@@ -1,1 +1,2 @@
-mysql-connector-python==9.2.0
+psycopg2>=2.9.10
+#mysql-connector-python==9.2.0

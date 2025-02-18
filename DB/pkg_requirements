@@ -1,0 +1,7 @@
+epel-release
+https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+postgrepql15
+postgrepql15-devel
+libpq5-devel (pg_config)
+python3-devel
+cmake

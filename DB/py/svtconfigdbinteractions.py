@@ -1,63 +1,71 @@
-import mysql.connector
-from mysql.connector import errorcode
+import psycopg2
+from psycopg2 import OperationalError
 
-config = {
+db_params = {
         'user' : 'admin',
-        'passwd' : 'svt-mosaix',
-        'host' : 'dbod-svt-mosaix-db.cern.ch',
-        'port' : 5524,
-        'database' : 'svt_mosaix_test',
-        'raise_on_warnings': True
+        'password' : 'svt-mosaix',
+        'host' : 'dbod-svt-sw-pgdb.cern.ch',
+        'port' : 6600,
+        'dbname' : 'svt_sw_db_test',
         }
 
 try:
-    cnx = mysql.connector.connect(**config)
+    conn = psycopg2.connect(**db_params)
 
-except mysql.connector.Error as err:
-    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-        print("Something is wrong with your user name or password")
-    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-        print("Database does not exist")
-    else:
-        print(err)
+except OperationalError as e:
+    print(f"Error connecting to database: {e}")
+
+except Exception as e:
+     print(f"An unexpected error occurred: {e}")
 
 def commit():
-    cnx.commit()
+    conn.commit()
 
 def close(cursor=None):
-    cnx.close()
+    if cursor is not None:
+        cursor.close()
 
-def createNewVersion(versionId=None, versionName=None, versionDescription=None, baseVersion=None):
-    with cnx.cursor() as cur:
-        if versionId is None:
-            # get a new version ID
-            cur.execute("SELECT MAX(ID) FROM TEST_VERSION")
-            newVersionId = cur.fetchone()[0] + 1
-            # add a new version to seq
-        else:
-            newVersionId = versionId
+    conn.close()
+    print("Database connection closed.")
+
+def showPgqlVersion():
+    with conn.cursor() as cur:
+        cur.execute("SELECT version();")
+        record = cur.fetchone()
+        print("Database version:", record)
+
+        cur.close()
+
+def createNewVersion(versionName=None, versionDescription=None, baseVersion=None):
+    with conn.cursor() as cur:
+        # get a new version ID
+        cur.execute("SELECT COUNT(*) FROM test.version")
+        newVersionId = cur.fetchone()[0] + 1
 
         if baseVersion is None:
             baseVersion = newVersionId
 
         cur.execute("""
-            INSERT INTO TEST_VERSION(ID, BASE_VERSION, NAME, DESCRIPTION)
-            VALUES(%(newVersionId)s, %(baseVersion)s, %(name)s, %(description)s)
-            """, {'newVersionId':newVersionId, 'baseVersion':baseVersion, 'name':versionName, 'description':versionDescription})
+            INSERT INTO test.Version (id, name, baseVersion, description)
+            VALUES(%(newVersionId)s, %(name)s, %(baseVersion)s, %(description)s)
+            """,
+            {'newVersionId':newVersionId, 'name':versionName, 'baseVersion':baseVersion, 'description':versionDescription})
 
         cur.close()
 
-    return newVersionId
+        return newVersionId
 
 def getMaxVersionId():
-    with cnx.cursor() as cur:
-        cur.execute("""
-        SELECT MAX(ID) FROM TEST_VERSION
-        """)
-
+    with conn.cursor() as cur:
         try:
-            dbId = cur.fetchone()[0]
-        except:
-            dbId = None
+            cur.execute("""
+            SELECT MAX(ID) FROM test.VERSION
+            """)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+        dbId = cur.fetchone()[0]
+
         cur.close
+
     return dbId
