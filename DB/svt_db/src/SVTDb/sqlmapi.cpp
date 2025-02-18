@@ -1,0 +1,314 @@
+#include "SVTDb/sqlmapi.h"
+#include "Database/databaseinterface.h"
+#include "SVTUtilities/SvtLogger.h"
+
+#include <vector>
+
+using namespace std;
+
+std::atomic<int> queryTime;
+std::atomic<int> queryCount;
+std::atomic<int> queryTrialCount;
+std::atomic<int> runtypeQueryTime;
+std::atomic<int> runtypeQueryCount;
+std::atomic<int> scansettingsQueryTime;
+std::atomic<int> scansettingsQueryCount;
+std::atomic<int> defaultchipQueryTime;
+std::atomic<int> defaultchipQueryCount;
+std::atomic<int> chipconfigQueryTime;
+std::atomic<int> chipconfigQueryCount;
+std::atomic<int> chipsettingsQueryTime;
+std::atomic<int> chipsettingsQueryCount;
+std::atomic<int> chipcalibQueryTime;
+std::atomic<int> chipcalibQueryCount;
+std::atomic<int> hicQueryTime;
+std::atomic<int> hicQueryCount;
+std::atomic<int> ruIdQueryTime;
+std::atomic<int> ruIdQueryCount;
+std::atomic<int> readoutSettingsQueryTime;
+std::atomic<int> readoutSettingsQueryCount;
+std::atomic<int> ruDefaultSettingsQueryTime;
+std::atomic<int> ruDefaultSettingsQueryCount;
+std::atomic<int> hsIdQueryTime;
+std::atomic<int> hsIdQueryCount;
+std::atomic<int> puIdQueryTime;
+std::atomic<int> puIdQueryCount;
+std::atomic<int> puChannelIdQueryTime;
+std::atomic<int> puChannelIdQueryCount;
+std::atomic<int> cableResistanceQueryTime;
+std::atomic<int> cableResistanceQueryCount;
+std::atomic<int> puBiasVoltageQueryTime;
+std::atomic<int> puBiasVoltageQueryCount;
+std::atomic<int> biasCurrentQueryTime;
+std::atomic<int> biasCurrentQueryCount;
+std::atomic<int> puVoltageQueryTime;
+std::atomic<int> puVoltageQueryCount;
+std::atomic<int> puCurrentQueryTime;
+std::atomic<int> puCurrentQueryCount;
+std::atomic<int> puCurrentThQueryTime;
+std::atomic<int> puCurrentThQueryCount;
+std::atomic<int> puMarginsQueryTime;
+std::atomic<int> puMarginsQueryCount;
+
+/**************************************************************
+Helper functions
+**************************************************************/
+// helper function for joining strings on a delimiter
+string stringJoin(vector<string> strings, string delimiter)
+{
+  string joinedString = "";
+
+  for (auto it = strings.begin(); it != strings.end(); ++it)
+  {
+    joinedString += *it;
+    if (it != strings.end() - 1)
+    {
+      joinedString += delimiter;
+    }
+  }
+
+  return joinedString;
+}
+
+// helper function for joining strings with a prepend on each string and a
+// delimiter
+string stringJoinPrefix(vector<string> strings, string prefix,
+                        string delimiter)
+{
+  string joinedString = "";
+
+  for (auto it = strings.begin(); it != strings.end(); ++it)
+  {
+    joinedString += prefix;
+    joinedString += *it;
+    if (it != strings.end() - 1)
+    {
+      joinedString += delimiter;
+    }
+  }
+
+  return joinedString;
+}
+
+/**************************************************************
+Interfacing with MAPI
+**************************************************************/
+void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
+{
+  bool successful = false;
+  int maxRetries = 1;
+  int nTrials = 0;
+  bool connected = true;
+  string errorMessage;
+  // vector<vector<MultiBase*>> rows;
+
+  queryCount++;
+
+  while (connected && (!successful) && (nTrials <= maxRetries))
+  {
+    std::chrono::high_resolution_clock::time_point t1 =
+        std::chrono::high_resolution_clock::now();
+    DatabaseInterface::executeQuery(queryString, successful, errorMessage,
+                                    rows);
+    // rows = DatabaseInterface::executeQuery(queryString, successful,
+    // errorMessage);
+    std::chrono::high_resolution_clock::time_point t2 =
+        std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+    queryTime += ms.count();
+    queryTrialCount++;
+    nTrials++;
+    if ((!successful) && (nTrials <= maxRetries))
+    {
+      SvtLogger::getInstance().logError(errorMessage + ", trying to reconnect");
+      connected = DatabaseInterface::isConnected();
+      if (!connected)
+        SvtLogger::getInstance().logError("reconnect failed");
+    }
+  }
+  if (!successful)
+  {
+    raiseError(errorMessage);
+    rows.clear();
+  }
+  // if (successful) {
+  // 	return rows;
+  // } else {
+  // 	raiseError(errorMessage);
+  // 	return vector<vector<MultiBase*>>();
+  // }
+}
+
+void raiseError(string errorMessage)
+{
+  // std::cout << errorMessage << std::endl;
+  SvtLogger::getInstance().logError(errorMessage);
+}
+
+void finishQuery(vector<vector<MultiBase *>> rows)
+{
+  DatabaseInterface::clearQueryResult(rows);
+}
+
+void SimpleQuery::doQuery(vector<vector<MultiBase *>> &rows)
+{
+  string queryString = "";
+  queryString += "SELECT " + stringJoin(mColumnNames, ", ");
+  queryString += " FROM " + mTableName;
+  if (!mWhereClauses.empty())
+  {
+    queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
+  }
+  return doGenericQuery(queryString, rows);
+}
+
+void SimpleQuery::addWhereIn(string columnName, vector<int> values)
+{
+  if (values.size() == 0)
+    return;
+  string clause = columnName + " IN (";
+  for (unsigned int i = 0; i < values.size(); i++)
+  {
+    clause += to_string(values.at(i));
+    if (i < values.size() - 1)
+      clause += ",";
+  }
+  clause += ")";
+  mWhereClauses.push_back(clause);
+}
+
+bool doGenericUpdate(string insertString)
+{
+  bool successful;
+  string errorMessage;
+
+  successful = DatabaseInterface::executeUpdate(insertString, errorMessage);
+
+  if (!successful)
+  {
+    raiseError(errorMessage);
+  }
+
+  return successful;
+}
+
+void commitUpdate() { DatabaseInterface::commitUpdate(true); }
+
+void rollbackUpdate() { DatabaseInterface::commitUpdate(false); }
+
+bool SimpleInsert::doInsert()
+{
+  string insertString = "";
+  insertString += "INSERT INTO " + mTableName;
+  insertString += " (" + stringJoin(mColumnNames, ", ") + ")";
+  insertString += " VALUES(" + stringJoin(mValues, ", ") + ")";
+
+  return doGenericUpdate(insertString);
+}
+
+/**************************************************************
+Versioning
+**************************************************************/
+void VersionedQuery::doQuery(vector<vector<MultiBase *>> &rows)
+{
+  // perhaps this should be folded into the main query?
+  int baseVersionId = getBaseVersion(mVersionId);
+
+  // the goal of this is to generalize the ability to query a table for a
+  // particular version and to return the combination of the base and diff
+  // versions that correspond to the given version see docs/versioning.md for a
+  // more detailed explanation
+  string queryString = "";
+  // subquery on version first
+  queryString += "WITH T0 AS (SELECT *";
+  queryString += " FROM " + mTableName;
+  queryString += " WHERE versionId IN (" + to_string(baseVersionId) + "," +
+                 to_string(mVersionId) + ")";
+  if (!mWhereClauses.empty())
+  {
+    queryString += " AND " + stringJoin(mWhereClauses, " AND ");
+  }
+  queryString += ")";
+  // select rows with the diff version if it exists and the base version if it
+  // doesn't
+  queryString += " SELECT " + stringJoinPrefix(mColumnNames, "T1.", ", ");
+  queryString += " FROM T0 T1";
+  queryString += " LEFT OUTER JOIN T0 T2";
+  queryString += " ON T1.versionId < T2.versionId";
+  queryString += " AND " + getPkString();
+  queryString += " WHERE T2." + mPrimaryKeys.at(0) + " IS NULL";
+
+  return doGenericQuery(queryString, rows);
+}
+
+bool VersionedInsert::doInsert()
+{
+  // perhaps this should be folded into the main query?
+  int baseVersionId = getBaseVersion(mVersionId);
+
+  // look for the exact row to insert but with the base version ID instead
+  mQuery.setTableName(mTableName);
+  mQuery.addColumn("COUNT(*)");
+  // the rest of the where clauses are added when calling addColumnAndValue
+  mQuery.addWhereEquals("versionId", baseVersionId);
+
+  vector<vector<MultiBase *>> rows;
+  mQuery.doQuery(rows);
+  int rowCount = rows.at(0).at(0)->getInt();
+  finishQuery(rows);
+
+  bool insertSuccessful = true;
+  // if no such row exists, do the insert
+  if (rowCount == 0)
+  {
+    // call parent method
+    insertSuccessful = SimpleInsert::doInsert();
+  }
+  return insertSuccessful;
+}
+
+int getBaseVersion(int versionId)
+{
+  string queryString = "SELECT baseVersion";
+  queryString += " FROM test.Version";
+  queryString += " WHERE id=" + to_string(versionId);
+
+  vector<vector<MultiBase *>> rows;
+  doGenericQuery(queryString, rows);
+  int baseVersion = -1;
+
+  if (!rows.empty())
+  {
+    baseVersion = rows.at(0).at(0)->getInt();
+  }
+  else
+  {
+    raiseError("Version ID " + to_string(versionId) +
+               " not found when retrieving base version");
+  }
+
+  finishQuery(rows);
+  return baseVersion;
+}
+
+int getMostRecentVersionId()
+{
+  string queryString = "SELECT MAX(ID) FROM test.Version";
+
+  vector<vector<MultiBase *>> rows;
+  doGenericQuery(queryString, rows);
+  int maxVersionId = -1;
+
+  if (!rows.empty())
+  {
+    maxVersionId = rows.at(0).at(0)->getInt();
+  }
+  else
+  {
+    raiseError("Max version ID returned nothing");
+  }
+
+  finishQuery(rows);
+  return maxVersionId;
+}
