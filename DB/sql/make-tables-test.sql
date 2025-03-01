@@ -1,8 +1,8 @@
 -- CREATE Schema test
-CREATE SCHEMA test;
+CREATE SCHEMA IF NOT EXISTS test;
 
 -- CREATE TABLE VERSION
-CREATE TABLE test.VERSION (
+CREATE TABLE IF NOT EXISTS test.VERSION (
 		id INT,
 		name VARCHAR(50),
 		baseVersion INT,
@@ -12,51 +12,57 @@ CREATE TABLE test.VERSION (
 		FOREIGN KEY (baseVersion) REFERENCES test.VERSION (id)
 );
 
-
 -- CREATE type enum EngineeringRun
-CREATE TYPE enum_EngineeringRun AS ENUM (
-		'eng_run_0',
-		'eng_run_1'
+CREATE TYPE test.enum_engineeringRun AS ENUM (
+		'ER1'
 );
- 
+
+-- CREATE type enum Foundry
+CREATE TYPE test.enum_foundry AS ENUM (
+		'TowerJazz'
+);
+
+-- CREATE type enum waferTechnology
+CREATE TYPE test.enum_waferTech AS ENUM (
+	--
+);
+
 -- CREATE type enum waferType
-CREATE TYPE enum_WaferType AS ENUM (
-	'wafer_type_0',
-	'wafer_type_1'
+CREATE TYPE test.enum_waferType AS ENUM (
+	--
 );
 
 -- CREATE type enum asic_family_type
-CREATE TYPE enum_FamilyType AS ENUM (
-	'asic_family_type_0',
-	'asic_family_type_1'
+CREATE TYPE test.enum_familyType AS ENUM (
+	--
 );
 
 -- CREATE TABLE WAFER
-CREATE TABLE test.WAFER (
+CREATE TABLE IF NOT EXISTS test.wafer (
 	id SERIAL,
 	serialNumber VARCHAR(50) UNIQUE,
 	batchNumber INT,
-	engineeringRun enum_EngineeringRun,
-	foundry VARCHAR(50),
-	technology VARCHAR(50),
+	engineeringRun test.enum_engineeringRun,
+	foundry test.enum_foundry,
+	technology test.enum_waferTech,
 	thinningDate DATE,
 	dicingDate DATE,
-	waferType enum_WaferType,
+	waferType test.enum_waferType,
 	PRIMARY KEY (id)
 );
 
 -- CREATE TABLE Asic
-CREATE TABLE test.ASIC (
+CREATE TABLE IF NOT EXISTS test.asic (
 	id SERIAL,
 	waferId INT NOT NULL,
-	familyType enum_FamilyType,
+	familyType enum_familyType,
 	topographyDieId INT,
 	PRIMARY KEY (id),
-	FOREIGN KEY (waferId) REFERENCES test.WAFER (id)
+	FOREIGN KEY (waferId) REFERENCES test.wafer (id)
 );
 
 -- CREATE TABLE WaferTopography
-CREATE TABLE test.WAFER_TOPOGRAPHY (
+CREATE TABLE IF NOT EXISTS test.waferTopography (
 	id SERIAL,
 	name TEXT,
 	filePath TEXT,
