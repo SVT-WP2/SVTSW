@@ -11,13 +11,13 @@ namespace SvtDb_IF
     Structure type definitions
   **************************************************************/
 
-  typedef struct
+  using dbVersion = struct dbVersion_s
   {
     int id;
     int baseVersion;
     std::string name;
     std::string description;
-  } dbVersion;
+  };
 
   /**************************************************************
     Function declarations

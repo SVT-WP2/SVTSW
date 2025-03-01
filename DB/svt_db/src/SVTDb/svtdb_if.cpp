@@ -2,12 +2,12 @@
 #include "SVTDb/sqlmapi.h"
 // #include "SVTUtilities/SvtLogger.h"
 
-int SvtDb_IF::getAllVersions(std::vector<dbVersion> &versions)
+int SvtDb_IF::getAllVersions(std::vector<SvtDb_IF::dbVersion> &versions)
 {
   versions.clear();
   SimpleQuery query;
 
-  query.setTableName("test.versions");
+  query.setTableName("test.version");
 
   query.addColumn("id");
   query.addColumn("name");
