@@ -43,14 +43,14 @@
     pgql_cmd="CREATE DATABASE"
   }
 
-  _createTable() {
-    local sql_in_fl=${1:-}
-    [ -z "$sql_in_fl" ] && {
-      echo "ERROR: no sql input file entered."
-      exit 1
-    }
-    _run_sql_script "$sql_in_fl"
-  }
+  # _createTable() {
+  #   local sql_in_fl=${1:-}
+  #   [ -z "$sql_in_fl" ] && {
+  #     echo "ERROR: no sql input file entered."
+  #     exit 1
+  #   }
+  #   _run_sql_script "$sql_in_fl"
+  # }
 
   [ $# -eq 0 ] && {
     echo "ERROR at least a argumentis needed"
@@ -67,9 +67,9 @@
     shift
     _createdb "$@"
     ;;
-  --createTable)
+  --run)
     shift
-    _createTable "$@"
+    _run_sql_script "$@"
     ;;
   *)
     exit 1
