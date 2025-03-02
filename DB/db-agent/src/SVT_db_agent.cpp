@@ -5,7 +5,10 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <iostream>
 #include <string>
+#include <thread>
 
 std::string version = std::string(VERSION);
 SvtLogger &logger = SvtLogger::getInstance();
@@ -65,11 +68,22 @@ int main()
     logger.logInfo("Databaseinterface is connected");
   }
 
-  // while (1)
-  // {
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  //   // int time = gTimer.getTicksInSeconds();
-  //   // heartbeatService->updateService(time);
-  // }
+  try
+  {
+    while (1)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      //   // int time = gTimer.getTicksInSeconds();
+      //   // heartbeatService->updateService(time);
+    }
+  }
+  catch (const std::exception &e)
+  {
+    std::cout << std::endl
+              << "### Caught exception in the main thread ###" << std::endl
+              << std::endl;
+    std::cout << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }

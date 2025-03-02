@@ -6,9 +6,10 @@
  */
 
 #include "SVTDb/svtdb_if.h"
+#include "SVTDb/sqlmapi.h"
+
 #include <string>
 #include <vector>
-#include "SVTDb/sqlmapi.h"
 
 //========================================================================+
 std::vector<std::string> SvtDb_IF::getAllEnumValues(std::string enum_value)
