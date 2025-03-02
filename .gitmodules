@@ -1,0 +1,6 @@
+[submodule "DB/db-agent/deps/librdkafka"]
+	path = DB/db-agent/deps/librdkafka
+	url = git@github.com:confluentinc/librdkafka.git
+[submodule "DB/db-agent/deps/libpqxx"]
+	path = DB/db-agent/deps/libpqxx
+	url = git@github.com:jtv/libpqxx.git
