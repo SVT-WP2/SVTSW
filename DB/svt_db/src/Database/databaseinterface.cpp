@@ -5,11 +5,13 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 DatabaseInterface *DatabaseInterface::instance = nullptr;
 bool DatabaseInterface::mUnavailable = false;
 std::recursive_mutex DatabaseInterface::mMutex;
+SvtLogger &DatabaseInterface::logger = SvtLogger::getInstance();
 
 DatabaseInterface::DatabaseInterface(const string &user, const string &password,
                                      const string &connString,
@@ -57,8 +59,8 @@ bool DatabaseInterface::close()
     }
     catch (pqxx::sql_error const &e)
     {
-      SvtLogger::getInstance().logError(std::string("SQL error: ") + e.what());
-      SvtLogger::getInstance().logError(std::string("Query was: ") + e.query());
+      logger.logError(std::string("SQL error: ") + e.what());
+      logger.logError(std::string("Query was: ") + e.query());
     }
   }
 
@@ -78,13 +80,14 @@ bool DatabaseInterface::connect()
                              " password=" + this->mPassword;
 
     mDBConnection = new pqxx::connection(connstring);
-    mDBWork = new pqxx::work(*mDBConnection);
+    mDBWork = new pqxx::nontransaction(*mDBConnection);
   }
   catch (pqxx::sql_error const &e)
   {
-    SvtLogger::getInstance().logError(std::string("SQL error: ") + e.what());
-    SvtLogger::getInstance().logError(std::string("Query was: ") + e.query());
+    logger.logError(std::string("SQL error: ") + e.what());
+    logger.logError(std::string("Query was: ") + e.query());
 
+    DatabaseInterface::close();
     DatabaseInterface::instance = nullptr;
 
     return false;
@@ -93,6 +96,7 @@ bool DatabaseInterface::connect()
   {
     SvtLogger::getInstance().logError(std::string("Error: ") + e.what());
 
+    DatabaseInterface::close();
     DatabaseInterface::instance = nullptr;
 
     return false;
@@ -104,45 +108,40 @@ bool DatabaseInterface::connect()
 bool DatabaseInterface::reconnect()
 {
   std::string errMessage;
-  SvtLogger::getInstance().logInfo(
-      "DatabaseInterface::reconnect: trying to reconnect");
+  logger.logInfo("DatabaseInterface::reconnect: trying to reconnect");
 
   if (!DatabaseInterface::instance)
   {
-    SvtLogger::getInstance().logError(
-        "DatabaseInterface::reconnect: myInstance = nullptr");
+    logger.logError("DatabaseInterface::reconnect: myInstance = nullptr");
     return false;
   }
 
   if (!this->mDBConnection)
   {
-    SvtLogger::getInstance().logError(
-        "DatabaseInterface::reconnect: mDBConnection = nullptr");
+    logger.logError("DatabaseInterface::reconnect: mDBConnection = nullptr");
     return false;
   }
 
   if (mDBConnection->is_open())
   {
-    SvtLogger::getInstance().logInfo(
+    logger.logInfo(
         "DatabaseInterface::reconnect: trying to terminate connection");
     this->close();
   }
   try
   {
-    SvtLogger::getInstance().logInfo(
-        "DatabaseInterface::reconnect: trying to create connection");
+    logger.logInfo("DatabaseInterface::reconnect: trying to create connection");
     this->connect();
   }
   catch (pqxx::sql_error const &e)
   {
-    SvtLogger::getInstance().logError(std::string("SQL error: ") + e.what());
-    SvtLogger::getInstance().logError(std::string("Query was: ") + e.query());
+    logger.logError(std::string("SQL error: ") + e.what());
+    logger.logError(std::string("Query was: ") + e.query());
     DatabaseInterface::instance->close();
     return false;
   }
 
-  SvtLogger::getInstance().logInfo(
-      "DatabaseInterface::reconnect: connect done");
+  logger.logInfo("DatabaseInterface::reconnect: connect done");
   return (DatabaseInterface::instance->mDBConnection != nullptr &&
           DatabaseInterface::instance->mDBWork != nullptr);
 }
@@ -213,7 +212,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
       vector<MultiBase *> rowResult;
       for (uint8_t i{0}; i < row.size(); ++i)
       {
-        const auto &data_field = row[1];
+        const auto &data_field = row[i];
         if (data_field.is_null())
         {
           rowResult.push_back(nullptr);
@@ -239,6 +238,8 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
       }
       rows.push_back(rowResult);
     }
+    // remove query statement
+    DatabaseInterface::instance->mDBWork->exec("DEALLOCATE PREPARE query");
     return;
   }
   catch (pqxx::sql_error const &e)
@@ -317,7 +318,7 @@ bool DatabaseInterface::commitUpdate(bool commit)
   {
     if (commit)
     {
-      DatabaseInterface::instance->mDBWork->commit();
+      DatabaseInterface::instance->mDBWork->exec("commit;");
     }
     else
     {
