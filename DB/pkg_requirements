@@ -5,3 +5,4 @@ postgrepql15-devel
 libpq5-devel (pg_config)
 python3-devel
 cmake
+librdkafka-devel
