@@ -43,7 +43,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # find_package(RdKafka CONFIG REQUIRED)
 # find_package(Monitoring CONFIG REQUIRED)
 
-file(GLOB SOURCES
+file(GLOB SOURCES_DB
   "src/SVTUtilities/SvtLogger.cpp"
   # "src/ITSUtilities/ItsTimer.cpp"
   # "src/ITSUtilities/ItsGlobalTimer.cpp"
@@ -69,12 +69,16 @@ add_custom_target(version
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-add_executable(SVT_db_agent "src/SVT_db_agent.cpp" ${SOURCES})
+add_executable(SVT_db_agent "src/SVT_db_agent.cpp" ${SOURCES_DB})
 add_dependencies(SVT_db_agent version)
 
-add_executable(test_db_if "src/test_db_if.cpp" ${SOURCES})
+add_executable(test_db_if "src/test_db_if.cpp" ${SOURCES_DB})
 add_dependencies(test_db_if version)
 
 add_subdirectory(deps/libpqxx build-pqxx)
-target_link_libraries(SVT_db_agent PRIVATE pqxx pthread)
+
+set(RDKAFKA_BUILD_STATIC ON CACHE BOOL "")
+add_subdirectory(deps/librdkafka build-rdkafka)
+
+target_link_libraries(SVT_db_agent PRIVATE pqxx rdkafka pthread)
 target_link_libraries(test_db_if PRIVATE pqxx)

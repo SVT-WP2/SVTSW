@@ -1,3 +1,6 @@
 [submodule "DB/svt_db/deps/libpqxx"]
 	path = DB/svt_db/deps/libpqxx
 	url = git@github.com:jtv/libpqxx.git
+[submodule "DB/svt_db/deps/librdkafka"]
+	path = DB/svt_db/deps/librdkafka
+	url = git@github.com:confluentinc/librdkafka.git
