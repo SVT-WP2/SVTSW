@@ -44,8 +44,6 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # find_package(Monitoring CONFIG REQUIRED)
 
 file(GLOB SOURCES
-  "src/SVT_db.cpp"
-
   "src/SVTUtilities/SvtLogger.cpp"
   # "src/ITSUtilities/ItsTimer.cpp"
   # "src/ITSUtilities/ItsGlobalTimer.cpp"
@@ -71,8 +69,12 @@ add_custom_target(version
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-add_executable(SVT_db ${SOURCES})
-add_dependencies(SVT_db version)
+add_executable(SVT_db_agent "src/SVT_db_agent.cpp" ${SOURCES})
+add_dependencies(SVT_db_agent version)
+
+add_executable(test_db_if "src/test_db_if.cpp" ${SOURCES})
+add_dependencies(test_db_if version)
 
 add_subdirectory(deps/libpqxx build-pqxx)
-target_link_libraries(SVT_db PRIVATE pqxx pthread)
+target_link_libraries(SVT_db_agent PRIVATE pqxx pthread)
+target_link_libraries(test_db_if PRIVATE pqxx)
