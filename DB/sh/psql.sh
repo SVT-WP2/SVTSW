@@ -2,30 +2,18 @@
 (
   set -euo pipefail
 
-  _cmd_psql() {
-    local cmd
-    cmd=${1:-}
-    [[ -z "$cmd" ]] && {
-      echo "ERROR missing command."
-      exit 1
-    }
-    PGPASSWORD='svt-mosaix' psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 -c "$cmd"
+  _psql_exec_no_db() {
+    PGPASSWORD='svt-mosaix' psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 ${@:+$*}
   }
 
-  _run_sql_script() {
-    local in_file
-    in_file=${1:-}
-    [[ -f "$in_file" ]] || {
-      echo "ERROR script $in_file not found."
-      exit 1
-    }
-    PGPASSWORD='svt-mosaix' psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 -d svt_sw_db_test -a -f "$in_file"
+  _psql_exec_in_db() {
+    PGPASSWORD='svt-mosaix' psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 -d svt_sw_db_test ${@:+$*}
   }
 
   _chpass() {
     read -rp "Enter new pass: " PASS
     pgql_cmd="ALTER USER admin PASSWORD '${PASS}';"
-    _cmd_psql "${pgql_cmd}"
+    _psql_exec_no_db -c "${pgql_cmd}"
   }
 
   _createdb() {
@@ -34,23 +22,15 @@
       echo "ERROR: no DB name provided."
       exit 1
     }
-    if [[ "$(_cmd_psql "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';")" = '1' ]]; then
+    local cmd="SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';"
+    if [[ "$(_psql_exec_no_db -XAtc "$cmd")" == "1" ]]; then
       echo "DB ${DB_NAME} exits, exiting."
       exit 1
     else
-      _cmd_psql "CREATE DATABASE ${DB_NAME};"
+      cmd="CREATE DATABASE ${DB_NAME};"
+    #   _psql_exec_no_db -c "${cmd}"
     fi
-    pgql_cmd="CREATE DATABASE"
   }
-
-  # _createTable() {
-  #   local sql_in_fl=${1:-}
-  #   [ -z "$sql_in_fl" ] && {
-  #     echo "ERROR: no sql input file entered."
-  #     exit 1
-  #   }
-  #   _run_sql_script "$sql_in_fl"
-  # }
 
   [ $# -eq 0 ] && {
     echo "ERROR at least a argumentis needed"
@@ -69,7 +49,19 @@
     ;;
   --run)
     shift
-    _run_sql_script "$@"
+    in_file=${1:-}
+    [ -z "$in_file" ] && {
+      echo "ERROR: script file not provided."
+      exit 1
+    }
+    [[ -f "$in_file" ]] || {
+      echo "ERROR script $in_file not found."
+      exit 1
+    }
+    _psql_exec_in_db "-a -f $in_file"
+    ;;
+  --open)
+    _psql_exec_in_db
     ;;
   *)
     exit 1
