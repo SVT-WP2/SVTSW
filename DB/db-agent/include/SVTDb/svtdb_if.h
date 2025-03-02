@@ -26,8 +26,8 @@ namespace SvtDb_IF
 
   using dbWaferRecords = struct dbWaferRecords
   {
-    int id;
-    std::string_view serialNumber;
+    int id = -1;
+    std::string serialNumber;
     int batchNumber = -1;
     std::string engineeringRun;
     std::string foundry;

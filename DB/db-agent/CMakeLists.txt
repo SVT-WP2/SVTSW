@@ -38,11 +38,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-# set(RDKafka_DIR /usr/local/lib/cmake/RdKafka)
-# set(Monitoring_DIR /usr/local/lib/cmake/Monitoring)
-# find_package(RdKafka CONFIG REQUIRED)
-# find_package(Monitoring CONFIG REQUIRED)
-
 file(GLOB SOURCES_DB
   "src/SVTUtilities/SvtLogger.cpp"
   # "src/ITSUtilities/ItsTimer.cpp"
@@ -51,9 +46,10 @@ file(GLOB SOURCES_DB
   # "src/ITSUtilities/itsThread.cpp"
   #"src/ITSUtilities/ItsBitsManager.cpp"
 
-
   "src/SVTDb/svtdb_if.cpp"
   "src/SVTDb/sqlmapi.cpp"
+  "src/DbAgent/svtdb_service.cpp"
+  "src/DbAgent/svtdb_agent.cpp"
   "src/Database/multitype.cpp"
   "src/Database/databaseinterface.cpp"
 )
