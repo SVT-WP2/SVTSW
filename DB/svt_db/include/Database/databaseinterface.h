@@ -1,6 +1,8 @@
 #ifndef __DATABASE_INTERFACE__
 #define __DATABASE_INTERFACE__
 
+#include "SVTUtilities/SvtLogger.h"
+
 #include <pqxx/pqxx>
 
 #include <mutex>
@@ -17,7 +19,7 @@ class DatabaseInterface
   string mUser, mPassword, mConnString, mHost, mPort;
 
   pqxx::connection *mDBConnection;
-  pqxx::work *mDBWork;
+  pqxx::nontransaction *mDBWork;
 
   bool reconnect();
   bool close();
@@ -25,6 +27,8 @@ class DatabaseInterface
   static bool mUnavailable;
 
   static std::recursive_mutex mMutex;
+
+  static SvtLogger &logger;
 
  public:
   DatabaseInterface(const string &user, const string &password,
