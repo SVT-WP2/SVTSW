@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS test.VERSION (
 		FOREIGN KEY (baseVersion) REFERENCES test.VERSION (id)
 );
 
+-- DROP TYPE <type_name>
 -- CREATE type enum EngineeringRun
 CREATE TYPE test.enum_engineeringRun AS ENUM (
 		'ER1'
@@ -55,7 +56,7 @@ CREATE TABLE IF NOT EXISTS test.wafer (
 CREATE TABLE IF NOT EXISTS test.asic (
 	id SERIAL,
 	waferId INT NOT NULL,
-	familyType enum_familyType,
+	familyType test.enum_familyType,
 	topographyDieId INT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (waferId) REFERENCES test.wafer (id)
