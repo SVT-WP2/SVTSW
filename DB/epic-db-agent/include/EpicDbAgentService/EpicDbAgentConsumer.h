@@ -2,7 +2,7 @@
 #define EPIC_DB_AGENT_CONSUMER_H
 
 /*!
- * @file EpicDbAgentService.h
+ * @file EpicDbAgentConsumer.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @data Mar-2025
  * @brief Db agent kafka service
@@ -12,106 +12,67 @@
 #include "EpicUtilities/EpicLogger.h"
 
 #include <librdkafka/rdkafkacpp.h>
+
 #include <atomic>
-#include <csignal>
-#include <sstream>
-#include <string>
-
-extern std::atomic<int> consumer_run;
-
-class SvtThread;
+#include <memory>
+#include <thread>
 
 namespace
 {
   constexpr int kKafkaWaitTime_ms = 1;
-
-  enum EpicDbAgentTopicEnum : uint8_t
-  {
-    Request = 0,
-    RequestReply,
-    NumTopicNames = 2
-  };
-
-  const std::array<std::string_view, EpicDbAgentTopicEnum::NumTopicNames>
-      topicNames = {{"epic.db-agent.request", "epic.db-agent.request.reply"}};
 }  // namespace
-
-class EpicDbAgentEventCb : public RdKafka::EventCb
-{
- public:
-  void event_cb(RdKafka::Event &event)
-  {
-    std::ostringstream msg;
-    switch (event.type())
-    {
-    case RdKafka::Event::EVENT_ERROR:
-      msg.clear();
-      if (event.fatal())
-      {
-        msg << "FATAL ";
-        consumer_run = 0;
-      }
-      msg << "ERROR (" << RdKafka::err2str(event.err()) << "): " << event.str();
-      EpicLogger::getInstance().logError(msg.str());
-      break;
-
-    case RdKafka::Event::EVENT_STATS:
-      EpicLogger::getInstance().logInfo("\"STATS\": " + event.str(),
-                                        EpicLogger::Mode::STANDARD);
-      break;
-
-    case RdKafka::Event::EVENT_LOG:
-      msg.clear();
-      msg << "LOG-" << event.severity() << "-" << event.fac() << ": "
-          << event.str();
-      EpicLogger::getInstance().logInfo(msg.str(), EpicLogger::Mode::STANDARD);
-      break;
-
-    default:
-      msg << "EVENT " << event.type() << " (" << RdKafka::err2str(event.err())
-          << "): " << event.str();
-      EpicLogger::getInstance().logInfo(msg.str(), EpicLogger::Mode::STANDARD);
-      break;
-    }
-  }
-};
 
 class EpicDbAgentConsumeCb : public RdKafka::ConsumeCb
 {
  public:
   void consume_cb(RdKafka::Message &msg, void *opaque)
   {
-    EpicDbAgentService::getInstance().processMsgCb(&msg, opaque);
+    EpicDbAgentService::getInstance().ProcessMsgCb(&msg, opaque);
   }
 };
 
 class EpicDbAgentConsumer
 {
  public:
-  EpicDbAgentConsumer() = default;
+  enum STATES : uint8_t
+  {
+    START = 0,
+    SUSPEND,
+    STOP
+  };
+
+  EpicDbAgentConsumer(RdKafka::Conf *globalConf, RdKafka::Conf *topicConf,
+                      bool stop_eof = false);
   ~EpicDbAgentConsumer() = default;
 
-  bool Configure(bool do_conf_dump = true);
-  bool isRunning() { return consumer_run; }
+  bool CreateConsumer();
+
+  void SetStopEof(const bool val) { m_stop_eof = val; }
+
+  bool GetIsRunning() { return m_running; }
+  bool GetSuspended() { return m_suspended; }
+
+  void SetIsRunning(const bool running) { m_running = running; }
+  void SetSuspended(const bool suspended) { m_suspended = suspended; }
 
  private:
-  EpicLogger &logger = EpicLogger::getInstance();
+  EpicLogger &logger = Singleton<EpicLogger>::instance();
 
-  RdKafka::Consumer *m_consumer = nullptr;
-  RdKafka::Topic *m_topic = nullptr;
-  RdKafka::Conf *m_globalConf =
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  RdKafka::Conf *m_topicConf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+  bool Start();
+  bool Stop(const bool suspend = false);
+  void Pull();
 
+  std::shared_ptr<RdKafka::Conf> m_globalConf;
+  std::shared_ptr<RdKafka::Conf> m_topicConf;
+  std::shared_ptr<RdKafka::Consumer> m_consumer;
+  std::shared_ptr<RdKafka::Topic> m_topic;
   int m_partition = 0;
-
-  std::string m_brokerName = {"localhost:9092"};
   std::string m_errStr;
-  std::string m_debug;
+  bool m_stop_eof = false;
 
-  bool CreateConsumer();
-  void Start();
-  void Stop();
+  std::atomic<bool> m_running = false;
+  std::atomic<bool> m_suspended = false;
+  std::thread m_thread;
 };
 
 #endif  // !SVTDB_AGENT_H

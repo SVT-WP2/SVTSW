@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 
 //========================================================================+
@@ -12,6 +13,7 @@ EpicLogger::EpicLogger()
   , logVerbosityFile_(0U)
   , msgId_(0U)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::time_t time_now = std::time(nullptr);
   std::stringstream ss;
   ss << std::put_time(std::localtime(&time_now), "%Y-%m-%d");
@@ -25,7 +27,7 @@ EpicLogger::EpicLogger()
   logFileName_ = logFileRoot_ + "-" + date + ".log";
 
   logFile_.open(logFileName_, std::ios::app);
-  if (!logFile_.is_open() || !logFile_.fail())
+  if (!logFile_.is_open() || !logFile_.good())
   {
     logFileName_ = "";  //
     std::cerr << "EpicLogger::log unable to create the file " << logFileName_
@@ -153,13 +155,6 @@ void EpicLogger::log(const std::string type, const std::string message,
 
   if (severity <= logVerbosity_)
     std::cout << logMsg;  // is thread-safe
-}
-
-//========================================================================+
-EpicLogger &EpicLogger::getInstance()
-{
-  static EpicLogger pinstance;
-  return pinstance;
 }
 
 //========================================================================+

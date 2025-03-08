@@ -38,13 +38,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 file(GLOB SOURCES_DB
+  "src/EpicUtilities/EpicLogger.cpp"
   "src/Database/databaseinterface.cpp"
   "src/Database/multitype.cpp"
   "src/EpicDb/sqlmapi.cpp"
   "src/EpicDb/EpicDbInterface.cpp"
   "src/EpicDbAgentService/EpicDbAgentConsumer.cpp"
   "src/EpicDbAgentService/EpicDbAgentService.cpp"
-  "src/EpicUtilities/EpicLogger.cpp"
 )
 
 add_custom_target(version

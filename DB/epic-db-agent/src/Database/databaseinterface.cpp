@@ -1,46 +1,37 @@
 #include "Database/databaseinterface.h"
+#include "EpicUtilities/EpicLogger.h"
 
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <stdexcept>
+// #include <stdexcept>
 #include <string>
 #include <vector>
 
-DatabaseInterface *DatabaseInterface::instance = nullptr;
-bool DatabaseInterface::mUnavailable = false;
-std::recursive_mutex DatabaseInterface::mMutex;
-EpicLogger &DatabaseInterface::logger = EpicLogger::getInstance();
+//========================================================================+
+DatabaseInterface::DatabaseInterface() { mUnavailable = false; }
 
-DatabaseInterface::DatabaseInterface(const string &user, const string &password,
-                                     const string &connString,
-                                     const string &host, const string &port)
+bool DatabaseInterface::Init(const string &user, const string &password,
+                             const string &connString, const string &host,
+                             const string &port)
 {
-  if (DatabaseInterface::instance == nullptr)
-  {
-    this->mUser = user;
-    this->mPassword = password;
-    this->mConnString = connString;
-    this->mHost = host;
-    this->mPort = port;
+  mUser = user;
+  mPassword = password;
+  mConnString = connString;
+  mHost = host;
+  mPort = port;
 
-    this->mDBConnection = nullptr;
-    this->mDBWork = nullptr;
+  mDBConnection = nullptr;
+  mDBWork = nullptr;
 
-    DatabaseInterface::instance = this;
-  }
-  else
-  {
-    throw runtime_error(
-        "Multiple instances of DatabaseInterface are not allowed!");
-  }
+  // {
+  //   throw runtime_error(
+  //       "Multiple instances of DatabaseInterface are not allowed!");
+  // }
+  return true;
 }
 
-DatabaseInterface::~DatabaseInterface()
-{
-  this->close();
-  DatabaseInterface::instance = nullptr;
-}
+DatabaseInterface::~DatabaseInterface() { this->close(); }
 
 bool DatabaseInterface::close()
 {
@@ -86,17 +77,16 @@ bool DatabaseInterface::connect()
     logger.logError(std::string("SQL error: ") + e.what());
     logger.logError(std::string("Query was: ") + e.query());
 
-    DatabaseInterface::close();
-    DatabaseInterface::instance = nullptr;
+    close();
 
     return false;
   }
   catch (std::exception const &e)
   {
-    EpicLogger::getInstance().logError(std::string("Error: ") + e.what());
+    Singleton<EpicLogger>::instance().logError(std::string("Error: ") +
+                                               e.what());
 
-    DatabaseInterface::close();
-    DatabaseInterface::instance = nullptr;
+    close();
 
     return false;
   }
@@ -109,11 +99,11 @@ bool DatabaseInterface::reconnect()
   std::string errMessage;
   logger.logWarning("DatabaseInterface::reconnect: trying to reconnect");
 
-  if (!DatabaseInterface::instance)
-  {
-    logger.logError("DatabaseInterface::reconnect: myInstance = nullptr");
-    return false;
-  }
+  // if (!DatabaseInterface::instance)
+  // {
+  //   logger.logError("DatabaseInterface::reconnect: myInstance = nullptr");
+  //   return false;
+  // }
 
   if (!this->mDBConnection)
   {
@@ -137,38 +127,37 @@ bool DatabaseInterface::reconnect()
   {
     logger.logError(std::string("SQL error: ") + e.what());
     logger.logError(std::string("Query was: ") + e.query());
-    DatabaseInterface::instance->close();
+    close();
     return false;
   }
 
   logger.logWarning("DatabaseInterface::reconnect: connect done");
-  return (DatabaseInterface::instance->mDBConnection != nullptr &&
-          DatabaseInterface::instance->mDBWork != nullptr);
+  return (mDBConnection != nullptr && mDBWork != nullptr);
 }
 
 bool DatabaseInterface::isConnected()
 {
   string message;
-  return DatabaseInterface::isConnected(message);
+  return isConnected(message);
 }
 
 bool DatabaseInterface::isConnected(string &message)
 {
   message = "";
 
-  if (!DatabaseInterface::instance)
-  {
-    message = "database instance is null";
-    return false;
-  }
+  // if (!DatabaseInterface::instance)
+  // {
+  //   message = "database instance is null";
+  //   return false;
+  // }
 
-  if (!DatabaseInterface::instance->mDBConnection)
+  if (!mDBConnection)
   {
     message = "database connection not available";
     return false;
   }
 
-  return DatabaseInterface::instance->mDBConnection->is_open();
+  return mDBConnection->is_open();
 }
 
 //========================================================================+
@@ -186,27 +175,27 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
   try
   {
     // check connection was opened
-    if (!DatabaseInterface::instance)
-      throw runtime_error(
-          "DatabaseInterface is uninitialized! You either forgotten to call "
-          "DatabaseInterface.connect() function or ignored its result.");
+    // if (!DatabaseInterface::instance)
+    //   throw runtime_error(
+    //       "DatabaseInterface is uninitialized! You either forgotten to call "
+    //       "DatabaseInterface.connect() function or ignored its result.");
 
-    lock_guard<recursive_mutex> dbLock(DatabaseInterface::instance->mMutex);
+    lock_guard<recursive_mutex> dbLock(mMutex);
 
-    if (!DatabaseInterface::isConnected(message))
+    if (!isConnected(message))
     {
       std::cout << "Database timeout reached, trying to reconnect!"
                 << std::endl;
-      if (!DatabaseInterface::instance->reconnect())
+      if (!reconnect())
       {
-        DatabaseInterface::instance->close();
+        close();
       }
     }
 
     //! prepare statement
-    DatabaseInterface::instance->mDBConnection->prepare("query", query);
+    mDBConnection->prepare("query", query);
     pqxx::prepped prepare_name{"query"};
-    pqxx::result res{DatabaseInterface::instance->mDBWork->exec(prepare_name)};
+    pqxx::result res{mDBWork->exec(prepare_name)};
     for (const auto &row : res)
     {
       vector<MultiBase *> rowResult;
@@ -239,7 +228,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
       rows.push_back(rowResult);
     }
     // remove query statement
-    DatabaseInterface::instance->mDBWork->exec("DEALLOCATE PREPARE query");
+    mDBWork->exec("DEALLOCATE PREPARE query");
     return;
   }
   catch (pqxx::sql_error const &e)
@@ -302,27 +291,27 @@ bool DatabaseInterface::executeUpdate(const string &update)
 //========================================================================+
 bool DatabaseInterface::commitUpdate(bool commit)
 {
-  if (!DatabaseInterface::instance)
-    throw runtime_error(
-        "DatabaseInterface is uninitialized! You either forgotten to call "
-        "DatabaseInterface.connect() function or ignored its result.");
+  // if (!DatabaseInterface::instance)
+  //   throw runtime_error(
+  //       "DatabaseInterface is uninitialized! You either forgotten to call "
+  //       "DatabaseInterface.connect() function or ignored its result.");
 
-  lock_guard<recursive_mutex> dbLock(DatabaseInterface::instance->mMutex);
+  lock_guard<recursive_mutex> dbLock(mMutex);
 
-  if (!DatabaseInterface::isConnected())
+  if (!isConnected())
   {
     return false;
   }
 
-  if (DatabaseInterface::instance->mDBWork)
+  if (mDBWork)
   {
     if (commit)
     {
-      DatabaseInterface::instance->mDBWork->exec("commit;");
+      mDBWork->exec("commit;");
     }
     else
     {
-      DatabaseInterface::instance->mDBWork->abort();
+      mDBWork->abort();
     }
   }
   else
