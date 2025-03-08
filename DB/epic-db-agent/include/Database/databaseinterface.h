@@ -14,7 +14,7 @@ using namespace std;
 class DatabaseInterface
 {
  private:
-  static DatabaseInterface *instance;
+  // static DatabaseInterface *instance;
 
   string mUser, mPassword, mConnString, mHost, mPort;
 
@@ -24,43 +24,37 @@ class DatabaseInterface
   bool reconnect();
   bool close();
 
-  static bool mUnavailable;
-
-  static std::recursive_mutex mMutex;
-
-  static EpicLogger &logger;
+  EpicLogger &logger = Singleton<EpicLogger>::instance();
+  bool mUnavailable;
+  std::recursive_mutex mMutex;
 
  public:
-  DatabaseInterface(const string &user, const string &password,
-                    const string &connString, const string &host,
-                    const string &port);
+  DatabaseInterface();
   ~DatabaseInterface();
 
+  bool Init(const string &user, const string &password,
+            const string &connString, const string &host, const string &port);
   bool connect();
 
-  static bool isConnected();
-  static bool isConnected(string &message);
+  bool isConnected();
+  bool isConnected(string &message);
 
-  static void setUnavailable(bool unavailable)
-  {
-    DatabaseInterface::mUnavailable = unavailable;
-  };
-  static bool isUnavailable() { return mUnavailable; };
+  void setUnavailable(bool unavailable) { mUnavailable = unavailable; };
+  bool isUnavailable() { return mUnavailable; };
 
-  static void executeQuery(const string &query, bool &status, string &message,
-                           vector<vector<MultiBase *>> &rows);
-  static void executeQuery(const string &query, bool &status,
-                           vector<vector<MultiBase *>> &rows);
-  static void executeQuery(const string &query,
-                           vector<vector<MultiBase *>> &rows);
+  void executeQuery(const string &query, bool &status, string &message,
+                    vector<vector<MultiBase *>> &rows);
+  void executeQuery(const string &query, bool &status,
+                    vector<vector<MultiBase *>> &rows);
+  void executeQuery(const string &query, vector<vector<MultiBase *>> &rows);
 
-  static void clearQueryResult(vector<vector<MultiBase *>> &result);
+  void clearQueryResult(vector<vector<MultiBase *>> &result);
 
-  static bool executeUpdate(const string &update, string &message);
-  static bool executeUpdate(const string &update);
+  bool executeUpdate(const string &update, string &message);
+  bool executeUpdate(const string &update);
 
-  static bool commitUpdate(bool commit = true);
-  static std::recursive_mutex *getMutex() { return &mMutex; };
+  bool commitUpdate(bool commit = true);
+  std::recursive_mutex *getMutex() { return &mMutex; };
 };
 
 #endif
