@@ -4,7 +4,7 @@
 
 #include <vector>
 
-using namespace std;
+using DatabaseIF = Singleton<DatabaseInterface>;
 
 std::atomic<int> queryTime;
 std::atomic<int> queryCount;
@@ -73,10 +73,8 @@ void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
   {
     std::chrono::high_resolution_clock::time_point t1 =
         std::chrono::high_resolution_clock::now();
-    DatabaseInterface::executeQuery(queryString, successful, errorMessage,
-                                    rows);
-    // rows = DatabaseInterface::executeQuery(queryString, successful,
-    // errorMessage);
+    DatabaseIF::instance().executeQuery(queryString, successful, errorMessage,
+                                        rows);
     std::chrono::high_resolution_clock::time_point t2 =
         std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds ms =
@@ -86,11 +84,11 @@ void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
     nTrials++;
     if ((!successful) && (nTrials <= maxRetries))
     {
-      EpicLogger::getInstance().logError(errorMessage +
-                                         ", trying to reconnect");
-      connected = DatabaseInterface::isConnected();
+      Singleton<EpicLogger>::instance().logError(errorMessage +
+                                                 ", trying to reconnect");
+      connected = DatabaseIF::instance().isConnected();
       if (!connected)
-        EpicLogger::getInstance().logError("reconnect failed");
+        Singleton<EpicLogger>::instance().logError("reconnect failed");
     }
   }
   if (!successful)
@@ -98,25 +96,19 @@ void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
     raiseError(errorMessage);
     rows.clear();
   }
-  // if (successful) {
-  // 	return rows;
-  // } else {
-  // 	raiseError(errorMessage);
-  // 	return vector<vector<MultiBase*>>();
-  // }
 }
 
 //========================================================================+
 void raiseError(string errorMessage)
 {
   // std::cout << errorMessage << std::endl;
-  EpicLogger::getInstance().logError(errorMessage);
+  Singleton<EpicLogger>::instance().logError(errorMessage);
 }
 
 //========================================================================+
 void finishQuery(vector<vector<MultiBase *>> rows)
 {
-  DatabaseInterface::clearQueryResult(rows);
+  DatabaseIF::instance().clearQueryResult(rows);
 }
 
 //========================================================================+
@@ -154,7 +146,7 @@ bool doGenericUpdate(string insertString)
   bool successful;
   string errorMessage;
 
-  successful = DatabaseInterface::executeUpdate(insertString, errorMessage);
+  successful = DatabaseIF::instance().executeUpdate(insertString, errorMessage);
 
   if (!successful)
   {
@@ -165,10 +157,10 @@ bool doGenericUpdate(string insertString)
 }
 
 //========================================================================+
-void commitUpdate() { DatabaseInterface::commitUpdate(true); }
+void commitUpdate() { DatabaseIF::instance().commitUpdate(true); }
 
 //========================================================================+
-void rollbackUpdate() { DatabaseInterface::commitUpdate(false); }
+void rollbackUpdate() { DatabaseIF::instance().commitUpdate(false); }
 
 //========================================================================+
 bool SimpleInsert::doInsert()

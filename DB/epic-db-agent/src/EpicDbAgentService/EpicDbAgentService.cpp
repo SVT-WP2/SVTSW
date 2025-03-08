@@ -1,5 +1,5 @@
 /*!
- * @file EpicDbAgent.cpp
+ * @file EpicDbAgentService.cpp
  * @author Y. Corrales <ycorrale@cern.ch>
  * @data Mar-2025
  * @brief Db agent
@@ -14,20 +14,72 @@
 
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <string>
 
-EpicDbAgentService::EpicDbAgentService()
+bool EpicDbAgentService::ConfigureService(bool stop_eof, bool do_conf_dump)
 {
-  m_Consumer = new EpicDbAgentConsumer();
-}
-EpicDbAgentService::~EpicDbAgentService() { delete m_Consumer; }
+  /*
+   * Set configuration properties
+   */
+  m_globalConf->set("metadata.broker.list", m_brokerName, m_errStr);
 
-bool EpicDbAgentService::ConfigureDbAgentConsumer(bool do_conf_dump)
-{
-  return m_Consumer->Configure(do_conf_dump);
+  if (!m_debug.empty())
+  {
+    if (m_globalConf->set("debug", m_debug, m_errStr) !=
+        RdKafka::Conf::CONF_OK)
+    {
+      logger.logError(m_errStr);
+      return false;
+    }
+  }
+
+  EpicDbAgentEventCb ex_event_cb;
+  m_globalConf->set("event_cb", &ex_event_cb, m_errStr);
+
+  if (do_conf_dump)
+  {
+    int pass;
+
+    for (pass = 0; pass < 3; pass++)
+    {
+      std::list<std::string> *dump;
+      switch (pass)
+      {
+      case 0:
+        dump = m_globalConf->dump();
+        logger.logInfo("# Global config", EpicLogger::Mode::STANDARD);
+        break;
+      case 1:
+        dump = m_cTopicConf->dump();
+        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
+        break;
+      case 2:
+        dump = m_cTopicConf->dump();
+        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
+      }
+
+      std::ostringstream ss;
+      for (std::list<std::string>::iterator it = dump->begin();
+           it != dump->end();)
+      {
+        ss << *it << " = ";
+        it++;
+        ss << *it << std::endl;
+        it++;
+      }
+      ss << std::endl;
+      logger.logInfo(ss.str(), EpicLogger::Mode::STANDARD);
+    }
+  }
+
+  m_Consumer = std::shared_ptr<EpicDbAgentConsumer>(new EpicDbAgentConsumer(
+      m_globalConf.get(), m_cTopicConf.get(), stop_eof));
+
+  return true;
 }
 
-void EpicDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
+void EpicDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
 {
   const RdKafka::Headers *headers;
 
@@ -43,8 +95,7 @@ void EpicDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
                    EpicLogger::Mode::STANDARD);
     if (message->key())
     {
-      EpicLogger::getInstance().logInfo("Key: " + *message->key(),
-                                        EpicLogger::Mode::STANDARD);
+      logger.logInfo("Key: " + *message->key(), EpicLogger::Mode::STANDARD);
     }
     headers = message->headers();
     if (headers)

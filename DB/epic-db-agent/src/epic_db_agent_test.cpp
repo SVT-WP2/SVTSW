@@ -1,3 +1,10 @@
+/*!
+ * @file epic_db_agent_test.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Mar-2025
+ * @brief epic_db_agent_test
+ */
+
 #include "Database/databaseinterface.h"
 #include "EpicDb/EpicDbInterface.h"
 #include "EpicUtilities/EpicLogger.h"
@@ -14,13 +21,16 @@
 #include <vector>
 
 std::string version = std::string(VERSION);
-EpicLogger &logger = EpicLogger::getInstance();
+
+EpicLogger &logger = Singleton<EpicLogger>::instance();
 
 std::string psqlhost = "dbod-svt-sw-pgdb.cern.ch";
 std::string psqlport = "6600";
 std::string psqluser = "admin";
 std::string psqlpass = "svt-mosaix";
 std::string psqldb = "svt_sw_db_test";
+
+using DatabaseIF = Singleton<DatabaseInterface>;
 
 void test_getVersions();
 void test_addEnumValues();
@@ -31,10 +41,13 @@ void test_getWafers();
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,
                  std::string &host, std::string &port)
 {
-  DatabaseInterface *dbInterface =
-      new DatabaseInterface(user, pass, conn, host, port);
+  DatabaseInterface &dbInterface = DatabaseIF::instance();
+  if (!dbInterface.Init(user, pass, conn, host, port))
+  {
+    return false;
+  }
 
-  if (dbInterface->connect())
+  if (dbInterface.connect())
   {
     logger.logInfo("Successfully connected to " + conn + ".");
     return true;
@@ -54,33 +67,38 @@ int main()
                      version,
                  EpicLogger::Mode::STANDARD);
 
+  DatabaseInterface &dbInterface = DatabaseIF::instance();
+
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
   // problems
-  if (!DatabaseInterface::isConnected())
+  if (!dbInterface.isConnected())
   {
     if (!connectToDB(psqluser, psqlpass, psqldb, psqlhost, psqlport))
     {
       logger.logError("Cannot connect to DB");
+      return EXIT_FAILURE;
+    }
+    else
+    {
+      logger.logInfo("Databaseinterface is connected");
     }
   }
-
-  // check if DB is connected, otherwise continue in reduced mode.
-  // DIM channels must be explicitly enabled to run in reduced mode (set noDB to
-  // true in constructor)
-  if (!DatabaseInterface::isConnected())
+  try
   {
-    logger.logError("WARNING: Databaseinterface is not connected!");
-    DatabaseInterface::setUnavailable(true);
+    test_getVersions();
+    test_addEnumValues();
+    // test_inserWafer();
+    test_getWafers();
   }
-  else
+  catch (const std::exception &e)
   {
-    logger.logInfo("DatabaseInterface is connected");
+    std::cout << std::endl
+              << "### Caught exception in the main thread ###" << std::endl
+              << std::endl;
+    std::cout << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
-  test_getVersions();
-  test_addEnumValues();
-  // test_inserWafer();
-  test_getWafers();
 
   return EXIT_SUCCESS;
 }

@@ -1,18 +1,27 @@
+/*!
+ * @file epic_db_agent.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Mar-2025
+ * @brief epic_db_agent executable
+ */
+
 #include "Database/databaseinterface.h"
 #include "EpicDbAgentService/EpicDbAgentService.h"
 #include "EpicUtilities/EpicLogger.h"
 
 #include "version.h"
 
-#include <cstdio>
+// #include <cstdio>
+// #include <cstdlib>
+// #include <exception>
 #include <cstdlib>
-#include <exception>
 #include <iostream>
-#include <string>
+// #include <string>
 #include <thread>
 
 std::string version = std::string(VERSION);
-EpicLogger &logger = EpicLogger::getInstance();
+
+EpicLogger &logger = Singleton<EpicLogger>::instance();
 
 std::string psqlhost = "dbod-svt-sw-pgdb.cern.ch";
 std::string psqlport = "6600";
@@ -20,13 +29,19 @@ std::string psqluser = "admin";
 std::string psqlpass = "svt-mosaix";
 std::string psqldb = "svt_sw_db_test";
 
+using DatabaseIF = Singleton<DatabaseInterface>;
+
+//========================================================================+
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,
                  std::string &host, std::string &port)
 {
-  DatabaseInterface *dbInterface =
-      new DatabaseInterface(user, pass, conn, host, port);
+  DatabaseInterface &dbInterface = DatabaseIF::instance();
+  if (!dbInterface.Init(user, pass, conn, host, port))
+  {
+    return false;
+  }
 
-  if (dbInterface->connect())
+  if (dbInterface.connect())
   {
     logger.logInfo("Successfully connected to " + conn + ".");
     return true;
@@ -39,39 +54,33 @@ bool connectToDB(std::string &user, std::string &pass, std::string &conn,
   return false;
 }
 
+//========================================================================+
 int main()
 {
   logger.logInfo("********************** Epic Db Agent, version:" + version,
                  EpicLogger::Mode::STANDARD);
 
+  DatabaseInterface &dbInterface = DatabaseIF::instance();
+
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
   // problems
-  if (!DatabaseInterface::isConnected())
+  if (!dbInterface.isConnected())
   {
     if (!connectToDB(psqluser, psqlpass, psqldb, psqlhost, psqlport))
     {
       logger.logError("Cannot connect to DB");
+      return EXIT_FAILURE;
     }
-  }
-
-  // check if DB is connected, otherwise continue in reduced mode.
-  // DIM channels must be explicitly enabled to run in reduced mode
-  // (set noDB to true in constructor)
-  if (!DatabaseInterface::isConnected())
-  {
-    logger.logError("WARNING: Databaseinterface is not connected");
-    DatabaseInterface::setUnavailable(true);
-    return EXIT_FAILURE;
-  }
-  else
-  {
-    logger.logInfo("Databaseinterface is connected");
+    else
+    {
+      logger.logInfo("Databaseinterface is connected");
+    }
   }
   try
   {
     EpicDbAgentService &_dbAgent = EpicDbAgentService::getInstance();
-    if (!_dbAgent.ConfigureDbAgentConsumer(false))
+    if (!_dbAgent.ConfigureService(true, false))
     {
       return EXIT_FAILURE;
     }
