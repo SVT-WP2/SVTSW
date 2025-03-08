@@ -1,6 +1,15 @@
 #ifndef EPIC_LOGGER_H
 #define EPIC_LOGGER_H
 
+/*!
+ * @file EpicLogger.h
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Mar-2025
+ * @brief Epic db-agent logger
+ */
+
+#include "EpicUtilities.h"
+
 #include <fstream>
 #include <mutex>
 #include <string>
@@ -17,7 +26,6 @@ class EpicLogger
  public:
   EpicLogger();
   ~EpicLogger();
-  static EpicLogger &getInstance();
 
   enum Mode
   {
