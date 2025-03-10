@@ -1,0 +1,24 @@
+[Unit]
+Description=Epic database agent
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=simple
+User=root
+
+EnvironmentFile=/data/ycorrale/SVTSW/DB/epic-db-agent/EpicDbAgent.conf
+WorkingDirectory=/data/ycorrale/SVTSW/DB/epic-db-agent/
+ExecStart=/data/ycorrale/SVTSW/DB/epic-db-agent/EpicDbAgent.sh
+
+#StandardOutput=null
+#StandardError=null
+#StandardOutput=syslog
+#StandardError=inherit
+Restart=always
+TimeoutStartSec=2
+RestartSec=2
+LimitMEMLock=infinity
+
+

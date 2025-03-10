@@ -65,8 +65,9 @@ bool EpicDbAgentConsumer::CreateConsumer()
    * Start consumer for topic+partition at start offset
    */
   // RdKafka::ErrorCode resp = consumer->start(topic, partition, start_offset);
-  RdKafka::ErrorCode resp = m_consumer->start(m_topic.get(), m_partition,
-                                              RdKafka::Topic::OFFSET_BEGINNING);
+  RdKafka::ErrorCode resp =
+      m_consumer->start(m_topic.get(), m_partition, RdKafka::Topic::OFFSET_END);
+  // m_consumer->start(m_topic.get(), m_partition, 94);
   // consumer->start(topic, partition, RdKafka::Topic::OFFSET_END);
   if (resp != RdKafka::ERR_NO_ERROR)
   {
