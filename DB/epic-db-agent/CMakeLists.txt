@@ -44,6 +44,7 @@ file(GLOB SOURCES_DB
   "src/EpicDb/sqlmapi.cpp"
   "src/EpicDb/EpicDbInterface.cpp"
   "src/EpicDbAgentService/EpicDbAgentConsumer.cpp"
+  "src/EpicDbAgentService/EpicDbAgentProducer.cpp"
   "src/EpicDbAgentService/EpicDbAgentService.cpp"
 )
 

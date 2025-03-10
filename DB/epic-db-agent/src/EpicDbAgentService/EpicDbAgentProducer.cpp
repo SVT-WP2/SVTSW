@@ -8,163 +8,83 @@
 #include "EpicDbAgentService/EpicDbAgentProducer.h"
 
 #include <librdkafka/rdkafkacpp.h>
-#include <atomic>
-#include <functional>
-#include <thread>
-
-std::atomic<int> producer_run = 1;
+#include <memory>
 
 //========================================================================+
-bool EpicDbAgentProducer::Configure(bool do_conf_dump)
+EpicDbAgentProducer::EpicDbAgentProducer(RdKafka::Conf *globalConf,
+                                         RdKafka::Conf *topicConf)
+  : m_globalConf(globalConf)
+  , m_topicConf(topicConf)
 {
-  /*
-   * Set configuration properties
-   */
-  m_globalConf->set("metadata.broker.list", m_brokerName, m_errStr);
-
-  if (!m_debug.empty())
-  {
-    if (m_globalConf->set("debug", m_debug, m_errStr) !=
-        RdKafka::Conf::CONF_OK)
-    {
-      logger.logError(m_errStr);
-      return false;
-    }
-  }
-
-  //========================================================================+
-  EpicDbAgentEventCb ex_event_cb;
-  m_globalConf->set("event_cb", &ex_event_cb, m_errStr);
-
-  if (do_conf_dump)
-  {
-    int pass;
-
-    for (pass = 0; pass < 2; pass++)
-    {
-      std::list<std::string> *dump;
-      if (pass == 0)
-      {
-        dump = m_globalConf->dump();
-        logger.logInfo("# Global config", EpicLogger::Mode::STANDARD);
-      }
-      else
-      {
-        dump = m_topicConf->dump();
-        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
-      }
-
-      std::ostringstream ss;
-      for (std::list<std::string>::iterator it = dump->begin();
-           it != dump->end();)
-      {
-        ss << *it << " = ";
-        it++;
-        ss << *it << std::endl;
-        it++;
-      }
-      ss << std::endl;
-      logger.logInfo(ss.str(), EpicLogger::Mode::STANDARD);
-    }
-  }
-
-  return CreateConsumer();
+  CreateProducer();
 }
 
 //========================================================================+
-bool EpicDbAgentConsumer::CreateConsumer()
+bool EpicDbAgentProducer::CreateProducer()
 {
-  //! stop consumer
-  consumer_run = 0;
+  EpicDbAgentDeliveryReportCb dr_cb;
 
-  //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
-  //! the consumer reaches the end of a partition.
-  m_globalConf->set("enable.partition.eof", "true", m_errStr);
+  /* Set delivery report callback */
+  m_globalConf->set("dr_cb", &dr_cb, m_errStr);
+
+  m_globalConf->set("default_topic_conf", m_topicConf.get(), m_errStr);
 
   /*
-   * Create consumer using accumulated global configuration.
+   * Create producer using accumulated global configuration.
    */
-  m_consumer = RdKafka::Consumer::create(m_globalConf, m_errStr);
-  if (!m_consumer)
+  m_producer = std::shared_ptr<RdKafka::Producer>(
+      RdKafka::Producer::create(m_globalConf.get(), m_errStr));
+  if (!m_producer)
   {
-    logger.logError("Failed to create consumer: " + m_errStr);
+    logger.logError("Failed to create producer: " + m_errStr);
     return false;
   }
 
-  logger.logInfo("% Created consumer " + m_consumer->name(),
+  logger.logInfo("% Created producer " + m_producer->name(),
                  EpicLogger::Mode::STANDARD);
 
-  /*
-   * Create topic handle.
-   */
-  auto &topic_name = topicNames[EpicDbAgentTopicEnum::Request];
-  m_topic = RdKafka::Topic::create(m_consumer, std::string(topic_name),
-                                   m_topicConf, m_errStr);
-  if (!m_topic)
-  {
-    logger.logError("Failed to create topic: " + m_errStr);
-    return false;
-  }
-
-  m_partition = 0;
-  // int start_offset = 0;
-  /*
-   * Start consumer for topic+partition at start offset
-   */
-  // RdKafka::ErrorCode resp = consumer->start(topic, partition, start_offset);
-  RdKafka::ErrorCode resp =
-      m_consumer->start(m_topic, m_partition, RdKafka::Topic::OFFSET_BEGINNING);
-  // consumer->start(topic, partition, RdKafka::Topic::OFFSET_END);
-  if (resp != RdKafka::ERR_NO_ERROR)
-  {
-    logger.logError("Failed to start consumer: " + RdKafka::err2str(resp));
-    return false;
-  }
-
-  consumer_run = 1;
-  logger.logInfo("Starting DbAgetnConsumer " + m_consumer->name() +
-                     " in toppic " + m_topic->name(),
-                 EpicLogger::Mode::STANDARD);
-  std::thread consumerThread(std::bind(&EpicDbAgentConsumer::Start, this));
-  if (consumerThread.joinable())
-  {
-    consumerThread.join();
-  }
   return true;
 }
 
 //========================================================================+
-void EpicDbAgentConsumer::Start()
+bool EpicDbAgentProducer::Push(EpicDbAgentMessage &message)
 {
-  EpicDbAgentConsumeCb ex_consume_cb;
-
-  bool cb = true;
-  while (isRunning())
+  RdKafka::Headers *headers = RdKafka::Headers::create();
+  for (const auto &[hdr_name, hdr_value] : message.headers.items())
   {
-    m_consumer->consume_callback(m_topic, m_partition, 1000, &ex_consume_cb,
-                                 &cb);
-    if (!cb)
-    {
-      // std::this_thread::sleep_for(std::chrono::milliseconds(kKafkaWaitTime_ms));
-      consumer_run = 0;
-    }
-    m_consumer->poll(0);
+    headers->add(hdr_name, hdr_value);
   }
   /*
-   * Stop consumer
+   * Produce message
    */
-  this->Stop();
-}
+  size_t payload_size = message.payload.dump().size();
+  RdKafka::ErrorCode resp = m_producer->produce(
+      std::string(topicNames[EpicDbAgentTopicEnum::RequestReply]), m_partition,
+      RdKafka::Producer::RK_MSG_COPY /*Copy payload*/,
+      /* Value */
+      const_cast<char *>(message.payload.dump().c_str()), payload_size,
+      /* Key */
+      NULL, 0,
+      /* Timestamp (defaults to now) */
+      0,
+      /* Message headers, if any */
+      headers,
+      /* Per-message opaque value passed to
+       * delivery report */
+      NULL);
+  if (resp != RdKafka::ERR_NO_ERROR)
+  {
+    logger.logError("% Produce failed: " + RdKafka::err2str(resp));
+    delete headers;
+  }
+  else
+  {
+    logger.logInfo("% Produced message (" + std::to_string(payload_size) +
+                       " bytes)",
+                   EpicLogger::Mode::STANDARD);
+  }
 
-//========================================================================+
-void EpicDbAgentConsumer::Stop()
-{
-  EpicLogger::getInstance().logInfo("Stopping DbAgetnConsumer " +
-                                        m_consumer->name() + " in toppic " +
-                                        m_topic->name(),
-                                    EpicLogger::Mode::STANDARD);
-  m_consumer->stop(m_topic, m_partition);
-  m_consumer->poll(1000);
-  delete m_topic;
-  delete m_consumer;
+  m_producer->poll(0);
+
+  return true;
 }

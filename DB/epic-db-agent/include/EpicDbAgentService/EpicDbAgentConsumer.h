@@ -27,19 +27,19 @@ class EpicDbAgentConsumeCb : public RdKafka::ConsumeCb
  public:
   void consume_cb(RdKafka::Message &msg, void *opaque)
   {
-    EpicDbAgentService::getInstance().ProcessMsgCb(&msg, opaque);
+    Singleton<EpicDbAgentService>::instance().ProcessMsgCb(&msg, opaque);
   }
 };
 
 class EpicDbAgentConsumer
 {
  public:
-  enum STATES : uint8_t
-  {
-    START = 0,
-    SUSPEND,
-    STOP
-  };
+  // enum STATES : uint8_t
+  // {
+  //   START = 0,
+  //   SUSPEND,
+  //   STOP
+  // };
 
   EpicDbAgentConsumer(RdKafka::Conf *globalConf, RdKafka::Conf *topicConf,
                       bool stop_eof = false);
@@ -54,12 +54,11 @@ class EpicDbAgentConsumer
 
   void SetIsRunning(const bool running) { m_running = running; }
   void SetSuspended(const bool suspended) { m_suspended = suspended; }
+  bool Start();
+  bool Stop(const bool suspend = false);
 
  private:
   EpicLogger &logger = Singleton<EpicLogger>::instance();
-
-  bool Start();
-  bool Stop(const bool suspend = false);
   void Pull();
 
   std::shared_ptr<RdKafka::Conf> m_globalConf;
