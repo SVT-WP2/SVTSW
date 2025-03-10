@@ -8,6 +8,7 @@
 #include "EpicDbAgentService/EpicDbAgentService.h"
 #include "EpicDb/EpicDbInterface.h"
 #include "EpicDbAgentService/EpicDbAgentConsumer.h"
+#include "EpicDbAgentService/EpicDbAgentProducer.h"
 
 #include "EpicUtilities/EpicLogger.h"
 #include "librdkafka/rdkafkacpp.h"
@@ -17,6 +18,7 @@
 #include <memory>
 #include <string>
 
+//========================================================================+
 bool EpicDbAgentService::ConfigureService(bool stop_eof, bool do_conf_dump)
 {
   /*
@@ -73,12 +75,22 @@ bool EpicDbAgentService::ConfigureService(bool stop_eof, bool do_conf_dump)
     }
   }
 
+  m_Producer = std::shared_ptr<EpicDbAgentProducer>(
+      new EpicDbAgentProducer(m_globalConf.get(), m_cTopicConf.get()));
+
   m_Consumer = std::shared_ptr<EpicDbAgentConsumer>(new EpicDbAgentConsumer(
       m_globalConf.get(), m_cTopicConf.get(), stop_eof));
 
   return true;
 }
 
+//========================================================================+
+void EpicDbAgentService::StopConsumer(const bool suspended)
+{
+  m_Consumer->Stop(suspended);
+}
+
+//========================================================================+
 void EpicDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
 {
   const RdKafka::Headers *headers;
@@ -155,11 +167,9 @@ void EpicDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
   }
 }
 
+//========================================================================+
 void EpicDbAgentService::parseMsg(EpicDbAgentMessage &msg)
 {
-  logger.logInfo(msg.headers.dump(1));
-  logger.logInfo(msg.payload.dump(1));
-
   nlohmann::json replyHeaders = nlohmann::json::object();
   replyHeaders["kafka_correlationId"] = msg.headers["kafka_correlationId"];
 
@@ -199,10 +209,10 @@ void EpicDbAgentService::parseMsg(EpicDbAgentMessage &msg)
     {
       logger.logError("Error getting Wafer from DB. " + std::string(e.what()));
     }
-    logger.logInfo(replyHeaders.dump(1));
-    logger.logInfo(replyData.dump(1));
     EpicDbAgentMessage replyMsg;
     replyMsg.headers = replyHeaders;
     replyMsg.payload = replyData;
+
+    m_Producer->Push(replyMsg);
   }
 }
