@@ -79,8 +79,8 @@ int main()
   }
   try
   {
-    EpicDbAgentService &_dbAgent = EpicDbAgentService::getInstance();
-    if (!_dbAgent.ConfigureService(true, false))
+    EpicDbAgentService &_dbAgent = Singleton<EpicDbAgentService>::instance();
+    if (!_dbAgent.ConfigureService(false, false))
     {
       return EXIT_FAILURE;
     }

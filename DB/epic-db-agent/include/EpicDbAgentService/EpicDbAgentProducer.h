@@ -12,11 +12,7 @@
 #include "EpicUtilities/EpicLogger.h"
 
 #include <librdkafka/rdkafkacpp.h>
-#include <atomic>
-#include <sstream>
 #include <string>
-
-extern std::atomic<int> producer_run;
 
 class EpicDbAgentDeliveryReportCb : public RdKafka::DeliveryReportCb
 {
@@ -39,41 +35,39 @@ class EpicDbAgentDeliveryReportCb : public RdKafka::DeliveryReportCb
       status_name = "Unknown?";
       break;
     }
-    EpicLogger::getInstance().logInfo(
+    Singleton<EpicLogger>::instance().logInfo(
         "Message delivery for (" + std::to_string(message.len()) +
         " bytes): " + status_name + ": " + message.errstr());
     if (message.key())
-      EpicLogger::getInstance().logInfo("Key: " + *(message.key()));
+      Singleton<EpicLogger>::instance().logInfo("Key: " + *(message.key()));
   }
 };
 
 class EpicDbAgentProducer
 {
  public:
-  EpicDbAgentProducer() = default;
-  ~EpicDbAgentProducer() = default;
+  EpicDbAgentProducer(RdKafka::Conf *globalConf, RdKafka::Conf *topicConf);
+  ~EpicDbAgentProducer()
+  {
+    while (m_producer->outq_len() > 0)
+    {
+      logger.logInfo("Waiting for " + std::to_string(m_producer->outq_len()));
+      m_producer->poll(1000);
+    }
+  };
 
-  bool Configure(bool do_conf_dump = true);
-  bool isRunning() { return consumer_run; }
+  bool CreateProducer();
+  bool Push(EpicDbAgentMessage &message);
 
  private:
-  EpicLogger &logger = EpicLogger::getInstance();
+  EpicLogger &logger = Singleton<EpicLogger>::instance();
 
-  RdKafka::Consumer *m_consumer = nullptr;
-  RdKafka::Topic *m_topic = nullptr;
-  RdKafka::Conf *m_globalConf =
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  RdKafka::Conf *m_topicConf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-
+  std::shared_ptr<RdKafka::Conf> m_globalConf;
+  std::shared_ptr<RdKafka::Conf> m_topicConf;
+  std::shared_ptr<RdKafka::Producer> m_producer;
+  std::shared_ptr<RdKafka::Topic> m_topic;
   int m_partition = 0;
-
-  std::string m_brokerName = {"localhost:9092"};
   std::string m_errStr;
-  std::string m_debug;
-
-  bool CreateConsumer();
-  void Start();
-  void Stop();
 };
 
 #endif  // !SVTDB_AGENT_H
