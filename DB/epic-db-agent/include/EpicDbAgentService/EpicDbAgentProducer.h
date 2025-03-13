@@ -46,7 +46,7 @@ class EpicDbAgentDeliveryReportCb : public RdKafka::DeliveryReportCb
 class EpicDbAgentProducer
 {
  public:
-  EpicDbAgentProducer(RdKafka::Conf *globalConf, RdKafka::Conf *topicConf);
+  EpicDbAgentProducer(const std::string &broker);
   ~EpicDbAgentProducer()
   {
     while (m_producer->outq_len() > 0)
@@ -57,17 +57,20 @@ class EpicDbAgentProducer
   };
 
   bool CreateProducer();
+
   bool Push(EpicDbAgentMessage &message);
 
  private:
   EpicLogger &logger = Singleton<EpicLogger>::instance();
 
-  std::shared_ptr<RdKafka::Conf> m_globalConf;
-  std::shared_ptr<RdKafka::Conf> m_topicConf;
   std::shared_ptr<RdKafka::Producer> m_producer;
   std::shared_ptr<RdKafka::Topic> m_topic;
   int m_partition = 0;
+
+  std::string m_broker;
   std::string m_errStr;
+  std::string m_debug;
+  bool m_dumpConfig = false;
 };
 
 #endif  // !SVTDB_AGENT_H
