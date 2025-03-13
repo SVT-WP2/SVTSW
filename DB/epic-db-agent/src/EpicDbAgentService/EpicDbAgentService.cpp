@@ -19,67 +19,15 @@
 #include <string>
 
 //========================================================================+
-bool EpicDbAgentService::ConfigureService(bool stop_eof, bool do_conf_dump)
+EpicDbAgentService::~EpicDbAgentService() { RdKafka::wait_destroyed(5000); }
+
+//========================================================================+
+bool EpicDbAgentService::ConfigureService(bool stop_eof)
 {
-  /*
-   * Set configuration properties
-   */
-  m_globalConf->set("metadata.broker.list", m_brokerName, m_errStr);
-
-  if (!m_debug.empty())
-  {
-    if (m_globalConf->set("debug", m_debug, m_errStr) !=
-        RdKafka::Conf::CONF_OK)
-    {
-      logger.logError(m_errStr);
-      return false;
-    }
-  }
-
-  EpicDbAgentEventCb ex_event_cb;
-  m_globalConf->set("event_cb", &ex_event_cb, m_errStr);
-
-  if (do_conf_dump)
-  {
-    int pass;
-
-    for (pass = 0; pass < 3; pass++)
-    {
-      std::list<std::string> *dump;
-      switch (pass)
-      {
-      case 0:
-        dump = m_globalConf->dump();
-        logger.logInfo("# Global config", EpicLogger::Mode::STANDARD);
-        break;
-      case 1:
-        dump = m_cTopicConf->dump();
-        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
-        break;
-      case 2:
-        dump = m_cTopicConf->dump();
-        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
-      }
-
-      std::ostringstream ss;
-      for (std::list<std::string>::iterator it = dump->begin();
-           it != dump->end();)
-      {
-        ss << *it << " = ";
-        it++;
-        ss << *it << std::endl;
-        it++;
-      }
-      ss << std::endl;
-      logger.logInfo(ss.str(), EpicLogger::Mode::STANDARD);
-    }
-  }
-
+  m_Consumer = std::shared_ptr<EpicDbAgentConsumer>(
+      new EpicDbAgentConsumer(m_brokerName, stop_eof));
   m_Producer = std::shared_ptr<EpicDbAgentProducer>(
-      new EpicDbAgentProducer(m_globalConf.get(), m_cTopicConf.get()));
-
-  m_Consumer = std::shared_ptr<EpicDbAgentConsumer>(new EpicDbAgentConsumer(
-      m_globalConf.get(), m_cTopicConf.get(), stop_eof));
+      new EpicDbAgentProducer(m_brokerName));
 
   return true;
 }
@@ -88,6 +36,12 @@ bool EpicDbAgentService::ConfigureService(bool stop_eof, bool do_conf_dump)
 void EpicDbAgentService::StopConsumer(const bool suspended)
 {
   m_Consumer->Stop(suspended);
+}
+
+//========================================================================+
+bool EpicDbAgentService::GetIsConsRunnning()
+{
+  return m_Consumer->GetIsRunning();
 }
 
 //========================================================================+
@@ -172,15 +126,18 @@ void EpicDbAgentService::parseMsg(EpicDbAgentMessage &msg)
 {
   nlohmann::json replyHeaders = nlohmann::json::object();
   replyHeaders["kafka_correlationId"] = msg.headers["kafka_correlationId"];
-
-  nlohmann::ordered_json replyData;
-  replyData["type"] = "GetAllWafersReply";
+  replyHeaders["kafka_replyPartition"] = msg.headers["kafka_replyPartition"];
+  replyHeaders["kafka_nest-is-disposed"] = std::string("00");
 
   auto type = msg.payload["type"].get<std::string>();
+
+  nlohmann::ordered_json replyData;
+  replyData["type"] = msg.payload["type"];
+
   if (type.empty())
   {
     logger.logError("Request have not type information. Skipping");
-    return;
+    replyData["status"] = msgStatus[EpicDbAgentMessageStatus::NotFound];
   }
   else if (!strcmp(type.c_str(), "GetAllWafers"))
   {
@@ -188,7 +145,7 @@ void EpicDbAgentService::parseMsg(EpicDbAgentMessage &msg)
     {
       std::vector<EpicDbInterface::dbWaferRecords> wafers;
       EpicDbInterface::getAllWafers(wafers);
-      replyData["data"] = nlohmann::json::array();
+      nlohmann::ordered_json items = nlohmann::json::array();
 
       for (const auto &wafer : wafers)
       {
@@ -197,22 +154,40 @@ void EpicDbAgentService::parseMsg(EpicDbAgentMessage &msg)
         json_wafer["serialNumber"] = wafer.serialNumber;
         json_wafer["batchNumber"] = wafer.batchNumber;
         json_wafer["engineeringRun"] = wafer.engineeringRun;
+        json_wafer["foundry"] = wafer.foundry;
         json_wafer["technology"] = wafer.technology;
         json_wafer["thinningDate"] = wafer.thinningDate;
         json_wafer["dicingDate"] = wafer.dicingDate;
         json_wafer["waferType"] = wafer.waferType;
 
-        replyData["data"].push_back(json_wafer);
+        items.push_back(json_wafer);
       }
+      replyData["data"]["items"] = items;
+      replyData["status"] = msgStatus[EpicDbAgentMessageStatus::Success];
     }
     catch (const std::exception &e)
     {
       logger.logError("Error getting Wafer from DB. " + std::string(e.what()));
     }
-    EpicDbAgentMessage replyMsg;
-    replyMsg.headers = replyHeaders;
-    replyMsg.payload = replyData;
-
-    m_Producer->Push(replyMsg);
   }
+  else
+  {
+    logger.logError("");
+    replyData["status"] = msgStatus[EpicDbAgentMessageStatus::NotFound];
+  }
+  EpicDbAgentMessage replyMsg;
+  replyMsg.headers = replyHeaders;
+  replyMsg.payload = replyData;
+
+  if (true)
+  {
+    logger.logInfo("Request messages: \n" + std::string("Header = ") +
+                   msg.headers.dump() + std::string("\nPayload = ") +
+                   msg.payload.dump());
+    logger.logInfo("Reply messages: \n" + std::string("Header = ") +
+                   replyMsg.headers.dump() + std::string("\nPayload = ") +
+                   replyMsg.payload.dump());
+  }
+
+  m_Producer->Push(replyMsg);
 }
