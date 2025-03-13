@@ -13,11 +13,9 @@
 #include <thread>
 
 //========================================================================+
-EpicDbAgentConsumer::EpicDbAgentConsumer(RdKafka::Conf *globalConf,
-                                         RdKafka::Conf *topicConf,
+EpicDbAgentConsumer::EpicDbAgentConsumer(const std::string &broker,
                                          bool stop_eof)
-  : m_globalConf(globalConf)
-  , m_topicConf(topicConf)
+  : m_broker(broker)
   , m_stop_eof(stop_eof)
 {
   CreateConsumer();
@@ -28,6 +26,62 @@ bool EpicDbAgentConsumer::CreateConsumer()
   //! stop consumer
   m_running = 0;
 
+  /*
+   * Set configuration properties
+   */
+  std::shared_ptr<RdKafka::Conf> m_globalConf = std::shared_ptr<RdKafka::Conf>(
+      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
+
+  std::shared_ptr<RdKafka::Conf> m_topicConf = std::shared_ptr<RdKafka::Conf>(
+      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
+
+  m_globalConf->set("metadata.broker.list", m_broker, m_errStr);
+
+  if (!m_debug.empty())
+  {
+    if (m_globalConf->set("debug", m_debug, m_errStr) !=
+        RdKafka::Conf::CONF_OK)
+    {
+      logger.logError(m_errStr);
+      return false;
+    }
+  }
+
+  EpicDbAgentEventCb event_cb;
+  m_globalConf->set("event_cb", &event_cb, m_errStr);
+
+  if (m_dumpConfig)
+  {
+    int pass;
+
+    for (pass = 0; pass < 2; pass++)
+    {
+      std::list<std::string> *dump;
+      switch (pass)
+      {
+      case 0:
+        dump = m_globalConf->dump();
+        logger.logInfo("# Global config", EpicLogger::Mode::STANDARD);
+        break;
+      case 1:
+        dump = m_topicConf->dump();
+        logger.logInfo("# Topic config", EpicLogger::Mode::STANDARD);
+        break;
+      }
+
+      std::ostringstream ss;
+      for (std::list<std::string>::iterator it = dump->begin();
+           it != dump->end();)
+      {
+        ss << *it << " = ";
+        it++;
+        ss << *it << std::endl;
+        it++;
+      }
+      ss << std::endl;
+      logger.logInfo(ss.str(), EpicLogger::Mode::STANDARD);
+    }
+  }
   //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
   //! the consumer reaches the end of a partition.
   m_globalConf->set("enable.partition.eof", (m_stop_eof ? "true" : "false"),
@@ -64,7 +118,8 @@ bool EpicDbAgentConsumer::CreateConsumer()
   /*
    * Start consumer for topic+partition at start offset
    */
-  // RdKafka::ErrorCode resp = consumer->start(topic, partition, start_offset);
+  // RdKafka::ErrorCode resp = consumer->start(topic, partition,
+  // start_offset);
   RdKafka::ErrorCode resp =
       m_consumer->start(m_topic.get(), m_partition, RdKafka::Topic::OFFSET_END);
   // m_consumer->start(m_topic.get(), m_partition, 94);
@@ -113,13 +168,13 @@ bool EpicDbAgentConsumer::Start()
 //========================================================================+
 void EpicDbAgentConsumer::Pull()
 {
-  EpicDbAgentConsumeCb ex_consume_cb;
+  EpicDbAgentConsumeCb consume_cb;
 
   bool cb = true;
   while (GetIsRunning() && !GetSuspended())
   {
-    m_consumer->consume_callback(m_topic.get(), m_partition, 1000,
-                                 &ex_consume_cb, &cb);
+    m_consumer->consume_callback(m_topic.get(), m_partition, 1000, &consume_cb,
+                                 &cb);
     if (!cb)
     {
       Stop(false);
