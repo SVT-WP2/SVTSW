@@ -63,6 +63,8 @@ class EpicDbAgentConsumer
   std::shared_ptr<RdKafka::Topic> m_topic;
   int m_partition = 0;
 
+  static constexpr uint8_t kKafkaWaitTime_ms = 1;
+
   std::string m_broker;
   std::string m_errStr;
   std::string m_debug;
