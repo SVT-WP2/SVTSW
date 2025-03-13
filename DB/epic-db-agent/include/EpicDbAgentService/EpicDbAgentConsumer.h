@@ -40,9 +40,7 @@ class EpicDbAgentConsumer
   //   SUSPEND,
   //   STOP
   // };
-
-  EpicDbAgentConsumer(RdKafka::Conf *globalConf, RdKafka::Conf *topicConf,
-                      bool stop_eof = false);
+  EpicDbAgentConsumer(const std::string &broker, bool stop_eof = false);
   ~EpicDbAgentConsumer() = default;
 
   bool CreateConsumer();
@@ -61,12 +59,14 @@ class EpicDbAgentConsumer
   EpicLogger &logger = Singleton<EpicLogger>::instance();
   void Pull();
 
-  std::shared_ptr<RdKafka::Conf> m_globalConf;
-  std::shared_ptr<RdKafka::Conf> m_topicConf;
   std::shared_ptr<RdKafka::Consumer> m_consumer;
   std::shared_ptr<RdKafka::Topic> m_topic;
   int m_partition = 0;
+
+  std::string m_broker;
   std::string m_errStr;
+  std::string m_debug;
+  bool m_dumpConfig = false;
   bool m_stop_eof = false;
 
   std::atomic<bool> m_running = false;

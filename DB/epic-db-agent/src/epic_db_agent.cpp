@@ -80,11 +80,11 @@ int main()
   try
   {
     EpicDbAgentService &_dbAgent = Singleton<EpicDbAgentService>::instance();
-    if (!_dbAgent.ConfigureService(false, false))
+    if (!_dbAgent.ConfigureService(false))
     {
       return EXIT_FAILURE;
     }
-    while (1)
+    while (_dbAgent.GetIsConsRunnning())
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       //   // int time = gTimer.getTicksInSeconds();

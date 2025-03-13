@@ -9,11 +9,13 @@
  */
 
 #include <librdkafka/rdkafkacpp.h>
+#include <cstdint>
 #include <nlohmann/json.hpp>
 #include "EpicUtilities/EpicLogger.h"
 
 #include <memory>
 #include <sstream>
+#include <string_view>
 
 enum EpicDbAgentTopicEnum : uint8_t
 {
@@ -24,6 +26,23 @@ enum EpicDbAgentTopicEnum : uint8_t
 
 const std::array<std::string_view, EpicDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"epic.db-agent.request", "epic.db-agent.request.reply"}};
+
+enum EpicDbAgentMessageStatus : uint8_t
+{
+  // sucess
+  Success = 0,
+  // message data has invalid format
+  BadRequest,
+  // requested entity does not exist
+  NotFound,
+  // is not able to process the request, some unexpected error
+  UnexpectedError,
+  // Num of message status
+  NumStatus
+};
+
+const std::array<std::string_view, EpicDbAgentMessageStatus::NumStatus>
+    msgStatus = {{"Success", "BadRequest", "NotFound", "UnexpectedError"}};
 
 namespace RdKafka
 {
@@ -44,13 +63,14 @@ class EpicDbAgentService
 {
  public:
   EpicDbAgentService() = default;
-  ~EpicDbAgentService() = default;
+  ~EpicDbAgentService();
 
-  bool ConfigureService(bool stop_eof = false, bool do_conf_dump = false);
+  bool ConfigureService(bool stop_eof = false);
   void ProcessMsgCb(RdKafka::Message *msg, void *opaque);
   void SetDebug(std::string debug) { m_debug = debug; }
 
   void StopConsumer(const bool suspeneded);
+  bool GetIsConsRunnning();
 
  private:
   EpicLogger &logger = Singleton<EpicLogger>::instance();
@@ -59,13 +79,6 @@ class EpicDbAgentService
 
   std::shared_ptr<EpicDbAgentConsumer> m_Consumer;
   std::shared_ptr<EpicDbAgentProducer> m_Producer;
-
-  std::shared_ptr<RdKafka::Conf> m_globalConf = std::shared_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
-  std::shared_ptr<RdKafka::Conf> m_cTopicConf = std::shared_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
-  std::shared_ptr<RdKafka::Conf> m_pTopicConf = std::shared_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
   std::string m_brokerName = {"localhost:9092"};
   std::string m_errStr;
@@ -77,6 +90,7 @@ class EpicDbAgentEventCb : public RdKafka::EventCb
  public:
   void event_cb(RdKafka::Event &event)
   {
+    Singleton<EpicLogger>::instance().logInfo("EpicDbAgentEventCb called.");
     std::ostringstream msg;
     switch (event.type())
     {
