@@ -149,7 +149,7 @@ bool EpicDbAgentProducer::Push(EpicDbAgentMessage &message)
     }
     break;
   }
-  // m_producer->poll(0);
+  m_producer->poll(0);
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   return true;
 }
