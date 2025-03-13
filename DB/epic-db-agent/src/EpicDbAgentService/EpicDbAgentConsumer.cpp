@@ -8,6 +8,7 @@
 #include "EpicDbAgentService/EpicDbAgentConsumer.h"
 
 #include <librdkafka/rdkafkacpp.h>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <thread>
@@ -173,12 +174,12 @@ void EpicDbAgentConsumer::Pull()
   bool cb = true;
   while (GetIsRunning() && !GetSuspended())
   {
+    std::this_thread::sleep_for(std::chrono::milliseconds(kKafkaWaitTime_ms));
     m_consumer->consume_callback(m_topic.get(), m_partition, 1000, &consume_cb,
                                  &cb);
     if (!cb)
     {
       Stop(false);
-      // std::this_thread::sleep_for(std::chrono::milliseconds(kKafkaWaitTime_ms));
     }
     m_consumer->poll(0);
   }
