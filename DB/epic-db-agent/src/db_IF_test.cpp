@@ -5,19 +5,18 @@
  * @brief epic_db_agent executable
  */
 
-#include "Database/databaseinterface.h"
-#include "EpicDbAgentService/EpicDbAgentService.h"
+#include "EpicDb/EpicDbInterface.h"
 #include "EpicUtilities/EpicLogger.h"
+
+#include "Database/databaseinterface.h"
 
 #include "version.h"
 
-// #include <cstdio>
-// #include <cstdlib>
-// #include <exception>
+#include <array>
 #include <cstdlib>
 #include <iostream>
-// #include <string>
-#include <thread>
+#include <string_view>
+#include <vector>
 
 std::string version = std::string(VERSION);
 
@@ -57,7 +56,8 @@ bool connectToDB(std::string &user, std::string &pass, std::string &conn,
 //========================================================================+
 int main()
 {
-  logger.logInfo("********************** Epic Db Agent, version:" + version,
+  logger.logInfo("********************** Epic Db Interface Test, version:" +
+                     version,
                  EpicLogger::Mode::STANDARD);
 
   DatabaseInterface &dbInterface = DatabaseIF::instance();
@@ -80,16 +80,19 @@ int main()
   }
   try
   {
-    EpicDbAgentService &_dbAgent = Singleton<EpicDbAgentService>::instance();
-    if (!_dbAgent.ConfigureService(false))
+    std::array<std::string_view, 5> a_enumTypeNames = {
+        {"enum_engineeringRun", "enum_waferType", "enum_waferTech",
+         "enum_foundry", "enum_familyType"}};
+
+    for (const auto &type : a_enumTypeNames)
     {
-      return EXIT_FAILURE;
-    }
-    while (_dbAgent.GetIsConsRunnning())
-    {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      //   // int time = gTimer.getTicksInSeconds();
-      //   // heartbeatService->updateService(time);
+      std::string type_name = EpicDbAgent::db_schema + "." + std::string(type);
+      std::vector<std::string> v_enumVal;
+      EpicDbInterface::getAllEnumValues(type_name, v_enumVal);
+      for (auto &val : v_enumVal)
+      {
+        logger.logInfo(val);
+      }
     }
   }
   catch (const std::exception &e)

@@ -2,6 +2,8 @@
 #include "Database/databaseinterface.h"
 #include "EpicUtilities/EpicLogger.h"
 
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 using DatabaseIF = Singleton<DatabaseInterface>;
@@ -75,6 +77,7 @@ void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
         std::chrono::high_resolution_clock::now();
     DatabaseIF::instance().executeQuery(queryString, successful, errorMessage,
                                         rows);
+
     std::chrono::high_resolution_clock::time_point t2 =
         std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds ms =
@@ -84,11 +87,11 @@ void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
     nTrials++;
     if ((!successful) && (nTrials <= maxRetries))
     {
-      Singleton<EpicLogger>::instance().logError(errorMessage +
-                                                 ", trying to reconnect");
       connected = DatabaseIF::instance().isConnected();
       if (!connected)
+      {
         Singleton<EpicLogger>::instance().logError("reconnect failed");
+      }
     }
   }
   if (!successful)
@@ -103,6 +106,7 @@ void raiseError(string errorMessage)
 {
   // std::cout << errorMessage << std::endl;
   Singleton<EpicLogger>::instance().logError(errorMessage);
+  throw std::runtime_error(errorMessage);
 }
 
 //========================================================================+
@@ -241,7 +245,7 @@ bool VersionedInsert::doInsert()
 int getBaseVersion(int versionId)
 {
   string queryString = "SELECT baseVersion";
-  queryString += " FROM test.Version";
+  queryString += " FROM " + EpicDbAgent::db_schema + ".Version";
   queryString += " WHERE id=" + to_string(versionId);
 
   vector<vector<MultiBase *>> rows;
@@ -265,7 +269,8 @@ int getBaseVersion(int versionId)
 //========================================================================+
 int getMostRecentVersionId()
 {
-  string queryString = "SELECT MAX(ID) FROM test.Version";
+  string queryString =
+      "SELECT MAX(ID) FROM " + EpicDbAgent::db_schema + ".Version";
 
   vector<vector<MultiBase *>> rows;
   doGenericQuery(queryString, rows);
