@@ -34,17 +34,21 @@ namespace EpicDbInterface
     std::string technology;
     std::string thinningDate;
     std::string dicingDate;
+    std::string productionDate;
     std::string waferType;
   };
 
   //!
   //! Function declarations
   //!
-  std::vector<std::string> getAllEnumValues(std::string enum_name);
+  int getAllEnumValues(std::string enum_name,
+                       std::vector<std::string> &enum_values);
   bool addEnumValue(std::string type_name, std::string value);
 
   int getAllVersions(std::vector<dbVersion> &versions);
-  int getAllWafers(std::vector<dbWaferRecords> &wafers);
+  int getAllWafers(std::vector<dbWaferRecords> &wafers,
+                   std::vector<int> &id_filters);
+  int getMaxWaferId();
 
   bool insertWaferRecords(const dbWaferRecords &waferRecords);
 

@@ -38,6 +38,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 file(GLOB SOURCES_DB
+  "src/EpicUtilities/EpicUtilities.cpp"
   "src/EpicUtilities/EpicLogger.cpp"
   "src/Database/databaseinterface.cpp"
   "src/Database/multitype.cpp"
@@ -67,9 +68,9 @@ add_subdirectory(deps/nlohmann_json build-nlohmann_json)
 add_executable(epic_db_agent "src/epic_db_agent.cpp" ${SOURCES_DB})
 add_dependencies(epic_db_agent version)
 
-add_executable(epic_db_agent_test "src/epic_db_agent_test.cpp" ${SOURCES_DB})
-add_dependencies(epic_db_agent_test version)
+add_executable(db_IF_test "src/db_IF_test.cpp" ${SOURCES_DB})
+add_dependencies(db_IF_test version)
 
 set(epic_db_agent_lib pqxx rdkafka++ nlohmann_json::nlohmann_json pthread)
 target_link_libraries(epic_db_agent PRIVATE ${epic_db_agent_lib})
-target_link_libraries(epic_db_agent_test PRIVATE ${epic_db_agent_lib})
+target_link_libraries(db_IF_test PRIVATE ${epic_db_agent_lib})
