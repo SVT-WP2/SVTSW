@@ -8,14 +8,22 @@
  * @brief Db agent manager
  */
 
-#include <librdkafka/rdkafkacpp.h>
-#include <cstdint>
-#include <nlohmann/json.hpp>
+#include "EpicDb/EpicDbInterface.h"
+#include "EpicDbAgentService/EpicDbAgentRequest.h"
 #include "EpicUtilities/EpicLogger.h"
 
+#include <librdkafka/rdkafkacpp.h>
+#include <nlohmann/json.hpp>
+
+#include <cstdint>
 #include <memory>
-#include <sstream>
 #include <string_view>
+#include <vector>
+
+namespace EpicDbInterface
+{
+  struct dbWaferRecords;
+}
 
 enum EpicDbAgentTopicEnum : uint8_t
 {
@@ -27,7 +35,7 @@ enum EpicDbAgentTopicEnum : uint8_t
 const std::array<std::string_view, EpicDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"epic.db-agent.request", "epic.db-agent.request.reply"}};
 
-enum EpicDbAgentMessageStatus : uint8_t
+enum EpicDbAgentMsgStatus : uint8_t
 {
   // sucess
   Success = 0,
@@ -41,8 +49,8 @@ enum EpicDbAgentMessageStatus : uint8_t
   NumStatus
 };
 
-const std::array<std::string_view, EpicDbAgentMessageStatus::NumStatus>
-    msgStatus = {{"Success", "BadRequest", "NotFound", "UnexpectedError"}};
+const std::array<std::string_view, EpicDbAgentMsgStatus::NumStatus> msgStatus =
+    {{"Success", "BadRequest", "NotFound", "UnexpectedError"}};
 
 namespace RdKafka
 {
@@ -75,7 +83,15 @@ class EpicDbAgentService
  private:
   EpicLogger &logger = Singleton<EpicLogger>::instance();
 
-  void parseMsg(EpicDbAgentMessage &msg);
+  void parseMsg(EpicDbAgentMessage &msg, EpicDbAgentMsgStatus &status);
+
+  //! Actions
+  void getEnumReplyMsg(const EpicDbAgent::RequestType &reqType,
+                       nlohmann::ordered_json &replyData);
+
+  void getWaferReplyMsg(nlohmann::ordered_json &replyData,
+                        std::vector<EpicDbInterface::dbWaferRecords> &wafers);
+  void createWaferReplyMsg();
 
   std::shared_ptr<EpicDbAgentConsumer> m_Consumer;
   std::shared_ptr<EpicDbAgentProducer> m_Producer;
@@ -83,51 +99,6 @@ class EpicDbAgentService
   std::string m_brokerName = {"localhost:9092"};
   std::string m_errStr;
   std::string m_debug;
-};
-
-class EpicDbAgentEventCb : public RdKafka::EventCb
-{
- public:
-  void event_cb(RdKafka::Event &event)
-  {
-    Singleton<EpicLogger>::instance().logInfo("EpicDbAgentEventCb called.");
-    std::ostringstream msg;
-    switch (event.type())
-    {
-    case RdKafka::Event::EVENT_ERROR:
-      msg.clear();
-      if (event.fatal())
-      {
-        msg << "FATAL ";
-        //! TODO
-        // Stop consumer and producer thread
-        Singleton<EpicDbAgentService>::instance().StopConsumer(false);
-      }
-      msg << "ERROR (" << RdKafka::err2str(event.err()) << "): " << event.str();
-      Singleton<EpicLogger>::instance().logError(msg.str());
-      break;
-
-    case RdKafka::Event::EVENT_STATS:
-      Singleton<EpicLogger>::instance().logWarning("\"STATS\": " + event.str(),
-                                                   EpicLogger::Mode::STANDARD);
-      break;
-
-    case RdKafka::Event::EVENT_LOG:
-      msg.clear();
-      msg << "LOG-" << event.severity() << "-" << event.fac() << ": "
-          << event.str();
-      Singleton<EpicLogger>::instance().logWarning(msg.str(),
-                                                   EpicLogger::Mode::STANDARD);
-      break;
-
-    default:
-      msg << "EVENT " << event.type() << " (" << RdKafka::err2str(event.err())
-          << "): " << event.str();
-      Singleton<EpicLogger>::instance().logInfo(msg.str(),
-                                                EpicLogger::Mode::STANDARD);
-      break;
-    }
-  }
 };
 
 #endif  // !SVTDB_AGENT_H

@@ -1,9 +1,11 @@
 #ifndef SQLMAPI_H
 #define SQLMAPI_H
 
-#include <atomic>
-#include <vector>
 #include "Database/multitype.h"
+
+#include <atomic>
+#include <cstdlib>
+#include <vector>
 
 using namespace std;
 

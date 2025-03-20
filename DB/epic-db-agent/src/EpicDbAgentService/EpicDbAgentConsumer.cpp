@@ -6,6 +6,7 @@
  */
 
 #include "EpicDbAgentService/EpicDbAgentConsumer.h"
+#include "EpicDbAgentService/EpicDbAgentCb.h"
 
 #include <librdkafka/rdkafkacpp.h>
 #include <chrono>

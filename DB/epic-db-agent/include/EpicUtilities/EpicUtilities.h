@@ -1,9 +1,19 @@
+#ifndef EPIC_UTILITIES_H
+#define EPIC_UTILITIES_H
+
 /*!
  * @file EpicUtilities.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Mar-2025
  * @brief Utilities
  */
+
+#include <string>
+
+namespace EpicDbAgent
+{
+  extern std::string db_schema;
+};  // namespace EpicDbAgent
 
 template <typename T>
 class Singleton
@@ -24,3 +34,5 @@ class Singleton
   // Private constructor
   Singleton() {}
 };
+
+#endif  // !EPIC_UTILITIES_H
