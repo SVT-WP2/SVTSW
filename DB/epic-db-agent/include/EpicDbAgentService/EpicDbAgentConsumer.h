@@ -8,7 +8,6 @@
  * @brief Db agent kafka service
  */
 
-#include "EpicDbAgentService.h"
 #include "EpicUtilities/EpicLogger.h"
 
 #include <librdkafka/rdkafkacpp.h>
@@ -21,15 +20,6 @@ namespace
 {
   constexpr int kKafkaWaitTime_ms = 1;
 }  // namespace
-
-class EpicDbAgentConsumeCb : public RdKafka::ConsumeCb
-{
- public:
-  void consume_cb(RdKafka::Message &msg, void *opaque)
-  {
-    Singleton<EpicDbAgentService>::instance().ProcessMsgCb(&msg, opaque);
-  }
-};
 
 class EpicDbAgentConsumer
 {

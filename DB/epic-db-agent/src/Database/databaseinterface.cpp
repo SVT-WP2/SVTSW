@@ -233,8 +233,9 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
   }
   catch (pqxx::sql_error const &e)
   {
-    std::cerr << "SQL error: " << e.what() << std::endl;
-    std::cerr << "Query was: " << e.query() << std::endl;
+    message = std::string("SQL error: ") + e.what() +
+              std::string("Query was: ") + e.query();
+    status = false;
   }
   clearQueryResult(rows);
 
