@@ -32,7 +32,7 @@ enum SvtDbAgentTopicEnum : uint8_t
 };
 
 const std::array<std::string_view, SvtDbAgentTopicEnum::NumTopicNames>
-    topicNames = {{"epic.db-agent.request", "epic.db-agent.request.reply"}};
+    topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
 
 enum SvtDbAgentMsgStatus : uint8_t
 {
