@@ -1,9 +1,0 @@
-[submodule "DB/epic-db-agent/deps/nlohmann_json"]
-	path = DB/epic-db-agent/deps/nlohmann_json
-	url = git@github.com:nlohmann/json.git
-[submodule "DB/epic-db-agent/deps/libpqxx"]
-	path = DB/epic-db-agent/deps/libpqxx
-	url = git@github.com:jtv/libpqxx.git
-[submodule "DB/epic-db-agent/deps/librdkafka"]
-	path = DB/epic-db-agent/deps/librdkafka
-	url = git@github.com:confluentinc/librdkafka.git
