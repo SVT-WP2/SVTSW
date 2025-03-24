@@ -143,13 +143,13 @@ void SvtDbAgentService::getEnumReplyMsg(const SvtDbAgent::RequestType &reqType,
   case SvtDbAgent::RequestType::GetAllEngineeringRuns:
     enum_name += "enum_engineeringRun";
     break;
-  case SvtDbAgent::RequestType::GetAllFoundry:
+  case SvtDbAgent::RequestType::GetAllFoundries:
     enum_name += "enum_foundry";
     break;
   case SvtDbAgent::RequestType::GetAllWaferTechnologies:
     enum_name += "enum_waferTech";
     break;
-  case SvtDbAgent::RequestType::GetFamilyType:
+  case SvtDbAgent::RequestType::GetAllAsicFamilyTypes:
     enum_name += "enum_familyType";
     break;
   default:
@@ -276,8 +276,9 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
         {
         case SvtDbAgent::RequestType::GetAllWaferTypes:
         case SvtDbAgent::RequestType::GetAllEngineeringRuns:
-        case SvtDbAgent::RequestType::GetAllFoundry:
+        case SvtDbAgent::RequestType::GetAllFoundries:
         case SvtDbAgent::RequestType::GetAllWaferTechnologies:
+        case SvtDbAgent::RequestType::GetAllAsicFamilyTypes:
         {
           getEnumReplyMsg(reqType, replyData);
         }
