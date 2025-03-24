@@ -1,0 +1,24 @@
+[Unit]
+Description=Svt database agent
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=simple
+User=root
+
+EnvironmentFile=/data/ycorrale/SVTSW/DB/svt-db-agent/SvtDbAgent.conf
+WorkingDirectory=/data/ycorrale/SVTSW/DB/svt-db-agent/
+ExecStart=/data/ycorrale/SVTSW/DB/svt-db-agent/SvtDbAgent.sh
+
+#StandardOutput=null
+#StandardError=null
+#StandardOutput=syslog
+#StandardError=inherit
+Restart=always
+TimeoutStartSec=2
+RestartSec=2
+LimitMEMLock=infinity
+
+
