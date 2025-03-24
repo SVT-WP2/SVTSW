@@ -10,9 +10,9 @@ namespace SvtDbAgent
   {
     GetAllWaferTypes = 0,
     GetAllEngineeringRuns,
-    GetAllFoundry,
+    GetAllFoundries,
     GetAllWaferTechnologies,
-    GetFamilyType,
+    GetAllAsicFamilyTypes,
     GetAllWafers,
     CreateWafer,
     NotFound,
@@ -20,8 +20,8 @@ namespace SvtDbAgent
   };
 
   static std::array<std::string_view, kNumRequest> a_requestType = {
-      {"GetAllWaferTypes", "GetAllEngineeringRuns", "GetAllFoundry",
-       "GetAllWaferTechnologies", "GetFamilyType", "GetAllWafers",
+      {"GetAllWaferTypes", "GetAllEngineeringRuns", "GetAllFoundries",
+       "GetAllWaferTechnologies", "GetAllAsicFamilyTypes", "GetAllWafers",
        "CreateWafer"}};
 
   inline RequestType GetRequestType(std::string_view type_req)
