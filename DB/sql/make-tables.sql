@@ -45,13 +45,13 @@ CREATE TABLE IF NOT EXISTS :SchemaName.wafer (
 	id SERIAL,
 	serialNumber VARCHAR(50) UNIQUE,
 	batchNumber INT,
-	engineeringRun :SchemaName.enum_engineeringRun,
 	foundry :SchemaName.enum_foundry,
 	technology :SchemaName.enum_waferTech,
+	engineeringRun :SchemaName.enum_engineeringRun,
+	waferType :SchemaName.enum_waferType,
 	thinningDate DATE,
 	dicingDate DATE,
 	productionDate DATE,
-	waferType :SchemaName.enum_waferType,
 	PRIMARY KEY (id)
 );
 
