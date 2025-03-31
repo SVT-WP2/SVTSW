@@ -231,6 +231,27 @@ void SvtDbAgentService::createWaferReplyMsg(const nlohmann::json &json_wafer,
     SvtDbInterface::insertWafer(wafer);
     const auto maxWaferId = SvtDbInterface::getMaxId("Wafer");
     std::vector<int> id_filters = {maxWaferId};
+
+    std::vector<SvtDbInterface::dbWaferRecords> wafers;
+    SvtDbInterface::getAllWafers(wafers, id_filters);
+
+    wafer = (wafers.size()) ? std::move(wafers.at(0))
+                            : std::move(SvtDbInterface::dbWaferRecords{});
+
+    nlohmann::json ret_json_wafer;
+    ret_json_wafer["id"] = wafer.id;
+    ret_json_wafer["serialNumber"] = wafer.serialNumber;
+    ret_json_wafer["batchNumber"] = wafer.batchNumber;
+    ret_json_wafer["waferType"] = wafer.waferType;
+    ret_json_wafer["engineeringRun"] = wafer.engineeringRun;
+    ret_json_wafer["foundry"] = wafer.foundry;
+    ret_json_wafer["technology"] = wafer.technology;
+    ret_json_wafer["thinningDate"] = wafer.thinningDate;
+    ret_json_wafer["dicingDate"] = wafer.dicingDate;
+    ret_json_wafer["productionDate"] = wafer.productionDate;
+
+    replyData["data"]["entity"] = ret_json_wafer;
+    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
     getWaferReplyMsg(id_filters, replyData);
   }
   catch (const std::exception &e)
