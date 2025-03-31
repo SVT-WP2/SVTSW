@@ -42,6 +42,56 @@ def showPgqlVersion():
         cur.close()
 
 
+def createSchema(schemaName=None):
+    if schemaName is not None:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(f"""CREATE SCHEMA IF NOT EXISTS {schemaName};""")
+            except Exception as e:
+                print(f"Error {e}")
+    else:
+        print("Error not schema name was provided")
+
+
+def dropSchema(schemaName=None, cascade=False):
+    if schemaName is not None:
+        with conn.cursor() as cur:
+            try:
+                if cascade:
+                    cur.execute(f"""DROP SCHEMA {schemaName} CASCADE;""")
+                else:
+                    cur.execute(f"""DROP SCHEMA {schemaName};""")
+            except Exception as e:
+                print(f"Error {e}")
+    else:
+        print("Error not schema name was provided")
+
+
+def createEnumType(enumType=None):
+    if enumType is not None:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(f"""CREATE TYPE {enumType} AS ENUM ();""")
+            except Exception as e:
+                print(f"Error {e}")
+    else:
+        print("Error not schema name was provided")
+
+
+def dropEnumType(enumType=None, cascade=False):
+    if enumType is not None:
+        with conn.cursor() as cur:
+            try:
+                if cascade:
+                    cur.execute(f"""DROP TYPE {enumType} CASCADE;""")
+                else:
+                    cur.execute(f"""DROP TYPE {enumType};""")
+            except Exception as e:
+                print(f"Error {e}")
+    else:
+        print("Error not schema name was provided")
+
+
 def createNewVersion(versionName=None,
                      versionDescription=None,
                      baseVersion=None):
@@ -57,7 +107,7 @@ def createNewVersion(versionName=None,
             INSERT INTO test.Version
                 (id, name, baseVersion, description)
             VALUES(%(newVersionId)s, %(name)s,
-                  %(baseVersion)s, %(description)s)
+                  %(baseVersion)s, %(description)s);
             """,
                     {'newVersionId': newVersionId,
                      'name': versionName,
@@ -71,7 +121,7 @@ def getMaxVersionId():
     with conn.cursor() as cur:
         try:
             cur.execute("""
-                SELECT MAX(ID) FROM test.VERSION
+                SELECT MAX(ID) FROM test.VERSION;
             """)
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
