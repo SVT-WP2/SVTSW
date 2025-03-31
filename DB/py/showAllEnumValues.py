@@ -5,17 +5,19 @@ schemas = ["test", "Prod"]
 enum_foundry = {"enum_foundry": ["TowerJazz"]}
 enum_waferTech = {"enum_waferTech": ["TPSCo65"]}
 enum_engineeringRun = {"enum_engineeringRun": ["ER1"]}
-enum_waferType = {"enum_waferType": ["ER1"]}
-enum_familyType = {"enum_familyType": ["babyMOSS",
-                                       "MOSS",
-                                       "NKF7",
-                                       "APTS",
-                                       "NKF6",
-                                       "NKF5"]}
+enum_waferMapOrientation = {"enum_waferMapOrientation": [
+    "North", "South", "East", "West"
+]}
+enum_asicFamilyType = {"enum_asicFamilyType": ["babyMOSS",
+                                               "MOSS",
+                                               "NKF7",
+                                               "APTS",
+                                               "NKF6",
+                                               "NKF5"]}
 
 enum_types_dict = {**enum_foundry, **enum_waferTech,
-                   **enum_engineeringRun, **enum_waferType,
-                   **enum_familyType}
+                   **enum_engineeringRun, **enum_waferMapOrientation,
+                   **enum_asicFamilyType}
 
 for schema in schemas:
     for type_name, values in enum_types_dict.items():
