@@ -141,25 +141,20 @@ int SvtDbInterface::getMaxId(const std::string &tableName)
 }
 
 //========================================================================+
-int SvtDbInterface::getAllWafers(std::vector<dbWaferRecords> &wafers,
-                                 const std::vector<int> &id_filters)
+int SvtDbInterface::getAllWaferTypes(
+    std::vector<dbWaferTypeRecords> &waferTypes,
+    const std::vector<int> &id_filters)
 {
-  wafers.clear();
+  waferTypes.clear();
   SimpleQuery query;
 
-  std::string tableName = SvtDbAgent::db_schema + std::string(".Wafer");
+  std::string tableName = SvtDbAgent::db_schema + std::string(".waferType");
   query.setTableName(tableName);
 
-  query.addColumn("id");
-  query.addColumn("serialNumber");
-  query.addColumn("batchNumber");
-  query.addColumn("foundry");
-  query.addColumn("technology");
-  query.addColumn("engineeringRun");
-  query.addColumn("waferType");
-  query.addColumn("thinningDate");
-  query.addColumn("dicingdate");
-  query.addColumn("productionDate");
+  for (const auto &record : dbWaferTypeRecords::val_names)
+  {
+    query.addColumn(std::string(record));
+  }
 
   if (!id_filters.empty())
   {
@@ -173,7 +168,112 @@ int SvtDbInterface::getAllWafers(std::vector<dbWaferRecords> &wafers,
 
     for (vector<MultiBase *> row : rows)
     {
-      if (row.size() != 10)
+      if (row.size() != dbWaferTypeRecords::val_names.size())
+      {
+        throw std::range_error("");
+      }
+      dbWaferTypeRecords waferType;
+      //! waferTyoe id
+      waferType.id = (row.at(0)) ? row.at(0)->getInt() : -1;
+      //! waferType serialNumber
+      waferType.name = (row.at(1)) ? row.at(1)->getString() : "";
+      //! waferType foundry
+      waferType.foundry = (row.at(2)) ? row.at(2)->getString() : "";
+      //! waferType technology
+      waferType.technology = (row.at(3)) ? row.at(3)->getString() : "";
+      //! waferType engineeringRun
+      waferType.engineeringRun = (row.at(4)) ? row.at(4)->getString() : "";
+      // //! waferType imageBase64String
+      // waferType.imageBase64String = (row.at(5)) ? row.at(5)->getString() :
+      // "";
+      //! waferType waferMap
+      waferType.waferMap = (row.at(5)) ? row.at(5)->getString() : "";
+
+      waferTypes.push_back(waferType);
+    }
+  }
+  catch (const std::exception &e)
+  {
+    Singleton<SvtLogger>::instance().logError(e.what());
+    waferTypes.clear();
+  }
+
+  return waferTypes.size();
+}
+
+//========================================================================+
+bool SvtDbInterface::insertWaferType(const dbWaferTypeRecords &waferType)
+{
+  SimpleInsert insert;
+
+  std::string tableName = SvtDbAgent::db_schema + std::string(".waferType");
+  insert.setTableName(tableName);
+
+  //! Add columns & values
+  if (!waferType.name.empty())
+  {
+    insert.addColumnAndValue("name", std::string(waferType.name));
+  }
+  if (!waferType.foundry.empty())
+  {
+    insert.addColumnAndValue("foundry", std::string(waferType.foundry));
+  }
+  if (!waferType.technology.empty())
+  {
+    insert.addColumnAndValue("technology", std::string(waferType.technology));
+  }
+  if (!waferType.engineeringRun.empty())
+  {
+    insert.addColumnAndValue("engineeringRun",
+                             std::string(waferType.engineeringRun));
+  }
+  // if (!waferType.imageBase64String.empty())
+  // {
+  //   insert.addColumnAndValue("imageBase64String",
+  //                            std::string(waferType.imageBase64String));
+  // }
+  if (!waferType.waferMap.empty())
+  {
+    insert.addColumnAndValue("waferMap", std::string(waferType.waferMap));
+  }
+
+  if (!insert.doInsert())
+  {
+    rollbackUpdate();
+    return -1;
+  }
+  commitUpdate();
+  return true;
+}
+
+//========================================================================+
+int SvtDbInterface::getAllWafers(std::vector<dbWaferRecords> &wafers,
+                                 const std::vector<int> &id_filters)
+{
+  wafers.clear();
+  SimpleQuery query;
+
+  std::string tableName = SvtDbAgent::db_schema + std::string(".Wafer");
+  query.setTableName(tableName);
+
+  for (const auto &record : dbWaferRecords::val_names)
+  {
+    query.addColumn(std::string(record));
+  }
+
+  if (!id_filters.empty())
+  {
+    query.addWhereIn("id", id_filters);
+  }
+
+  try
+  {
+    vector<vector<MultiBase *>> rows;
+    query.doQuery(rows);
+
+    for (vector<MultiBase *> row : rows)
+    {
+      if (row.size() != dbWaferRecords::val_names.size())
       {
         throw std::range_error("");
       }
@@ -184,20 +284,14 @@ int SvtDbInterface::getAllWafers(std::vector<dbWaferRecords> &wafers,
       wafer.serialNumber = (row.at(1)) ? row.at(1)->getString() : "";
       //! wafer batchNumber
       wafer.batchNumber = (row.at(2)) ? row.at(2)->getInt() : -1;
-      //! wafer foundry
-      wafer.foundry = (row.at(3)) ? row.at(3)->getString() : "";
-      //! wafer technology
-      wafer.technology = (row.at(4)) ? row.at(4)->getString() : "";
-      //! wafer engineeringRun
-      wafer.engineeringRun = (row.at(5)) ? row.at(5)->getString() : "";
-      //! wafer type
-      wafer.waferType = (row.at(6)) ? row.at(6)->getString() : "";
+      //! wafer waferTypeId
+      wafer.waferTypeId = (row.at(3)) ? row.at(3)->getInt() : -1;
       //! wafer thiningDate
-      wafer.thinningDate = (row.at(7)) ? row.at(7)->getString() : "";
+      wafer.thinningDate = (row.at(4)) ? row.at(4)->getString() : "";
       //! wafer dicingDate
-      wafer.dicingDate = (row.at(8)) ? row.at(8)->getString() : "";
+      wafer.dicingDate = (row.at(5)) ? row.at(5)->getString() : "";
       //! wafer productionDate
-      wafer.productionDate = (row.at(9)) ? row.at(9)->getString() : "";
+      wafer.productionDate = (row.at(6)) ? row.at(6)->getString() : "";
 
       wafers.push_back(wafer);
     }
@@ -227,23 +321,6 @@ bool SvtDbInterface::insertWafer(const dbWaferRecords &wafer)
   if (wafer.batchNumber >= 0)
   {
     insert.addColumnAndValue("batchNumber", wafer.batchNumber);
-  }
-  if (!wafer.foundry.empty())
-  {
-    insert.addColumnAndValue("foundry", std::string(wafer.foundry));
-  }
-  if (!wafer.technology.empty())
-  {
-    insert.addColumnAndValue("technology", std::string(wafer.technology));
-  }
-  if (!wafer.engineeringRun.empty())
-  {
-    insert.addColumnAndValue("engineeringRun",
-                             std::string(wafer.engineeringRun));
-  }
-  if (!wafer.waferType.empty())
-  {
-    insert.addColumnAndValue("waferType", std::string(wafer.waferType));
   }
   if (!wafer.thinningDate.empty())
   {
@@ -349,95 +426,6 @@ bool SvtDbInterface::insertAsic(const dbAsicRecords &asic)
   {
     insert.addColumnAndValue("waferMapPosition",
                              std::string(asic.waferMapPosition));
-  }
-
-  if (!insert.doInsert())
-  {
-    rollbackUpdate();
-    return -1;
-  }
-  commitUpdate();
-  return true;
-}
-
-//========================================================================+
-int SvtDbInterface::getAllTopography(
-    std::vector<dbWaferTopoRecords> &topography,
-    const std::vector<int> &id_filters)
-{
-  topography.clear();
-  SimpleQuery query;
-
-  std::string tableName =
-      SvtDbAgent::db_schema + std::string(".waferTopography");
-  query.setTableName(tableName);
-
-  query.addColumn("id");
-  query.addColumn("name");
-  query.addColumn("imageBase64String");
-  query.addColumn("waferMap");
-
-  if (!id_filters.empty())
-  {
-    query.addWhereIn("id", id_filters);
-  }
-
-  try
-  {
-    vector<vector<MultiBase *>> rows;
-    query.doQuery(rows);
-
-    for (vector<MultiBase *> row : rows)
-    {
-      if (row.size() != 4)
-      {
-        throw std::range_error("WaferTopography table:");
-      }
-      dbWaferTopoRecords topog;
-      //! topog id
-      topog.id = (row.at(0)) ? row.at(0)->getInt() : -1;
-      //! topog name
-      topog.name = (row.at(1)) ? row.at(1)->getString() : "";
-      //! topog imageBase64String
-      topog.imageBase64String = (row.at(2)) ? row.at(2)->getString() : "";
-      //! topog waferMapP
-      topog.waferMap = (row.at(3)) ? row.at(3)->getString() : "";
-
-      topography.push_back(topog);
-    }
-  }
-  catch (const std::exception &e)
-  {
-    Singleton<SvtLogger>::instance().logError(e.what());
-    topography.clear();
-  }
-
-  return topography.size();
-}
-
-//========================================================================+
-bool SvtDbInterface::insertTopography(
-    const dbWaferTopoRecords &waferTopography)
-{
-  SimpleInsert insert;
-
-  std::string tableName =
-      SvtDbAgent::db_schema + std::string(".waferTopography");
-  insert.setTableName(tableName);
-
-  //! Add columns & values
-  if (!waferTopography.name.empty())
-  {
-    insert.addColumnAndValue("name", std::string(waferTopography.name));
-  }
-  if (!waferTopography.imageBase64String.empty())
-  {
-    insert.addColumnAndValue("imageBase64String",
-                             std::string(waferTopography.imageBase64String));
-  }
-  if (!waferTopography.waferMap.empty())
-  {
-    insert.addColumnAndValue("waferMap", std::string(waferTopography.waferMap));
   }
 
   if (!insert.doInsert())
