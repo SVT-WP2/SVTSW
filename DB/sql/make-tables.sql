@@ -1,5 +1,5 @@
---\set SchemaName 'Test'
-\set SchemaName 'Prod'
+\set SchemaName 'Test'
+--\set SchemaName 'Prod'
 
 -- CREATE TABLE VERSION
 CREATE TABLE IF NOT EXISTS :SchemaName.VERSION (
@@ -19,9 +19,15 @@ CREATE TABLE IF NOT EXISTS :SchemaName.waferType (
 	foundry :SchemaName.enum_foundry,
 	technology :SchemaName.enum_waferTech,
 	engineeringRun :SchemaName.enum_engineeringRun,
-	imageBase64String TEXT,
 	waferMap TEXT,
 	PRIMARY KEY (id)
+);
+
+-- CREATE TABLE WAFER TYPE imageBase64String
+CREATE TABLE IF NOT EXISTS :SchemaName.waferTypeImage (
+	waferTypeId INT NOT NULL,
+	imageBase64String TEXT NOT NULL,
+	FOREIGN KEY (waferTypeId) REFERENCES :SchemaName.waferType (id)
 );
 
 -- CREATE TABLE WAFER SUBMAP

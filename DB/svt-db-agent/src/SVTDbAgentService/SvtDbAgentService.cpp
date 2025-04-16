@@ -9,6 +9,7 @@
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDbAgentService/SvtDbAgentConsumer.h"
 #include "SVTDbAgentService/SvtDbAgentProducer.h"
+#include "SVTDbAgentService/SvtDbAgentRequest.h"
 #include "SVTUtilities/SvtLogger.h"
 
 #include "librdkafka/rdkafkacpp.h"
@@ -16,6 +17,7 @@
 #include <cstring>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -51,12 +53,13 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
   const RdKafka::Headers *headers;
 
   SvtDbAgentMessage svtMsg;
-  SvtDbAgentMsgStatus status = SvtDbAgentMsgStatus::Success;
+  SvtDbAgent::SvtDbAgentMsgStatus status =
+      SvtDbAgent::SvtDbAgentMsgStatus::Success;
   switch (message->err())
   {
   case RdKafka::ERR__TIMED_OUT:
     logger.logError("KafkaError: ERR__TIMED_OUT");
-    status = SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR_NO_ERROR:
@@ -104,165 +107,35 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
       // printf("%.*s\n", static_cast<int>(message->len()),
       //        static_cast<const char *>(message->payload()));
     }
-    status = SvtDbAgentMsgStatus::Success;
+    status = SvtDbAgent::SvtDbAgentMsgStatus::Success;
     break;
 
   case RdKafka::ERR__PARTITION_EOF:
     /* Last message */
     logger.logError("KafkaError: ERR__PARTITION_EOF");
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR__UNKNOWN_TOPIC:
   case RdKafka::ERR__UNKNOWN_PARTITION:
     logger.logError("KafkaError: Consume failed, " + message->errstr());
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   default:
     /* Errors */
     logger.logError("KafkaError: Consume failed, " + message->errstr());
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
   }
   parseMsg(svtMsg, status);
 }
 
 //========================================================================+
-void SvtDbAgentService::getEnumReplyMsg(const SvtDbAgent::RequestType &reqType,
-                                        nlohmann::ordered_json &replyData)
-{
-  std::string enum_name(SvtDbAgent::db_schema);
-  switch (reqType)
-  {
-  case SvtDbAgent::RequestType::GetAllWaferTypes:
-    enum_name += "enum_waferType";
-    break;
-  case SvtDbAgent::RequestType::GetAllEngineeringRuns:
-    enum_name += "enum_engineeringRun";
-    break;
-  case SvtDbAgent::RequestType::GetAllFoundries:
-    enum_name += "enum_foundry";
-    break;
-  case SvtDbAgent::RequestType::GetAllWaferTechnologies:
-    enum_name += "enum_waferTech";
-    break;
-  case SvtDbAgent::RequestType::GetAllAsicFamilyTypes:
-    enum_name += "enum_familyType";
-    break;
-  default:
-    break;
-  }
-  try
-  {
-    std::vector<std::string> enum_values;
-    SvtDbInterface::getAllEnumValues(enum_name, enum_values);
-    nlohmann::ordered_json items = nlohmann::json::array();
-    for (const auto &enum_val : enum_values)
-    {
-      items.push_back(enum_val);
-    }
-    replyData["data"]["items"] = items;
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-  }
-  return;
-}
-
-//========================================================================+
-void SvtDbAgentService::getWaferReplyMsg(const std::vector<int> &id_filters,
-                                         nlohmann::ordered_json &replyData)
-{
-  std::vector<SvtDbInterface::dbWaferRecords> wafers;
-  SvtDbInterface::getAllWafers(wafers, id_filters);
-
-  nlohmann::ordered_json items = nlohmann::json::array();
-  for (const auto &wafer : wafers)
-  {
-    nlohmann::ordered_json json_wafer;
-    json_wafer["id"] = wafer.id;
-    json_wafer["serialNumber"] = wafer.serialNumber;
-    json_wafer["batchNumber"] = wafer.batchNumber;
-    json_wafer["waferType"] = wafer.waferType;
-    json_wafer["engineeringRun"] = wafer.engineeringRun;
-    json_wafer["foundry"] = wafer.foundry;
-    json_wafer["technology"] = wafer.technology;
-    json_wafer["thinningDate"] = wafer.thinningDate;
-    json_wafer["dicingDate"] = wafer.dicingDate;
-    json_wafer["productionDate"] = wafer.productionDate;
-
-    items.push_back(json_wafer);
-  }
-  replyData["data"]["items"] = items;
-  replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
-}
-
-//========================================================================+
-void SvtDbAgentService::createWaferReplyMsg(const nlohmann::json &json_wafer,
-                                            nlohmann::ordered_json &replyData)
-{
-  SvtDbInterface::dbWaferRecords wafer;
-  //! wafer.serialNumber
-  wafer.serialNumber = json_wafer.value("serialNumber", "");
-  //! wafer.batchNumber
-  wafer.batchNumber = json_wafer.value("batchNumber", -1);
-  //! wafer.engineeringRun
-  wafer.engineeringRun = json_wafer.value("engineeringRun", "");
-  //! wafer.foundry
-  wafer.foundry = json_wafer.value("foundry", "");
-  //! wafer.technology
-  wafer.technology = json_wafer.value("technology", "");
-  //! wafer.waferType
-  wafer.waferType = json_wafer.value("waferType", "");
-  //! wafer.thinningDate
-  SvtDbAgent::get_v(json_wafer, "thinningDate", wafer.thinningDate);
-  //! wafer.dicingDate
-  SvtDbAgent::get_v(json_wafer, "dicingDate", wafer.dicingDate);
-  //! wafer.productionDate
-  SvtDbAgent::get_v(json_wafer, "productionDate", wafer.productionDate);
-
-  try
-  {
-    SvtDbInterface::insertWafer(wafer);
-    const auto maxWaferId = SvtDbInterface::getMaxId("Wafer");
-    std::vector<int> id_filters = {maxWaferId};
-
-    std::vector<SvtDbInterface::dbWaferRecords> wafers;
-    SvtDbInterface::getAllWafers(wafers, id_filters);
-
-    wafer = (wafers.size()) ? std::move(wafers.at(0))
-                            : std::move(SvtDbInterface::dbWaferRecords{});
-
-    nlohmann::json ret_json_wafer;
-    ret_json_wafer["id"] = wafer.id;
-    ret_json_wafer["serialNumber"] = wafer.serialNumber;
-    ret_json_wafer["batchNumber"] = wafer.batchNumber;
-    ret_json_wafer["waferType"] = wafer.waferType;
-    ret_json_wafer["engineeringRun"] = wafer.engineeringRun;
-    ret_json_wafer["foundry"] = wafer.foundry;
-    ret_json_wafer["technology"] = wafer.technology;
-    ret_json_wafer["thinningDate"] = wafer.thinningDate;
-    ret_json_wafer["dicingDate"] = wafer.dicingDate;
-    ret_json_wafer["productionDate"] = wafer.productionDate;
-
-    replyData["data"]["entity"] = ret_json_wafer;
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
-    getWaferReplyMsg(id_filters, replyData);
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-  }
-}
-
-//========================================================================+
 void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
-                                 SvtDbAgentMsgStatus &status)
+                                 SvtDbAgent::SvtDbAgentMsgStatus &status)
 {
   //! fill headers for reply message
   nlohmann::json replyHeaders = nlohmann::json::object();
@@ -273,9 +146,9 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
   //! reply message data field
   nlohmann::ordered_json replyData;
 
-  if (status != SvtDbAgentMsgStatus::Success)
+  if (status != SvtDbAgent::SvtDbAgentMsgStatus::Success)
   {
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::NotFound];
+    replyData["status"] = status;
     replyData["data"] = std::string();
   }
   else
@@ -285,7 +158,8 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
     if (type.empty())
     {
       logger.logError("Request have not type information. Skipping");
-      replyData["status"] = msgStatus[SvtDbAgentMsgStatus::NotFound];
+      replyData["status"] =
+          SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
     }
     else
     {
@@ -295,15 +169,40 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
       {
         switch (reqType)
         {
-        case SvtDbAgent::RequestType::GetAllWaferTypes:
+          //! enumValues
+        case SvtDbAgent::RequestType::GetAllWaferFoundries:
         case SvtDbAgent::RequestType::GetAllEngineeringRuns:
-        case SvtDbAgent::RequestType::GetAllFoundries:
         case SvtDbAgent::RequestType::GetAllWaferTechnologies:
+        case SvtDbAgent::RequestType::GetAllWaferSubMapOrientations:
         case SvtDbAgent::RequestType::GetAllAsicFamilyTypes:
         {
-          getEnumReplyMsg(reqType, replyData);
+          getAllEnumValuesReplyMsg(reqType, replyData);
         }
         break;
+          //! Get all wafer types
+        case SvtDbAgent::RequestType::GetAllWaferTypes:
+        {
+          std::vector<int> id_filters;
+          if (msg.payload.contains(std::string("filter")))
+          {
+            id_filters = msg.payload["filter"].get<std::vector<int>>();
+          }
+          SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyData);
+        }
+        break;
+          //! Create wafer type
+        case SvtDbAgent::RequestType::CreateWaferType:
+        {
+          const auto &msgData = msg.payload["data"];
+          if (!msgData.contains(std::string("create")))
+          {
+            throw std::runtime_error(
+                "DbAgentService: Non object create was found");
+          }
+          SvtDbAgent::createWaferTypeReplyMsg(msgData["create"], replyData);
+        }
+        break;
+          //! Get all wafers
         case SvtDbAgent::RequestType::GetAllWafers:
         {
           std::vector<int> id_filters;
@@ -311,9 +210,10 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
           {
             id_filters = msg.payload["filter"].get<std::vector<int>>();
           }
-          getWaferReplyMsg(id_filters, replyData);
+          SvtDbAgent::getAllWafersReplyMsg(id_filters, replyData);
         }
         break;
+          //! Create wafer
         case SvtDbAgent::RequestType::CreateWafer:
         {
           const auto &msgData = msg.payload["data"];
@@ -322,22 +222,26 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
             throw std::runtime_error(
                 "DbAgentService: Non object create was found");
           }
-          createWaferReplyMsg(msgData["create"], replyData);
+          SvtDbAgent::createWaferReplyMsg(msgData["create"], replyData);
         }
         break;
+          //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
           logger.logError("");
-          replyData["status"] = msgStatus[SvtDbAgentMsgStatus::NotFound];
+          replyData["status"] = SvtDbAgent::msgStatus
+              [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
         }
       }
       catch (const std::exception &e)
       {
         logger.logError("Error requesting " +
-                        std::string(SvtDbAgent::a_requestType[reqType]) +
+                        std::string(SvtDbAgent::m_requestType[reqType]) +
                         std::string(e.what()));
         replyData["data"]["items"] = std::string();
-        replyData["status"] = msgStatus[SvtDbAgentMsgStatus::BadRequest];
+        replyData["status"] =
+            SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
+        replyData["errMsg"] = e.what();
       }
     }  //!<! request type is not empty
   }
