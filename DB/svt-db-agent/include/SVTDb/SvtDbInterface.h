@@ -8,6 +8,7 @@
  * @brief Database interface for SVT test
  */
 
+#include <initializer_list>
 #include <string>
 #include <vector>
 
@@ -26,19 +27,34 @@ namespace SvtDbInterface
     std::string description;
   };
 
+  //! WaferType
+  using dbWaferTypeRecords = struct dbWaferTypeRecords
+  {
+    int id = -1;
+    std::string name;
+    std::string foundry;
+    std::string technology;
+    std::string engineeringRun;
+    std::string waferMap;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "id", "name", "foundry", "technology", "engineeringRun", "waferMap"};
+  };
+
   //! Wafer
   using dbWaferRecords = struct dbWaferRecords
   {
     int id = -1;
     std::string serialNumber;
     int batchNumber = -1;
-    std::string foundry;
-    std::string technology;
-    std::string engineeringRun;
-    std::string waferType;
+    int waferTypeId = -1;
     std::string thinningDate;
     std::string dicingDate;
     std::string productionDate;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "id", "serialNumber", "batchNumber", "waferTypeId",
+        "thinningDate", "dicingDate", "productionDate"};
   };
 
   //! Asic
@@ -49,15 +65,6 @@ namespace SvtDbInterface
     std::string serialNumber;
     std::string familyType;
     std::string waferMapPosition;
-  };
-
-  //! Wafer topography
-  using dbWaferTopoRecords = struct dbWaferTopoRecords
-  {
-    int id = -1;
-    std::string name;  //!<! TODO change to waferType
-    std::string imageBase64String;
-    std::string waferMap;
   };
 
   //!
@@ -71,6 +78,10 @@ namespace SvtDbInterface
 
   int getAllVersions(std::vector<dbVersion> &versions);
 
+  //! Wafers Type
+  int getAllWaferTypes(std::vector<dbWaferTypeRecords> &wafersTypes,
+                       const std::vector<int> &id_filters);
+  bool insertWaferType(const dbWaferTypeRecords &wafer);
   //! Wafers
   int getAllWafers(std::vector<dbWaferRecords> &wafers,
                    const std::vector<int> &id_filters);
@@ -79,11 +90,6 @@ namespace SvtDbInterface
   int getAllAsics(std::vector<dbAsicRecords> &asics,
                   const std::vector<int> &id_filters);
   bool insertAsic(const dbAsicRecords &asic);
-  //! WaferTopography
-  int getAllTopography(std::vector<dbWaferTopoRecords> &WaferTopography,
-                       const std::vector<int> &id_filters);
-  bool insertTopography(const dbWaferTopoRecords &waferTopography);
-
 }  // namespace SvtDbInterface
 
 #endif
