@@ -1,0 +1,244 @@
+Table WaferType {
+  id integer [primary key, increment]
+  name string
+  engineeringRun engineeringRun
+  foundry foundry
+  technology technology
+  imageBase64String string
+  waferMap JSON
+}
+
+Table Wafer {
+  id integer [primary key, increment]
+  serialNumber string [unique]
+  batchNumber integer
+  thinningDate date
+  dicingDate date
+  productionDate date
+  waferTypeId integer [ref: > WaferType.id]
+}
+
+Table Asic {
+  id integer [primary key, increment]
+  waferId integer [ref: > Wafer.id]
+  serialNumber string [unique]
+  familyType familyType
+  waferMapPosition string
+}
+
+Table waferSubMap {
+  waferTypeId integer [ref: > WaferType.id]
+  orientation orientation
+  submap JSON
+}
+
+Table wpMachineInfo {
+  id integer [primary key, increment]
+  name string [unique]
+  hostname string
+  connectionType connectionType
+  connectionPort integer
+  generalLocation generalLocation
+  software software
+  softwareVersion string
+  vendor vendor
+  probeCardInfo integer [ref: > probeCardInfo.id]
+}
+
+Table probeCardInfo {
+  id integer [primary key, increment]
+  serialNumber string [unique]
+  vendor vendorPc
+  name name
+  model model
+  version integer
+  dateOfArrival date
+  location location
+  type type
+  vendorCleaningInterval integer
+}
+
+Table probeCardFamilyType {
+  probeCardInfoId integer [ref: > probeCardInfo.id]
+  asicFamilyType asicFamilyType [ref: > Asic.familyType]
+}
+
+Table projectName {
+  id integer [primary key, increment]
+  wpMachineInfoId integer [ref: > wpMachineInfo.id]
+  waferTypeId integer [ref: > WaferType.id]
+  asicFamilyType asicFamilyType [ref: > Asic.familyType]
+  orientation orientation
+  name string [unique]
+  alignmentDie string
+  homeDie string
+}
+
+Table probeCardMaintenance {
+  id integer [primary key, increment]
+  probeCardInfoId integer [ref: > probeCardInfo.id]
+  cleaningDate date
+  totNumContacts integer
+  numContactsSinceLastCleaning integer
+  numContactsDuringCleaning integer
+  cleaningOverdrive integer
+}
+
+Table asicProbingInfo {
+  id integer [primary key, increment]
+  asicId integer [ref: > Asic.id]
+  numContacts integer
+  mechanicalQuality mechanicalQuality
+  dateAndTime date
+}
+
+Table waferLoadedInMachine {
+  id integer [primary key, increment]
+  machineId integer [ref: > wpMachineInfo.id]
+  waferSerialNumber string [ref: > Wafer.serialNumber]
+  date date
+  userName string
+  action action
+}
+
+Table asicConfiguration {
+  id integer [primary key, increment]
+  wpMachineInfoId integer [ref: > wpMachineInfo.id]
+  versionId integer [ref: > probeCardInfo.version]
+  testingAllowed boolean
+}
+
+Table wpConfiguration {
+  id integer [primary key, increment]
+  wpMachineInfoId integer [ref: > wpMachineInfo.id]
+  versionId integer [ref: > probeCardInfo.version]
+  orientation orientation
+}
+
+Table probeCardConfiguration {
+  id integer [primary key, increment]
+  probeCardInfoId integer [ref: > probeCardInfo.id]
+  versionId integer [ref: > probeCardInfo.version]
+  cleaningInterval integer
+}
+
+Enum engineeringRun {
+  ER1
+  ER2
+  ER3
+  LAS1
+  Ancillary1
+}
+
+Enum foundry {
+  TowerSemiconductor
+  xfab
+}
+
+Enum technology {
+  TPSCo65
+  xfab110
+}
+
+Enum familyType {
+  MOSS
+  babyMOSS
+  NKF7
+  MOSAIX
+  babyMOSAIX
+  LAS
+  Ancillary
+}
+
+Enum orientation {
+  North
+  South
+  East
+  West
+}
+
+Enum connectionType {
+  TCPIP
+  GPIB
+  RS232
+  USB
+  Ethernet
+  Modbus
+  LAN
+}
+
+Enum generalLocation {
+  CERN_186_R_E10
+  Prague
+  LosAlamos
+  BNL
+  RAL
+}
+
+Enum software {
+  Sentio
+  VeloxCascade
+}
+
+Enum vendor {
+  MPI
+  CascadeMicrotech
+  FormFactor
+}
+
+Enum vendorPc {
+  MPI
+  Korea
+  Synergie
+  FormFactorPC
+}
+
+Enum name {
+  NKF7_MPI
+  BabyMOSS_Korea
+  Mosaix_Korea
+}
+
+Enum model {
+  NKF7
+  MosaixLeft
+  MosaixRight
+  LAS
+  BabyMOSS
+  Ancillary
+}
+
+Enum location {
+  CERN
+  Prague
+  LosAlamos
+  BNL
+  RAL
+}
+
+Enum type {
+  Vertical
+  Cantilever
+}
+
+Enum asicFamilyType {
+  NKF7
+  Mosaix
+  BabyMosaix
+  LAS
+  BabyMOSS
+  Ancillary
+  MOSS
+}
+
+Enum mechanicalQuality {
+  Good
+  Bad
+  AvoidIfPossible
+}
+
+Enum action {
+  Loaded
+  Unloaded
+}
+
