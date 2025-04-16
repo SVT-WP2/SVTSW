@@ -34,23 +34,6 @@ enum SvtDbAgentTopicEnum : uint8_t
 const std::array<std::string_view, SvtDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
 
-enum SvtDbAgentMsgStatus : uint8_t
-{
-  // sucess
-  Success = 0,
-  // message data has invalid format
-  BadRequest,
-  // requested entity does not exist
-  NotFound,
-  // is not able to process the request, some unexpected error
-  UnexpectedError,
-  // Num of message status
-  NumStatus
-};
-
-const std::array<std::string_view, SvtDbAgentMsgStatus::NumStatus> msgStatus = {
-    {"Success", "BadRequest", "NotFound", "UnexpectedError"}};
-
 namespace RdKafka
 {
   class Message;
@@ -82,15 +65,8 @@ class SvtDbAgentService
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
 
-  void parseMsg(SvtDbAgentMessage &msg, SvtDbAgentMsgStatus &status);
-
-  //! Actions
-  void getEnumReplyMsg(const SvtDbAgent::RequestType &reqType,
-                       nlohmann::ordered_json &replyData);
-  void getWaferReplyMsg(const std::vector<int> &id_filters,
-                        nlohmann::ordered_json &replyData);
-  void createWaferReplyMsg(const nlohmann::json &json_wafer,
-                           nlohmann::ordered_json &replyData);
+  void parseMsg(SvtDbAgentMessage &msg,
+                SvtDbAgent::SvtDbAgentMsgStatus &status);
 
   std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
   std::shared_ptr<SvtDbAgentProducer> m_Producer;

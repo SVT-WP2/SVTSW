@@ -46,6 +46,7 @@ file(GLOB SOURCES_DB
   "src/SVTDb/SvtDbInterface.cpp"
   "src/SVTDbAgentService/SvtDbAgentConsumer.cpp"
   "src/SVTDbAgentService/SvtDbAgentProducer.cpp"
+  "src/SVTDbAgentService/SvtDbAgentRequest.cpp"
   "src/SVTDbAgentService/SvtDbAgentService.cpp"
 )
 
