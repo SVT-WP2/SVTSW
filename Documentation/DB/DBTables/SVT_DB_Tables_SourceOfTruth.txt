@@ -1,128 +1,128 @@
 Table WaferType {
   id integer [primary key, increment]
   name string
-  engineeringRun engineeringRun
+  engineeringrun engineeringrun
   foundry foundry
   technology technology
-  imageBase64String string
-  waferMap JSON
+  imagebase64string string
+  wafermap JSON
 }
 
 Table Wafer {
   id integer [primary key, increment]
-  serialNumber string [unique]
-  batchNumber integer
-  thinningDate date
-  dicingDate date
-  productionDate date
-  waferTypeId integer [ref: > WaferType.id]
+  serialnumber string [unique]
+  batchnumber integer
+  thinningdate date
+  dicingdate date
+  productiondate date
+  wafertypeid integer [ref: > WaferType.id]
 }
 
 Table Asic {
   id integer [primary key, increment]
-  waferId integer [ref: > Wafer.id]
-  serialNumber string [unique]
-  familyType familyType
-  waferMapPosition string
+  waferid integer [ref: > Wafer.id]
+  serialnumber string [unique]
+  familytype familytype
+  wafermapposition string
 }
 
-Table waferSubMap {
-  waferTypeId integer [ref: > WaferType.id]
+Table WaferSubMap {
+  wafertypeid integer [ref: > WaferType.id]
   orientation orientation
   submap JSON
 }
 
-Table wpMachineInfo {
+Table WpMachine {
   id integer [primary key, increment]
   name string [unique]
   hostname string
-  connectionType connectionType
-  connectionPort integer
-  generalLocation generalLocation
+  connectiontype connectiontype
+  connectionport integer
+  generallocation generallocation
   software software
-  softwareVersion string
+  softwareversion string
   vendor vendor
-  probeCardInfo integer [ref: > probeCardInfo.id]
+  probecardid integer [ref: > WpProbeCard.id]
 }
 
-Table probeCardInfo {
+Table WpProbeCard {
   id integer [primary key, increment]
-  serialNumber string [unique]
-  vendor vendorPc
+  serialnumber string [unique]
+  vendor vendorpc
   name name
   model model
   version integer
-  dateOfArrival date
+  arrivaldate date
   location location
   type type
-  vendorCleaningInterval integer
+  vendorcleaninginterval integer
 }
 
-Table probeCardFamilyType {
-  probeCardInfoId integer [ref: > probeCardInfo.id]
-  asicFamilyType asicFamilyType [ref: > Asic.familyType]
+Table WpProbeCardFamilyType {
+  probecardid integer [ref: > WpProbeCard.id]
+  asicfamilytype asicfamilytype [ref: > Asic.familytype]
 }
 
-Table projectName {
+Table WpProject {
   id integer [primary key, increment]
-  wpMachineInfoId integer [ref: > wpMachineInfo.id]
-  waferTypeId integer [ref: > WaferType.id]
-  asicFamilyType asicFamilyType [ref: > Asic.familyType]
+  wpmachineid integer [ref: > WpMachine.id]
+  wafertypeid integer [ref: > WaferType.id]
+  asicfamilytype asicfamilytype [ref: > Asic.familytype]
   orientation orientation
   name string [unique]
-  alignmentDie string
-  homeDie string
+  alignmentdie string
+  homedie string
 }
 
-Table probeCardMaintenance {
+Table ProbeCardMaintenance {
   id integer [primary key, increment]
-  probeCardInfoId integer [ref: > probeCardInfo.id]
-  cleaningDate date
-  totNumContacts integer
-  numContactsSinceLastCleaning integer
-  numContactsDuringCleaning integer
-  cleaningOverdrive integer
+  probecardid integer [ref: > WpProbeCard.id]
+  cleaningdate date
+  totnumcontacts integer
+  numcontactssincelastcleaning integer
+  numcontactsduringcleaning integer
+  cleaningoverdrive integer
 }
 
-Table asicProbingInfo {
+Table AsicProbingInfo {
   id integer [primary key, increment]
-  asicId integer [ref: > Asic.id]
-  numContacts integer
-  mechanicalQuality mechanicalQuality
-  dateAndTime date
+  asicid integer [ref: > Asic.id]
+  numcontacts integer
+  mechanicalquality mechanicalquality
+  arrivedat date
 }
 
-Table waferLoadedInMachine {
+Table WaferLoadedInMachine {
   id integer [primary key, increment]
-  machineId integer [ref: > wpMachineInfo.id]
-  waferSerialNumber string [ref: > Wafer.serialNumber]
+  machineid integer [ref: > WpMachine.id]
+  waferserialnumber string [ref: > Wafer.serialnumber]
   date date
-  userName string
+  username string
   action action
 }
 
-Table asicConfiguration {
+Table AsicConfiguration {
   id integer [primary key, increment]
-  wpMachineInfoId integer [ref: > wpMachineInfo.id]
-  versionId integer [ref: > probeCardInfo.version]
-  testingAllowed boolean
+  wpmachineid integer [ref: > WpMachine.id]
+  versionid integer [ref: > WpProbeCard.version]
+  istestingallowed boolean
 }
 
-Table wpConfiguration {
+Table WpConfiguration {
   id integer [primary key, increment]
-  wpMachineInfoId integer [ref: > wpMachineInfo.id]
-  versionId integer [ref: > probeCardInfo.version]
+  wpmachineid integer [ref: > WpMachine.id]
+  versionid integer [ref: > WpProbeCard.version]
   orientation orientation
 }
 
-Table probeCardConfiguration {
+Table ProbeCardConfiguration {
   id integer [primary key, increment]
-  probeCardInfoId integer [ref: > probeCardInfo.id]
-  versionId integer [ref: > probeCardInfo.version]
-  cleaningInterval integer
+  probecardid integer [ref: > WpProbeCard.id]
+  versionid integer [ref: > WpProbeCard.version]
+  cleaninginterval integer
 }
 
-Enum engineeringRun {
+Enum engineeringrun {
   ER1
   ER2
   ER3
@@ -132,20 +132,20 @@ Enum engineeringRun {
 
 Enum foundry {
   TowerSemiconductor
-  xfab
+  Xfab
 }
 
 Enum technology {
   TPSCo65
-  xfab110
+  Xfab110
 }
 
-Enum familyType {
+Enum familytype {
   MOSS
-  babyMOSS
+  BabyMOSS
   NKF7
   MOSAIX
-  babyMOSAIX
+  BabyMOSAIX
   LAS
   Ancillary
 }
@@ -157,7 +157,7 @@ Enum orientation {
   West
 }
 
-Enum connectionType {
+Enum connectiontype {
   TCPIP
   GPIB
   RS232
@@ -167,7 +167,7 @@ Enum connectionType {
   LAN
 }
 
-Enum generalLocation {
+Enum generallocation {
   CERN_186_R_E10
   Prague
   LosAlamos
@@ -186,7 +186,7 @@ Enum vendor {
   FormFactor
 }
 
-Enum vendorPc {
+Enum vendorpc {
   MPI
   Korea
   Synergie
@@ -221,7 +221,7 @@ Enum type {
   Cantilever
 }
 
-Enum asicFamilyType {
+Enum asicfamilytype {
   NKF7
   Mosaix
   BabyMosaix
@@ -231,7 +231,7 @@ Enum asicFamilyType {
   MOSS
 }
 
-Enum mechanicalQuality {
+Enum mechanicalquality {
   Good
   Bad
   AvoidIfPossible
