@@ -133,12 +133,28 @@ def getMaxVersionId():
     return dbId
 
 
-def showAllEnumValues():
+def getAllEnumTypes():
     with conn.cursor() as cur:
         try:
             cur.execute("""
                 SELECT n.nspname AS enum_schema,
-                    t.typname AS enUm_name,
+                    t.typname AS enum_name
+                FROM pg_type t
+                    join pg_enum e on t.oid = e.enumtypid
+                    join pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+                        """)
+            return cur.fetchall()
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+        cur.close
+
+def getAllEnumValues():
+    with conn.cursor() as cur:
+        try:
+            cur.execute("""
+                SELECT n.nspname AS enum_schema,
+                    t.typname AS enum_name,
                     e.enumlabel AS enum_value
                 FROM pg_type t
                     join pg_enum e on t.oid = e.enumtypid
