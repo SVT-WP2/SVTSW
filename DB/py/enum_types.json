@@ -1,0 +1,49 @@
+{
+  "enum_engineeringRun": ["ER1", "ER2", "ER3", "LAS1", "Ancillary1"],
+  "enum_foundry": ["TowerSemiconductor", "Xfab"],
+  "enum_waferTech": ["TPSCo65", "Xfab110"],
+
+  "enum_asicFamilyType": [
+    "MOSS",
+    "BabyMOSS",
+    "NKF7",
+    "MOSAIX",
+    "BabyMOSAIX",
+    "LAS",
+    "Ancillary"
+  ],
+  "enum_waferMapOrientation": ["North", "South", "East", "West"],
+
+  "enum_wpConnectionType": [
+    "TCPIP",
+    "GPIB",
+    "RS232",
+    "USB",
+    "Ethernet",
+    "Modbus",
+    "LAN"
+  ],
+  "enum_wpGeneralLocation": [
+    "CERN_186_R_E10",
+    "Prague",
+    "LosAlamos",
+    "BNL",
+    "RAL"
+  ],
+  "enum_wpSwType": ["Sentio", "VeloxCascade"],
+  "enum_wpVendor": ["MPI", "CascadeMicrotech", "FormFactor"],
+  "enum_pcVendor": ["MPI", "Korea", "Synergie", "FormFactorPC"],
+  "enum_pcName": ["NKF7_MPI", "BabyMOSS_Korea", "Mosaix_Korea"],
+  "enum_pcModel": [
+    "NKF7",
+    "MosaixLeft",
+    "MosaixRight",
+    "LAS",
+    "BabyMOSS",
+    "Ancillary"
+  ],
+  "enum_pcLocation": ["CERN", "Prague", "LosAlamos", "BNL", "RAL"],
+  "enum_pcType": ["Vertical", "Cantilever"],
+  "enum_contctMechanicalQuality": ["Good", "Bad", "AvoidIfPossible"],
+  "enum_waferInMachineStatus": ["Loaded", "Unloaded"]
+}
