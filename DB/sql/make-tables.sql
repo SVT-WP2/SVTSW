@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS :SchemaName.VERSION (
 CREATE TABLE IF NOT EXISTS :SchemaName.waferType (
 	id SERIAL,
 	name VARCHAR(50) UNIQUE,
+	engineeringRun :SchemaName.enum_engineeringRun,
 	foundry :SchemaName.enum_foundry,
 	technology :SchemaName.enum_waferTech,
-	engineeringRun :SchemaName.enum_engineeringRun,
 	waferMap TEXT,
 	PRIMARY KEY (id)
 );
@@ -31,10 +31,10 @@ CREATE TABLE IF NOT EXISTS :SchemaName.waferTypeImage (
 );
 
 -- CREATE TABLE WAFER SUBMAP
-CREATE TABLE IF NOT EXISTS :SchemaName.waferSubMap (
+CREATE TABLE IF NOT EXISTS :SchemaName.waferTypeSubMap (
 	waferTypeId INT,
 	Orientation :SchemaName.enum_waferMapOrientation,
-	waferSubMap TEXT,
+	waferTypeSubMap TEXT,
 	FOREIGN KEY (waferTypeId) REFERENCES :SchemaName.waferType (id)
 );
 
