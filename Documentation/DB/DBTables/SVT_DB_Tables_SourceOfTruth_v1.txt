@@ -1,0 +1,290 @@
+Table WaferType {
+  id integer [primary key, increment]
+  name string
+  engineeringRun engineeringRun
+  foundry foundry
+  technology waferTech
+  waferMap JSON
+}
+
+Table Wafer {
+  id integer [primary key, increment]
+  serialNumber string [unique]
+  batchNumber integer
+  thinningDate date
+  dicingDate date
+  productionDate date
+  waferTypeId integer [ref: > WaferType.id]
+}
+
+Table Version {
+  id integer [primary]
+  name string
+  baseVersion integer [ref: > Version.id]
+  creationTime timestamp [DEFAULT CURRENT_TIMESTAMPE]
+  description string
+}
+
+Table WaferTypeImage {
+  waferTypeId integer [ref: > WaferType.id, Not Null]
+  imageBase64String string [Not Null]
+}
+
+Table WaferTypeSubMap {
+  waferTypeId integer [ref: > WaferType.id]
+  orientation waferMapOrientation
+  waferTypeSubmap JSON
+}
+
+Table Asic {
+  id integer [primary key, increment]
+  waferId integer [ref: > Wafer.id]
+  serialNumber string [unique]
+  familyType asicFamilyType
+  waferMapPosition string
+}
+
+Table ProbeCard {
+  id integer [primary key, increment]
+  serialNumber string [unique]
+  vendor pcVendor
+  name pcName
+  model pcModel
+  version integer
+  arrivalDate date
+  location pcLocation
+  type pcType
+  vendorCleaningInterval integer
+}
+
+Table ProbeCardFamilyType {
+  probeCardId integer [ref: > ProbeCard.id]
+  asicFamilyType asicFamilyType [ref: > Asic.familytype]
+}
+
+Table WaferProbeMachine {
+  id integer [primary key, increment]
+  name string [unique]
+  hostName string
+  connectionType wpConnectionType
+  connectionPort integer
+  generalLocation wpGeneralLocation
+  software wpSwType
+  swVersion string
+  vendor wpVendor
+  probeCardId integer [ref: > ProbeCard.id]
+}
+
+Table WaferProbeProject {
+  id integer [primary key, increment]
+  wpMachineId integer [ref: > WaferProbeMachine.id]
+  waferTypeid integer [ref: > WaferType.id]
+  asicFamilyType asicFamilyType [ref: > Asic.familytype]
+  orientation waferMapOrientation
+  name string [unique]
+  alignmentDie string
+  homeDie string
+}
+
+Table ProbeCardMaintenance {
+  id integer [primary key, increment]
+  probeCardId integer [ref: > ProbeCard.id]
+  cleaningDate date
+  totNumContacts integer
+  numContactsSinceLastCleaning integer
+  numContactsDuringCleaning integer
+  cleaningOverdrive integer
+}
+
+Table AsicProbing {
+  id integer [primary key, increment]
+  asicId integer [ref: > Asic.id]
+  numContacts integer
+  mechanicalQuality contactMechanicalQuality
+  arrivalDate date
+}
+
+Table WaferLoadedInMachine {
+  id integer [primary key, increment]
+  machineId integer [ref: > WaferProbeMachine.id]
+  waferSerialNumber string [ref: > Wafer.serialNumber]
+  date date
+  userName string
+  status waferInMachineStatus
+}
+
+Table AsicConfiguration {
+  id integer [primary key, increment]
+  probeStationId integer [ref: > WaferProbeMachine.id]
+  versionId integer [ref: > Version.id]
+  isTestingAllowed boolean
+}
+
+Table WpConfiguration {
+  id integer [primary key, increment]
+  wpMachineId integer [ref: > WaferProbeMachine.id]
+  versionId integer [ref: > Version.id]
+  orientation waferMapOrientation
+}
+
+Table ProbeCardConfiguration {
+  id integer [primary key, increment]
+  probeCardId integer [ref: > ProbeCard.id]
+  versionId integer [ref: > Version.id]
+  cleaningInterval integer
+}
+
+Enum engineeringRun {
+  ER1
+  ER2
+  ER3
+  LAS1
+  Ancillary1
+}
+
+Enum foundry {
+  TowerSemiconductor
+  Xfab
+}
+
+Enum waferTech {
+  TPSCo65
+  Xfab110
+}
+
+Enum asicFamilytype {
+  MOSS
+  BABYMOSS
+  NKF7
+  MOSAIX
+  BabyMOSAIX
+  LAS
+  Ancillary
+  CE65 V1CG I5U SQ
+  CE65 V2CG I5U SQ
+  CE65 V2CG I8U SQ
+  CE65 V2CG I8U HSQ
+  CE65 V2CG 22U5 SQ
+  CE65 V2CG 22U5 HSQ
+  CE65 V2CN I5U SQ
+  CE65 V2CN I8U SQ
+  CE65 V2CN 18U HSQ
+  CE65 V2CN 22U5 SQ
+  CE65 V2CN 22U5 HSQ
+  AOIO P
+  AO_IO
+  AOIO 8
+  S
+  DESY
+  NONAME1
+  CE65 V1CN I5U SQ
+  NONAME2
+  CE65 V1CB I5U SQ
+  dPTSN
+  dP_TS
+  AFISP
+  AFISB
+  AF_IS
+  RAL TXRX ER1    
+  TTS-5
+  TTS-4
+  CE65 V1CN I5U SQ
+  CE65 V2CB I5U SQ
+  CE65 V2CB 22U5 SQ
+  CE65 V2CB I8U HSQ
+  CE65 V2CB 22U5 HSQ
+  CE65 V2CB I8U SQ
+  NKF5
+  NKF6
+  NKF7
+  NONAME5
+  SEU-2 INFN-BAR GDR
+  SEU-1 INFN-BAR GDR
+  TTS-3
+  TTS-2
+  TTS-1
+  NONAME4
+  NONAME_LONG    
+}
+
+Enum waferMapOrientation {
+  North
+  South
+  East
+  West
+}
+
+Enum wpConnectionType {
+  TCPIP
+  GPIB
+  RS232
+  USB
+  Ethernet
+  Modbus
+  LAN
+}
+
+Enum wpGeneralLocation {
+  CERN_186_R_E10
+  Prague
+  LosAlamos
+  BNL
+  RAL
+}
+
+Enum wpSwType {
+  Sentio
+  VeloxCascade
+}
+
+Enum wpVendor {
+  MPI
+  CascadeMicrotech
+  FormFactor
+}
+
+Enum pcVendor {
+  MPI
+  Korea
+  Synergie
+  FormFactorPC
+}
+
+Enum pcName {
+  NKF7_MPI
+  BabyMOSS_Korea
+  Mosaix_Korea
+}
+
+Enum pcModel {
+  NKF7
+  MosaixLeft
+  MosaixRight
+  LAS
+  BabyMOSS
+  Ancillary
+}
+
+Enum pcLocation {
+  CERN
+  Prague
+  LosAlamos
+  BNL
+  RAL
+}
+
+Enum pcType {
+  Vertical
+  Cantilever
+}
+
+Enum contactMechanicalQuality {
+  Good
+  Bad
+  AvoidIfPossible
+}
+
+Enum waferInMachineStatus {
+  Loaded
+  Unloaded
+}
