@@ -18,16 +18,16 @@ Table Wafer {
 }
 
 Table Version {
-  id integer [primary]
+  id integer [primary key]
   name string
   baseVersion integer [ref: > Version.id]
-  creationTime timestamp [DEFAULT CURRENT_TIMESTAMPE]
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
   description string
 }
 
 Table WaferTypeImage {
-  waferTypeId integer [ref: > WaferType.id, Not Null]
-  imageBase64String string [Not Null]
+  waferTypeId integer [ref: > WaferType.id, not null]
+  imageBase64String string [not null]
 }
 
 Table WaferTypeSubMap {
@@ -40,7 +40,7 @@ Table Asic {
   id integer [primary key, increment]
   waferId integer [ref: > Wafer.id]
   serialNumber string [unique]
-  familyType asicFamilyType
+  familyType asicFamilytype
   waferMapPosition string
 }
 
@@ -59,7 +59,7 @@ Table ProbeCard {
 
 Table ProbeCardFamilyType {
   probeCardId integer [ref: > ProbeCard.id]
-  asicFamilyType asicFamilyType [ref: > Asic.familytype]
+  asicFamilyType asicFamilytype
 }
 
 Table WaferProbeMachine {
@@ -78,8 +78,8 @@ Table WaferProbeMachine {
 Table WaferProbeProject {
   id integer [primary key, increment]
   wpMachineId integer [ref: > WaferProbeMachine.id]
-  waferTypeid integer [ref: > WaferType.id]
-  asicFamilyType asicFamilyType [ref: > Asic.familytype]
+  waferTypeId integer [ref: > WaferType.id]
+  asicFamilyType asicFamilytype
   orientation waferMapOrientation
   name string [unique]
   alignmentDie string
@@ -160,49 +160,47 @@ Enum asicFamilytype {
   BabyMOSAIX
   LAS
   Ancillary
-  CE65 V1CG I5U SQ
-  CE65 V2CG I5U SQ
-  CE65 V2CG I8U SQ
-  CE65 V2CG I8U HSQ
-  CE65 V2CG 22U5 SQ
-  CE65 V2CG 22U5 HSQ
-  CE65 V2CN I5U SQ
-  CE65 V2CN I8U SQ
-  CE65 V2CN 18U HSQ
-  CE65 V2CN 22U5 SQ
-  CE65 V2CN 22U5 HSQ
-  AOIO P
+  CE65_V1CG_I5U_SQ
+  CE65_V2CG_I5U_SQ
+  CE65_V2CG_I8U_SQ
+  CE65_V2CG_I8U_HSQ
+  CE65_V2CG_22U5_SQ
+  CE65_V2CG_22U5_HSQ
+  CE65_V2CN_I5U_SQ
+  CE65_V2CN_I8U_SQ
+  CE65_V2CN_18U_HSQ
+  CE65_V2CN_22U5_SQ
+  CE65_V2CN_22U5_HSQ
+  AOIO_P
   AO_IO
-  AOIO 8
+  AOIO_8
   S
   DESY
   NONAME1
-  CE65 V1CN I5U SQ
+  CE65_V1CN_I5U_SQ
   NONAME2
-  CE65 V1CB I5U SQ
+  CE65_V1CB_I5U_SQ
   dPTSN
   dP_TS
   AFISP
   AFISB
   AF_IS
-  RAL TXRX ER1    
-  TTS-5
-  TTS-4
-  CE65 V1CN I5U SQ
-  CE65 V2CB I5U SQ
-  CE65 V2CB 22U5 SQ
-  CE65 V2CB I8U HSQ
-  CE65 V2CB 22U5 HSQ
-  CE65 V2CB I8U SQ
+  RAL_TXRX_ER1    
+  TTS_5
+  TTS_4
+  CE65_V2CB_I5U_SQ
+  CE65_V2CB_22U5_SQ
+  CE65_V2CB_I8U_HSQ
+  CE65_V2CB_22U5_HSQ
+  CE65_V2CB_I8U_SQ
   NKF5
   NKF6
-  NKF7
   NONAME5
-  SEU-2 INFN-BAR GDR
-  SEU-1 INFN-BAR GDR
-  TTS-3
-  TTS-2
-  TTS-1
+  SEU_2_INFN_BAR_GDR
+  SEU_1_INFN_BAR_GDR
+  TTS_3
+  TTS_2
+  TTS_1
   NONAME4
   NONAME_LONG    
 }
