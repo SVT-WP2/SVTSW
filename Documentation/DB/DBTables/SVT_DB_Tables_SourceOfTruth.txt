@@ -17,6 +17,13 @@ Table Wafer {
   waferTypeId integer [ref: > WaferType.id]
 }
 
+Table WaferLocation {
+  waferid integer [ref: > Wafer.id, not null]
+  generalLocation wpGeneralLocation
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  description string
+}
+
 Table Version {
   id integer [primary key]
   name string
