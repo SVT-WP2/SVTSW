@@ -6,6 +6,17 @@ The Folder distribution is:
 
 - UI
 - DB
+- DBAgent
+- WPAgent
+- Documentation
 - ExternalDrivers
 - SVTSupervisor
+
+Responsible for each folder:
+- UI ok-cern
+- DB and DBAgent ycorrales
+- WPAgent leyreflores, angie-kistina
+- Documentation leyreflores
+- SVTSupervisor icali
+- ExternalDrivers icali
 
