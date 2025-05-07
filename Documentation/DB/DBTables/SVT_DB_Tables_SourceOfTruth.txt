@@ -1,137 +1,137 @@
-Table Version {
-  id integer [primary]
-  name string
-  baseversion integer [ref: > Version.id]
-  creationtime timestamp [DEFAULT CURRENT_TIMESTAMPE]
-  description string
-}
-
 Table WaferType {
   id integer [primary key, increment]
   name string
-  engineeringrun engineeringRun
+  engineeringRun engineeringRun
   foundry foundry
   technology waferTech
-  wafermap JSON
-}
-
-Table WaferTypeImage {
-  wafertypeid integer [ref: > WaferType.id, Not Null]
-  imageBase64String string [Not Null]
-}
-
-Table WaferTypeSubMap {
-  wafertypeid integer [ref: > WaferType.id]
-  orientation waferMapOrientation
-  wafertypesubmap JSON
+  waferMap JSON
 }
 
 Table Wafer {
   id integer [primary key, increment]
-  serialnumber string [unique]
-  batchnumber integer
-  thinningdate date
-  dicingdate date
-  productiondate date
-  wafertypeid integer [ref: > WaferType.id]
+  serialNumber string [unique]
+  batchNumber integer
+  thinningDate date
+  dicingDate date
+  productionDate date
+  waferTypeId integer [ref: > WaferType.id]
+}
+
+Table Version {
+  id integer [primary key]
+  name string
+  baseVersion integer [ref: > Version.id]
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  description string
+}
+
+Table WaferTypeImage {
+  waferTypeId integer [ref: > WaferType.id, not null]
+  imageBase64String string [not null]
+}
+
+Table WaferTypeSubMap {
+  waferTypeId integer [ref: > WaferType.id]
+  orientation waferMapOrientation
+  waferTypeSubmap JSON
 }
 
 Table Asic {
   id integer [primary key, increment]
-  waferid integer [ref: > Wafer.id]
-  serialnumber string [unique]
-  familytype asicFamilyType
-  wafermapposition string
+  waferId integer [ref: > Wafer.id]
+  serialNumber string [unique]
+  familyType asicFamilytype
+  waferMapPosition string
 }
 
 Table ProbeCard {
   id integer [primary key, increment]
-  serialnumber string [unique]
+  serialNumber string [unique]
   vendor pcVendor
   name pcName
   model pcModel
   version integer
-  arrivedat date
+  arrivalDate date
   location pcLocation
   type pcType
-  vendorcleaninginterval integer
+  vendorCleaningInterval integer
 }
 
 Table ProbeCardFamilyType {
-  probecardid integer [ref: > ProbeCard.id]
-  asicfamilytype asicFamilyType [ref: > Asic.familytype]
+  probeCardId integer [ref: > ProbeCard.id]
+  asicFamilyType asicFamilytype
 }
 
 Table WaferProbeMachine {
   id integer [primary key, increment]
   name string [unique]
-  hostname string
-  connectiontype wpConnectionType
-  connectionport integer
-  generallocation wpGeneralLocation
+  hostName string
+  connectionType wpConnectionType
+  connectionPort integer
+  generalLocation wpGeneralLocation
   software wpSwType
   swVersion string
   vendor wpVendor
-  probecardid integer [ref: > ProbeCard.id]
+  probeCardId integer [ref: > ProbeCard.id]
 }
 
 Table WaferProbeProject {
   id integer [primary key, increment]
-  wpmachineid integer [ref: > WpMachine.id]
-  wafertypeid integer [ref: > WaferType.id]
-  asicfamilytype asicFamilyType [ref: > Asic.familytype]
+  wpMachineId integer [ref: > WaferProbeMachine.id]
+  waferTypeId integer [ref: > WaferType.id]
+  asicFamilyType asicFamilytype
   orientation waferMapOrientation
   name string [unique]
-  alignmentdie string
-  homedie string
+  alignmentDie string
+  homeDie string
 }
 
 Table ProbeCardMaintenance {
   id integer [primary key, increment]
-  probecardid integer [ref: > ProbeCard.id]
-  cleaningdate date
-  totnumcontacts integer
-  numcontactssincelastcleaning integer
-  numcontactsduringcleaning integer
-  cleaningoverdrive integer
+  probeCardId integer [ref: > ProbeCard.id]
+  cleaningDate date
+  totNumContacts integer
+  numContactsSinceLastCleaning integer
+  numContactsDuringCleaning integer
+  cleaningOverdrive integer
 }
 
-Table AsicProbingInfo {
+Table AsicProbing {
   id integer [primary key, increment]
-  asicid integer [ref: > Asic.id]
-  numcontacts integer
-  mechanicalquality contactMechanicalQuality
-  arrivedat date
+  asicId integer [ref: > Asic.id]
+  numContacts integer
+  mechanicalQuality contactMechanicalQuality
+  arrivalDate date
 }
 
 Table WaferLoadedInMachine {
   id integer [primary key, increment]
-  machineid integer [ref: > WaferProbeMachine.id]
-  waferserialnumber string [ref: > Wafer.serialnumber]
+  machineId integer [ref: > WaferProbeMachine.id]
+  waferSerialNumber string [ref: > Wafer.serialNumber]
   date date
-  username string
+  userName string
   status waferInMachineStatus
 }
 
 Table AsicConfiguration {
   id integer [primary key, increment]
-  probestationid integer [ref: > WaferProbeMachine.id]
-  versionid integer [ref: > Version.id]
-  istestingallowed boolean
+  probeStationId integer [ref: > WaferProbeMachine.id]
+  versionId integer [ref: > Version.id]
+  isTestingAllowed boolean
 }
 
 Table WpConfiguration {
   id integer [primary key, increment]
-  wpmachineid integer [ref: > WaferProbeMachine.id]
-  versionid integer [ref: > Version.id]
+  wpMachineId integer [ref: > WaferProbeMachine.id]
+  versionId integer [ref: > Version.id]
   orientation waferMapOrientation
 }
 
 Table ProbeCardConfiguration {
   id integer [primary key, increment]
-  probecardid integer [ref: > ProbeCard.id]
-  versionid integer [ref: > Version.id]
-  cleaninginterval integer
+  probeCardId integer [ref: > ProbeCard.id]
+  versionId integer [ref: > Version.id]
+  cleaningInterval integer
 }
 
 Enum engineeringRun {
@@ -154,12 +154,55 @@ Enum waferTech {
 
 Enum asicFamilytype {
   MOSS
-  BabyMOSS
+  BABYMOSS
   NKF7
   MOSAIX
   BabyMOSAIX
   LAS
   Ancillary
+  CE65_V1CG_I5U_SQ
+  CE65_V2CG_I5U_SQ
+  CE65_V2CG_I8U_SQ
+  CE65_V2CG_I8U_HSQ
+  CE65_V2CG_22U5_SQ
+  CE65_V2CG_22U5_HSQ
+  CE65_V2CN_I5U_SQ
+  CE65_V2CN_I8U_SQ
+  CE65_V2CN_18U_HSQ
+  CE65_V2CN_22U5_SQ
+  CE65_V2CN_22U5_HSQ
+  AOIO_P
+  AO_IO
+  AOIO_8
+  S
+  DESY
+  NONAME1
+  CE65_V1CN_I5U_SQ
+  NONAME2
+  CE65_V1CB_I5U_SQ
+  dPTSN
+  dP_TS
+  AFISP
+  AFISB
+  AF_IS
+  RAL_TXRX_ER1    
+  TTS_5
+  TTS_4
+  CE65_V2CB_I5U_SQ
+  CE65_V2CB_22U5_SQ
+  CE65_V2CB_I8U_HSQ
+  CE65_V2CB_22U5_HSQ
+  CE65_V2CB_I8U_SQ
+  NKF5
+  NKF6
+  NONAME5
+  SEU_2_INFN_BAR_GDR
+  SEU_1_INFN_BAR_GDR
+  TTS_3
+  TTS_2
+  TTS_1
+  NONAME4
+  NONAME_LONG    
 }
 
 Enum waferMapOrientation {
@@ -243,5 +286,3 @@ Enum waferInMachineStatus {
   Loaded
   Unloaded
 }
-
-
