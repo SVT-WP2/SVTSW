@@ -1,0 +1,4573 @@
+{ 
+  "FileName": "string",                         // Name of the file
+  "MotherFilename": "string",                   // Name of the linked file in the repo, unique name
+  "DateOfCreation": "2025-05-08 18:29:15",      // Date of creation of the file
+  "DateOfLastUpdate": "2025-05-09 HH:MM:SS",    // Date of last update of the file
+  "Revision": "0.0.0",                          // Revision of the file
+
+
+  "Groups": {                                   // Identifier to start the definition of the group of ASICs
+    "Group0": [                              // String
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CG 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CG 15U SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CG 18U SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG 18U HSQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG 22U5 SQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CN 15U SQ" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CN 18U SQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN 18U HSQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 10, "FamilyType": "E65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 11, "FamilyType": "AOIO P" },
+        { "PosInGroup": 12, "FamilyType": "AO_IO" },
+        { "PosInGroup": 13, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 14, "FamilyType": "S" },
+        { "PosInGroup": 15, "FamilyType": "DESY" },
+        { "PosInGroup": 16, "FamilyType": "NONAME1" },
+        { "PosInGroup": 17, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 18, "FamilyType": "NONAME2" }
+    ],
+
+    "Group1":[
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CB 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "dPTSN" },
+        { "PosInGroup": 2, "FamilyType": "dPTSN" },
+        { "PosInGroup": 3, "FamilyType": "dPTSN" },
+        { "PosInGroup": 4, "FamilyType": "dP_TS" },
+        { "PosInGroup": 5, "FamilyType": "dP_TS" },
+        { "PosInGroup": 6, "FamilyType": "AFISP" },
+        { "PosInGroup": 7, "FamilyType": "AFISB" },
+        { "PosInGroup": 8, "FamilyType": "AF_IS" },
+        { "PosInGroup": 9, "FamilyType": "RAL TXRX ER1" },
+        { "PosInGroup": 10, "FamilyType": "AFISP" },
+        { "PosInGroup": 11, "FamilyType": "AFISB" },
+        { "PosInGroup": 12, "FamilyType": "AF_IS" },
+        { "PosInGroup": 13, "FamilyType": "DESY" },
+        { "PosInGroup": 14, "FamilyType": "TTS-5" },
+        { "PosInGroup": 15, "FamilyType": "TTS-4" },
+        { "PosInGroup": 16, "FamilyType": "CE65 V1CB 15U SQ"},
+        { "PosInGroup": 17, "FamilyType": "NONAME2"}
+    ],
+
+    "Group2":[
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CB 15U SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CB 22U5 SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CB 18U HSQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CB 22U5 HSQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CB I8U SQ" },
+        { "PosInGroup": 6, "FamilyType": "NKF5" },
+        { "PosInGroup": 7, "FamilyType": "NKF6" },
+        { "PosInGroup": 8, "FamilyType": "NKF7" },
+        { "PosInGroup": 9, "FamilyType": "NONAME5" },
+        { "PosInGroup": 10, "FamilyType": "SEU-2 INFN-BAR GDR" },
+        { "PosInGroup": 11, "FamilyType": "SEU-1 INFN-BAR GDR" },
+        { "PosInGroup": 12, "FamilyType": "TTS-3" },
+        { "PosInGroup": 13, "FamilyType": "TTS-2" },
+        { "PosInGroup": 14, "FamilyType": "TTS-1" },
+        { "PosInGroup": 13, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 14, "FamilyType": "NONAME2" }
+    ],
+
+    "Group3":[
+        { "PosInGroup": 0, "FamilyType": "BABYMOSS" }
+    ],
+
+    "Group4":[
+        { "PosInGroup": 0, "FamilyType": "NONAME4" }
+    ],
+
+    "Group5":[
+        { "PosInGroup": 0, "FamilyType": "NONAME_LONG" }
+    ],
+
+    "Group6":[
+        { "PosInGroup": 0, "FamilyType": "MOSS" }
+    ],
+
+    "Group7":[
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CG 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CG 18U SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CG 18U HSQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG 22U5 SQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CN 15U SQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CN 18U SQ" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CN 18U HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 10, "FamilyType": "AOIO P" },
+        { "PosInGroup": 11, "FamilyType": "AO_IO" },
+        { "PosInGroup": 12, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 13, "FamilyType": "S" },
+        { "PosInGroup": 14, "FamilyType": "DESY" },
+        { "PosInGroup": 15, "FamilyType": "NONAME1" }
+    ],
+
+    "Group8":[
+        { "PosInGroup": 0, "FamilyType": "dPTSN" },
+        { "PosInGroup": 1, "FamilyType": "dPTSN" },
+        { "PosInGroup": 2, "FamilyType": "dPTSN" },
+        { "PosInGroup": 3, "FamilyType": "dP_TS" },
+        { "PosInGroup": 4, "FamilyType": "dP_TS" },
+        { "PosInGroup": 5, "FamilyType": "AFISP" },
+        { "PosInGroup": 6, "FamilyType": "AFISB" },
+        { "PosInGroup": 7, "FamilyType": "AF_IS" },
+        { "PosInGroup": 8, "FamilyType": "RAL TXRX ER1" },
+        { "PosInGroup": 9, "FamilyType": "AFISP" },
+        { "PosInGroup": 10, "FamilyType": "AFISB" },
+        { "PosInGroup": 11, "FamilyType": "AF_IS" },
+        { "PosInGroup": 12, "FamilyType": "DESY" },
+        { "PosInGroup": 13, "FamilyType": "TTS-5" },
+        { "PosInGroup": 14, "FamilyType": "TTS-4" }
+    ],
+
+    "Group9":[
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CB 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CB 22U5 SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CB 18U HSQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CB 22U5 HSQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CB 18U SQ" },
+        { "PosInGroup": 5, "FamilyType": "NKF5" },
+        { "PosInGroup": 6, "FamilyType": "NKF6" },
+        { "PosInGroup": 7, "FamilyType": "NKF7" },
+        { "PosInGroup": 8, "FamilyType": "NONAME5" },
+        { "PosInGroup": 9, "FamilyType": "SEU-2 INFN-BAR GDR" },
+        { "PosInGroup": 10, "FamilyType": "SEU-1 INFN-BAR GDR" },
+        { "PosInGroup": 11, "FamilyType": "TTS-3" },
+        { "PosInGroup": 12, "FamilyType": "TTS-2" },
+        { "PosInGroup": 13, "FamilyType": "TTS-1" }
+    ],
+
+    "Group10":[
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CG I5U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CG I8U SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CG I8U HSQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG 22U5 SQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CN I8U SQ" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CN 18U HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 10, "FamilyType": "AOIO P" },
+        { "PosInGroup": 11, "FamilyType": "AO_IO" },
+        { "PosInGroup": 12, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 13, "FamilyType": "S" },
+        { "PosInGroup": 14, "FamilyType": "DESY"},
+        { "PosInGroup": 15, "FamilyType": "NONAME1" }
+    ],
+
+    "MOSS_Group11":[
+        { "PosInGroup": 0, "FamilyType": "DESY" },
+        { "PosInGroup": 1, "FamilyType": "NONAME1" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CN I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "NONAME2" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V1CG I5U SQ" }
+    ],
+
+    "MOSS_Group12": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CG I5U SQ" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CG I8U SQ" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CG I8U HSQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG 22U5 SQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CN 15U SQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CN 18U SQ" }
+    ],
+
+    "MOSS_Group13": [
+        { "PosInGroup": 0, "FamilyType": "TTS-5" },
+        { "PosInGroup": 1, "FamilyType": "TTS-4" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "NONAME2" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V1CB I5U SQ" }
+    ],
+
+    "MOSS_Group14": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "dPTSN" },
+        { "PosInGroup": 4, "FamilyType": "dPTSN" },
+        { "PosInGroup": 5, "FamilyType": "dPTSN" },
+        { "PosInGroup": 6, "FamilyType": "dP_TS (cut)" }
+    ],
+
+    "MOSS_Group15": [
+        { "PosInGroup": 0, "FamilyType": "TTS-2" },
+        { "PosInGroup": 1, "FamilyType": "TTS-1" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CN I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "NONAME2" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V1CN I5U SQ" }
+    ],
+
+    "MOSS_Group16": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN I5U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CN I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CB I5U SQ" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CB 22U5 SQ" },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CB 18U HSQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CB 22U5 HSQ" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CB 18U SQ (cut)" }
+    ],
+
+    "MOSS_Group17": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN 22U5 HSQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "AOIO P" },
+        { "PosInGroup": 2, "FamilyType": "AO_IO" },
+        { "PosInGroup": 3, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 4, "FamilyType": "S" },
+        { "PosInGroup": 5, "FamilyType": "DESY" },
+        { "PosInGroup": 6, "FamilyType": "NONAME1" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V1CN I5U SQ" },
+        { "PosInGroup": 8, "FamilyType": "NONAME2" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V1CG I5U SQ" }
+    ],
+
+    "MOSS_Group18": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CN I8U SQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" }
+    ],
+
+    "MOSS_Group19": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN I8U SQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 4, "FamilyType": "AOIO P" },
+        { "PosInGroup": 5, "FamilyType": "AO_IO" },
+        { "PosInGroup": 6, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 7, "FamilyType": "S" },
+        { "PosInGroup": 8, "FamilyType": "DESY" },
+        { "PosInGroup": 9, "FamilyType": "NONAME1" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 11, "FamilyType": "NONAME2" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V1CG I5U SQ " }
+    ],
+
+    "MOSS_Group20": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN I8U SQ" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 11, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V2CN 22U5 HSQ (cut)" },
+        { "PosInGroup": 13, "FamilyType": "AOIO P (cut)" },
+        { "PosInGroup": 14, "FamilyType": "AO_IO (cut)" }
+    ],
+
+    "MOSS_Group21": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN I8U SQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 4, "FamilyType": "AOIO P" },
+        { "PosInGroup": 5, "FamilyType": "AO_IO" },
+        { "PosInGroup": 6, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 7, "FamilyType": "S" },
+        { "PosInGroup": 8, "FamilyType": "DESY" },
+        { "PosInGroup": 9, "FamilyType": "NONAME1" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 11, "FamilyType": "NONAME2" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V1CG I5U SQ " }
+    ],
+
+    "MOSS_Group22": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN I8U SQ (cut)" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 11, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V2CN 22U5 HSQ (cut)" },
+        { "PosInGroup": 13, "FamilyType": "AOIO P (cut)" },
+        { "PosInGroup": 14, "FamilyType": "AO_IO (cut)" }
+    ],
+
+    "MOSS_Group23": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN I8U SQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V2CN 22U5 SQ" },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 4, "FamilyType": "AOIO P" },
+        { "PosInGroup": 5, "FamilyType": "AO_IO" },
+        { "PosInGroup": 6, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 7, "FamilyType": "S" },
+        { "PosInGroup": 8, "FamilyType": "DESY" },
+        { "PosInGroup": 9, "FamilyType": "NONAME1" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 11, "FamilyType": "NONAME2" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V1CG I5U SQ " }
+    ],
+
+    "MOSS_Group24": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN I8U SQ (cut)" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 11, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V2CN 22U5 HSQ (cut)" },
+        { "PosInGroup": 13, "FamilyType": "AOIO P (cut)" },
+        { "PosInGroup": 14, "FamilyType": "AO_IO (cut)" }
+    ],
+
+    "MOSS_Group25": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 2, "FamilyType": "AOIO P" },
+        { "PosInGroup": 3, "FamilyType": "AO_IO" },
+        { "PosInGroup": 4, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 5, "FamilyType": "S" },
+        { "PosInGroup": 6, "FamilyType": "DESY" },
+        { "PosInGroup": 7, "FamilyType": "NONAME1" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 9, "FamilyType": "NONAME2" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V1CG I5U SQ " }
+    ],
+
+    "MOSS_Group26": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CG 22U5 HSQ" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V2CN I5U SQ" },
+        { "PosInGroup": 9, "FamilyType": "CE65 V2CN I8U SQ " },
+        { "PosInGroup": 10, "FamilyType": "CE65 V2CN 18U HSQ (cut)" },
+        { "PosInGroup": 11, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 12, "FamilyType": "CE65 V2CN 22U5 HSQ (cut)" },
+        { "PosInGroup": 13, "FamilyType": "AOIO P (cut)" },
+        { "PosInGroup": 14, "FamilyType": "AO_IO (cut)" }
+    ],
+
+    "MOSS_Group27": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V2CN 22U5 SQ (cut)" },
+        { "PosInGroup": 1, "FamilyType": "CE65 V2CN 22U5 HSQ" },
+        { "PosInGroup": 2, "FamilyType": "AOIO P" },
+        { "PosInGroup": 3, "FamilyType": "AO_IO" },
+        { "PosInGroup": 4, "FamilyType": "AOIO 8" },
+        { "PosInGroup": 5, "FamilyType": "S" },
+        { "PosInGroup": 6, "FamilyType": "DESY" },
+        { "PosInGroup": 7, "FamilyType": "NONAME1" },
+        { "PosInGroup": 8, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 9, "FamilyType": "NONAME2" },
+        { "PosInGroup": 10, "FamilyType": "CE65 V1CG I5U SQ " }
+    ],
+
+    "MOSS_Group28": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CG I5U SQ " },
+        { "PosInGroup": 3, "FamilyType": "CE65 V2CG I5U SQ " },
+        { "PosInGroup": 4, "FamilyType": "CE65 V2CG I8U SQ " },
+        { "PosInGroup": 5, "FamilyType": "CE65 V2CG I8U HSQ " },
+        { "PosInGroup": 6, "FamilyType": "CE65 V2CG 22U5 SQ " },
+        { "PosInGroup": 7, "FamilyType": "CE65 V2CG 22U5 HSQ (cut)" }
+    ], 
+
+    "MOSS_Group29": [
+        { "PosInGroup": 0, "FamilyType": "TTS-5 (cut)" },
+        { "PosInGroup": 1, "FamilyType": "TTS-4" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "NONAME2" },
+        { "PosInGroup": 4, "FamilyType": "CE65 V1CB I5U SQ" }
+    ],
+
+    "MOSS_Group30": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 1, "FamilyType": "NONAME2" },
+        { "PosInGroup": 2, "FamilyType": "CE65 V1CB I5U SQ" },
+        { "PosInGroup": 3, "FamilyType": "dPTSN" },
+        { "PosInGroup": 4, "FamilyType": "dPTSN" },
+        { "PosInGroup": 5, "FamilyType": "dPTSN" },
+        { "PosInGroup": 6, "FamilyType": "dP_TS (cut)" }
+    ],
+
+    "MOSS_Group31": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CG I5U SQ (cut)" }
+    ], 
+
+    "MOSS_Group32": [
+        { "PosInGroup": 0, "FamilyType": "CE65 V1CN 15U SQ (cut)" }
+    ],
+
+  },
+
+  "Dies": {
+    "BABYMOSSDie": {
+        "GroupsInDie": ["Group2", "Group3", "Group4", "Group0", "Group1"] // starting from top to bottom
+    },
+    "MOSSDie": {
+        "GroupsInDie": ["List of all groups that make the Die/Reticle [GroupX0, GroupX1, GroupX3...]"] // starting from top to bottom
+    },
+  },
+
+  "MapGroups": {
+        "MapGroupsRow0": 
+        {                                           
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],    
+
+                    "MechanicallyIntergerASICs": []    
+                },
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []   
+                }    
+
+            ]
+        },
+
+        "MapGroupsRow1":                                         
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0,],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                             
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }                             
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+
+        "MapGroupsRow2":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [17,18],                       
+
+                    "MechanicallyDamagedASICs": [17,18],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },           
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [0,1,2,3,4,5,6],    
+
+                    "ASICsCoveredByGreenLayer": [7,8,9,10,11,12,13,14,15,16],   
+
+                    "MechanicallyIntergerASICs": [17,18]    
+                },                              
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithASICsCoveredByGreenLayer",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [16,17,18],   
+
+                    "MechanicallyIntergerASICs": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]    
+                },                               
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0,1,2,3,4,5,6,7,8,9,10,11],                       
+
+                    "MechanicallyDamagedASICs": [2,3,4,5,6,7,8,9,10,11],    
+
+                    "ASICsCoveredByGreenLayer": [0,1],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+        "MapGroupsRow3":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                            
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                        
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                }                       
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+        "MapGroupsRow5":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [10,11,12,13,14,15,16,17],                       
+
+                    "MechanicallyDamagedASICs": [10,11,12],    
+
+                    "ASICsCoveredByGreenLayer": [13,14],   
+
+                    "MechanicallyIntergerASICs": [15,16,17]    
+                },                            
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                       
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [14,15,16,17],    
+
+                    "ASICsCoveredByGreenLayer": [12,13],   
+
+                    "MechanicallyIntergerASICs": [0,1,2,3,4,5,6,7,8,9,10,11]    
+                }  
+            ]
+        },
+        "MapGroupsRow6":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [7,8,9,10,11,12,13,14],                       
+
+                    "MechanicallyDamagedASICs": [7,8,9],    
+
+                    "ASICsCoveredByGreenLayer": [10,11,12],   
+
+                    "MechanicallyIntergerASICs": [13,14]    
+                },                            
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                       
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [13,14],    
+
+                    "ASICsCoveredByGreenLayer": [12,13],   
+
+                    "MechanicallyIntergerASICs": [0,1,2,3,4,5,6,7,8,9,10,11]    
+                },  
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0,1],                       
+
+                    "MechanicallyDamagedASICs": [0,1],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+        "MapGroupsRow7":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                            
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },                        
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },                          
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },    
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },      
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithASICsCoveredByGreenLayer",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [0],   
+
+                    "MechanicallyIntergerASICs": []    
+                },     
+                { 
+                    "GroupName": "Group3",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+        "MapGroupsRow8":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                            
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },                        
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },                          
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },    
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                }, 
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },   
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": [0]    
+                },        
+                { 
+                    "GroupName": "Group4",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [0],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+
+        "MapGroupsRow9":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [14,15,16,17,18],                       
+
+                    "MechanicallyDamagedASICs": [14,15,16],    
+
+                    "ASICsCoveredByGreenLayer": [17],   
+
+                    "MechanicallyIntergerASICs": [18]    
+                },                            
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },      
+                { 
+                    "GroupName": "Group0",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [15,16,17],    
+
+                    "ASICsCoveredByGreenLayer": [11,12,13,14],   
+
+                    "MechanicallyIntergerASICs": [0,1,2,3,4,5,6,7,8,9,10]    
+                }
+            ]
+        },
+
+        "MapGroupsRow10":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [13,14,15,16,17],                       
+
+                    "MechanicallyDamagedASICs": [13,14],    
+
+                    "ASICsCoveredByGreenLayer": [15],   
+
+                    "MechanicallyIntergerASICs": [16,17]    
+                },                            
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },   
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },      
+                { 
+                    "GroupName": "Group1",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": [0],                       
+
+                    "MechanicallyDamagedASICs": [4,16,17],    
+
+                    "ASICsCoveredByGreenLayer": [11,12],   
+
+                    "MechanicallyIntergerASICs": [0,1,2,3,4,5,6,7,8,9,10]    
+                }
+            ]
+        },
+
+        "MapGroupsRow11":                                          
+        { 
+            "MapGroupsColumns": [                                
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": ["All"],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                },                            
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },                        
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },  
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyIntegerASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": [],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": ["All"]    
+                },       
+                { 
+                    "GroupName": "Group2",                     
+                    "Property": "WithMechanicallyDamagedASICs",  
+                    "ExistingAsics": ["All"],                       
+
+                    "MechanicallyDamagedASICs": ["All"],    
+
+                    "ASICsCoveredByGreenLayer": [],   
+
+                    "MechanicallyIntergerASICs": []    
+                }
+            ]
+        },
+
+        "MapGroupsRow12":
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group3",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow13": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group4",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow14": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group0",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow15": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group1",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow16": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow17": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow18": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow19": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group11",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group12",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow20": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group13",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group14",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "MOSS_Group14",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow21": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group15",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group9",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group16",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow22": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow23": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow24": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow25": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group17",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group10",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group18",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow26": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow27": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow28": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group19",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group20",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        }, 
+        "MapGroupsRow29": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow30": 
+        {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow31": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group21",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group22",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow32": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow33": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        }, 
+
+        "MapGroupsRow34": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group23",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group24",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow35": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow36": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        }, 
+        "MapGroupsRow37": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group25",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group26",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow38": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow39": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow40": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group27",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group28",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow41": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group29",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group8",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group30",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow42": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group2",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow43": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group6",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow44": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group5",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+
+        "MapGroupsRow45": {
+            "MapGroupsColumns": [
+                {
+                    "GroupName": "MOSS_Group31",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "Group7",
+                    "Property": "WithMechanicallyIntegerASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": [],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": ["All"]
+                },
+                {
+                    "GroupName": "MOSS_Group32",
+                    "Property": "WithMechanicallyDamagedASICs",
+                    "ExistingAsics": ["All"],
+                    "MechanicallyDamagedASICs": ["All"],
+                    "ASICsCoveredByGreenLayer": [],
+                    "MechanicallyIntergerASICs": []
+                }
+            ]
+        },
+        "MapGroupsRow46": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow47": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow48": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow49": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow50": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow51": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow52": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow53": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow54": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow55": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow56": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group1",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow57": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group2",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow58": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group3",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow59": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group4",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            },
+            "MapGroupsRow60": {
+                "MapGroupsColumns": [
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyIntegerASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": [
+                            "All"
+                        ]
+                    },
+                    {
+                        "GroupName": "Group0",
+                        "Property": "WithMechanicallyDamagedASICs",
+                        "ExistingAsics": [
+                            "All"
+                        ],
+                        "MechanicallyDamagedASICs": [
+                            "All"
+                        ],
+                        "ASICsCoveredByGreenLayer": [],
+                        "MechanicallyIntergerASICs": []
+                    }
+                ]
+            }
+  },
+
+  "MapDies": {
+    "MapDieseRow": [                                            // Row number as if the map was built by reticles
+        {
+            "MapDiesColumn": [                                  // Column number as if the map was built by reticles
+                {
+                    "DieName": "Name of die",  // string
+                    "Property": "WithMechanicallyDamagedASICs, WithASICsCoveredByGreenLayer, MechanicallyInterger", 
+                    "MechanicallyDamagedASICs": ["numbers"],    // See above, same format but Row and Colum of the individual ASICs 
+                                                                // In the die. Comma separated. All is accepted.
+                    "ASICsCoveredByGreenLayer": ["numbers"],    // See above list of numbers that are green. Comma separated. All is accepted.
+                    "MechanicallyIntergerASICs": ["numbers"],    // See above list of numbers that are testable. Comma separated. All is accepted.
+                    "MappingToMapGroupsRow": ["x","y"],         // Int. Row number in the MapGroups [first, last]
+                    "MappingToMapGroupsColumn": ["x","y"]       // Int. Column number in the MapGroups [first, last]               
+                }
+            ]
+        } 
+   ]
+
+  }   
+}
+
