@@ -18,7 +18,7 @@ Table Wafer {
 }
 
 Table WaferLocation {
-  waferid integer [ref: > Wafer.id, not null]
+  waferId integer [ref: > Wafer.id, not null]
   generalLocation wpGeneralLocation
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
   description string
@@ -47,7 +47,7 @@ Table Asic {
   id integer [primary key, increment]
   waferId integer [ref: > Wafer.id]
   serialNumber string [unique]
-  familyType asicFamilytype
+  familyType asicFamilyType
   waferMapPosition string
 }
 
@@ -66,7 +66,7 @@ Table ProbeCard {
 
 Table ProbeCardFamilyType {
   probeCardId integer [ref: > ProbeCard.id]
-  asicFamilyType asicFamilytype
+  asicFamilyType asicFamilyType
 }
 
 Table WaferProbeMachine {
@@ -86,7 +86,7 @@ Table WaferProbeProject {
   id integer [primary key, increment]
   wpMachineId integer [ref: > WaferProbeMachine.id]
   waferTypeId integer [ref: > WaferType.id]
-  asicFamilyType asicFamilytype
+  asicFamilyType asicFamilyType
   orientation waferMapOrientation
   name string [unique]
   alignmentDie string
@@ -159,7 +159,7 @@ Enum waferTech {
   Xfab110
 }
 
-Enum asicFamilytype {
+Enum asicFamilyType {
   MOSS
   BABYMOSS
   NKF7
