@@ -122,7 +122,7 @@ Table WaferLoadedInMachine {
 Table ProbeCardInstalledInMachine {
   id integer [primary key, increment]
   machineId integer [ref: > WaferProbeMachine.id]
-  probeCardId string [ref: > ProbeCard.id]
+  probeCardId integer [ref: > ProbeCard.id]
   date date
   userName string
 }
