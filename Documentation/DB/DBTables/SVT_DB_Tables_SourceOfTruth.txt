@@ -71,6 +71,7 @@ Table ProbeCardFamilyType {
 
 Table WaferProbeMachine {
   id integer [primary key, increment]
+  serialNumber string [unique]
   name string [unique]
   hostName string
   connectionType wpConnectionType
