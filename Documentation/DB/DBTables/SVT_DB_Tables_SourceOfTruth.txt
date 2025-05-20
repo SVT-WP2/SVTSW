@@ -114,7 +114,7 @@ Table AsicProbing {
 Table WaferLoadedInMachine {
   id integer [primary key, increment]
   machineId integer [ref: > WaferProbeMachine.id]
-  waferId string [ref: > Wafer.id]
+  waferId integer [ref: > Wafer.id]
   date date
   userName string
   status waferInMachineStatus
