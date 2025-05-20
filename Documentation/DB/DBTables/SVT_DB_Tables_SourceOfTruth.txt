@@ -79,7 +79,6 @@ Table WaferProbeMachine {
   software wpSwType
   swVersion string
   vendor wpVendor
-  probeCardId integer [ref: > ProbeCard.id]
 }
 
 Table WaferProbeProject {
@@ -118,6 +117,14 @@ Table WaferLoadedInMachine {
   date date
   userName string
   status waferInMachineStatus
+}
+
+Table ProbeCardInstalledInMachine {
+  id integer [primary key, increment]
+  machineId integer [ref: > WaferProbeMachine.id]
+  probeCardId string [ref: > ProbeCard.id]
+  date date
+  userName string
 }
 
 Table AsicConfiguration {
