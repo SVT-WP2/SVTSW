@@ -2,7 +2,7 @@ Table WaferType {
   id integer [primary key, increment]
   name string
   engineeringRun engineeringRun
-  foundry foundry
+  foundry foundryName
   technology waferTech
   waferMap JSON
 }
@@ -151,7 +151,7 @@ Enum engineeringRun {
   Ancillary1
 }
 
-Enum foundry {
+Enum foundryName {
   TowerSemiconductor
   Xfab
 }
