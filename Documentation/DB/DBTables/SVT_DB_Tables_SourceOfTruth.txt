@@ -2,7 +2,7 @@ Table WaferType {
   id integer [primary key, increment]
   name string
   engineeringRun engineeringRun
-  foundry foundry
+  foundry foundryName
   technology waferTech
   waferMap JSON
 }
@@ -37,18 +37,13 @@ Table WaferTypeImage {
   imageBase64String string [not null]
 }
 
-Table WaferTypeSubMap {
-  waferTypeId integer [ref: > WaferType.id]
-  orientation waferMapOrientation
-  waferTypeSubmap JSON
-}
-
 Table Asic {
   id integer [primary key, increment]
   waferId integer [ref: > Wafer.id]
   serialNumber string [unique]
   familyType asicFamilyType
   waferMapPosition string
+  quality asicQuality
 }
 
 Table ProbeCard {
@@ -91,6 +86,7 @@ Table WaferProbeProject {
   name string [unique]
   alignmentDie string
   homeDie string
+  local2GlobalMap JSON
 }
 
 Table ProbeCardMaintenance {
@@ -112,7 +108,6 @@ Table AsicProbing {
 }
 
 Table WaferLoadedInMachine {
-  id integer [primary key, increment]
   machineId integer [ref: > WaferProbeMachine.id]
   waferId integer [ref: > Wafer.id]
   date date
@@ -121,7 +116,6 @@ Table WaferLoadedInMachine {
 }
 
 Table ProbeCardInstalledInMachine {
-  id integer [primary key, increment]
   machineId integer [ref: > WaferProbeMachine.id]
   probeCardId integer [ref: > ProbeCard.id]
   date date
@@ -157,7 +151,7 @@ Enum engineeringRun {
   Ancillary1
 }
 
-Enum foundry {
+Enum foundryName {
   TowerSemiconductor
   Xfab
 }
@@ -289,6 +283,12 @@ Enum pcLocation {
 Enum pcType {
   Vertical
   Cantilever
+}
+
+Enum asicQuality {
+  MechanicallyDamaged
+  MechanicallyInteger
+  CoveredByGreenLayer
 }
 
 Enum contactMechanicalQuality {
