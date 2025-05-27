@@ -1,12 +1,12 @@
 { 
-  "FileName": "string",                         // Name of the file
-  "MotherFilename": "string",                   // Name of the linked file in the repo, unique name
-  "DateOfCreation": "2025-05-08 18:29:15",      // Date of creation of the file
-  "DateOfLastUpdate": "2025-05-14 HH:MM:SS",    // Date of last update of the file
-  "Revision": "0.0.0",                          // Revision of the file
+  "FileName": "string",                         
+  "MotherFilename": "string",            
+  "DateOfCreation": "2025-05-08 18:29:15",      
+  "DateOfLastUpdate": "2025-05-14 HH:MM:SS",    
+  "Revision": "0.0.0",                          
 
 
-  "Groups": {                                   // Identifier to start the definition of the group of ASICs
+  "Groups": {                                   
     "Group0": [
         { "PosInGroup": 0, "FamilyType": "CE65_V1CG_15U_SQ" },
         { "PosInGroup": 1, "FamilyType": "CE65_V2CG_15U_SQ" },
@@ -424,17 +424,16 @@
 
     "MOSS_Group32": [
         { "PosInGroup": 0, "FamilyType": "CE65_V1CN_15U_SQ)" }
-    ],
-
+    ]
   },
 
   "Dies": {
     "BABYMOSSDie": {
-        "GroupsInDie": ["Group2", "Group3", "Group4", "Group0", "Group1"] // starting from top to bottom
+        "GroupsInDie": ["Group2", "Group3", "Group4", "Group0", "Group1"] 
     },
     "MOSSDie": {
-        "GroupsInDie": ["List of all groups that make the Die/Reticle [GroupX0, GroupX1, GroupX3...]"] // starting from top to bottom
-    },
+        "GroupsInDie": ["List of all groups that make the Die/Reticle [GroupX0, GroupX1, GroupX3...]"]
+    }
   },
 
   "MapGroups": {
@@ -475,7 +474,7 @@
                     "Property": "WithMechanicallyDamagedASICs",  
                     "ExistingAsics": [0],                       
 
-                    "MechanicallyDamagedASICs": [0,],    
+                    "MechanicallyDamagedASICs": [0],    
 
                     "ASICsCoveredByGreenLayer": [],   
 
@@ -491,7 +490,7 @@
                     "ASICsCoveredByGreenLayer": [],   
 
                     "MechanicallyIntergerASICs": []    
-                }                             
+                },                             
                 { 
                     "GroupName": "Group4",                     
                     "Property": "WithMechanicallyDamagedASICs",  
@@ -590,7 +589,7 @@
                     "ASICsCoveredByGreenLayer": [],   
 
                     "MechanicallyIntergerASICs": [0]    
-                }                       
+                },                       
                 { 
                     "GroupName": "Group0",                     
                     "Property": "WithMechanicallyDamagedASICs",  
@@ -4549,25 +4548,5 @@
                     }
                 ]
             }
-  },
-
-  "MapDies": {
-    "MapDieseRow": [                                            // Row number as if the map was built by reticles
-        {
-            "MapDiesColumn": [                                  // Column number as if the map was built by reticles
-                {
-                    "DieName": "Name of die",  // string
-                    "Property": "WithMechanicallyDamagedASICs, WithASICsCoveredByGreenLayer, MechanicallyInterger", 
-                    "MechanicallyDamagedASICs": ["numbers"],    // See above, same format but Row and Colum of the individual ASICs 
-                                                                // In the die. Comma separated. All is accepted.
-                    "ASICsCoveredByGreenLayer": ["numbers"],    // See above list of numbers that are green. Comma separated. All is accepted.
-                    "MechanicallyIntergerASICs": ["numbers"],    // See above list of numbers that are testable. Comma separated. All is accepted.
-                    "MappingToMapGroupsRow": ["x","y"],         // Int. Row number in the MapGroups [first, last]
-                    "MappingToMapGroupsColumn": ["x","y"]       // Int. Column number in the MapGroups [first, last]               
-                }
-            ]
-        } 
-   ]
-
-  }   
+  }
 }
