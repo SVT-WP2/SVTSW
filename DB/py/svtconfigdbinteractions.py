@@ -137,7 +137,7 @@ def getAllEnumTypes():
     with conn.cursor() as cur:
         try:
             cur.execute("""
-                SELECT n.nspname AS enum_schema,
+                SELECT DISTINCT n.nspname AS enum_schema,
                     t.typname AS enum_name
                 FROM pg_type t
                     join pg_enum e on t.oid = e.enumtypid
