@@ -1,27 +1,26 @@
 {
-    "FileName": "string",                       // Name of the file
-    "DateOfreation": "YYYY-MM-DD HH:MM:SS",     // Date of creation of the file
-    "DateOfLastUpdate": "YYYY-MM-DD HH:MM:SS",  // Date of last update of the file
-    "Revision": "X.Y.Z",                        // Revision of the file
+    "FileName": "ER1_mother",                       
+    "DateOfreation": "2025-06-02 17:50:23",     
+    "DateOfLastUpdate": "2025-06-02 17:50:23",  
+    "Revision": "0.0.1",                        
   
     "General": {
-      // it defines the type of wafer following the convention defined here:
-      // https://github.com/SVT-WP2/SVTSW/blob/main/Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt */
-      "Name": ["string","string"], // If left blank all WaferType names are allowed, else it limits to a specific set of WaferType names
-      "EngineeringRun": "string",  // See source of truth for allowed values
-      "Foundry": "string",         // See source of truth for allowed values
-      "Technology": "string"       // See source of truth for allowed values
+      "Name": [], 
+      "EngineeringRun": "ER1",  
+      "Foundry": "TowerSemiconductor",         
+      "Technology": "TPSCo65"       
     },
   
-    "SerialNumbers": [              // It contains the serial numbers of the wafers that may be associated to this JSON. If left blank, nothing is created.
-      "SN",                         // If SN already exists in the DB, then nothing is done
-      "SN",
-      "SN"
+    "SerialNumbers": [ 
+      "HS01769-15G8",
+      "HS01769-12A4",
+      "HS01769-11B1",
+      "HS01769-10B6"          
     ],
   
-    "AllowedAsics": [               // List of ASIC names that are allowed to be used in the JSON file. This field is used for JSON self-consistency
-      "Name of asic",               // String
-      "...",
-      "Name of asic"
+    "AllowedAsics": [                
+      "NKF7",               
+      "BABYMOSS",
+      "MOSS"
     ]
   }
