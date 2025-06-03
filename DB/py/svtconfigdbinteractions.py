@@ -1,12 +1,19 @@
+import os
+
 import psycopg2
 from psycopg2 import OperationalError
 
+db_host = (
+    os.getenv("SVT_DB_HOST")
+    if os.getenv("SVT_DB_HOST") is not None
+    else "dbod-svt-sw-pgdb.cern.ch"
+)
 db_params = {
-    'user': 'admin',
-    'password': 'svt-mosaix',
-    'host': 'dbod-svt-sw-pgdb.cern.ch',
-    'port': 6600,
-    'dbname': 'svt_sw_db_test',
+    "user": "admin",
+    "password": "svt-mosaix",
+    "host": db_host,
+    "port": 6600,
+    "dbname": "svt_sw_db_test",
 }
 
 try:
@@ -20,10 +27,12 @@ except Exception as e:
 
 
 def commit():
+    global conn
     conn.commit()
 
 
 def close(cursor=None):
+    global conn
     if cursor is not None:
         cursor.close()
 
@@ -33,6 +42,7 @@ def close(cursor=None):
 
 
 def showPgqlVersion():
+    global conn
     with conn.cursor() as cur:
         cur.execute("SELECT version();")
         record = cur.fetchone()
@@ -43,6 +53,7 @@ def showPgqlVersion():
 
 
 def createSchema(schemaName=None):
+    global conn
     if schemaName is not None:
         with conn.cursor() as cur:
             try:
@@ -54,6 +65,7 @@ def createSchema(schemaName=None):
 
 
 def dropSchema(schemaName=None, cascade=False):
+    global conn
     if schemaName is not None:
         with conn.cursor() as cur:
             try:
@@ -68,6 +80,7 @@ def dropSchema(schemaName=None, cascade=False):
 
 
 def createEnumType(enumType=None):
+    global conn
     if enumType is not None:
         with conn.cursor() as cur:
             try:
@@ -79,6 +92,7 @@ def createEnumType(enumType=None):
 
 
 def dropEnumType(enumType=None, cascade=False):
+    global conn
     if enumType is not None:
         with conn.cursor() as cur:
             try:
@@ -92,9 +106,8 @@ def dropEnumType(enumType=None, cascade=False):
         print("Error not schema name was provided")
 
 
-def createNewVersion(versionName=None,
-                     versionDescription=None,
-                     baseVersion=None):
+def createNewVersion(versionName=None, versionDescription=None, baseVersion=None):
+    global conn
     with conn.cursor() as cur:
         # get a new version ID
         cur.execute("SELECT COUNT(*) FROM test.version")
@@ -103,26 +116,33 @@ def createNewVersion(versionName=None,
         if baseVersion is None:
             baseVersion = newVersionId
 
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO test.Version
                 (id, name, baseVersion, description)
             VALUES(%(newVersionId)s, %(name)s,
                   %(baseVersion)s, %(description)s);
             """,
-                    {'newVersionId': newVersionId,
-                     'name': versionName,
-                     'baseVersion': baseVersion,
-                     'description': versionDescription})
+            {
+                "newVersionId": newVersionId,
+                "name": versionName,
+                "baseVersion": baseVersion,
+                "description": versionDescription,
+            },
+        )
         cur.close()
         return newVersionId
 
 
 def getMaxVersionId():
+    global conn
     with conn.cursor() as cur:
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT MAX(ID) FROM test.VERSION;
-            """)
+            """
+            )
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
@@ -134,32 +154,46 @@ def getMaxVersionId():
 
 
 def getAllEnumTypes():
+    global conn
     with conn.cursor() as cur:
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT DISTINCT n.nspname AS enum_schema,
                     t.typname AS enum_name
                 FROM pg_type t
                     join pg_enum e on t.oid = e.enumtypid
                     join pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
-                        """)
+                        """
+            )
             return cur.fetchall()
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
         cur.close
 
-def getAllEnumValues():
+
+def getAllEnumValues(enum_type=None):
+    global conn
     with conn.cursor() as cur:
         try:
-            cur.execute("""
-                SELECT n.nspname AS enum_schema,
-                    t.typname AS enum_name,
-                    e.enumlabel AS enum_value
-                FROM pg_type t
-                    join pg_enum e on t.oid = e.enumtypid
-                    join pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
-                        """)
+            if enum_type is None:
+                cur.execute(
+                    """
+                    SELECT n.nspname AS enum_schema,
+                        t.typname AS enum_name,
+                        e.enumlabel AS enum_value
+                    FROM pg_type t
+                        join pg_enum e on t.oid = e.enumtypid
+                        join pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+                        """
+                )
+            else:
+                cur.execute(
+                    f"""
+                    select enum_range(null::Prod."{enum_type}");
+                    """
+                )
             return cur.fetchall()
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
@@ -168,12 +202,15 @@ def getAllEnumValues():
 
 
 def addEnumValue(schema, enum_type_name, value):
+    global conn
     with conn.cursor() as cur:
         try:
-            cur.execute(f"""
+            cur.execute(
+                f"""
                         ALTER TYPE {schema}.{enum_type_name}
                         ADD VALUE IF NOT EXISTS '{value}';
-                        """)
+                        """
+            )
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
