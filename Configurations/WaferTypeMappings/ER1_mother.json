@@ -1,0 +1,26 @@
+{
+    "FileName": "ER1_mother",                       
+    "DateOfreation": "2025-06-02 17:50:23",     
+    "DateOfLastUpdate": "2025-06-02 17:50:23",  
+    "Revision": "0.0.1",                        
+  
+    "General": {
+      "Name": [], 
+      "EngineeringRun": "ER1",  
+      "Foundry": "TowerSemiconductor",         
+      "Technology": "TPSCo65"       
+    },
+  
+    "SerialNumbers": [ 
+      "HS01769-15G8",
+      "HS01769-12A4",
+      "HS01769-11B1",
+      "HS01769-10B6"          
+    ],
+  
+    "AllowedAsics": [                
+      "NKF7",               
+      "BABYMOSS",
+      "MOSS"
+    ]
+  }
