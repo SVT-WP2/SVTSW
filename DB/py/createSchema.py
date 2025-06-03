@@ -1,6 +1,6 @@
 import svtconfigdbinteractions as configdb
 
-schemas = ["test", "Prod"]
+schemas = ["Prod"]
 
 for schema in schemas:
     configdb.createSchema(schema)
