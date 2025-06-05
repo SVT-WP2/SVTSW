@@ -1,0 +1,836 @@
+openapi: '3.0.1'
+info:
+  title: SVT DB Agent
+  description: |
+    The Kafka communication layer definitions for `SVT DB Agent Service`. 
+    
+    ### Naming Conventions
+    - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - The reply message topic name is define by the global SVT naming conventions `*.reply`, e.g: 
+      - request message topic `svt.db-agent.request` => reply topic name `svt.db-agent.request.reply`
+    - Each message structure follows the global SVT naming conventions 
+    
+    ### POST Request Meaning
+    - Request body describes Kafka Message structure
+    - Response
+      - if response is specified, the relevant message will be emmited to the relevant *.reply topic as a reply to that message.
+    
+    ### Useful Links
+    - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
+    - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
+    
+    
+  version: 0.0.1
+paths:
+  /svt.db-agent.request/GetAllWaferTypes:
+    post:
+      tags:
+        - Wafer Types
+      summary: Get All Wafer Types
+      description: Returns Wafer Types list in the reply message. Optional filter by Wafer Type Ids can be applied to return exact set of Wafer Types.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllWaferTypesMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllWaferTypesReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/CreateWaferType:
+    post:
+      tags:
+        - Wafer Types
+      summary: Create WaferType
+      description: Returns the newly created WaferType in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateWaferTypeMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateWaferTypeReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"                
+                
+  /svt.db-agent.request/GetAllWafers:
+    post:
+      tags:
+        - Wafers
+      summary: Get All Wafers
+      description: Returns Wafers list in the reply message. Optional filter by wafersIds can be applied to return exact set of Wafers.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllWafersMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllWafersReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+  /svt.db-agent.request/CreateWafer:
+    post:
+      tags:
+        - Wafers
+      summary: Create Wafer
+      description: Returns the newly created Wafer in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateWaferMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateWaferReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateWafer:
+    post:
+      tags:
+        - Wafers
+      summary: Update Wafer
+      description: Returns updated Wafer in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateWaferMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateWaferReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateWaferLocation:
+    post:
+      tags:
+        - Wafers
+      summary: Update Wafer Location
+      description: Returns updated Wafer in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateWaferLocationMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateWaferLocationReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"      
+
+  /svt.db-agent.request/GetAllAsics:
+    post:
+      tags:
+        - Asics
+      summary: Get All Asics
+      description: Returns Asics list in the reply message. Optional filter by asicIds and waferId can be applied to return exact set of Asics.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllAsicsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllAsicsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/CreateAsic:
+    post:
+      tags:
+        - Asics
+      summary: Create Asic
+      description: Returns the newly created Asic in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateAsicMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateAsicReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"                
+                
+  /svt.db-agent.request/GetAllEnums:
+    post:
+      tags:
+        - Enums
+      summary: Request All Enums.
+      description: Returns All Enums in the reply message according to the relevant filter. If filter is empty all enums will be returned.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllEnumsRequest'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllEnumsReply'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+components:
+  schemas:
+    RequestMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+
+    ReplyMessage:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        status:
+          $ref: "#/components/schemas/ReplyStatus"
+        type:
+          type: string
+        data:
+          type: object
+        error:
+          type: object
+          required:
+            - message
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+
+    ReplyStatus:
+      enum:
+        - Success
+        - BadRequest
+        - NotFound
+        - UnexpectedError
+
+    GetAllEnumsRequest:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEnums'
+        data:
+          type: object
+          properties:
+            enumsNames:
+              type: array
+              items:
+                $ref: '#/components/schemas/SvtEnumName'
+
+    GetAllEnumsReply:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEnumsReply'
+        data:
+          type: object
+          properties:
+            asicFamilType:
+              type: array
+              items:
+                type: string
+            engineeringRun:
+              type: array
+              items:
+                type: string
+            foundryName:
+              type: array
+              items:
+                type: string
+            waferTech:
+              type: array
+              items:
+                type: string
+            waferMapOrientation:
+              type: array
+              items:
+                type: string
+            wpGeneralLocation:
+              type: array
+              items:
+                type: string
+            wpConnectionType:
+              type: array
+              items:
+                type: string
+            wpVendor:
+              type: array
+              items:
+                type: string
+            wpSwType:
+              type: array
+              items:
+                type: string
+            waferInMachineStatus:
+              type: array
+              items:
+                type: string
+            asicQuality:
+              type: array
+              items:
+                type: string
+    #
+    # WAFER TYPES :: LIST
+    #
+    GetAllWaferTypesMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferTypes'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Wafer Type ids array. If array is empty / undefined => all wafers will be returned.
+                  items:
+                    type: number
+
+    GetAllWaferTypesReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferTypesReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaferTypeDto'
+    #
+    # WAFER TYPES :: CREATE
+    #
+    CreateWaferTypeMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferType'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/WaferTypeCreateDto"
+
+    CreateWaferTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferTypeReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferTypeDto'                
+    #
+    # WAFERS :: LIST
+    #
+    GetAllWafersMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWafers'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Wafer ids array. If array is empty / undefined => all wafers will be returned.
+                  items:
+                    type: number
+
+    GetAllWafersReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWafersReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaferDto'
+    #
+    # WAFERS :: CREATE
+    #
+    CreateWaferMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWafer'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/WaferCreateDto"
+
+    CreateWaferReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferDto'
+    #
+    # WAFERS :: UPDATE
+    #
+    UpdateWaferMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWafer'
+        data:
+          type: object
+          required:
+            - waferId
+            - update
+          properties:
+            waferId:
+              type: number
+            update:
+              $ref: "#/components/schemas/WaferUpdateDto"
+
+    UpdateWaferReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWaferReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferDto'
+    #
+    # WAFERS :: UPDATE LOCATION
+    #
+    UpdateWaferLocationMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWaferLocation'
+        data:
+          type: object
+          properties:              
+            waferId:
+              type: number
+            update:
+              $ref: "#/components/schemas/WaferUpdateLocationDto"
+
+    UpdateWaferLocationReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWaferLocationReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferDto'
+              
+    #
+    # ASICS :: LIST
+    #
+    GetAllAsicsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllAsics'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                waferId:
+                  type: number
+                  description: Optional filter used to fetch all ASICs for the particular wafer
+                ids:
+                  type: array
+                  description: Asic ids array. If array is empty / undefined => all Asics will be returned.
+                  items:
+                    type: number
+
+    GetAllAsicsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllAsicsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AsicDto'   
+    #
+    # ASICS :: CREATE
+    #
+    CreateAsicMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateAsic'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/AsicCreateDto"
+
+    CreateAsicReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateAsicReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/AsicDto'                
+    #
+    # DTOs
+    #
+    
+    WaferTypeDto:
+      type: object
+      required:
+        - id
+        - name
+        - engineeringRun
+        - foundry
+        - technology
+        - waferMap
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        engineeringRun:
+          type: string
+        foundry:
+          type: number
+        technology:
+          type: number
+        waferMap:
+          type: string
+          description: Stringified JSON in the correct format.
+          
+    WaferTypeCreateDto:
+      type: object
+      required:        
+        - name
+        - engineeringRun
+        - foundry
+        - technology
+        - waferMap
+      properties:
+        name:
+          type: string
+        engineeringRun:
+          type: string
+        foundry:
+          type: number
+        technology:
+          type: number
+        waferMap:
+          type: string
+          description: Stringified JSON in the correct format.
+          
+    WaferDto:
+      type: object
+      required:
+        - id
+        - serialNumber
+        - batchNumber
+        - waferTypeId
+        - generalLocation
+      properties:
+        id:
+          type: string
+        serialNumber:
+          type: string
+        batchNumber:
+          type: number
+        waferTypeId:
+          type: number
+        generalLocation:
+          type: string
+        thinningDate:
+          type: string
+        dicingDate:
+          type: string
+        productionDate:
+          type: string          
+    
+    WaferCreateDto:
+      type: object
+      required:        
+        - serialNumber
+        - batchNumber
+        - waferTypeId
+        - generalLocation
+      properties:        
+        serialNumber:
+          type: string
+        batchNumber:
+          type: number
+        waferTypeId:
+          type: number
+        generalLocation:
+          type: string
+        thinningDate:
+          type: string
+          nullable: true
+        dicingDate:
+          type: string
+          nullable: true
+        productionDate:
+          type: string
+          nullable: true
+          
+    WaferUpdateDto:
+      type: object
+      properties:        
+        thinningDate:
+          type: string
+          nullable: true
+        dicingDate:
+          type: string
+          nullable: true
+        productionDate:
+          type: string
+          nullable: true
+            
+    WaferUpdateLocationDto:
+      type: object
+      required:
+        - waferId
+        - generalLocation
+        - userName
+      properties:
+        waferId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        userName:
+          type: string
+          
+    AsicDto:
+      type: object
+      required:
+        - id
+        - serialNumber
+        - familyType
+        - waferMapPosition
+        - quality
+      properties:
+        id:
+          type: string
+        serialNumber:
+          type: string
+        familyType:
+          type: string
+        waferMapPosition:
+          type: string
+        quality:
+          type: string     
+          
+    AsicCreateDto:
+      type: object
+      required:
+        - serialNumber
+        - familyType
+        - waferMapPosition
+        - quality
+      properties:
+        serialNumber:
+          type: string
+        familyType:
+          type: string
+        waferMapPosition:
+          type: string
+        quality:
+          type: string
+    
+    SvtEnumName:
+      type: string
+      enum:
+        - asicFamilyType
+        - engineeringRun
+        - foundryName
+        - waferTech
+        - waferMapOrientation
+        - wpGeneralLocation
+        - wpConnectionType
+        - wpVendor
+        - wpSwType
+        - waferInMachineStatus
+        - asicQuality
