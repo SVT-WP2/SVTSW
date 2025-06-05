@@ -75,7 +75,7 @@ Headers:
 
 Reply Message: 
 {
-  status: EcpiDbAgentMessageStatus // Ok, BadRequest, NotFound, ...
+  status: SvtDbAgentMessageStatus // Ok, BadRequest, NotFound, ...
   type: string // some enum,
   data?: { [key: string]: unknown } // some JSON, NOT REQUIRED
   error?: {
@@ -84,7 +84,7 @@ Reply Message:
   }
 }
 
-enum EcpiDbAgentMessageStatus {
+enum SvtDbAgentMessageStatus {
   // sucess
   Success = 'Success',
   // message data has invalid format
