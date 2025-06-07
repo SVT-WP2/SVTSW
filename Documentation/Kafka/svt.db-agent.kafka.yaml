@@ -284,8 +284,272 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"                
+                $ref: "#/components/schemas/ReplyMessage"         
                 
+  /svt.db-agent.request/GetAllWaferProbeMachines:
+    post:
+      tags:
+        - Wafer Probe Machines
+      summary: Get All WaferProbeMachines
+      description: Returns WaferProbeMachines list in the reply message. Optional filter by WaferProbeMachine Ids can be applied to return exact set of WaferProbeMachines.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllWaferProbeMachinesMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllWaferProbeMachinesReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"     
+                
+  /svt.db-agent.request/CreateWaferProbeMachine:
+    post:
+      tags:
+        - Wafer Probe Machines
+      summary: Create WaferProbeMachine
+      description: Returns the newly created WaferProbeMachine in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateWaferProbeMachineMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateWaferProbeMachineReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateWaferProbeMachine:
+    post:
+      tags:
+        - Wafer Probe Machines
+      summary: Update WaferProbeMachine
+      description: Returns updated WaferProbeMachine in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateWaferProbeMachineMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateWaferProbeMachineReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateWpMachineLoadedWafer:
+    post:
+      tags:
+        - Wafer Probe Machines
+      summary: Update WaferProbeMachine Loaded Wafer
+      description: Returns updated WaferProbeMachine in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateWpMachineLoadedWaferMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateWpMachineLoadedWaferReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"                
+
+  /svt.db-agent.request/UpdateWpMachineInstalledProbeCard:
+    post:
+      tags:
+        - Wafer Probe Machines
+      summary: Update WaferProbeMachine Installed Probe Card
+      description: Returns updated WaferProbeMachine in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateWpMachineInstalledProbeCardMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateWpMachineInstalledProbeCardReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
+  /svt.db-agent.request/GetAllWaferProbeProjects:
+    post:
+      tags:
+        - Wafer Probe Projects
+      summary: Get All WaferProbeProjects
+      description: Returns WaferProbeProjects list in the reply message. Optional filter by WaferProbeProject Ids can be applied to return exact set of WaferProbeProjects.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllWaferProbeProjectsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllWaferProbeProjectsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/CreateWaferProbeProject:
+    post:
+      tags:
+        - Wafer Probe Projects
+      summary: Create WaferProbeProject
+      description: Returns the newly created WaferProbeProject in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateWaferProbeProjectMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateWaferProbeProjectReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"                
+  
+  /svt.db-agent.request/GetAllProbeCards:
+    post:
+      tags:
+        - Probe Cards
+      summary: Get All ProbeCards
+      description: Returns ProbeCards list in the reply message. Optional filter by wafersIds can be applied to return exact set of ProbeCards.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllProbeCardsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllProbeCardsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -353,6 +617,7 @@ components:
               type: string
 
     ReplyStatus:
+      type: string
       enum:
         - Success
         - BadRequest
@@ -547,11 +812,12 @@ components:
         data:
           type: object
           required:
-            - waferId
+            - id
             - update
           properties:
-            waferId:
+            id:
               type: number
+              description: Wafer Id
             update:
               $ref: "#/components/schemas/WaferUpdateDto"
 
@@ -574,12 +840,7 @@ components:
           type: string
           default: 'UpdateWaferLocation'
         data:
-          type: object
-          properties:              
-            waferId:
-              type: number
-            update:
-              $ref: "#/components/schemas/WaferUpdateLocationDto"
+          $ref: "#/components/schemas/WaferUpdateLocationDto"
 
     UpdateWaferLocationReplyMessage:
       properties:
@@ -650,7 +911,227 @@ components:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/AsicDto'                
+              $ref: '#/components/schemas/AsicDto'
+    #
+    # WAFER PROBE MACHINES :: LIST
+    #
+    GetAllWaferProbeMachinesMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferProbeMachines'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Wafer Probe Machine ids array. If array is empty / undefined => all Wafer Probe Machines will be returned.
+                  items:
+                    type: number
+
+    GetAllWaferProbeMachinesReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferProbeMachinesReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaferProbeMachineDto'
+    #
+    # WAFER PROBE MACHINES :: CREATE
+    #
+    CreateWaferProbeMachineMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferProbeMachine'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/WaferProbeMachineCreateDto"
+
+    CreateWaferProbeMachineReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferProbeMachineReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferProbeMachineDto'    
+    #
+    # WAFER PROBE MACHINES :: UPDATE
+    #
+    UpdateWaferProbeMachineMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWaferProbeMachine'
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: WaferProbeMachine Id
+            update:
+              $ref: "#/components/schemas/WaferProbeMachineUpdateDto"
+
+    UpdateWaferProbeMachineReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWaferProbeMachineReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferProbeMachineDto' 
+              
+    #
+    # WAFER PROBE MACHINES :: UPDATE :: LOADED WAFER
+    #
+    UpdateWpMachineLoadedWaferMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWpMachineLoadedWafer'
+        data:
+          $ref: "#/components/schemas/WpMachineLoadedWaferUpdateDto"
+
+    UpdateWpMachineLoadedWaferReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWpMachineLoadedWaferReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferProbeMachineDto'
+                            
+    #
+    # WAFER PROBE MACHINES :: UPDATE :: INSTALLED PROBE CARD
+    #
+    UpdateWpMachineInstalledProbeCardMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWpMachineInstalledProbeCard'
+        data:
+          $ref: "#/components/schemas/WpMachineInstalledProbeCardUpdateDto"
+
+    UpdateWpMachineInstalledProbeCardReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateWpMachineInstalledProbeCardReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferProbeMachineDto'
+              
+    #
+    # WAFER PROBE PROJECTS :: LIST
+    #
+    GetAllWaferProbeProjectsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferProbeProjects'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: WaferProbeProjects ids array. If array is empty / undefined => all WaferProbeProjects will be returned.
+                  items:
+                    type: number
+
+    GetAllWaferProbeProjectsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllWaferProbeProjectsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaferProbeProjectDto'  
+                
+    #
+    # WAFER PROBE PROJECTS :: CREATE
+    #
+    CreateWaferProbeProjectMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferProbeProject'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/WaferProbeProjectCreateDto"
+
+    CreateWaferProbeProjectReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateWaferProbeProjectReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/WaferProbeProjectDto'
+    #
+    # WAFER PROBE CARDS :: LIST
+    #
+    GetAllProbeCardsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllProbeCards'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: ProbeCard ids array. If array is empty / undefined => all ProbeCards will be returned.
+                  items:
+                    type: number
+
+    GetAllProbeCardsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllProbeCardsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProbeCardDto'
     #
     # DTOs
     #
@@ -666,7 +1147,7 @@ components:
         - waferMap
       properties:
         id:
-          type: string
+          type: number
         name:
           type: string
         engineeringRun:
@@ -710,7 +1191,7 @@ components:
         - generalLocation
       properties:
         id:
-          type: string
+          type: number
         serialNumber:
           type: string
         batchNumber:
@@ -721,10 +1202,13 @@ components:
           type: string
         thinningDate:
           type: string
+          description: Date only in format `2025-06-03`
         dicingDate:
           type: string
+          description: Date only in format `2025-06-03`
         productionDate:
-          type: string          
+          type: string
+          description: Date only in format `2025-06-03`
     
     WaferCreateDto:
       type: object
@@ -793,7 +1277,7 @@ components:
         - quality
       properties:
         id:
-          type: string
+          type: number
         serialNumber:
           type: string
         familyType:
@@ -818,8 +1302,229 @@ components:
         waferMapPosition:
           type: string
         quality:
+          type: string    
+    
+    WaferProbeMachineDto:
+      type: object
+      required:
+        - id
+        - name
+        - serialNumber
+        - hostName
+        - connectionType
+        - connectionPort
+        - generalLocation
+        - software
+        - swVersion
+        - vendor
+        - loadedWaferId
+        - installedProbeCardId
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        serialNumber:
+          type: string
+        hostName:
+          type: string
+        connectionType:
+          type: string
+        connectionPort:
+          type: number
+        generalLocation:
+          type: string
+        software:
+          type: string
+        swVersion:
+          type: string
+        vendor:
+          type: string
+        loadedWaferId:
+          type: number
+          nullable: true
+        installedProbeCardId:
+          type: number
+          nullable: true          
+
+    WaferProbeMachineCreateDto:
+      type: object
+      required:
+        - name
+        - serialNumber
+        - hostName
+        - connectionType
+        - connectionPort
+        - generalLocation
+        - software
+        - swVersion
+        - vendor
+      properties:
+        name:
+          type: string
+        serialNumber:
+          type: string
+        hostName:
+          type: string
+        connectionType:
+          type: string
+        connectionPort:
+          type: number
+        generalLocation:
+          type: string
+        software:
+          type: string
+        swVersion:
+          type: string
+        vendor:
           type: string
     
+    WaferProbeMachineUpdateDto:
+      type: object
+      required:
+        - hostName
+        - connectionType
+        - connectionPort
+        - generalLocation
+        - software
+        - swVersion
+      properties:
+        hostName:
+          type: string
+        connectionType:
+          type: string
+        connectionPort:
+          type: number
+        generalLocation:
+          type: string
+        software:
+          type: string
+        swVersion:
+          type: string
+          
+    WpMachineLoadedWaferUpdateDto:
+      type: object
+      required:
+        - wpMachineId
+        - loadedWaferId
+      properties:
+        wpMachineId:
+          type: number          
+        loadedWaferId:
+          type: number
+          nullable: true
+          
+    WpMachineInstalledProbeCardUpdateDto:
+      type: object
+      required:
+        - wpMachineId
+        - installedProbeCardId
+      properties:
+        wpMachineId:
+          type: number
+        installedProbeCardId:
+          type: number
+          nullable: true
+    
+    WaferProbeProjectDto:
+      type: object
+      required:
+        - id
+        - wpMachineId
+        - waferTypeId
+        - name
+        - asicFamilyType
+        - orientation
+        - alignmentDie
+        - homeDie
+        - local2GlobalMap
+      properties:
+        id:
+          type: number
+        wpMachineId:
+          type: number
+        waferTypeId:
+          type: number
+        name:
+          type: string
+        asicFamilyType:
+          type: string
+        orientation:
+          type: string
+        alignmentDie:
+          type: string
+        homeDie:
+          type: string
+        local2GlobalMap:
+          type: string
+          description: Stringified JSON in the correct format.
+
+    WaferProbeProjectCreateDto:
+      type: object
+      required:
+        - wpMachineId
+        - waferTypeId
+        - name
+        - asicFamilyType
+        - orientation
+        - alignmentDie
+        - homeDie
+        - local2GlobalMap
+      properties:
+        wpMachineId:
+          type: number
+        waferTypeId:
+          type: number
+        name:
+          type: string
+        asicFamilyType:
+          type: string
+        orientation:
+          type: string
+        alignmentDie:
+          type: string
+        homeDie:
+          type: string
+        local2GlobalMap:
+          type: string
+          description: Stringified JSON in the correct format.          
+
+    ProbeCardDto:
+      type: object
+      required:
+        - id
+        - name
+        - serialNumber
+        - model
+        - arriveDate
+        - location
+        - type
+        - vendorCleaningInterval
+        - vendor
+        - asicFamilyType
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        serialNumber:
+          type: string
+        model:
+          type: string
+        arriveDate:
+          type: string
+          description: Date only in format `2025-06-03`
+        location:
+          type: string
+        type:
+          type: string
+        vendorCleaningInterval:
+          type: number
+        vendor:
+          type: string
+        asicFamilyType:
+          type: string
+
     SvtEnumName:
       type: string
       enum:
