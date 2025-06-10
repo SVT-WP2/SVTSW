@@ -2,18 +2,14 @@
 (
   set -euo pipefail
 
-  _psql_exec_no_db() {
+  _psql_exec() {
      psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 ${@:+$*}
-  }
-
-  _psql_exec_in_db() {
-     psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 -d svt_sw_db_test ${@:+$*}
   }
 
   _chpass() {
     read -rp "Enter new pass: " PASS
     pgql_cmd="ALTER USER admin PASSWORD '${PASS}';"
-    _psql_exec_no_db -c "${pgql_cmd}"
+    _psql_exec -c "${pgql_cmd}"
   }
 
   _createdb() {
@@ -23,12 +19,12 @@
       exit 1
     }
     local cmd="SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';"
-    if [[ "$(_psql_exec_no_db -XAtc "$cmd")" == "1" ]]; then
+    if [[ "$(_psql_exec -XAtc "$cmd")" == "1" ]]; then
       echo "DB ${DB_NAME} exits, exiting."
       exit 1
     else
       cmd="CREATE DATABASE ${DB_NAME};"
-    #   _psql_exec_no_db -c "${cmd}"
+    #   _psql_exec -c "${cmd}"
     fi
   }
 
@@ -58,10 +54,10 @@
       echo "ERROR script $in_file not found."
       exit 1
     }
-    _psql_exec_in_db "-a -f $in_file"
+    _psql_exec "-d svt_sw_db_test -a -f $in_file"
     ;;
   --open)
-    _psql_exec_in_db
+    _psql_exec "-d svt_sw_db_test"
     ;;
   *)
     exit 1

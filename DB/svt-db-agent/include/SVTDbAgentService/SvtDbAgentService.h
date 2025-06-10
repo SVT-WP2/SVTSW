@@ -8,8 +8,11 @@
  * @brief Db agent manager
  */
 
-#include "SVTDbAgentService/SvtDbAgentRequest.h"
+#include "SVTDbAgentService/SvtDbAgentEnum.h"
 #include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
+#include "SvtDbAgentMessage.h"
+#include "SvtDbAgentProducer.h"
 
 #include <librdkafka/rdkafkacpp.h>
 #include <nlohmann/json.hpp>
@@ -17,7 +20,6 @@
 #include <cstdint>
 #include <memory>
 #include <string_view>
-#include <vector>
 
 namespace SvtDbInterface
 {
@@ -42,19 +44,13 @@ namespace RdKafka
 class SvtDbAgentConsumer;
 class SvtDbAgentProducer;
 
-class SvtDbAgentMessage
-{
- public:
-  nlohmann::json headers = {};
-  nlohmann::json payload = {};
-};
-
 class SvtDbAgentService
 {
  public:
   SvtDbAgentService() = default;
   ~SvtDbAgentService();
 
+  bool DbEnumTypeInitialization(const std::string &schema = "prod");
   bool ConfigureService(bool stop_eof = false);
   void ProcessMsgCb(RdKafka::Message *msg, void *opaque);
   void SetDebug(std::string debug) { m_debug = debug; }
@@ -62,11 +58,15 @@ class SvtDbAgentService
   void StopConsumer(const bool suspeneded);
   bool GetIsConsRunnning();
 
+  SvtDbAgentEnum &GetEnumList() { return dbAgentEnumList; }
+
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
 
-  void parseMsg(SvtDbAgentMessage &msg,
-                SvtDbAgent::SvtDbAgentMsgStatus &status);
+  void parseMsg(const SvtDbAgent::SvtDbAgentMessage &msg,
+                const SvtDbAgent::SvtDbAgentMsgStatus &status);
+
+  SvtDbAgentEnum dbAgentEnumList;
 
   std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
   std::shared_ptr<SvtDbAgentProducer> m_Producer;

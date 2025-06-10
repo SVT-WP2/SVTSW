@@ -44,6 +44,7 @@ file(GLOB SOURCES_DB
   "src/Database/multitype.cpp"
   "src/SVTDb/sqlmapi.cpp"
   "src/SVTDb/SvtDbInterface.cpp"
+  "src/SVTDbAgentService/SvtDbAgentEnum.cpp"
   "src/SVTDbAgentService/SvtDbAgentConsumer.cpp"
   "src/SVTDbAgentService/SvtDbAgentProducer.cpp"
   "src/SVTDbAgentService/SvtDbAgentRequest.cpp"
