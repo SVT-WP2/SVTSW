@@ -2,6 +2,7 @@
 #define __DATABASE_INTERFACE__
 
 #include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
 
 #include <pqxx/pqxx>
 

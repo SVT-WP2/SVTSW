@@ -9,6 +9,7 @@
  */
 
 #include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
 
 #include <librdkafka/rdkafkacpp.h>
 

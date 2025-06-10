@@ -8,8 +8,6 @@
  * @brief SVT db-agent logger
  */
 
-#include "SvtUtilities.h"
-
 #include <fstream>
 #include <mutex>
 #include <string>

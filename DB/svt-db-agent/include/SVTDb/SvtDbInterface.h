@@ -70,6 +70,8 @@ namespace SvtDbInterface
   //!
   //! Function declarations
   //!
+  int getAllEnumTypes(const std::string &schema,
+                      std::vector<std::string> &enum_types);
   int getAllEnumValues(std::string enum_name,
                        std::vector<std::string> &enum_values);
   bool addEnumValue(std::string type_name, std::string value);

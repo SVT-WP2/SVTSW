@@ -7,6 +7,7 @@
 
 #include "SVTDbAgentService/SvtDbAgentProducer.h"
 #include "SVTDbAgentService/SvtDbAgentCb.h"
+#include "SVTDbAgentService/SvtDbAgentMessage.h"
 
 #include <librdkafka/rdkafkacpp.h>
 #include <chrono>
@@ -105,24 +106,27 @@ bool SvtDbAgentProducer::CreateProducer()
 }
 
 //========================================================================+
-bool SvtDbAgentProducer::Push(SvtDbAgentMessage &message)
+bool SvtDbAgentProducer::Push(const std::string_view &topic,
+                              const SvtDbAgent::SvtDbAgentMessage &message)
 {
   RdKafka::Headers *headers = RdKafka::Headers::create();
-  for (const auto &[hdr_name, hdr_value] : message.headers.items())
+  for (const auto &[hdr_name, hdr_value] : message.GetHeaders().items())
   {
     headers->add(hdr_name, hdr_value);
   }
   /*
    * Produce message
    */
-  size_t payload_size = message.payload.dump().size();
+  const size_t payload_size = message.GetPayload().dump().size();
   while (true)
   {
     RdKafka::ErrorCode resp = m_producer->produce(
-        std::string(topicNames[SvtDbAgentTopicEnum::RequestReply]), m_partition,
+        // std::string(topicNames[SvtDbAgentTopicEnum::RequestReply]),
+        // m_partition,
+        std::string(topic), m_partition,
         RdKafka::Producer::RK_MSG_COPY /*Copy payload*/,
         /* Value */
-        const_cast<char *>(message.payload.dump().c_str()), payload_size,
+        const_cast<char *>(message.GetPayload().dump().c_str()), payload_size,
         /* Key */
         NULL, 0,
         /* Timestamp (defaults to now) */

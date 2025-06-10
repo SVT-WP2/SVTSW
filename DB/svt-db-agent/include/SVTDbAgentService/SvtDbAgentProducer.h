@@ -9,13 +9,17 @@
  */
 
 #include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
 
 #include <librdkafka/rdkafkacpp.h>
 
 #include <memory>
 #include <string>
 
-class SvtDbAgentMessage;
+namespace SvtDbAgent
+{
+  class SvtDbAgentMessage;
+};
 
 class SvtDbAgentProducer
 {
@@ -32,7 +36,8 @@ class SvtDbAgentProducer
 
   bool CreateProducer();
 
-  bool Push(SvtDbAgentMessage &message);
+  bool Push(const std::string_view &topic,
+            const SvtDbAgent::SvtDbAgentMessage &message);
 
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
