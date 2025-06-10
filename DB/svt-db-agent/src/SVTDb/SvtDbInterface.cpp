@@ -13,6 +13,39 @@
 #include <exception>
 #include <string>
 #include <vector>
+
+//========================================================================+
+int SvtDbInterface::getAllEnumTypes(const std::string &schema,
+                                    std::vector<std::string> &enum_types)
+{
+  vector<vector<MultiBase *>> rows;
+  std::string query =
+      "SELECT DISTINCT n.nspname AS enum_schema, t.typname AS enum_name\n";
+  query += "FROM pg_type t\n";
+  query += "join pg_enum e on t.oid = e.enumtypid\n";
+  query += "join pg_catalog.pg_namespace n ON n.oid = t.typnamespace;";
+
+  enum_types.clear();
+  try
+  {
+    doGenericQuery(query, rows);
+    for (auto &row : rows)
+    {
+      if (!schema.compare(row.at(0)->getString()))
+      {
+        enum_types.push_back(row.at(1)->getString());
+      }
+    }
+    finishQuery(rows);
+  }
+  catch (const std::exception &e)
+  {
+    enum_types.clear();
+    throw e;
+  }
+  return enum_types.size();
+}
+
 //========================================================================+
 int SvtDbInterface::getAllEnumValues(std::string type_name,
                                      std::vector<std::string> &enum_values)
@@ -113,6 +146,7 @@ int SvtDbInterface::getAllVersions(
     }
     versions.push_back(version);
   }
+  finishQuery(rows);
 
   return versions.size();
 }

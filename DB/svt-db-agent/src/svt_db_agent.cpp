@@ -8,6 +8,7 @@
 #include "Database/databaseinterface.h"
 #include "SVTDbAgentService/SvtDbAgentService.h"
 #include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
 
 #include "version.h"
 
@@ -80,6 +81,10 @@ int main()
   try
   {
     SvtDbAgentService &_dbAgent = Singleton<SvtDbAgentService>::instance();
+    if (!_dbAgent.DbEnumTypeInitialization(SvtDbAgent::db_schema))
+    {
+      return EXIT_FAILURE;
+    }
     if (!_dbAgent.ConfigureService(false))
     {
       return EXIT_FAILURE;

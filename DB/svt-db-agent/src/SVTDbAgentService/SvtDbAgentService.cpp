@@ -25,6 +25,29 @@
 SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(5000); }
 
 //========================================================================+
+bool SvtDbAgentService::DbEnumTypeInitialization(const std::string &schema)
+{
+  logger.logInfo("Initialize enum type list");
+  std::vector<std::string> enum_types;
+  SvtDbInterface::getAllEnumTypes(schema, enum_types);
+  for (auto &enum_type : enum_types)
+  {
+    std::string enum_name(SvtDbAgent::db_schema);
+    enum_name += std::string(".");
+    enum_name += "\"" + enum_type + "\"";
+
+    std::vector<std::string> enum_values;
+    SvtDbInterface::getAllEnumValues(enum_name, enum_values);
+    for (auto &value : enum_values)
+    {
+      dbAgentEnumList.AddValue(enum_type, value);
+    }
+  }
+  dbAgentEnumList.Print();
+  return true;
+}
+
+//========================================================================+
 bool SvtDbAgentService::ConfigureService(bool stop_eof)
 {
   m_Consumer = std::shared_ptr<SvtDbAgentConsumer>(
@@ -52,7 +75,7 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
 {
   const RdKafka::Headers *headers;
 
-  SvtDbAgentMessage svtMsg;
+  SvtDbAgent::SvtDbAgentReplyMsg svtMsg;
   SvtDbAgent::SvtDbAgentMsgStatus status =
       SvtDbAgent::SvtDbAgentMsgStatus::Success;
   switch (message->err())
@@ -88,7 +111,7 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
         {
           hdr_val = "";
         }
-        svtMsg.headers[hdr.key()] = hdr_val;
+        svtMsg.AddHeader(hdr.key().data(), hdr_val.data());
         // if (hdr.value() != NULL)
         // {
         //   printf(" Header: %s = \"%.*s\"\n", hdr.key().c_str(),
@@ -102,8 +125,8 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
     }
     {
       auto bufferPayload = static_cast<const char *>(message->payload());
-      svtMsg.payload = nlohmann::json::parse(
-          bufferPayload, bufferPayload + static_cast<int>(message->len()));
+      svtMsg.SetPayload(nlohmann::json::parse(
+          bufferPayload, bufferPayload + static_cast<int>(message->len())));
       // printf("%.*s\n", static_cast<int>(message->len()),
       //        static_cast<const char *>(message->payload()));
     }
@@ -134,35 +157,43 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
 }
 
 //========================================================================+
-void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
-                                 SvtDbAgent::SvtDbAgentMsgStatus &status)
+void SvtDbAgentService::parseMsg(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    const SvtDbAgent::SvtDbAgentMsgStatus &status)
 {
+  std::initializer_list<std::string_view> hdr_name_list = {
+      "kafka_correlationId", "kafka_replyPartition"};
   //! fill headers for reply message
-  nlohmann::json replyHeaders = nlohmann::json::object();
-  replyHeaders["kafka_correlationId"] = msg.headers["kafka_correlationId"];
-  replyHeaders["kafka_replyPartition"] = msg.headers["kafka_replyPartition"];
-  replyHeaders["kafka_nest-is-disposed"] = std::string("00");
-
-  //! reply message data field
-  nlohmann::ordered_json replyData;
+  SvtDbAgent::SvtDbAgentReplyMsg replyMsg;
+  for (const auto &header : hdr_name_list)
+  {
+    replyMsg.AddHeader(header,
+                       msg.GetHeaders()[header].get<std::string>().data());
+  }
+  replyMsg.AddHeader("kafka_nest-is-disposed", "00");
 
   if (status != SvtDbAgent::SvtDbAgentMsgStatus::Success)
   {
-    replyData["status"] = status;
-    replyData["data"] = std::string();
+    replyMsg.SetType("");
+    replyMsg.SetStatus(SvtDbAgent::msgStatus[status]);
+    replyMsg.SetData(nlohmann::ordered_json());
+    replyMsg.SetError(-1, "");
   }
   else
   {
-    auto type = msg.payload["type"].get<std::string>();
-    replyData["type"] = type + std::string("Reply");
+    auto type = msg.GetPayload()["type"].get<std::string>();
     if (type.empty())
     {
       logger.logError("Request have not type information. Skipping");
-      replyData["status"] =
-          SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
+      replyMsg.SetType("");
+      replyMsg.SetStatus(
+          SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+      replyMsg.SetData(nlohmann::ordered_json());
+      replyMsg.SetError(-1, "");
     }
     else
     {
+      replyMsg.SetType(type + std::string("Reply"));
       SvtDbAgent::RequestType reqType =
           SvtDbAgent::GetRequestType(std::string_view(type.c_str()));
       try
@@ -170,67 +201,67 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
         switch (reqType)
         {
           //! enumValues
-        case SvtDbAgent::RequestType::GetAllWaferFoundries:
-        case SvtDbAgent::RequestType::GetAllEngineeringRuns:
-        case SvtDbAgent::RequestType::GetAllWaferTechnologies:
-        case SvtDbAgent::RequestType::GetAllWaferSubMapOrientations:
-        case SvtDbAgent::RequestType::GetAllAsicFamilyTypes:
+        case SvtDbAgent::RequestType::GetAllEnums:
         {
-          getAllEnumValuesReplyMsg(reqType, replyData);
+          const auto &msgData = msg.GetPayload()["data"];
+          std::vector<std::string> type_filters;
+          if (msgData.contains(std::string("enumNames")))
+          {
+            type_filters = msgData["enumNames"].get<std::vector<std::string>>();
+          }
+          SvtDbAgent::getAllEnumValuesReplyMsg(type_filters, dbAgentEnumList,
+                                               replyMsg);
         }
         break;
           //! Get all wafer types
-        case SvtDbAgent::RequestType::GetAllWaferTypes:
-        {
-          std::vector<int> id_filters;
-          if (msg.payload.contains(std::string("filter")))
-          {
-            id_filters = msg.payload["filter"].get<std::vector<int>>();
-          }
-          SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyData);
-        }
-        break;
-          //! Create wafer type
-        case SvtDbAgent::RequestType::CreateWaferType:
-        {
-          const auto &msgData = msg.payload["data"];
-          if (!msgData.contains(std::string("create")))
-          {
-            throw std::runtime_error(
-                "DbAgentService: Non object create was found");
-          }
-          SvtDbAgent::createWaferTypeReplyMsg(msgData["create"], replyData);
-        }
-        break;
-          //! Get all wafers
-        case SvtDbAgent::RequestType::GetAllWafers:
-        {
-          std::vector<int> id_filters;
-          if (msg.payload.contains(std::string("filter")))
-          {
-            id_filters = msg.payload["filter"].get<std::vector<int>>();
-          }
-          SvtDbAgent::getAllWafersReplyMsg(id_filters, replyData);
-        }
-        break;
-          //! Create wafer
-        case SvtDbAgent::RequestType::CreateWafer:
-        {
-          const auto &msgData = msg.payload["data"];
-          if (!msgData.contains(std::string("create")))
-          {
-            throw std::runtime_error(
-                "DbAgentService: Non object create was found");
-          }
-          SvtDbAgent::createWaferReplyMsg(msgData["create"], replyData);
-        }
-        break;
-          //! Not Found
+        // case SvtDbAgent::RequestType::GetAllWaferTypes:
+        // {
+        //   std::vector<int> id_filters;
+        //   if (msg.payload.contains(std::string("filter")))
+        //   {
+        //     id_filters = msg.payload["filter"].get<std::vector<int>>();
+        //   }
+        //   SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyData);
+        // }
+        // break;
+        //   //! Create wafer type
+        // case SvtDbAgent::RequestType::CreateWaferType {
+        //   const auto &msgData = msg.payload["data"];
+        //   if (!msgData.contains(std::string("create"))) {
+        //     throw std::runtime_error(
+        //         "DbAgentService: Non object create was found");
+        //   } SvtDbAgent::createWaferTypeReplyMsg(msgData["create"],
+        //   replyData);
+        // } break;
+        //     //! Get all wafers
+        //     case SvtDbAgent::RequestType::GetAllWafers:
+        // {
+        //   std::vector<int> id_filters;
+        //   if (msg.payload.contains(std::string("filter")))
+        //   {
+        //     id_filters = msg.payload["filter"].get<std::vector<int>>();
+        //   }
+        //   SvtDbAgent::getAllWafersReplyMsg(id_filters, replyData);
+        // }
+        // break;
+        //   //! Create wafer
+        // case SvtDbAgent::RequestType::CreateWafer:
+        // {
+        //   const auto &msgData = msg.payload["data"];
+        //   if (!msgData.contains(std::string("create")))
+        //   {
+        //     throw std::runtime_error(
+        //         "DbAgentService: Non object create was found");
+        //   }
+        //   SvtDbAgent::createWaferReplyMsg(msgData["create"], replyData);
+        // }
+        // break;
+        //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
           logger.logError("");
-          replyData["status"] = SvtDbAgent::msgStatus
-              [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
+          replyMsg.SetStatus(SvtDbAgent::msgStatus
+                                 [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
         }
       }
       catch (const std::exception &e)
@@ -238,26 +269,24 @@ void SvtDbAgentService::parseMsg(SvtDbAgentMessage &msg,
         logger.logError("Error requesting " +
                         std::string(SvtDbAgent::m_requestType[reqType]) +
                         std::string(e.what()));
-        replyData["data"]["items"] = std::string();
-        replyData["status"] =
-            SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest];
-        replyData["errMsg"] = e.what();
+        replyMsg.SetData(nlohmann::ordered_json());
+        replyMsg.SetStatus(
+            SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+        replyMsg.SetError(-1, e.what());
       }
     }  //!<! request type is not empty
   }
-  SvtDbAgentMessage replyMsg;
-  replyMsg.headers = replyHeaders;
-  replyMsg.payload = replyData;
+  replyMsg.ParsePayload();
 
   if (true)
   {
     logger.logInfo("Request messages: \n" + std::string("Header = ") +
-                   msg.headers.dump() + std::string("\nPayload = ") +
-                   msg.payload.dump());
+                   msg.GetHeaders().dump() + std::string("\nPayload = ") +
+                   msg.GetPayload().dump());
     logger.logInfo("Reply messages: \n" + std::string("Header = ") +
-                   replyMsg.headers.dump() + std::string("\nPayload = ") +
-                   replyMsg.payload.dump());
+                   replyMsg.GetHeaders().dump() + std::string("\nPayload = ") +
+                   replyMsg.GetPayload().dump());
   }
 
-  m_Producer->Push(replyMsg);
+  m_Producer->Push(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
 }

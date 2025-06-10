@@ -7,7 +7,7 @@
 
 #include "SVTDbAgentService/SvtDbAgentRequest.h"
 #include "SVTDb/SvtDbInterface.h"
-#include "SVTUtilities/SvtLogger.h"
+#include "SVTDbAgentService/SvtDbAgentMessage.h"
 #include "SVTUtilities/SvtUtilities.h"
 
 //========================================================================+
@@ -25,32 +25,38 @@ SvtDbAgent::RequestType SvtDbAgent::GetRequestType(std::string_view type_req)
 
 //========================================================================+
 void SvtDbAgent::getAllEnumValuesReplyMsg(
-    const SvtDbAgent::RequestType &reqType, nlohmann::ordered_json &replyData)
+    const std::vector<std::string> &type_filters,
+    const SvtDbAgentEnum &enumList, SvtDbAgentReplyMsg &msgReply)
 {
   std::string enum_name(SvtDbAgent::db_schema);
-
-  const auto &iter = SvtDbAgent::m_EnumType.find(reqType);
-  if (iter == SvtDbAgent::m_EnumType.end())
-  {
-    Singleton<SvtLogger>::instance().logError("Error: enum type " +
-                                              std::to_string(reqType) +
-                                              " is not a valid enum type");
-    throw std::invalid_argument("enum type not found");
-  }
-  enum_name += std::string(".");
-  enum_name += iter->second;
-
   try
   {
-    std::vector<std::string> enum_values;
-    SvtDbInterface::getAllEnumValues(enum_name, enum_values);
-    nlohmann::ordered_json items = nlohmann::json::array();
-    for (const auto &enum_val : enum_values)
+    nlohmann::ordered_json data;
+    if (type_filters.size())
     {
-      items.push_back(enum_val);
+      for (const auto &enum_type : type_filters)
+      {
+        data[enum_type] = nlohmann::ordered_json::array();
+        for (const auto &enum_value : enumList.GetEnumValues(enum_type))
+        {
+          data[enum_type].push_back(enum_value);
+        }
+      }
     }
-    replyData["data"]["items"] = items;
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
+    else
+    {
+      for (const auto &enum_type : enumList.GetTypeNames())
+      {
+        data[enum_type] = nlohmann::ordered_json::array();
+        for (const auto &enum_value : enumList.GetEnumValues(enum_type))
+        {
+          data[enum_type].push_back(enum_value);
+        }
+      }
+    }
+    msgReply.SetData(data);
+    msgReply.SetStatus(msgStatus[SvtDbAgentMsgStatus::Success]);
+    msgReply.SetError(0, "");
   }
   catch (const std::exception &e)
   {
