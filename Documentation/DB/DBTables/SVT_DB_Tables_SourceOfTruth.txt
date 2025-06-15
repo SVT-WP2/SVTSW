@@ -21,6 +21,7 @@ Table WaferLocation {
   waferId integer [ref: > Wafer.id, not null]
   generalLocation wpGeneralLocation
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  username string
   description string
 }
 
