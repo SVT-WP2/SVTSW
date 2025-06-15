@@ -19,7 +19,7 @@ info:
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
     
-    
+
   version: 0.0.1
 paths:
   /svt.db-agent.request/GetAllWaferTypes:
@@ -54,7 +54,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/CreateWaferType:
     post:
       tags:
@@ -86,8 +86,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"                
-                
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/GetAllWafers:
     post:
       tags:
@@ -153,7 +153,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/UpdateWafer:
     post:
       tags:
@@ -186,7 +186,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/UpdateWaferLocation:
     post:
       tags:
@@ -218,7 +218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"      
+                $ref: "#/components/schemas/ReplyMessage"
 
   /svt.db-agent.request/GetAllAsics:
     post:
@@ -252,7 +252,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/CreateAsic:
     post:
       tags:
@@ -284,8 +284,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"         
-                
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/GetAllWaferProbeMachines:
     post:
       tags:
@@ -317,8 +317,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"     
-                
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/CreateWaferProbeMachine:
     post:
       tags:
@@ -351,7 +351,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/UpdateWaferProbeMachine:
     post:
       tags:
@@ -384,7 +384,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/UpdateWpMachineLoadedWafer:
     post:
       tags:
@@ -416,7 +416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"                
+                $ref: "#/components/schemas/ReplyMessage"
 
   /svt.db-agent.request/UpdateWpMachineInstalledProbeCard:
     post:
@@ -450,7 +450,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  
+
   /svt.db-agent.request/GetAllWaferProbeProjects:
     post:
       tags:
@@ -483,7 +483,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
+
   /svt.db-agent.request/CreateWaferProbeProject:
     post:
       tags:
@@ -515,8 +515,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReplyMessage"                
-  
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/GetAllProbeCards:
     post:
       tags:
@@ -549,7 +549,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  
+
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -744,7 +744,7 @@ components:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferTypeDto'                
+              $ref: '#/components/schemas/WaferTypeDto'
     #
     # WAFERS :: LIST
     #
@@ -852,7 +852,7 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferDto'
-              
+
     #
     # ASICS :: LIST
     #
@@ -887,7 +887,7 @@ components:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/AsicDto'   
+                $ref: '#/components/schemas/AsicDto'
     #
     # ASICS :: CREATE
     #
@@ -967,7 +967,7 @@ components:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto'    
+              $ref: '#/components/schemas/WaferProbeMachineDto'
     #
     # WAFER PROBE MACHINES :: UPDATE
     #
@@ -997,8 +997,8 @@ components:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto' 
-              
+              $ref: '#/components/schemas/WaferProbeMachineDto'
+
     #
     # WAFER PROBE MACHINES :: UPDATE :: LOADED WAFER
     #
@@ -1020,7 +1020,7 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-                            
+
     #
     # WAFER PROBE MACHINES :: UPDATE :: INSTALLED PROBE CARD
     #
@@ -1042,7 +1042,7 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-              
+
     #
     # WAFER PROBE PROJECTS :: LIST
     #
@@ -1074,8 +1074,8 @@ components:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferProbeProjectDto'  
-                
+                $ref: '#/components/schemas/WaferProbeProjectDto'
+
     #
     # WAFER PROBE PROJECTS :: CREATE
     #
@@ -1135,7 +1135,7 @@ components:
     #
     # DTOs
     #
-    
+
     WaferTypeDto:
       type: object
       required:
@@ -1159,10 +1159,10 @@ components:
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
-          
+
     WaferTypeCreateDto:
       type: object
-      required:        
+      required:
         - name
         - engineeringRun
         - foundry
@@ -1180,7 +1180,7 @@ components:
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
-          
+
     WaferDto:
       type: object
       required:
@@ -1209,15 +1209,15 @@ components:
         productionDate:
           type: string
           description: Date only in format `2025-06-03`
-    
+
     WaferCreateDto:
       type: object
-      required:        
+      required:
         - serialNumber
         - batchNumber
         - waferTypeId
         - generalLocation
-      properties:        
+      properties:
         serialNumber:
           type: string
         batchNumber:
@@ -1235,10 +1235,10 @@ components:
         productionDate:
           type: string
           nullable: true
-          
+
     WaferUpdateDto:
       type: object
-      properties:        
+      properties:
         thinningDate:
           type: string
           nullable: true
@@ -1248,7 +1248,7 @@ components:
         productionDate:
           type: string
           nullable: true
-            
+
     WaferUpdateLocationDto:
       type: object
       required:
@@ -1266,7 +1266,7 @@ components:
           nullable: true
         userName:
           type: string
-          
+
     AsicDto:
       type: object
       required:
@@ -1285,8 +1285,8 @@ components:
         waferMapPosition:
           type: string
         quality:
-          type: string     
-          
+          type: string
+
     AsicCreateDto:
       type: object
       required:
@@ -1302,8 +1302,8 @@ components:
         waferMapPosition:
           type: string
         quality:
-          type: string    
-    
+          type: string
+
     WaferProbeMachineDto:
       type: object
       required:
@@ -1345,7 +1345,7 @@ components:
           nullable: true
         installedProbeCardId:
           type: number
-          nullable: true          
+          nullable: true
 
     WaferProbeMachineCreateDto:
       type: object
@@ -1378,7 +1378,7 @@ components:
           type: string
         vendor:
           type: string
-    
+
     WaferProbeMachineUpdateDto:
       type: object
       required:
@@ -1401,7 +1401,7 @@ components:
           type: string
         swVersion:
           type: string
-          
+
     WpMachineLoadedWaferUpdateDto:
       type: object
       required:
@@ -1409,11 +1409,11 @@ components:
         - loadedWaferId
       properties:
         wpMachineId:
-          type: number          
+          type: number
         loadedWaferId:
           type: number
           nullable: true
-          
+
     WpMachineInstalledProbeCardUpdateDto:
       type: object
       required:
@@ -1425,7 +1425,7 @@ components:
         installedProbeCardId:
           type: number
           nullable: true
-    
+
     WaferProbeProjectDto:
       type: object
       required:
@@ -1487,7 +1487,7 @@ components:
           type: string
         local2GlobalMap:
           type: string
-          description: Stringified JSON in the correct format.          
+          description: Stringified JSON in the correct format.
 
     ProbeCardDto:
       type: object
@@ -1501,7 +1501,7 @@ components:
         - type
         - vendorCleaningInterval
         - vendor
-        - asicFamilyType
+        - asicFamilyTypes
       properties:
         id:
           type: number
@@ -1522,8 +1522,10 @@ components:
           type: number
         vendor:
           type: string
-        asicFamilyType:
-          type: string
+        asicFamilyTypes:
+          type: array
+          items:
+            type: string
 
     SvtEnumName:
       type: string
