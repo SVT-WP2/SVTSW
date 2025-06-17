@@ -81,15 +81,15 @@ int main()
   try
   {
     SvtDbAgentService &_dbAgent = Singleton<SvtDbAgentService>::instance();
-    if (!_dbAgent.DbEnumTypeInitialization(SvtDbAgent::db_schema))
+    if (!_dbAgent.initEnumTypeList(SvtDbAgent::db_schema))
     {
       return EXIT_FAILURE;
     }
-    if (!_dbAgent.ConfigureService(false))
+    if (!_dbAgent.configureService(false))
     {
       return EXIT_FAILURE;
     }
-    while (_dbAgent.GetIsConsRunnning())
+    while (_dbAgent.getIsConsRunnning())
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       //   // int time = gTimer.getTicksInSeconds();

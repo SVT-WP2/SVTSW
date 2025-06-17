@@ -166,6 +166,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
                                      vector<vector<MultiBase *>> &rows)
 {
   status = DatabaseInterface::isConnected(message);
+  std::string query_name("query");
 
   if (!status)
   {
@@ -193,8 +194,8 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     }
 
     //! prepare statement
-    mDBConnection->prepare("query", query);
-    pqxx::prepped prepare_name{"query"};
+    mDBConnection->prepare(query_name, query);
+    pqxx::prepped prepare_name{query_name};
     pqxx::result res{mDBWork->exec(prepare_name)};
     for (const auto &row : res)
     {
@@ -228,11 +229,13 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
       rows.push_back(rowResult);
     }
     // remove query statement
-    mDBWork->exec("DEALLOCATE PREPARE query");
+    mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     return;
   }
   catch (pqxx::sql_error const &e)
   {
+    // clear prepare
+    mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     message = std::string("SQL error: ") + e.what() +
               std::string("Query was: ") + e.query();
     status = false;
