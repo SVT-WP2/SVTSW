@@ -15,6 +15,7 @@
 #include "SvtDbAgentProducer.h"
 
 #include <librdkafka/rdkafkacpp.h>
+#include <cmath>
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
@@ -50,15 +51,18 @@ class SvtDbAgentService
   SvtDbAgentService() = default;
   ~SvtDbAgentService();
 
-  bool DbEnumTypeInitialization(const std::string &schema = "prod");
-  bool ConfigureService(bool stop_eof = false);
-  void ProcessMsgCb(RdKafka::Message *msg, void *opaque);
-  void SetDebug(std::string debug) { m_debug = debug; }
+  bool initEnumTypeList(const std::string &schema = "prod");
+  bool configureService(bool stop_eof = false);
+  void processMsgCb(RdKafka::Message *msg, void *opaque);
+  void setDebug(std::string debug) { m_debug = debug; }
 
-  void StopConsumer(const bool suspeneded);
-  bool GetIsConsRunnning();
+  void stopConsumer(const bool suspeneded);
+  bool getIsConsRunnning();
 
-  SvtDbAgentEnum &GetEnumList() { return dbAgentEnumList; }
+  void setLogMessages(const bool val) { log_messages = val; }
+  bool getLogMessages() { return log_messages; }
+
+  SvtDbAgentEnum &getEnumList() { return dbAgentEnumList; }
 
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
@@ -74,6 +78,8 @@ class SvtDbAgentService
   std::string m_brokerName = {"localhost:9092"};
   std::string m_errStr;
   std::string m_debug;
+
+  bool log_messages = false;
 };
 
 #endif  // !SVTDB_AGENT_H

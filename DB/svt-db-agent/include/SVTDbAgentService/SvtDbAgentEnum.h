@@ -16,11 +16,11 @@
 class SvtDbAgentEnum
 {
  public:
-  void AddValue(const std::string &type, std::string &value)
+  void addValue(const std::string &type, std::string &value)
   {
     enum_type_value_map[type].push_back(value);
   }
-  std::vector<std::string> GetTypeNames() const
+  std::vector<std::string> getTypeNames() const
   {
     std::vector<std::string> keys;
     std::transform(
@@ -33,7 +33,7 @@ class SvtDbAgentEnum
     return keys;
   }
 
-  std::vector<std::string> GetEnumValues(const std::string &enum_type) const
+  std::vector<std::string> getEnumValues(const std::string &enum_type) const
   {
     if (enum_type_value_map.find(enum_type) != enum_type_value_map.cend())
     {
@@ -45,12 +45,12 @@ class SvtDbAgentEnum
     }
   }
 
-  const std::map<std::string, std::vector<std::string>> &GetAllEnumList()
+  const std::map<std::string, std::vector<std::string>> &getAllEnumList()
   {
     return enum_type_value_map;
   }
 
-  void Print();
+  void print();
 
  private:
   std::map<std::string, std::vector<std::string>> enum_type_value_map;

@@ -19,10 +19,10 @@ SvtDbAgentConsumer::SvtDbAgentConsumer(const std::string &broker, bool stop_eof)
   : m_broker(broker)
   , m_stop_eof(stop_eof)
 {
-  CreateConsumer();
+  createConsumer();
 }
 
-bool SvtDbAgentConsumer::CreateConsumer()
+bool SvtDbAgentConsumer::createConsumer()
 {
   //! stop consumer
   m_running = 0;
@@ -132,11 +132,11 @@ bool SvtDbAgentConsumer::CreateConsumer()
     return false;
   }
 
-  return Start();
+  return start();
 }
 
 //========================================================================+
-bool SvtDbAgentConsumer::Start()
+bool SvtDbAgentConsumer::start()
 {
   logger.logInfo("Starting DbAgetnConsumer " + m_consumer->name() +
                      " in toppic " + m_topic->name(),
@@ -144,9 +144,9 @@ bool SvtDbAgentConsumer::Start()
 
   if (m_running)
   {
-    if (GetSuspended())
+    if (getSuspended())
     {
-      SetSuspended(false);
+      setSuspended(false);
       return true;
     }
     else
@@ -160,47 +160,47 @@ bool SvtDbAgentConsumer::Start()
   {
     m_thread.join();
   }
-  SetSuspended(false);
+  setSuspended(false);
   m_running = true;
-  m_thread = std::thread(std::bind(&SvtDbAgentConsumer::Pull, this));
+  m_thread = std::thread(std::bind(&SvtDbAgentConsumer::pull, this));
 
   return true;
 }
 
 //========================================================================+
-void SvtDbAgentConsumer::Pull()
+void SvtDbAgentConsumer::pull()
 {
   SvtDbAgentConsumeCb consume_cb;
 
   bool cb = true;
-  while (GetIsRunning() && !GetSuspended())
+  while (getIsRunning() && !getSuspended())
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(kKafkaWaitTime_ms));
     m_consumer->consume_callback(m_topic.get(), m_partition, 1000, &consume_cb,
                                  &cb);
     if (!cb)
     {
-      Stop(false);
+      stop(false);
     }
     m_consumer->poll(0);
   }
 }
 
 //========================================================================+
-bool SvtDbAgentConsumer::Stop(const bool suspended)
+bool SvtDbAgentConsumer::stop(const bool suspended)
 {
   if (suspended)
   {
     logger.logInfo("Suspended DbAgetnConsumer " + m_consumer->name() +
                        " in toppic " + m_topic->name(),
                    SvtLogger::Mode::STANDARD);
-    SetSuspended(true);
+    setSuspended(true);
     return true;
   }
   logger.logInfo("Stopping DbAgetnConsumer " + m_consumer->name() +
                      " in toppic " + m_topic->name(),
                  SvtLogger::Mode::STANDARD);
-  SetIsRunning(false);
+  setIsRunning(false);
   m_consumer->stop(m_topic.get(), m_partition);
   m_consumer->poll(1000);
   return true;

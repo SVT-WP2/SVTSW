@@ -182,12 +182,12 @@ int SvtDbInterface::getAllWaferTypes(
   waferTypes.clear();
   SimpleQuery query;
 
-  std::string tableName = SvtDbAgent::db_schema + std::string(".waferType");
+  std::string tableName = SvtDbAgent::db_schema + std::string(".WaferType");
   query.setTableName(tableName);
 
   for (const auto &record : dbWaferTypeRecords::val_names)
   {
-    query.addColumn(std::string(record));
+    query.addColumn(record);
   }
 
   if (!id_filters.empty())
@@ -240,7 +240,7 @@ bool SvtDbInterface::insertWaferType(const dbWaferTypeRecords &waferType)
 {
   SimpleInsert insert;
 
-  std::string tableName = SvtDbAgent::db_schema + std::string(".waferType");
+  std::string tableName = SvtDbAgent::db_schema + std::string(".WaferType");
   insert.setTableName(tableName);
 
   //! Add columns & values

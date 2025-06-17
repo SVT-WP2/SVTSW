@@ -34,9 +34,9 @@ class SvtDbAgentProducer
     }
   };
 
-  bool CreateProducer();
+  bool createProducer();
 
-  bool Push(const std::string_view &topic,
+  bool push(const std::string_view &topic,
             const SvtDbAgent::SvtDbAgentMessage &message);
 
  private:

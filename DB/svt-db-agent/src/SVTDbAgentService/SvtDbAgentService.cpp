@@ -25,7 +25,7 @@
 SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(5000); }
 
 //========================================================================+
-bool SvtDbAgentService::DbEnumTypeInitialization(const std::string &schema)
+bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
 {
   logger.logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
@@ -40,15 +40,15 @@ bool SvtDbAgentService::DbEnumTypeInitialization(const std::string &schema)
     SvtDbInterface::getAllEnumValues(enum_name, enum_values);
     for (auto &value : enum_values)
     {
-      dbAgentEnumList.AddValue(enum_type, value);
+      dbAgentEnumList.addValue(enum_type, value);
     }
   }
-  dbAgentEnumList.Print();
+  dbAgentEnumList.print();
   return true;
 }
 
 //========================================================================+
-bool SvtDbAgentService::ConfigureService(bool stop_eof)
+bool SvtDbAgentService::configureService(bool stop_eof)
 {
   m_Consumer = std::shared_ptr<SvtDbAgentConsumer>(
       new SvtDbAgentConsumer(m_brokerName, stop_eof));
@@ -59,19 +59,19 @@ bool SvtDbAgentService::ConfigureService(bool stop_eof)
 }
 
 //========================================================================+
-void SvtDbAgentService::StopConsumer(const bool suspended)
+void SvtDbAgentService::stopConsumer(const bool suspended)
 {
-  m_Consumer->Stop(suspended);
+  m_Consumer->stop(suspended);
 }
 
 //========================================================================+
-bool SvtDbAgentService::GetIsConsRunnning()
+bool SvtDbAgentService::getIsConsRunnning()
 {
-  return m_Consumer->GetIsRunning();
+  return m_Consumer->getIsRunning();
 }
 
 //========================================================================+
-void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
+void SvtDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
 {
   const RdKafka::Headers *headers;
 
@@ -125,7 +125,7 @@ void SvtDbAgentService::ProcessMsgCb(RdKafka::Message *message, void *opaque)
     }
     {
       auto bufferPayload = static_cast<const char *>(message->payload());
-      svtMsg.SetPayload(nlohmann::json::parse(
+      svtMsg.setPayload(nlohmann::json::parse(
           bufferPayload, bufferPayload + static_cast<int>(message->len())));
       // printf("%.*s\n", static_cast<int>(message->len()),
       //        static_cast<const char *>(message->payload()));
@@ -168,34 +168,35 @@ void SvtDbAgentService::parseMsg(
   for (const auto &header : hdr_name_list)
   {
     replyMsg.AddHeader(header,
-                       msg.GetHeaders()[header].get<std::string>().data());
+                       msg.getHeaders()[header].get<std::string>().data());
   }
   replyMsg.AddHeader("kafka_nest-is-disposed", "00");
 
   if (status != SvtDbAgent::SvtDbAgentMsgStatus::Success)
   {
-    replyMsg.SetType("");
-    replyMsg.SetStatus(SvtDbAgent::msgStatus[status]);
-    replyMsg.SetData(nlohmann::ordered_json());
-    replyMsg.SetError(-1, "");
+    replyMsg.setType("");
+    replyMsg.setStatus(SvtDbAgent::msgStatus[status]);
+    replyMsg.setData(nlohmann::ordered_json());
+    replyMsg.setError(-1, "");
   }
   else
   {
-    auto type = msg.GetPayload()["type"].get<std::string>();
+    auto type = msg.getPayload()["type"].get<std::string>();
+    logger.logInfo("Received message with request type: " + type);
     if (type.empty())
     {
       logger.logError("Request have not type information. Skipping");
-      replyMsg.SetType("");
-      replyMsg.SetStatus(
+      replyMsg.setType("");
+      replyMsg.setStatus(
           SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
-      replyMsg.SetData(nlohmann::ordered_json());
-      replyMsg.SetError(-1, "");
+      replyMsg.setData(nlohmann::ordered_json());
+      replyMsg.setError(-1, "Empty type");
     }
     else
     {
-      replyMsg.SetType(type + std::string("Reply"));
+      replyMsg.setType(type + std::string("Reply"));
       SvtDbAgent::RequestType reqType =
-          SvtDbAgent::GetRequestType(std::string_view(type.c_str()));
+          SvtDbAgent::getRequestType(std::string_view(type.c_str()));
       try
       {
         switch (reqType)
@@ -203,7 +204,7 @@ void SvtDbAgentService::parseMsg(
           //! enumValues
         case SvtDbAgent::RequestType::GetAllEnums:
         {
-          const auto &msgData = msg.GetPayload()["data"];
+          const auto &msgData = msg.getPayload()["data"];
           std::vector<std::string> type_filters;
           if (msgData.contains(std::string("enumNames")))
           {
@@ -214,26 +215,33 @@ void SvtDbAgentService::parseMsg(
         }
         break;
           //! Get all wafer types
-        // case SvtDbAgent::RequestType::GetAllWaferTypes:
-        // {
-        //   std::vector<int> id_filters;
-        //   if (msg.payload.contains(std::string("filter")))
-        //   {
-        //     id_filters = msg.payload["filter"].get<std::vector<int>>();
-        //   }
-        //   SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyData);
-        // }
-        // break;
-        //   //! Create wafer type
-        // case SvtDbAgent::RequestType::CreateWaferType {
-        //   const auto &msgData = msg.payload["data"];
-        //   if (!msgData.contains(std::string("create"))) {
-        //     throw std::runtime_error(
-        //         "DbAgentService: Non object create was found");
-        //   } SvtDbAgent::createWaferTypeReplyMsg(msgData["create"],
-        //   replyData);
-        // } break;
-        //     //! Get all wafers
+        case SvtDbAgent::RequestType::GetAllWaferTypes:
+        {
+          const auto &msgData = msg.getPayload()["data"];
+          std::vector<int> id_filters;
+          if (msgData.contains(std::string("filter")))
+          {
+            if (msgData.contains(std::string("ids")))
+            {
+              id_filters = msgData["filter"]["ids"].get<std::vector<int>>();
+            }
+          }
+          SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyMsg);
+        }
+        break;
+        //! Create wafer type
+        case SvtDbAgent::RequestType::CreateWaferType:
+        {
+          const auto &msgData = msg.getPayload()["data"];
+          if (!msgData.contains(std::string("create")))
+          {
+            throw std::runtime_error(
+                "DbAgentService: Non object create was found");
+          }
+          SvtDbAgent::createWaferTypeReplyMsg(msgData["create"], replyMsg);
+        }
+        break;
+        //! Get all wafers
         //     case SvtDbAgent::RequestType::GetAllWafers:
         // {
         //   std::vector<int> id_filters;
@@ -259,34 +267,38 @@ void SvtDbAgentService::parseMsg(
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
-          logger.logError("");
-          replyMsg.SetStatus(SvtDbAgent::msgStatus
+          std::ostringstream ss;
+          ss << "Error: Request " << type << " not Found";
+          logger.logError(ss.str());
+          replyMsg.setData(nlohmann::ordered_json());
+          replyMsg.setStatus(SvtDbAgent::msgStatus
                                  [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+          replyMsg.setError(-1, ss.str());
         }
       }
       catch (const std::exception &e)
       {
-        logger.logError("Error requesting " +
+        logger.logError("Error: requesting " +
                         std::string(SvtDbAgent::m_requestType[reqType]) +
-                        std::string(e.what()));
-        replyMsg.SetData(nlohmann::ordered_json());
-        replyMsg.SetStatus(
+                        std::string(". ") + std::string(e.what()));
+        replyMsg.setData(nlohmann::ordered_json());
+        replyMsg.setStatus(
             SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
-        replyMsg.SetError(-1, e.what());
+        replyMsg.setError(-1, e.what());
       }
     }  //!<! request type is not empty
   }
-  replyMsg.ParsePayload();
+  replyMsg.parsePayload();
 
-  if (true)
+  if (log_messages)
   {
     logger.logInfo("Request messages: \n" + std::string("Header = ") +
-                   msg.GetHeaders().dump() + std::string("\nPayload = ") +
-                   msg.GetPayload().dump());
+                   msg.getHeaders().dump() + std::string("\nPayload = ") +
+                   msg.getPayload().dump());
     logger.logInfo("Reply messages: \n" + std::string("Header = ") +
-                   replyMsg.GetHeaders().dump() + std::string("\nPayload = ") +
-                   replyMsg.GetPayload().dump());
+                   replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
+                   replyMsg.getPayload().dump());
   }
 
-  m_Producer->Push(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
+  m_Producer->push(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
 }
