@@ -11,7 +11,7 @@
 #include "SVTUtilities/SvtUtilities.h"
 
 //========================================================================+
-SvtDbAgent::RequestType SvtDbAgent::GetRequestType(std::string_view type_req)
+SvtDbAgent::RequestType SvtDbAgent::getRequestType(std::string_view type_req)
 {
   for (const auto &[key, value] : m_requestType)
   {
@@ -37,7 +37,7 @@ void SvtDbAgent::getAllEnumValuesReplyMsg(
       for (const auto &enum_type : type_filters)
       {
         data[enum_type] = nlohmann::ordered_json::array();
-        for (const auto &enum_value : enumList.GetEnumValues(enum_type))
+        for (const auto &enum_value : enumList.getEnumValues(enum_type))
         {
           data[enum_type].push_back(enum_value);
         }
@@ -45,18 +45,18 @@ void SvtDbAgent::getAllEnumValuesReplyMsg(
     }
     else
     {
-      for (const auto &enum_type : enumList.GetTypeNames())
+      for (const auto &enum_type : enumList.getTypeNames())
       {
         data[enum_type] = nlohmann::ordered_json::array();
-        for (const auto &enum_value : enumList.GetEnumValues(enum_type))
+        for (const auto &enum_value : enumList.getEnumValues(enum_type))
         {
           data[enum_type].push_back(enum_value);
         }
       }
     }
-    msgReply.SetData(data);
-    msgReply.SetStatus(msgStatus[SvtDbAgentMsgStatus::Success]);
-    msgReply.SetError(0, "");
+    msgReply.setData(data);
+    msgReply.setStatus(msgStatus[SvtDbAgentMsgStatus::Success]);
+    msgReply.setError(0, "");
   }
   catch (const std::exception &e)
   {
@@ -67,32 +67,43 @@ void SvtDbAgent::getAllEnumValuesReplyMsg(
 
 //========================================================================+
 void SvtDbAgent::getAllWaferTypesReplyMsg(const std::vector<int> &id_filters,
-                                          nlohmann::ordered_json &replyData)
+                                          SvtDbAgentReplyMsg &msgReply)
 {
-  std::vector<SvtDbInterface::dbWaferTypeRecords> waferTypes;
-  SvtDbInterface::getAllWaferTypes(waferTypes, id_filters);
-
-  nlohmann::ordered_json items = nlohmann::json::array();
-  for (const auto &waferType : waferTypes)
+  try
   {
-    nlohmann::ordered_json json_wafer_type;
-    json_wafer_type["id"] = waferType.id;
-    json_wafer_type["name"] = waferType.name;
-    json_wafer_type["foundry"] = waferType.foundry;
-    json_wafer_type["technology"] = waferType.technology;
-    json_wafer_type["engineeringRun"] = waferType.engineeringRun;
-    // json_wafer_type["imageBase64String"] = waferType.imageBase64String;
-    json_wafer_type["waferMap"] = waferType.waferMap;
+    std::vector<SvtDbInterface::dbWaferTypeRecords> waferTypes;
+    SvtDbInterface::getAllWaferTypes(waferTypes, id_filters);
 
-    items.push_back(json_wafer_type);
+    nlohmann::ordered_json data;
+    nlohmann::ordered_json items = nlohmann::json::array();
+    for (const auto &waferType : waferTypes)
+    {
+      nlohmann::ordered_json json_wafer_type;
+      json_wafer_type["id"] = waferType.id;
+      json_wafer_type["name"] = waferType.name;
+      json_wafer_type["foundry"] = waferType.foundry;
+      json_wafer_type["technology"] = waferType.technology;
+      json_wafer_type["engineeringRun"] = waferType.engineeringRun;
+      // json_wafer_type["imageBase64String"] = waferType.imageBase64String;
+      json_wafer_type["waferMap"] = waferType.waferMap;
+
+      items.push_back(json_wafer_type);
+    }
+    data["items"] = items;
+    msgReply.setData(data);
+    msgReply.setStatus(msgStatus[SvtDbAgentMsgStatus::Success]);
+    msgReply.setError(0, "");
   }
-  replyData["data"]["items"] = items;
-  replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
+  catch (const std::exception &e)
+  {
+    throw e;
+  }
+  return;
 }
 
 //========================================================================+
 void SvtDbAgent::createWaferTypeReplyMsg(const nlohmann::json &json_wafer_type,
-                                         nlohmann::ordered_json &replyData)
+                                         SvtDbAgentReplyMsg &msgReply)
 {
   //! remove id record
   if (json_wafer_type.size() <
@@ -113,7 +124,16 @@ void SvtDbAgent::createWaferTypeReplyMsg(const nlohmann::json &json_wafer_type,
   // waferType.imageBase64String = json_wafer_type.value("imageBase64String",
   // "");
   //! waferType.waferMap
-  waferType.waferMap = json_wafer_type.value("waferMap", "");
+  if (nlohmann::json::accept(json_wafer_type.value("waferMap", "")))
+  {
+    waferType.waferMap = json_wafer_type.value("waferMap", "");
+  }
+  else
+  {
+    msgReply.setStatus(msgStatus[SvtDbAgentMsgStatus::BadRequest]);
+    msgReply.setError(-1, "ERROR: invvalid JSON format found for waferMap");
+    return;
+  }
 
   try
   {
@@ -128,6 +148,7 @@ void SvtDbAgent::createWaferTypeReplyMsg(const nlohmann::json &json_wafer_type,
                     ? std::move(waferTypes.at(0))
                     : std::move(SvtDbInterface::dbWaferTypeRecords{});
 
+    nlohmann::ordered_json data;
     nlohmann::json ret_json_waferType;
     ret_json_waferType["id"] = waferType.id;
     ret_json_waferType["name"] = waferType.name;
@@ -137,8 +158,10 @@ void SvtDbAgent::createWaferTypeReplyMsg(const nlohmann::json &json_wafer_type,
     // ret_json_waferType["imageBase64String"] = waferType.imageBase64String;
     ret_json_waferType["waferMap"] = waferType.waferMap;
 
-    replyData["data"]["entity"] = ret_json_waferType;
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
+    data["entity"] = ret_json_waferType;
+    msgReply.setData(data);
+    msgReply.setStatus(msgStatus[SvtDbAgentMsgStatus::Success]);
+    msgReply.setError(0, "");
   }
   catch (const std::exception &e)
   {
@@ -146,75 +169,75 @@ void SvtDbAgent::createWaferTypeReplyMsg(const nlohmann::json &json_wafer_type,
   }
 }
 
-//========================================================================+
-void SvtDbAgent::getAllWafersReplyMsg(const std::vector<int> &id_filters,
-                                      nlohmann::ordered_json &replyData)
-{
-  std::vector<SvtDbInterface::dbWaferRecords> wafers;
-  SvtDbInterface::getAllWafers(wafers, id_filters);
-
-  nlohmann::ordered_json items = nlohmann::json::array();
-  for (const auto &wafer : wafers)
-  {
-    nlohmann::ordered_json json_wafer;
-    json_wafer["id"] = wafer.id;
-    json_wafer["serialNumber"] = wafer.serialNumber;
-    json_wafer["batchNumber"] = wafer.batchNumber;
-    json_wafer["waferTypeId"] = wafer.waferTypeId;
-    json_wafer["thinningDate"] = wafer.thinningDate;
-    json_wafer["dicingDate"] = wafer.dicingDate;
-    json_wafer["productionDate"] = wafer.productionDate;
-
-    items.push_back(json_wafer);
-  }
-  replyData["data"]["items"] = items;
-  replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
-}
-
-//========================================================================+
-void SvtDbAgent::createWaferReplyMsg(const nlohmann::json &json_wafer,
-                                     nlohmann::ordered_json &replyData)
-{
-  SvtDbInterface::dbWaferRecords wafer;
-  //! wafer.serialNumber
-  wafer.serialNumber = json_wafer.value("serialNumber", "");
-  //! wafer.batchNumber
-  wafer.batchNumber = json_wafer.value("batchNumber", -1);
-  //! wafer.waferTypeId
-  wafer.waferTypeId = json_wafer.value("waferTypeId", -1);
-  //! wafer.thinningDate
-  SvtDbAgent::get_v(json_wafer, "thinningDate", wafer.thinningDate);
-  //! wafer.dicingDate
-  SvtDbAgent::get_v(json_wafer, "dicingDate", wafer.dicingDate);
-  //! wafer.productionDate
-  SvtDbAgent::get_v(json_wafer, "productionDate", wafer.productionDate);
-
-  try
-  {
-    SvtDbInterface::insertWafer(wafer);
-    const auto maxWaferId = SvtDbInterface::getMaxId("Wafer");
-    std::vector<int> id_filters = {maxWaferId};
-
-    std::vector<SvtDbInterface::dbWaferRecords> wafers;
-    SvtDbInterface::getAllWafers(wafers, id_filters);
-
-    wafer = (wafers.size()) ? std::move(wafers.at(0))
-                            : std::move(SvtDbInterface::dbWaferRecords{});
-
-    nlohmann::json ret_json_wafer;
-    ret_json_wafer["id"] = wafer.id;
-    ret_json_wafer["serialNumber"] = wafer.serialNumber;
-    ret_json_wafer["batchNumber"] = wafer.batchNumber;
-    ret_json_wafer["waferTypeId"] = wafer.waferTypeId;
-    ret_json_wafer["thinningDate"] = wafer.thinningDate;
-    ret_json_wafer["dicingDate"] = wafer.dicingDate;
-    ret_json_wafer["productionDate"] = wafer.productionDate;
-
-    replyData["data"]["entity"] = ret_json_wafer;
-    replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-  }
-}
+// //========================================================================+
+// void SvtDbAgent::getAllWafersReplyMsg(const std::vector<int> &id_filters,
+//                                       nlohmann::ordered_json &replyData)
+// {
+//   std::vector<SvtDbInterface::dbWaferRecords> wafers;
+//   SvtDbInterface::getAllWafers(wafers, id_filters);
+//
+//   nlohmann::ordered_json items = nlohmann::json::array();
+//   for (const auto &wafer : wafers)
+//   {
+//     nlohmann::ordered_json json_wafer;
+//     json_wafer["id"] = wafer.id;
+//     json_wafer["serialNumber"] = wafer.serialNumber;
+//     json_wafer["batchNumber"] = wafer.batchNumber;
+//     json_wafer["waferTypeId"] = wafer.waferTypeId;
+//     json_wafer["thinningDate"] = wafer.thinningDate;
+//     json_wafer["dicingDate"] = wafer.dicingDate;
+//     json_wafer["productionDate"] = wafer.productionDate;
+//
+//     items.push_back(json_wafer);
+//   }
+//   replyData["data"]["items"] = items;
+//   replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
+// }
+//
+// //========================================================================+
+// void SvtDbAgent::createWaferReplyMsg(const nlohmann::json &json_wafer,
+//                                      nlohmann::ordered_json &replyData)
+// {
+//   SvtDbInterface::dbWaferRecords wafer;
+//   //! wafer.serialNumber
+//   wafer.serialNumber = json_wafer.value("serialNumber", "");
+//   //! wafer.batchNumber
+//   wafer.batchNumber = json_wafer.value("batchNumber", -1);
+//   //! wafer.waferTypeId
+//   wafer.waferTypeId = json_wafer.value("waferTypeId", -1);
+//   //! wafer.thinningDate
+//   SvtDbAgent::get_v(json_wafer, "thinningDate", wafer.thinningDate);
+//   //! wafer.dicingDate
+//   SvtDbAgent::get_v(json_wafer, "dicingDate", wafer.dicingDate);
+//   //! wafer.productionDate
+//   SvtDbAgent::get_v(json_wafer, "productionDate", wafer.productionDate);
+//
+//   try
+//   {
+//     SvtDbInterface::insertWafer(wafer);
+//     const auto maxWaferId = SvtDbInterface::getMaxId("Wafer");
+//     std::vector<int> id_filters = {maxWaferId};
+//
+//     std::vector<SvtDbInterface::dbWaferRecords> wafers;
+//     SvtDbInterface::getAllWafers(wafers, id_filters);
+//
+//     wafer = (wafers.size()) ? std::move(wafers.at(0))
+//                             : std::move(SvtDbInterface::dbWaferRecords{});
+//
+//     nlohmann::json ret_json_wafer;
+//     ret_json_wafer["id"] = wafer.id;
+//     ret_json_wafer["serialNumber"] = wafer.serialNumber;
+//     ret_json_wafer["batchNumber"] = wafer.batchNumber;
+//     ret_json_wafer["waferTypeId"] = wafer.waferTypeId;
+//     ret_json_wafer["thinningDate"] = wafer.thinningDate;
+//     ret_json_wafer["dicingDate"] = wafer.dicingDate;
+//     ret_json_wafer["productionDate"] = wafer.productionDate;
+//
+//     replyData["data"]["entity"] = ret_json_wafer;
+//     replyData["status"] = msgStatus[SvtDbAgentMsgStatus::Success];
+//   }
+//   catch (const std::exception &e)
+//   {
+//     throw e;
+//   }
+// }

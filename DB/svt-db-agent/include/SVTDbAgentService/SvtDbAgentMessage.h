@@ -27,14 +27,14 @@ namespace SvtDbAgent
   class SvtDbAgentMessage
   {
    public:
-    virtual const nlohmann::json &GetHeaders() const { return headers; }
-    virtual const nlohmann::json &GetPayload() const { return payload; }
+    virtual const nlohmann::json &getHeaders() const { return headers; }
+    virtual const nlohmann::json &getPayload() const { return payload; }
 
     virtual void AddHeader(std::string_view _key, std::string_view _val)
     {
       headers[_key] = _val;
     }
-    virtual void SetPayload(const nlohmann::json &json) { payload = json; }
+    virtual void setPayload(const nlohmann::json &json) { payload = json; }
 
    protected:
     nlohmann::json headers = {};
@@ -44,16 +44,16 @@ namespace SvtDbAgent
   class SvtDbAgentReplyMsg : public SvtDbAgentMessage
   {
    public:
-    void SetType(const std::string &_type) { type = _type; }
-    void SetStatus(const std::string_view &_status) { status = _status; }
-    void SetData(const nlohmann::ordered_json &val) { data = val; }
-    void SetError(const int _code, const std::string &_msg)
+    void setType(const std::string &_type) { type = _type; }
+    void setStatus(const std::string_view &_status) { status = _status; }
+    void setData(const nlohmann::ordered_json &val) { data = val; }
+    void setError(const int _code, const std::string &_msg)
     {
       error_code = _code;
       error_msg = _msg;
     }
 
-    void ParsePayload()
+    void parsePayload()
     {
       payload["type"] = type;
       payload["status"] = status;

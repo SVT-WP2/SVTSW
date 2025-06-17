@@ -20,6 +20,8 @@ namespace SvtDbAgent
     CreateWaferType,
     GetAllWafers,
     CreateWafer,
+    UpdateWafer,
+    UpdateWaferLocation,
     NotFound,
   };
 
@@ -29,22 +31,24 @@ namespace SvtDbAgent
       {CreateWaferType, "CreateWaferType"},
       {GetAllWafers, "GetAllWafers"},
       {CreateWafer, "CreateWafer"},
+      {UpdateWafer, "UpdateWafer"},
+      {UpdateWaferLocation, "UpdateWaferLocation"},
       {NotFound, "NotFound"}};
 
-  RequestType GetRequestType(std::string_view type_req);
+  RequestType getRequestType(std::string_view type_req);
 
   //! Actions
   void getAllEnumValuesReplyMsg(const std::vector<std::string> &type_filters,
                                 const SvtDbAgentEnum &enumList,
                                 SvtDbAgentReplyMsg &msgReply);
   void getAllWaferTypesReplyMsg(const std::vector<int> &id_filters,
-                                nlohmann::ordered_json &replyData);
+                                SvtDbAgentReplyMsg &msgReply);
   void createWaferTypeReplyMsg(const nlohmann::json &json_wafer,
-                               nlohmann::ordered_json &replyData);
-  void getAllWafersReplyMsg(const std::vector<int> &id_filters,
-                            nlohmann::ordered_json &replyData);
-  void createWaferReplyMsg(const nlohmann::json &json_wafer,
-                           nlohmann::ordered_json &replyData);
+                               SvtDbAgentReplyMsg &msgReply);
+  // void getAllWafersReplyMsg(const std::vector<int> &id_filters,
+  //                           SvtDbAgentReplyMsg &msgReply);
+  // void createWaferReplyMsg(const nlohmann::json &json_wafer,
+  //                          SvtDbAgentReplyMsg &msgReply);
 };  // namespace SvtDbAgent
 
 #endif  //! SVT_DB_AGENT_REQUEST_H

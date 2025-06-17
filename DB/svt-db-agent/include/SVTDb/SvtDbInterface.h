@@ -38,7 +38,7 @@ namespace SvtDbInterface
     std::string waferMap;
 
     static constexpr std::initializer_list<const char *> val_names = {
-        "id", "name", "foundry", "technology", "engineeringRun", "waferMap"};
+        "id", "name", "engineeringRun", "foundry", "technology", "waferMap"};
   };
 
   //! Wafer
