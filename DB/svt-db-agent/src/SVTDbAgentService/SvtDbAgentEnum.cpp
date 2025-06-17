@@ -9,7 +9,7 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
-void SvtDbAgentEnum::Print()
+void SvtDbAgentEnum::print()
 {
   SvtLogger &logger = Singleton<SvtLogger>::instance();
   logger.logInfo("Db Agent Enums");

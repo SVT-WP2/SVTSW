@@ -1,5 +1,6 @@
 [Unit]
 Description=Svt database agent
+Requires=kafka.service
 
 [Install]
 WantedBy=default.target

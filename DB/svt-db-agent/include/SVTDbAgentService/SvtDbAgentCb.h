@@ -30,7 +30,7 @@ class SvtDbAgentEventCb : public RdKafka::EventCb
         msg << "FATAL ";
         //! TODO
         // Stop consumer and producer thread
-        Singleton<SvtDbAgentService>::instance().StopConsumer(false);
+        Singleton<SvtDbAgentService>::instance().stopConsumer(false);
       }
       msg << "ERROR (" << RdKafka::err2str(event.err()) << "): " << event.str();
       Singleton<SvtLogger>::instance().logError(msg.str());
@@ -64,7 +64,7 @@ class SvtDbAgentConsumeCb : public RdKafka::ConsumeCb
  public:
   void consume_cb(RdKafka::Message &msg, void *opaque)
   {
-    Singleton<SvtDbAgentService>::instance().ProcessMsgCb(&msg, opaque);
+    Singleton<SvtDbAgentService>::instance().processMsgCb(&msg, opaque);
   }
 };
 

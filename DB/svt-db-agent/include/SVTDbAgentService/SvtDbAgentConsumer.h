@@ -34,21 +34,21 @@ class SvtDbAgentConsumer
   SvtDbAgentConsumer(const std::string &broker, bool stop_eof = false);
   ~SvtDbAgentConsumer() = default;
 
-  bool CreateConsumer();
+  bool createConsumer();
 
-  void SetStopEof(const bool val) { m_stop_eof = val; }
+  void setStopEof(const bool val) { m_stop_eof = val; }
 
-  bool GetIsRunning() { return m_running; }
-  bool GetSuspended() { return m_suspended; }
+  bool getIsRunning() { return m_running; }
+  bool getSuspended() { return m_suspended; }
 
-  void SetIsRunning(const bool running) { m_running = running; }
-  void SetSuspended(const bool suspended) { m_suspended = suspended; }
-  bool Start();
-  bool Stop(const bool suspend = false);
+  void setIsRunning(const bool running) { m_running = running; }
+  void setSuspended(const bool suspended) { m_suspended = suspended; }
+  bool start();
+  bool stop(const bool suspend = false);
 
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
-  void Pull();
+  void pull();
 
   std::shared_ptr<RdKafka::Consumer> m_consumer;
   std::shared_ptr<RdKafka::Topic> m_topic;
