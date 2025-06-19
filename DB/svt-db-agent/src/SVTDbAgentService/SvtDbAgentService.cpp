@@ -6,7 +6,10 @@
  */
 
 #include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SVTDb/SvtDbInterface.h"
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
+#include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentDto/SvtDbWaferDto.h"
+#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentConsumer.h"
 #include "SVTDbAgentService/SvtDbAgentProducer.h"
 #include "SVTDbAgentService/SvtDbAgentRequest.h"
@@ -17,7 +20,8 @@
 #include <cstring>
 #include <exception>
 #include <memory>
-#include <stdexcept>
+#include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -29,7 +33,10 @@ bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
 {
   logger.logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
-  SvtDbInterface::getAllEnumTypes(schema, enum_types);
+  if (!SvtDbEnumDto::getAllEnumTypesInDB(schema, enum_types))
+  {
+    return false;
+  }
   for (auto &enum_type : enum_types)
   {
     std::string enum_name(SvtDbAgent::db_schema);
@@ -37,13 +44,20 @@ bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
     enum_name += "\"" + enum_type + "\"";
 
     std::vector<std::string> enum_values;
-    SvtDbInterface::getAllEnumValues(enum_name, enum_values);
+    if (!SvtDbEnumDto::getAllEnumValuesInDB(enum_name, enum_values))
+    {
+      return false;
+    }
     for (auto &value : enum_values)
     {
-      dbAgentEnumList.addValue(enum_type, value);
+      SvtDbEnumDto::addValue(enum_type, value);
     }
   }
-  dbAgentEnumList.print();
+
+  if (log_messages)
+  {
+    SvtDbEnumDto::print();
+  }
   return true;
 }
 
@@ -203,67 +217,39 @@ void SvtDbAgentService::parseMsg(
         {
           //! enumValues
         case SvtDbAgent::RequestType::GetAllEnums:
-        {
-          const auto &msgData = msg.getPayload()["data"];
-          std::vector<std::string> type_filters;
-          if (msgData.contains(std::string("enumNames")))
-          {
-            type_filters = msgData["enumNames"].get<std::vector<std::string>>();
-          }
-          SvtDbAgent::getAllEnumValuesReplyMsg(type_filters, dbAgentEnumList,
-                                               replyMsg);
-        }
-        break;
+          SvtDbEnumDto::getAllEnumValues(msg, replyMsg);
+          break;
           //! Get all wafer types
         case SvtDbAgent::RequestType::GetAllWaferTypes:
-        {
-          const auto &msgData = msg.getPayload()["data"];
-          std::vector<int> id_filters;
-          if (msgData.contains(std::string("filter")))
-          {
-            if (msgData.contains(std::string("ids")))
-            {
-              id_filters = msgData["filter"]["ids"].get<std::vector<int>>();
-            }
-          }
-          SvtDbAgent::getAllWaferTypesReplyMsg(id_filters, replyMsg);
-        }
-        break;
+          SvtDbWaferTypeDto::getAllWaferTypes(msg, replyMsg);
+          break;
         //! Create wafer type
         case SvtDbAgent::RequestType::CreateWaferType:
-        {
-          const auto &msgData = msg.getPayload()["data"];
-          if (!msgData.contains(std::string("create")))
-          {
-            throw std::runtime_error(
-                "DbAgentService: Non object create was found");
-          }
-          SvtDbAgent::createWaferTypeReplyMsg(msgData["create"], replyMsg);
-        }
-        break;
+          SvtDbWaferTypeDto::createWaferType(msg, replyMsg);
+          break;
         //! Get all wafers
-        //     case SvtDbAgent::RequestType::GetAllWafers:
-        // {
-        //   std::vector<int> id_filters;
-        //   if (msg.payload.contains(std::string("filter")))
-        //   {
-        //     id_filters = msg.payload["filter"].get<std::vector<int>>();
-        //   }
-        //   SvtDbAgent::getAllWafersReplyMsg(id_filters, replyData);
-        // }
-        // break;
-        //   //! Create wafer
-        // case SvtDbAgent::RequestType::CreateWafer:
-        // {
-        //   const auto &msgData = msg.payload["data"];
-        //   if (!msgData.contains(std::string("create")))
-        //   {
-        //     throw std::runtime_error(
-        //         "DbAgentService: Non object create was found");
-        //   }
-        //   SvtDbAgent::createWaferReplyMsg(msgData["create"], replyData);
-        // }
-        // break;
+        case SvtDbAgent::RequestType::GetAllWafers:
+          SvtDbWaferDto::getAllWafers(msg, replyMsg);
+          break;
+        //! Create wafer
+        case SvtDbAgent::RequestType::CreateWafer:
+          SvtDbWaferDto::createWafer(msg, replyMsg);
+          break;
+        //! Update wafer
+        case SvtDbAgent::RequestType::UpdateWafer:
+          SvtDbWaferDto::updateWafer(msg, replyMsg);
+          break;
+        //! UpdateWaferLocation
+        case SvtDbAgent::RequestType::UpdateWaferLocation:
+          SvtDbWaferDto::updateWaferLocation(msg, replyMsg);
+          break;
+        //! getAllAsics
+        case SvtDbAgent::RequestType::GetAllAsics:
+          SvtDbAsicDto::getAllAsics(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::CreateAsic:
+          SvtDbAsicDto::createAsic(msg, replyMsg);
+          break;
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:

@@ -8,7 +8,6 @@
  * @brief Db agent manager
  */
 
-#include "SVTDbAgentService/SvtDbAgentEnum.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbAgentMessage.h"
@@ -62,15 +61,11 @@ class SvtDbAgentService
   void setLogMessages(const bool val) { log_messages = val; }
   bool getLogMessages() { return log_messages; }
 
-  SvtDbAgentEnum &getEnumList() { return dbAgentEnumList; }
-
  private:
   SvtLogger &logger = Singleton<SvtLogger>::instance();
 
   void parseMsg(const SvtDbAgent::SvtDbAgentMessage &msg,
                 const SvtDbAgent::SvtDbAgentMsgStatus &status);
-
-  SvtDbAgentEnum dbAgentEnumList;
 
   std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
   std::shared_ptr<SvtDbAgentProducer> m_Producer;
