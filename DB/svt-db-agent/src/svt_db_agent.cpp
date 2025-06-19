@@ -83,6 +83,7 @@ int main()
     SvtDbAgentService &_dbAgent = Singleton<SvtDbAgentService>::instance();
     if (!_dbAgent.initEnumTypeList(SvtDbAgent::db_schema))
     {
+      logger.logError("ERROR: We could not initialize enum from DB.");
       return EXIT_FAILURE;
     }
     if (!_dbAgent.configureService(false))

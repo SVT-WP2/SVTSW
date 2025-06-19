@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -86,6 +87,48 @@ class SimpleInsert
   string mTableName;
   vector<string> mColumnNames;
   vector<string> mValues;
+};
+
+class SimpleUpdate
+{
+ public:
+  void setTableName(string tableName) { mTableName = tableName; }
+  bool doUpdate();
+
+  // overload addColumnAndValue for different types
+  // modify each as needed
+  void addColumnAndValue(string columnName, string value)
+  {
+    // strings have to have '' around the value
+    mColumnNamesAndValues.push_back(columnName + " = '" + value + "'");
+  }
+  void addColumnAndValue(string columnName, int value)
+  {
+    mColumnNamesAndValues.push_back(columnName + " = " + to_string(value));
+  }
+  void addColumnAndValue(string columnName, float value)
+  {
+    mColumnNamesAndValues.push_back(columnName + " = " + to_string(value));
+  }
+
+  // overload addWhereEquals for different types
+  void addWhereEquals(string columnName, string value)
+  {
+    mWhereClauses.push_back(columnName + " = '" + value + "'");
+  }
+  void addWhereEquals(string columnName, int value)
+  {
+    mWhereClauses.push_back(columnName + " = " + to_string(value));
+  }
+  void addWhereEquals(string columnName, float value)
+  {
+    mWhereClauses.push_back(columnName + " = " + to_string(value));
+  }
+
+ protected:
+  string mTableName;
+  vector<string> mColumnNamesAndValues;
+  vector<string> mWhereClauses;
 };
 
 // functions related to versioning
