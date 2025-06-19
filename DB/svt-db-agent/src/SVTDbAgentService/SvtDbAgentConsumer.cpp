@@ -37,6 +37,7 @@ bool SvtDbAgentConsumer::createConsumer()
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
   m_globalConf->set("metadata.broker.list", m_broker, m_errStr);
+  m_globalConf->set("group.id", "svt-db-agent", m_errStr);
   m_globalConf->set("allow.auto.create.topics", "true", m_errStr);
 
   if (!m_debug.empty())
@@ -139,7 +140,7 @@ bool SvtDbAgentConsumer::createConsumer()
 bool SvtDbAgentConsumer::start()
 {
   logger.logInfo("Starting DbAgetnConsumer " + m_consumer->name() +
-                     " in toppic " + m_topic->name(),
+                     " in topic " + m_topic->name(),
                  SvtLogger::Mode::STANDARD);
 
   if (m_running)

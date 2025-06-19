@@ -177,6 +177,19 @@ bool SimpleInsert::doInsert()
   return doGenericUpdate(insertString);
 }
 
+//========================================================================+
+bool SimpleUpdate::doUpdate()
+{
+  string queryString = "";
+  queryString += "UPDATE " + mTableName;
+  queryString += " SET " + stringJoin(mColumnNamesAndValues, ", ");
+  if (!mWhereClauses.empty())
+  {
+    queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
+  }
+  return doGenericUpdate(queryString);
+}
+
 /*!
  * Versioning
  */
