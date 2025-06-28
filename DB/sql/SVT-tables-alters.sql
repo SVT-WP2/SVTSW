@@ -1,7 +1,9 @@
+\set SchemaName Test
+--\set SchemaName Prod
 --Create schema
-CREATE SCHEMA IF NOT EXISTS prod;
+CREATE SCHEMA IF NOT EXISTS :SchemaName;
 -- SELECT SCHEMA
-SET search_path TO prod;
+SET search_path TO :SchemaName;
 
 -- WaferType refereced by:
 ALTER TABLE Wafer ADD FOREIGN KEY (waferTypeId) REFERENCES WaferType (id);
@@ -13,9 +15,8 @@ ALTER TABLE Asic ADD FOREIGN KEY (waferId) REFERENCES Wafer (id);
 
 -- ALTER TABLE "Version" ADD FOREIGN KEY ("baseVersion") REFERENCES "Version" ("id");
 
--- ALTER TABLE "ProbeCardFamilyType" ADD FOREIGN KEY ("probeCardId") REFERENCES "ProbeCard" ("id");
---
--- ALTER TABLE "WaferProbeProject" ADD FOREIGN KEY ("wpMachineId") REFERENCES "WaferProbeMachine" ("id");
+ALTER TABLE "ProbeCardFamilyType" ADD FOREIGN KEY ("probeCardId") REFERENCES "ProbeCard" ("id");
+
 --
 -- ALTER TABLE "WaferProbeProject" ADD FOREIGN KEY ("waferTypeId") REFERENCES "WaferType" ("id");
 --

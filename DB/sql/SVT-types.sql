@@ -1,7 +1,9 @@
+\set SchemaName Test
+--\set SchemaName Prod
 --Create schema
-CREATE SCHEMA IF NOT EXISTS prod;
+CREATE SCHEMA IF NOT EXISTS :SchemaName;
 -- SELECT SCHEMA
-SET search_path TO Prod;
+SET search_path TO :SchemaName;
 
 --Taking from 
 CREATE TYPE "engineeringRun" AS ENUM (
