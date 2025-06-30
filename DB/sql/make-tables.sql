@@ -1,5 +1,4 @@
-\set SchemaName 'Test'
---\set SchemaName 'Prod'
+\set SchemaName %SCHEMA_NAME%
 
 -- CREATE TABLE VERSION
 CREATE TABLE IF NOT EXISTS :SchemaName.VERSION (
