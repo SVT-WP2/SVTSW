@@ -36,6 +36,19 @@
     fi
   }
 
+  _run() {
+    in_file=${1:-}
+    [ -z "$in_file" ] && {
+      echo "ERROR: script file not provided."
+      exit 1
+    }
+    [[ -f "$in_file" ]] || {
+      echo "ERROR script $in_file not found."
+      exit 1
+    }
+    _psql_exec "-d ${db_name} -a -f ${in_file} "
+  }
+
   [ $# -eq 0 ] && {
     echo "ERROR at least a argumentis needed"
     exit 1
@@ -56,16 +69,19 @@
     ;;
   --run)
     shift
-    in_file=${1:-}
-    [ -z "$in_file" ] && {
-      echo "ERROR: script file not provided."
-      exit 1
-    }
-    [[ -f "$in_file" ]] || {
-      echo "ERROR script $in_file not found."
-      exit 1
-    }
-    _psql_exec "-d ${db_name} -a -f ${in_file} "
+    _run "$@"
+    ;;
+  --run2all)
+    shift
+    for schema in prod test; do
+      echo
+      echo "Running to $schema"
+      echo
+      sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
+      _run temp.sql
+      rm temp.sql
+
+    done
     ;;
   --open)
     _psql_exec "-d ${db_name}"

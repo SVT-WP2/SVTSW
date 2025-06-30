@@ -1,5 +1,4 @@
-\set SchemaName Test
---\set SchemaName Prod
+\set SchemaName %SCHEMA_NAME%
 --Create schema
 CREATE SCHEMA IF NOT EXISTS :SchemaName;
 -- SELECT SCHEMA
