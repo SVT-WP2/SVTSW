@@ -12,6 +12,7 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+#include <sstream>
 #include <stdexcept>
 
 //========================================================================+
@@ -415,6 +416,13 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   const auto waferId = msgData["id"];
   const auto json_wafer = msgData["update"];
 
+  if (!SvtDbInterface::checkIdExist("wafer", waferId))
+  {
+    std::ostringstream ss("");
+    ss << "ERROR: Wafer with id " << waferId << " does not found.";
+    throw std::runtime_error(ss.str());
+  }
+
   dbWaferRecords wafer;
   wafer.id = waferId;
   bool found_entry_to_update = false;
@@ -472,6 +480,13 @@ void SvtDbWaferDto::updateWaferLocation(
   }
 
   auto waferId = msgData["waferId"];
+  if (!SvtDbInterface::checkIdExist("wafer", waferId))
+  {
+    std::ostringstream ss("");
+    ss << "ERROR: Wafer with id " << waferId << " does not found.";
+    throw std::runtime_error(ss.str());
+  }
+
   //! Create waferLocations
   dbWaferLocationRecords waferLoc;
   waferLoc.waferId = msgData["waferId"];
