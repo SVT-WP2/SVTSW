@@ -8,6 +8,7 @@
 #include "SVTDbAgentService/SvtDbAgentService.h"
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentConsumer.h"
@@ -249,6 +250,9 @@ void SvtDbAgentService::parseMsg(
           break;
         case SvtDbAgent::RequestType::CreateAsic:
           SvtDbAsicDto::createAsic(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
+          SvtDbWPMachineDto::getAllWPMachines(msg, replyMsg);
           break;
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
