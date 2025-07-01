@@ -12,10 +12,14 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+#include <algorithm>
+#include <sstream>
 #include <stdexcept>
 
+using SvtDbAgent::Singleton;
+
 //========================================================================+
-size_t SvtDbWaferTypeDto::getAllWaferTypesInDB(
+bool SvtDbWaferTypeDto::getAllWaferTypesFromDB(
     std::vector<dbWaferTypeRecords> &waferTypes,
     const std::vector<int> &id_filters)
 {
@@ -65,14 +69,33 @@ size_t SvtDbWaferTypeDto::getAllWaferTypesInDB(
 
       waferTypes.push_back(waferType);
     }
+    if (id_filters.size() && waferTypes.size() != id_filters.size())
+    {
+      throw std::runtime_error("ERROR: ");
+    }
   }
   catch (const std::exception &e)
   {
     Singleton<SvtLogger>::instance().logError(e.what());
     waferTypes.clear();
+    return false;
   }
 
-  return waferTypes.size();
+  return true;
+}
+
+//========================================================================+
+bool SvtDbWaferTypeDto::getWaferTypeFromDB(dbWaferTypeRecords &waferType,
+                                           int id)
+{
+  std::vector<int> id_filters = {id};
+  std::vector<dbWaferTypeRecords> waferTypes;
+  if (!getAllWaferTypesFromDB(waferTypes, id_filters))
+  {
+    return false;
+  }
+  waferType = std::move(waferTypes.at(0));
+  return true;
 }
 
 //========================================================================+
@@ -107,6 +130,7 @@ bool SvtDbWaferTypeDto::createWaferTypeInDB(
   commitUpdate();
   return true;
 }
+
 //========================================================================+
 void SvtDbWaferTypeDto::getAllWaferTypes(
     const SvtDbAgent::SvtDbAgentMessage &msg,
@@ -122,12 +146,10 @@ void SvtDbWaferTypeDto::getAllWaferTypes(
     }
   }
   std::vector<dbWaferTypeRecords> waferTypes;
-  const auto n_wafer_types = getAllWaferTypesInDB(waferTypes, id_filters);
-  if (id_filters.size() && n_wafer_types != id_filters.size())
+  if (getAllWaferTypesFromDB(waferTypes, id_filters))
   {
-    throw std::runtime_error("ERROR: ");
+    getAllWaferTypesReplyMsg(waferTypes, replyMsg);
   }
-  getAllWaferTypesReplyMsg(waferTypes, replyMsg);
 }
 
 //========================================================================+
@@ -141,16 +163,16 @@ void SvtDbWaferTypeDto::getAllWaferTypesReplyMsg(
     nlohmann::ordered_json items = nlohmann::json::array();
     for (const auto &waferType : waferTypes)
     {
-      nlohmann::ordered_json json_wafer_type;
-      json_wafer_type["id"] = waferType.id;
-      json_wafer_type["name"] = waferType.name;
-      json_wafer_type["foundry"] = waferType.foundry;
-      json_wafer_type["technology"] = waferType.technology;
-      json_wafer_type["engineeringRun"] = waferType.engineeringRun;
-      // json_wafer_type["imageBase64String"] = waferType.imageBase64String;
-      json_wafer_type["waferMap"] = waferType.waferMap;
+      nlohmann::ordered_json waferType_j;
+      waferType_j["id"] = waferType.id;
+      waferType_j["name"] = waferType.name;
+      waferType_j["foundry"] = waferType.foundry;
+      waferType_j["technology"] = waferType.technology;
+      waferType_j["engineeringRun"] = waferType.engineeringRun;
+      // waferType_j["imageBase64String"] = waferType.imageBase64String;
+      waferType_j["waferMap"] = waferType.waferMap;
 
-      items.push_back(json_wafer_type);
+      items.push_back(waferType_j);
     }
     data["items"] = items;
     msgReply.setData(data);
@@ -161,8 +183,8 @@ void SvtDbWaferTypeDto::getAllWaferTypesReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
-  return;
 }
 
 //========================================================================+
@@ -176,33 +198,35 @@ void SvtDbWaferTypeDto::createWaferType(
     throw std::runtime_error("DbAgentService: Non object create was found");
   }
 
-  auto json_wafer_type = msgData["create"];
+  auto waferType_j = msgData["create"];
   //! remove id record
-  if (json_wafer_type.size() < (dbWaferTypeRecords::val_names.size() - 1))
+  if (waferType_j.size() < (dbWaferTypeRecords::val_names.size() - 1))
   {
     throw std::invalid_argument("insufficient number of parameters");
   }
 
   dbWaferTypeRecords waferType;
   //! waferType.name
-  waferType.name = json_wafer_type.value("name", "");
+  waferType.name = waferType_j.value("name", "");
   //! waferType.foundry
-  waferType.foundry = json_wafer_type.value("foundry", "");
+  waferType.foundry = waferType_j.value("foundry", "");
   //! waferType.technology
-  waferType.technology = json_wafer_type.value("technology", "");
+  waferType.technology = waferType_j.value("technology", "");
   //! waferType.engineeringRun
-  waferType.engineeringRun = json_wafer_type.value("engineeringRun", "");
+  waferType.engineeringRun = waferType_j.value("engineeringRun", "");
   // //! waferType.imageBase64String
-  // waferType.imageBase64String = json_wafer_type.value("imageBase64String",
+  // waferType.imageBase64String = waferType_j.value("imageBase64String",
   // "");
   //! waferType.waferMap
-  if (nlohmann::json::accept(json_wafer_type.value("waferMap", "")))
+  const std::string waferMap_s = waferType_j.value("waferMap", "");
+  std::string err_msg;
+  if (checkWaferMap(waferMap_s, err_msg))
   {
-    waferType.waferMap = json_wafer_type.value("waferMap", "");
+    waferType.waferMap = waferMap_s;
   }
   else
   {
-    throw std::runtime_error("ERROR: invalid JSON format found for waferMap");
+    throw std::runtime_error(err_msg);
     return;
   }
 
@@ -214,18 +238,8 @@ void SvtDbWaferTypeDto::createWaferType(
   }
 
   const auto newWaferTypeId = SvtDbInterface::getMaxId("WaferType");
-  std::vector<int> id_filters = {static_cast<int>(newWaferTypeId)};
-
-  std::vector<dbWaferTypeRecords> waferTypes;
-  const auto n_wafer_types = getAllWaferTypesInDB(waferTypes, id_filters);
-  if (id_filters.size() && n_wafer_types != id_filters.size())
-  {
-    throw std::runtime_error(
-        "ERROR: incomplete number of returned wafer types");
-    return;
-  }
-  createWaferTypeReplyMsg(waferTypes.at(0), replyMsg);
-  return;
+  getWaferTypeFromDB(waferType, newWaferTypeId);
+  createWaferTypeReplyMsg(waferType, replyMsg);
 }
 
 //========================================================================+
@@ -236,16 +250,16 @@ void SvtDbWaferTypeDto::createWaferTypeReplyMsg(
   try
   {
     nlohmann::ordered_json data;
-    nlohmann::json ret_json_waferType;
-    ret_json_waferType["id"] = waferType.id;
-    ret_json_waferType["name"] = waferType.name;
-    ret_json_waferType["foundry"] = waferType.foundry;
-    ret_json_waferType["technology"] = waferType.technology;
-    ret_json_waferType["engineeringRun"] = waferType.engineeringRun;
-    // ret_json_waferType["imageBase64String"] = waferType.imageBase64String;
-    ret_json_waferType["waferMap"] = waferType.waferMap;
+    nlohmann::json ret_waferType_j;
+    ret_waferType_j["id"] = waferType.id;
+    ret_waferType_j["name"] = waferType.name;
+    ret_waferType_j["foundry"] = waferType.foundry;
+    ret_waferType_j["technology"] = waferType.technology;
+    ret_waferType_j["engineeringRun"] = waferType.engineeringRun;
+    // ret_waferType_j["imageBase64String"] = waferType.imageBase64String;
+    ret_waferType_j["waferMap"] = waferType.waferMap;
 
-    data["entity"] = ret_json_waferType;
+    data["entity"] = ret_waferType_j;
     msgReply.setData(data);
     msgReply.setStatus(
         SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
@@ -254,5 +268,149 @@ void SvtDbWaferTypeDto::createWaferTypeReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
+}
+
+//========================================================================+
+bool SvtDbWaferTypeDto::checkWaferMap(const std::string_view waferMap,
+                                      std::string &err_msg)
+{
+  if (!nlohmann::json::accept(waferMap))
+  {
+    return false;
+  }
+  nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
+  if (!waferMap_j.contains("Groups") || !waferMap_j.contains("MapGroups"))
+  {
+    err_msg = "ERROR: wrong json format for Wafer mapping.";
+    return false;
+  }
+
+  //! check Groups
+  for (const auto &[g_name, g_asics] : waferMap_j["Groups"].items())
+  {
+    int expected_index = 0;
+    for (const auto &asic : g_asics)
+    {
+      int posInGroup = asic["PosInGroup"].template get<int>();
+      if (posInGroup != expected_index)
+      {
+        std::ostringstream ss;
+        ss << "ERROR: Unmatching PosInGroup index: " << posInGroup
+           << " from expected " << expected_index << " in group " << g_name;
+        err_msg = ss.str();
+        return false;
+      }
+      ++expected_index;
+    }
+  }
+
+  //! Check MapGroups
+  auto get_range = [&waferMap_j](const std::string_view g_name,
+                                 const nlohmann::json &array_j,
+                                 std::vector<int> &range)
+  {
+    if (!array_j.is_null() && array_j.size())
+    {
+      if (array_j.begin()->is_string() && array_j.begin().value() == "All")
+      {
+        range.resize(waferMap_j["Groups"][g_name].size());
+        std::iota(range.begin(), range.end(), 0);
+      }
+      else if (std::all_of(
+                   array_j.begin(), array_j.end(),
+                   [](const nlohmann::json &el)
+                   { return el.is_number(); }))
+      {
+        range = array_j.get<std::vector<int>>();
+      }
+      else
+      {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  //! loop group rows
+  for (auto &[g_row, g_cols] : waferMap_j["MapGroups"].items())
+  {
+    // int asic_row = std::stoi(std::string(g_row).erase(0, 12));
+    int asic_col = 0;
+    // int g_col_index = 0;
+    for (auto &g_col : g_cols["MapGroupsColumns"])
+    {
+      //! check group in MapGroupsColumns exist
+      std::string g_name = g_col["GroupName"];
+      if (!waferMap_j["Groups"].contains(g_name))
+      {
+        std::ostringstream ss;
+        ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
+           << " group name " << g_name << "was not found";
+        err_msg = ss.str();
+        return false;
+      }
+
+      //! check array format
+      std::vector<int> existingAsics;
+      std::vector<int> mecDamagedAsics;
+      std::vector<int> coveredAsics;
+      std::vector<int> mecIntegerAsics;
+      if (!get_range(g_name, g_col["ExistingAsics"], existingAsics) ||
+          !get_range(g_name, g_col["MechanicallyDamagedASICs"],
+                     mecDamagedAsics) ||
+          !get_range(g_name, g_col["ASICsCoveredByGreenLayer"], coveredAsics) ||
+          !get_range(g_name, g_col["MechanicallyIntergerASICs"],
+                     mecIntegerAsics))
+      {
+        std::ostringstream ss;
+        ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
+           << " Wrong array found";
+        err_msg = ss.str();
+
+        return false;
+      }
+
+      //! check equal number of asics and properties
+      if (existingAsics.size() !=
+          (mecDamagedAsics.size() + coveredAsics.size() +
+           mecIntegerAsics.size()))
+      {
+        std::ostringstream ss;
+        ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
+           << ", unmaching number of asics and properties size";
+        err_msg = ss.str();
+
+        return false;
+      }
+
+      //! check unique property per asic
+      std::list<std::vector<int> *> listOfVectors = {
+          &mecDamagedAsics, &coveredAsics, &mecIntegerAsics};
+      //! loop for existing asics
+      for (const auto &asic_index : existingAsics)
+      {
+        int n_found = 0;
+        for (const auto &vec : listOfVectors)
+        {
+          if (std::find(vec->begin(), vec->end(), asic_index) != vec->end())
+          {
+            ++n_found;
+          }
+        }
+        if (n_found != 1)
+        {
+          std::ostringstream ss;
+          ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
+             << ", asic index " << asic_index << " has more than one property ";
+          err_msg = ss.str();
+          return false;
+        }
+      }
+
+      ++asic_col;
+    }
+  }
+  return true;
 }

@@ -47,7 +47,7 @@ class SvtDbAgentConsumer
   bool stop(const bool suspend = false);
 
  private:
-  SvtLogger &logger = Singleton<SvtLogger>::instance();
+  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
   void pull();
 
   std::shared_ptr<RdKafka::Consumer> m_consumer;

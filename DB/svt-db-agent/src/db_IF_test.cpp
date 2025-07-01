@@ -18,7 +18,7 @@
 
 std::string version = std::string(VERSION);
 
-SvtLogger &logger = Singleton<SvtLogger>::instance();
+SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
 class Msg
 {

@@ -19,6 +19,9 @@
 #include <string>
 #include <thread>
 
+using SvtDbAgent::Singleton;
+using DatabaseIF = Singleton<DatabaseInterface>;
+
 std::string version = std::string(VERSION);
 
 SvtLogger &logger = Singleton<SvtLogger>::instance();
@@ -28,8 +31,6 @@ std::string psqlport = "6600";
 std::string psqluser = "admin";
 std::string psqlpass = "svt-mosaix";
 std::string psqldb = "svt_sw_db_test";
-
-using DatabaseIF = Singleton<DatabaseInterface>;
 
 //========================================================================+
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,

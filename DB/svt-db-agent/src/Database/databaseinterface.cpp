@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+using SvtDbAgent::Singleton;
 //========================================================================+
 DatabaseInterface::DatabaseInterface() { mUnavailable = false; }
 

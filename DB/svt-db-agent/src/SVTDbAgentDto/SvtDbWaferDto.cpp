@@ -1,22 +1,30 @@
 /*!
- * @file SvtDbWaferTypeDto.cpp
+ * @file SvtDbWaferDto.cpp
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Jun-2025
- * @brief SvtDbWaferTypeDto
+ * @brief SvtDbWaferDto
  */
 
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDb/sqlmapi.h"
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
+#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+#include <algorithm>
+#include <cassert>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+
+using SvtDbAgent::Singleton;
 
 //========================================================================+
-size_t SvtDbWaferDto::getAllWafersInDB(std::vector<dbWaferRecords> &wafers,
+bool SvtDbWaferDto::getAllWafersFromDB(std::vector<dbWaferRecords> &wafers,
                                        const std::vector<int> &id_filters)
 {
   wafers.clear();
@@ -66,14 +74,33 @@ size_t SvtDbWaferDto::getAllWafersInDB(std::vector<dbWaferRecords> &wafers,
 
       wafers.push_back(wafer);
     }
+    if (id_filters.size() && wafers.size() != id_filters.size())
+    {
+      throw std::runtime_error("ERROR: ");
+    }
   }
   catch (const std::exception &e)
   {
     Singleton<SvtLogger>::instance().logError(e.what());
     wafers.clear();
+    return false;
   }
 
-  return wafers.size();
+  return true;
+}
+
+//========================================================================+
+bool SvtDbWaferDto::getWaferFromDB(dbWaferRecords &wafer, int id)
+{
+  std::vector<int> id_filters = {id};
+  std::vector<dbWaferRecords> wafers;
+  if (!getAllWafersFromDB(wafers, id_filters))
+  {
+    return false;
+  }
+  wafer = std::move(wafers.at(0));
+
+  return true;
 }
 
 //========================================================================+
@@ -84,7 +111,7 @@ bool SvtDbWaferDto::createWaferInDB(const dbWaferRecords &wafer)
   std::string tableName = SvtDbAgent::db_schema + std::string(".Wafer");
   insert.setTableName(tableName);
 
-  //! checkinput values
+  //! check input values
   if (wafer.serialNumber.empty() || wafer.generalLocation.empty() ||
       (wafer.batchNumber < 0) || (wafer.waferTypeId < 0))
   {
@@ -121,6 +148,7 @@ bool SvtDbWaferDto::createWaferInDB(const dbWaferRecords &wafer)
     return -1;
   }
   commitUpdate();
+
   return true;
 }
 
@@ -156,32 +184,32 @@ bool SvtDbWaferDto::updateWaferInDB(const dbWaferRecords &wafer)
   if (!update.doUpdate())
   {
     rollbackUpdate();
-    return -1;
+    return false;
   }
   commitUpdate();
+
   return true;
 }
 
 //========================================================================+
-size_t SvtDbWaferDto::getAllWaferLocationsInDB(
+bool SvtDbWaferDto::getAllWaferLocationsFromDB(
     std::vector<dbWaferLocationRecords> &waferLocations, const int &waferId)
 {
+  waferLocations.clear();
+  SimpleQuery query;
+
+  std::string tableName = SvtDbAgent::db_schema + std::string(".WaferLocation");
+  query.setTableName(tableName);
+
+  for (const auto &record : dbWaferRecords::val_names)
+  {
+    query.addColumn(std::string(record));
+  }
+
+  query.addWhereEquals("id", waferId);
+
   try
   {
-    waferLocations.clear();
-    SimpleQuery query;
-
-    std::string tableName =
-        SvtDbAgent::db_schema + std::string(".WaferLocation");
-    query.setTableName(tableName);
-
-    for (const auto &record : dbWaferRecords::val_names)
-    {
-      query.addColumn(std::string(record));
-    }
-
-    query.addWhereEquals("id", waferId);
-
     vector<vector<MultiBase *>> rows;
     query.doQuery(rows);
 
@@ -210,9 +238,10 @@ size_t SvtDbWaferDto::getAllWaferLocationsInDB(
   {
     Singleton<SvtLogger>::instance().logError(e.what());
     waferLocations.clear();
+    return false;
   }
 
-  return waferLocations.size();
+  return true;
 }
 
 //========================================================================+
@@ -247,8 +276,10 @@ bool SvtDbWaferDto::createWaferLocationInDB(
     return -1;
   }
   commitUpdate();
+
   return true;
 }
+
 //========================================================================+
 void SvtDbWaferDto::getAllWafers(const SvtDbAgent::SvtDbAgentMessage &msg,
                                  SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
@@ -263,12 +294,10 @@ void SvtDbWaferDto::getAllWafers(const SvtDbAgent::SvtDbAgentMessage &msg,
     }
   }
   std::vector<dbWaferRecords> wafers;
-  const auto n_wafers = getAllWafersInDB(wafers, id_filters);
-  if (id_filters.size() && n_wafers != id_filters.size())
+  if (getAllWafersFromDB(wafers, id_filters))
   {
-    throw std::runtime_error("ERROR: ");
+    getAllWafersReplyMsg(wafers, replyMsg);
   }
-  getAllWafersReplyMsg(wafers, replyMsg);
 }
 
 //========================================================================+
@@ -282,17 +311,17 @@ void SvtDbWaferDto::getAllWafersReplyMsg(
     nlohmann::ordered_json items = nlohmann::json::array();
     for (const auto &wafer : wafers)
     {
-      nlohmann::ordered_json json_wafer;
-      json_wafer["id"] = wafer.id;
-      json_wafer["serialNumber"] = wafer.serialNumber;
-      json_wafer["batchNumber"] = wafer.batchNumber;
-      json_wafer["generalLocation"] = wafer.generalLocation;
-      json_wafer["thinningDate"] = wafer.thinningDate;
-      json_wafer["dicingDate"] = wafer.dicingDate;
-      json_wafer["productionDate"] = wafer.productionDate;
-      json_wafer["waferTypeId"] = wafer.waferTypeId;
+      nlohmann::ordered_json wafer_j;
+      wafer_j["id"] = wafer.id;
+      wafer_j["serialNumber"] = wafer.serialNumber;
+      wafer_j["batchNumber"] = wafer.batchNumber;
+      wafer_j["generalLocation"] = wafer.generalLocation;
+      wafer_j["thinningDate"] = wafer.thinningDate;
+      wafer_j["dicingDate"] = wafer.dicingDate;
+      wafer_j["productionDate"] = wafer.productionDate;
+      wafer_j["waferTypeId"] = wafer.waferTypeId;
 
-      items.push_back(json_wafer);
+      items.push_back(wafer_j);
     }
     data["items"] = items;
     msgReply.setData(data);
@@ -303,8 +332,8 @@ void SvtDbWaferDto::getAllWafersReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
-  return;
 }
 
 //========================================================================+
@@ -316,28 +345,28 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   {
     throw std::runtime_error("DbAgentService: Non object create was found");
   }
-  auto json_wafer = msgData["create"];
+  auto wafer_j = msgData["create"];
   //! remove id record
-  if (json_wafer.size() < (dbWaferRecords::val_names.size() - 1))
+  if (wafer_j.size() < (dbWaferRecords::val_names.size() - 1))
   {
     throw std::invalid_argument("insufficient number of parameters");
   }
 
   dbWaferRecords wafer;
   //! wafer.serialNumber
-  wafer.serialNumber = json_wafer.value("serialNumber", "");
+  wafer.serialNumber = wafer_j.value("serialNumber", "");
   //! wafer.batchNumber
-  wafer.batchNumber = json_wafer.value("batchNumber", -1);
+  wafer.batchNumber = wafer_j.value("batchNumber", -1);
   //! wafer.generalLocation
-  wafer.generalLocation = json_wafer.value("generalLocation", "");
+  wafer.generalLocation = wafer_j.value("generalLocation", "");
   //! wafer.thinningDate
-  SvtDbAgent::get_v(json_wafer, "thinningDate", wafer.thinningDate);
+  SvtDbAgent::get_v(wafer_j, "thinningDate", wafer.thinningDate);
   //! wafer.dicingDate
-  SvtDbAgent::get_v(json_wafer, "dicingDate", wafer.dicingDate);
+  SvtDbAgent::get_v(wafer_j, "dicingDate", wafer.dicingDate);
   //! wafer.productionDate
-  SvtDbAgent::get_v(json_wafer, "productionDate", wafer.productionDate);
+  SvtDbAgent::get_v(wafer_j, "productionDate", wafer.productionDate);
   //! wafer.waferTypeId
-  wafer.waferTypeId = json_wafer.value("waferTypeId", -1);
+  wafer.waferTypeId = wafer_j.value("waferTypeId", -1);
 
   //! create wafer in DB
   if (!createWaferInDB(wafer))
@@ -346,28 +375,21 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
     return;
   }
   const auto newWaferId = SvtDbInterface::getMaxId("Wafer");
-  std::vector<int> id_filters = {static_cast<int>(newWaferId)};
-
-  std::vector<dbWaferRecords> wafers;
-  const auto n_wafers = getAllWafersInDB(wafers, id_filters);
-  if (id_filters.size() && n_wafers != id_filters.size())
-  {
-    throw std::runtime_error("ERROR: incomplete number of wafers returning");
-    return;
-  }
-  createWaferReplyMsg(wafers.at(0), replyMsg);
+  getWaferFromDB(wafer, newWaferId);
 
   //! Create waferLocations
   dbWaferLocationRecords waferLoc;
   waferLoc.waferId = newWaferId;
-  waferLoc.generalLocation = wafers.at(0).generalLocation;
+  waferLoc.generalLocation = wafer.generalLocation;
   waferLoc.description = std::string("Location at creation");
   if (!createWaferLocationInDB(waferLoc))
   {
     throw std::runtime_error("ERROR: Could not create wafer location entry");
     return;
   }
-  return;
+
+  // createAllAsics(wafer);
+  createWaferReplyMsg(wafer, replyMsg);
 }
 
 //========================================================================+
@@ -377,17 +399,17 @@ void SvtDbWaferDto::createWaferReplyMsg(
   try
   {
     nlohmann::ordered_json data;
-    nlohmann::json ret_json_wafer;
-    ret_json_wafer["id"] = wafer.id;
-    ret_json_wafer["serialNumber"] = wafer.serialNumber;
-    ret_json_wafer["batchNumber"] = wafer.batchNumber;
-    ret_json_wafer["generalLocation"] = wafer.generalLocation;
-    ret_json_wafer["thinningDate"] = wafer.thinningDate;
-    ret_json_wafer["dicingDate"] = wafer.dicingDate;
-    ret_json_wafer["productionDate"] = wafer.productionDate;
-    ret_json_wafer["waferTypeId"] = wafer.waferTypeId;
+    nlohmann::json ret_wafer_j;
+    ret_wafer_j["id"] = wafer.id;
+    ret_wafer_j["serialNumber"] = wafer.serialNumber;
+    ret_wafer_j["batchNumber"] = wafer.batchNumber;
+    ret_wafer_j["generalLocation"] = wafer.generalLocation;
+    ret_wafer_j["thinningDate"] = wafer.thinningDate;
+    ret_wafer_j["dicingDate"] = wafer.dicingDate;
+    ret_wafer_j["productionDate"] = wafer.productionDate;
+    ret_wafer_j["waferTypeId"] = wafer.waferTypeId;
 
-    data["entity"] = ret_json_wafer;
+    data["entity"] = ret_wafer_j;
     msgReply.setData(data);
     msgReply.setStatus(
         SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
@@ -396,6 +418,7 @@ void SvtDbWaferDto::createWaferReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
 }
 
@@ -414,7 +437,7 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   }
 
   const auto waferId = msgData["id"];
-  const auto json_wafer = msgData["update"];
+  const auto wafer_j = msgData["update"];
 
   if (!SvtDbInterface::checkIdExist("wafer", waferId))
   {
@@ -426,19 +449,19 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   dbWaferRecords wafer;
   wafer.id = waferId;
   bool found_entry_to_update = false;
-  if (!json_wafer["thinningDate"].is_null())
+  if (!wafer_j["thinningDate"].is_null())
   {
-    wafer.thinningDate = json_wafer["thinningDate"];
+    wafer.thinningDate = wafer_j["thinningDate"];
     found_entry_to_update = true;
   }
-  if (!json_wafer["dicingDate"].is_null())
+  if (!wafer_j["dicingDate"].is_null())
   {
-    wafer.dicingDate = json_wafer["dicingDate"];
+    wafer.dicingDate = wafer_j["dicingDate"];
     found_entry_to_update = true;
   }
-  if (!json_wafer["productionDate"].is_null())
+  if (!wafer_j["productionDate"].is_null())
   {
-    wafer.productionDate = json_wafer["productionDate"];
+    wafer.productionDate = wafer_j["productionDate"];
     found_entry_to_update = true;
   }
 
@@ -450,21 +473,11 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   if (!updateWaferInDB(wafer))
   {
     throw std::runtime_error("ERROR: wafer was not updated");
+    return;
   }
 
-  std::vector<int> id_filters = {waferId};
-
-  std::vector<dbWaferRecords> wafers;
-  const auto n_wafers = getAllWafersInDB(wafers, id_filters);
-  if (id_filters.size() && n_wafers != id_filters.size())
-  {
-    throw std::runtime_error(
-        std::string("ERROR: could not find the updated wafer with id ") +
-        std::string(waferId));
-  }
-  createWaferReplyMsg(wafers.at(0), replyMsg);
-
-  return;
+  getWaferFromDB(wafer, waferId);
+  createWaferReplyMsg(wafer, replyMsg);
 }
 
 //========================================================================+
@@ -507,17 +520,124 @@ void SvtDbWaferDto::updateWaferLocation(
   if (!updateWaferInDB(wafer))
   {
     throw std::runtime_error("ERROR: wafer was not updated");
+    return;
   }
 
-  std::vector<int> id_filters = {waferId};
+  getWaferFromDB(wafer, waferId);
+  createWaferReplyMsg(wafer, replyMsg);
+}
 
-  std::vector<dbWaferRecords> wafers;
-  const auto n_wafers = getAllWafersInDB(wafers, id_filters);
-  if (id_filters.size() && n_wafers != id_filters.size())
+//========================================================================+
+void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
+{
+  dbWaferTypeRecords waferType;
+  SvtDbWaferTypeDto::getWaferTypeFromDB(waferType, wafer.waferTypeId);
+  std::string_view waferMap = waferType.waferMap;
+
+  nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
+
+  auto get_range = [&waferMap_j](const std::string_view g_name,
+                                 const nlohmann::json &array_j,
+                                 std::vector<int> &range)
   {
-    throw std::runtime_error(
-        std::string("ERROR: could not find the updated wafer with id ") +
-        std::string(waferId));
+    std::cout << "Group: " << g_name << std::endl;
+    if (!array_j.is_null() && array_j.size())
+    {
+      if (array_j.begin()->is_string() && array_j.begin().value() == "All")
+      {
+        std::cout << "Size : " << waferMap_j["Groups"][g_name].size()
+                  << std::endl;
+        range.resize(waferMap_j["Groups"][g_name].size());
+        std::iota(range.begin(), range.end(), 0);
+      }
+      else if (std::all_of(
+                   array_j.begin(), array_j.end(),
+                   [](const nlohmann::json &el)
+                   { return el.is_number(); }))
+      {
+        range = array_j.get<std::vector<int>>();
+      }
+      else
+      {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  //! loop group rows
+  for (auto &[g_row, g_cols] : waferMap_j["MapGroups"].items())
+  {
+    int asic_row = std::stoi(std::string(g_row).erase(0, 12));
+    int asic_col = 0;
+    int g_col_index = 0;
+    for (auto &g_col : g_cols["MapGroupsColumns"])
+    {
+      std::string g_name = g_col["GroupName"];
+      std::cout << asic_row << ", " << asic_col << std::endl;
+
+      std::vector<int> existingAsics;
+      std::vector<int> mecDamagedAsics;
+      std::vector<int> coveredAsics;
+      std::vector<int> mecIntegerAsics;
+      if (!get_range(g_name, g_col["ExistingAsics"], existingAsics) ||
+          !get_range(g_name, g_col["MechanicallyDamagedASICs"],
+                     mecDamagedAsics) ||
+          !get_range(g_name, g_col["ASICsCoveredByGreenLayer"], coveredAsics) ||
+          !get_range(g_name, g_col["MechanicallyIntergerASICs"],
+                     mecIntegerAsics))
+      {
+        std::ostringstream ss;
+        ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
+           << " Wrong array found";
+
+        throw std::runtime_error(ss.str());
+      }
+      //! create asics from existingAsics
+      for (const auto &asic_index : existingAsics)
+      {
+        std::ostringstream asic_waferMapPos;
+        asic_waferMapPos << asic_row << "_" << asic_col;
+        std::ostringstream asic_SN(wafer.serialNumber);
+        asic_SN << "_" << asic_waferMapPos.str();
+
+        std::string asic_quality;
+        if (std::find(mecDamagedAsics.begin(), mecDamagedAsics.end(),
+                      asic_index) != mecDamagedAsics.end())
+        {
+          asic_quality = "MechanicalDamaged";
+        }
+        else if (std::find(coveredAsics.begin(), coveredAsics.end(),
+                           asic_index) != coveredAsics.end())
+        {
+          asic_quality = "CoveredByGreenLayer";
+        }
+        else if (std::find(mecIntegerAsics.begin(), mecIntegerAsics.end(),
+                           asic_index) != mecIntegerAsics.end())
+        {
+          asic_quality = "MechanicallyInteger";
+        }
+        else
+        {
+          std::ostringstream ss;
+          ss << "ERROT: Wrong Asic quality property for asic  " << asic_index
+             << " of row " << asic_row << " and group col " << g_col_index;
+          throw std::runtime_error(ss.str());
+        }
+
+        dbAsicRecords asic;
+        asic.waferId = wafer.id;
+        asic.serialNumber = asic_SN.str();
+        // asic.familyType =
+        //     waferMap_j["Groups"][g_name][asic_index]["familyType"];
+        asic.waferMapPosition = asic_waferMapPos.str();
+        asic.quality = asic_quality;
+        // SvtDbAsicDto::createAsicInDB(asic);
+        ++asic_col;
+      }
+      ++g_col_index;
+    }
   }
-  createWaferReplyMsg(wafers.at(0), replyMsg);
+
+  return;
 }
