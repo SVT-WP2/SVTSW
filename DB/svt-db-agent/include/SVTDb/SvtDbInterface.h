@@ -32,6 +32,8 @@ namespace SvtDbInterface
   //!
   size_t getMaxId(const std::string &tableName);
 
+  bool checkIdExist(const std::string &tableName, int id);
+
   size_t getAllVersions(std::vector<dbVersion> &versions);
 }  // namespace SvtDbInterface
 

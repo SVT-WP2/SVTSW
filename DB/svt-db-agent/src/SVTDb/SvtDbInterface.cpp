@@ -73,11 +73,11 @@ size_t SvtDbInterface::getMaxId(const std::string &tableName)
 
   vector<vector<MultiBase *>> rows;
   doGenericQuery(queryString, rows);
-  int maxVersionId = -1;
+  int maxId = -1;
 
   if (!rows.empty())
   {
-    maxVersionId = rows.at(0).at(0)->getInt();
+    maxId = rows.at(0).at(0)->getInt();
   }
   else
   {
@@ -85,5 +85,20 @@ size_t SvtDbInterface::getMaxId(const std::string &tableName)
   }
 
   finishQuery(rows);
-  return maxVersionId;
+  return maxId;
+}
+
+//========================================================================+
+bool SvtDbInterface::checkIdExist(const std::string &tableName, int id)
+{
+  SimpleQuery query;
+
+  std::string full_tableName = SvtDbAgent::db_schema + "." + tableName;
+  query.setTableName(full_tableName);
+  query.addWhereEquals("id", id);
+  // string queryString = "SELECT 1 FROM " + full_tableName;
+
+  vector<vector<MultiBase *>> rows;
+  query.doQuery(rows);
+  return !rows.empty();
 }
