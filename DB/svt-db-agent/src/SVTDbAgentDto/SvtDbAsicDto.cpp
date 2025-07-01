@@ -14,8 +14,10 @@
 
 #include <stdexcept>
 
+using SvtDbAgent::Singleton;
+
 //========================================================================+
-size_t SvtDbAsicDto::getAllAsicsInDB(std::vector<dbAsicRecords> &asics,
+bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
                                      const std::vector<int> &id_filters)
 {
   asics.clear();
@@ -60,14 +62,33 @@ size_t SvtDbAsicDto::getAllAsicsInDB(std::vector<dbAsicRecords> &asics,
 
       asics.push_back(asic);
     }
+    if (id_filters.size() && asics.size() != id_filters.size())
+    {
+      throw std::runtime_error("ERROR: ");
+    }
   }
   catch (const std::exception &e)
   {
     Singleton<SvtLogger>::instance().logError(e.what());
     asics.clear();
+    return false;
   }
 
-  return asics.size();
+  return true;
+}
+
+//========================================================================+
+bool SvtDbAsicDto::getAsicFromDB(dbAsicRecords &asic, int id)
+{
+  std::vector<int> id_filters = {id};
+  std::vector<dbAsicRecords> asics;
+  if (!getAllAsicsFromDB(asics, id_filters))
+  {
+    return false;
+  }
+  asic = std::move(asics.at(0));
+
+  return true;
 }
 
 //========================================================================+
@@ -78,24 +99,19 @@ bool SvtDbAsicDto::createAsicInDB(const dbAsicRecords &asic)
   std::string tableName = SvtDbAgent::db_schema + std::string(".Asic");
   insert.setTableName(tableName);
 
+  //! check input values
+  if ((asic.waferId < 0) || asic.serialNumber.empty() ||
+      asic.familyType.empty() || asic.waferMapPosition.empty())
+  {
+    return false;
+  }
+
   //! Add columns & values
-  if (asic.waferId >= 0)
-  {
-    insert.addColumnAndValue("waferId", asic.waferId);
-  }
-  if (!asic.serialNumber.empty())
-  {
-    insert.addColumnAndValue("serialNumber", std::string(asic.serialNumber));
-  }
-  if (!asic.familyType.empty())
-  {
-    insert.addColumnAndValue("familyType", std::string(asic.familyType));
-  }
-  if (!asic.waferMapPosition.empty())
-  {
-    insert.addColumnAndValue("waferMapPosition",
-                             std::string(asic.waferMapPosition));
-  }
+  insert.addColumnAndValue("waferId", asic.waferId);
+  insert.addColumnAndValue("serialNumber", std::string(asic.serialNumber));
+  insert.addColumnAndValue("familyType", std::string(asic.familyType));
+  insert.addColumnAndValue("waferMapPosition",
+                           std::string(asic.waferMapPosition));
 
   if (!insert.doInsert())
   {
@@ -103,8 +119,10 @@ bool SvtDbAsicDto::createAsicInDB(const dbAsicRecords &asic)
     return -1;
   }
   commitUpdate();
+
   return true;
 }
+
 //========================================================================+
 void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
                                SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
@@ -119,12 +137,10 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
     }
   }
   std::vector<dbAsicRecords> asics;
-  const auto n_asics = getAllAsicsInDB(asics, id_filters);
-  if (id_filters.size() && n_asics != id_filters.size())
+  if (getAllAsicsFromDB(asics, id_filters))
   {
-    throw std::runtime_error("ERROR: ");
+    getAllAsicsReplyMsg(asics, replyMsg);
   }
-  getAllAsicsReplyMsg(asics, replyMsg);
 }
 
 //========================================================================+
@@ -138,16 +154,16 @@ void SvtDbAsicDto::getAllAsicsReplyMsg(
     nlohmann::ordered_json items = nlohmann::json::array();
     for (const auto &asic : asics)
     {
-      nlohmann::ordered_json json_asic;
-      json_asic["id"] = asic.id;
-      json_asic["waferId"] = asic.waferId;
-      json_asic["serialNumber"] = asic.serialNumber;
-      json_asic["familyType"] = asic.familyType;
-      json_asic["waferMapPosition"] = asic.waferMapPosition;
-      // json_asic["imageBase64String"] = asic.imageBase64String;
-      json_asic["quality"] = asic.quality;
+      nlohmann::ordered_json asic_j;
+      asic_j["id"] = asic.id;
+      asic_j["waferId"] = asic.waferId;
+      asic_j["serialNumber"] = asic.serialNumber;
+      asic_j["familyType"] = asic.familyType;
+      asic_j["waferMapPosition"] = asic.waferMapPosition;
+      // asic_j["imageBase64String"] = asic.imageBase64String;
+      asic_j["quality"] = asic.quality;
 
-      items.push_back(json_asic);
+      items.push_back(asic_j);
     }
     data["items"] = items;
     msgReply.setData(data);
@@ -158,8 +174,8 @@ void SvtDbAsicDto::getAllAsicsReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
-  return;
 }
 
 //========================================================================+
@@ -170,7 +186,6 @@ void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg)
   {
     throw std::runtime_error("DbAgentService: Non object create was found");
   }
-
   auto json_asic = msgData["create"];
   //! remove id record
   if (json_asic.size() < (dbAsicRecords::val_names.size() - 1))
@@ -191,7 +206,6 @@ void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg)
     throw std::runtime_error("ERROR: Asic was not created");
     return;
   }
-  return;
 }
 
 //========================================================================+
@@ -200,19 +214,11 @@ void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg,
 {
   createAsic(msg);
 
+  dbAsicRecords asic;
   const auto newAsicId = SvtDbInterface::getMaxId("Asic");
-  std::vector<int> id_filters = {static_cast<int>(newAsicId)};
+  getAsicFromDB(asic, newAsicId);
 
-  std::vector<dbAsicRecords> asics;
-  const auto n_asics = getAllAsicsInDB(asics, id_filters);
-  if (id_filters.size() && n_asics != id_filters.size())
-  {
-    throw std::runtime_error(
-        "ERROR: incomplete number of returned wafer types");
-    return;
-  }
-  createAsicReplyMsg(asics.at(0), replyMsg);
-  return;
+  createAsicReplyMsg(asic, replyMsg);
 }
 
 //========================================================================+
@@ -239,5 +245,6 @@ void SvtDbAsicDto::createAsicReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
 }

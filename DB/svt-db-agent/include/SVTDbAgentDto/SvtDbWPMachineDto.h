@@ -67,8 +67,9 @@ using dbWaferLoadedInMachine = struct dbWaferLoadedInMachine
 namespace SvtDbWPMachineDto
 {
   //! WaferProbeMachine in DB
-  size_t getAllWPMachinesInDB(std::vector<dbWPMachineRecords> &wpmachine,
+  bool getAllWPMachinesFromDB(std::vector<dbWPMachineRecords> &wpmachine,
                               const std::vector<int> &id_filters);
+  bool getWPMachineFromDB(dbWPMachineRecords &wpm, int id);
   bool createWPMachineInDB(const dbWPMachineRecords &wafer);
   bool updateWPMachineInDB(const dbWPMachineRecords &wafer);
 

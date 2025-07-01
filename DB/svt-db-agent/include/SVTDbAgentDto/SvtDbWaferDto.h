@@ -8,8 +8,6 @@
  * @brief Svt Db wafer DTO
  * */
 
-#include <map>
-#include <utility>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -62,47 +60,17 @@ using dbWaferLocationRecords = struct dbWaferLocationRecords
   };
 };
 
-class WaferMapParser
-{
- public:
-  using AsicQuality = enum {
-    MechanicallyDamaged,
-    MechanicallyInteger,
-    CoveredByGreenLayer,
-  };
-  //! Position in groups and family type
-  using AsicInGroup = std::pair<int, std::string>;
-  using Group = std::map<std::string, std::vector<AsicInGroup>>;
-  using AsicInCol = std::pair<int, AsicQuality>;
-  using MapGroupCols = struct
-  {
-    std::string groupName;
-    std::vector<AsicInCol> asics;
-  };
-  using MapGroupRows = std::map<std::string, MapGroupCols>;
-
-  WaferMapParser() = default;
-  ~WaferMapParser() = default;
-
-  void parse(nlohmann::json &waferTypeMap);
-
- private:
-  std::vector<Group> _groups;
-  MapGroupRows _groupRows;
-};
-
 namespace SvtDbWaferDto
 {
   //! Wafers
-  size_t getAllWafersInDB(std::vector<dbWaferRecords> &wafers,
+  bool getAllWafersFromDB(std::vector<dbWaferRecords> &wafers,
                           const std::vector<int> &id_filters);
+  bool getWaferFromDB(dbWaferRecords &wafer, int id);
   bool createWaferInDB(const dbWaferRecords &wafer);
   bool updateWaferInDB(const dbWaferRecords &wafer);
-
   //! WaferLocation
-  size_t
-  getAllWaferLocationsInDB(std::vector<dbWaferLocationRecords> &waferLocations,
-                           const int &waferId);
+  bool getAllWaferLocationsFromDB(
+      std::vector<dbWaferLocationRecords> &waferLocations, const int &waferId);
   bool createWaferLocationInDB(const dbWaferLocationRecords &waferLocation);
 
   void getAllWafers(const SvtDbAgent::SvtDbAgentMessage &msg,
@@ -122,6 +90,9 @@ namespace SvtDbWaferDto
 
   void createWaferReplyMsg(const dbWaferRecords &wafer,
                            SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+
+  //! Create asics for wafer
+  void createAllAsics(const dbWaferRecords &wafer);
 };  // namespace SvtDbWaferDto
 
 #endif  //! SVT_DB_WAFER_DTO_H

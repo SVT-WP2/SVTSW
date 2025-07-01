@@ -53,8 +53,10 @@ using dbWaferTypeImagesRecords = struct dbWaferTypeImagesRecords
 namespace SvtDbWaferTypeDto
 {
   //! Wafers Type
-  size_t getAllWaferTypesInDB(std::vector<dbWaferTypeRecords> &wafersTypes,
+  bool getAllWaferTypesFromDB(std::vector<dbWaferTypeRecords> &wafersTypes,
                               const std::vector<int> &id_filters);
+  bool getWaferTypeFromDB(dbWaferTypeRecords &waferType, int id);
+
   bool createWaferTypeInDB(const dbWaferTypeRecords &wafer);
 
   void getAllWaferTypes(const SvtDbAgent::SvtDbAgentMessage &msg,
@@ -68,6 +70,7 @@ namespace SvtDbWaferTypeDto
 
   void createWaferTypeReplyMsg(const dbWaferTypeRecords &waferType,
                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+  bool checkWaferMap(const std::string_view waferMap, std::string &err_msg);
 
 };  // namespace SvtDbWaferTypeDto
 

@@ -40,7 +40,7 @@ class SvtDbAgentProducer
             const SvtDbAgent::SvtDbAgentMessage &message);
 
  private:
-  SvtLogger &logger = Singleton<SvtLogger>::instance();
+  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
   std::shared_ptr<RdKafka::Producer> m_producer;
   std::shared_ptr<RdKafka::Topic> m_topic;

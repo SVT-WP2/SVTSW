@@ -62,7 +62,7 @@ class SvtDbAgentService
   bool getLogMessages() { return log_messages; }
 
  private:
-  SvtLogger &logger = Singleton<SvtLogger>::instance();
+  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
   void parseMsg(const SvtDbAgent::SvtDbAgentMessage &msg,
                 const SvtDbAgent::SvtDbAgentMsgStatus &status);

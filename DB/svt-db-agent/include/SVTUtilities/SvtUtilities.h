@@ -30,26 +30,32 @@ namespace SvtDbAgent
       val = j.value(key, T{});
     }
   }
-};  // namespace SvtDbAgent
 
-template <typename T>
-class Singleton
-{
- public:
-  // Public method to get the singleton instance
-  static T &instance()
+  template <typename T>
+  inline void clearVector(std::vector<T> &vec)
   {
-    static T instance;  // Static instance of type T
-    return instance;
+    std::vector<T>().swap(vec);
   }
 
-  // Prevent copying and assignment
-  Singleton(const Singleton &) = delete;
-  Singleton &operator=(const Singleton &) = delete;
+  template <typename T>
+  class Singleton
+  {
+   public:
+    // Public method to get the singleton instance
+    static T &instance()
+    {
+      static T instance;  // Static instance of type T
+      return instance;
+    }
 
- private:
-  // Private constructor
-  Singleton() {}
-};
+    // Prevent copying and assignment
+    Singleton(const Singleton &) = delete;
+    Singleton &operator=(const Singleton &) = delete;
+
+   private:
+    // Private constructor
+    Singleton() {}
+  };
+};  // namespace SvtDbAgent
 
 #endif  // !SVT_UTILITIES_H

@@ -41,8 +41,9 @@ using dbAsicRecords = struct dbAsicRecords
 namespace SvtDbAsicDto
 {
   //! Asics
-  size_t getAllAsicsInDB(std::vector<dbAsicRecords> &asics,
+  bool getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
                          const std::vector<int> &id_filters);
+  bool getAsicFromDB(dbAsicRecords &asic, int id);
   bool createAsicInDB(const dbAsicRecords &asic);
 
   void getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
