@@ -11,6 +11,8 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+using SvtDbAgent::Singleton;
+
 std::map<std::string, std::vector<std::string>>
     SvtDbEnumDto::enum_type_value_map;
 

@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 
-using DatabaseIF = Singleton<DatabaseInterface>;
+using SvtDbAgent::Singleton;
+using DatabaseIF = SvtDbAgent::Singleton<DatabaseInterface>;
 
 std::atomic<int> queryTime;
 std::atomic<int> queryCount;

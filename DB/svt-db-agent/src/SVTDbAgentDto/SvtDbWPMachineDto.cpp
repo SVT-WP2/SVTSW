@@ -16,8 +16,10 @@
 #include <sstream>
 #include <stdexcept>
 
+using SvtDbAgent::Singleton;
+
 //========================================================================+
-size_t SvtDbWPMachineDto::getAllWPMachinesInDB(
+bool SvtDbWPMachineDto::getAllWPMachinesFromDB(
     std::vector<dbWPMachineRecords> &wpMachines,
     const std::vector<int> &id_filters)
 {
@@ -73,14 +75,33 @@ size_t SvtDbWPMachineDto::getAllWPMachinesInDB(
 
       wpMachines.push_back(wpm);
     }
+    if (id_filters.size() && wpMachines.size() != id_filters.size())
+    {
+      throw std::runtime_error("ERROR: ");
+    }
   }
   catch (const std::exception &e)
   {
     Singleton<SvtLogger>::instance().logError(e.what());
     wpMachines.clear();
+    return false;
   }
 
-  return wpMachines.size();
+  return true;
+}
+
+//========================================================================+
+bool SvtDbWPMachineDto::getWPMachineFromDB(dbWPMachineRecords &wpm, int id)
+{
+  std::vector<int> id_filters = {id};
+  std::vector<dbWPMachineRecords> wpMachines;
+  if (!getAllWPMachinesFromDB(wpMachines, id_filters))
+  {
+    return false;
+  }
+  wpm = std::move(wpMachines.at(0));
+
+  return true;
 }
 
 //========================================================================+
@@ -118,6 +139,7 @@ bool SvtDbWPMachineDto::createWPMachineInDB(const dbWPMachineRecords &wpm)
     return -1;
   }
   commitUpdate();
+
   return true;
 }
 
@@ -159,9 +181,10 @@ bool SvtDbWPMachineDto::updateWPMachineInDB(const dbWPMachineRecords &wpm)
   if (!update.doUpdate())
   {
     rollbackUpdate();
-    return -1;
+    return false;
   }
   commitUpdate();
+
   return true;
 }
 
@@ -180,13 +203,10 @@ void SvtDbWPMachineDto::getAllWPMachines(
     }
   }
   std::vector<dbWPMachineRecords> wpMachines;
-  const auto n_wpMachines = getAllWPMachinesInDB(wpMachines, id_filters);
-
-  if (id_filters.size() && n_wpMachines != id_filters.size())
+  if (getAllWPMachinesFromDB(wpMachines, id_filters))
   {
-    throw std::runtime_error("ERROR: ");
+    getAllWPMachinesReplyMsg(wpMachines, replyMsg);
   }
-  getAllWPMachinesReplyMsg(wpMachines, replyMsg);
 }
 
 //========================================================================+
@@ -200,19 +220,19 @@ void SvtDbWPMachineDto::getAllWPMachinesReplyMsg(
     nlohmann::ordered_json items = nlohmann::json::array();
     for (const auto &wpm : wpMachines)
     {
-      nlohmann::ordered_json json_wpm;
-      json_wpm["id"] = wpm.id;
-      json_wpm["serialNumber"] = wpm.serialNumber;
-      json_wpm["name"] = wpm.name;
-      json_wpm["hostName"] = wpm.hostName;
-      json_wpm["connectionType"] = wpm.connectionType;
-      json_wpm["connectionPort"] = wpm.connectionPort;
-      json_wpm["generalLocation"] = wpm.generalLocation;
-      json_wpm["software"] = wpm.software;
-      json_wpm["swVersion"] = wpm.swVersion;
-      json_wpm["vendor"] = wpm.vendor;
+      nlohmann::ordered_json wpm_j;
+      wpm_j["id"] = wpm.id;
+      wpm_j["serialNumber"] = wpm.serialNumber;
+      wpm_j["name"] = wpm.name;
+      wpm_j["hostName"] = wpm.hostName;
+      wpm_j["connectionType"] = wpm.connectionType;
+      wpm_j["connectionPort"] = wpm.connectionPort;
+      wpm_j["generalLocation"] = wpm.generalLocation;
+      wpm_j["software"] = wpm.software;
+      wpm_j["swVersion"] = wpm.swVersion;
+      wpm_j["vendor"] = wpm.vendor;
 
-      items.push_back(json_wpm);
+      items.push_back(wpm_j);
     }
     data["items"] = items;
     msgReply.setData(data);
@@ -223,8 +243,8 @@ void SvtDbWPMachineDto::getAllWPMachinesReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
-  return;
 }
 
 //========================================================================+
@@ -237,32 +257,32 @@ void SvtDbWPMachineDto::createWPMachine(
   {
     throw std::runtime_error("DbAgentService: Non object create was found");
   }
-  auto json_wpm = msgData["create"];
+  auto wpm_j = msgData["create"];
   //! remove id record
-  if (json_wpm.size() < (dbWPMachineRecords::val_names.size() - 1))
+  if (wpm_j.size() < (dbWPMachineRecords::val_names.size() - 1))
   {
     throw std::invalid_argument("insufficient number of parameters");
   }
 
   dbWPMachineRecords wpm;
   //! wpm.serialNumber
-  wpm.serialNumber = json_wpm.value("serialNumber", "");
+  wpm.serialNumber = wpm_j.value("serialNumber", "");
   //! wpm.name
-  wpm.name = json_wpm.value("name", "");
+  wpm.name = wpm_j.value("name", "");
   //! wpm.hostName
-  wpm.hostName = json_wpm.value("hostName", "");
+  wpm.hostName = wpm_j.value("hostName", "");
   //! wpm.connectionType
-  wpm.connectionType = json_wpm.value("connectionType", "");
+  wpm.connectionType = wpm_j.value("connectionType", "");
   //! wpm.connectionPort
-  wpm.connectionPort = json_wpm.value("connectionPort", -1);
+  wpm.connectionPort = wpm_j.value("connectionPort", -1);
   //! wpm.generalLocation
-  wpm.generalLocation = json_wpm.value("generalLocation", "");
+  wpm.generalLocation = wpm_j.value("generalLocation", "");
   //! wpm.software
-  wpm.software = json_wpm.value("software", "");
+  wpm.software = wpm_j.value("software", "");
   //! wpm.swVersion
-  wpm.swVersion = json_wpm.value("swVersion", "");
+  wpm.swVersion = wpm_j.value("swVersion", "");
   //! wpm.vendor
-  wpm.vendor = json_wpm.value("vendor", "");
+  wpm.vendor = wpm_j.value("vendor", "");
 
   //! create wpm in DB
   if (!createWPMachineInDB(wpm))
@@ -271,19 +291,8 @@ void SvtDbWPMachineDto::createWPMachine(
     return;
   }
   const auto newWPMId = SvtDbInterface::getMaxId("WaferProbeMachine");
-  std::vector<int> id_filters = {static_cast<int>(newWPMId)};
-
-  std::vector<dbWPMachineRecords> wpMachines;
-  const auto n_wpMachines = getAllWPMachinesInDB(wpMachines, id_filters);
-  if (id_filters.size() && n_wpMachines != id_filters.size())
-  {
-    throw std::runtime_error(
-        "ERROR: incomplete number of wafer Probe MAchines returning");
-    return;
-  }
-  createWPMachineReplyMsg(wpMachines.at(0), replyMsg);
-
-  return;
+  getWPMachineFromDB(wpm, newWPMId);
+  createWPMachineReplyMsg(wpm, replyMsg);
 }
 
 //========================================================================+
@@ -293,19 +302,19 @@ void SvtDbWPMachineDto::createWPMachineReplyMsg(
   try
   {
     nlohmann::ordered_json data;
-    nlohmann::json ret_json_wpm;
-    ret_json_wpm["id"] = wpm.id;
-    ret_json_wpm["serialNumber"] = wpm.serialNumber;
-    ret_json_wpm["name"] = wpm.name;
-    ret_json_wpm["hostName"] = wpm.hostName;
-    ret_json_wpm["connectionType"] = wpm.connectionType;
-    ret_json_wpm["connectionPort"] = wpm.connectionPort;
-    ret_json_wpm["generalLocation"] = wpm.generalLocation;
-    ret_json_wpm["software"] = wpm.software;
-    ret_json_wpm["swVersion"] = wpm.swVersion;
-    ret_json_wpm["vendor"] = wpm.vendor;
+    nlohmann::json ret_wpm_j;
+    ret_wpm_j["id"] = wpm.id;
+    ret_wpm_j["serialNumber"] = wpm.serialNumber;
+    ret_wpm_j["name"] = wpm.name;
+    ret_wpm_j["hostName"] = wpm.hostName;
+    ret_wpm_j["connectionType"] = wpm.connectionType;
+    ret_wpm_j["connectionPort"] = wpm.connectionPort;
+    ret_wpm_j["generalLocation"] = wpm.generalLocation;
+    ret_wpm_j["software"] = wpm.software;
+    ret_wpm_j["swVersion"] = wpm.swVersion;
+    ret_wpm_j["vendor"] = wpm.vendor;
 
-    data["entity"] = ret_json_wpm;
+    data["entity"] = ret_wpm_j;
     msgReply.setData(data);
     msgReply.setStatus(
         SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
@@ -314,6 +323,7 @@ void SvtDbWPMachineDto::createWPMachineReplyMsg(
   catch (const std::exception &e)
   {
     throw e;
+    return;
   }
 }
 
@@ -333,7 +343,7 @@ void SvtDbWPMachineDto::updateWPMachine(
   }
 
   const auto wpMachineId = msgData["id"];
-  const auto json_wpm = msgData["update"];
+  const auto wpm_j = msgData["update"];
 
   if (!SvtDbInterface::checkIdExist("WaferProbeMachine", wpMachineId))
   {
@@ -346,19 +356,19 @@ void SvtDbWPMachineDto::updateWPMachine(
   dbWPMachineRecords wpm;
   wpm.id = wpMachineId;
   bool found_entry_to_update = false;
-  // if (!json_wpm["thinningDate"].is_null())
+  // if (!wpm_j["thinningDate"].is_null())
   // {
-  //   wpm.thinningDate = json_wpm["thinningDate"];
+  //   wpm.thinningDate = wpm_j["thinningDate"];
   //   found_entry_to_update = true;
   // }
-  // if (!json_wpm["dicingDate"].is_null())
+  // if (!wpm_j["dicingDate"].is_null())
   // {
-  //   wpm.dicingDate = json_wpm["dicingDate"];
+  //   wpm.dicingDate = wpm_j["dicingDate"];
   //   found_entry_to_update = true;
   // }
-  // if (!json_wpm["productionDate"].is_null())
+  // if (!wpm_j["productionDate"].is_null())
   // {
-  //   wpm.productionDate = json_wpm["productionDate"];
+  //   wpm.productionDate = wpm_j["productionDate"];
   //   found_entry_to_update = true;
   // }
 
@@ -372,19 +382,8 @@ void SvtDbWPMachineDto::updateWPMachine(
     throw std::runtime_error("ERROR: wpm was not updated");
   }
 
-  std::vector<int> id_filters = {wpMachineId};
-
-  std::vector<dbWPMachineRecords> wpMachines;
-  const auto n_wpMachines = getAllWPMachinesInDB(wpMachines, id_filters);
-  if (id_filters.size() && n_wpMachines != id_filters.size())
-  {
-    throw std::runtime_error(
-        std::string("ERROR: could not find the updated wpm with id ") +
-        std::string(wpMachineId));
-  }
-  createWPMachineReplyMsg(wpMachines.at(0), replyMsg);
-
-  return;
+  getWPMachineFromDB(wpm, wpMachineId);
+  createWPMachineReplyMsg(wpm, replyMsg);
 }
 
 // //========================================================================+
