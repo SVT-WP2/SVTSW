@@ -3,9 +3,11 @@
   set -euo pipefail
 
   db_name="svt_sw_db_test"
+  PSQL_CMD='psql'
+  HOST='dbod-svt-sw-pgdb'
 
   _psql_exec() {
-    eval " psql -h dbod-svt-sw-pgdb.cern.ch -U admin -p 6600 ${*:+$*}"
+    eval " $PSQL_CMD -h $HOST -U admin -p 6600 ${*:+$*}"
   }
 
   _chTZ() {
@@ -54,40 +56,51 @@
     exit 1
   }
 
-  action=${1:-}
+  while [ $# -gt 0 ]; do
+    action=${1:-}
 
-  case $action in
-  --chTZ)
-    _chTZ
-    ;;
-  --chpass)
-    _chpass
-    ;;
-  --createdb)
-    shift
-    _createdb "$@"
-    ;;
-  --run)
-    shift
-    _run "$@"
-    ;;
-  --run2all)
-    shift
-    for schema in prod test; do
-      echo
-      echo "Running to $schema"
-      echo
-      sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
-      _run temp.sql
-      rm temp.sql
+    case $action in
+    --local)
+      PSQL_CMD='psql-17'
+      HOST='localhost'
+      ;;
+    --chTZ)
+      _chTZ
+      ;;
+    --chpass)
+      _chpass
+      ;;
+    --createdb)
+      shift
+      _createdb "$1"
+      ;;
+    --exec)
+      shift
+      _psql_exec "-d $db_name -c '$1'"
+      ;;
+    --run)
+      shift
+      _run "$1"
+      ;;
+    --run2all)
+      shift
+      for schema in prod test; do
+        echo
+        echo "Running to $schema"
+        echo
+        sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
+        _run temp.sql
+        rm temp.sql
 
-    done
-    ;;
-  --open)
-    _psql_exec "-d ${db_name}"
-    ;;
-  *)
-    exit 1
-    ;;
-  esac
+      done
+      ;;
+    --open)
+      _psql_exec "-d ${db_name}"
+      ;;
+    *)
+      exit 1
+      ;;
+    esac
+    shift
+  done
 )
