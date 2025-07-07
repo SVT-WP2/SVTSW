@@ -66,8 +66,8 @@
         { "PosInGroup": 12, "FamilyType": "TTS-3" },
         { "PosInGroup": 13, "FamilyType": "TTS-2" },
         { "PosInGroup": 14, "FamilyType": "TTS-1" },
-        { "PosInGroup": 13, "FamilyType": "CE65_V1CN_15U_SQ" },
-        { "PosInGroup": 14, "FamilyType": "NONAME2" }
+        { "PosInGroup": 15, "FamilyType": "CE65_V1CN_15U_SQ" },
+        { "PosInGroup": 16, "FamilyType": "NONAME2" }
     ],
 
 
