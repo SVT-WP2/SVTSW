@@ -370,6 +370,7 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   //! wafer.waferTypeId
   wafer.waferTypeId = wafer_j.value("waferTypeId", -1);
 
+  Singleton<SvtLogger>::instance().logInfo("Creating Wafer in DB");
   //! create wafer in DB
   if (!createWaferInDB(wafer))
   {
@@ -380,6 +381,7 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   const auto newWaferId = SvtDbInterface::getMaxId("Wafer");
   getWaferFromDB(wafer, newWaferId);
 
+  Singleton<SvtLogger>::instance().logInfo("Creating Waferlocation in DB");
   //! Create waferLocations
   dbWaferLocationRecords waferLoc;
   waferLoc.waferId = newWaferId;
@@ -391,7 +393,9 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
     return;
   }
 
+  Singleton<SvtLogger>::instance().logInfo("Creating all Asics in DB");
   createAllAsics(wafer);
+  Singleton<SvtLogger>::instance().logInfo("Creating reply SvtDbAgentMessage");
   createWaferReplyMsg(wafer, replyMsg);
 }
 
@@ -539,13 +543,22 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
 
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
 
-  //! loop group rows
+  std::map<int, std::string> g_map_ordered;
+
   for (auto &[mapG_row_name, mapG_cols] : waferMap_j["MapGroups"].items())
   {
-    size_t mapG_col_index = 0;
     int asic_row = std::stoi(std::string(mapG_row_name).erase(0, 12));
+    g_map_ordered[asic_row] = mapG_row_name;
+  }
+
+  //! loop group rows
+  for (const auto &g_row_item : g_map_ordered)
+  {
+    size_t mapG_col_index = 0;
+    int asic_row = g_row_item.first;
     int asic_col = 0;
-    for (auto &mapG_col : mapG_cols["MapGroupsColumns"])
+    for (auto &mapG_col :
+         waferMap_j["MapGroups"][g_row_item.second]["MapGroupsColumns"])
     {
       std::string g_name = mapG_col["GroupName"];
       auto g_size = waferMap_j["Groups"][g_name].size();
@@ -563,7 +576,7 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
           !SvtDbWaferTypeDto::parse_range(
               g_size, mapG_col["MechanicallyIntergerASICs"], mecIntegerAsics))
       {
-        std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+        std::cout << "Error creating Asic. MapGroups: " << g_row_item.second
                   << ", group col: " << mapG_col_index << std::endl;
 
         throw std::runtime_error("Wrong array found");
@@ -594,7 +607,7 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
         }
         else
         {
-          std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+          std::cout << "Error creating Asic. MapGroups: " << g_row_item.second
                     << ", group col: " << mapG_col_index << std::endl;
           std::ostringstream ss;
           ss << "Wrong Asic quality property for asic  " << asic_index;
@@ -607,7 +620,7 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
 
         if (asic_familytype.empty())
         {
-          std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+          std::cout << "Error creating Asic. MapGroups: " << g_row_item.second
                     << ", group col: " << mapG_col_index << std::endl;
           throw std::runtime_error("invalid familyType");
         }
