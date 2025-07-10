@@ -5,7 +5,7 @@
  * @file SvtDbWaferTypeDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Jun-2025
- * @brief Svt Db enum DTO
+ * @brief Svt Db Wafer type DTO
  * */
 
 #include <vector>
@@ -70,6 +70,10 @@ namespace SvtDbWaferTypeDto
 
   void createWaferTypeReplyMsg(const dbWaferTypeRecords &waferType,
                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+
+  bool parse_range(const int g_size, const nlohmann::json &array_j,
+                   std::vector<int> &range);
+
   bool checkWaferMap(const std::string_view waferMap, std::string &err_msg);
 
 };  // namespace SvtDbWaferTypeDto
