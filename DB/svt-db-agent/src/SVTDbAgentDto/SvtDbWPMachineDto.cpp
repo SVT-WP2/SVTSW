@@ -77,7 +77,8 @@ bool SvtDbWPMachineDto::getAllWPMachinesFromDB(
     }
     if (id_filters.size() && wpMachines.size() != id_filters.size())
     {
-      throw std::runtime_error("ERROR: ");
+      throw std::runtime_error(
+          "unmatching returned elements and requested filter size");
     }
   }
   catch (const std::exception &e)
@@ -255,7 +256,7 @@ void SvtDbWPMachineDto::createWPMachine(
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("DbAgentService: Non object create was found");
+    throw std::runtime_error("Object item create was found");
   }
   auto wpm_j = msgData["create"];
   //! remove id record
@@ -287,7 +288,7 @@ void SvtDbWPMachineDto::createWPMachine(
   //! create wpm in DB
   if (!createWPMachineInDB(wpm))
   {
-    throw std::runtime_error("ERROR: Wafer Probe Machine was not created");
+    throw std::runtime_error("Wafer Probe Machine was not created");
     return;
   }
   const auto newWPMId = SvtDbInterface::getMaxId("WaferProbeMachine");
@@ -335,11 +336,11 @@ void SvtDbWPMachineDto::updateWPMachine(
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("id"))
   {
-    throw std::runtime_error("DbAgentService: Non object id was found");
+    throw std::runtime_error("Object item id was found");
   }
   if (!msgData.contains("update"))
   {
-    throw std::runtime_error("DbAgentService: Non object update was found");
+    throw std::runtime_error("Object item update was found");
   }
 
   const auto wpMachineId = msgData["id"];
@@ -348,8 +349,7 @@ void SvtDbWPMachineDto::updateWPMachine(
   if (!SvtDbInterface::checkIdExist("WaferProbeMachine", wpMachineId))
   {
     std::ostringstream ss("");
-    ss << "ERROR: Wafer Probe Machine with id " << wpMachineId
-       << " does not found.";
+    ss << "Wafer Probe Machine with id " << wpMachineId << " does not found.";
     throw std::runtime_error(ss.str());
   }
 
@@ -374,70 +374,14 @@ void SvtDbWPMachineDto::updateWPMachine(
 
   if (!found_entry_to_update)
   {
-    throw std::runtime_error("ERROR: no entry to update found");
+    throw std::runtime_error("no entry to update found");
     return;
   }
   if (!updateWPMachineInDB(wpm))
   {
-    throw std::runtime_error("ERROR: wpm was not updated");
+    throw std::runtime_error("wpm was not updated");
   }
 
   getWPMachineFromDB(wpm, wpMachineId);
   createWPMachineReplyMsg(wpm, replyMsg);
 }
-
-// //========================================================================+
-// void SvtDbWaferDto::updateWaferLocation(
-//     const SvtDbAgent::SvtDbAgentMessage &msg,
-//     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
-// {
-//   const auto &msgData = msg.getPayload()["data"];
-//   if (!msgData.contains("waferId") || !msgData.contains("generalLocation")
-//   ||
-//       !msgData.contains("date") || !msgData.contains("username"))
-//   {
-//     throw std::runtime_error("ERROR: Wron format for data");
-//   }
-//
-//   auto waferId = msgData["waferId"];
-//   if (!SvtDbInterface::checkIdExist("wafer", waferId))
-//   {
-//     std::ostringstream ss("");
-//     ss << "ERROR: Wafer with id " << waferId << " does not found.";
-//     throw std::runtime_error(ss.str());
-//   }
-//
-//   //! Create waferLocations
-//   dbWaferLocationRecords waferLoc;
-//   waferLoc.waferId = msgData["waferId"];
-//   waferLoc.generalLocation = msgData["generalLocation"];
-//   waferLoc.creationTime = msgData["date"];
-//   waferLoc.username = msgData["username"];
-//   waferLoc.description = std::string("Update Location");
-//   if (!createWaferLocationInDB(waferLoc))
-//   {
-//     throw std::runtime_error("ERROR: Could not create wafer location
-//     entry"); return;
-//   }
-//
-//   //! update general location for wafer with waferId
-//   dbWaferRecords wafer;
-//   wafer.id = waferId;
-//   wafer.generalLocation = msgData["generalLocation"];
-//   if (!updateWaferInDB(wafer))
-//   {
-//     throw std::runtime_error("ERROR: wafer was not updated");
-//   }
-//
-//   std::vector<int> id_filters = {waferId};
-//
-//   std::vector<dbWaferRecords> wafers;
-//   const auto n_wafers = getAllWafersInDB(wafers, id_filters);
-//   if (id_filters.size() && n_wafers != id_filters.size())
-//   {
-//     throw std::runtime_error(
-//         std::string("ERROR: could not find the updated wafer with id ") +
-//         std::string(waferId));
-//   }
-//   createWaferReplyMsg(wafers.at(0), replyMsg);
-// }

@@ -2,7 +2,7 @@
 #define SVT_DB_ASIC_DTO_H
 
 /*!
- * @file SvtDbWafer.h
+ * @file SvtDbAsicDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Jun-2025
  * @brief Svt Db asic DTO
@@ -48,8 +48,6 @@ namespace SvtDbAsicDto
 
   void getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
                    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-
-  void createAsic(const SvtDbAgent::SvtDbAgentMessage &msg);
 
   void createAsic(const SvtDbAgent::SvtDbAgentMessage &msg,
                   SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);

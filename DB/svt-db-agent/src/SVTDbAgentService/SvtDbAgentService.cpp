@@ -254,6 +254,9 @@ void SvtDbAgentService::parseMsg(
         case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
           SvtDbWPMachineDto::getAllWPMachines(msg, replyMsg);
           break;
+        case SvtDbAgent::RequestType::CreateWaferProbeMachine:
+          SvtDbWPMachineDto::createWPMachine(msg, replyMsg);
+          break;
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
