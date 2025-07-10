@@ -2,7 +2,7 @@
 #define SVT_DB_WAFERPROBEMACHINE_DTO_H
 
 /*!
- * @file SvtDbWafer.h
+ * @file SvtDbWPMachineDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Jun-2025
  * @brief Svt Db wafer probe machine DTO
