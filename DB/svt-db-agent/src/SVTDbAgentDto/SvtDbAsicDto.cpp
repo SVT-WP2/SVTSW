@@ -1,8 +1,8 @@
 /*!
- * @file SvtDbWaferTypeDto.cpp
+ * @file SvtDbAsicDto.cpp
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Jun-2025
- * @brief SvtDbWaferTypeDto
+ * @brief SvtDbAsicDto
  */
 
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
@@ -31,6 +31,7 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
   query.addColumn("serialNumber");
   query.addColumn("familyType");
   query.addColumn("waferMapPosition");
+  query.addColumn("quality");
 
   if (!id_filters.empty())
   {
@@ -44,7 +45,7 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
 
     for (vector<MultiBase *> row : rows)
     {
-      if (row.size() != 5)
+      if (row.size() != 6)
       {
         throw std::range_error("Asic table: ");
       }
@@ -59,12 +60,15 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
       asic.familyType = (row.at(3)) ? row.at(3)->getString() : "";
       //! asic waferMapPosition
       asic.waferMapPosition = (row.at(4)) ? row.at(4)->getString() : "";
+      //! asic quality
+      asic.quality = (row.at(5)) ? row.at(5)->getString() : "";
 
       asics.push_back(asic);
     }
     if (id_filters.size() && asics.size() != id_filters.size())
     {
-      throw std::runtime_error("ERROR: ");
+      throw std::runtime_error(
+          "unmatching returned elements and requested filter size");
     }
   }
   catch (const std::exception &e)
@@ -101,17 +105,18 @@ bool SvtDbAsicDto::createAsicInDB(const dbAsicRecords &asic)
 
   //! check input values
   if ((asic.waferId < 0) || asic.serialNumber.empty() ||
-      asic.familyType.empty() || asic.waferMapPosition.empty())
+      asic.familyType.empty() || asic.waferMapPosition.empty() ||
+      asic.quality.empty())
   {
     return false;
   }
 
   //! Add columns & values
   insert.addColumnAndValue("waferId", asic.waferId);
-  insert.addColumnAndValue("serialNumber", std::string(asic.serialNumber));
-  insert.addColumnAndValue("familyType", std::string(asic.familyType));
-  insert.addColumnAndValue("waferMapPosition",
-                           std::string(asic.waferMapPosition));
+  insert.addColumnAndValue("serialNumber", asic.serialNumber);
+  insert.addColumnAndValue("familyType", asic.familyType);
+  insert.addColumnAndValue("waferMapPosition", asic.waferMapPosition);
+  insert.addColumnAndValue("quality", asic.quality);
 
   if (!insert.doInsert())
   {
@@ -179,12 +184,13 @@ void SvtDbAsicDto::getAllAsicsReplyMsg(
 }
 
 //========================================================================+
-void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg)
+void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg,
+                              SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("DbAgentService: Non object create was found");
+    throw std::runtime_error("Object item create was found");
   }
   auto json_asic = msgData["create"];
   //! remove id record
@@ -203,18 +209,10 @@ void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg)
   //! create Asic
   if (!createAsicInDB(asic))
   {
-    throw std::runtime_error("ERROR: Asic was not created");
+    throw std::runtime_error("Asic was not created");
     return;
   }
-}
 
-//========================================================================+
-void SvtDbAsicDto::createAsic(const SvtDbAgent::SvtDbAgentMessage &msg,
-                              SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
-{
-  createAsic(msg);
-
-  dbAsicRecords asic;
   const auto newAsicId = SvtDbInterface::getMaxId("Asic");
   getAsicFromDB(asic, newAsicId);
 

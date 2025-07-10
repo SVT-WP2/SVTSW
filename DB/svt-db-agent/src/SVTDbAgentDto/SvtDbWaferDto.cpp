@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -76,7 +77,8 @@ bool SvtDbWaferDto::getAllWafersFromDB(std::vector<dbWaferRecords> &wafers,
     }
     if (id_filters.size() && wafers.size() != id_filters.size())
     {
-      throw std::runtime_error("ERROR: ");
+      throw std::runtime_error(
+          "unmatching returned elements and requested filter size");
     }
   }
   catch (const std::exception &e)
@@ -343,7 +345,7 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("DbAgentService: Non object create was found");
+    throw std::runtime_error("Non object create was found");
   }
   auto wafer_j = msgData["create"];
   //! remove id record
@@ -371,9 +373,10 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   //! create wafer in DB
   if (!createWaferInDB(wafer))
   {
-    throw std::runtime_error("ERROR: wafer type was not created");
+    throw std::runtime_error("Wafer type was not created");
     return;
   }
+
   const auto newWaferId = SvtDbInterface::getMaxId("Wafer");
   getWaferFromDB(wafer, newWaferId);
 
@@ -388,7 +391,7 @@ void SvtDbWaferDto::createWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
     return;
   }
 
-  // createAllAsics(wafer);
+  createAllAsics(wafer);
   createWaferReplyMsg(wafer, replyMsg);
 }
 
@@ -429,11 +432,11 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("id"))
   {
-    throw std::runtime_error("DbAgentService: Non object id was found");
+    throw std::runtime_error("Object item id was found");
   }
   if (!msgData.contains("update"))
   {
-    throw std::runtime_error("DbAgentService: Non object update was found");
+    throw std::runtime_error("Object item update was found");
   }
 
   const auto waferId = msgData["id"];
@@ -442,7 +445,7 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
   if (!SvtDbInterface::checkIdExist("wafer", waferId))
   {
     std::ostringstream ss("");
-    ss << "ERROR: Wafer with id " << waferId << " does not found.";
+    ss << "Wafer with id " << waferId << " does not found.";
     throw std::runtime_error(ss.str());
   }
 
@@ -467,12 +470,12 @@ void SvtDbWaferDto::updateWafer(const SvtDbAgent::SvtDbAgentMessage &msg,
 
   if (!found_entry_to_update)
   {
-    throw std::runtime_error("ERROR: no entry to update found");
+    throw std::runtime_error("no entry to update found");
     return;
   }
   if (!updateWaferInDB(wafer))
   {
-    throw std::runtime_error("ERROR: wafer was not updated");
+    throw std::runtime_error("Wafer was not updated");
     return;
   }
 
@@ -489,14 +492,14 @@ void SvtDbWaferDto::updateWaferLocation(
   if (!msgData.contains("waferId") || !msgData.contains("generalLocation") ||
       !msgData.contains("date") || !msgData.contains("username"))
   {
-    throw std::runtime_error("ERROR: Wron format for data");
+    throw std::runtime_error("Wrong format for data");
   }
 
   auto waferId = msgData["waferId"];
   if (!SvtDbInterface::checkIdExist("wafer", waferId))
   {
     std::ostringstream ss("");
-    ss << "ERROR: Wafer with id " << waferId << " does not found.";
+    ss << "Wafer with id " << waferId << " does not found.";
     throw std::runtime_error(ss.str());
   }
 
@@ -509,7 +512,7 @@ void SvtDbWaferDto::updateWaferLocation(
   waferLoc.description = std::string("Update Location");
   if (!createWaferLocationInDB(waferLoc))
   {
-    throw std::runtime_error("ERROR: Could not create wafer location entry");
+    throw std::runtime_error("Could not create wafer location entry");
     return;
   }
 
@@ -519,7 +522,7 @@ void SvtDbWaferDto::updateWaferLocation(
   wafer.generalLocation = msgData["generalLocation"];
   if (!updateWaferInDB(wafer))
   {
-    throw std::runtime_error("ERROR: wafer was not updated");
+    throw std::runtime_error("Wafer was not updated");
     return;
   }
 
@@ -536,76 +539,48 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
 
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
 
-  auto get_range = [&waferMap_j](const std::string_view g_name,
-                                 const nlohmann::json &array_j,
-                                 std::vector<int> &range)
-  {
-    std::cout << "Group: " << g_name << std::endl;
-    if (!array_j.is_null() && array_j.size())
-    {
-      if (array_j.begin()->is_string() && array_j.begin().value() == "All")
-      {
-        std::cout << "Size : " << waferMap_j["Groups"][g_name].size()
-                  << std::endl;
-        range.resize(waferMap_j["Groups"][g_name].size());
-        std::iota(range.begin(), range.end(), 0);
-      }
-      else if (std::all_of(
-                   array_j.begin(), array_j.end(),
-                   [](const nlohmann::json &el)
-                   { return el.is_number(); }))
-      {
-        range = array_j.get<std::vector<int>>();
-      }
-      else
-      {
-        return false;
-      }
-    }
-    return true;
-  };
-
   //! loop group rows
-  for (auto &[g_row, g_cols] : waferMap_j["MapGroups"].items())
+  for (auto &[mapG_row_name, mapG_cols] : waferMap_j["MapGroups"].items())
   {
-    int asic_row = std::stoi(std::string(g_row).erase(0, 12));
+    size_t mapG_col_index = 0;
+    int asic_row = std::stoi(std::string(mapG_row_name).erase(0, 12));
     int asic_col = 0;
-    int g_col_index = 0;
-    for (auto &g_col : g_cols["MapGroupsColumns"])
+    for (auto &mapG_col : mapG_cols["MapGroupsColumns"])
     {
-      std::string g_name = g_col["GroupName"];
-      std::cout << asic_row << ", " << asic_col << std::endl;
+      std::string g_name = mapG_col["GroupName"];
+      auto g_size = waferMap_j["Groups"][g_name].size();
 
       std::vector<int> existingAsics;
       std::vector<int> mecDamagedAsics;
       std::vector<int> coveredAsics;
       std::vector<int> mecIntegerAsics;
-      if (!get_range(g_name, g_col["ExistingAsics"], existingAsics) ||
-          !get_range(g_name, g_col["MechanicallyDamagedASICs"],
-                     mecDamagedAsics) ||
-          !get_range(g_name, g_col["ASICsCoveredByGreenLayer"], coveredAsics) ||
-          !get_range(g_name, g_col["MechanicallyIntergerASICs"],
-                     mecIntegerAsics))
+      if (!SvtDbWaferTypeDto::parse_range(g_size, mapG_col["ExistingAsics"],
+                                          existingAsics) ||
+          !SvtDbWaferTypeDto::parse_range(
+              g_size, mapG_col["MechanicallyDamagedASICs"], mecDamagedAsics) ||
+          !SvtDbWaferTypeDto::parse_range(
+              g_size, mapG_col["ASICsCoveredByGreenLayer"], coveredAsics) ||
+          !SvtDbWaferTypeDto::parse_range(
+              g_size, mapG_col["MechanicallyIntergerASICs"], mecIntegerAsics))
       {
-        std::ostringstream ss;
-        ss << "ERROR: Map Group: " << g_row << " Col: " << asic_col
-           << " Wrong array found";
+        std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+                  << ", group col: " << mapG_col_index << std::endl;
 
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("Wrong array found");
       }
       //! create asics from existingAsics
       for (const auto &asic_index : existingAsics)
       {
         std::ostringstream asic_waferMapPos;
         asic_waferMapPos << asic_row << "_" << asic_col;
-        std::ostringstream asic_SN(wafer.serialNumber);
-        asic_SN << "_" << asic_waferMapPos.str();
+        std::ostringstream asic_SN;
+        asic_SN << wafer.serialNumber << "_" << asic_waferMapPos.str();
 
         std::string asic_quality;
         if (std::find(mecDamagedAsics.begin(), mecDamagedAsics.end(),
                       asic_index) != mecDamagedAsics.end())
         {
-          asic_quality = "MechanicalDamaged";
+          asic_quality = "MechanicallyDamaged";
         }
         else if (std::find(coveredAsics.begin(), coveredAsics.end(),
                            asic_index) != coveredAsics.end())
@@ -619,23 +594,33 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
         }
         else
         {
+          std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+                    << ", group col: " << mapG_col_index << std::endl;
           std::ostringstream ss;
-          ss << "ERROT: Wrong Asic quality property for asic  " << asic_index
-             << " of row " << asic_row << " and group col " << g_col_index;
+          ss << "Wrong Asic quality property for asic  " << asic_index;
           throw std::runtime_error(ss.str());
         }
 
+        std::string asic_familytype;
+        SvtDbAgent::get_v(waferMap_j["Groups"][g_name][asic_index],
+                          "FamilyType", asic_familytype);
+
+        if (asic_familytype.empty())
+        {
+          std::cout << "Error creating Asic. MapGroups: " << mapG_row_name
+                    << ", group col: " << mapG_col_index << std::endl;
+          throw std::runtime_error("invalid familyType");
+        }
         dbAsicRecords asic;
         asic.waferId = wafer.id;
         asic.serialNumber = asic_SN.str();
-        // asic.familyType =
-        //     waferMap_j["Groups"][g_name][asic_index]["familyType"];
         asic.waferMapPosition = asic_waferMapPos.str();
+        asic.familyType = asic_familytype;
         asic.quality = asic_quality;
-        // SvtDbAsicDto::createAsicInDB(asic);
+        SvtDbAsicDto::createAsicInDB(asic);
         ++asic_col;
       }
-      ++g_col_index;
+      ++mapG_col_index;
     }
   }
 
