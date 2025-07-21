@@ -663,13 +663,13 @@
         {
           "GroupName": "Group2",
           "Property": "WithMechanicallyDamagedASICs",
-          "ExistingAsics": [7, 8, 9, 10, 11, 12, 13, 14],
+          "ExistingAsics": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
 
           "MechanicallyDamagedASICs": [7, 8, 9],
 
           "ASICsCoveredByGreenLayer": [10, 11, 12],
 
-          "MechanicallyIntergerASICs": [13, 14]
+          "MechanicallyIntergerASICs": [13, 14, 15, 16]
         },
         {
           "GroupName": "Group2",
@@ -720,9 +720,9 @@
           "Property": "WithMechanicallyDamagedASICs",
           "ExistingAsics": ["All"],
 
-          "MechanicallyDamagedASICs": [13, 14],
+          "MechanicallyDamagedASICs": [15, 16],
 
-          "ASICsCoveredByGreenLayer": [12, 13],
+          "ASICsCoveredByGreenLayer": [12, 13, 14],
 
           "MechanicallyIntergerASICs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         },
@@ -995,13 +995,15 @@
         {
           "GroupName": "Group0",
           "Property": "WithMechanicallyDamagedASICs",
-          "ExistingAsics": [0],
+          "ExistingAsics": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+          ],
 
-          "MechanicallyDamagedASICs": [15, 16, 17],
+          "MechanicallyDamagedASICs": [13, 14, 15],
 
-          "ASICsCoveredByGreenLayer": [11, 12, 13, 14],
+          "ASICsCoveredByGreenLayer": [10, 11, 12],
 
-          "MechanicallyIntergerASICs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          "MechanicallyIntergerASICs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         }
       ]
     },
@@ -1088,11 +1090,13 @@
         {
           "GroupName": "Group1",
           "Property": "WithMechanicallyDamagedASICs",
-          "ExistingAsics": [0],
+          "ExistingAsics": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+          ],
 
-          "MechanicallyDamagedASICs": [4, 16, 17],
+          "MechanicallyDamagedASICs": [14, 15],
 
-          "ASICsCoveredByGreenLayer": [11, 12],
+          "ASICsCoveredByGreenLayer": [11, 12, 13],
 
           "MechanicallyIntergerASICs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         }
