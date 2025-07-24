@@ -18,6 +18,12 @@ namespace SvtDbAgent
   static std::string db_schema = (getenv("SVT_DB_AGENT_SCHEMA") != nullptr)
                                      ? getenv("SVT_DB_AGENT_SCHEMA")
                                      : "prod";
+  static std::string kafka_server = (getenv("SVT_KAFKA_SERVER") != nullptr)
+                                        ? getenv("SVT_KAFKA_SERVER")
+                                        : "localhost";
+  static std::string kafka_port =
+      (getenv("SVT_KAFKA_PORT") != nullptr) ? getenv("SVT_KAFKA_PORT") : "9092";
+
   template <class T>
   inline void get_v(const nlohmann::json &j, const char *key, T &val)
   {

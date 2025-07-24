@@ -61,6 +61,8 @@ class SvtDbAgentService
   void setLogMessages(const bool val) { log_messages = val; }
   bool getLogMessages() { return log_messages; }
 
+  std::string &getBrokerName() { return m_brokerName; }
+
  private:
   SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
@@ -70,7 +72,8 @@ class SvtDbAgentService
   std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
   std::shared_ptr<SvtDbAgentProducer> m_Producer;
 
-  std::string m_brokerName = {"localhost:9092"};
+  std::string m_brokerName =
+      SvtDbAgent::kafka_server + std::string(":") + SvtDbAgent::kafka_port;
   std::string m_errStr;
   std::string m_debug;
 
