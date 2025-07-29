@@ -864,17 +864,31 @@ components:
         data:
           type: object
           properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
             filter:
               type: object
               properties:
                 waferId:
                   type: number
                   description: Optional filter used to fetch all ASICs for the particular wafer
+                familyType:
+                  type: string
+                quality:
+                  type: string
                 ids:
                   type: array
                   description: Asic ids array. If array is empty / undefined => all Asics will be returned.
                   items:
                     type: number
+
 
     GetAllAsicsReplyMessage:
       properties:
@@ -888,6 +902,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/AsicDto'
+            totalCount:
+              type: number
     #
     # ASICS :: CREATE
     #
