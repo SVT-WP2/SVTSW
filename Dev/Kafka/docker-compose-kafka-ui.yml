@@ -4,8 +4,8 @@ services:
     container_name: svt-kafka-ui
     # depends_on:
     #   - kafka
-    ports:
-      - "8088:8080"
+    # ports:
+    #   - "8088:8080"
     network_mode: "host"
     restart: always
     environment:
