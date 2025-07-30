@@ -265,7 +265,7 @@ Enum pcName {
 }
 
 Enum pcModel {
-  NKF7
+  NKF7-TS3500-CABLEOUT-MLO(EVS-P)
   MosaixLeft
   MosaixRight
   LAS
