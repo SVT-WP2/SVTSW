@@ -126,7 +126,7 @@ CREATE TYPE "pcName" AS ENUM (
 );
 
 CREATE TYPE "pcModel" AS ENUM (
-  'NKF7',
+  'NKF7-TS3500-CABLEOUT-MLO(EVS-P)',
   'MosaixLeft',
   'MosaixRight',
   'LAS',
