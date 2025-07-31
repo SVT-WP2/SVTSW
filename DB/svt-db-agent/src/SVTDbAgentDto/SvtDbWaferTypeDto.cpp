@@ -142,9 +142,10 @@ void SvtDbWaferTypeDto::getAllWaferTypes(
   std::vector<int> id_filters;
   if (msgData.contains("filter"))
   {
-    if (msgData.contains("ids"))
+    const auto filterData = msgData["filter"];
+    if (filterData.contains("ids"))
     {
-      id_filters = msgData["filter"]["ids"].get<std::vector<int>>();
+      id_filters = filterData["ids"].get<std::vector<int>>();
     }
   }
   std::vector<dbWaferTypeRecords> waferTypes;

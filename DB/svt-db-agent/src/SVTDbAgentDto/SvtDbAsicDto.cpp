@@ -12,13 +12,15 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 using SvtDbAgent::Singleton;
 
 //========================================================================+
 bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
-                                     const std::vector<int> &id_filters)
+                                     const asic_filters_type &filters)
 {
   asics.clear();
   SimpleQuery query;
@@ -33,9 +35,21 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
   query.addColumn("waferMapPosition");
   query.addColumn("quality");
 
-  if (!id_filters.empty())
+  if (!filters.ids.empty())
   {
-    query.addWhereIn("id", id_filters);
+    query.addWhereIn("id", filters.ids);
+  }
+  if (filters.waferId >= 0)
+  {
+    query.addWhereEquals("waferId", filters.waferId);
+  }
+  if (!filters.familyType.empty())
+  {
+    query.addWhereEquals("familyType", filters.familyType);
+  }
+  if (!filters.quality.empty())
+  {
+    query.addWhereEquals("quality", filters.quality);
   }
 
   try
@@ -65,7 +79,7 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
 
       asics.push_back(asic);
     }
-    if (id_filters.size() && asics.size() != id_filters.size())
+    if (filters.ids.size() && asics.size() != filters.ids.size())
     {
       throw std::runtime_error(
           "unmatching returned elements and requested filter size");
@@ -84,9 +98,10 @@ bool SvtDbAsicDto::getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
 //========================================================================+
 bool SvtDbAsicDto::getAsicFromDB(dbAsicRecords &asic, int id)
 {
-  std::vector<int> id_filters = {id};
+  asic_filters_type asic_filters;
+  asic_filters.ids.push_back(id);
   std::vector<dbAsicRecords> asics;
-  if (!getAllAsicsFromDB(asics, id_filters))
+  if (!getAllAsicsFromDB(asics, asic_filters))
   {
     return false;
   }
@@ -133,24 +148,66 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
                                SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
-  std::vector<int> id_filters;
+  asic_filters_type asic_filters;
   if (msgData.contains("filter"))
   {
-    if (msgData.contains("ids"))
+    const auto filterData = msgData["filter"];
+    if (filterData.contains("ids"))
     {
-      id_filters = msgData["filter"]["ids"].get<std::vector<int>>();
+      asic_filters.ids = filterData["ids"].get<std::vector<int>>();
+    }
+    if (filterData.contains("waferId"))
+    {
+      asic_filters.waferId = filterData["waferId"].get<int>();
+    }
+    if (filterData.contains("familyType"))
+    {
+      asic_filters.familyType = filterData["familyType"].get<std::string>();
+    }
+    if (filterData.contains("quality"))
+    {
+      asic_filters.quality = filterData["quality"].get<std::string>();
     }
   }
-  std::vector<dbAsicRecords> asics;
-  if (getAllAsicsFromDB(asics, id_filters))
+
+  std::vector<dbAsicRecords> all_asics;
+  if (getAllAsicsFromDB(all_asics, asic_filters))
   {
-    getAllAsicsReplyMsg(asics, replyMsg);
+    if (!msgData.contains("pager"))
+    {
+      auto empty_list = std::vector<dbAsicRecords>();
+      auto &asics = all_asics.size() <= 5000 ? all_asics : empty_list;
+      getAllAsicsReplyMsg(asics, all_asics.size(), replyMsg);
+    }
+    else
+    {
+      size_t pager_limit = msgData["pager"]["limits"];
+      size_t pager_offset = msgData["pager"]["offset"];
+
+      if (all_asics.size() <= pager_offset)
+      {
+        std::ostringstream err_msg;
+        err_msg << "Pager offset out of range, filtered asic size: "
+                << all_asics.size();
+
+        throw std::runtime_error(err_msg.str());
+        return;
+      }
+      size_t tail_size = all_asics.size() - pager_offset;
+      std::vector<dbAsicRecords>::const_iterator first =
+          all_asics.begin() + pager_offset;
+      std::vector<dbAsicRecords>::const_iterator last =
+          all_asics.begin() + pager_offset +
+          ((tail_size < pager_limit) ? tail_size : pager_limit);
+      std::vector<dbAsicRecords> asics(first, last);
+    }
   }
+  return;
 }
 
 //========================================================================+
 void SvtDbAsicDto::getAllAsicsReplyMsg(
-    const std::vector<dbAsicRecords> &asics,
+    const std::vector<dbAsicRecords> &asics, size_t totalCount,
     SvtDbAgent::SvtDbAgentReplyMsg &msgReply)
 {
   try
@@ -171,6 +228,7 @@ void SvtDbAsicDto::getAllAsicsReplyMsg(
       items.push_back(asic_j);
     }
     data["items"] = items;
+    data["totalCount"] = totalCount;
     msgReply.setData(data);
     msgReply.setStatus(
         SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
