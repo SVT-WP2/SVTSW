@@ -18,50 +18,50 @@ namespace SvtDbAgent
   class SvtDbAgentReplyMsg;
 };  // namespace SvtDbAgent
 
-//! Wafer
-using dbWaferRecords = struct dbWaferRecords
-{
-  int id = -1;
-  std::string serialNumber;
-  int batchNumber = -1;
-  std::string generalLocation;
-  std::string thinningDate;
-  std::string dicingDate;
-  std::string productionDate;
-  int waferTypeId = -1;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "id",
-      "serialNumber",
-      "batchNumber",
-      "generalLocation",
-      "waferTypeId",
-      "thinningDate",
-      "dicingDate",
-      "productionDate",
-  };
-};
-
-//! WaferLocation
-using dbWaferLocationRecords = struct dbWaferLocationRecords
-{
-  int waferId = -1;
-  std::string generalLocation;
-  std::string creationTime;
-  std::string username;
-  std::string description;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "waferId",
-      "generalLocation",
-      "creationTime",
-      "username",
-      "description",
-  };
-};
-
 namespace SvtDbWaferDto
 {
+  //! Wafer
+  using dbWaferRecords = struct dbWaferRecords
+  {
+    int id = -1;
+    std::string serialNumber;
+    int batchNumber = -1;
+    std::string generalLocation;
+    std::string thinningDate;
+    std::string dicingDate;
+    std::string productionDate;
+    int waferTypeId = -1;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "id",
+        "serialNumber",
+        "batchNumber",
+        "generalLocation",
+        "waferTypeId",
+        "thinningDate",
+        "dicingDate",
+        "productionDate",
+    };
+  };
+
+  //! WaferLocation
+  using dbWaferLocationRecords = struct dbWaferLocationRecords
+  {
+    int waferId = -1;
+    std::string generalLocation;
+    std::string creationTime;
+    std::string username;
+    std::string description;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "waferId",
+        "generalLocation",
+        "creationTime",
+        "username",
+        "description",
+    };
+  };
+
   //! Wafers
   bool getAllWafersFromDB(std::vector<dbWaferRecords> &wafers,
                           const std::vector<int> &id_filters);

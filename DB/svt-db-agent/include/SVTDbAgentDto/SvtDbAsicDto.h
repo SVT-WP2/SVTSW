@@ -18,31 +18,39 @@ namespace SvtDbAgent
   class SvtDbAgentReplyMsg;
 };  // namespace SvtDbAgent
 
-//! Asic
-using dbAsicRecords = struct dbAsicRecords
-{
-  int id = -1;
-  int waferId = -1;
-  std::string serialNumber;
-  std::string familyType;
-  std::string waferMapPosition;
-  std::string quality;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "id",
-      "waferId",
-      "serialNumber",
-      "familyType",
-      "waferMapPosition",
-      "quality",
-  };
-};
-
 namespace SvtDbAsicDto
 {
+  //! Asic
+  using dbAsicRecords = struct dbAsicRecords
+  {
+    int id = -1;
+    int waferId = -1;
+    std::string serialNumber;
+    std::string familyType;
+    std::string waferMapPosition;
+    std::string quality;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "id",
+        "waferId",
+        "serialNumber",
+        "familyType",
+        "waferMapPosition",
+        "quality",
+    };
+  };
+
+  using asic_filters_type = struct asic_filters_type
+  {
+    std::vector<int> ids;
+    int waferId = -1;
+    std::string familyType;
+    std::string quality;
+  };
+
   //! Asics
   bool getAllAsicsFromDB(std::vector<dbAsicRecords> &asics,
-                         const std::vector<int> &id_filters);
+                         const asic_filters_type &filters);
   bool getAsicFromDB(dbAsicRecords &asic, int id);
   bool createAsicInDB(const dbAsicRecords &asic);
 
@@ -53,6 +61,7 @@ namespace SvtDbAsicDto
                   SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
 
   void getAllAsicsReplyMsg(const std::vector<dbAsicRecords> &asics,
+                           const size_t totalCount,
                            SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
 
   void createAsicReplyMsg(const dbAsicRecords &asic,

@@ -18,40 +18,40 @@ namespace SvtDbAgent
   class SvtDbAgentReplyMsg;
 };  // namespace SvtDbAgent
 
-//! WaferType
-using dbWaferTypeRecords = struct dbWaferTypeRecords
-{
-  int id = -1;
-  std::string name;
-  std::string engineeringRun;
-  std::string foundry;
-  std::string technology;
-  std::string waferMap;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "id",
-      "name",
-      "engineeringRun",
-      "foundry",
-      "technology",
-      "waferMap",
-  };
-};
-
-//! WaferTypeImage
-using dbWaferTypeImagesRecords = struct dbWaferTypeImagesRecords
-{
-  int waferTypeId = -1;
-  std::string imageBase64String;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "waferTypeId",
-      "imageBase64String",
-  };
-};
-
 namespace SvtDbWaferTypeDto
 {
+  //! WaferType
+  using dbWaferTypeRecords = struct dbWaferTypeRecords
+  {
+    int id = -1;
+    std::string name;
+    std::string engineeringRun;
+    std::string foundry;
+    std::string technology;
+    std::string waferMap;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "id",
+        "name",
+        "engineeringRun",
+        "foundry",
+        "technology",
+        "waferMap",
+    };
+  };
+
+  //! WaferTypeImage
+  using dbWaferTypeImagesRecords = struct dbWaferTypeImagesRecords
+  {
+    int waferTypeId = -1;
+    std::string imageBase64String;
+
+    static constexpr std::initializer_list<const char *> val_names = {
+        "waferTypeId",
+        "imageBase64String",
+    };
+  };
+
   //! Wafers Type
   bool getAllWaferTypesFromDB(std::vector<dbWaferTypeRecords> &wafersTypes,
                               const std::vector<int> &id_filters);
