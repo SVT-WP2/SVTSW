@@ -290,9 +290,10 @@ void SvtDbWaferDto::getAllWafers(const SvtDbAgent::SvtDbAgentMessage &msg,
   std::vector<int> id_filters;
   if (msgData.contains("filter"))
   {
-    if (msgData.contains("ids"))
+    const auto filterData = msgData["filter"];
+    if (filterData.contains("ids"))
     {
-      id_filters = msgData["filter"]["ids"].get<std::vector<int>>();
+      id_filters = filterData["ids"].get<std::vector<int>>();
     }
   }
   std::vector<dbWaferRecords> wafers;
@@ -537,7 +538,7 @@ void SvtDbWaferDto::updateWaferLocation(
 //========================================================================+
 void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
 {
-  dbWaferTypeRecords waferType;
+  SvtDbWaferTypeDto::dbWaferTypeRecords waferType;
   SvtDbWaferTypeDto::getWaferTypeFromDB(waferType, wafer.waferTypeId);
   std::string_view waferMap = waferType.waferMap;
 
@@ -624,7 +625,8 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
                     << ", group col: " << mapG_col_index << std::endl;
           throw std::runtime_error("invalid familyType");
         }
-        dbAsicRecords asic;
+
+        SvtDbAsicDto::dbAsicRecords asic;
         asic.waferId = wafer.id;
         asic.serialNumber = asic_SN.str();
         asic.waferMapPosition = asic_waferMapPos.str();
