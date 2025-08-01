@@ -398,11 +398,17 @@
     "BABYMOSSDie": {
       "GroupsInDie": ["Group2", "Group3", "Group4", "Group0", "Group1"]
     },
-    "MOSSDie": {
-      "GroupsInDie": [
-        "List of all groups that make the Die/Reticle [GroupX0, GroupX1, GroupX3...]"
+    "OnMOSSDie": {
+      "GroupsInDie": ["MOSS_Group32","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","MOSS_Group16"
       ]
-    }
+    },
+    "MOSSDie": {
+      "GroupsInDie": ["Group6","Group5","Group7","Group7","Group7","Group7","Group7","Group7","Group7","Group7","Group7","MOSS_Group12"
+      ]
+    },
+    "UnderMOSSDie": {
+      "GroupsInDie":["MOSS_Group32","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9","Group9"]
+   }
   },
 
   "MapGroups": {
