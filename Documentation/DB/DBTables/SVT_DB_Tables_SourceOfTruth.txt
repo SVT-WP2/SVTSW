@@ -182,8 +182,8 @@ Enum asicFamilyType {
   CE65_V2CN_22U5_SQ
   CE65_V2CN_22U5_HSQ
   AOIO_P
-  AO_IO
-  AOIO_8
+  AOIO
+  AOIO_B
   S
   DESY
   NONAME1
@@ -191,10 +191,10 @@ Enum asicFamilyType {
   NONAME2
   CE65_V1CB_15U_SQ
   dPTSN
-  dP_TS
+  dPTS
   AFISP
   AFISB
-  AF_IS
+  AFIS
   RAL_TXRX_ER1    
   TTS_5
   TTS_4
