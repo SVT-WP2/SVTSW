@@ -173,6 +173,9 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
   std::vector<dbAsicRecords> all_asics;
   if (getAllAsicsFromDB(all_asics, asic_filters))
   {
+    Singleton<SvtLogger>::instance().logInfo("Number of asics: " +
+                                             std::to_string(all_asics.size()));
+
     if (!msgData.contains("pager"))
     {
       auto empty_list = std::vector<dbAsicRecords>();
@@ -181,7 +184,7 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
     }
     else
     {
-      size_t pager_limit = msgData["pager"]["limits"];
+      size_t pager_limit = msgData["pager"]["limit"];
       size_t pager_offset = msgData["pager"]["offset"];
 
       if (all_asics.size() <= pager_offset)
@@ -200,6 +203,7 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
           all_asics.begin() + pager_offset +
           ((tail_size < pager_limit) ? tail_size : pager_limit);
       std::vector<dbAsicRecords> asics(first, last);
+      getAllAsicsReplyMsg(asics, all_asics.size(), replyMsg);
     }
   }
   return;
@@ -210,6 +214,9 @@ void SvtDbAsicDto::getAllAsicsReplyMsg(
     const std::vector<dbAsicRecords> &asics, size_t totalCount,
     SvtDbAgent::SvtDbAgentReplyMsg &msgReply)
 {
+  Singleton<SvtLogger>::instance().logInfo(
+      "Creating message with " + std::to_string(asics.size()) + " out of " +
+      std::to_string(totalCount));
   try
   {
     nlohmann::ordered_json data;
