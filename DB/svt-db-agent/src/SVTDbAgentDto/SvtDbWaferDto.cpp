@@ -575,7 +575,7 @@ void SvtDbWaferDto::createAllAsics(const dbWaferRecords &wafer)
           !SvtDbWaferTypeDto::parse_range(
               g_size, mapG_col["ASICsCoveredByGreenLayer"], coveredAsics) ||
           !SvtDbWaferTypeDto::parse_range(
-              g_size, mapG_col["MechanicallyIntergerASICs"], mecIntegerAsics))
+              g_size, mapG_col["MechanicallyIntegerASICs"], mecIntegerAsics))
       {
         std::cout << "Error creating Asic. MapGroups: " << g_row_item.second
                   << ", group col: " << mapG_col_index << std::endl;
