@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 using SvtDbAgent::Singleton;
 
@@ -379,7 +380,7 @@ bool SvtDbWaferTypeDto::checkWaferMap(const std::string_view waferMap,
                        mecDamagedAsics) ||
           !parse_range(g_size, g_col["ASICsCoveredByGreenLayer"],
                        coveredAsics) ||
-          !parse_range(g_size, g_col["MechanicallyIntergerASICs"],
+          !parse_range(g_size, g_col["MechanicallyIntegerASICs"],
                        mecIntegerAsics))
       {
         std::ostringstream ss;
@@ -391,10 +392,17 @@ bool SvtDbWaferTypeDto::checkWaferMap(const std::string_view waferMap,
       }
 
       //! check equal number of asics and properties
-      if (existingAsics.size() !=
-          (mecDamagedAsics.size() + coveredAsics.size() +
-           mecIntegerAsics.size()))
+      if ((existingAsics.size() > g_size) ||
+          (existingAsics.size() !=
+           (mecDamagedAsics.size() + coveredAsics.size() +
+            mecIntegerAsics.size())))
       {
+        Singleton<SvtLogger>::instance().logError(
+            "Total number of asics in the group: " + std::to_string(g_size) +
+            ", existing asics: " + std::to_string(existingAsics.size()) +
+            ", damaged asics: " + std::to_string(mecDamagedAsics.size()) +
+            ", covered asics: " + std::to_string(coveredAsics.size()) +
+            ", integer asics: " + std::to_string(mecIntegerAsics.size()));
         std::ostringstream ss;
         ss << "Map Group: " << g_row << " Col: " << asic_col
            << ", unmaching number of asics and properties size";
