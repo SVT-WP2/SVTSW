@@ -1,0 +1,234 @@
+Table WaferType {
+  id integer [primary key, increment]
+  name string
+  engineeringRun engineeringRun
+  foundry foundryName
+  technology waferTech
+  waferMap JSON
+}
+
+Table Wafer {
+  id integer [primary key, increment]
+  serialNumber string [unique]
+  batchNumber integer
+  thinningDate date
+  dicingDate date
+  productionDate date
+  waferTypeId integer [ref: > WaferType.id]
+}
+
+Table WaferLocation {
+  waferId integer [ref: > Wafer.id, not null]
+  generalLocation wpGeneralLocation
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  username string
+  description string
+}
+
+Table Asic {
+  id integer [primary key, increment]
+  waferId integer [ref: > Wafer.id]
+  serialNumber string [unique]
+  familyType asicFamilyType
+  waferMapPosition string
+  quality asicQuality
+}
+
+Table TestConfiguration {
+  id integer [primary key]
+  name tests
+  mode Modes
+  voltageRampRates float
+  loadCapacitance Load_cap
+  loadCurrent Load_current
+  temperature Temparature
+}
+
+Table SLDO_Test {
+  id integer [primary key]
+  name tests
+  asicId integer [ref: > Asic.id]
+  configId integer [ref: > TestConfiguration.id]
+  testValues JSON
+}
+
+Table Power_Ramp_up  {
+  id integer [primary key]
+  asicId integer [ref: > Asic.id]
+  configId integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  V_out float
+}
+
+Table PSRR  {
+  Test_ID integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  signal_amp float
+  signal_freq float
+  V_out_amp float
+  PSRR float
+
+}
+
+Table Power_ramp_rate{
+  Test_ID integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  T_ramp ramp_time
+  V_out float
+}
+
+Table DAC_scan{
+  Test_ID integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  DAC_code integer
+  V_out float
+}
+
+Table Over_current{
+  Test_ID integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  I_excess float
+  V_out float
+  I_out float
+  I_in float
+}
+
+Table Irradiation{
+  Test_ID integer [ref: > TestConfiguration.id]
+  V_in_target float
+  I_in_limit float
+  Iraddiation_dose float
+  V_out float
+  I_out float
+  I_in float
+}
+
+Enum engineeringRun {
+  ER1
+  ER2
+  ER3
+  LAS1
+  Ancillary1
+}
+
+Enum foundryName {
+  TowerSemiconductor
+  Xfab
+}
+
+Enum waferTech {
+  TPSCo65
+  Xfab110
+}
+Enum wpGeneralLocation {
+  CERN_186_R_E10
+  Prague
+  LosAlamos
+  BNL
+  RAL
+}
+Enum asicFamilyType {
+  MOSS
+  BABYMOSS
+  NKF7
+  MOSAIX
+  BabyMOSAIX
+  LAS
+  Ancillary
+  CE65_V1CG_15U_SQ
+  CE65_V2CG_15U_SQ
+  CE65_V2CG_18U_SQ
+  CE65_V2CG_18U_HSQ
+  CE65_V2CG_22U5_SQ
+  CE65_V2CG_22U5_HSQ
+  CE65_V2CN_15U_SQ
+  CE65_V2CN_18U_SQ
+  CE65_V2CN_18U_HSQ
+  CE65_V2CN_22U5_SQ
+  CE65_V2CN_22U5_HSQ
+  AOIO_P
+  AOIO
+  AOIO_B
+  S
+  DESY
+  NONAME1
+  CE65_V1CN_15U_SQ
+  NONAME2
+  CE65_V1CB_15U_SQ
+  dPTSN
+  dPTS
+  AFISP
+  AFISB
+  AFIS
+  RAL_TXRX_ER1    
+  TTS_5
+  TTS_4
+  CE65_V2CB_15U_SQ
+  CE65_V2CB_22U5_SQ
+  CE65_V2CB_18U_HSQ
+  CE65_V2CB_22U5_HSQ
+  CE65_V2CB_18U_SQ
+  NKF5
+  NKF6
+  NONAME5
+  SEU_2_INFN_BAR_GDR
+  SEU_1_INFN_BAR_GDR
+  TTS_3
+  TTS_2
+  TTS_1
+  NONAME4
+  NONAME_LONG    
+}
+Enum asicQuality {
+  MechanicallyDamaged
+  MechanicallyInteger
+  CoveredByGreenLayer
+}
+Enum tests {
+  Power_ramp_up
+  PSRR
+  Power_Ramp_rate
+  DAC_Scan
+  Overcurrent
+  Irradiation
+}
+Enum Modes {
+  Mode0
+  Mode1
+}
+Enum ramp_time {
+  100us
+  1ms
+  10ms
+  100ms
+  1s
+}
+Enum Load_cap {
+  10nF
+  100nF
+  1uF
+  10uF
+}
+Enum Load_current {
+  40mA
+  500mA
+  900mA
+}
+Enum Temparature {
+  minus_20
+  27C
+  60C
+  105C
+}
+
+
+
+
+
+
+
