@@ -34,78 +34,43 @@ Table Asic {
   quality asicQuality
 }
 
-Table TestConfiguration {
-  id integer [primary key]
-  name tests
-  mode Modes
-  voltageRampRates float
-  loadCapacitance Load_cap
-  loadCurrent Load_current
-  temperature Temparature
+Table AncillaryAsic {
+  asicId integer [ref: > Asic.id]
+  ancAsicType ancAsicType
+  location generalLocation
+  arrivalDate date
 }
 
-Table SLDO_Test {
+Table TestSetup {
+  ancAsicTestId integer [ref: > AncAsicTest.id]
+  equipment equipmentName
+  eqipmentDetails JSON
+}
+
+
+Table TestConfiguration {
   id integer [primary key]
-  name tests
+  name testTypes
+  mode modes
+  voltageRampRates float
+  loadCapacitance loadCap
+  loadCurrent loadCurrent
+  temperature temparature
+}
+
+Table AncAsicTest {
+  id integer [primary key]
+  name testTypes
   asicId integer [ref: > Asic.id]
   configId integer [ref: > TestConfiguration.id]
   testValues JSON
 }
 
-Table Power_Ramp_up  {
-  id integer [primary key]
-  asicId integer [ref: > Asic.id]
-  configId integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  V_out float
-}
-
-Table PSRR  {
-  Test_ID integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  signal_amp float
-  signal_freq float
-  V_out_amp float
-  PSRR float
-
-}
-
-Table Power_ramp_rate{
-  Test_ID integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  T_ramp ramp_time
-  V_out float
-}
-
-Table DAC_scan{
-  Test_ID integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  DAC_code integer
-  V_out float
-}
-
-Table Over_current{
-  Test_ID integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  I_excess float
-  V_out float
-  I_out float
-  I_in float
-}
-
-Table Irradiation{
-  Test_ID integer [ref: > TestConfiguration.id]
-  V_in_target float
-  I_in_limit float
-  Iraddiation_dose float
-  V_out float
-  I_out float
-  I_in float
+Enum ancAsicType {
+  NVG
+  SLDO
+  AncBrain
+  AncAsic
 }
 
 Enum engineeringRun {
@@ -132,6 +97,21 @@ Enum wpGeneralLocation {
   BNL
   RAL
 }
+
+Enum generalLocation {
+  Darsburry
+  Brunel
+  Birmingham
+  Liverpool
+}
+
+Enum equipmentName {
+  oscilloscope
+  powerSupply
+  signalGenetaor
+  SMU
+}
+
 Enum asicFamilyType {
   MOSS
   BABYMOSS
@@ -189,7 +169,7 @@ Enum asicQuality {
   MechanicallyInteger
   CoveredByGreenLayer
 }
-Enum tests {
+Enum testTypes {
   Power_ramp_up
   PSRR
   Power_Ramp_rate
@@ -197,38 +177,31 @@ Enum tests {
   Overcurrent
   Irradiation
 }
-Enum Modes {
+Enum modes {
   Mode0
   Mode1
 }
-Enum ramp_time {
+Enum rampTime {
   100us
   1ms
   10ms
   100ms
   1s
 }
-Enum Load_cap {
+Enum loadCap {
   10nF
   100nF
   1uF
   10uF
 }
-Enum Load_current {
+Enum loadCurrent {
   40mA
   500mA
   900mA
 }
-Enum Temparature {
+Enum temparature {
   minus_20
   27C
   60C
   105C
 }
-
-
-
-
-
-
-
