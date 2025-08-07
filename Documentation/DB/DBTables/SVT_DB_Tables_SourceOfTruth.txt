@@ -144,6 +144,51 @@ Table ProbeCardConfiguration {
   cleaningInterval integer
 }
 
+Table TestSetup {
+  id integer [primary key]
+  location wpGeneralLocation
+  equipment equipmentName
+  eqipmentDetails JSON
+}
+
+Table TestConfiguration {
+  id integer [primary key]
+  name testTypes
+  mode modes
+  loadCapacitance loadCap
+  loadCurrent loadCurrent
+  temperature temparature
+}
+
+Table AncAsicTest {
+  id integer [primary key]
+  name testTypes
+  asicId integer [ref: > Asic.id]
+  testSetupId integer [ref: > TestSetup.id]
+  configId integer [ref: > TestConfiguration.id]
+  testValues JSON
+}
+
+Table AncModule {
+  id integer [primary key]
+  ancAsicType ancModuleType
+  location wpGeneralLocation
+  arrivalDate date
+}
+
+Table AncModToChip {
+  moduleId integer [ref: > AncModule.id]
+  ancAsicId integer [ref: > Asic.id]
+}
+
+Table AncModuleTest {
+  id integer [primary key]
+  name AncModuleTest
+  AncModId integer [ref: > AncModule.id]
+  testSetupId integer [ref: > TestSetup.id]
+  testValues JSON
+}
+
 Enum engineeringRun {
   ER1
   ER2
@@ -169,7 +214,9 @@ Enum asicFamilyType {
   MOSAIX
   BabyMOSAIX
   LAS
-  Ancillary
+  Ancillary_NGV
+  Ancillary_SLDO
+  Ancillary_AncBrain
   CE65_V1CG_15U_SQ
   CE65_V2CG_15U_SQ
   CE65_V2CG_18U_SQ
@@ -238,6 +285,10 @@ Enum wpGeneralLocation {
   LosAlamos
   BNL
   RAL
+  Darsburry
+  Brunel
+  Birmingham
+  Liverpool
 }
 
 Enum wpSwType {
@@ -301,4 +352,56 @@ Enum contactMechanicalQuality {
 Enum waferInMachineStatus {
   Loaded
   Unloaded
+}
+
+Enum AncModuleTest {
+  TBD
+}
+
+Enum ancModuleType {
+  AncAsic
+}
+
+Enum equipmentName {
+  oscilloscope
+  powerSupply
+  signalGenetaor
+  SMU
+}
+
+Enum testTypes {
+  Power_ramp_up
+  PSRR
+  Power_Ramp_rate
+  DAC_Scan
+  Overcurrent
+  Irradiation
+}
+Enum modes {
+  Mode0
+  Mode1
+}
+Enum rampTime {
+  100us
+  1ms
+  10ms
+  100ms
+  1s
+}
+Enum loadCap {
+  10nF
+  100nF
+  1uF
+  10uF
+}
+Enum loadCurrent {
+  40mA
+  500mA
+  900mA
+}
+Enum temparature {
+  minus_20
+  27C
+  60C
+  105C
 }
