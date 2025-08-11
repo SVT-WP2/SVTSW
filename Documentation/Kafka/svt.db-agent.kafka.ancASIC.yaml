@@ -1,0 +1,856 @@
+openapi: '3.0.1'
+info:
+  title: SVT DB Agent(AncASIC part)
+  description: |
+    The Kafka communication layer definitions for `SVT DB Agent Service for Ancillary ASIC tests`. 
+    
+    ### Naming Conventions
+    - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - The reply message topic name is define by the global SVT naming conventions `*.reply`, e.g: 
+      - request message topic `svt.db-agent.request` => reply topic name `svt.db-agent.request.reply`
+    - Each message structure follows the global SVT naming conventions 
+    
+    ### POST Request Meaning
+    - Request body describes Kafka Message structure
+    - Response
+      - if response is specified, the relevant message will be emmited to the relevant *.reply topic as a reply to that message.
+    
+    ### Useful Links
+    - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
+    - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
+    
+
+  version: 0.0.1
+paths:
+  /svt.db-agent.request/GetAllTestSetups:
+    post:
+      tags:
+        - Test Setup
+      summary: Get All Test Setups
+      description: Returns list of Test setups in the reply message. Optional filter by Test Setup Ids can be applied to return exact set of Test Setups.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllTestSetupsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllTestSetupsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/CreateTestSetup:
+    post:
+      tags:
+        - Test Setup
+      summary: Create a Test Setup
+      description: Returns the newly created TestSetup in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateTestSetupMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateTestSetupReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateTestSetup:
+    post:
+      tags:
+        - Test Setup
+      summary: Update Test Setup
+      description: Returns updated TestSetup in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateTestSetupMessage'
+    
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateTestSetupReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/GetAllTestConfigurations:
+    post:
+      tags:
+        - Test Configurations
+      summary: Get All Test Configurations
+      description: Returns list of Test Configurations in the reply message. Optional filter by Test Configuration Ids can be applied to return exact set of Test Setups.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllTestConfigurationsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllTestConfigurationsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/CreateTestConfiguration:
+    post:
+      tags:
+        - Test Configurations
+      summary: Create a Test Configuration
+      description: Returns the newly created Test Configurations in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateTestConfigurationMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateTestConfigurationReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/GetAllAncAsicTest:
+    post:
+      tags:
+        - Ancillary ASIC Tests
+      summary: Get All Ancillary ASIC Tests
+      description: Returns list of Ancillary ASIC Tests in the reply message. Optional filter by Ancillary ASIC Test Ids can be applied to return exact set of Test Setups.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllAncAsicTestMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllAncAsicTestReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+  /svt.db-agent.request/CreateAncAsicTest:
+    post:
+      tags:
+        - Ancillary ASIC Tests
+      summary: Create an Ancillary ASIC Test
+      description: Returns the newly created Ancillary ASIC Test in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateAncAsicTestMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateAncAsicTestReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateAncAsicTest:
+    post:
+      tags:
+        - Ancillary ASIC Tests
+      summary: Update an Ancillary ASIC Test
+      description: Returns updated Ancillary ASIC Test in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateAncAsicTestMessage'
+    
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateAncAsicTestReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+              
+components:
+  schemas:
+    RequestMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    ReplyMessage:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        status:
+          $ref: "#/components/schemas/ReplyStatus"
+        type:
+          type: string
+        data:
+          type: object
+        error:
+          type: object
+          required:
+            - message
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+    ReplyStatus:
+      type: string
+      enum:
+        - Success
+        - BadRequest
+        - NotFound
+        - UnexpectedError
+    #
+    # Test Setup :: LIST
+    #
+    GetAllTestSetupsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllTestSetups'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Test setups ids array. If array is empty / undefined => all Test Setups will be returned.
+                  items:
+                    type: number
+    GetAllTestSetupsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllTestSetupsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TestSetupDto'
+    #
+    # TESTSETUP :: CREATE
+    #
+    CreateTestSetupMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestSetup'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/TestSetupCreateDto"
+    CreateTestSetupReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestSetupReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/TestSetupDto'
+    #
+    # TESTSETUP :: UPDATE
+    #
+    UpdateTestSetupMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateTestSetup'
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: TestSetup Id
+            update:
+              $ref: "#/components/schemas/TestSetupUpdateDto"
+    UpdateTestSetupReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateTestSetupReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/TestSetupDto'
+    #
+    # TESTCONFIGURATION :: LIST
+    #
+    GetAllTestConfigurationsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllTestConfigurations'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Test Configurations ids array. If array is empty / undefined => all Test Configurations will be returned.
+                  items:
+                    type: number
+    GetAllTestConfigurationsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllTestConfigurationsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TestConfigurationDto'
+    #
+    # TESTCONFIGURATION :: CREATE
+    #
+    CreateTestConfigurationMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestConfiguration'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/TestConfigurationCreateDto"
+    CreateTestConfigurationReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestConfigurationReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/TestConfigurationDto'
+              
+        #
+    #   
+    # ANCASICTEST :: LIST
+    #
+    GetAllAncAsicTestMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllAncAsicTests'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Anc Asic Test ids array. If array is empty / undefined => all Anc Asic Tests will be returned.
+                  items:
+                    type: number
+    GetAllAncAsicTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllAncAsicTestsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AncAsicTestDto'
+    #
+    # ANCASICTEST :: CREATE
+    #
+    CreateAncAsicTestMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateAncAsicTest'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/AncAsicTestCreateDto"
+    CreateAncAsicTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateAncAsicTestReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/AncAsicTestCreateReplyDto'
+    #
+    # ANCASICTEST :: UPDATE
+    #
+    UpdateAncAsicTestMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateAncAsicTest'
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: AncAsicTest Id
+            update:
+              $ref: "#/components/schemas/AncAsicTestUpdateDto"
+    UpdateAncAsicTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateAncAsicTestReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/AncAsicTestDto'
+    #
+    # DTOs
+    #
+    TestSetupDto:
+      type: object
+      required:
+        - id
+        - location
+        - equipment
+        - equipmentDetails
+      properties:
+        id:
+          type: number
+        location:
+          $ref: "#/components/schemas/LocationsEnum"
+        equipment:
+          $ref: "#/components/schemas/EquipmentsEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+    TestSetupCreateDto:
+      type: object
+      required:
+        - location
+        - equipment
+        - equipmentDetails
+      properties:
+        location:
+          $ref: "#/components/schemas/LocationsEnum"
+        equipment:
+          $ref: "#/components/schemas/EquipmentsEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+    TestSetupUpdateDto:
+      type: object
+      properties:
+        equipment:
+          $ref: "#/components/schemas/EquipmentsEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+    TestConfigurationDto:
+      type: object
+      required:
+        - id
+        - name
+        - mode
+        - loadCapacitance
+        - loadCurrent
+        - temperature
+      properties:
+        id:
+          type: number
+        name:
+          $ref: "#/components/schemas/NamesEnum"
+        mode:
+          $ref: "#/components/schemas/ModesEnum"
+        loadCapacitance:
+          $ref: "#/components/schemas/LoadCapacitanceEnum"
+        loadCurrent:
+          $ref: "#/components/schemas/LoadCurrentEnum"
+        temperature:
+          $ref: "#/components/schemas/TemperatureEnum"
+    TestConfigurationCreateDto:
+      type: object
+      required:
+        - name
+        - mode
+        - loadCapacitance
+        - loadCurrent
+        - temperature
+      properties:
+        name:
+          $ref: "#/components/schemas/NamesEnum"
+        mode:
+          $ref: "#/components/schemas/ModesEnum"
+        loadCapacitance:
+          $ref: "#/components/schemas/LoadCapacitanceEnum"
+        loadCurrent:
+          $ref: "#/components/schemas/LoadCurrentEnum"
+        temperature:
+          $ref: "#/components/schemas/TemperatureEnum"
+    AncAsicTestDto:
+      type: object
+      required:
+        - id
+        - name
+        - asicId
+        - testSetupId
+        - configId
+        - testValues
+      properties:
+        id:
+          type: number
+        name:
+          $ref: "#/components/schemas/NamesEnum"
+        asicId:
+          type: number
+        testSetupId:
+          type: number
+        configId:
+          type: number
+        testValues:
+          $ref: "#/components/schemas/TestValuesPH"
+    AncAsicTestCreateDto:
+      type: object
+      required:
+          - name
+          - asicId
+          - testSetupId
+          - configId
+      properties:
+        name:
+          $ref: "#/components/schemas/NamesEnum"
+        asicId:
+          type: number
+        testSetupId:
+          type: number
+        configId:
+          type: number
+    AncAsicTestCreateReplyDto:
+      type: object
+      required:
+          - name
+          - asicId
+          - testSetupId
+          - configId
+          - testValues
+      properties:
+        name:
+          $ref: "#/components/schemas/NamesEnum"
+        asicId:
+          type: number
+        testSetupId:
+          type: number
+        configId:
+          type: number
+        testValues:
+          $ref: "#/components/schemas/TestValueEnum"
+    AncAsicTestUpdateDto:
+      type: object
+      required:
+          - testValues
+      properties:
+        testValues:
+          $ref: "#/components/schemas/TestValuesPH"
+    #
+    # Enums
+    #
+    LocationsEnum:
+      type: string
+      enum:
+        - Brunel
+        - CERN_186_R_E10
+        - Prague
+        - LosAlamos
+        - BNL
+        - RAL
+        - Darsburry
+        - Birmingham
+        - Liverpool
+    EquipmentsEnum:
+      type: string
+      enum:
+        - Oscilloscope
+        - Power Supply
+        - Signal Generator
+        - SMU
+    NamesEnum:
+      type: string
+      enum:
+        - Power Ramp Up
+        - PSRR
+        - Power Ramp Rate
+        - DAC Scan
+        - Overcurrent
+        - Irradiation
+    ModesEnum:
+      type: string
+      enum:
+        - Mode0
+        - Mode1
+    LoadCapacitanceEnum:
+      type: string
+      enum:
+        - 10nF
+        - 100nF
+        - 1uF
+        - 10uF
+    LoadCurrentEnum:
+      type: string
+      enum:
+        - 40mA
+        - 500mA
+        - 900mA
+    TemperatureEnum:
+      type: string
+      enum:
+        - -20C
+        - 27C
+        - 60C
+        - 105C
+    TestValueEnum:
+      type: string
+      enum:
+        - Stringified JSON null at creation.
+    
+    #
+    # JsonPlaceHolders
+    #
+    EquipmentDetailsPH:
+      type: object
+      description: |
+        Equipment-specific details. The structure varies based on the equipment type.
+        - Oscilloscope: make, model, year, bandwidth, channels, sampling rate.
+        - Power Supply: make, model, year, maxvoltage, maxcurrent.
+        - Signal Generator: make, model, year, frequency range
+        - SMU: make, model, year,compliance voltage, source current range.
+      example:
+        bandwidth: "500MHz"
+        channels: 2
+        samplingRate: "1GS/s"
+    TestValuesPH:
+      type: object
+      description: |
+        Collection of test results across multiple electrical test measurements.
+        The structure of test data may vary depending on the test type:
+    
+        - Power Ramp Up: Evaluates initial power supply behavior.
+          Fields: vInTarget, iInLimit, vOut
+    
+        - PSRR (Power Supply Rejection Ratio): Evaluates response to power supply noise.
+          Fields: vInTarget, iInLimit, signalAmplitude, signalFrequency, vOutAmplitude, psrr
+    
+        - Power Ramp Rate: Analyzes effects of ramp-up time on output voltage.
+          Fields: vInTarget, iInLimit, tRamp, vOut
+    
+        - DAC Scan: Evaluates how DAC codes affect output voltage.
+          Fields: vInTarget, iInLimit, dacCodes (31), vOutValues (31)
+    
+        - Over Current: Tests system behavior under over-current scenarios.
+          Fields: vInTarget, iInLimit, iExcess, vOut, iOut, iIn
+    
+        - Irradiation: Measures effect of irradiation dose on electrical characteristics.
+          Fields: vInTarget, iInLimit, irradiationDose, vOut, iOut, iIn
+      properties:
+        inputs:
+          type: object
+          properties:
+            vInTarget:
+              type: number
+              description: Input voltage target (V)
+            iInLimit:
+              type: number
+              description: Input current limit (A)
+            rampRate:
+              type: number
+              description: Ramp rate (kV/s)
+            signalAmplitude:
+              type: number
+              description: Signal amplitude (V)
+            signalFrequency:
+              type: number
+              description: Signal frequency (Hz)
+            tRamp:
+              type: number
+              description: Ramp time (ms)
+            dacCodes:
+              type: array
+              items:
+                type: integer
+              description: List of 31 DAC input codes
+            iExcess:
+              type: number
+              description: Excess current injected (A)
+            irradiationDose:
+              type: number
+              description: Irradiation dose (unit TBD)
+        results:
+          type: object
+          properties:
+            vOut:
+              type: number
+              description: Output voltage (V)
+            vOutAmplitude:
+              type: number
+              description: Output voltage amplitude (V)
+            psrr:
+              type: number
+              description: Power Supply Rejection Ratio (dB)
+            vOutValues:
+              type: array
+              items:
+                type: number
+              description: List of 31 output voltages from DAC scan
+            iOut:
+              type: number
+              description: Output current (A)
+            iIn:
+              type: number
+              description: Input current measured (A)
+      example:
+        inputs:
+          vInTarget: 1.55
+          iInLimit: 1.5
+          rampRate: 3.1
+        results:
+          vOut: 1.2
+  
