@@ -50,7 +50,7 @@ file(GLOB SOURCES_DB
   "src/SVTDbAgentDto/SvtDbAsicDto.cpp"
   "src/SVTDbAgentDto/SvtDbWPMachineDto.cpp"
   "src/SVTDbAgentDto/SvtDbWPProjectDto.cpp"
-  "src/SVTDbAgentDto/SvtDbProbeCard.cpp"
+  "src/SVTDbAgentDto/SvtDbProbeCardDto.cpp"
   "src/SVTDbAgentService/SvtDbAgentConsumer.cpp"
   "src/SVTDbAgentService/SvtDbAgentProducer.cpp"
   "src/SVTDbAgentService/SvtDbAgentRequest.cpp"
