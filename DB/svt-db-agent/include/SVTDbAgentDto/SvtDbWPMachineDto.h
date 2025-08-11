@@ -70,8 +70,8 @@ namespace SvtDbWPMachineDto
   bool getAllWPMachinesFromDB(std::vector<dbWPMachineRecords> &wpmachine,
                               const std::vector<int> &id_filters);
   bool getWPMachineFromDB(dbWPMachineRecords &wpm, int id);
-  bool createWPMachineInDB(const dbWPMachineRecords &wafer);
-  bool updateWPMachineInDB(const dbWPMachineRecords &wafer);
+  bool createWPMachineInDB(const dbWPMachineRecords &wpm);
+  bool updateWPMachineInDB(const dbWPMachineRecords &wpm);
 
   //! WaferProbeMachine request/reply
   void getAllWPMachines(const SvtDbAgent::SvtDbAgentMessage &msg,
