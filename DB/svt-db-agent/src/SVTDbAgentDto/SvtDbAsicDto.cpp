@@ -187,7 +187,7 @@ void SvtDbAsicDto::getAllAsics(const SvtDbAgent::SvtDbAgentMessage &msg,
       size_t pager_limit = msgData["pager"]["limit"];
       size_t pager_offset = msgData["pager"]["offset"];
 
-      if (all_asics.size() <= pager_offset)
+      if (all_asics.size() < pager_offset)
       {
         std::ostringstream err_msg;
         err_msg << "Pager offset out of range, filtered asic size: "

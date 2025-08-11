@@ -32,6 +32,7 @@ namespace SvtDbAgent
     CreateWaferProbeProject,
     //! Probe Cards
     GetAllProbeCards,
+    CreateProbeCard,
     NotFound,
   };
 
@@ -60,6 +61,7 @@ namespace SvtDbAgent
       {CreateWaferProbeProject, "CreateWaferProbeProject"},
       //! Probe Cards
       {GetAllProbeCards, "GetAllProbeCards"},
+      {GetAllProbeCards, "CreateProbeCard"},
       //! Others
       {NotFound, "NotFound"},
   };
