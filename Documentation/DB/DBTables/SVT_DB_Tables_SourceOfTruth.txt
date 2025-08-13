@@ -146,46 +146,32 @@ Table ProbeCardConfiguration {
 
 Table TestSetup {
   id integer [primary key]
+  name string [unique]
   location wpGeneralLocation
-  equipment equipmentName
+}
+
+Table TestSetupEquipment
+{
+  testSetupId integer [ref: > TestSetup.id]
+  equipment testEquipments
   eqipmentDetails JSON
 }
 
-Table TestConfiguration {
+Table AncSLDOTestConfiguration {
   id integer [primary key]
-  name testTypes
-  mode modes
-  loadCapacitance loadCap
-  loadCurrent loadCurrent
-  temperature temparature
+  name string
+  mode ancTestModes
+  loadCapacitance ancTestLoadCap
+  loadCurrent ancTestLoadCurrent
+  temperature ancTestTemparature
 }
 
-Table AncAsicTest {
+Table AncSLDOTest {
   id integer [primary key]
-  name testTypes
+  name ancSLDOTestTypes
   asicId integer [ref: > Asic.id]
   testSetupId integer [ref: > TestSetup.id]
-  configId integer [ref: > TestConfiguration.id]
-  testValues JSON
-}
-
-Table AncModule {
-  id integer [primary key]
-  ancAsicType ancModuleType
-  location wpGeneralLocation
-  arrivalDate date
-}
-
-Table AncModToChip {
-  moduleId integer [ref: > AncModule.id]
-  ancAsicId integer [ref: > Asic.id]
-}
-
-Table AncModuleTest {
-  id integer [primary key]
-  name AncModuleTest
-  AncModId integer [ref: > AncModule.id]
-  testSetupId integer [ref: > TestSetup.id]
+  configId integer [ref: > AncSLDOTestConfiguration.id]
   testValues JSON
 }
 
@@ -214,9 +200,11 @@ Enum asicFamilyType {
   MOSAIX
   BabyMOSAIX
   LAS
-  Ancillary_NGV
-  Ancillary_SLDO
-  Ancillary_AncBrain
+  AncMPW1
+  AncMPW2
+  AncMPW3
+  AncBrain
+  AncASIC
   CE65_V1CG_15U_SQ
   CE65_V2CG_15U_SQ
   CE65_V2CG_18U_SQ
@@ -354,22 +342,14 @@ Enum waferInMachineStatus {
   Unloaded
 }
 
-Enum AncModuleTest {
-  TBD
-}
-
-Enum ancModuleType {
-  AncAsic
-}
-
-Enum equipmentName {
+Enum testEquipments {
   oscilloscope
   powerSupply
   signalGenetaor
   SMU
 }
 
-Enum testTypes {
+Enum ancSLDOTestTypes {
   Power_ramp_up
   PSRR
   Power_Ramp_rate
@@ -377,31 +357,37 @@ Enum testTypes {
   Overcurrent
   Irradiation
 }
-Enum modes {
+
+Enum ancTestModes {
   Mode0
   Mode1
 }
-Enum rampTime {
+
+Enum ancTestRampTime {
   100us
   1ms
   10ms
   100ms
   1s
 }
-Enum loadCap {
+
+Enum ancTestLoadCap {
   10nF
   100nF
   1uF
   10uF
 }
-Enum loadCurrent {
+
+Enum ancTestLoadCurrent {
   40mA
   500mA
   900mA
 }
-Enum temparature {
+
+Enum ancTestTemparature {
   minus_20
   27C
   60C
   105C
 }
+
