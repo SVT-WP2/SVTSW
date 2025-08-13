@@ -30,7 +30,11 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'MOSAIX',
   'BabyMOSAIX',
   'LAS',
-  'Ancillary',
+  'AncMPW1',
+  'AncMPW2',
+  'AncMPW3',
+  'AncBrain',
+  'AncASIC',
   'CE65_V1CG_15U_SQ',
   'CE65_V2CG_15U_SQ',
   'CE65_V2CG_18U_SQ',
@@ -98,7 +102,11 @@ CREATE TYPE "wpGeneralLocation" AS ENUM (
   'Prague',
   'LosAlamos',
   'BNL',
-  'RAL'
+  'RAL',
+  'Darsburry',
+  'Brunel',
+  'Birmingham',
+  'Liverpool'
 );
 
 CREATE TYPE "wpSwType" AS ENUM (
@@ -163,3 +171,53 @@ CREATE TYPE "waferInMachineStatus" AS ENUM (
   'Loaded',
   'Unloaded'
 );
+
+CREATE TYPE "testEquipments" AS ENUM (
+  'oscilloscope',
+  'powerSupply',
+  'signalGenetaor',
+  'SMU'
+);
+
+CREATE TYPE "ancSLDOTestTypes" AS ENUM (
+  'Power_ramp_up',
+  'PSRR',
+  'Power_Ramp_rate',
+  'DAC_Scan',
+  'Overcurrent',
+  'Irradiation'
+);
+
+CREATE TYPE "ancTestModes" AS ENUM (
+  'Mode0',
+  'Mode1'
+);
+
+CREATE TYPE "ancTestRampTime" AS ENUM (
+  '100us',
+  '1ms',
+  '10ms',
+  '100ms',
+  '1s'
+);
+
+CREATE TYPE "ancTestLoadCap" AS ENUM (
+  '10nF',
+  '100nF',
+  '1uF',
+  '10uF'
+);
+
+CREATE TYPE "ancTestLoadCurrent" AS ENUM (
+  '40mA',
+  '500mA',
+  '900mA'
+);
+
+CREATE TYPE "ancTestTemparature" AS ENUM (
+  'minus_20',
+  '27C',
+  '60C',
+  '105C'
+);
+
