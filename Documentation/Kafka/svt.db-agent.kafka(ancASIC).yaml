@@ -1,8 +1,8 @@
 openapi: '3.0.1'
 info:
-  title: SVT DB Agent(AncASIC part)
+  title: SVT DB Agent(AncASIC_SLDO part)
   description: |
-    The Kafka communication layer definitions for `SVT DB Agent Service for Ancillary ASIC tests`. 
+    The Kafka communication layer definitions for `SVT DB Agent Service for SLDO Tests`. 
     
     ### Naming Conventions
     - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
@@ -19,17 +19,11 @@ info:
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
     
-    ###Questions
-    - What is Stringified JSON? (Sring of the file path / Content of the actual JSON file)
-    
     ###Logic
     - No update message for the Test configuration because any changes to the test configuration means a different configuration.
-    - Ancillary ASIC Test
-      - CreateAncAsicTest only creates a new test instance with linked asicId, testSetupId and configId.
-      - UpdateAncAsicTest will push the test results. 
     
 
-  version: 0.0.1
+  version: 0.0.2
 paths:
   /svt.db-agent.request/GetAllTestSetups:
     post:
@@ -129,13 +123,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-                
-  /svt.db-agent.request/GetAllTestConfigurations:
+  
+  /svt.db-agent.request/GetAllTestSetupEquipment:
     post:
       tags:
-        - Test Configurations
-      summary: Get All Test Configurations
-      description: Returns list of Test Configurations in the reply message. Optional filter by Test Configuration Ids can be applied to return exact set of Test Setups.
+        - Test Setup Equipment
+      summary: Get All Test Setup Equipment
+      description: Returns list of Test Setup Equipment in the reply message. Optional filter by Test Setup Equipment Ids can be applied to return exact set of Test Setup Equipment.
       requestBody:
         content:
           application/json:
@@ -143,7 +137,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllTestConfigurationsMessage'
+                - $ref: '#/components/schemas/GetAllTestSetupEquipmentMessage'
 
         required: true
       responses:
@@ -155,7 +149,105 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllTestConfigurationsReplyMessage'
+                  - $ref: '#/components/schemas/GetAllTestSetupEquipmentReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
+  /svt.db-agent.request/CreateTestSetupEquipment:
+    post:
+      tags:
+        - Test Setup Equipment
+      summary: Create a Test Setup Equipment
+      description: Returns the newly created TestSetupEquipment in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateTestSetupEquipmentMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateTestSetupEquipmentReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+                
+  /svt.db-agent.request/UpdateTestSetupEquipment:
+    post:
+      tags:
+        - Test Setup Equipment
+      summary: Update Test Setup Equipment
+      description: Returns updated Test Setup Equipment in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateTestSetupEquipmentMessage'
+    
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateTestSetupEquipmentReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"              
+  /svt.db-agent.request/GetAllSLDOTestConfigurations:
+    post:
+      tags:
+        - SLDO Test Configurations
+      summary: Get All SLDO Test Configurations
+      description: Returns list of SLDO Test Configurations in the reply message. Optional filter by Test Configuration Ids can be applied to return exact set of Test Setups.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllSLDOTestConfigurationsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllSLDOTestConfigurationsReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -166,9 +258,9 @@ paths:
   /svt.db-agent.request/CreateTestConfiguration:
     post:
       tags:
-        - Test Configurations
+        - SLDO Test Configurations
       summary: Create a Test Configuration
-      description: Returns the newly created Test Configurations in the reply message
+      description: Returns the newly created SLDO Test Configurations in the reply message
       requestBody:
         content:
           application/json:
@@ -196,12 +288,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
                 
-  /svt.db-agent.request/GetAllAncAsicTest:
+  /svt.db-agent.request/GetAllSLDOTests:
     post:
       tags:
-        - Ancillary ASIC Tests
-      summary: Get All Ancillary ASIC Tests
-      description: Returns list of Ancillary ASIC Tests in the reply message. Optional filter by Ancillary ASIC Test Ids can be applied to return exact set of Test Setups.
+        - SLDO Tests
+      summary: Get All SLDO Tests
+      description: Returns list of SLDO Tests in the reply message. Optional filter by Ancillary ASIC Test Ids can be applied to return exact set of Test Setups.
       requestBody:
         content:
           application/json:
@@ -209,7 +301,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllAncAsicTestMessage'
+                - $ref: '#/components/schemas/GetAllSLDOTestMessage'
 
         required: true
       responses:
@@ -221,7 +313,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllAncAsicTestReplyMessage'
+                  - $ref: '#/components/schemas/GetAllSLDOTestReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -229,10 +321,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
 
-  /svt.db-agent.request/CreateAncAsicTest:
+  /svt.db-agent.request/CreateSLDOTest:
     post:
       tags:
-        - Ancillary ASIC Tests
+        - SLDO Tests
       summary: Create an Ancillary ASIC Test
       description: Returns the newly created Ancillary ASIC Test in the reply message
       requestBody:
@@ -242,7 +334,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateAncAsicTestMessage'
+                - $ref: '#/components/schemas/CreateSLDOTestMessage'
 
         required: true
       responses:
@@ -254,7 +346,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateAncAsicTestReplyMessage'
+                  - $ref: '#/components/schemas/CreateSLDOTestReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -262,38 +354,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
                 
-  /svt.db-agent.request/UpdateAncAsicTest:
-    post:
-      tags:
-        - Ancillary ASIC Tests
-      summary: Update an Ancillary ASIC Test
-      description: Returns updated Ancillary ASIC Test in the reply message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateAncAsicTestMessage'
-    
-        required: true
-      responses:
-        '200':
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateAncAsicTestReplyMessage'
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
+  
               
 components:
   schemas:
@@ -417,14 +478,16 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/TestSetupDto'
+    
     #
-    # TESTCONFIGURATION :: LIST
-    #
-    GetAllTestConfigurationsMessage:
+    # TESTSETUPEQIPMENT :: LIST
+    #         
+    
+    GetAllTestSetupEquipmentMessage:
       properties:
         type:
           type: string
-          default: 'GetAllTestConfigurations'
+          default: 'GetAllTestSetupEquipment'
         data:
           type: object
           properties:
@@ -433,14 +496,99 @@ components:
               properties:
                 ids:
                   type: array
-                  description: Test Configurations ids array. If array is empty / undefined => all Test Configurations will be returned.
+                  description: Test setups ids array. If array is empty / undefined => all Test Setup equipment will be returned.
                   items:
                     type: number
-    GetAllTestConfigurationsReplyMessage:
+    GetAllTestSetupEquipmentReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetAllTestConfigurationsReply'
+          default: 'GetAllTestSetupEquipmentReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TestSetupEquipmentDto'
+    
+    
+    #
+    # TESTSETUPEQIPMENT :: CREATE
+    #     
+    
+    CreateTestSetupEquipmentMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestSetupEquipment'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/TestSetupEquipmentCreateDto"
+    CreateTestSetupEquipmentReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateTestSetupEquipmentReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/TestSetupEquipmentDto'
+    
+    
+    #
+    # TESTSETUPEQIPMENT :: UPDATE
+    #     
+    
+    UpdateTestSetupEquipmentMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateTestSetupEquipment'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/TestSetupEquipmentUpdateDto"
+            
+    UpdateTestSetupEquipmentReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateTestSetupEquipmentReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/TestSetupEquipmentDto'
+    
+    #
+    # TESTCONFIGURATION :: LIST
+    #
+    GetAllSLDOTestConfigurationsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllSLDOTestConfigurations'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SLDO Test Configurations ids array. If array is empty / undefined => all SLDO Test Configurations will be returned.
+                  items:
+                    type: number
+    GetAllSLDOTestConfigurationsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllSLDOTestConfigurationsReply'
         data:
           type: object
           properties:
@@ -474,13 +622,13 @@ components:
               
         #
     #   
-    # ANCASICTEST :: LIST
+    # SLDOTest :: LIST
     #
-    GetAllAncAsicTestMessage:
+    GetAllSLDOTestMessage:
       properties:
         type:
           type: string
-          default: 'GetAllAncAsicTests'
+          default: 'GetAllSLDOTests'
         data:
           type: object
           properties:
@@ -492,70 +640,41 @@ components:
                   description: Anc Asic Test ids array. If array is empty / undefined => all Anc Asic Tests will be returned.
                   items:
                     type: number
-    GetAllAncAsicTestReplyMessage:
+    GetAllSLDOTestReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetAllAncAsicTestsReply'
+          default: 'GetAllSLDOTestsReply'
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/AncAsicTestDto'
+                $ref: '#/components/schemas/SLDOTestDto'
     #
-    # ANCASICTEST :: CREATE
+    # SLDOTest :: CREATE
     #
-    CreateAncAsicTestMessage:
+    CreateSLDOTestMessage:
       properties:
         type:
           type: string
-          default: 'CreateAncAsicTest'
+          default: 'CreateSLDOTest'
         data:
           type: object
           properties:
             create:
-              $ref: "#/components/schemas/AncAsicTestCreateDto"
-    CreateAncAsicTestReplyMessage:
+              $ref: "#/components/schemas/SLDOTestCreateDto"
+    CreateSLDOTestReplyMessage:
       properties:
         type:
           type: string
-          default: 'CreateAncAsicTestReply'
+          default: 'CreateSLDOTestReply'
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/AncAsicTestCreateReplyDto'
-    #
-    # ANCASICTEST :: UPDATE
-    #
-    UpdateAncAsicTestMessage:
-      properties:
-        type:
-          type: string
-          default: 'UpdateAncAsicTest'
-        data:
-          type: object
-          required:
-            - id
-            - update
-          properties:
-            id:
-              type: number
-              description: AncAsicTest Id
-            update:
-              $ref: "#/components/schemas/AncAsicTestUpdateDto"
-    UpdateAncAsicTestReplyMessage:
-      properties:
-        type:
-          type: string
-          default: 'UpdateAncAsicTestReply'
-        data:
-          type: object
-          properties:
-            entity:
-              $ref: '#/components/schemas/AncAsicTestDto'
+              $ref: '#/components/schemas/SLDOTestDto'
     #
     # DTOs
     #
@@ -563,47 +682,93 @@ components:
       type: object
       required:
         - id
+        - name
         - location
         - equipment
         - equipmentDetails
       properties:
         id:
           type: number
+        name:
+          type: string
         location:
           $ref: "#/components/schemas/LocationsEnum"
         equipment:
-          $ref: "#/components/schemas/EquipmentsEnum"
+          $ref: "#/components/schemas/EquipmentEnum"
         equipmentDetails:
           $ref: "#/components/schemas/EquipmentDetailsPH"
     TestSetupCreateDto:
       type: object
       required:
+        - name
         - location
-        - equipment
-        - equipmentDetails
       properties:
         location:
           $ref: "#/components/schemas/LocationsEnum"
         equipment:
-          $ref: "#/components/schemas/EquipmentsEnum"
+          $ref: "#/components/schemas/EquipmentEnum"
         equipmentDetails:
           $ref: "#/components/schemas/EquipmentDetailsPH"
       example:
         location: "A value from Enum wpGeneralLocation"
         equipment: "A value from Enum equipmentName" 
-        equipmentDetails: 'Equipment details JSON file location/Stringified json format(Example for oscilloscope equipment details "{"bandwidth":"500MHz","channels":2,"samplingRate":"1GSs"}")'
+        equipmentDetails: 'Stringified json format'
       
         
     TestSetupUpdateDto:
       type: object
       properties:
         equipment:
-          $ref: "#/components/schemas/EquipmentsEnum"
+          $ref: "#/components/schemas/EquipmentEnum"
         equipmentDetails:
           $ref: "#/components/schemas/EquipmentDetailsPH"
       example:
         equipment: "A value from equipmentEnum" 
-        equipmentDetails: 'Equipment details JSON file location/Stringified json format(Example for oscilloscope equipment details "{"bandwidth":"500MHz","channels":2,"samplingRate":"1GSs"}")'
+        equipmentDetails: 'Stringified json format'
+        
+    TestSetupEquipmentDto:
+      type: object
+      required:
+        - id
+        - equipment
+        - equipmentDetails
+      properties:
+        id:
+          type: number
+        equipment:
+          $ref: "#/components/schemas/EquipmentEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+    
+    TestSetupEquipmentCreateDto:
+      type: object
+      required:
+        - equipment
+        - equipmentDetails
+      properties:
+        equipment:
+          $ref: "#/components/schemas/EquipmentEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+      example:
+        equipment: "A value from Enum equipmentName" 
+        equipmentDetails: 'Stringified json format'
+    
+    
+    TestSetupEquipmentUpdateDto:
+      type: object
+      required:
+        - equipment
+        - equipmentDetails
+      properties:
+        equipment:
+          $ref: "#/components/schemas/EquipmentEnum"
+        equipmentDetails:
+          $ref: "#/components/schemas/EquipmentDetailsPH"
+      example:
+        equipment: "A value from Enum equipmentName" 
+        equipmentDetails: 'Stringified json format'
+    
     TestConfigurationDto:
       type: object
       required:
@@ -626,6 +791,7 @@ components:
           $ref: "#/components/schemas/LoadCurrentEnum"
         temperature:
           $ref: "#/components/schemas/TemperatureEnum"
+    
     TestConfigurationCreateDto:
       type: object
       required:
@@ -651,7 +817,7 @@ components:
         loadCapacitance: "A value from Enum loadCapacitance"
         loadCurrent: "A value from Enum loadCurrent"
         temperature: "A value from Enum temparature"
-    AncAsicTestDto:
+    SLDOTestDto:
       type: object
       required:
         - id
@@ -673,13 +839,14 @@ components:
           type: number
         testValues:
           $ref: "#/components/schemas/TestValuesPH"
-    AncAsicTestCreateDto:
+    SLDOTestCreateDto:
       type: object
       required:
           - name
           - asicId
           - testSetupId
           - configId
+          - testValues
       properties:
         name:
           $ref: "#/components/schemas/NamesEnum"
@@ -689,7 +856,19 @@ components:
           type: number
         configId:
           type: number
-    AncAsicTestCreateReplyDto:
+        testValues:
+          type: string
+      example:
+        testValues: 'Example testValues ({
+        "inputs": {
+          "vInTarget(V)": 1.55,
+          "iInLimit(A)": 1.5,
+          "rampRate(kV/s)": 3.1
+        },
+        "results": {
+          "vOut(V)": 1.2
+        })'
+    SLDOTestCreateReplyDto:
       type: object
       required:
           - name
@@ -708,24 +887,13 @@ components:
           type: number
         testValues:
           $ref: "#/components/schemas/TestValueEnum"
-    AncAsicTestUpdateDto:
+    SLDOTestUpdateDto:
       type: object
       required:
           - testValues
       properties:
         testValues:
           $ref: "#/components/schemas/TestValuesPH"
-      example:
-        testValues: 'Equipment details JSON file location/Stringified json format(Example for Power ramp up testValues {
-        "inputs": {
-          "vInTarget(V)": 1.55,
-          "iInLimit(A)": 1.5,
-          "rampRate(kV/s)": 3.1
-        },
-        "results": {
-          "vOut(V)": 1.2
-        }
-      })'
     #
     # Enums
     #
@@ -741,7 +909,7 @@ components:
         - Darsburry
         - Birmingham
         - Liverpool
-    EquipmentsEnum:
+    EquipmentEnum:
       type: string
       enum:
         - Oscilloscope
@@ -799,6 +967,10 @@ components:
         - Signal Generator: make, model, year, frequency range
         - SMU: make, model, year,compliance voltage, source current range.
       example:
+        make: Teledyne LeCroy
+        model: LeCroy1234
+        year: 2025
+        serialNumber: 0 
         bandwidth: "500MHz"
         channels: 2
         samplingRate: "1GS/s"
