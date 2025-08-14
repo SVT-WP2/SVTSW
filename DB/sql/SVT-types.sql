@@ -179,7 +179,7 @@ CREATE TYPE "testEquipments" AS ENUM (
   'SMU'
 );
 
-CREATE TYPE "ancSLDOTestTypes" AS ENUM (
+CREATE TYPE "SLDOTestTypes" AS ENUM (
   'Power_ramp_up',
   'PSRR',
   'Power_Ramp_rate',
@@ -188,12 +188,12 @@ CREATE TYPE "ancSLDOTestTypes" AS ENUM (
   'Irradiation'
 );
 
-CREATE TYPE "ancTestModes" AS ENUM (
+CREATE TYPE "SLDOTestModes" AS ENUM (
   'Mode0',
   'Mode1'
 );
 
-CREATE TYPE "ancTestRampTime" AS ENUM (
+CREATE TYPE "SLDOTestRampTime" AS ENUM (
   '100us',
   '1ms',
   '10ms',
@@ -201,20 +201,20 @@ CREATE TYPE "ancTestRampTime" AS ENUM (
   '1s'
 );
 
-CREATE TYPE "ancTestLoadCap" AS ENUM (
+CREATE TYPE "SLDOTestLoadCap" AS ENUM (
   '10nF',
   '100nF',
   '1uF',
   '10uF'
 );
 
-CREATE TYPE "ancTestLoadCurrent" AS ENUM (
+CREATE TYPE "SLDOTestLoadCurrent" AS ENUM (
   '40mA',
   '500mA',
   '900mA'
 );
 
-CREATE TYPE "ancTestTemparature" AS ENUM (
+CREATE TYPE "SLDOTestTemparature" AS ENUM (
   'minus_20',
   '27C',
   '60C',
