@@ -157,21 +157,33 @@ Table TestSetupEquipment
   eqipmentDetails JSON
 }
 
-Table AncSLDOTestConfiguration {
+Table Chips{
   id integer [primary key]
-  name string
-  mode ancTestModes
-  loadCapacitance ancTestLoadCap
-  loadCurrent ancTestLoadCurrent
-  temperature ancTestTemparature
+  asicId integer [ref: > Asic.id]
+  location wpGeneralLocation
 }
 
-Table AncSLDOTest {
+Table SLDO{
   id integer [primary key]
-  name ancSLDOTestTypes
-  asicId integer [ref: > Asic.id]
+  chipId integer [ref: > Chips.id]
+  serialNumber string
+}
+
+Table SLDOTestConfiguration {
+  id integer [primary key]
+  name string
+  mode SLDOTestModes
+  loadCapacitance SLDOTestLoadCap
+  loadCurrent SLDOTestLoadCurrent
+  temperature SLDOTestTemparature
+}
+
+Table SLDOTest {
+  id integer [primary key]
+  name SLDOTestTypes
+  SLDOid integer [ref: > SLDO.id]
   testSetupId integer [ref: > TestSetup.id]
-  configId integer [ref: > AncSLDOTestConfiguration.id]
+  configId integer [ref: > SLDOTestConfiguration.id]
   testValues JSON
 }
 
@@ -349,7 +361,7 @@ Enum testEquipments {
   SMU
 }
 
-Enum ancSLDOTestTypes {
+Enum SLDOTestTypes {
   Power_ramp_up
   PSRR
   Power_Ramp_rate
@@ -358,12 +370,12 @@ Enum ancSLDOTestTypes {
   Irradiation
 }
 
-Enum ancTestModes {
+Enum SLDOTestModes {
   Mode0
   Mode1
 }
 
-Enum ancTestRampTime {
+Enum SLDOTestRampTime {
   100us
   1ms
   10ms
@@ -371,20 +383,20 @@ Enum ancTestRampTime {
   1s
 }
 
-Enum ancTestLoadCap {
+Enum SLDOTestLoadCap {
   10nF
   100nF
   1uF
   10uF
 }
 
-Enum ancTestLoadCurrent {
+Enum SLDOTestLoadCurrent {
   40mA
   500mA
   900mA
 }
 
-Enum ancTestTemparature {
+Enum SLDOTestTemparature {
   minus_20
   27C
   60C
