@@ -49,7 +49,7 @@ namespace SvtDbAgent
     virtual void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
                                        SvtDbAgentReplyMsg &msgReply);
 
-    virtual void parseData(const nlohmann::json &entry_j, SvtDbEntry &entry) = 0;
+    virtual void parseData(const nlohmann::json &entry_j, SvtDbEntry &entry);
     virtual void parseFilter(const nlohmann::json &msgData,
                              SvtDbFilters &filters);
 
