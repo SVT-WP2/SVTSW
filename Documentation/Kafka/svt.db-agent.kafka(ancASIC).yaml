@@ -684,8 +684,6 @@ components:
         - id
         - name
         - location
-        - equipment
-        - equipmentDetails
       properties:
         id:
           type: number
@@ -693,38 +691,30 @@ components:
           type: string
         location:
           $ref: "#/components/schemas/LocationsEnum"
-        equipment:
-          $ref: "#/components/schemas/EquipmentEnum"
-        equipmentDetails:
-          $ref: "#/components/schemas/EquipmentDetailsPH"
+    
     TestSetupCreateDto:
       type: object
       required:
         - name
         - location
       properties:
+        name:
+          type: string
         location:
           $ref: "#/components/schemas/LocationsEnum"
-        equipment:
-          $ref: "#/components/schemas/EquipmentEnum"
-        equipmentDetails:
-          $ref: "#/components/schemas/EquipmentDetailsPH"
-      example:
-        location: "A value from Enum wpGeneralLocation"
-        equipment: "A value from Enum equipmentName" 
-        equipmentDetails: 'Stringified json format'
+
       
         
     TestSetupUpdateDto:
       type: object
+      required:
+        - name
+        - location
       properties:
-        equipment:
-          $ref: "#/components/schemas/EquipmentEnum"
-        equipmentDetails:
-          $ref: "#/components/schemas/EquipmentDetailsPH"
-      example:
-        equipment: "A value from equipmentEnum" 
-        equipmentDetails: 'Stringified json format'
+        name:
+          type: string
+        location:
+          $ref: "#/components/schemas/LocationsEnum"
         
     TestSetupEquipmentDto:
       type: object
