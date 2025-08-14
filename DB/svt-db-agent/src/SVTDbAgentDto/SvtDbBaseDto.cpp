@@ -6,6 +6,7 @@
  */
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -193,6 +194,34 @@ void SvtDbAgent::SvtDbBaseDto::parseFilter(const nlohmann::json &msgData,
       filters.intFilters.insert(
           {"id", filterData["ids"].get<std::vector<int>>()});
     }
+  }
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
+                                         SvtDbEntry &entry)
+{
+  //! remove id record
+  std::vector<std::string> AdjIntColName(GetIntColNames().begin(),
+                                         GetIntColNames().end());
+  std::vector<std::string>::const_iterator iter =
+      std::find(AdjIntColName.begin(), AdjIntColName.end(), "id");
+  if (iter != AdjIntColName.end())
+  {
+    AdjIntColName.erase(iter);
+  }
+  if (entry_j.size() != (AdjIntColName.size() + GetStringColNames().size()))
+  {
+    throw std::invalid_argument("insufficient number of parameters");
+  }
+
+  for (const auto &colName : AdjIntColName)
+  {
+    entry.int_values[colName] = entry_j.value(colName, -1);
+  }
+  for (const auto &colName : GetStringColNames())
+  {
+    entry.string_values[colName] = entry_j.value(colName, "");
   }
 }
 
