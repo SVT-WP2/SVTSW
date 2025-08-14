@@ -18,6 +18,7 @@
 #include "SVTDbAgentService/SvtDbAgentRequest.h"
 #include "SVTUtilities/SvtLogger.h"
 
+#include "SVTUtilities/SvtUtilities.h"
 #include "librdkafka/rdkafkacpp.h"
 
 #include <cstring>
@@ -224,53 +225,57 @@ void SvtDbAgentService::parseMsg(
           break;
           //! Get all wafer types
         case SvtDbAgent::RequestType::GetAllWaferTypes:
-          SvtDbWaferTypeDto::getAllWaferTypes(msg, replyMsg);
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance()
+              .getAllEntries(msg, replyMsg);
           break;
         //! Create wafer type
         case SvtDbAgent::RequestType::CreateWaferType:
-          SvtDbWaferTypeDto::createWaferType(msg, replyMsg);
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance()
+              .createEntry(msg, replyMsg);
           break;
-        //! Get all wafers
-        case SvtDbAgent::RequestType::GetAllWafers:
-          SvtDbWaferDto::getAllWafers(msg, replyMsg);
-          break;
-        //! Create wafer
-        case SvtDbAgent::RequestType::CreateWafer:
-          SvtDbWaferDto::createWafer(msg, replyMsg);
-          break;
-        //! Update wafer
-        case SvtDbAgent::RequestType::UpdateWafer:
-          SvtDbWaferDto::updateWafer(msg, replyMsg);
-          break;
-        //! UpdateWaferLocation
-        case SvtDbAgent::RequestType::UpdateWaferLocation:
-          SvtDbWaferDto::updateWaferLocation(msg, replyMsg);
-          break;
-        //! getAllAsics
-        case SvtDbAgent::RequestType::GetAllAsics:
-          SvtDbAsicDto::getAllAsics(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateAsic:
-          SvtDbAsicDto::createAsic(msg, replyMsg);
-          break;
+        // //! Get all wafers
+        // case SvtDbAgent::RequestType::GetAllWafers:
+        //   SvtDbWaferDto::getAllWafers(msg, replyMsg);
+        //   break;
+        // //! Create wafer
+        // case SvtDbAgent::RequestType::CreateWafer:
+        //   SvtDbWaferDto::createWafer(msg, replyMsg);
+        //   break;
+        // //! Update wafer
+        // case SvtDbAgent::RequestType::UpdateWafer:
+        //   SvtDbWaferDto::updateWafer(msg, replyMsg);
+        //   break;
+        // //! UpdateWaferLocation
+        // case SvtDbAgent::RequestType::UpdateWaferLocation:
+        //   SvtDbWaferDto::updateWaferLocation(msg, replyMsg);
+        //   break;
+        // //! getAllAsics
+        // case SvtDbAgent::RequestType::GetAllAsics:
+        //   SvtDbAsicDto::getAllAsics(msg, replyMsg);
+        //   break;
+        // case SvtDbAgent::RequestType::CreateAsic:
+        //   SvtDbAsicDto::createAsic(msg, replyMsg);
+        //   break;
         case SvtDbAgent::RequestType::GetAllProbeCards:
-          SvtDbProbeCardDto::getAllProbeCards(msg, replyMsg);
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
+              .getAllEntries(msg, replyMsg);
           break;
         case SvtDbAgent::RequestType::CreateProbeCard:
-          SvtDbProbeCardDto::createProbeCard(msg, replyMsg);
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
+              .createEntry(msg, replyMsg);
           break;
-        case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
-          SvtDbWPMachineDto::getAllWPMachines(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateWaferProbeMachine:
-          SvtDbWPMachineDto::createWPMachine(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
-          SvtDbWPProjectDto::getAllWPProjects(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateWaferProbeProject:
-          SvtDbWPProjectDto::createWPProject(msg, replyMsg);
-          break;
+        // case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
+        //   SvtDbWPMachineDto::getAllWPMachines(msg, replyMsg);
+        //   break;
+        // case SvtDbAgent::RequestType::CreateWaferProbeMachine:
+        //   SvtDbWPMachineDto::createWPMachine(msg, replyMsg);
+        //   break;
+        // case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
+        //   SvtDbWPProjectDto::getAllWPProjects(msg, replyMsg);
+        //   break;
+        // case SvtDbAgent::RequestType::CreateWaferProbeProject:
+        //   SvtDbWPProjectDto::createWPProject(msg, replyMsg);
+        //   break;
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
