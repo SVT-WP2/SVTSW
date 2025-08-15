@@ -264,18 +264,22 @@ void SvtDbAgentService::parseMsg(
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
               .createEntry(msg, replyMsg);
           break;
-        // case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
-        //   SvtDbWPMachineDto::getAllWPMachines(msg, replyMsg);
-        //   break;
-        // case SvtDbAgent::RequestType::CreateWaferProbeMachine:
-        //   SvtDbWPMachineDto::createWPMachine(msg, replyMsg);
-        //   break;
-        // case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
-        //   SvtDbWPProjectDto::getAllWPProjects(msg, replyMsg);
-        //   break;
-        // case SvtDbAgent::RequestType::CreateWaferProbeProject:
-        //   SvtDbWPProjectDto::createWPProject(msg, replyMsg);
-        //   break;
+        case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
+              .getAllEntries(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::CreateWaferProbeMachine:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
+              .createEntry(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance()
+              .getAllEntries(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::CreateWaferProbeProject:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance()
+              .createEntry(msg, replyMsg);
+          break;
         //! Not Found
         case SvtDbAgent::RequestType::NotFound:
         default:
