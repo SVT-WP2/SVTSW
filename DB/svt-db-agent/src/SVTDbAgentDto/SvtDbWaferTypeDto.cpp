@@ -6,7 +6,6 @@
  */
 
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
@@ -18,6 +17,7 @@
 #include <string>
 
 using SvtDbAgent::Singleton;
+
 //========================================================================+
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {

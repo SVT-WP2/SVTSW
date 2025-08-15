@@ -6,18 +6,6 @@
  */
 
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
-// #include "SVTDb/SvtDbInterface.h"
-// #include "SVTDb/sqlmapi.h"
-// #include "SVTDbAgentDto/SvtDbEnumDto.h"
-// #include "SVTDbAgentService/SvtDbAgentMessage.h"
-// #include "SVTUtilities/SvtLogger.h"
-// #include "SVTUtilities/SvtUtilities.h"
-
-// #include <algorithm>
-// #include <sstream>
-// #include <stdexcept>
-
-// using SvtDbAgent::Singleton;
 
 //========================================================================+
 SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()

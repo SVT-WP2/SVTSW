@@ -292,7 +292,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
   //! create entry in DB
   if (!createEntryInDB(entry))
   {
-    throw std::runtime_error("Wafer type was not created");
+    throw std::runtime_error("Entry was not created in " + GetTableName());
     return;
   }
 
