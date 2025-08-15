@@ -8,89 +8,57 @@
  * @brief Svt Db wafer probe machine DTO
  * */
 
-#include <vector>
-
-#include <nlohmann/json.hpp>
+#include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
+
+  class SvtDbWaferLoadedInMachine : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWaferLoadedInMachine();
+    ~SvtDbWaferLoadedInMachine() = default;
+  };
+
+  class SvtDbWPMachineDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWPMachineDto();
+    ~SvtDbWPMachineDto() = default;
+
+   private:
+  };
+
+  // namespace SvtDbWPMachineDto
+  // {
+  //   //! WaferProbeMachine in DB
+  //   bool getAllWPMachinesFromDB(std::vector<dbWPMachineRecords> &wpmachine,
+  //                               const std::vector<int> &id_filters);
+  //   bool getWPMachineFromDB(dbWPMachineRecords &wpm, int id);
+  //   bool createWPMachineInDB(const dbWPMachineRecords &wpm);
+  //   bool updateWPMachineInDB(const dbWPMachineRecords &wpm);
+  //
+  //   //! WaferProbeMachine request/reply
+  //   void getAllWPMachines(const SvtDbAgent::SvtDbAgentMessage &msg,
+  //                         SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+  //
+  //   void createWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
+  //                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+  //
+  //   void updateWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
+  //                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+  //
+  //   // void updateWaferLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
+  //   //                          SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+  //
+  //   void getAllWPMachinesReplyMsg(const std::vector<dbWPMachineRecords>
+  //   &wpMachines,
+  //                                 SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+  //
+  //   void createWPMachineReplyMsg(const dbWPMachineRecords &wpm,
+  //                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+  // };  // namespace SvtDbWPMachineDto
 };  // namespace SvtDbAgent
-
-//! Wafer
-using dbWPMachineRecords = struct dbWPMachineRecords
-{
-  int id = -1;
-  std::string serialNumber;
-  std::string name;
-  std::string hostName;
-  std::string connectionType;
-  int connectionPort = -1;
-  std::string generalLocation;
-  std::string software;
-  std::string swVersion;
-  std::string vendor;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "id",
-      "serialNumber",
-      "name",
-      "hostName",
-      "connectionType",
-      "connectionPort",
-      "generalLocation",
-      "software",
-      "swVersion",
-      "vendor",
-  };
-};
-
-//! WaferLocation
-using dbWaferLoadedInMachine = struct dbWaferLoadedInMachine
-{
-  int machineId = -1;
-  int waferId = -1;
-  std::string date;
-  std::string username;
-  std::string status;
-
-  static constexpr std::initializer_list<const char *> val_names = {
-      "machineId",
-      "waferId",
-      "date",
-      "username",
-      "status",
-  };
-};
-
-namespace SvtDbWPMachineDto
-{
-  //! WaferProbeMachine in DB
-  bool getAllWPMachinesFromDB(std::vector<dbWPMachineRecords> &wpmachine,
-                              const std::vector<int> &id_filters);
-  bool getWPMachineFromDB(dbWPMachineRecords &wpm, int id);
-  bool createWPMachineInDB(const dbWPMachineRecords &wpm);
-  bool updateWPMachineInDB(const dbWPMachineRecords &wpm);
-
-  //! WaferProbeMachine request/reply
-  void getAllWPMachines(const SvtDbAgent::SvtDbAgentMessage &msg,
-                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-
-  void createWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
-                       SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-
-  void updateWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
-                       SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-
-  // void updateWaferLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
-  //                          SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-
-  void getAllWPMachinesReplyMsg(const std::vector<dbWPMachineRecords> &wpMachines,
-                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
-
-  void createWPMachineReplyMsg(const dbWPMachineRecords &wpm,
-                               SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
-};  // namespace SvtDbWPMachineDto
-
 #endif  //! SVT_DB_WAFER_DTO_H
