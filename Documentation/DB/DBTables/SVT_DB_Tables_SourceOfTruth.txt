@@ -14,6 +14,7 @@ Table Wafer {
   thinningDate date
   dicingDate date
   productionDate date
+  generallocation wpGeneralLocation
   waferTypeId integer [ref: > WaferType.id]
 }
 
@@ -402,4 +403,3 @@ Enum SLDOTestTemparature {
   60C
   105C
 }
-
