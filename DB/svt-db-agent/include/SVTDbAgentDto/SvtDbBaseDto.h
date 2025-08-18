@@ -22,7 +22,7 @@ namespace SvtDbAgent
   struct SvtDbEntry
   {
     std::map<const std::string, int> int_values;
-    std::map<const std::string, std::string> string_values;
+    std::map<const std::string, std::string> str_values;
   };
 
   struct SvtDbFilters

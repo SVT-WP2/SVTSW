@@ -77,6 +77,12 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     }
   }
 
+  if (std::find(allColumns.begin(), allColumns.end(), "id") !=
+      allColumns.end())
+  {
+    query.setOrderById(true);
+  }
+
   try
   {
     vector<vector<MultiBase *>> rows;
@@ -101,7 +107,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
         else if (std::find(GetStrColNames().begin(), GetStrColNames().end(),
                            colName) != GetStrColNames().end())
         {
-          entry.string_values[colName] =
+          entry.str_values[colName] =
               (row.at(colNameId)) ? row.at(colNameId)->getString() : "";
         }
         else
@@ -158,19 +164,17 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
   //! checkinput values and Add columns & values
   for (const auto &item : entry.int_values)
   {
-    if (item.second < 0)
+    if (item.second >= 0)
     {
-      return false;
+      insert.addColumnAndValue(item.first, item.second);
     }
-    insert.addColumnAndValue(item.first, item.second);
   }
-  for (const auto &item : entry.string_values)
+  for (const auto &item : entry.str_values)
   {
-    if (item.second.empty())
+    if (!item.second.empty())
     {
-      return false;
+      insert.addColumnAndValue(item.first, item.second);
     };
-    insert.addColumnAndValue(item.first, item.second);
   }
 
   if (!insert.doInsert())
@@ -205,7 +209,7 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
     update.addColumnAndValue(item.first, item.second);
     ++totUpdateParameters;
   }
-  for (const auto &item : entry.string_values)
+  for (const auto &item : entry.str_values)
   {
     if (item.second.empty())
     {
@@ -278,11 +282,11 @@ void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
 
   for (const auto &colName : AdjIntColName)
   {
-    entry.int_values[colName] = entry_j.value(colName, -1);
+    SvtDbAgent::get_v(entry_j, colName.c_str(), entry.int_values[colName]);
   }
   for (const auto &colName : GetStrColNames())
   {
-    entry.string_values[colName] = entry_j.value(colName, "");
+    SvtDbAgent::get_v(entry_j, colName.c_str(), entry.str_values[colName]);
   }
 }
 
@@ -302,7 +306,7 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
       {
         entry_j[item.first] = item.second;
       }
-      for (const auto &item : entry.string_values)
+      for (const auto &item : entry.str_values)
       {
         entry_j[item.first] = item.second;
       }
@@ -397,7 +401,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
     }
     else if (value.is_string())
     {
-      entry.string_values[key] = value;
+      entry.str_values[key] = value;
     }
     else
     {
@@ -434,7 +438,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntryReplyMsg(
     {
       entry_j[item.first] = item.second;
     }
-    for (const auto &item : entry.string_values)
+    for (const auto &item : entry.str_values)
     {
       entry_j[item.first] = item.second;
     }
