@@ -233,22 +233,26 @@ void SvtDbAgentService::parseMsg(
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance()
               .createEntry(msg, replyMsg);
           break;
-        // //! Get all wafers
-        // case SvtDbAgent::RequestType::GetAllWafers:
-        //   SvtDbWaferDto::getAllWafers(msg, replyMsg);
-        //   break;
-        // //! Create wafer
-        // case SvtDbAgent::RequestType::CreateWafer:
-        //   SvtDbWaferDto::createWafer(msg, replyMsg);
-        //   break;
-        // //! Update wafer
-        // case SvtDbAgent::RequestType::UpdateWafer:
-        //   SvtDbWaferDto::updateWafer(msg, replyMsg);
-        //   break;
-        // //! UpdateWaferLocation
-        // case SvtDbAgent::RequestType::UpdateWaferLocation:
-        //   SvtDbWaferDto::updateWaferLocation(msg, replyMsg);
-        //   break;
+        //! Get all wafers
+        case SvtDbAgent::RequestType::GetAllWafers:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
+              .getAllEntries(msg, replyMsg);
+          break;
+        //! Create wafer
+        case SvtDbAgent::RequestType::CreateWafer:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
+              .createEntry(msg, replyMsg);
+          break;
+        //! Update wafer
+        case SvtDbAgent::RequestType::UpdateWafer:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
+              .updateEntry(msg, replyMsg);
+          break;
+        //! UpdateWaferLocation
+        case SvtDbAgent::RequestType::UpdateWaferLocation:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance()
+              .updateEntry(msg, replyMsg);
+          break;
         //! getAllAsics
         case SvtDbAgent::RequestType::GetAllAsics:
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance()

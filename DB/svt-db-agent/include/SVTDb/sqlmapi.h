@@ -48,10 +48,13 @@ class SimpleQuery
   }
   void addWhereIn(string columnName, vector<int> values);
 
+  void setOrderById(const bool order) { mOrderById = order; }
+
  protected:
   string mTableName;
   vector<string> mColumnNames;
   vector<string> mWhereClauses;
+  bool mOrderById = false;
 };
 
 bool doGenericUpdate(string insertString);

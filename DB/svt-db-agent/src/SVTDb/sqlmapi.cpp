@@ -126,6 +126,10 @@ void SimpleQuery::doQuery(vector<vector<MultiBase *>> &rows)
   {
     queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
   }
+  if (mOrderById)
+  {
+    queryString += " ORDER BY id ";
+  }
   return doGenericQuery(queryString, rows);
 }
 
