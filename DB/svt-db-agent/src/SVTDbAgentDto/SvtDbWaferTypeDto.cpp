@@ -23,11 +23,11 @@ SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {
   SetTableName("WaferType");
   AddIntColName("id");
-  AddStringColName("name");
-  AddStringColName("engineeringRun");
-  AddStringColName("foundry");
-  AddStringColName("technology");
-  AddStringColName("waferMap");
+  AddStrColName("name");
+  AddStrColName("engineeringRun");
+  AddStrColName("foundry");
+  AddStrColName("technology");
+  AddStrColName("waferMap");
 }
 
 //========================================================================+

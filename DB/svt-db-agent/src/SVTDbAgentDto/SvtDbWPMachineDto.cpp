@@ -14,14 +14,14 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   SetTableName("WaferProbeMachine");
   AddIntColName("id");
   AddIntColName("connectionPort");
-  AddStringColName("serialNumber");
-  AddStringColName("name");
-  AddStringColName("hostName");
-  AddStringColName("connectionType");
-  AddStringColName("generalLocation");
-  AddStringColName("software");
-  AddStringColName("swVersion");
-  AddStringColName("vendor");
+  AddStrColName("serialNumber");
+  AddStrColName("name");
+  AddStrColName("hostName");
+  AddStrColName("connectionType");
+  AddStrColName("generalLocation");
+  AddStrColName("software");
+  AddStrColName("swVersion");
+  AddStrColName("vendor");
 }
 
 //========================================================================+
@@ -30,7 +30,7 @@ SvtDbAgent::SvtDbWaferLoadedInMachine::SvtDbWaferLoadedInMachine()
   SetTableName("");
   AddIntColName("machineId");
   AddIntColName("waferId");
-  AddStringColName("date");
-  AddStringColName("username");
-  AddStringColName("status");
+  AddStrColName("date");
+  AddStrColName("username");
+  AddStrColName("status");
 }
