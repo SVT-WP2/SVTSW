@@ -27,7 +27,8 @@ namespace SvtDbAgent
 
   struct SvtDbFilters
   {
-    std::map<std::string, std::vector<int>> intFilters;
+    std::vector<int> ids;
+    std::map<std::string, int> intFilters;
     std::map<std::string, std::string> strFilters;
   };
 
@@ -49,7 +50,8 @@ namespace SvtDbAgent
                                SvtDbAgentReplyMsg &replyMsg);
 
     virtual void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
-                                       SvtDbAgentReplyMsg &msgReply);
+                                       SvtDbAgentReplyMsg &msgReply,
+                                       int totalCount = -1);
 
     virtual void parseData(const nlohmann::json &entry_j, SvtDbEntry &entry);
     virtual void parseFilter(const nlohmann::json &msgData,
@@ -67,27 +69,21 @@ namespace SvtDbAgent
     void Clear()
     {
       std::vector<std::string>().swap(m_IntColNames);
-      std::vector<std::string>().swap(m_StringColNames);
+      std::vector<std::string>().swap(m_StrColNames);
     }
 
     const std::vector<std::string> &GetIntColNames() { return m_IntColNames; }
-    const std::vector<std::string> &GetStringColNames()
-    {
-      return m_StringColNames;
-    }
+    const std::vector<std::string> &GetStrColNames() { return m_StrColNames; }
 
     void AddIntColName(const std::string &name) { m_IntColNames.push_back(name); }
-    void AddStringColName(const std::string &name)
-    {
-      m_StringColNames.push_back(name);
-    }
+    void AddStrColName(const std::string &name) { m_StrColNames.push_back(name); }
 
     void SetTableName(const std::string &tName) { m_TableName = tName; }
     const std::string &GetTableName() { return m_TableName; }
 
    private:
     std::vector<std::string> m_IntColNames;
-    std::vector<std::string> m_StringColNames;
+    std::vector<std::string> m_StrColNames;
 
     std::string m_TableName;
   };

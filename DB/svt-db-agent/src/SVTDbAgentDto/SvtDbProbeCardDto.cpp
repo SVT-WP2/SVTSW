@@ -14,11 +14,11 @@ SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
   AddIntColName("id");
   AddIntColName("version");
   AddIntColName("vendorCleaningInterval");
-  AddStringColName("serialNumber");
-  AddStringColName("name");
-  AddStringColName("vendor");
-  AddStringColName("model");
-  AddStringColName("arrivalDate");
-  AddStringColName("location");
-  AddStringColName("type");
+  AddStrColName("serialNumber");
+  AddStrColName("name");
+  AddStrColName("vendor");
+  AddStrColName("model");
+  AddStrColName("arrivalDate");
+  AddStrColName("location");
+  AddStrColName("type");
 }

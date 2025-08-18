@@ -14,10 +14,10 @@ SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
   AddIntColName("id");
   AddIntColName("wpMachineId");
   AddIntColName("waferTypeId");
-  AddStringColName("asicFamilyType");
-  AddStringColName("orientation");
-  AddStringColName("name");
-  AddStringColName("alignmentDie");
-  AddStringColName("homeDie");
-  AddStringColName("local2GlobalMap");
+  AddStrColName("asicFamilyType");
+  AddStrColName("orientation");
+  AddStrColName("name");
+  AddStrColName("alignmentDie");
+  AddStrColName("homeDie");
+  AddStrColName("local2GlobalMap");
 }

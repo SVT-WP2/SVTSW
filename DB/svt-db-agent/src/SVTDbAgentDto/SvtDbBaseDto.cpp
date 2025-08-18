@@ -30,20 +30,24 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   std::vector<std::string> allColumns(GetIntColNames().begin(),
                                       GetIntColNames().end());
-  allColumns.insert(allColumns.end(), GetStringColNames().begin(),
-                    GetStringColNames().end());
+  allColumns.insert(allColumns.end(), GetStrColNames().begin(),
+                    GetStrColNames().end());
 
   for (const auto &colName : allColumns)
   {
     query.addColumn(colName);
   }
 
+  if (!filters.ids.empty())
+  {
+    query.addWhereIn("id", filters.ids);
+  }
   for (const auto &filter : filters.intFilters)
   {
     if (std::find(GetIntColNames().begin(), GetIntColNames().end(),
                   filter.first) != GetIntColNames().end())
     {
-      query.addWhereIn(filter.first, filter.second);
+      query.addWhereEquals(filter.first, filter.second);
     }
     else
     {
@@ -94,9 +98,8 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
           entry.int_values[colName] =
               (row.at(colNameId)) ? row.at(colNameId)->getInt() : -1;
         }
-        else if (std::find(GetStringColNames().begin(),
-                           GetStringColNames().end(),
-                           colName) != GetStringColNames().end())
+        else if (std::find(GetStrColNames().begin(), GetStrColNames().end(),
+                           colName) != GetStrColNames().end())
         {
           entry.string_values[colName] =
               (row.at(colNameId)) ? row.at(colNameId)->getString() : "";
@@ -110,9 +113,9 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       entries.push_back(entry);
     }
 
-    if (filters.intFilters.find("id") != filters.intFilters.end())
+    if (!filters.ids.empty())
     {
-      if (filters.intFilters.at("id").size() != entries.size())
+      if (filters.ids.size() != entries.size())
       {
         throw std::runtime_error(
             "unmatching returned elements and requested filter size");
@@ -133,7 +136,8 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 bool SvtDbAgent::SvtDbBaseDto::getEntryWithId(SvtDbEntry &entry, int id)
 {
   SvtDbFilters filters;
-  filters.intFilters.insert({"id", {id}});
+  filters.ids.push_back(id);
+
   std::vector<SvtDbEntry> entries;
   if (!getAllEntriesFromDB(entries, filters))
   {
@@ -235,8 +239,21 @@ void SvtDbAgent::SvtDbBaseDto::parseFilter(const nlohmann::json &msgData,
     const auto filterData = msgData["filter"];
     if (filterData.contains("ids"))
     {
-      filters.intFilters.insert(
-          {"id", filterData["ids"].get<std::vector<int>>()});
+      filters.ids = filterData["ids"].get<std::vector<int>>();
+    }
+    for (const auto &colName : GetIntColNames())
+    {
+      if (filterData.contains(colName))
+      {
+        filters.intFilters[colName] = filterData[colName].get<int>();
+      }
+    }
+    for (const auto &colName : GetStrColNames())
+    {
+      if (filterData.contains(colName))
+      {
+        filters.strFilters[colName] = filterData[colName].get<std::string>();
+      }
     }
   }
 }
@@ -254,7 +271,7 @@ void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
   {
     AdjIntColName.erase(iter);
   }
-  if (entry_j.size() != (AdjIntColName.size() + GetStringColNames().size()))
+  if (entry_j.size() != (AdjIntColName.size() + GetStrColNames().size()))
   {
     throw std::invalid_argument("insufficient number of parameters");
   }
@@ -263,7 +280,7 @@ void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
   {
     entry.int_values[colName] = entry_j.value(colName, -1);
   }
-  for (const auto &colName : GetStringColNames())
+  for (const auto &colName : GetStrColNames())
   {
     entry.string_values[colName] = entry_j.value(colName, "");
   }
@@ -271,7 +288,8 @@ void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
-    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply)
+    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
+    int totalCount)
 {
   try
   {
@@ -291,6 +309,10 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
       items.push_back(entry_j);
     }
     data["items"] = items;
+    if (totalCount >= 0)
+    {
+      data["totalCount"] = totalCount;
+    }
     msgReply.setData(data);
     msgReply.setStatus(
         SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
