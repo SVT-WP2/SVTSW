@@ -272,6 +272,10 @@ void SvtDbAgentService::parseMsg(
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
               .createEntry(msg, replyMsg);
           break;
+        case SvtDbAgent::RequestType::UpdateWaferProbeMachine:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
+              .updateEntry(msg, replyMsg);
+          break;
         case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance()
               .getAllEntries(msg, replyMsg);

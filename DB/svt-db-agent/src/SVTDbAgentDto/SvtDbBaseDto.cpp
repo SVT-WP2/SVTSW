@@ -152,25 +152,21 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
   insert.setTableName(tableName);
 
   //! checkinput values and Add columns & values
-  for (const auto &colName : GetIntColNames())
+  for (const auto &item : entry.int_values)
   {
-    if (colName == "id")
-    {
-      continue;
-    }
-    if (entry.int_values.at(colName) < 0)
+    if (item.second < 0)
     {
       return false;
     }
-    insert.addColumnAndValue(colName, entry.int_values.at(colName));
+    insert.addColumnAndValue(item.first, item.second);
   }
-  for (const auto &colName : GetStringColNames())
+  for (const auto &item : entry.string_values)
   {
-    if (entry.string_values.at(colName).empty())
+    if (item.second.empty())
     {
       return false;
     };
-    insert.addColumnAndValue(colName, entry.string_values.at(colName));
+    insert.addColumnAndValue(item.first, item.second);
   }
 
   if (!insert.doInsert())
@@ -179,6 +175,54 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
     return -1;
   }
   commitUpdate();
+  return true;
+}
+
+//========================================================================+
+bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
+                                               const SvtDbEntry &entry)
+{
+  SimpleUpdate update;
+
+  std::string tableName =
+      SvtDbAgent::db_schema + std::string(".") + GetTableName();
+  update.setTableName(tableName);
+
+  update.addWhereEquals("id", id);
+
+  //! checkinput values and Add columns & values
+  int totUpdateParameters = 0;
+  for (const auto &item : entry.int_values)
+  {
+    if (item.second < 0)
+    {
+      return false;
+    }
+    update.addColumnAndValue(item.first, item.second);
+    ++totUpdateParameters;
+  }
+  for (const auto &item : entry.string_values)
+  {
+    if (item.second.empty())
+    {
+      return false;
+    };
+    update.addColumnAndValue(item.first, item.second);
+    ++totUpdateParameters;
+  }
+
+  if (!totUpdateParameters)
+  {
+    return true;
+  }
+
+  if (!update.doUpdate())
+  {
+    rollbackUpdate();
+    return false;
+  }
+  commitUpdate();
+
   return true;
 }
 
@@ -284,7 +328,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
     throw std::runtime_error("Object item create was found");
   }
 
-  auto entry_j = msgData["create"];
+  auto &entry_j = msgData["create"];
   SvtDbAgent::SvtDbEntry entry;
 
   parseData(entry_j, entry);
@@ -298,6 +342,61 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
 
   const auto newEntryId = SvtDbInterface::getMaxId(GetTableName());
   getEntryWithId(entry, newEntryId);
+  createEntryReplyMsg(entry, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
+                                           SvtDbAgentReplyMsg &replyMsg)
+{
+  const auto &msgData = msg.getPayload()["data"];
+  if (!msgData.contains("id"))
+  {
+    throw std::runtime_error("Object item id was found");
+  }
+  if (!msgData.contains("update"))
+  {
+    throw std::runtime_error("Object item update was found");
+  }
+
+  const auto &Id = msgData["id"];
+  const auto &entry_j = msgData["update"];
+  SvtDbAgent::SvtDbEntry entry;
+
+  for (const auto &[key, value] : entry_j.items())
+  {
+    if (value.is_null())
+    {
+      continue;
+    }
+    else if (value.is_number())
+    {
+      entry.int_values[key] = value;
+    }
+    else if (value.is_string())
+    {
+      entry.string_values[key] = value;
+    }
+    else
+    {
+      throw std::runtime_error("Only string or int values are accepted.");
+      return;
+    }
+  }
+
+  if (!SvtDbInterface::checkIdExist(GetTableName(), Id))
+  {
+    std::ostringstream ss("");
+    ss << "Wafer Probe Machine with id " << Id << " does not found.";
+    throw std::runtime_error(ss.str());
+  }
+
+  if (!updateEntryInDB(Id, entry))
+  {
+    throw std::runtime_error("Entry was not updated");
+  }
+
+  getEntryWithId(entry, Id);
   createEntryReplyMsg(entry, replyMsg);
 }
 

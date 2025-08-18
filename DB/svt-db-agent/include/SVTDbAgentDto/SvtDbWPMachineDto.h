@@ -30,35 +30,5 @@ namespace SvtDbAgent
 
    private:
   };
-
-  // namespace SvtDbWPMachineDto
-  // {
-  //   //! WaferProbeMachine in DB
-  //   bool getAllWPMachinesFromDB(std::vector<dbWPMachineRecords> &wpmachine,
-  //                               const std::vector<int> &id_filters);
-  //   bool getWPMachineFromDB(dbWPMachineRecords &wpm, int id);
-  //   bool createWPMachineInDB(const dbWPMachineRecords &wpm);
-  //   bool updateWPMachineInDB(const dbWPMachineRecords &wpm);
-  //
-  //   //! WaferProbeMachine request/reply
-  //   void getAllWPMachines(const SvtDbAgent::SvtDbAgentMessage &msg,
-  //                         SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-  //
-  //   void createWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
-  //                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-  //
-  //   void updateWPMachine(const SvtDbAgent::SvtDbAgentMessage &msg,
-  //                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-  //
-  //   // void updateWaferLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
-  //   //                          SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-  //
-  //   void getAllWPMachinesReplyMsg(const std::vector<dbWPMachineRecords>
-  //   &wpMachines,
-  //                                 SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
-  //
-  //   void createWPMachineReplyMsg(const dbWPMachineRecords &wpm,
-  //                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
-  // };  // namespace SvtDbWPMachineDto
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

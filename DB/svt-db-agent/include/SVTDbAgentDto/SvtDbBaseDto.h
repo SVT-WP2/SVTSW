@@ -43,6 +43,8 @@ namespace SvtDbAgent
 
     virtual bool createEntryInDB(const SvtDbEntry &entry);
 
+    virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
+
     virtual void getAllEntries(const SvtDbAgentMessage &msg,
                                SvtDbAgentReplyMsg &replyMsg);
 
@@ -55,6 +57,10 @@ namespace SvtDbAgent
 
     virtual void createEntry(const SvtDbAgentMessage &msg,
                              SvtDbAgentReplyMsg &replyMsg);
+
+    virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
+                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+
     virtual void createEntryReplyMsg(const SvtDbEntry &entry,
                                      SvtDbAgentReplyMsg &msgReply);
 
