@@ -249,13 +249,15 @@ void SvtDbAgentService::parseMsg(
         // case SvtDbAgent::RequestType::UpdateWaferLocation:
         //   SvtDbWaferDto::updateWaferLocation(msg, replyMsg);
         //   break;
-        // //! getAllAsics
-        // case SvtDbAgent::RequestType::GetAllAsics:
-        //   SvtDbAsicDto::getAllAsics(msg, replyMsg);
-        //   break;
-        // case SvtDbAgent::RequestType::CreateAsic:
-        //   SvtDbAsicDto::createAsic(msg, replyMsg);
-        //   break;
+        //! getAllAsics
+        case SvtDbAgent::RequestType::GetAllAsics:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance()
+              .getAllEntries(msg, replyMsg);
+          break;
+        case SvtDbAgent::RequestType::CreateAsic:
+          SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance()
+              .createEntry(msg, replyMsg);
+          break;
         case SvtDbAgent::RequestType::GetAllProbeCards:
           SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
               .getAllEntries(msg, replyMsg);
