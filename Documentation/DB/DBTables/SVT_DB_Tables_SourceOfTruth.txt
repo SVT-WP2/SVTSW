@@ -11,11 +11,11 @@ Table Wafer {
   id integer [primary key, increment]
   serialNumber string [unique]
   batchNumber integer
+  waferTypeId integer [ref: > WaferType.id]
   thinningDate date
   dicingDate date
   productionDate date
   generallocation wpGeneralLocation
-  waferTypeId integer [ref: > WaferType.id]
 }
 
 Table WaferLocation {
