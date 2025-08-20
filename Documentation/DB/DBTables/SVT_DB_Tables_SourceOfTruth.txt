@@ -207,6 +207,7 @@ Enum waferTech {
 }
 
 Enum asicFamilyType {
+  MOST    
   MOSS
   BABYMOSS
   NKF7
@@ -260,7 +261,6 @@ Enum asicFamilyType {
   TTS_2
   TTS_1
   NONAME4
-  NONAME_LONG    
 }
 
 Enum waferMapOrientation {

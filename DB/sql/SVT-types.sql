@@ -24,6 +24,7 @@ CREATE TYPE "waferTech" AS ENUM (
 );
 
 CREATE TYPE "asicFamilyType" AS ENUM (
+  'MOST',
   'MOSS',
   'BABYMOSS',
   'NKF7',
@@ -76,8 +77,7 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'TTS_3',
   'TTS_2',
   'TTS_1',
-  'NONAME4',
-  'NONAME_LONG'
+  'NONAME4'
 );
 
 CREATE TYPE "waferMapOrientation" AS ENUM (
