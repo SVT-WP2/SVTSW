@@ -10,15 +10,15 @@
 //========================================================================+
 SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
 {
-  SetTableName("ProbeCard");
-  AddIntColName("id");
-  AddIntColName("version");
-  AddIntColName("vendorCleaningInterval");
-  AddStrColName("serialNumber");
-  AddStrColName("name");
-  AddStrColName("vendor");
-  AddStrColName("model");
-  AddStrColName("arrivalDate");
-  AddStrColName("location");
-  AddStrColName("type");
+  setTableName("ProbeCard");
+  addColName("id");
+  addColName("version");
+  addColName("vendorCleaningInterval");
+  addColName("serialNumber");
+  addColName("name");
+  addColName("vendor");
+  addColName("model");
+  addColName("arrivalDate");
+  addColName("location");
+  addColName("type");
 }
