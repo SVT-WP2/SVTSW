@@ -4,11 +4,11 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-// #include <stdexcept>
-#include <string>
-#include <vector>
 
+using std::vector;
+using std::string;
 using SvtDbAgent::Singleton;
+
 //========================================================================+
 DatabaseInterface::DatabaseInterface() { mUnavailable = false; }
 
@@ -182,7 +182,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     //       "DatabaseInterface is uninitialized! You either forgotten to call "
     //       "DatabaseInterface.connect() function or ignored its result.");
 
-    lock_guard<recursive_mutex> dbLock(mMutex);
+    std::lock_guard<std::recursive_mutex> dbLock(mMutex);
 
     if (!isConnected(message))
     {
@@ -272,8 +272,8 @@ void DatabaseInterface::clearQueryResult(vector<vector<MultiBase *>> &result)
     {
       delete cell;
     }
+    std::vector<MultiBase*>().swap(row);
   }
-  result.clear();
 }
 
 //========================================================================+
@@ -301,7 +301,7 @@ bool DatabaseInterface::commitUpdate(bool commit)
   //       "DatabaseInterface is uninitialized! You either forgotten to call "
   //       "DatabaseInterface.connect() function or ignored its result.");
 
-  lock_guard<recursive_mutex> dbLock(mMutex);
+  std::lock_guard<std::recursive_mutex> dbLock(mMutex);
 
   if (!isConnected())
   {
