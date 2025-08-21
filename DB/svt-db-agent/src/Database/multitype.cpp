@@ -1,29 +1,4 @@
 #include "Database/multitype.h"
-#include <typeinfo>
-
-// typeid(..).name() is not portable between compilers!
-static const char *MULTITYPE_INTEGER = typeid(int).name();
-static const char *MULTITYPE_DOUBLE = typeid(double).name();
-static const char *MULTITYPE_STRING = typeid(string).name();
-
-// MultiBase::~MultiBase() {}
-
-MultiBase::MultiWrapper::MultiWrapper(int value) { this->intVal = value; }
-
-MultiBase::MultiWrapper::MultiWrapper(double value) { this->doubleVal = value; }
-
-MultiBase::MultiWrapper::MultiWrapper(string value) { this->stringVal = value; }
-
-int MultiBase::MultiWrapper::getInt() { return this->intVal; }
-
-double MultiBase::MultiWrapper::getDouble() { return this->doubleVal; }
-
-string MultiBase::MultiWrapper::getString() { return this->stringVal; }
-
-// template <typename Type>
-// MultiType<Type>::MultiType()
-// {
-// }
 
 template <typename Type>
 MultiType<Type>::MultiType(Type val)
@@ -49,24 +24,18 @@ Type MultiType<Type>::operator()(Type val)
   return this->value;
 }
 
-template <typename Type>
-string MultiType<Type>::getType()
-{
-  return string(typeid(Type).name());
-}
+// template <typename Type>
+// string MultiType<Type>::getType()
+// {
+//   return string(typeid(Type).name());
+// }
 
 template <typename Type>
 int MultiType<Type>::getInt()
 {
-  MultiWrapper wrapper(this->value);
-
-  if (getType() == MULTITYPE_INTEGER)
+  if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
-    return wrapper.getInt();
-  }
-  else if (getType() == MULTITYPE_DOUBLE)
-  {
-    return int(wrapper.getDouble());
+    return static_cast<int>(value);
   }
 
   return 0;
@@ -75,47 +44,38 @@ int MultiType<Type>::getInt()
 template <typename Type>
 double MultiType<Type>::getDouble()
 {
-  MultiWrapper wrapper(this->value);
-
-  if (getType() == MULTITYPE_DOUBLE)
+  if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
-    return wrapper.getDouble();
+    return static_cast<double>(value);
   }
-  else if (getType() == MULTITYPE_INTEGER)
-  {
-    return double(wrapper.getInt());
-  }
-
   return 0.0;
 }
 
 template <typename Type>
-string MultiType<Type>::getString()
+std::string MultiType<Type>::getString()
 {
-  MultiWrapper wrapper(this->value);
-
-  if (getType() == MULTITYPE_INTEGER)
+  if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
-    return to_string(wrapper.getInt());
+    return std::to_string(value);
   }
-  else if (getType() == MULTITYPE_DOUBLE)
+  else if constexpr(std::is_same_v<Type, std::string>)
   {
-    return to_string(wrapper.getDouble());
+    return value;
   }
 
-  return wrapper.getString();
+  return "";
 }
 
 template <typename Type>
 bool MultiType<Type>::isInt()
 {
-  return getType() == MULTITYPE_INTEGER;
+  return std::is_same_v<Type, int>;
 }
 
 template <typename Type>
 bool MultiType<Type>::isDouble()
 {
-  return getType() == MULTITYPE_DOUBLE;
+  return std::is_same_v<Type, double>;
 }
 
 template <typename Type>
@@ -127,9 +87,9 @@ bool MultiType<Type>::isNumeric()
 template <typename Type>
 bool MultiType<Type>::isString()
 {
-  return getType() == MULTITYPE_STRING;
+  return std::is_same_v<Type, std::string>;
 }
 
 template class MultiType<int>;
 template class MultiType<double>;
-template class MultiType<string>;
+template class MultiType<std::string>;
