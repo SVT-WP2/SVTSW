@@ -21,13 +21,13 @@ using SvtDbAgent::Singleton;
 //========================================================================+
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {
-  SetTableName("WaferType");
-  AddIntColName("id");
-  AddStrColName("name");
-  AddStrColName("engineeringRun");
-  AddStrColName("foundry");
-  AddStrColName("technology");
-  AddStrColName("waferMap");
+  setTableName("WaferType");
+  addColName("id");
+  addColName("name");
+  addColName("engineeringRun");
+  addColName("foundry");
+  addColName("technology");
+  addColName("waferMap");
 }
 
 //========================================================================+

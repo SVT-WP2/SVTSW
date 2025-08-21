@@ -6,17 +6,16 @@
 class MultiBase
 {
  public:
-  virtual int getInt() = 0;
-  virtual double getDouble() = 0;
-  virtual std::string getString() = 0;
+  virtual int getInt() const = 0;
+  virtual double getDouble() const = 0;
+  virtual std::string getString() const = 0;
 
-  virtual bool isInt() = 0;
-  virtual bool isDouble() = 0;
-  virtual bool isNumeric() = 0;
-  virtual bool isString() = 0;
+  virtual bool isInt() const = 0;
+  virtual bool isDouble() const = 0;
+  virtual bool isNumeric() const = 0;
+  virtual bool isString() const = 0;
 
   virtual ~MultiBase() = default;
-
 };
 
 template <typename Type>
@@ -33,14 +32,14 @@ class MultiType : public MultiBase
   Type operator()();
   Type operator()(Type val);
 
-  int getInt();
-  double getDouble();
-  std::string getString();
+  int getInt() const override;
+  double getDouble() const override;
+  std::string getString() const override;
 
-  bool isInt();
-  bool isDouble();
-  bool isNumeric();
-  bool isString();
+  bool isInt() const override;
+  bool isDouble() const override;
+  bool isNumeric() const override;
+  bool isString() const override;
 };
 
 #endif  // !_MULTIBASE_

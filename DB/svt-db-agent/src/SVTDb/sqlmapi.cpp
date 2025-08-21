@@ -4,7 +4,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using SvtDbAgent::Singleton;
 using DatabaseIF = SvtDbAgent::Singleton<DatabaseInterface>;

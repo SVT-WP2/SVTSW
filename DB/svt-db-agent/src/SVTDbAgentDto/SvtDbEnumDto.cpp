@@ -66,7 +66,7 @@ bool SvtDbEnumDto::getAllEnumValuesInDB(std::string type_name,
     res.remove_prefix(res.find('{') + 1);
     res.remove_suffix(res.size() - res.find_last_of('}'));
 
-    const string_view delimiter(",");
+    const std::string_view delimiter(",");
     size_t start = 0;
     size_t end = res.find(delimiter);
     while (end != std::string_view::npos)

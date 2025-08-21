@@ -10,14 +10,14 @@
 //========================================================================+
 SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
 {
-  SetTableName("WaferProbeProject");
-  AddIntColName("id");
-  AddIntColName("wpMachineId");
-  AddIntColName("waferTypeId");
-  AddStrColName("asicFamilyType");
-  AddStrColName("orientation");
-  AddStrColName("name");
-  AddStrColName("alignmentDie");
-  AddStrColName("homeDie");
-  AddStrColName("local2GlobalMap");
+  setTableName("WaferProbeProject");
+  addColName("id");
+  addColName("wpMachineId");
+  addColName("waferTypeId");
+  addColName("asicFamilyType");
+  addColName("orientation");
+  addColName("name");
+  addColName("alignmentDie");
+  addColName("homeDie");
+  addColName("local2GlobalMap");
 }
