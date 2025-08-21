@@ -8,7 +8,9 @@
 #include <string>
 #include <vector>
 
-using namespace std;
+using std::string;
+using std::to_string;
+using std::vector;
 
 extern std::atomic<int> queryTime;
 extern std::atomic<int> queryCount;

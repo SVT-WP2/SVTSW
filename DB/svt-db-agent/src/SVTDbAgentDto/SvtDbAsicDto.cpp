@@ -14,15 +14,14 @@
 //========================================================================+
 SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 {
-  SetTableName("Asic");
+  setTableName("Asic");
 
-  AddIntColName("id");
-  AddIntColName("waferId");
-
-  AddStrColName("serialNumber");
-  AddStrColName("familyType");
-  AddStrColName("waferMapPosition");
-  AddStrColName("quality");
+  addColName("id");
+  addColName("waferId");
+  addColName("serialNumber");
+  addColName("familyType");
+  addColName("waferMapPosition");
+  addColName("quality");
 }
 
 //========================================================================+

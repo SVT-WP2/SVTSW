@@ -31,7 +31,7 @@ Type MultiType<Type>::operator()(Type val)
 // }
 
 template <typename Type>
-int MultiType<Type>::getInt()
+int MultiType<Type>::getInt() const
 {
   if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
@@ -42,7 +42,7 @@ int MultiType<Type>::getInt()
 }
 
 template <typename Type>
-double MultiType<Type>::getDouble()
+double MultiType<Type>::getDouble() const
 {
   if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
@@ -52,13 +52,13 @@ double MultiType<Type>::getDouble()
 }
 
 template <typename Type>
-std::string MultiType<Type>::getString()
+std::string MultiType<Type>::getString() const
 {
   if constexpr (std::is_same_v<Type, int> || std::is_same_v<Type, double>)
   {
     return std::to_string(value);
   }
-  else if constexpr(std::is_same_v<Type, std::string>)
+  else if constexpr (std::is_same_v<Type, std::string>)
   {
     return value;
   }
@@ -67,25 +67,25 @@ std::string MultiType<Type>::getString()
 }
 
 template <typename Type>
-bool MultiType<Type>::isInt()
+bool MultiType<Type>::isInt() const
 {
   return std::is_same_v<Type, int>;
 }
 
 template <typename Type>
-bool MultiType<Type>::isDouble()
+bool MultiType<Type>::isDouble() const
 {
   return std::is_same_v<Type, double>;
 }
 
 template <typename Type>
-bool MultiType<Type>::isNumeric()
+bool MultiType<Type>::isNumeric() const
 {
   return isInt() || isDouble();
 }
 
 template <typename Type>
-bool MultiType<Type>::isString()
+bool MultiType<Type>::isString() const
 {
   return std::is_same_v<Type, std::string>;
 }

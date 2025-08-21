@@ -8,7 +8,9 @@
  * @brief Base DTO class
  */
 
+#include <memory>
 #include <nlohmann/json.hpp>
+#include "Database/multitype.h"
 
 #include <map>
 #include <string>
@@ -21,22 +23,53 @@ namespace SvtDbAgent
 
   struct SvtDbEntry
   {
-    std::map<const std::string, int> int_values;
-    std::map<const std::string, std::string> str_values;
+    std::map<std::string, std::shared_ptr<MultiBase>> values;
+    SvtDbEntry() = default;
+
+    void addValue(const std::string &colName, const MultiBase *colValue)
+    {
+      if (colValue)
+      {
+        if (colValue->isInt())
+        {
+          values.insert({colName, std::shared_ptr<MultiBase>(
+                                      new MultiType<int>(colValue->getInt()))});
+        }
+        else if (colValue->isString())
+        {
+          values.insert(
+              {colName, std::shared_ptr<MultiBase>(
+                            new MultiType<std::string>(colValue->getString()))});
+        }
+        else
+        {
+          values.insert({colName, std::shared_ptr<MultiBase>(nullptr)});
+        }
+      }
+    };
+    void addValue(const std::string &colName, const int &val)
+    {
+      values.insert(
+          {colName, std::shared_ptr<MultiBase>(new MultiType<int>(val))});
+    }
+    void addValue(const std::string &colName, const std::string &val)
+    {
+      values.insert(
+          {colName, std::shared_ptr<MultiBase>(new MultiType<std::string>(val))});
+    }
   };
 
   struct SvtDbFilters
   {
     std::vector<int> ids;
-    std::map<std::string, int> intFilters;
-    std::map<std::string, std::string> strFilters;
+    SvtDbEntry mFilters;
   };
 
   class SvtDbBaseDto
   {
    public:
     SvtDbBaseDto() = default;
-    ~SvtDbBaseDto() { Clear(); }
+    virtual ~SvtDbBaseDto() { clear(); }
 
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
                                      const SvtDbFilters &filters);
@@ -66,26 +99,19 @@ namespace SvtDbAgent
     virtual void createEntryReplyMsg(const SvtDbEntry &entry,
                                      SvtDbAgentReplyMsg &msgReply);
 
-    void Clear()
-    {
-      std::vector<std::string>().swap(m_IntColNames);
-      std::vector<std::string>().swap(m_StrColNames);
-    }
+    void clear() { std::vector<std::string>().swap(mColNames); }
 
-    const std::vector<std::string> &GetIntColNames() { return m_IntColNames; }
-    const std::vector<std::string> &GetStrColNames() { return m_StrColNames; }
+    const std::vector<std::string> &getColNames() { return mColNames; }
 
-    void AddIntColName(const std::string &name) { m_IntColNames.push_back(name); }
-    void AddStrColName(const std::string &name) { m_StrColNames.push_back(name); }
+    void addColName(const std::string &name) { mColNames.push_back(name); }
 
-    void SetTableName(const std::string &tName) { m_TableName = tName; }
-    const std::string &GetTableName() { return m_TableName; }
+    void setTableName(const std::string &tName) { mTableName = tName; }
+    const std::string &getTableName() { return mTableName; }
 
    private:
-    std::vector<std::string> m_IntColNames;
-    std::vector<std::string> m_StrColNames;
+    std::vector<std::string> mColNames;
 
-    std::string m_TableName;
+    std::string mTableName;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_BASE_DTO_H
