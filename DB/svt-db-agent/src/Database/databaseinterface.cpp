@@ -5,8 +5,8 @@
 #include <cstring>
 #include <iostream>
 
-using std::vector;
 using std::string;
+using std::vector;
 using SvtDbAgent::Singleton;
 
 //========================================================================+
@@ -163,8 +163,7 @@ bool DatabaseInterface::isConnected(string &message)
 
 //========================================================================+
 void DatabaseInterface::executeQuery(const string &query, bool &status,
-                                     string &message,
-                                     vector<vector<MultiBase *>> &rows)
+                                     string &message, rows_t &rows)
 {
   status = DatabaseInterface::isConnected(message);
   std::string query_name("query");
@@ -200,7 +199,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     pqxx::result res{mDBWork->exec(prepare_name)};
     for (const auto &row : res)
     {
-      vector<MultiBase *> rowResult;
+      row_t rowResult;
       for (uint8_t i{0}; i < row.size(); ++i)
       {
         const auto &data_field = row[i];
@@ -215,15 +214,14 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
         case 20:  // int8
         case 21:  // int2
         case 23:  // integer
-          rowResult.push_back(new MultiType<int>(data_field.as<int>()));
+          rowResult.push_back(data_field.as<int>());
           break;
         case 700:  // float4
         case 701:  // float8
-          rowResult.push_back(new MultiType<double>(data_field.as<double>()));
+          rowResult.push_back(data_field.as<double>());
           break;
         default:
-          rowResult.push_back(
-              new MultiType<std::string>(data_field.as<std::string>()));
+          rowResult.push_back(data_field.as<std::string>());
           break;
         }
       }
@@ -248,15 +246,14 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
 
 //========================================================================+
 void DatabaseInterface::executeQuery(const string &query, bool &status,
-                                     vector<vector<MultiBase *>> &rows)
+                                     rows_t &rows)
 {
   string message;
   DatabaseInterface::executeQuery(query, status, message, rows);
 }
 
 //========================================================================+
-void DatabaseInterface::executeQuery(const string &query,
-                                     vector<vector<MultiBase *>> &rows)
+void DatabaseInterface::executeQuery(const string &query, rows_t &rows)
 {
   string message;
   bool status;
@@ -264,23 +261,20 @@ void DatabaseInterface::executeQuery(const string &query,
 }
 
 //========================================================================+
-void DatabaseInterface::clearQueryResult(vector<vector<MultiBase *>> &result)
+void DatabaseInterface::clearQueryResult(rows_t &result)
 {
   for (auto &row : result)
   {
-    for (auto &cell : row)
-    {
-      delete cell;
-    }
-    std::vector<MultiBase*>().swap(row);
+    row_t().swap(row);
   }
+  rows_t().swap(result);
 }
 
 //========================================================================+
 bool DatabaseInterface::executeUpdate(const string &update, string &message)
 {
   bool status;
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   executeQuery(update, status, message, rows);
   clearQueryResult(rows);
 

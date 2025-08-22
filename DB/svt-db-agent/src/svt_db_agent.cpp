@@ -94,8 +94,8 @@ int main()
     while (_dbAgent.getIsConsRunnning())
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      //   // int time = gTimer.getTicksInSeconds();
-      //   // heartbeatService->updateService(time);
+      // int time = gTimer.getTicksInSeconds();
+      // heartbeatService->updateService(time);
     }
   }
   catch (const std::exception &e)

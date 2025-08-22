@@ -41,7 +41,6 @@ file(GLOB SOURCES_DB
   "src/SVTUtilities/SvtUtilities.cpp"
   "src/SVTUtilities/SvtLogger.cpp"
   "src/Database/databaseinterface.cpp"
-  "src/Database/multitype.cpp"
   "src/SVTDb/sqlmapi.cpp"
   "src/SVTDb/SvtDbInterface.cpp"
   "src/SVTDbAgentDto/SvtDbEnumDto.cpp"

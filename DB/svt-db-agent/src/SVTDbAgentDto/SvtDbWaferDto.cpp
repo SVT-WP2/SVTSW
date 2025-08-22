@@ -14,8 +14,6 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
-#include <sstream>
-
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
 {
@@ -73,10 +71,10 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   Singleton<SvtLogger>::instance().logInfo("Creating Waferlocation in DB");
   //! Create waferLocations
   SvtDbEntry waferLoc;
-  waferLoc.addValue("waferId", newEntryId);
-  waferLoc.addValue("generalLocation",
-                    waferEntry.values["generalLocation"]->getString());
-  waferLoc.addValue("description", "Location at creation");
+  waferLoc.values.insert({"waferId", newEntryId});
+  waferLoc.values.insert(
+      {"generalLocation", waferEntry.values["generalLocation"]});
+  waferLoc.values.insert({"description", "Location at creation"});
   if (!Singleton<SvtDbWaferLocationDto>::instance().createEntryInDB(waferLoc))
   {
     throw std::runtime_error("ERROR: Could not create wafer location entry");
@@ -92,14 +90,14 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 {
-  int waferId = wafer.values.at("id")->getInt();
-  int waferTypeId = wafer.values.at("waferTypeId")->getInt();
+  int waferId = wafer.values.at("id").get<int>();
+  int waferTypeId = wafer.values.at("waferTypeId").get<int>();
 
   SvtDbWaferTypeDto &waferType = Singleton<SvtDbWaferTypeDto>::instance();
   SvtDbEntry waferTypeEntry;
   waferType.getEntryWithId(waferTypeEntry, waferTypeId);
 
-  std::string waferMap = waferTypeEntry.values["waferMap"]->getString();
+  std::string waferMap = waferTypeEntry.values["waferMap"].get<std::string>();
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
 
   std::map<int, std::string> g_map_ordered;
@@ -148,7 +146,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         std::ostringstream asic_waferMapPos;
         asic_waferMapPos << asic_row << "_" << asic_col;
         std::ostringstream asic_SN;
-        asic_SN << wafer.values.at("serialNumber")->getString() << "_"
+        asic_SN << wafer.values.at("serialNumber").get<std::string>() << "_"
                 << asic_waferMapPos.str();
 
         std::string asic_quality;
@@ -193,11 +191,11 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         }
 
         SvtDbEntry asic;
-        asic.addValue("waferId", waferId);
-        asic.addValue("serialNumber", asic_SN.str());
-        asic.addValue("waferMapPosition", asic_waferMapPos.str());
-        asic.addValue("familyType", asic_familytype);
-        asic.addValue("quality", asic_quality);
+        asic.values.insert({"waferId", waferId});
+        asic.values.insert({"serialNumber", asic_SN.str()});
+        asic.values.insert({"waferMapPosition", asic_waferMapPos.str()});
+        asic.values.insert({"familyType", asic_familytype});
+        asic.values.insert({"quality", asic_quality});
 
         Singleton<SvtDbAsicDto>::instance().createEntryInDB(asic);
         ++asic_col;

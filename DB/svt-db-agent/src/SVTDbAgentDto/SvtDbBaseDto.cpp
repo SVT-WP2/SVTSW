@@ -6,7 +6,6 @@
  */
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "Database/multitype.h"
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDb/sqlmapi.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
@@ -15,7 +14,6 @@
 #include "SVTUtilities/SvtUtilities.h"
 
 #include <algorithm>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -47,14 +45,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     if (std::find(getColNames().begin(), getColNames().end(), filter.first) !=
         getColNames().end())
     {
-      if (filter.second->isInt())
-      {
-        query.addWhereEquals(filter.first, filter.second->getInt());
-      }
-      else if (filter.second->isString())
-      {
-        query.addWhereEquals(filter.first, filter.second->getString());
-      }
+      query.addWhereEquals(filter.first, filter.second);
     }
     else
     {
@@ -73,7 +64,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   try
   {
-    vector<vector<MultiBase *>> rows;
+    rows_t rows;
     query.doQuery(rows);
 
     for (const auto &row : rows)
@@ -87,7 +78,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       for (const auto &colValue : row)
       {
         const std::string &colName = getColNames().at(valId);
-        rowEntry.addValue(colName, colValue);
+        rowEntry.values.insert({colName, colValue});
         ++valId;
       }
       entries.push_back(rowEntry);
@@ -138,17 +129,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
   //! checkinput values and Add columns & values
   for (const auto &item : entry.values)
   {
-    if (item.second)
-    {
-      if (item.second->isInt())
-      {
-        insert.addColumnAndValue(item.first, item.second->getInt());
-      }
-      else if (item.second->isString())
-      {
-        insert.addColumnAndValue(item.first, item.second->getString());
-      }
-    }
+    insert.addColumnAndValue(item.first, item.second);
   }
 
   if (!insert.doInsert())
@@ -177,16 +158,9 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
   //! checkinput values and Add columns & values
   for (const auto &item : entry.values)
   {
-    if (item.second)
+    if (!item.second.is_null())
     {
-      if (item.second->isInt())
-      {
-        update.addColumnAndValue(item.first, item.second->getInt());
-      }
-      else if (item.second->isString())
-      {
-        update.addColumnAndValue(item.first, item.second->getString());
-      }
+      update.addColumnAndValue(item.first, item.second);
       ++totUpdateParameters;
     }
   }
@@ -222,19 +196,7 @@ void SvtDbAgent::SvtDbBaseDto::parseFilter(const nlohmann::json &msgData,
       if (filterData.contains(colName))
       {
         auto &value = filterData[colName];
-
-        if (value.is_number())
-        {
-          filters.mFilters.values.insert(
-              {colName, std::shared_ptr<MultiBase>(new MultiType<int>(
-                            filterData[colName].get<int>()))});
-        }
-        else if (value.is_string())
-        {
-          filters.mFilters.values.insert(
-              {colName, std::shared_ptr<MultiBase>(new MultiType<std::string>(
-                            filterData[colName].get<std::string>()))});
-        }
+        filters.mFilters.values.insert({colName, value});
       }
     }
   }
@@ -260,14 +222,7 @@ void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
   for (const auto &colName : AdjIntColName)
   {
     const auto &value = entry_j[colName];
-    if (value.is_number())
-    {
-      entry.addValue(colName, value.get<int>());
-    }
-    else if (entry_j[colName].is_string())
-    {
-      entry.addValue(colName, value.get<std::string>());
-    }
+    entry.values.insert({colName, value});
   }
 }
 
@@ -285,16 +240,7 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
       nlohmann::ordered_json entry_j;
       for (const auto &item : entry.values)
       {
-        const auto &colName = item.first;
-        const auto &value = item.second;
-        if (value->isInt())
-        {
-          entry_j[colName] = value->getInt();
-        }
-        else if (value->isString())
-        {
-          entry_j[colName] = value->getString();
-        }
+        entry_j[item.first] = item.second;
       }
       items.push_back(entry_j);
     }
@@ -377,25 +323,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
 
   for (const auto &[key, value] : entry_j.items())
   {
-    if (value.is_null())
-    {
-      continue;
-    }
-    else if (value.is_number())
-    {
-      entry.values.insert(
-          {key, std::shared_ptr<MultiBase>(new MultiType<int>(value))});
-    }
-    else if (value.is_string())
-    {
-      entry.values.insert(
-          {key, std::shared_ptr<MultiBase>(new MultiType<string>(value))});
-    }
-    else
-    {
-      throw std::runtime_error("Only string or int values are accepted.");
-      return;
-    }
+    entry.values.insert({key, value});
   }
 
   if (!SvtDbInterface::checkIdExist(getTableName(), Id))
@@ -424,20 +352,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntryReplyMsg(
     nlohmann::ordered_json entry_j;
     for (const auto &item : entry.values)
     {
-      const auto &colName = item.first;
-      const auto &value = item.second;
-
-      if (value)
-      {
-        if (value->isInt())
-        {
-          entry_j[colName] = value->getInt();
-        }
-        else if (value->isString())
-        {
-          entry_j[colName] = value->getString();
-        }
-      }
+      entry_j[item.first] = item.second;
     }
 
     data["entity"] = entry_j;
