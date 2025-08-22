@@ -8,9 +8,7 @@
  * @brief Base DTO class
  */
 
-#include <memory>
 #include <nlohmann/json.hpp>
-#include "Database/multitype.h"
 
 #include <map>
 #include <string>
@@ -23,40 +21,8 @@ namespace SvtDbAgent
 
   struct SvtDbEntry
   {
-    std::map<std::string, std::shared_ptr<MultiBase>> values;
+    std::map<std::string, nlohmann::basic_json<>> values;
     SvtDbEntry() = default;
-
-    void addValue(const std::string &colName, const MultiBase *colValue)
-    {
-      if (colValue)
-      {
-        if (colValue->isInt())
-        {
-          values.insert({colName, std::shared_ptr<MultiBase>(
-                                      new MultiType<int>(colValue->getInt()))});
-        }
-        else if (colValue->isString())
-        {
-          values.insert(
-              {colName, std::shared_ptr<MultiBase>(
-                            new MultiType<std::string>(colValue->getString()))});
-        }
-        else
-        {
-          values.insert({colName, std::shared_ptr<MultiBase>(nullptr)});
-        }
-      }
-    };
-    void addValue(const std::string &colName, const int &val)
-    {
-      values.insert(
-          {colName, std::shared_ptr<MultiBase>(new MultiType<int>(val))});
-    }
-    void addValue(const std::string &colName, const std::string &val)
-    {
-      values.insert(
-          {colName, std::shared_ptr<MultiBase>(new MultiType<std::string>(val))});
-    }
   };
 
   struct SvtDbFilters

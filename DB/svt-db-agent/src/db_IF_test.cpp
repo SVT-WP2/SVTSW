@@ -5,7 +5,6 @@
  * @brief svt_db_agent executable
  */
 
-#include "SVTDbAgentService/SvtDbAgentProducer.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
@@ -20,15 +19,6 @@ std::string version = std::string(VERSION);
 
 SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
-class Msg
-{
- public:
-  std::string GetMsg() { return msg.dump(); }
-
- private:
-  nlohmann::ordered_json msg;
-};
-
 //========================================================================+
 int main()
 {
@@ -38,9 +28,10 @@ int main()
 
   try
   {
-    std::shared_ptr<SvtDbAgentProducer> m_Producer;
-    m_Producer = std::shared_ptr<SvtDbAgentProducer>(
-        new SvtDbAgentProducer("localhost:9092"));
+    logger.logInfo("Before", SvtLogger::Mode::STANDARD);
+    nlohmann::basic_json<> value = std::string("Hello");
+    logger.logInfo(value.dump(), SvtLogger::Mode::STANDARD);
+    logger.logInfo("End", SvtLogger::Mode::STANDARD);
   }
   catch (const std::exception &e)
   {

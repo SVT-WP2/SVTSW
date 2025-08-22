@@ -20,7 +20,7 @@ std::map<std::string, std::vector<std::string>>
 bool SvtDbEnumDto::getAllEnumTypesInDB(const std::string &schema,
                                        std::vector<std::string> &enum_types)
 {
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   std::string query =
       "SELECT DISTINCT n.nspname AS enum_schema, t.typname AS enum_name\n";
   query += "FROM pg_type t\n";
@@ -33,9 +33,9 @@ bool SvtDbEnumDto::getAllEnumTypesInDB(const std::string &schema,
     doGenericQuery(query, rows);
     for (auto &row : rows)
     {
-      if (!schema.compare(row.at(0)->getString()))
+      if (!schema.compare(row.at(0).get<std::string>()))
       {
-        enum_types.push_back(row.at(1)->getString());
+        enum_types.push_back(row.at(1).get<std::string>());
       }
     }
     finishQuery(rows);
@@ -52,14 +52,14 @@ bool SvtDbEnumDto::getAllEnumTypesInDB(const std::string &schema,
 bool SvtDbEnumDto::getAllEnumValuesInDB(std::string type_name,
                                         std::vector<std::string> &enum_values)
 {
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   std::string query = "SELECT enum_range(null::" + type_name + ");";
 
   enum_values.clear();
   try
   {
     doGenericQuery(query, rows);
-    const auto str_res = rows[0][0]->getString();
+    const auto str_res = rows[0][0].get<std::string>();
     std::string_view res{str_res};
     finishQuery(rows);
 

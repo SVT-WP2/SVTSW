@@ -7,8 +7,9 @@
 #include <pqxx/pqxx>
 
 #include <mutex>
-#include <vector>
-#include "multitype.h"
+
+using row_t = std::vector<nlohmann::basic_json<>>;
+using rows_t = std::vector<row_t>;
 
 class DatabaseInterface
 {
@@ -32,7 +33,8 @@ class DatabaseInterface
   ~DatabaseInterface();
 
   bool Init(const std::string &user, const std::string &password,
-            const std::string &connString, const std::string &host, const std::string &port);
+            const std::string &connString, const std::string &host,
+            const std::string &port);
   bool connect();
 
   bool isConnected();
@@ -41,13 +43,12 @@ class DatabaseInterface
   void setUnavailable(bool unavailable) { mUnavailable = unavailable; };
   bool isUnavailable() { return mUnavailable; };
 
-  void executeQuery(const std::string &query, bool &status, std::string &message,
-                    std::vector<std::vector<MultiBase *>> &rows);
   void executeQuery(const std::string &query, bool &status,
-                    std::vector<std::vector<MultiBase *>> &rows);
-  void executeQuery(const std::string &query, std::vector<std::vector<MultiBase *>> &rows);
+                    std::string &message, rows_t &rows);
+  void executeQuery(const std::string &query, bool &status, rows_t &rows);
+  void executeQuery(const std::string &query, rows_t &rows);
 
-  void clearQueryResult(std::vector<std::vector<MultiBase *>> &result);
+  void clearQueryResult(rows_t &result);
 
   bool executeUpdate(const std::string &update, std::string &message);
   bool executeUpdate(const std::string &update);

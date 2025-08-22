@@ -1,10 +1,14 @@
 #include "SVTDb/sqlmapi.h"
 #include "Database/databaseinterface.h"
 #include "SVTUtilities/SvtLogger.h"
+#include "nlohmann/json.hpp"
 
+#include <atomic>
 #include <stdexcept>
 #include <string>
 
+using std::string;
+using std::vector;
 using SvtDbAgent::Singleton;
 using DatabaseIF = SvtDbAgent::Singleton<DatabaseInterface>;
 
@@ -60,7 +64,7 @@ string stringJoinPrefix(vector<string> strings, string prefix,
  */
 
 //========================================================================+
-void doGenericQuery(string queryString, vector<vector<MultiBase *>> &rows)
+void doGenericQuery(string queryString, rows_t &rows)
 {
   bool successful = false;
   int maxRetries = 1;
@@ -110,13 +114,10 @@ void raiseError(string errorMessage)
 }
 
 //========================================================================+
-void finishQuery(vector<vector<MultiBase *>> rows)
-{
-  DatabaseIF::instance().clearQueryResult(rows);
-}
+void finishQuery(rows_t rows) { DatabaseIF::instance().clearQueryResult(rows); }
 
 //========================================================================+
-void SimpleQuery::doQuery(vector<vector<MultiBase *>> &rows)
+void SimpleQuery::doQuery(rows_t &rows)
 {
   string queryString = "";
   queryString += "SELECT " + stringJoin(mColumnNames, ", ");
@@ -133,6 +134,27 @@ void SimpleQuery::doQuery(vector<vector<MultiBase *>> &rows)
 }
 
 //========================================================================+
+void SimpleQuery::addWhereEquals(string columnName,
+                                 const nlohmann::basic_json<> &value)
+{
+  if (!value.is_null())
+  {
+    if (value.is_number_integer())
+    {
+      addWhereEquals(columnName, value.get<int>());
+    }
+    else if (value.is_string())
+    {
+      addWhereEquals(columnName, value.get<std::string>());
+    }
+    else if (value.is_number_float())
+    {
+      addWhereEquals(columnName, value.get<float>());
+    }
+  }
+}
+
+//========================================================================+
 void SimpleQuery::addWhereIn(string columnName, vector<int> values)
 {
   if (values.size() == 0)
@@ -140,7 +162,7 @@ void SimpleQuery::addWhereIn(string columnName, vector<int> values)
   string clause = columnName + " IN (";
   for (unsigned int i = 0; i < values.size(); i++)
   {
-    clause += to_string(values.at(i));
+    clause += std::to_string(values.at(i));
     if (i < values.size() - 1)
       clause += ",";
   }
@@ -182,6 +204,27 @@ bool SimpleInsert::doInsert()
 }
 
 //========================================================================+
+void SimpleInsert::addColumnAndValue(string columnName,
+                                     const nlohmann::basic_json<> &value)
+{
+  if (!value.is_null())
+  {
+    if (value.is_number_integer())
+    {
+      addColumnAndValue(columnName, value.get<int>());
+    }
+    else if (value.is_string())
+    {
+      addColumnAndValue(columnName, value.get<std::string>());
+    }
+    else if (value.is_number_float())
+    {
+      addColumnAndValue(columnName, value.get<float>());
+    }
+  }
+}
+
+//========================================================================+
 bool SimpleUpdate::doUpdate()
 {
   string queryString = "";
@@ -194,12 +237,54 @@ bool SimpleUpdate::doUpdate()
   return doGenericUpdate(queryString);
 }
 
+//========================================================================+
+void SimpleUpdate::addColumnAndValue(string columnName,
+                                     const nlohmann::basic_json<> &value)
+{
+  if (!value.is_null())
+  {
+    if (value.is_number_integer())
+    {
+      addColumnAndValue(columnName, value.get<int>());
+    }
+    else if (value.is_string())
+    {
+      addColumnAndValue(columnName, value.get<std::string>());
+    }
+    else if (value.is_number_float())
+    {
+      addColumnAndValue(columnName, value.get<float>());
+    }
+  }
+}
+
+//========================================================================+
+void SimpleUpdate::addWhereEquals(string columnName,
+                                  const nlohmann::basic_json<> &value)
+{
+  if (!value.is_null())
+  {
+    if (value.is_number_integer())
+    {
+      addWhereEquals(columnName, value.get<int>());
+    }
+    else if (value.is_string())
+    {
+      addWhereEquals(columnName, value.get<std::string>());
+    }
+    else if (value.is_number_float())
+    {
+      addWhereEquals(columnName, value.get<float>());
+    }
+  }
+}
+
 /*!
  * Versioning
  */
 
 //========================================================================+
-void VersionedQuery::doQuery(vector<vector<MultiBase *>> &rows)
+void VersionedQuery::doQuery(rows_t &rows)
 {
   // perhaps this should be folded into the main query?
   int baseVersionId = getBaseVersion(mVersionId);
@@ -212,8 +297,8 @@ void VersionedQuery::doQuery(vector<vector<MultiBase *>> &rows)
   // subquery on version first
   queryString += "WITH T0 AS (SELECT *";
   queryString += " FROM " + mTableName;
-  queryString += " WHERE versionId IN (" + to_string(baseVersionId) + "," +
-                 to_string(mVersionId) + ")";
+  queryString += " WHERE versionId IN (" + std::to_string(baseVersionId) + "," +
+                 std::to_string(mVersionId) + ")";
   if (!mWhereClauses.empty())
   {
     queryString += " AND " + stringJoin(mWhereClauses, " AND ");
@@ -243,9 +328,9 @@ bool VersionedInsert::doInsert()
   // the rest of the where clauses are added when calling addColumnAndValue
   mQuery.addWhereEquals("versionId", baseVersionId);
 
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   mQuery.doQuery(rows);
-  int rowCount = rows.at(0).at(0)->getInt();
+  int rowCount = rows.at(0).at(0).get<int>();
   finishQuery(rows);
 
   bool insertSuccessful = true;
@@ -263,19 +348,19 @@ int getBaseVersion(int versionId)
 {
   string queryString = "SELECT baseVersion";
   queryString += " FROM " + SvtDbAgent::db_schema + ".Version";
-  queryString += " WHERE id=" + to_string(versionId);
+  queryString += " WHERE id=" + std::to_string(versionId);
 
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   doGenericQuery(queryString, rows);
   int baseVersion = -1;
 
   if (!rows.empty())
   {
-    baseVersion = rows.at(0).at(0)->getInt();
+    baseVersion = rows.at(0).at(0).get<int>();
   }
   else
   {
-    raiseError("Version ID " + to_string(versionId) +
+    raiseError("Version ID " + std::to_string(versionId) +
                " not found when retrieving base version");
   }
 
@@ -289,13 +374,13 @@ int getMostRecentVersionId()
   string queryString =
       "SELECT MAX(ID) FROM " + SvtDbAgent::db_schema + ".Version";
 
-  vector<vector<MultiBase *>> rows;
+  rows_t rows;
   doGenericQuery(queryString, rows);
   int maxVersionId = -1;
 
   if (!rows.empty())
   {
-    maxVersionId = rows.at(0).at(0)->getInt();
+    maxVersionId = rows.at(0).at(0).get<int>();
   }
   else
   {
