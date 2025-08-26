@@ -27,6 +27,7 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'MOST',
   'MOSS',
   'BABYMOSS',
+  'BABYMOST',
   'NKF7',
   'MOSAIX',
   'BabyMOSAIX',
@@ -47,9 +48,9 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'CE65_V2CN_18U_HSQ',
   'CE65_V2CN_22U5_SQ',
   'CE65_V2CN_22U5_HSQ',
-  'AOIO_P',
-  'AOIO',
-  'AOIO_B',
+  'AO10P',
+  'AO10',
+  'AO10B',
   'S',
   'DESY',
   'NONAME1',
@@ -58,9 +59,9 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'CE65_V1CB_15U_SQ',
   'dPTSN',
   'dPTS',
-  'AFISP',
-  'AFISB',
-  'AFIS',
+  'AF15P',
+  'AF15B',
+  'AF15',
   'RAL_TXRX_ER1',
   'TTS_5',
   'TTS_4',
@@ -76,8 +77,7 @@ CREATE TYPE "asicFamilyType" AS ENUM (
   'SEU_1_INFN_BAR_GDR',
   'TTS_3',
   'TTS_2',
-  'TTS_1',
-  'NONAME4'
+  'TTS_1'
 );
 
 CREATE TYPE "waferMapOrientation" AS ENUM (
