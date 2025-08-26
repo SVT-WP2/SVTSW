@@ -8,7 +8,7 @@
   "Groups": {
     "Group_0": [{ "PosInGroup": 0, "FamilyType": "BABYMOSS" }],
 
-    "Group_1": [{ "PosInGroup": 0, "FamilyType": "NONAME4" }],
+    "Group_1": [{ "PosInGroup": 0, "FamilyType": "BABYMOST" }],
 
     "Group_2": [{ "PosInGroup": 0, "FamilyType": "MOST" }],
 
@@ -27,9 +27,9 @@
       { "PosInGroup": 7, "FamilyType": "CE65_V2CN_18U_HSQ" },
       { "PosInGroup": 8, "FamilyType": "CE65_V2CN_22U5_SQ" },
       { "PosInGroup": 9, "FamilyType": "CE65_V2CN_22U5_HSQ" },
-      { "PosInGroup": 10, "FamilyType": "AOIO_P" },
-      { "PosInGroup": 11, "FamilyType": "AOIO" },
-      { "PosInGroup": 12, "FamilyType": "AOIO_B" },
+      { "PosInGroup": 10, "FamilyType": "AO10P" },
+      { "PosInGroup": 11, "FamilyType": "AO10" },
+      { "PosInGroup": 12, "FamilyType": "AO10B" },
       { "PosInGroup": 13, "FamilyType": "S" },
       { "PosInGroup": 14, "FamilyType": "DESY" },
       { "PosInGroup": 15, "FamilyType": "NONAME1" }
@@ -48,13 +48,13 @@
       { "PosInGroup": 2, "FamilyType": "dPTSN" },
       { "PosInGroup": 3, "FamilyType": "dPTS" },
       { "PosInGroup": 4, "FamilyType": "dPTS" },
-      { "PosInGroup": 5, "FamilyType": "AFISP" },
-      { "PosInGroup": 6, "FamilyType": "AFISB" },
-      { "PosInGroup": 7, "FamilyType": "AFIS" },
+      { "PosInGroup": 5, "FamilyType": "AF15P" },
+      { "PosInGroup": 6, "FamilyType": "AF15B" },
+      { "PosInGroup": 7, "FamilyType": "AF15" },
       { "PosInGroup": 8, "FamilyType": "RAL_TXRX_ER1" },
-      { "PosInGroup": 9, "FamilyType": "AFISP" },
-      { "PosInGroup": 10, "FamilyType": "AFISB" },
-      { "PosInGroup": 11, "FamilyType": "AFIS" },
+      { "PosInGroup": 9, "FamilyType": "AF15P" },
+      { "PosInGroup": 10, "FamilyType": "AF15B" },
+      { "PosInGroup": 11, "FamilyType": "AF15" },
       { "PosInGroup": 12, "FamilyType": "DESY" },
       { "PosInGroup": 13, "FamilyType": "TTS_5" },
       { "PosInGroup": 14, "FamilyType": "TTS_4" }
