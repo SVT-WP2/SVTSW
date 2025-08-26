@@ -210,6 +210,7 @@ Enum asicFamilyType {
   MOST    
   MOSS
   BABYMOSS
+  BABYMOST
   NKF7
   MOSAIX
   BabyMOSAIX
@@ -230,9 +231,9 @@ Enum asicFamilyType {
   CE65_V2CN_18U_HSQ
   CE65_V2CN_22U5_SQ
   CE65_V2CN_22U5_HSQ
-  AOIO_P
-  AOIO
-  AOIO_B
+  AO10P
+  AO10
+  AO10B
   S
   DESY
   NONAME1
@@ -241,9 +242,9 @@ Enum asicFamilyType {
   CE65_V1CB_15U_SQ
   dPTSN
   dPTS
-  AFISP
-  AFISB
-  AFIS
+  AF15P
+  AF15B
+  AF15
   RAL_TXRX_ER1    
   TTS_5
   TTS_4
@@ -260,7 +261,6 @@ Enum asicFamilyType {
   TTS_3
   TTS_2
   TTS_1
-  NONAME4
 }
 
 Enum waferMapOrientation {
