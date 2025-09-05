@@ -164,9 +164,19 @@ CREATE TABLE IF NOT EXISTS ProbeCardInstalledInMachine (
 
 CREATE TABLE Chips (
   id integer PRIMARY KEY,
+  serialNumber varchar(50) UNIQUE,
   asicId integer,
-  location "wpGeneralLocation",
+  generalLocation "wpGeneralLocation",
   FOREIGN KEY (asicId) REFERENCES Asic (id)
+);
+
+CREATE TABLE ChipLocation (
+  chipId integer NOT NULL,
+  generalLocation "wpGeneralLocation",
+  creationTime timestamp DEFAULT (CURRENT_TIMESTAMP),
+  username varchar(50),
+  description text,
+  FOREIGN KEY (chipId) REFERENCES Chips (id)
 );
 
 CREATE TABLE SLDO (
@@ -175,7 +185,6 @@ CREATE TABLE SLDO (
   serialNumber varchar(50),
   FOREIGN KEY (chipId) REFERENCES Chips (id)
 );
-
 
 CREATE TABLE TestSetup (
   id integer PRIMARY KEY,
