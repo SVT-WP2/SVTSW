@@ -158,15 +158,24 @@ Table TestSetupEquipment
   eqipmentDetails JSON
 }
 
-Table Chips{
+Table Chip{
   id integer [primary key]
+  serialNumber string UNIQUE
   asicId integer [ref: > Asic.id]
-  location wpGeneralLocation
+  generalLocation wpGeneralLocation
+}
+
+Table ChipLocation {
+  chipId integer [ref: > Chip.id, not null]
+  generalLocation wpGeneralLocation
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  username string
+  description string
 }
 
 Table SLDO{
   id integer [primary key]
-  chipId integer [ref: > Chips.id]
+  chipId integer [ref: > Chip.id]
   serialNumber string
 }
 

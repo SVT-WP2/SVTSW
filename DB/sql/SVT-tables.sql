@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS ProbeCardInstalledInMachine (
 --   "cleaningInterval" integer
 -- );
 
-CREATE TABLE Chips (
+CREATE TABLE Chip (
   id integer PRIMARY KEY,
   serialNumber varchar(50) UNIQUE,
   asicId integer,
@@ -176,14 +176,14 @@ CREATE TABLE ChipLocation (
   creationTime timestamp DEFAULT (CURRENT_TIMESTAMP),
   username varchar(50),
   description text,
-  FOREIGN KEY (chipId) REFERENCES Chips (id)
+  FOREIGN KEY (chipId) REFERENCES Chip (id)
 );
 
 CREATE TABLE SLDO (
   id integer PRIMARY KEY,
   chipId integer,
   serialNumber varchar(50),
-  FOREIGN KEY (chipId) REFERENCES Chips (id)
+  FOREIGN KEY (chipId) REFERENCES Chip (id)
 );
 
 CREATE TABLE TestSetup (
