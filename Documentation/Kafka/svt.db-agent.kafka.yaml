@@ -18,7 +18,6 @@ info:
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
-    
 
   version: 0.0.1
 paths:
@@ -285,6 +284,105 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+
+  /svt.db-agent.request/GetAllChips:
+    post:
+      tags:
+        - Chips
+      summary: Get All Chips
+      description: Returns Chips list in the reply message. Optional filter by chipId can be applied to return exact chip.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllChipsMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllChipsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.db-agent.request/CreateChip:
+    post:
+      tags:
+        - Chips
+      summary: Create chip
+      description: Returns the newly created Chip in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateChipMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateChipReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.db-agent.request/UpdateChipLocation:
+    post:
+      tags:
+        - Chips
+      summary: Update Chip Location
+      description: Returns updated Chip in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateChipLocationMessage"
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateChipLocationReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
 
   /svt.db-agent.request/GetAllWaferProbeMachines:
     post:
@@ -889,7 +987,6 @@ components:
                   items:
                     type: number
 
-
     GetAllAsicsReplyMessage:
       properties:
         type:
@@ -928,6 +1025,87 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/AsicDto'
+
+    #
+    # CHIPS :: LIST
+    #
+    GetAllChipsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllChip'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Chip ids array. If array is empty / undefined => all Chip will be returned.
+                  items:
+                    type: number
+
+    GetAllChipsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllAsicsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChipDto'
+
+    #
+    # CHIPS :: CREATE
+    #
+    CreateChipMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateChip'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: '#/components/schemas/ChipCreateDto'
+
+    CreateChipReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateChipReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/ChipDto'
+
+    #
+    # CHIPS :: UPDATE LOCAION
+    #
+    UpdateChipLocationMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateChipLocation'
+        data:
+          $ref: '#/components/schemas/ChipUpdateLocationDto'
+
+    UpdateChipLocationReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateChipLocationReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/ChipDto'
+
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -984,6 +1162,7 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
+
     #
     # WAFER PROBE MACHINES :: UPDATE
     #
@@ -1271,6 +1450,7 @@ components:
         - waferId
         - generalLocation
         - userName
+        - note
       properties:
         waferId:
           type: number
@@ -1282,6 +1462,9 @@ components:
           nullable: true
         userName:
           type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
 
     AsicDto:
       type: object
@@ -1319,6 +1502,59 @@ components:
           type: string
         quality:
           type: string
+
+    ChipDto:
+      type: object
+      required:
+        - id
+        - serialNumber
+        - acicId
+        - generalLocation
+      properties:
+        id:
+          type: number
+        serialNumber:
+          type: string
+        asicId:
+          type: number
+        generalLocation:
+          type: string
+
+    ChipCreateDto:
+      type: object
+      required:
+        - serialNumber
+        - asicId
+        - generalLocation
+      properties:
+        serialNumber:
+          type: string
+        asicId:
+          type: number
+        generalLocation:
+          type: string
+
+    ChipUpdateLocationDto:
+      type: object
+      required:
+        - chipId
+        - generalLocation
+        - userName
+        - note
+      properties:
+        chipId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        userName:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
 
     WaferProbeMachineDto:
       type: object
