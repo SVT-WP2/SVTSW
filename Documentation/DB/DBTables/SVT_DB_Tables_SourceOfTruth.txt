@@ -70,7 +70,7 @@ Table main.WaferProbeMachine {
   id integer [primary key, increment]
   serialNumber varchar(50) [unique, not null]
   name varchar(50) [unique, not null]
-  hostName varchar(200) [not null]
+  hostname varchar(200) [not null]
   connectionType main.wpConnectionType [not null]
   connectionPort integer [not null]
   generalLocation main.wpGeneralLocation [not null]
