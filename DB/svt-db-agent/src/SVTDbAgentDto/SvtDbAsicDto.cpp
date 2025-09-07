@@ -11,6 +11,7 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
+#include <sstream>
 //========================================================================+
 SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 {
