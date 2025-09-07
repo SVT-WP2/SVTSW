@@ -1,8 +1,3 @@
-\set SchemaName %SCHEMA_NAME%
---Create schema
-CREATE SCHEMA IF NOT EXISTS :SchemaName;
--- SELECT SCHEMA
-SET search_path TO :SchemaName;
 
 --Taking from
 INSERT INTO probecard VALUES (

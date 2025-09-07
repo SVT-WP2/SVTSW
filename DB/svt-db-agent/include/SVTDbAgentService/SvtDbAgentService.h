@@ -13,21 +13,19 @@
 #include "SvtDbAgentMessage.h"
 #include "SvtDbAgentProducer.h"
 
-#include <librdkafka/rdkafkacpp.h>
 #include <cmath>
+#include <librdkafka/rdkafkacpp.h>
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <string_view>
 
-namespace SvtDbInterface
-{
-  struct dbWaferRecords;
+namespace SvtDbInterface {
+struct dbWaferRecords;
 }
 
-enum SvtDbAgentTopicEnum : uint8_t
-{
+enum SvtDbAgentTopicEnum : uint8_t {
   Request = 0,
   RequestReply,
   NumTopicNames = 2
@@ -36,21 +34,19 @@ enum SvtDbAgentTopicEnum : uint8_t
 const std::array<std::string_view, SvtDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
 
-namespace RdKafka
-{
-  class Message;
+namespace RdKafka {
+class Message;
 };
 
 class SvtDbAgentConsumer;
 class SvtDbAgentProducer;
 
-class SvtDbAgentService
-{
- public:
+class SvtDbAgentService {
+public:
   SvtDbAgentService() = default;
   ~SvtDbAgentService();
 
-  bool initEnumTypeList(const std::string &schema = "prod");
+  bool initEnumTypeList(const std::string &schema);
   bool configureService(bool stop_eof = false);
   void processMsgCb(RdKafka::Message *msg, void *opaque);
   void setDebug(std::string debug) { m_debug = debug; }
@@ -63,7 +59,7 @@ class SvtDbAgentService
 
   std::string &getBrokerName() { return m_brokerName; }
 
- private:
+private:
   SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
   void parseMsg(const SvtDbAgent::SvtDbAgentMessage &msg,
@@ -80,4 +76,4 @@ class SvtDbAgentService
   bool log_messages = false;
 };
 
-#endif  // !SVTDB_AGENT_H
+#endif // !SVTDB_AGENT_H
