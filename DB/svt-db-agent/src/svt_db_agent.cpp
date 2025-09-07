@@ -26,12 +26,6 @@ std::string version = std::string(VERSION);
 
 SvtLogger &logger = Singleton<SvtLogger>::instance();
 
-std::string psqlhost = "dbod-svt-sw-pgdb.cern.ch";
-std::string psqlport = "6600";
-std::string psqluser = "admin";
-std::string psqlpass = "svt-mosaix";
-std::string psqldb = "svt_sw_db_test";
-
 //========================================================================+
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,
                  std::string &host, std::string &port)
@@ -66,6 +60,11 @@ int main()
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
   // problems
+  std::string psqlhost = "dbod-svt-sw-pgdb.cern.ch";
+  std::string psqlport = "6600";
+  std::string psqluser = "admin";
+  std::string psqlpass = "svt-mosaix";
+  std::string psqldb = SvtDbAgent::db_name;
   if (!dbInterface.isConnected())
   {
     if (!connectToDB(psqluser, psqlpass, psqldb, psqlhost, psqlport))

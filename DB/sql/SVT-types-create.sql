@@ -1,10 +1,4 @@
-\set SchemaName %SCHEMA_NAME%
---Create schema
-CREATE SCHEMA IF NOT EXISTS :SchemaName;
--- SELECT SCHEMA
-SET search_path TO :SchemaName;
-
---Taking from 
+--Taking from
 CREATE TYPE "engineeringRun" AS ENUM (
   'ER1',
   'ER2',
