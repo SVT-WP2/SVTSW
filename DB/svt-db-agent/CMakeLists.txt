@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 17)
 project(svt-db-agent)
 
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR})
-link_libraries(stdc++fs)
+# link_libraries(stdc++fs)
 
 option(BUILD_TSAN "Compile with thread sanitizer" OFF)
 option(BUILD_ASAN "Compile with address sanitizer" OFF)
@@ -12,8 +12,8 @@ option(BUILD_UBSAN "Compile with undefined behaviour sanitizer" OFF)
 
 # add_definitions("-DTIXML_USE_STL")
 add_compile_options("-Wall" "-Wextra" "-g" "-O2")
-add_link_options("-lstdc++" "-ldl")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-conversion -Wpedantic -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation -Wundef -Wdeprecated -fno-common -fasynchronous-unwind-tables -Wl,-z,defs -D_FORTIFY_SOURCE=2 -D_GLIBCXX_ASSERTIONS" )
+# add_link_options("-lstdc++" "-ldl")
+# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-conversion -Wpedantic -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation -Wundef -Wdeprecated -fno-common -fasynchronous-unwind-tables -Wl,-z,defs -D_FORTIFY_SOURCE=2 -D_GLIBCXX_ASSERTIONS" )
 
 if(BUILD_TSAN)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
@@ -68,8 +68,6 @@ add_custom_target(version
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-add_subdirectory(deps/libpqxx build-pqxx)
-
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(deps/nlohmann_json build-nlohmann_json)
 
@@ -79,6 +77,22 @@ add_dependencies(svt_db_agent version)
 add_executable(db_IF_test "src/db_IF_test.cpp" ${SOURCES_DB})
 add_dependencies(db_IF_test version)
 
-set(svt_db_agent_lib pqxx rdkafka++ nlohmann_json::nlohmann_json pthread)
+IF (UNIX AND NOT APPLE)
+  add_subdirectory(deps/libpqxx build-pqxx)
+  set(svt_db_agent_lib pqxx rdkafka++ nlohmann_json::nlohmann_json pthread)
+
+ELSE()
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(PQXX REQUIRED libpqxx)
+  pkg_check_modules(RDKAFKA REQUIRED rdkafka++)
+
+  target_include_directories(svt_db_agent PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
+  target_include_directories(db_IF_test PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
+
+  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} ${RDKAFKA_LINK_LIBRARIES} nlohmann_json::nlohmann_json pthread)
+
+ENDIF()
+
 target_link_libraries(svt_db_agent PRIVATE ${svt_db_agent_lib})
 target_link_libraries(db_IF_test PRIVATE ${svt_db_agent_lib})
+
