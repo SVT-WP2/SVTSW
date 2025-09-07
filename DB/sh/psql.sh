@@ -2,12 +2,13 @@
 (
   set -euo pipefail
 
-  db_name="svt_sw_db_test"
+  db_name='svt_sw_db_test'
+  db_schema='main'
   PSQL_CMD='psql'
   HOST='dbod-svt-sw-pgdb'
 
   _psql_exec() {
-    eval " $PSQL_CMD -h $HOST -U admin -p 6600 ${*:+$*}"
+    eval " PGOPTIONS=\"--search_path=$db_schema\" $PSQL_CMD -h $HOST -U admin -p 6600 ${*:+$*}"
   }
 
   _chTZ() {
@@ -64,6 +65,14 @@
       PSQL_CMD='psql-17'
       HOST='localhost'
       ;;
+    --db)
+      shift
+      db_name=${1:}
+      ;;
+    --schema)
+      shift
+      db_schema=${1:}
+      ;;
     --chTZ)
       _chTZ
       ;;
@@ -84,20 +93,21 @@
       ;;
     --run2all)
       shift
-      for schema in prod test; do
-        echo
-        echo "Running to $schema"
-        echo
-        sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
-        _run temp.sql
-        rm temp.sql
+      # for schema in main; do
+      #   echo
+      #   echo "Running to $schema"
+      #   echo
+      #   sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
+      #   _run temp.sql
+      #   rm temp.sql
 
-      done
+      # done
       ;;
     --open)
       _psql_exec "-d ${db_name}"
       ;;
     *)
+      echo "unknow action $action"
       exit 1
       ;;
     esac

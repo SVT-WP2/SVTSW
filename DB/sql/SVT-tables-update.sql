@@ -1,8 +1,3 @@
-\set SchemaName %SCHEMA_NAME%
---Create schema
-CREATE SCHEMA IF NOT EXISTS :SchemaName;
--- SELECT SCHEMA
-SET search_path TO :SchemaName;
 
 -- ALTER TABLE "AsicProbing" ADD FOREIGN KEY ("asicId") REFERENCES "Asic" ("id");
 --
@@ -25,6 +20,7 @@ SET search_path TO :SchemaName;
 -- ALTER TABLE "ProbeCardConfiguration" ADD FOREIGN KEY ("probeCardId") REFERENCES "ProbeCard" ("id");
 
 -- ALTER TABLE "ProbeCardConfiguration" ADD FOREIGN KEY ("versionId") REFERENCES "Version" ("id");
+
 -- DROP TABLE WaferType CASCADE;
 -- DROP TABLE Wafer CASCADE;
 -- DROP TABLE WaferLocation CASCADE;
