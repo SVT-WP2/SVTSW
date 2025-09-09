@@ -100,7 +100,8 @@ CREATE TYPE "wpGeneralLocation" AS ENUM (
   'Darsburry',
   'Brunel',
   'Birmingham',
-  'Liverpool'
+  'Liverpool',
+  'LBL'
 );
 
 CREATE TYPE "wpSwType" AS ENUM (
@@ -213,5 +214,11 @@ CREATE TYPE "SLDOTestTemparature" AS ENUM (
   '27C',
   '60C',
   '105C'
+);
+
+CREATE TYPE "testSetupType" AS ENUM (
+  'SLDO_MPW1',
+  'NVG_MPW2',
+  'ER1_MOSAIX'
 );
 
