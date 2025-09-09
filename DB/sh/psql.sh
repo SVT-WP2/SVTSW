@@ -67,11 +67,11 @@
       ;;
     --db)
       shift
-      db_name=${1:}
+      db_name=${1:-}
       ;;
     --schema)
       shift
-      db_schema=${1:}
+      db_schema=${1:-}
       ;;
     --chTZ)
       _chTZ
