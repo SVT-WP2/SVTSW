@@ -20,7 +20,7 @@ Table main.Wafer {
 
 Table main.WaferLocation {
   waferId integer [ref: > main.Wafer.id, not null]
-  location main.siteGeneralLocation [not null]
+  generalLocation main.wpGeneralLocation [not null]
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
   username varchar(50)
   note text
@@ -113,7 +113,7 @@ Table main.WaferLoadedInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   waferId integer [ref: > main.Wafer.id]
   date date
-  userName varchar(50)
+  username varchar(50)
   status main.waferInMachineStatus
 }
 
@@ -121,7 +121,7 @@ Table main.ProbeCardInstalledInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   probeCardId integer [ref: > main.ProbeCard.id]
   date date
-  userName varchar(50)
+  username varchar(50)
 }
 
 Table main.AsicConfiguration {
