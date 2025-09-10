@@ -39,6 +39,16 @@
     fi
   }
 
+  _exec() {
+    local opt=${1:-}
+    local cmd=${2:-}
+    db_names=${db_names:-$db_name}
+    for db in "${db_names[@]}"; do
+      echo -e "Executing cmd '$cmd' in db $db"
+      _psql_exec "-d $db $opt '$cmd'"
+    done
+  }
+
   _run() {
     in_file=${1:-}
     [ -z "$in_file" ] && {
@@ -49,7 +59,8 @@
       echo "ERROR script $in_file not found."
       exit 1
     }
-    _psql_exec "-d ${db_name} -a -f ${in_file} "
+
+    _exec '-a -f' "${in_file}"
   }
 
   [ $# -eq 0 ] && {
@@ -67,11 +78,14 @@
       ;;
     --db)
       shift
-      db_name=${1:-}
+      db_name="${1:-}"
       ;;
     --schema)
       shift
       db_schema=${1:-}
+      ;;
+    --all)
+      db_names=('svt_sw_db_test' 'svt_sw_db')
       ;;
     --chTZ)
       _chTZ
@@ -85,23 +99,11 @@
       ;;
     --exec)
       shift
-      _psql_exec "-d $db_name -c '$1'"
+      _exec '-c' "${1:-}"
       ;;
     --run)
       shift
-      _run "$1"
-      ;;
-    --run2all)
-      shift
-      # for schema in main; do
-      #   echo
-      #   echo "Running to $schema"
-      #   echo
-      #   sed "s/%SCHEMA_NAME%/$schema/g" "${1:-}" >temp.sql
-      #   _run temp.sql
-      #   rm temp.sql
-
-      # done
+      _run "${1:-}"
       ;;
     --open)
       _psql_exec "-d ${db_name}"
