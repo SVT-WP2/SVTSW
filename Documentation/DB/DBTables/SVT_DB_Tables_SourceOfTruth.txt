@@ -1,99 +1,99 @@
-Table WaferType {
+Table main.WaferType {
   id integer [primary key, increment]
-  name string
-  engineeringRun engineeringRun
-  foundry foundryName
-  technology waferTech
-  waferMap JSON
+  name varchar(50) [not null]
+  engineeringRun main.engineeringRun [not null]
+  foundry main.foundryName [not null]
+  technology main.waferTech [not null]
+  waferMap JSON [not null]
 }
 
-Table Wafer {
+Table main.Wafer {
   id integer [primary key, increment]
-  serialNumber string [unique]
-  batchNumber integer
-  waferTypeId integer [ref: > WaferType.id]
+  waferTypeId integer [ref: > main.WaferType.id, not null]
+  serialNumber varchar(50) [unique, not null]
+  batchNumber integer [not null]
   thinningDate date
   dicingDate date
   productionDate date
-  generallocation wpGeneralLocation
+  generalLocation main.wpGeneralLocation
 }
 
-Table WaferLocation {
-  waferId integer [ref: > Wafer.id, not null]
-  generalLocation wpGeneralLocation
+Table main.WaferLocation {
+  waferId integer [ref: > main.Wafer.id, not null]
+  location main.siteGeneralLocation [not null]
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
-  username string
-  description string
+  username varchar(50)
+  note text
 }
 
-Table Version {
-  id integer [primary key]
-  name string
-  baseVersion integer [ref: > Version.id]
+Table main.Version {
+  id integer [primary key, increment]
+  name varchar(50) [not null]
+  baseVersion integer [ref: > main.Version.id]
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
-  description string
+  note text
 }
 
-Table WaferTypeImage {
-  waferTypeId integer [ref: > WaferType.id, not null]
-  imageBase64String string [not null]
+Table main.WaferTypeImage {
+  waferTypeId integer [ref: > main.WaferType.id, not null]
+  imageBase64String text [not null]
 }
 
-Table Asic {
+Table main.Asic {
   id integer [primary key, increment]
-  waferId integer [ref: > Wafer.id]
-  serialNumber string [unique]
-  familyType asicFamilyType
-  waferMapPosition string
-  quality asicQuality
+  waferId integer [ref: > main.Wafer.id, not null]
+  serialNumber varchar(50) [unique, not null]
+  familyType main.asicFamilyType [not null]
+  waferMapPosition varchar(50) [not null]
+  quality main.asicQuality [not null]
 }
 
-Table ProbeCard {
+Table main.ProbeCard {
   id integer [primary key, increment]
-  serialNumber string [unique]
-  vendor pcVendor
-  name pcName
-  model pcModel
-  version integer
-  arrivalDate date
-  location pcLocation
-  type pcType
-  vendorCleaningInterval integer
+  serialNumber varchar(50) [unique, not null]
+  vendor main.pcVendor [not null]
+  name main.pcName [not null]
+  model main.pcModel [not null]
+  version integer [not null]
+  arrivalDate date [not null]
+  location main.pcLocation [not null]
+  type main.pcType [not null]
+  vendorCleaningInterval integer [not null]
 }
 
-Table ProbeCardFamilyType {
-  probeCardId integer [ref: > ProbeCard.id]
-  asicFamilyType asicFamilyType
+Table main.ProbeCardFamilyType {
+  probeCardId integer [ref: > main.ProbeCard.id, not null]
+  asicFamilyType main.asicFamilyType [not null]
 }
 
-Table WaferProbeMachine {
+Table main.WaferProbeMachine {
   id integer [primary key, increment]
-  serialNumber string [unique]
-  name string [unique]
-  hostName string
-  connectionType wpConnectionType
-  connectionPort integer
-  generalLocation wpGeneralLocation
-  software wpSwType
-  swVersion string
-  vendor wpVendor
+  serialNumber varchar(50) [unique, not null]
+  name varchar(50) [unique, not null]
+  hostName varchar(200) [not null]
+  connectionType main.wpConnectionType [not null]
+  connectionPort integer [not null]
+  generalLocation main.wpGeneralLocation [not null]
+  software main.wpSwType [not null]
+  swVersion varchar(50) [not null]
+  vendor main.wpVendor [not null]
 }
 
-Table WaferProbeProject {
+Table main.WaferProbeProject {
   id integer [primary key, increment]
-  wpMachineId integer [ref: > WaferProbeMachine.id]
-  waferTypeId integer [ref: > WaferType.id]
-  asicFamilyType asicFamilyType
-  orientation waferMapOrientation
-  name string [unique]
-  alignmentDie string
-  homeDie string
+  wpMachineId integer [ref: > main.WaferProbeMachine.id, not null]
+  waferTypeId integer [ref: > main.WaferType.id, not null]
+  asicFamilyType main.asicFamilyType
+  orientation main.waferMapOrientation
+  name varchar(100) [unique, not null]
+  alignmentDie varchar(100)
+  homeDie varchar(100)
   local2GlobalMap JSON
 }
 
-Table ProbeCardMaintenance {
+Table main.ProbeCardMaintenance {
   id integer [primary key, increment]
-  probeCardId integer [ref: > ProbeCard.id]
+  probeCardId integer [ref: > main.ProbeCard.id, not null]
   cleaningDate date
   totNumContacts integer
   numContactsSinceLastCleaning integer
@@ -101,103 +101,104 @@ Table ProbeCardMaintenance {
   cleaningOverdrive integer
 }
 
-Table AsicProbing {
+Table main.AsicProbing {
   id integer [primary key, increment]
-  asicId integer [ref: > Asic.id]
+  asicId integer [ref: > main.Asic.id]
   numContacts integer
-  mechanicalQuality contactMechanicalQuality
+  mechanicalQuality main.contactMechanicalQuality
   arrivalDate date
 }
 
-Table WaferLoadedInMachine {
-  machineId integer [ref: > WaferProbeMachine.id]
-  waferId integer [ref: > Wafer.id]
+Table main.WaferLoadedInMachine {
+  machineId integer [ref: > main.WaferProbeMachine.id]
+  waferId integer [ref: > main.Wafer.id]
   date date
-  userName string
-  status waferInMachineStatus
+  userName varchar(50)
+  status main.waferInMachineStatus
 }
 
-Table ProbeCardInstalledInMachine {
-  machineId integer [ref: > WaferProbeMachine.id]
-  probeCardId integer [ref: > ProbeCard.id]
+Table main.ProbeCardInstalledInMachine {
+  machineId integer [ref: > main.WaferProbeMachine.id]
+  probeCardId integer [ref: > main.ProbeCard.id]
   date date
-  userName string
+  userName varchar(50)
 }
 
-Table AsicConfiguration {
+Table main.AsicConfiguration {
   id integer [primary key, increment]
-  probeStationId integer [ref: > WaferProbeMachine.id]
-  versionId integer [ref: > Version.id]
+  probeStationId integer [ref: > main.WaferProbeMachine.id]
+  versionId integer [ref: > main.Version.id]
   isTestingAllowed boolean
 }
 
-Table WpConfiguration {
+Table main.WpConfiguration {
   id integer [primary key, increment]
-  wpMachineId integer [ref: > WaferProbeMachine.id]
-  versionId integer [ref: > Version.id]
-  orientation waferMapOrientation
+  wpMachineId integer [ref: > main.WaferProbeMachine.id]
+  versionId integer [ref: > main.Version.id]
+  orientation main.waferMapOrientation
 }
 
-Table ProbeCardConfiguration {
+Table main.ProbeCardConfiguration {
   id integer [primary key, increment]
-  probeCardId integer [ref: > ProbeCard.id]
-  versionId integer [ref: > Version.id]
+  probeCardId integer [ref: > main.ProbeCard.id]
+  versionId integer [ref: > main.Version.id]
   cleaningInterval integer
 }
 
-Table TestSetup {
-  id integer [primary key]
-  name string [unique]
-  location wpGeneralLocation
+Table main.Chip{
+  id integer [primary key, increment]
+  serialNumber varchar(50) UNIQUE
+  asicId integer [ref: > main.Asic.id]
+  generalLocation main.wpGeneralLocation
 }
 
-Table TestSetupEquipment
+Table main.ChipLocation {
+  chipId integer [ref: > main.Chip.id, not null]
+  generalLocation main.wpGeneralLocation
+  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  username varchar(50)
+  note text
+}
+
+Table main.SLDO{
+  id integer [primary key, increment]
+  chipId integer [ref: > main.Chip.id]
+  serialNumber varchar(50)
+}
+
+Table main.TestSetup {
+  id integer [primary key]
+  name main.testSetupType
+  location main.wpGeneralLocation
+}
+
+Table main.TestSetupEquipment
 {
-  testSetupId integer [ref: > TestSetup.id]
-  equipment testEquipments
+  testSetupId integer [ref: > main.TestSetup.id]
+  equipment main.testEquipments
   eqipmentDetails JSON
 }
 
-Table Chip{
-  id integer [primary key]
-  serialNumber string UNIQUE
-  asicId integer [ref: > Asic.id]
-  generalLocation wpGeneralLocation
+Table main.SLDOTestConfiguration {
+  id integer [primary key, increment]
+  name varchar(100)
+  mode main.sldoTestModes
+  loadCapacitance main.sldoTestLoadCap
+  loadCurrent main.sldoTestLoadCurrent
+  temperature main.sldoTestTemparature
 }
 
-Table ChipLocation {
-  chipId integer [ref: > Chip.id, not null]
-  generalLocation wpGeneralLocation
-  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
-  username string
-  description string
-}
-
-Table SLDO{
-  id integer [primary key]
-  chipId integer [ref: > Chip.id]
-  serialNumber string
-}
-
-Table SLDOTestConfiguration {
-  id integer [primary key]
-  name string
-  mode SLDOTestModes
-  loadCapacitance SLDOTestLoadCap
-  loadCurrent SLDOTestLoadCurrent
-  temperature SLDOTestTemparature
-}
-
-Table SLDOTest {
-  id integer [primary key]
-  name SLDOTestTypes
-  SLDOid integer [ref: > SLDO.id]
-  testSetupId integer [ref: > TestSetup.id]
-  configId integer [ref: > SLDOTestConfiguration.id]
+Table main.SLDOTest {
+  id integer [primary key, increment]
+  name main.sldoTestTypes
+  timestamp timestamp [default: `CURRENT_TIMESTAMP`]
+  SLDOid integer [ref: > main.SLDO.id]
+  testSetupId integer [ref: > main.TestSetup.id]
+  configId integer [ref: > main.SLDOTestConfiguration.id]
   testValues JSON
 }
 
-Enum engineeringRun {
+Enum main.engineeringRun {
   ER1
   ER2
   ER3
@@ -205,17 +206,17 @@ Enum engineeringRun {
   Ancillary1
 }
 
-Enum foundryName {
+Enum main.foundryName {
   TowerSemiconductor
   Xfab
 }
 
-Enum waferTech {
+Enum main.waferTech {
   TPSCo65
   Xfab110
 }
 
-Enum asicFamilyType {
+Enum main.asicFamilyType {
   MOST    
   MOSS
   BABYMOSS
@@ -272,14 +273,14 @@ Enum asicFamilyType {
   TTS_1
 }
 
-Enum waferMapOrientation {
+Enum main.waferMapOrientation {
   North
   South
   East
   West
 }
 
-Enum wpConnectionType {
+Enum main.wpConnectionType {
   TCPIP
   GPIB
   RS232
@@ -289,7 +290,7 @@ Enum wpConnectionType {
   LAN
 }
 
-Enum wpGeneralLocation {
+Enum main.wpGeneralLocation {
   CERN_186_R_E10
   Prague
   LosAlamos
@@ -299,33 +300,34 @@ Enum wpGeneralLocation {
   Brunel
   Birmingham
   Liverpool
+  LBL
 }
 
-Enum wpSwType {
+Enum main.wpSwType {
   Sentio
   VeloxCascade
 }
 
-Enum wpVendor {
+Enum main.wpVendor {
   MPI
   CascadeMicrotech
   FormFactor
 }
 
-Enum pcVendor {
+Enum main.pcVendor {
   MPI
   Korea
   Synergie
   FormFactorPC
 }
 
-Enum pcName {
+Enum main.pcName {
   NKF7_MPI
   BabyMOSS_Korea
   Mosaix_Korea
 }
 
-Enum pcModel {
+Enum main.pcModel {
   "NKF7-TS3500-CABLEOUT-MLO(EVS-P)"
   MosaixLeft
   MosaixRight
@@ -334,44 +336,44 @@ Enum pcModel {
   Ancillary
 }
 
-Enum pcLocation {
+Enum main.pcLocation {
   CERN
   Prague
   LosAlamos
   BNL
   RAL
-}
+ }
 
-Enum pcType {
+Enum main.pcType {
   Vertical
   Cantilever
 }
 
-Enum asicQuality {
+Enum main.asicQuality {
   MechanicallyDamaged
   MechanicallyInteger
   CoveredByGreenLayer
 }
 
-Enum contactMechanicalQuality {
+Enum main.contactMechanicalQuality {
   Good
   Bad
   AvoidIfPossible
 }
 
-Enum waferInMachineStatus {
+Enum main.waferInMachineStatus {
   Loaded
   Unloaded
 }
 
-Enum testEquipments {
+Enum main.testEquipments {
   oscilloscope
   powerSupply
   signalGenetaor
   SMU
 }
 
-Enum SLDOTestTypes {
+Enum main.sldoTestTypes {
   Power_ramp_up
   PSRR
   Power_Ramp_rate
@@ -380,12 +382,12 @@ Enum SLDOTestTypes {
   Irradiation
 }
 
-Enum SLDOTestModes {
+Enum main.sldoTestModes {
   Mode0
   Mode1
 }
 
-Enum SLDOTestRampTime {
+Enum main.sldoTestRampTime {
   100us
   1ms
   10ms
@@ -393,22 +395,28 @@ Enum SLDOTestRampTime {
   1s
 }
 
-Enum SLDOTestLoadCap {
+Enum main.sldoTestLoadCap {
   10nF
   100nF
   1uF
   10uF
 }
 
-Enum SLDOTestLoadCurrent {
+Enum main.sldoTestLoadCurrent {
   40mA
   500mA
   900mA
 }
 
-Enum SLDOTestTemparature {
-  minus_20
+Enum main.sldoTestTemparature {
+  "-20C"
   27C
   60C
   105C
+}
+
+Enum main.testSetupType {
+  SLDO_MPW1
+  NVG_MPW2
+  ER1_MOSAIX
 }
