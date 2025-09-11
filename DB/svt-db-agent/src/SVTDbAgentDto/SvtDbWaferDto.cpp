@@ -39,7 +39,7 @@ SvtDbAgent::SvtDbWaferLocationDto::SvtDbWaferLocationDto()
   addColName("generalLocation");
   addColName("creationTime");
   addColName("username");
-  addColName("description");
+  addColName("note");
 }
 
 //========================================================================+
@@ -75,7 +75,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   waferLoc.values.insert({"waferId", newEntryId});
   waferLoc.values.insert(
       {"generalLocation", waferEntry.values["generalLocation"]});
-  waferLoc.values.insert({"description", "Location at creation"});
+  waferLoc.values.insert({"note", "Location at creation"});
   if (!Singleton<SvtDbWaferLocationDto>::instance().createEntryInDB(waferLoc))
   {
     throw std::runtime_error("ERROR: Could not create wafer location entry");

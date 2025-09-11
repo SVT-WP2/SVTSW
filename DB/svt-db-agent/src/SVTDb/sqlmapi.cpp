@@ -20,6 +20,14 @@ std::atomic<int> queryTrialCount;
  * Helper functions
  */
 
+//! helper function quate string
+std::string formatStr(const std::string &str) { return "\"" + str + "\""; }
+std::string addSchema(const std::string &str)
+{
+  std::string schema(SvtDbAgent::db_schema);
+  return schema + "." + str;
+}
+
 //! helper function for joining strings on a delimiter
 //========================================================================+
 string stringJoin(vector<string> strings, string delimiter)
@@ -121,7 +129,7 @@ void SimpleQuery::doQuery(rows_t &rows)
 {
   string queryString = "";
   queryString += "SELECT " + stringJoin(mColumnNames, ", ");
-  queryString += " FROM " + mTableName;
+  queryString += " FROM " + addSchema(mTableName);
   if (!mWhereClauses.empty())
   {
     queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
@@ -196,7 +204,7 @@ void rollbackUpdate() { DatabaseIF::instance().commitUpdate(false); }
 bool SimpleInsert::doInsert()
 {
   string insertString = "";
-  insertString += "INSERT INTO " + mTableName;
+  insertString += "INSERT INTO " + addSchema(mTableName);
   insertString += " (" + stringJoin(mColumnNames, ", ") + ")";
   insertString += " VALUES(" + stringJoin(mValues, ", ") + ")";
 
@@ -228,7 +236,7 @@ void SimpleInsert::addColumnAndValue(string columnName,
 bool SimpleUpdate::doUpdate()
 {
   string queryString = "";
-  queryString += "UPDATE " + mTableName;
+  queryString += "UPDATE " + addSchema(mTableName);
   queryString += " SET " + stringJoin(mColumnNamesAndValues, ", ");
   if (!mWhereClauses.empty())
   {
@@ -296,7 +304,7 @@ void VersionedQuery::doQuery(rows_t &rows)
   string queryString = "";
   // subquery on version first
   queryString += "WITH T0 AS (SELECT *";
-  queryString += " FROM " + mTableName;
+  queryString += " FROM " + addSchema(mTableName);
   queryString += " WHERE versionId IN (" + std::to_string(baseVersionId) + "," +
                  std::to_string(mVersionId) + ")";
   if (!mWhereClauses.empty())
@@ -347,7 +355,7 @@ bool VersionedInsert::doInsert()
 int getBaseVersion(int versionId)
 {
   string queryString = "SELECT baseVersion";
-  queryString += " FROM " + SvtDbAgent::db_schema + ".Version";
+  queryString += " FROM " + SvtDbAgent::db_schema + ".\"Version\"";
   queryString += " WHERE id=" + std::to_string(versionId);
 
   rows_t rows;
@@ -372,7 +380,7 @@ int getBaseVersion(int versionId)
 int getMostRecentVersionId()
 {
   string queryString =
-      "SELECT MAX(ID) FROM " + SvtDbAgent::db_schema + ".Version";
+      "SELECT MAX(ID) FROM " + SvtDbAgent::db_schema + ".\"Version\"";
 
   rows_t rows;
   doGenericQuery(queryString, rows);

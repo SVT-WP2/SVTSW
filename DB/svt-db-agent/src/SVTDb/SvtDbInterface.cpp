@@ -19,13 +19,12 @@ size_t SvtDbInterface::getAllVersions(
   versions.clear();
   SimpleQuery query;
 
-  std::string tableName = SvtDbAgent::db_schema + std::string(".version");
-  query.setTableName(tableName);
+  query.setTableName("Version");
 
   query.addColumn("id");
   query.addColumn("name");
   query.addColumn("baseVersion");
-  query.addColumn("description");
+  query.addColumn("note");
 
   rows_t rows;
   query.doQuery(rows);
@@ -52,11 +51,11 @@ size_t SvtDbInterface::getAllVersions(
     }
     if ((row.size() > 3) && (row.at(3) != NULL))
     {
-      version.description = row.at(3).get<std::string>();
+      version.note = row.at(3).get<std::string>();
     }
     else
     {
-      version.description = "Empty";
+      version.note = "Empty";
     }
     versions.push_back(version);
   }
@@ -68,8 +67,8 @@ size_t SvtDbInterface::getAllVersions(
 //========================================================================+
 size_t SvtDbInterface::getMaxId(const std::string &tableName)
 {
-  std::string full_tableName = SvtDbAgent::db_schema + "." + tableName;
-  std::string queryString = "SELECT MAX(ID) FROM " + full_tableName;
+  std::string queryString = "SELECT MAX(ID) FROM " + SvtDbAgent::db_schema +
+                            "." + "\"" + tableName + "\"";
 
   rows_t rows;
   doGenericQuery(queryString, rows);
@@ -93,8 +92,7 @@ bool SvtDbInterface::checkIdExist(const std::string &tableName, int id)
 {
   SimpleQuery query;
 
-  std::string full_tableName = SvtDbAgent::db_schema + "." + tableName;
-  query.setTableName(full_tableName);
+  query.setTableName(tableName);
   query.addWhereEquals("id", id);
   // string queryString = "SELECT 1 FROM " + full_tableName;
 

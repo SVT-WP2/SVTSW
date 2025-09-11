@@ -33,8 +33,8 @@ namespace SvtDbAgent
   {
     SvtDbWaferTypeImageDto()
     {
-      addColName("waferTypeId");
-      addColName("imageBase64String");
+      addColName("\"waferTypeId\"");
+      addColName("\"imageBase64String\"");
     }
     ~SvtDbWaferTypeImageDto() = default;
     // void parseEntry(const nlohmann::json &entry_j, SvtDbEntry &entry) override;

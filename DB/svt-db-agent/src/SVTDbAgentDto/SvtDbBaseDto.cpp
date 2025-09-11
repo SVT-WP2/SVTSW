@@ -26,9 +26,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   entries.clear();
   SimpleQuery query;
 
-  std::string full_tableName =
-      SvtDbAgent::db_schema + std::string(".") + getTableName();
-  query.setTableName(full_tableName);
+  query.setTableName(getTableName());
 
   for (const auto &colName : getColNames())
   {
@@ -123,8 +121,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
 {
   SimpleInsert insert;
 
-  std::string tableName = SvtDbAgent::db_schema + "." + getTableName();
-  insert.setTableName(tableName);
+  insert.setTableName(getTableName());
 
   //! checkinput values and Add columns & values
   for (const auto &item : entry.values)
@@ -147,9 +144,7 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
 {
   SimpleUpdate update;
 
-  std::string tableName =
-      SvtDbAgent::db_schema + std::string(".") + getTableName();
-  update.setTableName(tableName);
+  update.setTableName(getTableName());
 
   update.addWhereEquals("id", id);
 
