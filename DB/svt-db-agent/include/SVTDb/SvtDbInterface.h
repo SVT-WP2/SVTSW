@@ -24,7 +24,7 @@ namespace SvtDbInterface
     int id;
     int baseVersion;
     std::string name;
-    std::string description;
+    std::string note;
   };
 
   //!

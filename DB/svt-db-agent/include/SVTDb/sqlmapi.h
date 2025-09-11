@@ -12,6 +12,7 @@ extern std::atomic<int> queryTrialCount;
 Function signatures
 **************************************************************/
 // wrapper code for interfacing with mapi
+std::string formatStr(const std::string &str);
 void doGenericQuery(std::string queryString, rows_t &rows);
 void raiseError(std::string errorMessage);
 void finishQuery(rows_t rows);
@@ -19,8 +20,14 @@ void finishQuery(rows_t rows);
 class SimpleQuery
 {
  public:
-  void setTableName(std::string tableName) { mTableName = tableName; }
-  void addColumn(std::string columnName) { mColumnNames.push_back(columnName); }
+  void setTableName(std::string tableName)
+  {
+    mTableName = formatStr(tableName);
+  }
+  void addColumn(std::string columnName)
+  {
+    mColumnNames.push_back(formatStr(columnName));
+  }
   void addWhereClause(std::string whereClause)
   {
     mWhereClauses.push_back(whereClause);
@@ -32,15 +39,17 @@ class SimpleQuery
                       const nlohmann::basic_json<> &value);
   void addWhereEquals(std::string columnName, std::string value)
   {
-    mWhereClauses.push_back(columnName + " = '" + value + "'");
+    mWhereClauses.push_back(formatStr(columnName) + " = '" + value + "'");
   }
   void addWhereEquals(std::string columnName, int value)
   {
-    mWhereClauses.push_back(columnName + " = " + std::to_string(value));
+    mWhereClauses.push_back(formatStr(columnName) + " = " +
+                            std::to_string(value));
   }
   void addWhereEquals(std::string columnName, float value)
   {
-    mWhereClauses.push_back(columnName + " = " + std::to_string(value));
+    mWhereClauses.push_back(formatStr(columnName) + " = " +
+                            std::to_string(value));
   }
   void addWhereIn(std::string columnName, std::vector<int> values);
 
@@ -60,7 +69,10 @@ void rollbackUpdate();
 class SimpleInsert
 {
  public:
-  void setTableName(std::string tableName) { mTableName = tableName; }
+  void setTableName(std::string tableName)
+  {
+    mTableName = formatStr(tableName);
+  }
   bool doInsert();
 
   // overload addColumnAndValue for different types
@@ -69,18 +81,18 @@ class SimpleInsert
                          const nlohmann::basic_json<> &value);
   void addColumnAndValue(std::string columnName, std::string value)
   {
-    mColumnNames.push_back(columnName);
+    mColumnNames.push_back(formatStr(columnName));
     // strings have to have '' around the value
     mValues.push_back("'" + value + "'");
   }
   void addColumnAndValue(std::string columnName, int value)
   {
-    mColumnNames.push_back(columnName);
+    mColumnNames.push_back(formatStr(columnName));
     mValues.push_back(std::to_string(value));
   }
   void addColumnAndValue(std::string columnName, float value)
   {
-    mColumnNames.push_back(columnName);
+    mColumnNames.push_back(formatStr(columnName));
     mValues.push_back(std::to_string(value));
   }
 
@@ -93,7 +105,10 @@ class SimpleInsert
 class SimpleUpdate
 {
  public:
-  void setTableName(std::string tableName) { mTableName = tableName; }
+  void setTableName(std::string tableName)
+  {
+    mTableName = formatStr(tableName);
+  }
   bool doUpdate();
 
   // overload addColumnAndValue for different types
@@ -103,15 +118,18 @@ class SimpleUpdate
   void addColumnAndValue(std::string columnName, std::string value)
   {
     // strings have to have '' around the value
-    mColumnNamesAndValues.push_back(columnName + " = '" + value + "'");
+    mColumnNamesAndValues.push_back(formatStr(columnName) + " = '" + value +
+                                    "'");
   }
   void addColumnAndValue(std::string columnName, int value)
   {
-    mColumnNamesAndValues.push_back(columnName + " = " + std::to_string(value));
+    mColumnNamesAndValues.push_back(formatStr(columnName) + " = " +
+                                    std::to_string(value));
   }
   void addColumnAndValue(std::string columnName, float value)
   {
-    mColumnNamesAndValues.push_back(columnName + " = " + std::to_string(value));
+    mColumnNamesAndValues.push_back(formatStr(columnName) + " = " +
+                                    std::to_string(value));
   }
 
   // overload addWhereEquals for different types
@@ -119,15 +137,17 @@ class SimpleUpdate
                       const nlohmann::basic_json<> &value);
   void addWhereEquals(std::string columnName, std::string value)
   {
-    mWhereClauses.push_back(columnName + " = '" + value + "'");
+    mWhereClauses.push_back(formatStr(columnName) + " = '" + value + "'");
   }
   void addWhereEquals(std::string columnName, int value)
   {
-    mWhereClauses.push_back(columnName + " = " + std::to_string(value));
+    mWhereClauses.push_back(formatStr(columnName) + " = " +
+                            std::to_string(value));
   }
   void addWhereEquals(std::string columnName, float value)
   {
-    mWhereClauses.push_back(columnName + " = " + std::to_string(value));
+    mWhereClauses.push_back(formatStr(columnName) + " = " +
+                            std::to_string(value));
   }
 
  protected:
@@ -187,18 +207,18 @@ class VersionedInsert : public SimpleInsert
   void addColumnAndValue(std::string columnName, std::string value)
   {
     // strings have to have '' around the value
-    SimpleInsert::addColumnAndValue(columnName, value);
-    mQuery.addWhereEquals(columnName, value);
+    SimpleInsert::addColumnAndValue(formatStr(columnName), value);
+    mQuery.addWhereEquals(formatStr(columnName), value);
   }
   void addColumnAndValue(std::string columnName, int value)
   {
-    SimpleInsert::addColumnAndValue(columnName, value);
-    mQuery.addWhereEquals(columnName, value);
+    SimpleInsert::addColumnAndValue(formatStr(columnName), value);
+    mQuery.addWhereEquals(formatStr(columnName), value);
   }
   void addColumnAndValue(std::string columnName, float value)
   {
-    SimpleInsert::addColumnAndValue(columnName, value);
-    mQuery.addWhereEquals(columnName, value);
+    SimpleInsert::addColumnAndValue(formatStr(columnName), value);
+    mQuery.addWhereEquals(formatStr(columnName), value);
   }
 
  protected:
