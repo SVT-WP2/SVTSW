@@ -16,7 +16,7 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   addColName("connectionPort");
   addColName("serialNumber");
   addColName("name");
-  addColName("hostName");
+  addColName("hostname");
   addColName("connectionType");
   addColName("generalLocation");
   addColName("software");
