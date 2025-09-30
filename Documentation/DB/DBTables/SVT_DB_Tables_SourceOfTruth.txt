@@ -203,7 +203,7 @@ Enum main.engineeringRun {
   ER2
   ER3
   LAS1
-  Ancillary1
+  AncMPW1
 }
 
 Enum main.foundryName {
