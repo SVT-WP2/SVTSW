@@ -5,7 +5,7 @@ CREATE TYPE "main"."engineeringRun" AS ENUM (
   'ER2',
   'ER3',
   'LAS1',
-  'Ancillary1'
+  'AncMPW1'
 );
 
 CREATE TYPE "main"."foundryName" AS ENUM (
