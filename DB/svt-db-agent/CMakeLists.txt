@@ -74,8 +74,21 @@ add_subdirectory(deps/nlohmann_json build-nlohmann_json)
 add_executable(svt_db_agent "src/svt_db_agent.cpp" ${SOURCES_DB})
 add_dependencies(svt_db_agent version)
 
-add_executable(db_IF_test "src/db_IF_test.cpp" ${SOURCES_DB})
-add_dependencies(db_IF_test version)
+# Define the directory containing your source files
+set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
+# Get a list of all .cpp files in the SOURCE_DIR
+file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
+# Loop through each .cpp file and create an executable
+foreach(CPP_FILE ${CPP_FILES})
+    # Extract the base name (without path and extension) for the executable name
+    get_filename_component(EXECUTABLE_NAME ${CPP_FILE} NAME_WE)
+
+    # Add the executable
+    add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
+    add_dependencies(${EXECUTABLE_NAME} version)
+    # add_executable(db_IF_test "src/test/db_IF_test.cpp" ${SOURCES_DB})
+    # add_dependencies(db_IF_test version)
+endforeach()
 
 IF (UNIX AND NOT APPLE)
   add_subdirectory(deps/libpqxx build-pqxx)
