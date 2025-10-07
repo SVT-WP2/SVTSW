@@ -69,7 +69,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
   getEntryWithId(waferEntry, newEntryId);
 
-  Singleton<SvtLogger>::instance().logInfo("Creating Waferlocation in DB");
+  Singleton<SvtLogger>::instance().logInfo("Creating wafer location in DB");
   //! Create waferLocations
   SvtDbEntry waferLoc;
   waferLoc.values.insert({"waferId", newEntryId});

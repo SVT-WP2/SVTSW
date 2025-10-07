@@ -47,6 +47,7 @@ file(GLOB SOURCES_DB
   "src/SVTDbAgentDto/SvtDbBaseDto.cpp"
   "src/SVTDbAgentDto/SvtDbWaferTypeDto.cpp"
   "src/SVTDbAgentDto/SvtDbWaferDto.cpp"
+  "src/SVTDbAgentDto/SvtDbChipDto.cpp"
   "src/SVTDbAgentDto/SvtDbAsicDto.cpp"
   "src/SVTDbAgentDto/SvtDbWPMachineDto.cpp"
   "src/SVTDbAgentDto/SvtDbWPProjectDto.cpp"
