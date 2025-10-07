@@ -400,7 +400,7 @@ CREATE TABLE "main"."TestSetup" (
 CREATE TABLE "main"."TestSetupEquipment" (
   "testSetupId" integer,
   "equipment" main."testEquipments",
-  "eqipmentDetails" JSON
+  "equipmentDetails" JSON
 );
 
 CREATE TABLE "main"."SLDOTestConfiguration" (
