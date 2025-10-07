@@ -6,16 +6,9 @@
  */
 
 #include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SVTDbAgentDto/SvtDbProbeCardDto.h"
-#include "SVTDbAgentDto/SvtDbWPMachineDto.h"
-#include "SVTDbAgentDto/SvtDbWPProjectDto.h"
-#include "SVTDbAgentDto/SvtDbWaferDto.h"
-#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentConsumer.h"
 #include "SVTDbAgentService/SvtDbAgentProducer.h"
-#include "SVTDbAgentService/SvtDbAgentRequest.h"
 #include "SVTUtilities/SvtLogger.h"
 
 #include "SVTUtilities/SvtUtilities.h"
@@ -29,15 +22,22 @@
 #include <string>
 #include <vector>
 
+using namespace SvtDbAgent;
 //========================================================================+
+SvtDbAgentService::SvtDbAgentService() {}
+
+//===============================================~~=========================+
 SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(5000); }
 
 //========================================================================+
 bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
 {
-  logger.logInfo("Initialize enum type list");
+  logger->logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
-  if (!SvtDbEnumDto::getAllEnumTypesInDB(schema, enum_types))
+  auto enumDto =
+      dynamic_cast<SvtDbEnumDto *>(m_Request->getDto("SvtDbEnumDto"));
+
+  if (!enumDto->getAllEnumTypesInDB(schema, enum_types))
   {
     return false;
   }
@@ -48,19 +48,19 @@ bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
     enum_name += "\"" + enum_type + "\"";
 
     std::vector<std::string> enum_values;
-    if (!SvtDbEnumDto::getAllEnumValuesInDB(enum_name, enum_values))
+    if (!enumDto->getAllEnumValuesInDB(enum_name, enum_values))
     {
       return false;
     }
     for (auto &value : enum_values)
     {
-      SvtDbEnumDto::addValue(enum_type, value);
+      enumDto->addValue(enum_type, value);
     }
   }
 
   if (log_messages)
   {
-    SvtDbEnumDto::print();
+    enumDto->print();
   }
   return true;
 }
@@ -99,17 +99,17 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
   switch (message->err())
   {
   case RdKafka::ERR__TIMED_OUT:
-    logger.logError("KafkaError: ERR__TIMED_OUT");
+    logger->logError("KafkaError: ERR__TIMED_OUT");
     status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR_NO_ERROR:
     /* Real message */
-    logger.logInfo("Read msg at offset " + std::to_string(message->offset()),
-                   SvtLogger::Mode::STANDARD);
+    logger->logInfo("Read msg at offset " + std::to_string(message->offset()),
+                    SvtLogger::Mode::STANDARD);
     if (message->key())
     {
-      logger.logInfo("Key: " + *message->key(), SvtLogger::Mode::STANDARD);
+      logger->logInfo("Key: " + *message->key(), SvtLogger::Mode::STANDARD);
     }
     headers = message->headers();
     if (headers)
@@ -153,21 +153,21 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
 
   case RdKafka::ERR__PARTITION_EOF:
     /* Last message */
-    logger.logError("KafkaError: ERR__PARTITION_EOF");
+    logger->logError("KafkaError: ERR__PARTITION_EOF");
     *(static_cast<bool *>(opaque)) = false;
     status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR__UNKNOWN_TOPIC:
   case RdKafka::ERR__UNKNOWN_PARTITION:
-    logger.logError("KafkaError: Consume failed, " + message->errstr());
+    logger->logError("KafkaError: Consume failed, " + message->errstr());
     *(static_cast<bool *>(opaque)) = false;
     status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
     break;
 
   default:
     /* Errors */
-    logger.logError("KafkaError: Consume failed, " + message->errstr());
+    logger->logError("KafkaError: Consume failed, " + message->errstr());
     *(static_cast<bool *>(opaque)) = false;
     status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
   }
@@ -200,10 +200,10 @@ void SvtDbAgentService::parseMsg(
   else
   {
     auto type = msg.getPayload()["type"].get<std::string>();
-    logger.logInfo("Received message with request type: " + type);
+    logger->logInfo("Received message with request type: " + type);
     if (type.empty())
     {
-      logger.logError("Request have not type information. Skipping");
+      logger->logError("Request have not type information. Skipping");
       replyMsg.setType("");
       replyMsg.setStatus(
           SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
@@ -213,89 +213,13 @@ void SvtDbAgentService::parseMsg(
     else
     {
       replyMsg.setType(type + std::string("Reply"));
-      SvtDbAgent::RequestType reqType =
-          SvtDbAgent::getRequestType(std::string_view(type.c_str()));
       try
       {
-        switch (reqType)
+        if (!m_Request->findAndRun(type, msg, replyMsg))
         {
-          //! enumValues
-        case SvtDbAgent::RequestType::GetAllEnums:
-          SvtDbEnumDto::getAllEnumValues(msg, replyMsg);
-          break;
-          //! Get all wafer types
-        case SvtDbAgent::RequestType::GetAllWaferTypes:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        //! Create wafer type
-        case SvtDbAgent::RequestType::CreateWaferType:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        //! Get all wafers
-        case SvtDbAgent::RequestType::GetAllWafers:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        //! Create wafer
-        case SvtDbAgent::RequestType::CreateWafer:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        //! Update wafer
-        case SvtDbAgent::RequestType::UpdateWafer:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()
-              .updateEntry(msg, replyMsg);
-          break;
-        //! UpdateWaferLocation
-        case SvtDbAgent::RequestType::UpdateWaferLocation:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance()
-              .updateEntry(msg, replyMsg);
-          break;
-        //! getAllAsics
-        case SvtDbAgent::RequestType::GetAllAsics:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateAsic:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::GetAllProbeCards:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateProbeCard:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::GetAllWaferProbeMachines:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateWaferProbeMachine:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::UpdateWaferProbeMachine:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance()
-              .updateEntry(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::GetAllWaferProbeProjects:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance()
-              .getAllEntries(msg, replyMsg);
-          break;
-        case SvtDbAgent::RequestType::CreateWaferProbeProject:
-          SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance()
-              .createEntry(msg, replyMsg);
-          break;
-        //! Not Found
-        case SvtDbAgent::RequestType::NotFound:
-        default:
           std::ostringstream ss;
           ss << "Error: Request " << type << " not Found";
-          logger.logError(ss.str());
+          logger->logError(ss.str());
           replyMsg.setData(nlohmann::ordered_json());
           replyMsg.setStatus(SvtDbAgent::msgStatus
                                  [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
@@ -304,9 +228,8 @@ void SvtDbAgentService::parseMsg(
       }
       catch (const std::exception &e)
       {
-        logger.logError("Error: requesting " +
-                        std::string(SvtDbAgent::m_requestType[reqType]) +
-                        std::string(". ") + std::string(e.what()));
+        logger->logError("Error: requesting " + type + ". " +
+                         std::string(e.what()));
         replyMsg.setData(nlohmann::ordered_json());
         replyMsg.setStatus(
             SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
@@ -318,12 +241,12 @@ void SvtDbAgentService::parseMsg(
 
   if (log_messages)
   {
-    logger.logInfo("Request messages: \n" + std::string("Header = ") +
-                   msg.getHeaders().dump() + std::string("\nPayload = ") +
-                   msg.getPayload().dump());
-    logger.logInfo("Reply messages: \n" + std::string("Header = ") +
-                   replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
-                   replyMsg.getPayload().dump());
+    logger->logInfo("Request messages: \n" + std::string("Header = ") +
+                    msg.getHeaders().dump() + std::string("\nPayload = ") +
+                    msg.getPayload().dump());
+    logger->logInfo("Reply messages: \n" + std::string("Header = ") +
+                    replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
+                    replyMsg.getPayload().dump());
   }
 
   m_Producer->push(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);

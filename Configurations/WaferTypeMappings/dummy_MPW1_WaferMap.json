@@ -1,0 +1,32 @@
+{
+  "FileName": "string",
+  "MotherFilename": "string",
+  "DateOfCreation": "2025-05-08 18:29:15",
+  "DateOfLastUpdate": "2025-05-29 13:45:02",
+  "Revision": "0.0.0",
+
+  "Groups": {
+    "Group_0": [
+      { "PosInGroup": 0, "FamilyType": "AncMPW1" },
+      { "PosInGroup": 1, "FamilyType": "AncMPW1" },
+      { "PosInGroup": 2, "FamilyType": "AncMPW1" },
+      { "PosInGroup": 3, "FamilyType": "AncMPW1" },
+      { "PosInGroup": 4, "FamilyType": "AncMPW1" }
+    ]
+  },
+
+  "MapGroups": {
+    "MapGroupsRow0": {
+      "MapGroupsColumns": [
+        {
+          "GroupName": "Group_0",
+          "Property": "WithMechanicallyIntegerASICs",
+          "ExistingAsics": ["All"],
+          "MechanicallyDamagedASICs": [],
+          "ASICsCoveredByGreenLayer": [],
+          "MechanicallyIntegerASICs": ["All"]
+        }
+      ]
+    }
+  }
+}

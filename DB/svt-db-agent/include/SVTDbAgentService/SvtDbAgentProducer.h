@@ -19,37 +19,37 @@
 namespace SvtDbAgent
 {
   class SvtDbAgentMessage;
-};
 
-class SvtDbAgentProducer
-{
- public:
-  SvtDbAgentProducer(const std::string &broker);
-  ~SvtDbAgentProducer()
+  class SvtDbAgentProducer
   {
-    while (m_producer->outq_len() > 0)
+   public:
+    SvtDbAgentProducer(const std::string &broker);
+    ~SvtDbAgentProducer()
     {
-      logger.logInfo("Waiting for " + std::to_string(m_producer->outq_len()));
-      m_producer->poll(1000);
-    }
+      while (m_producer->outq_len() > 0)
+      {
+        logger->logInfo("Waiting for " + std::to_string(m_producer->outq_len()));
+        m_producer->poll(1000);
+      }
+    };
+
+    bool createProducer();
+
+    bool push(const std::string_view &topic, const SvtDbAgentMessage &message);
+
+   private:
+    SvtLogger *logger = Singleton<SvtLogger>::instance();
+
+    std::shared_ptr<RdKafka::Producer> m_producer;
+    std::shared_ptr<RdKafka::Topic> m_topic;
+
+    int m_partition = 0;
+
+    std::string m_broker;
+    std::string m_errStr;
+    std::string m_debug;
+
+    bool m_dumpConfig = false;
   };
-
-  bool createProducer();
-
-  bool push(const std::string_view &topic,
-            const SvtDbAgent::SvtDbAgentMessage &message);
-
- private:
-  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
-
-  std::shared_ptr<RdKafka::Producer> m_producer;
-  std::shared_ptr<RdKafka::Topic> m_topic;
-  int m_partition = 0;
-
-  std::string m_broker;
-  std::string m_errStr;
-  std::string m_debug;
-  bool m_dumpConfig = false;
-};
-
+}  // namespace SvtDbAgent
 #endif  // !SVTDB_AGENT_H

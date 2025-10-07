@@ -14,6 +14,8 @@
 #include <memory>
 #include <thread>
 
+using namespace SvtDbAgent;
+
 //========================================================================+
 SvtDbAgentProducer::SvtDbAgentProducer(const std::string &broker)
   : m_broker(broker)
@@ -40,7 +42,7 @@ bool SvtDbAgentProducer::createProducer()
     if (m_globalConf->set("debug", m_debug, m_errStr) !=
         RdKafka::Conf::CONF_OK)
     {
-      logger.logError(m_errStr);
+      logger->logError(m_errStr);
       return false;
     }
   }
@@ -59,11 +61,11 @@ bool SvtDbAgentProducer::createProducer()
       {
       case 0:
         dump = m_globalConf->dump();
-        logger.logInfo("# Global config", SvtLogger::Mode::STANDARD);
+        logger->logInfo("# Global config", SvtLogger::Mode::STANDARD);
         break;
       case 1:
         dump = m_topicConf->dump();
-        logger.logInfo("# Topic config", SvtLogger::Mode::STANDARD);
+        logger->logInfo("# Topic config", SvtLogger::Mode::STANDARD);
         break;
       }
 
@@ -77,7 +79,7 @@ bool SvtDbAgentProducer::createProducer()
         it++;
       }
       ss << std::endl;
-      logger.logInfo(ss.str(), SvtLogger::Mode::STANDARD);
+      logger->logInfo(ss.str(), SvtLogger::Mode::STANDARD);
     }
   }
 
@@ -95,12 +97,12 @@ bool SvtDbAgentProducer::createProducer()
       RdKafka::Producer::create(m_globalConf.get(), m_errStr));
   if (!m_producer)
   {
-    logger.logError("Failed to create producer: " + m_errStr);
+    logger->logError("Failed to create producer: " + m_errStr);
     return false;
   }
 
-  logger.logInfo("% Created producer " + m_producer->name(),
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("% Created producer " + m_producer->name(),
+                  SvtLogger::Mode::STANDARD);
 
   return true;
 }
@@ -143,14 +145,14 @@ bool SvtDbAgentProducer::push(const std::string_view &topic,
     }
     else if (resp != RdKafka::ERR_NO_ERROR)
     {
-      logger.logError("% Produce failed: " + RdKafka::err2str(resp));
+      logger->logError("% Produce failed: " + RdKafka::err2str(resp));
       delete headers;
     }
     else
     {
-      logger.logInfo("% Produced message (" + std::to_string(payload_size) +
-                         " bytes)",
-                     SvtLogger::Mode::STANDARD);
+      logger->logInfo("% Produced message (" + std::to_string(payload_size) +
+                          " bytes)",
+                      SvtLogger::Mode::STANDARD);
     }
     break;
   }

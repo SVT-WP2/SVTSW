@@ -21,6 +21,8 @@ namespace SvtDbAgent
     SvtDbChipDto();
     ~SvtDbChipDto() = default;
 
+   private:
+    void createAllRequest() final;
     void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
                      SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
   };
@@ -30,6 +32,9 @@ namespace SvtDbAgent
    public:
     SvtDbChipLocationDto();
     ~SvtDbChipLocationDto() = default;
+
+   private:
+    void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_CHIP_DTO_H

@@ -24,8 +24,10 @@ namespace SvtDbAgent
     SvtDbWaferDto();
     ~SvtDbWaferDto() = default;
 
-    void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+   private:
+    virtual void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
+                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void createAllRequest() final;
   };
 
   class SvtDbWaferLocationDto : public SvtDbBaseDto
@@ -33,6 +35,9 @@ namespace SvtDbAgent
    public:
     SvtDbWaferLocationDto();
     ~SvtDbWaferLocationDto() = default;
+
+   private:
+    virtual void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

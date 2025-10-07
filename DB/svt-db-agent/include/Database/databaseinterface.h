@@ -13,21 +13,6 @@ using rows_t = std::vector<row_t>;
 
 class DatabaseInterface
 {
- private:
-  // static DatabaseInterface *instance;
-
-  std::string mUser, mPassword, mConnString, mHost, mPort;
-
-  pqxx::connection *mDBConnection;
-  pqxx::nontransaction *mDBWork;
-
-  bool reconnect();
-  bool close();
-
-  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
-  bool mUnavailable;
-  std::recursive_mutex mMutex;
-
  public:
   DatabaseInterface();
   ~DatabaseInterface();
@@ -55,6 +40,21 @@ class DatabaseInterface
 
   bool commitUpdate(bool commit = true);
   std::recursive_mutex *getMutex() { return &mMutex; };
+
+ private:
+  std::string mUser, mPassword, mConnString, mHost, mPort;
+
+  pqxx::connection *mDBConnection;
+  pqxx::nontransaction *mDBWork;
+
+  bool reconnect();
+  bool close();
+
+  SvtLogger *logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+
+  bool mUnavailable;
+
+  std::recursive_mutex mMutex;
 };
 
 #endif

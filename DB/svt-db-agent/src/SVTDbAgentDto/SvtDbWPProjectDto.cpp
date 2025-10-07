@@ -11,6 +11,7 @@
 SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
 {
   setTableName("WaferProbeProject");
+
   addColName("id");
   addColName("wpMachineId");
   addColName("waferTypeId");
@@ -20,4 +21,19 @@ SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
   addColName("alignmentDie");
   addColName("homeDie");
   addColName("local2GlobalMap");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbWPProjectDto::createAllRequest()
+{
+  //! SvtDbWPProjectDto::GetAllWPProjects
+  addRequest("GetAllWaferProbeProjects",
+             std::bind(&SvtDbWPProjectDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWPProjectDto::CreateWPProject
+  addRequest("CreateWaferProbeProject",
+             std::bind(&SvtDbWPProjectDto::createEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
 }

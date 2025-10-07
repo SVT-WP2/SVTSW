@@ -87,8 +87,8 @@ void doGenericQuery(string queryString, rows_t &rows)
   {
     std::chrono::high_resolution_clock::time_point t1 =
         std::chrono::high_resolution_clock::now();
-    DatabaseIF::instance().executeQuery(queryString, successful, errorMessage,
-                                        rows);
+    DatabaseIF::instance()->executeQuery(queryString, successful, errorMessage,
+                                         rows);
 
     std::chrono::high_resolution_clock::time_point t2 =
         std::chrono::high_resolution_clock::now();
@@ -99,10 +99,10 @@ void doGenericQuery(string queryString, rows_t &rows)
     nTrials++;
     if ((!successful) && (nTrials <= maxRetries))
     {
-      connected = DatabaseIF::instance().isConnected();
+      connected = DatabaseIF::instance()->isConnected();
       if (!connected)
       {
-        Singleton<SvtLogger>::instance().logError("reconnect failed");
+        Singleton<SvtLogger>::instance()->logError("reconnect failed");
       }
     }
   }
@@ -117,12 +117,15 @@ void doGenericQuery(string queryString, rows_t &rows)
 void raiseError(string errorMessage)
 {
   // std::cout << errorMessage << std::endl;
-  Singleton<SvtLogger>::instance().logError(errorMessage);
+  Singleton<SvtLogger>::instance()->logError(errorMessage);
   throw std::runtime_error(errorMessage);
 }
 
 //========================================================================+
-void finishQuery(rows_t rows) { DatabaseIF::instance().clearQueryResult(rows); }
+void finishQuery(rows_t rows)
+{
+  DatabaseIF::instance()->clearQueryResult(rows);
+}
 
 //========================================================================+
 void SimpleQuery::doQuery(rows_t &rows)
@@ -184,7 +187,8 @@ bool doGenericUpdate(string insertString)
   bool successful;
   string errorMessage;
 
-  successful = DatabaseIF::instance().executeUpdate(insertString, errorMessage);
+  successful =
+      DatabaseIF::instance()->executeUpdate(insertString, errorMessage);
 
   if (!successful)
   {
@@ -195,10 +199,10 @@ bool doGenericUpdate(string insertString)
 }
 
 //========================================================================+
-void commitUpdate() { DatabaseIF::instance().commitUpdate(true); }
+void commitUpdate() { DatabaseIF::instance()->commitUpdate(true); }
 
 //========================================================================+
-void rollbackUpdate() { DatabaseIF::instance().commitUpdate(false); }
+void rollbackUpdate() { DatabaseIF::instance()->commitUpdate(false); }
 
 //========================================================================+
 bool SimpleInsert::doInsert()
