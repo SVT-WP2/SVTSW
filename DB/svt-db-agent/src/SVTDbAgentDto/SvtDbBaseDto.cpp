@@ -14,10 +14,42 @@
 #include "SVTUtilities/SvtUtilities.h"
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::addRequest(
+    std::string_view reqName,
+    std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)> fun)
+{
+  Singleton<SvtLogger>::instance()->logInfo("Adding Request " +
+                                            std::string(reqName));
+  if (request_map.find(reqName) == request_map.end())
+  {
+    request_map[reqName] = fun;
+  }
+  else
+  {
+    Singleton<SvtLogger>::instance()->logError(
+        "Request " + std::string(reqName) + " already exist in request list.");
+  }
+}
+
+//========================================================================+
+bool SvtDbAgent::SvtDbBaseDto::findAndRun(std::string_view reqName,
+                                          const SvtDbAgentMessage &msg,
+                                          SvtDbAgentReplyMsg &replyMsg)
+{
+  if (request_map.find(reqName) != request_map.end())
+  {
+    request_map[reqName](msg, replyMsg);
+    return true;
+  }
+  return false;
+}
 
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
@@ -47,7 +79,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     }
     else
     {
-      Singleton<SvtLogger>::instance().logError(
+      Singleton<SvtLogger>::instance()->logError(
           "Wrong filter: column with name " + filter.first +
           " does not exists in table " + getTableName());
       return false;
@@ -93,7 +125,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   }
   catch (const std::exception &e)
   {
-    Singleton<SvtLogger>::instance().logError(e.what());
+    Singleton<SvtLogger>::instance()->logError(e.what());
     entries.clear();
     return false;
   }

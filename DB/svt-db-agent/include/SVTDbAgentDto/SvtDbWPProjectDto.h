@@ -22,6 +22,9 @@ namespace SvtDbAgent
    public:
     SvtDbWPProjectDto();
     ~SvtDbWPProjectDto() = default;
+
+   private:
+    void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
 

@@ -6,16 +6,65 @@
  */
 
 #include "SVTDbAgentService/SvtDbAgentRequest.h"
+#include <string_view>
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
+#include "SVTDbAgentDto/SvtDbChipDto.h"
+#include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentDto/SvtDbProbeCardDto.h"
+#include "SVTDbAgentDto/SvtDbWPMachineDto.h"
+#include "SVTDbAgentDto/SvtDbWPProjectDto.h"
+#include "SVTDbAgentDto/SvtDbWaferDto.h"
+#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
+
+using namespace SvtDbAgent;
+//========================================================================+
+SvtDbAgentRequest::SvtDbAgentRequest() { createAllDtos(); }
 
 //========================================================================+
-SvtDbAgent::RequestType SvtDbAgent::getRequestType(std::string_view type_req)
+void SvtDbAgentRequest::createAllDtos()
 {
-  for (const auto &[key, value] : m_requestType)
+  dtoList["SvtDbEnumDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbEnumDto>::instance();
+  dtoList["SvtDbWaferTypeDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance();
+  dtoList["SvtDbWaferDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance();
+  dtoList["SvtDbWaferLocationDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance();
+  dtoList["SvtDbAsicDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance();
+  dtoList["SvtDbChipDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbChipDto>::instance();
+  dtoList["SvtDbProbeCardDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
+  dtoList["SvtDbWPMachineDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance();
+  dtoList["SvtDbWPProjectDto"] =
+      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance();
+}
+
+//========================================================================+
+SvtDbBaseDto *SvtDbAgentRequest::getDto(std::string_view dtoName)
+{
+  if (dtoList.find(dtoName) != dtoList.end())
+    return dtoList[dtoName];
+  else
+    return nullptr;
+}
+
+//===========================================================================+
+bool SvtDbAgentRequest::findAndRun(std::string_view reqName,
+                                   const SvtDbAgentMessage &msg,
+                                   SvtDbAgentReplyMsg &replyMsg)
+{
+  bool req_found = false;
+  for (auto &[dtoName, dto] : dtoList)
   {
-    if (!value.compare(type_req))
+    if (dto->findAndRun(reqName, msg, replyMsg))
     {
-      return key;
+      req_found = true;
+      break;
     }
   }
-  return RequestType::NotFound;
+  return req_found;
 }

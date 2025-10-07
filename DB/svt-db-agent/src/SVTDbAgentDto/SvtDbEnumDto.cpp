@@ -13,12 +13,20 @@
 
 using SvtDbAgent::Singleton;
 
-std::map<std::string, std::vector<std::string>>
-    SvtDbEnumDto::enum_type_value_map;
+std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 
 //========================================================================+
-bool SvtDbEnumDto::getAllEnumTypesInDB(const std::string &schema,
-                                       std::vector<std::string> &enum_types)
+void SvtDbAgent::SvtDbEnumDto::createAllRequest()
+{
+  //! SvtDbEnumDto::GetAllEnums
+  addRequest("GetAllEnums",
+             std::bind(&SvtDbEnumDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+}
+
+//========================================================================+
+bool SvtDbAgent::SvtDbEnumDto::getAllEnumTypesInDB(
+    const std::string &schema, std::vector<std::string> &enum_types)
 {
   rows_t rows;
   std::string query =
@@ -49,8 +57,8 @@ bool SvtDbEnumDto::getAllEnumTypesInDB(const std::string &schema,
 }
 
 //========================================================================+
-bool SvtDbEnumDto::getAllEnumValuesInDB(std::string type_name,
-                                        std::vector<std::string> &enum_values)
+bool SvtDbAgent::SvtDbEnumDto::getAllEnumValuesInDB(
+    std::string type_name, std::vector<std::string> &enum_values)
 {
   rows_t rows;
   std::string query = "SELECT enum_range(null::" + type_name + ");";
@@ -86,7 +94,8 @@ bool SvtDbEnumDto::getAllEnumValuesInDB(std::string type_name,
 }
 
 //========================================================================+
-bool SvtDbEnumDto::addEnumValueInDB(std::string type_name, std::string value)
+bool SvtDbAgent::SvtDbEnumDto::addEnumValueInDB(std::string type_name,
+                                                std::string value)
 {
   std::string cmd =
       "ALTER TYPE " + type_name + " ADD VALUE IF NOT EXISTS '" + value + "';";
@@ -101,13 +110,14 @@ bool SvtDbEnumDto::addEnumValueInDB(std::string type_name, std::string value)
 }
 
 //========================================================================+
-void SvtDbEnumDto::addValue(const std::string &type, std::string &value)
+void SvtDbAgent::SvtDbEnumDto::addValue(const std::string &type,
+                                        std::string &value)
 {
   enum_type_value_map[type].push_back(value);
 }
 
 //========================================================================+
-std::vector<std::string> SvtDbEnumDto::getTypeNames()
+std::vector<std::string> SvtDbAgent::SvtDbEnumDto::getTypeNames()
 {
   std::vector<std::string> keys;
   std::transform(
@@ -122,7 +132,7 @@ std::vector<std::string> SvtDbEnumDto::getTypeNames()
 
 //========================================================================+
 std::vector<std::string>
-SvtDbEnumDto::getEnumValues(const std::string &enum_type)
+SvtDbAgent::SvtDbEnumDto::getEnumValues(const std::string &enum_type)
 {
   if (enum_type_value_map.find(enum_type) != enum_type_value_map.cend())
   {
@@ -135,23 +145,24 @@ SvtDbEnumDto::getEnumValues(const std::string &enum_type)
 }
 
 //========================================================================+
-void SvtDbEnumDto::print()
+void SvtDbAgent::SvtDbEnumDto::print()
 {
-  SvtLogger &logger = Singleton<SvtLogger>::instance();
-  logger.logInfo("Db Agent Enums");
+  SvtLogger *logger = Singleton<SvtLogger>::instance();
+  logger->logInfo("Db Agent Enums");
   for (const auto &[enum_type, values] : enum_type_value_map)
   {
-    logger.logInfo("type " + enum_type);
+    logger->logInfo("type " + enum_type);
     for (const auto &value : values)
     {
-      logger.logInfo("\t " + value);
+      logger->logInfo("\t " + value);
     }
   }
 }
 
 //========================================================================+
-void SvtDbEnumDto::getAllEnumValues(const SvtDbAgent::SvtDbAgentMessage &msg,
-                                    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbEnumDto::getAllEntries(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   std::vector<std::string> enum_types =
@@ -162,7 +173,7 @@ void SvtDbEnumDto::getAllEnumValues(const SvtDbAgent::SvtDbAgentMessage &msg,
 }
 
 //========================================================================+
-void SvtDbEnumDto::getAllEnumValuesReplyMsg(
+void SvtDbAgent::SvtDbEnumDto::getAllEnumValuesReplyMsg(
     const std::vector<std::string> &types,
     SvtDbAgent::SvtDbAgentReplyMsg &msgReply)
 {

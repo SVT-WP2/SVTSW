@@ -11,6 +11,7 @@
 SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
 {
   setTableName("ProbeCard");
+
   addColName("id");
   addColName("version");
   addColName("vendorCleaningInterval");
@@ -21,4 +22,19 @@ SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
   addColName("arrivalDate");
   addColName("location");
   addColName("type");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbProbeCardDto::createAllRequest()
+{
+  //! SvtDbProbeCardDto::GetAllProbeCards
+  addRequest("GetAllProbeCards",
+             std::bind(&SvtDbProbeCardDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbProbeCardDto::CreateProbeCard
+  addRequest("CreateProbeCard",
+             std::bind(&SvtDbProbeCardDto::createEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
 }

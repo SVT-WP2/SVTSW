@@ -21,10 +21,13 @@ namespace SvtDbAgent
     SvtDbWaferTypeDto();
     ~SvtDbWaferTypeDto() = default;
 
-    void parseData(const nlohmann::json &entry_j, SvtDbEntry &entry) override;
-
     bool parse_range(const int g_size, const nlohmann::json &array_j,
                      std::vector<int> &range);
+
+   private:
+    virtual void createAllRequest() final;
+    virtual void parseData(const nlohmann::json &entry_j,
+                           SvtDbEntry &entry) final;
 
     bool checkWaferMap(const std::string_view waferMap, std::string &err_msg);
   };

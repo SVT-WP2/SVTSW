@@ -24,26 +24,26 @@ using DatabaseIF = Singleton<DatabaseInterface>;
 
 std::string version = std::string(VERSION);
 
-SvtLogger &logger = Singleton<SvtLogger>::instance();
+SvtLogger *logger = Singleton<SvtLogger>::instance();
 
 //========================================================================+
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,
                  std::string &host, std::string &port)
 {
-  DatabaseInterface &dbInterface = DatabaseIF::instance();
-  if (!dbInterface.Init(user, pass, conn, host, port))
+  DatabaseInterface *dbInterface = DatabaseIF::instance();
+  if (!dbInterface->Init(user, pass, conn, host, port))
   {
     return false;
   }
 
-  if (dbInterface.connect())
+  if (dbInterface->connect())
   {
-    logger.logInfo("Successfully connected to " + conn + ".");
+    logger->logInfo("Successfully connected to " + conn + ".");
     return true;
   }
   else
   {
-    logger.logError("Cannot connet to " + conn + "!");
+    logger->logError("Cannot connet to " + conn + "!");
   }
 
   return false;
@@ -52,10 +52,10 @@ bool connectToDB(std::string &user, std::string &pass, std::string &conn,
 //========================================================================+
 int main()
 {
-  logger.logInfo("********************** Svt Db Agent, version:" + version,
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("********************** Svt Db Agent, version:" + version,
+                  SvtLogger::Mode::STANDARD);
 
-  DatabaseInterface &dbInterface = DatabaseIF::instance();
+  DatabaseInterface *dbInterface = DatabaseIF::instance();
 
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
@@ -65,32 +65,33 @@ int main()
   std::string psqluser = "admin";
   std::string psqlpass = "svt-mosaix";
   std::string psqldb = SvtDbAgent::db_name;
-  if (!dbInterface.isConnected())
+  if (!dbInterface->isConnected())
   {
     if (!connectToDB(psqluser, psqlpass, psqldb, psqlhost, psqlport))
     {
-      logger.logError("Cannot connect to DB");
+      logger->logError("Cannot connect to DB");
       return EXIT_FAILURE;
     }
     else
     {
-      logger.logInfo("Databaseinterface is connected");
-      logger.logInfo("Using Scheme: " + SvtDbAgent::db_schema);
+      logger->logInfo("Databaseinterface is connected");
+      logger->logInfo("Using Scheme: " + SvtDbAgent::db_schema);
     }
   }
   try
   {
-    SvtDbAgentService &_dbAgent = Singleton<SvtDbAgentService>::instance();
-    if (!_dbAgent.initEnumTypeList(SvtDbAgent::db_schema))
+    SvtDbAgent::SvtDbAgentService *_dbAgent =
+        Singleton<SvtDbAgent::SvtDbAgentService>::instance();
+    if (!_dbAgent->initEnumTypeList(SvtDbAgent::db_schema))
     {
-      logger.logError("ERROR: We could not initialize enum from DB.");
+      logger->logError("ERROR: We could not initialize enum from DB.");
       return EXIT_FAILURE;
     }
-    if (!_dbAgent.configureService(false))
+    if (!_dbAgent->configureService(false))
     {
       return EXIT_FAILURE;
     }
-    while (_dbAgent.getIsConsRunnning())
+    while (_dbAgent->getIsConsRunnning())
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       // int time = gTimer.getTicksInSeconds();

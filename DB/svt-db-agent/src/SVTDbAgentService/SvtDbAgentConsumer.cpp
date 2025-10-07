@@ -14,6 +14,8 @@
 #include <memory>
 #include <thread>
 
+using namespace SvtDbAgent;
+
 //========================================================================+
 SvtDbAgentConsumer::SvtDbAgentConsumer(const std::string &broker, bool stop_eof)
   : m_broker(broker)
@@ -45,7 +47,7 @@ bool SvtDbAgentConsumer::createConsumer()
     if (m_globalConf->set("debug", m_debug, m_errStr) !=
         RdKafka::Conf::CONF_OK)
     {
-      logger.logError(m_errStr);
+      logger->logError(m_errStr);
       return false;
     }
   }
@@ -64,11 +66,11 @@ bool SvtDbAgentConsumer::createConsumer()
       {
       case 0:
         dump = m_globalConf->dump();
-        logger.logInfo("# Global config", SvtLogger::Mode::STANDARD);
+        logger->logInfo("# Global config", SvtLogger::Mode::STANDARD);
         break;
       case 1:
         dump = m_topicConf->dump();
-        logger.logInfo("# Topic config", SvtLogger::Mode::STANDARD);
+        logger->logInfo("# Topic config", SvtLogger::Mode::STANDARD);
         break;
       }
 
@@ -82,7 +84,7 @@ bool SvtDbAgentConsumer::createConsumer()
         it++;
       }
       ss << std::endl;
-      logger.logInfo(ss.str(), SvtLogger::Mode::STANDARD);
+      logger->logInfo(ss.str(), SvtLogger::Mode::STANDARD);
     }
   }
   //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
@@ -97,12 +99,12 @@ bool SvtDbAgentConsumer::createConsumer()
       RdKafka::Consumer::create(m_globalConf.get(), m_errStr));
   if (!m_consumer)
   {
-    logger.logError("Failed to create consumer: " + m_errStr);
+    logger->logError("Failed to create consumer: " + m_errStr);
     return false;
   }
 
-  logger.logInfo("% Created consumer " + m_consumer->name(),
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("% Created consumer " + m_consumer->name(),
+                  SvtLogger::Mode::STANDARD);
 
   /*
    * Create topic handle.
@@ -112,7 +114,7 @@ bool SvtDbAgentConsumer::createConsumer()
       m_consumer.get(), std::string(topic_name), m_topicConf.get(), m_errStr));
   if (!m_topic)
   {
-    logger.logError("Failed to create topic: " + m_errStr);
+    logger->logError("Failed to create topic: " + m_errStr);
     return false;
   }
 
@@ -129,7 +131,7 @@ bool SvtDbAgentConsumer::createConsumer()
   // consumer->start(topic, partition, RdKafka::Topic::OFFSET_END);
   if (resp != RdKafka::ERR_NO_ERROR)
   {
-    logger.logError("Failed to start consumer: " + RdKafka::err2str(resp));
+    logger->logError("Failed to start consumer: " + RdKafka::err2str(resp));
     return false;
   }
 
@@ -139,9 +141,9 @@ bool SvtDbAgentConsumer::createConsumer()
 //========================================================================+
 bool SvtDbAgentConsumer::start()
 {
-  logger.logInfo("Starting DbAgetnConsumer " + m_consumer->name() +
-                     " in topic " + m_topic->name(),
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("Starting DbAgetnConsumer " + m_consumer->name() +
+                      " in topic " + m_topic->name(),
+                  SvtLogger::Mode::STANDARD);
 
   if (m_running)
   {
@@ -152,7 +154,7 @@ bool SvtDbAgentConsumer::start()
     }
     else
     {
-      logger.logError("Error, start requested for already running thread");
+      logger->logError("Error, start requested for already running thread");
       return false;  // start thread only once
     }
   }
@@ -192,15 +194,15 @@ bool SvtDbAgentConsumer::stop(const bool suspended)
 {
   if (suspended)
   {
-    logger.logInfo("Suspended DbAgetnConsumer " + m_consumer->name() +
-                       " in toppic " + m_topic->name(),
-                   SvtLogger::Mode::STANDARD);
+    logger->logInfo("Suspended DbAgetnConsumer " + m_consumer->name() +
+                        " in toppic " + m_topic->name(),
+                    SvtLogger::Mode::STANDARD);
     setSuspended(true);
     return true;
   }
-  logger.logInfo("Stopping DbAgetnConsumer " + m_consumer->name() +
-                     " in toppic " + m_topic->name(),
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("Stopping DbAgetnConsumer " + m_consumer->name() +
+                      " in toppic " + m_topic->name(),
+                  SvtLogger::Mode::STANDARD);
   setIsRunning(false);
   m_consumer->stop(m_topic.get(), m_partition);
   m_consumer->poll(1000);

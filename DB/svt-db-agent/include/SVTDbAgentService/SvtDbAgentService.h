@@ -11,21 +11,18 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbAgentMessage.h"
-#include "SvtDbAgentProducer.h"
+#include "SvtDbAgentRequest.h"
 
-#include <cmath>
 #include <librdkafka/rdkafkacpp.h>
+#include <cmath>
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <string_view>
 
-namespace SvtDbInterface {
-struct dbWaferRecords;
-}
-
-enum SvtDbAgentTopicEnum : uint8_t {
+enum SvtDbAgentTopicEnum : uint8_t
+{
   Request = 0,
   RequestReply,
   NumTopicNames = 2
@@ -34,46 +31,52 @@ enum SvtDbAgentTopicEnum : uint8_t {
 const std::array<std::string_view, SvtDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
 
-namespace RdKafka {
-class Message;
+namespace RdKafka
+{
+  class Message;
 };
 
-class SvtDbAgentConsumer;
-class SvtDbAgentProducer;
+namespace SvtDbAgent
+{
+  class SvtDbAgentConsumer;
+  class SvtDbAgentProducer;
 
-class SvtDbAgentService {
-public:
-  SvtDbAgentService() = default;
-  ~SvtDbAgentService();
+  class SvtDbAgentService
+  {
+   public:
+    SvtDbAgentService();
+    ~SvtDbAgentService();
 
-  bool initEnumTypeList(const std::string &schema);
-  bool configureService(bool stop_eof = false);
-  void processMsgCb(RdKafka::Message *msg, void *opaque);
-  void setDebug(std::string debug) { m_debug = debug; }
+    bool initEnumTypeList(const std::string &schema);
+    bool configureService(bool stop_eof = false);
+    void processMsgCb(RdKafka::Message *msg, void *opaque);
+    void setDebug(std::string debug) { m_debug = debug; }
 
-  void stopConsumer(const bool suspeneded);
-  bool getIsConsRunnning();
+    void stopConsumer(const bool suspeneded);
+    bool getIsConsRunnning();
 
-  void setLogMessages(const bool val) { log_messages = val; }
-  bool getLogMessages() { return log_messages; }
+    void setLogMessages(const bool val) { log_messages = val; }
+    bool getLogMessages() { return log_messages; }
 
-  std::string &getBrokerName() { return m_brokerName; }
+    std::string &getBrokerName() { return m_brokerName; }
 
-private:
-  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+   private:
+    SvtLogger *logger = Singleton<SvtLogger>::instance();
 
-  void parseMsg(const SvtDbAgent::SvtDbAgentMessage &msg,
-                const SvtDbAgent::SvtDbAgentMsgStatus &status);
+    void parseMsg(const SvtDbAgentMessage &msg,
+                  const SvtDbAgentMsgStatus &status);
 
-  std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
-  std::shared_ptr<SvtDbAgentProducer> m_Producer;
+    std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
+    std::shared_ptr<SvtDbAgentProducer> m_Producer;
 
-  std::string m_brokerName =
-      SvtDbAgent::kafka_server + std::string(":") + SvtDbAgent::kafka_port;
-  std::string m_errStr;
-  std::string m_debug;
+    SvtDbAgentRequest *m_Request = Singleton<SvtDbAgentRequest>::instance();
 
-  bool log_messages = false;
-};
+    std::string m_brokerName =
+        SvtDbAgent::kafka_server + std::string(":") + SvtDbAgent::kafka_port;
+    std::string m_errStr;
+    std::string m_debug;
 
-#endif // !SVTDB_AGENT_H
+    bool log_messages = false;
+  };
+}  // namespace SvtDbAgent
+#endif  // !SVTDB_AGENT_H

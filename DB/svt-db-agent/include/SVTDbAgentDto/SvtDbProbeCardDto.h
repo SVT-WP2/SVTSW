@@ -20,6 +20,9 @@ namespace SvtDbAgent
    public:
     SvtDbProbeCardDto();
     ~SvtDbProbeCardDto() = default;
+
+   private:
+    void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
 
