@@ -2,6 +2,7 @@
 #define SQLMAPI_H
 
 #include "Database/databaseinterface.h"
+
 #include "nlohmann/json.hpp"
 
 extern std::atomic<int> queryTime;

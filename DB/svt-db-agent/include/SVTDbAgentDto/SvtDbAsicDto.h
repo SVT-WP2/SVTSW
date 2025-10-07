@@ -23,6 +23,9 @@ namespace SvtDbAgent
 
     void getAllEntries(const SvtDbAgentMessage &msg,
                        SvtDbAgentReplyMsg &replyMsg) final;
+
+   private:
+    void createAllRequest() final;
     void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
                                SvtDbAgentReplyMsg &msgReply,
                                int totalCount = -1) final;

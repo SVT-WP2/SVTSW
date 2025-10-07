@@ -23,6 +23,21 @@ SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
   addColName("familyType");
   addColName("waferMapPosition");
   addColName("quality");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbAsicDto::createAllRequest()
+{
+  //! SvtDbAsicDto::GetAllAsics
+  addRequest("GetAllAsics",
+             std::bind(&SvtDbAsicDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbAsicDto::CreateAsic
+  addRequest("CreateAsic",
+             std::bind(&SvtDbAsicDto::createEntry, this, std::placeholders::_1,
+                       std::placeholders::_2));
 }
 
 //========================================================================+
@@ -37,8 +52,8 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   if (getAllEntriesFromDB(entries, filters))
   {
-    Singleton<SvtLogger>::instance().logInfo("Number of asics: " +
-                                             std::to_string(entries.size()));
+    Singleton<SvtLogger>::instance()->logInfo("Number of asics: " +
+                                              std::to_string(entries.size()));
   }
 
   if (!msgData.contains("pager"))
@@ -80,7 +95,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntriesReplyMsg(
     const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
     int totalCount)
 {
-  Singleton<SvtLogger>::instance().logInfo(
+  Singleton<SvtLogger>::instance()->logInfo(
       "Creating message with " + std::to_string(entries.size()) + " out of " +
       std::to_string(totalCount));
   this->SvtDbBaseDto::getAllEntriesReplyMsg(entries, msgReply, totalCount);

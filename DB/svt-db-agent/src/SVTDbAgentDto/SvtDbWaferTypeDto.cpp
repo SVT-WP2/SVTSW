@@ -28,6 +28,21 @@ SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
   addColName("foundry");
   addColName("technology");
   addColName("waferMap");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
+{
+  //! SvtDbWaferTypeDto::GetAllWaferTypes
+  addRequest("GetAllWaferTypes",
+             std::bind(&SvtDbWaferTypeDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWaferTypeDto::CreateWaferType
+  addRequest("CreateWaferType",
+             std::bind(&SvtDbWaferTypeDto::createEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
@@ -91,7 +106,7 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferMap(
   //! check Groups
   //! get all defined asic family types
   std::vector<std::string> enum_familyTypes =
-      SvtDbEnumDto::getEnumValues("asicFamilyType");
+      Singleton<SvtDbEnumDto>::instance()->getEnumValues("asicFamilyType");
   for (const auto &[g_name, g_asics] : waferMap_j["Groups"].items())
   {
     int expected_index = 0;
@@ -168,7 +183,7 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferMap(
            (mecDamagedAsics.size() + coveredAsics.size() +
             mecIntegerAsics.size())))
       {
-        Singleton<SvtLogger>::instance().logError(
+        Singleton<SvtLogger>::instance()->logError(
             "Total number of asics in the group: " + std::to_string(g_size) +
             ", existing asics: " + std::to_string(existingAsics.size()) +
             ", damaged asics: " + std::to_string(mecDamagedAsics.size()) +

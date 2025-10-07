@@ -22,49 +22,52 @@ namespace
   constexpr int kKafkaWaitTime_ms = 1;
 }  // namespace
 
-class SvtDbAgentConsumer
+namespace SvtDbAgent
 {
- public:
-  // enum STATES : uint8_t
-  // {
-  //   START = 0,
-  //   SUSPEND,
-  //   STOP
-  // };
-  SvtDbAgentConsumer(const std::string &broker, bool stop_eof = false);
-  ~SvtDbAgentConsumer() = default;
+  class SvtDbAgentConsumer
+  {
+   public:
+    // enum STATES : uint8_t
+    // {
+    //   START = 0,
+    //   SUSPEND,
+    //   STOP
+    // };
+    SvtDbAgentConsumer(const std::string &broker, bool stop_eof = false);
+    ~SvtDbAgentConsumer() = default;
 
-  bool createConsumer();
+    bool createConsumer();
 
-  void setStopEof(const bool val) { m_stop_eof = val; }
+    void setStopEof(const bool val) { m_stop_eof = val; }
 
-  bool getIsRunning() { return m_running; }
-  bool getSuspended() { return m_suspended; }
+    bool getIsRunning() { return m_running; }
+    bool getSuspended() { return m_suspended; }
 
-  void setIsRunning(const bool running) { m_running = running; }
-  void setSuspended(const bool suspended) { m_suspended = suspended; }
-  bool start();
-  bool stop(const bool suspend = false);
+    void setIsRunning(const bool running) { m_running = running; }
+    void setSuspended(const bool suspended) { m_suspended = suspended; }
+    bool start();
+    bool stop(const bool suspend = false);
 
- private:
-  SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
-  void pull();
+   private:
+    SvtLogger *logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+    void pull();
 
-  std::shared_ptr<RdKafka::Consumer> m_consumer;
-  std::shared_ptr<RdKafka::Topic> m_topic;
-  int m_partition = 0;
+    std::shared_ptr<RdKafka::Consumer> m_consumer;
+    std::shared_ptr<RdKafka::Topic> m_topic;
+    int m_partition = 0;
 
-  static constexpr uint8_t kKafkaWaitTime_ms = 1;
+    static constexpr uint8_t kKafkaWaitTime_ms = 1;
 
-  std::string m_broker;
-  std::string m_errStr;
-  std::string m_debug;
-  bool m_dumpConfig = false;
-  bool m_stop_eof = false;
+    std::string m_broker;
+    std::string m_errStr;
+    std::string m_debug;
 
-  std::atomic<bool> m_running = false;
-  std::atomic<bool> m_suspended = false;
-  std::thread m_thread;
-};
+    bool m_dumpConfig = false;
+    bool m_stop_eof = false;
 
+    std::atomic<bool> m_running = false;
+    std::atomic<bool> m_suspended = false;
+    std::thread m_thread;
+  };
+}  // namespace SvtDbAgent
 #endif  // !SVTDB_AGENT_H

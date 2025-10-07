@@ -17,21 +17,21 @@
 
 std::string version = std::string(VERSION);
 
-SvtLogger &logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+SvtLogger *logger = SvtDbAgent::Singleton<SvtLogger>::instance();
 
 //========================================================================+
 int main()
 {
-  logger.logInfo("********************** Svt Db Interface Test, version:" +
-                     version,
-                 SvtLogger::Mode::STANDARD);
+  logger->logInfo("********************** Svt Db Interface Test, version:" +
+                      version,
+                  SvtLogger::Mode::STANDARD);
 
   try
   {
-    logger.logInfo("Before", SvtLogger::Mode::STANDARD);
+    logger->logInfo("Before", SvtLogger::Mode::STANDARD);
     nlohmann::basic_json<> value = std::string("Hello");
-    logger.logInfo(value.dump(), SvtLogger::Mode::STANDARD);
-    logger.logInfo("End", SvtLogger::Mode::STANDARD);
+    logger->logInfo(value.dump(), SvtLogger::Mode::STANDARD);
+    logger->logInfo("End", SvtLogger::Mode::STANDARD);
   }
   catch (const std::exception &e)
   {

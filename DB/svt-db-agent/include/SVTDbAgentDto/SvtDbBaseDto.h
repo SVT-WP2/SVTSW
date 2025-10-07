@@ -10,8 +10,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <functional>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace SvtDbAgent
@@ -37,6 +39,17 @@ namespace SvtDbAgent
     SvtDbBaseDto() = default;
     virtual ~SvtDbBaseDto() { clear(); }
 
+    //! request DTO funcions
+    virtual void getAllEntries(const SvtDbAgentMessage &msg,
+                               SvtDbAgentReplyMsg &replyMsg);
+
+    virtual void createEntry(const SvtDbAgentMessage &msg,
+                             SvtDbAgentReplyMsg &replyMsg);
+
+    virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
+                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+
+    //! help functions
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
                                      const SvtDbFilters &filters);
     virtual bool getEntryWithId(SvtDbEntry &entry, int id);
@@ -45,9 +58,6 @@ namespace SvtDbAgent
 
     virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
 
-    virtual void getAllEntries(const SvtDbAgentMessage &msg,
-                               SvtDbAgentReplyMsg &replyMsg);
-
     virtual void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
                                        SvtDbAgentReplyMsg &msgReply,
                                        int totalCount = -1);
@@ -55,12 +65,6 @@ namespace SvtDbAgent
     virtual void parseData(const nlohmann::json &entry_j, SvtDbEntry &entry);
     virtual void parseFilter(const nlohmann::json &msgData,
                              SvtDbFilters &filters);
-
-    virtual void createEntry(const SvtDbAgentMessage &msg,
-                             SvtDbAgentReplyMsg &replyMsg);
-
-    virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
 
     virtual void createEntryReplyMsg(const SvtDbEntry &entry,
                                      SvtDbAgentReplyMsg &msgReply);
@@ -74,10 +78,23 @@ namespace SvtDbAgent
     void setTableName(const std::string &tName) { mTableName = tName; }
     const std::string &getTableName() { return mTableName; }
 
+    bool findAndRun(std::string_view, const SvtDbAgentMessage &,
+                    SvtDbAgentReplyMsg &);
+
+    void addRequest(
+        std::string_view,
+        std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>);
+
+   protected:
+    virtual void createAllRequest() = 0;
+
    private:
     std::vector<std::string> mColNames;
-
     std::string mTableName;
+
+    std::map<std::string_view,
+             std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>>
+        request_map;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_BASE_DTO_H

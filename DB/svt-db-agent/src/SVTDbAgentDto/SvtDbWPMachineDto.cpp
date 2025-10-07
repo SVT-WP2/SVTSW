@@ -12,6 +12,7 @@
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
 {
   setTableName("WaferProbeMachine");
+
   addColName("id");
   addColName("connectionPort");
   addColName("serialNumber");
@@ -22,15 +23,40 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   addColName("software");
   addColName("swVersion");
   addColName("vendor");
+
+  createAllRequest();
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbWaferLoadedInMachine::SvtDbWaferLoadedInMachine()
+void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
+{
+  //! SvtDbWPMachineDto::GetAllWaferProbeMachines
+  addRequest("GetAllWaferProbeMachines",
+             std::bind(&SvtDbWPMachineDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWPMachineDto::CreateWaferProbeMachine
+  addRequest("CreateWaferProbeMachine",
+             std::bind(&SvtDbWPMachineDto::createEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWPMachineDto::UpdateWaferProbeMachine
+  addRequest("UpdateWaferProbeMachine",
+             std::bind(&SvtDbWPMachineDto::updateEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
+}
+
+//========================================================================+
+SvtDbAgent::SvtDbWaferLoadedInMachineDto::SvtDbWaferLoadedInMachineDto()
 {
   setTableName("");
+
   addColName("machineId");
   addColName("waferId");
   addColName("date");
   addColName("username");
   addColName("status");
+
+  createAllRequest();
 }
+
+//========================================================================+
+void SvtDbAgent::SvtDbWaferLoadedInMachineDto::createAllRequest() {}

@@ -8,6 +8,8 @@
  * @brief Svt Db enum DTO
  * */
 
+#include "SvtDbBaseDto.h"
+
 #include <map>
 #include <string>
 #include <vector>
@@ -16,33 +18,39 @@ namespace SvtDbAgent
 {
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
-};  // namespace SvtDbAgent
-
-namespace SvtDbEnumDto
-{
 
   extern std::map<std::string, std::vector<std::string>> enum_type_value_map;
 
-  bool getAllEnumTypesInDB(const std::string &schema,
-                           std::vector<std::string> &enum_types);
-  bool getAllEnumValuesInDB(std::string enum_name,
-                            std::vector<std::string> &enum_values);
-  bool addEnumValueInDB(std::string type_name, std::string value);
+  class SvtDbEnumDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbEnumDto() { createAllRequest(); }
+    ~SvtDbEnumDto() = default;
 
-  void addValue(const std::string &type, std::string &value);
+    virtual void getAllEntries(const SvtDbAgentMessage &msg,
+                               SvtDbAgentReplyMsg &replyMsg) final;
 
-  void getAllEnumValues(const SvtDbAgent::SvtDbAgentMessage &msg,
-                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+    bool getAllEnumTypesInDB(const std::string &schema,
+                             std::vector<std::string> &enum_types);
+    bool getAllEnumValuesInDB(std::string enum_name,
+                              std::vector<std::string> &enum_values);
+    bool addEnumValueInDB(std::string type_name, std::string value);
 
-  void getAllEnumValuesReplyMsg(const std::vector<std::string> &type_filters,
-                                SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+    void addValue(const std::string &type, std::string &value);
 
-  std::vector<std::string> getTypeNames();
+    void getAllEnumValuesReplyMsg(const std::vector<std::string> &type_filters,
+                                  SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
 
-  std::vector<std::string> getEnumValues(const std::string &enum_type);
+    std::vector<std::string> getTypeNames();
 
-  void print();
+    std::vector<std::string> getEnumValues(const std::string &enum_type);
 
-};  // namespace SvtDbEnumDto
+    void print();
+
+   private:
+    virtual void createAllRequest() final;
+  };
+
+};  // namespace SvtDbAgent
 
 #endif  //! SVT_DB_AGENT_ENUM_H
