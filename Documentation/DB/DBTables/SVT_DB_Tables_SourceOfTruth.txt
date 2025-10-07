@@ -176,7 +176,7 @@ Table main.TestSetupEquipment
 {
   testSetupId integer [ref: > main.TestSetup.id]
   equipment main.testEquipments
-  eqipmentDetails JSON
+  equipmentDetails JSON
 }
 
 Table main.SLDOTestConfiguration {
