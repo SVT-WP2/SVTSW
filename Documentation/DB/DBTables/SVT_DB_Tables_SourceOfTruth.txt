@@ -77,6 +77,23 @@ Table main.WaferProbeMachine {
   software main.wpSwType [not null]
   swVersion varchar(50) [not null]
   vendor main.wpVendor [not null]
+  loadedWaferId integer [ref: > main.Wafer.id]
+  installedProbeCardId integer [ref: > main.ProbeCard.id]
+}
+
+Table main.WaferLoadedInMachine {
+  machineId integer [ref: > main.WaferProbeMachine.id]
+  waferId integer [ref: > main.Wafer.id]
+  date date
+  username varchar(50)
+  status main.waferInMachineStatus
+}
+
+Table main.ProbeCardInstalledInMachine {
+  machineId integer [ref: > main.WaferProbeMachine.id]
+  probeCardId integer [ref: > main.ProbeCard.id]
+  date date
+  username varchar(50)
 }
 
 Table main.WaferProbeProject {
@@ -107,21 +124,6 @@ Table main.AsicProbing {
   numContacts integer
   mechanicalQuality main.contactMechanicalQuality
   arrivalDate date
-}
-
-Table main.WaferLoadedInMachine {
-  machineId integer [ref: > main.WaferProbeMachine.id]
-  waferId integer [ref: > main.Wafer.id]
-  date date
-  username varchar(50)
-  status main.waferInMachineStatus
-}
-
-Table main.ProbeCardInstalledInMachine {
-  machineId integer [ref: > main.WaferProbeMachine.id]
-  probeCardId integer [ref: > main.ProbeCard.id]
-  date date
-  username varchar(50)
 }
 
 Table main.AsicConfiguration {
@@ -186,6 +188,12 @@ Table main.SLDOTestConfiguration {
   loadCapacitance main.sldoTestLoadCap
   loadCurrent main.sldoTestLoadCurrent
   temperature main.sldoTestTemparature
+}
+
+Table main.SLDOTestList {
+  name main.sldoTestTypes
+  config integer [ref: > main.SLDOTestConfiguration.id]
+  version integer
 }
 
 Table main.SLDOTest {
