@@ -72,25 +72,6 @@ add_custom_target(version
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(deps/nlohmann_json build-nlohmann_json)
 
-add_executable(svt_db_agent "src/svt_db_agent.cpp" ${SOURCES_DB})
-add_dependencies(svt_db_agent version)
-
-# Define the directory containing your source files
-set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
-# Get a list of all .cpp files in the SOURCE_DIR
-file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
-# Loop through each .cpp file and create an executable
-foreach(CPP_FILE ${CPP_FILES})
-    # Extract the base name (without path and extension) for the executable name
-    get_filename_component(EXECUTABLE_NAME ${CPP_FILE} NAME_WE)
-
-    # Add the executable
-    add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
-    add_dependencies(${EXECUTABLE_NAME} version)
-    # add_executable(db_IF_test "src/test/db_IF_test.cpp" ${SOURCES_DB})
-    # add_dependencies(db_IF_test version)
-endforeach()
-
 IF (UNIX AND NOT APPLE)
   add_subdirectory(deps/libpqxx build-pqxx)
   set(svt_db_agent_lib pqxx rdkafka++ nlohmann_json::nlohmann_json pthread)
@@ -100,13 +81,29 @@ ELSE()
   pkg_check_modules(PQXX REQUIRED libpqxx)
   pkg_check_modules(RDKAFKA REQUIRED rdkafka++)
 
-  target_include_directories(svt_db_agent PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
-  target_include_directories(db_IF_test PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
-
   set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} ${RDKAFKA_LINK_LIBRARIES} nlohmann_json::nlohmann_json pthread)
 
 ENDIF()
 
-target_link_libraries(svt_db_agent PRIVATE ${svt_db_agent_lib})
-target_link_libraries(db_IF_test PRIVATE ${svt_db_agent_lib})
+# Define the directory containing your source files
+set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
+# Get a list of all .cpp files in the SOURCE_DIR
+file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
+# Prepend main project executable source
+list(PREPEND CPP_FILES "${SRC_TEST_DIR}/../svt_db_agent.cpp")
+# Loop through each .cpp file and create an executable
+foreach(CPP_FILE ${CPP_FILES})
+    # Extract the base name (without path and extension) for the executable name
+    get_filename_component(EXECUTABLE_NAME ${CPP_FILE} NAME_WE)
+
+    # Add the executable
+    add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
+    add_dependencies(${EXECUTABLE_NAME} version)
+ 
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
+endforeach()
+
+
+
 

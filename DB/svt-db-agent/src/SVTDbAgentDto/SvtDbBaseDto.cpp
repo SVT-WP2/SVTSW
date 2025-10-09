@@ -25,8 +25,6 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
     std::string_view reqName,
     std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)> fun)
 {
-  Singleton<SvtLogger>::instance()->logInfo("Adding Request " +
-                                            std::string(reqName));
   if (request_map.find(reqName) == request_map.end())
   {
     request_map[reqName] = fun;
