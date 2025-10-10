@@ -38,6 +38,8 @@ namespace SvtDbAgent
 
    private:
     virtual void createAllRequest() final;
+    virtual void getAllEntries(const SvtDbAgentMessage &,
+                               SvtDbAgentReplyMsg &) final;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

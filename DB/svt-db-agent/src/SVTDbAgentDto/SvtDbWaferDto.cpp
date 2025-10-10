@@ -50,29 +50,6 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbWaferLocationDto::SvtDbWaferLocationDto()
-{
-  setTableName("WaferLocation");
-
-  addColName("waferId");
-  addColName("generalLocation");
-  addColName("creationTime");
-  addColName("username");
-  addColName("note");
-
-  createAllRequest();
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbWaferLocationDto::createAllRequest()
-{
-  //! SvtDbWaferLocationDto::UpdateWaferLocation
-  addRequest("UpdateWaferLocation",
-             std::bind(&SvtDbWaferLocationDto::updateEntry, this,
-                       std::placeholders::_1, std::placeholders::_2));
-}
-
-//========================================================================+
 void SvtDbAgent::SvtDbWaferDto::createEntry(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
@@ -124,7 +101,6 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   int waferId = wafer.values.at("id").get<int>();
   int waferTypeId = wafer.values.at("waferTypeId").get<int>();
 
-  SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
   SvtDbEntry waferTypeEntry;
   getEntryWithId(waferTypeEntry, waferTypeId);
 
@@ -140,6 +116,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   }
 
   //! loop group rows
+  SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
   for (const auto &g_row_item : g_map_ordered)
   {
     size_t mapG_col_index = 0;
@@ -236,4 +213,54 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   }
 
   return;
+}
+
+//========================================================================+
+SvtDbAgent::SvtDbWaferLocationDto::SvtDbWaferLocationDto()
+{
+  setTableName("WaferLocation");
+
+  addColName("waferId");
+  addColName("generalLocation");
+  addColName("creationTime");
+  addColName("username");
+  addColName("note");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbWaferLocationDto::createAllRequest()
+{
+  //! SvtDbWaferLocationDto::UpdateWaferLocation
+  addRequest("UpdateWaferLocation",
+             std::bind(&SvtDbWaferLocationDto::updateEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
+
+  addRequest("GetWaferLocationHistory",
+             std::bind(&SvtDbWaferLocationDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbWaferLocationDto::getAllEntries(
+    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+{
+  try
+  {
+    const auto &waferId = msg.getPayload()["data"]["waferId"];
+    SvtDbFilters filters;
+    filters.mFilters.values.insert({"waferId", waferId});
+
+    std::vector<SvtDbAgent::SvtDbEntry> entries;
+    if (getAllEntriesFromDB(entries, filters))
+    {
+      getAllEntriesReplyMsg(entries, replyMsg);
+    }
+  }
+  catch (const std::exception &e)
+  {
+    throw e;
+    return;
+  }
 }
