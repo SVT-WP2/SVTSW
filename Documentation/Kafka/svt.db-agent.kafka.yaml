@@ -219,11 +219,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
 
-  /svt.db-agent.request/GetWaferLocationRecords:
+  /svt.db-agent.request/GetWaferLocationHistory:
     post:
       tags:
         - Wafers
-      summary: Get Wafer Location Records
+      summary: Get Wafer Location History Records
       description: Return list of location records for a wafer
       requestBody:
         content:
@@ -232,7 +232,7 @@ paths:
             type: object
             allOf:
             - $ref: '#/components/schemas/RequestMessage'
-            - $ref: '#/components/schemas/GetWaferLocationRecordsMessage'
+            - $ref: '#/components/schemas/GetWaferLocationHistoryMessage'
 
         required:
           true
@@ -246,7 +246,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetWaferLocationRecordsReplyMessage'
+                  - $ref: '#/components/schemas/GetWaferLocationHistoryReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -419,11 +419,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
 
-  /svt.db-agent.request/GetChipLocationRecords:
+  /svt.db-agent.request/GetChipLocationHistory:
     post:
       tags:
         - Chips
-      summary: Get Chip Location Records
+      summary: Get Chip Location History Records
       description: Return list of location records for a chip
       requestBody:
         content:
@@ -432,7 +432,7 @@ paths:
             type: object
             allOf:
             - $ref: '#/components/schemas/RequestMessage'
-            - $ref: '#/components/schemas/GetChipLocationRecordsMessage'
+            - $ref: '#/components/schemas/GetChipLocationHistoryMessage'
 
         required:
           true
@@ -446,7 +446,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetChipLocationRecordsReplyMessage'
+                  - $ref: '#/components/schemas/GetChipLocationHistoryReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -1024,32 +1024,32 @@ components:
     #
     # WAFER LOCATION RECORDS
     #
-    GetWaferLocationRecordsMessage:
+    GetWaferLocationHistoryMessage:
       properties:
         type:
           type: string
-          default: 'GetWaferLocationRecords'
+          default: 'GetWaferLocationHistory'
         data:
           type: object
           required:
-          - id
+          - waferId
           properties:
-            id:
+            waferId:
               type: number
               description: Wafer id
 
-    GetWaferLocationRecordsReplyMessage:
+    GetWaferLocationHistoryReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetWaferLocationRecordsReply'
+          default: 'GetWaferLocationHistoryReply'
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferUpdateLocationDto'
+                $ref: '#/components/schemas/WaferLocationHistoryRecordDto'
 
     #
     # ASICS :: LIST
@@ -1213,32 +1213,32 @@ components:
     #
     # CHIP LOCATION RECORDS
     #
-    GetChipLocationRecordsMessage:
+    GetChipLocationHistoryMessage:
       properties:
         type:
           type: string
-          default: 'GetChipLocationRecords'
+          default: 'GetChipLocationHistory'
         data:
           type: object
           required:
-          - id
+          - chipId
           properties:
-            id:
+            chipId:
               type: number
               description: Chip id
 
-    GetChipLocationRecordsReplyMessage:
+    GetChipLocationHistoryReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetChipLocationRecordsReply'
+          default: 'GetChipLocationHistoryReply'
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/ChipUpdateLocationDto'
+                $ref: '#/components/schemas/ChipLocationHistoryRecordDto'
 
     #
     # WAFER PROBE MACHINES :: LIST
@@ -1600,6 +1600,31 @@ components:
           type: string
           description: General comment/reason about the location update.
 
+    WaferLocationHistoryRecordDto:
+      type: object
+      required:
+        - id
+        - waferId
+        - generalLocation
+        - username
+        - note
+      properties:
+        id:
+          type: number
+        waferId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
+
     AsicDto:
       type: object
       required:
@@ -1676,6 +1701,31 @@ components:
         - username
         - note
       properties:
+        chipId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
+
+    ChipLocationHistoryRecordDto:
+      type: object
+      required:
+        - id
+        - chipId
+        - generalLocation
+        - username
+        - note
+      properties:
+        id:
+          type: number
         chipId:
           type: number
         generalLocation:
