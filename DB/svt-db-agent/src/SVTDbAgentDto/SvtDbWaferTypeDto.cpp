@@ -22,6 +22,7 @@ using SvtDbAgent::Singleton;
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {
   setTableName("WaferType");
+
   addColName("id");
   addColName("name");
   addColName("engineeringRun");

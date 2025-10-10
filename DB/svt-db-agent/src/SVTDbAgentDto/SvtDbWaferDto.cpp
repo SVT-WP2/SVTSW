@@ -106,8 +106,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   waferLoc.values.insert(
       {"generalLocation", waferEntry.values["generalLocation"]});
   waferLoc.values.insert({"note", "Location at creation"});
-  if (!Singleton<SvtDbWaferLocationDto>::instance()->createEntryInDB(
-          waferLoc))
+  if (!createEntryInDB(waferLoc))
   {
     throw std::runtime_error("ERROR: Could not create wafer location entry");
     return;
@@ -127,7 +126,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 
   SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
   SvtDbEntry waferTypeEntry;
-  waferType->getEntryWithId(waferTypeEntry, waferTypeId);
+  getEntryWithId(waferTypeEntry, waferTypeId);
 
   std::string waferMap = waferTypeEntry.values["waferMap"].get<std::string>();
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
@@ -229,7 +228,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         asic.values.insert({"familyType", asic_familytype});
         asic.values.insert({"quality", asic_quality});
 
-        Singleton<SvtDbAsicDto>::instance()->createEntryInDB(asic);
+        createEntryInDB(asic);
         ++asic_col;
       }
       ++mapG_col_index;
