@@ -23,6 +23,8 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   addColName("software");
   addColName("swVersion");
   addColName("vendor");
+  addColName("loadedWaferId");
+  addColName("installedProbeCardId");
 
   createAllRequest();
 }
@@ -60,3 +62,20 @@ SvtDbAgent::SvtDbWaferLoadedInMachineDto::SvtDbWaferLoadedInMachineDto()
 
 //========================================================================+
 void SvtDbAgent::SvtDbWaferLoadedInMachineDto::createAllRequest() {}
+
+//========================================================================+
+SvtDbAgent::SvtDbProbeCardInstalledInMachineDto::
+    SvtDbProbeCardInstalledInMachineDto()
+{
+  setTableName("");
+
+  addColName("machineId");
+  addColName("probeCardId");
+  addColName("date");
+  addColName("username");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbProbeCardInstalledInMachineDto::createAllRequest() {}
