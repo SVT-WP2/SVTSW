@@ -45,29 +45,6 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbChipLocationDto::SvtDbChipLocationDto()
-{
-  setTableName("ChipLocation");
-
-  addColName("chipId");
-  addColName("generalLocation");
-  addColName("creationTime");
-  addColName("username");
-  addColName("note");
-
-  createAllRequest();
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbChipLocationDto::createAllRequest()
-{
-  //! SvtDbChipLocationDto::UpdateChipLocation
-  addRequest("UpdateChipLocation",
-             std::bind(&SvtDbChipLocationDto::updateEntry, this,
-                       std::placeholders::_1, std::placeholders::_2));
-}
-
-//========================================================================+
 void SvtDbAgent::SvtDbChipDto::createEntry(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
@@ -116,4 +93,53 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
 
   Singleton<SvtLogger>::instance()->logInfo("Creating reply SvtDbAgentMessage");
   createEntryReplyMsg(chipEntry, replyMsg);
+}
+
+//========================================================================+
+SvtDbAgent::SvtDbChipLocationDto::SvtDbChipLocationDto()
+{
+  setTableName("ChipLocation");
+
+  addColName("chipId");
+  addColName("generalLocation");
+  addColName("creationTime");
+  addColName("username");
+  addColName("note");
+
+  createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbChipLocationDto::createAllRequest()
+{
+  //! SvtDbChipLocationDto::UpdateChipLocation
+  addRequest("UpdateChipLocation",
+             std::bind(&SvtDbChipLocationDto::updateEntry, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  addRequest("GetChipLocationHistory",
+             std::bind(&SvtDbChipLocationDto::getAllEntries, this,
+                       std::placeholders::_1, std::placeholders::_2));
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbChipLocationDto::getAllEntries(
+    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+{
+  try
+  {
+    const auto &chipId = msg.getPayload()["data"]["chipId"];
+    SvtDbFilters filters;
+    filters.mFilters.values.insert({"chipId", chipId});
+
+    std::vector<SvtDbAgent::SvtDbEntry> entries;
+    if (getAllEntriesFromDB(entries, filters))
+    {
+      getAllEntriesReplyMsg(entries, replyMsg);
+    }
+  }
+  catch (const std::exception &e)
+  {
+    throw e;
+    return;
+  }
 }
