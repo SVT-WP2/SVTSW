@@ -215,7 +215,7 @@ void SvtDbAgentService::parseMsg(
       replyMsg.setType(type + std::string("Reply"));
       try
       {
-        if (!m_Request->findAndRun(type, msg, replyMsg))
+        if (!m_Request->findRequestAndRun(type, msg, replyMsg))
         {
           std::ostringstream ss;
           ss << "Error: Request " << type << " not Found";

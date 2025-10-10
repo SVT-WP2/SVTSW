@@ -37,9 +37,9 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbBaseDto::findAndRun(std::string_view reqName,
-                                          const SvtDbAgentMessage &msg,
-                                          SvtDbAgentReplyMsg &replyMsg)
+bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
+                                                 const SvtDbAgentMessage &msg,
+                                                 SvtDbAgentReplyMsg &replyMsg)
 {
   if (request_map.find(reqName) != request_map.end())
   {

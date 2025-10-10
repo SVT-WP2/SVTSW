@@ -108,7 +108,7 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   chipLoc.values.insert(
       {"generalLocation", chipEntry.values["generalLocation"]});
   chipLoc.values.insert({"note", "Location at creation"});
-  if (!Singleton<SvtDbChipLocationDto>::instance()->createEntryInDB(chipLoc))
+  if (!createEntryInDB(chipLoc))
   {
     throw std::runtime_error("ERROR: Could not create chip location entry");
     return;

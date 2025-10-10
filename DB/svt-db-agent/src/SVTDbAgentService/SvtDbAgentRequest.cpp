@@ -53,14 +53,14 @@ SvtDbBaseDto *SvtDbAgentRequest::getDto(std::string_view dtoName)
 }
 
 //===========================================================================+
-bool SvtDbAgentRequest::findAndRun(std::string_view reqName,
-                                   const SvtDbAgentMessage &msg,
-                                   SvtDbAgentReplyMsg &replyMsg)
+bool SvtDbAgentRequest::findRequestAndRun(std::string_view reqName,
+                                          const SvtDbAgentMessage &msg,
+                                          SvtDbAgentReplyMsg &replyMsg)
 {
   bool req_found = false;
   for (auto &[dtoName, dto] : dtoList)
   {
-    if (dto->findAndRun(reqName, msg, replyMsg))
+    if (dto->findRequestAndRun(reqName, msg, replyMsg))
     {
       req_found = true;
       break;
