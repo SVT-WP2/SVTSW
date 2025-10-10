@@ -15,6 +15,16 @@ namespace SvtDbAgent
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
 
+  class SvtDbWPMachineDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWPMachineDto();
+    ~SvtDbWPMachineDto() = default;
+
+   private:
+    void createAllRequest() final;
+  };
+
   class SvtDbWaferLoadedInMachineDto : public SvtDbBaseDto
   {
    public:
@@ -25,11 +35,11 @@ namespace SvtDbAgent
     void createAllRequest() final;
   };
 
-  class SvtDbWPMachineDto : public SvtDbBaseDto
+  class SvtDbProbeCardInstalledInMachineDto : public SvtDbBaseDto
   {
    public:
-    SvtDbWPMachineDto();
-    ~SvtDbWPMachineDto() = default;
+    SvtDbProbeCardInstalledInMachineDto();
+    ~SvtDbProbeCardInstalledInMachineDto() = default;
 
    private:
     void createAllRequest() final;
