@@ -1603,14 +1603,11 @@ components:
     WaferLocationHistoryRecordDto:
       type: object
       required:
-        - id
         - waferId
         - generalLocation
         - username
         - note
       properties:
-        id:
-          type: number
         waferId:
           type: number
         generalLocation:
@@ -1718,14 +1715,11 @@ components:
     ChipLocationHistoryRecordDto:
       type: object
       required:
-        - id
         - chipId
         - generalLocation
         - username
         - note
       properties:
-        id:
-          type: number
         chipId:
           type: number
         generalLocation:
