@@ -15,31 +15,48 @@ namespace SvtDbAgent
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
 
+  class SvtDbWaferLocationDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWaferLocationDto()
+    {
+      setTableName("WaferLocation");
+
+      addColName("waferId");
+      addColName("generalLocation");
+      addColName("creationTime");
+      addColName("username");
+      addColName("note");
+    };
+    ~SvtDbWaferLocationDto() = default;
+
+   private:
+    virtual void createAllRequest() final {};
+  };
+
   class SvtDbWaferDto : public SvtDbBaseDto
   {
-    //! Create asics for wafer
-    void createAllAsics(const SvtDbAgent::SvtDbEntry &wafer);
-
    public:
     SvtDbWaferDto();
     ~SvtDbWaferDto() = default;
 
    private:
+    //! request DTO funcions
     virtual void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
                              SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-    virtual void createAllRequest() final;
-  };
+    virtual void
+    updateWaferLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
+                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void getWaferLocationHistory(const SvtDbAgentMessage &,
+                                         SvtDbAgentReplyMsg &) final;
 
-  class SvtDbWaferLocationDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbWaferLocationDto();
-    ~SvtDbWaferLocationDto() = default;
-
-   private:
     virtual void createAllRequest() final;
-    virtual void getAllEntries(const SvtDbAgentMessage &,
-                               SvtDbAgentReplyMsg &) final;
+
+    //! Create asics for wafer
+    void createAllAsics(const SvtDbAgent::SvtDbEntry &wafer);
+
+    SvtDbWaferLocationDto *waferLocDto =
+        Singleton<SvtDbWaferLocationDto>::instance();
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

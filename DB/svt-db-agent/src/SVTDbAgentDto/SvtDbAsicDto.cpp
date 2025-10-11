@@ -8,8 +8,6 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
 
 #include <sstream>
 //========================================================================+
@@ -47,13 +45,12 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
 {
   const auto &msgData = msg.getPayload()["data"];
   SvtDbFilters filters;
-  parseFilter(msgData, filters);
+  parseJsonFilters(msgData, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   if (getAllEntriesFromDB(entries, filters))
   {
-    Singleton<SvtLogger>::instance()->logInfo("Number of asics: " +
-                                              std::to_string(entries.size()));
+    getLogger()->logInfo("Number of asics: " + std::to_string(entries.size()));
   }
 
   if (!msgData.contains("pager"))
@@ -95,8 +92,8 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntriesReplyMsg(
     const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
     int totalCount)
 {
-  Singleton<SvtLogger>::instance()->logInfo(
-      "Creating message with " + std::to_string(entries.size()) + " out of " +
-      std::to_string(totalCount));
+  getLogger()->logInfo("Creating message with " +
+                       std::to_string(entries.size()) + " out of " +
+                       std::to_string(totalCount));
   this->SvtDbBaseDto::getAllEntriesReplyMsg(entries, msgReply, totalCount);
 }

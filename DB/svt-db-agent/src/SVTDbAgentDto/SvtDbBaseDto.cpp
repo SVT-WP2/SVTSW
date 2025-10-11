@@ -10,8 +10,6 @@
 #include "SVTDb/sqlmapi.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
 
 #include <algorithm>
 #include <functional>
@@ -31,8 +29,8 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
   }
   else
   {
-    Singleton<SvtLogger>::instance()->logError(
-        "Request " + std::string(reqName) + " already exist in request list.");
+    getLogger()->logError("Request " + std::string(reqName) +
+                          " already exist in request list.");
   }
 }
 
@@ -77,9 +75,8 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     }
     else
     {
-      Singleton<SvtLogger>::instance()->logError(
-          "Wrong filter: column with name " + filter.first +
-          " does not exists in table " + getTableName());
+      getLogger()->logError("Wrong filter: column with name " + filter.first +
+                            " does not exists in table " + getTableName());
       return false;
     }
   }
@@ -123,7 +120,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   }
   catch (const std::exception &e)
   {
-    Singleton<SvtLogger>::instance()->logError(e.what());
+    getLogger()->logError(e.what());
     entries.clear();
     return false;
   }
@@ -206,12 +203,36 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::parseFilter(const nlohmann::json &msgData,
-                                           SvtDbFilters &filters)
+void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
+                                             SvtDbEntry &entry)
 {
-  if (msgData.contains("filter"))
+  //! remove id record
+  std::vector<std::string> AdjIntColName(getColNames().begin(),
+                                         getColNames().end());
+  std::vector<std::string>::const_iterator iter =
+      std::find(AdjIntColName.begin(), AdjIntColName.end(), "id");
+  if (iter != AdjIntColName.end())
   {
-    const auto filterData = msgData["filter"];
+    AdjIntColName.erase(iter);
+  }
+  if (j_data.size() != (AdjIntColName.size()))
+  {
+    throw std::invalid_argument("insufficient number of parameters");
+  }
+  for (const auto &colName : AdjIntColName)
+  {
+    const auto &value = j_data[colName];
+    entry.values.insert({colName, value});
+  }
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
+                                                SvtDbFilters &filters)
+{
+  if (j_data.contains("filter"))
+  {
+    const auto filterData = j_data["filter"];
     if (filterData.contains("ids"))
     {
       filters.ids = filterData["ids"].get<std::vector<int>>();
@@ -224,30 +245,6 @@ void SvtDbAgent::SvtDbBaseDto::parseFilter(const nlohmann::json &msgData,
         filters.mFilters.values.insert({colName, value});
       }
     }
-  }
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbBaseDto::parseData(const nlohmann::json &entry_j,
-                                         SvtDbEntry &entry)
-{
-  //! remove id record
-  std::vector<std::string> AdjIntColName(getColNames().begin(),
-                                         getColNames().end());
-  std::vector<std::string>::const_iterator iter =
-      std::find(AdjIntColName.begin(), AdjIntColName.end(), "id");
-  if (iter != AdjIntColName.end())
-  {
-    AdjIntColName.erase(iter);
-  }
-  if (entry_j.size() != (AdjIntColName.size()))
-  {
-    throw std::invalid_argument("insufficient number of parameters");
-  }
-  for (const auto &colName : AdjIntColName)
-  {
-    const auto &value = entry_j[colName];
-    entry.values.insert({colName, value});
   }
 }
 
@@ -290,9 +287,9 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
 void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
                                              SvtDbAgentReplyMsg &replyMsg)
 {
-  const auto &msgData = msg.getPayload()["data"];
+  const auto &j_data = msg.getPayload()["data"];
   SvtDbFilters filters;
-  parseFilter(msgData, filters);
+  parseJsonFilters(j_data, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   if (getAllEntriesFromDB(entries, filters))
@@ -314,7 +311,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
   auto &entry_j = msgData["create"];
   SvtDbEntry entry;
 
-  parseData(entry_j, entry);
+  parseJsonData(entry_j, entry);
 
   //! create entry in DB
   if (!createEntryInDB(entry))
@@ -354,7 +351,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
   if (!SvtDbInterface::checkIdExist(getTableName(), Id))
   {
     std::ostringstream ss("");
-    ss << "Wafer Probe Machine with id " << Id << " does not found.";
+    ss << "Object with id " << Id << " does not found.";
     throw std::runtime_error(ss.str());
   }
 

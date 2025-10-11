@@ -7,6 +7,8 @@
  */
 
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
+#include <exception>
+#include "SVTDbAgentService/SvtDbAgentMessage.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
@@ -44,38 +46,32 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
   addRequest("UpdateWaferProbeMachine",
              std::bind(&SvtDbWPMachineDto::updateEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWPMachineDto::UpdateWaferProbeMachine
+  addRequest("UpdateWpMachineLoadedWafer",
+             std::bind(&SvtDbWPMachineDto::updateWaferLoadedInMachine, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWPMachineDto::UpdateWaferProbeMachine
+  addRequest("UpdateWpMachineInstalledProbeCard",
+             std::bind(&SvtDbWPMachineDto::updateProbeCardInstalledInMachine,
+                       this, std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbWaferLoadedInMachineDto::SvtDbWaferLoadedInMachineDto()
+void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
+    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
 {
-  setTableName("");
-
-  addColName("machineId");
-  addColName("waferId");
-  addColName("date");
-  addColName("username");
-  addColName("status");
-
-  createAllRequest();
+  try
+  {
+    const auto machineId = msg.getPayload()["data"]["machineId"];
+    const auto waferId = msg.getPayload()["data"]["waferId"];
+  }
+  catch (std::exception &e)
+  {
+    throw e;
+    return;
+  }
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferLoadedInMachineDto::createAllRequest() {}
-
-//========================================================================+
-SvtDbAgent::SvtDbProbeCardInstalledInMachineDto::
-    SvtDbProbeCardInstalledInMachineDto()
-{
-  setTableName("");
-
-  addColName("machineId");
-  addColName("probeCardId");
-  addColName("date");
-  addColName("username");
-
-  createAllRequest();
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbProbeCardInstalledInMachineDto::createAllRequest() {}
+void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
+    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg) {}

@@ -7,12 +7,8 @@
 
 #include "SVTDbAgentDto/SvtDbChipDto.h"
 #include "SVTDb/SvtDbInterface.h"
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
@@ -42,6 +38,14 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
   addRequest("UpdateChip",
              std::bind(&SvtDbChipDto::updateEntry, this, std::placeholders::_1,
                        std::placeholders::_2));
+  //! SvtDbChipDto::UpdateChipLocation
+  addRequest("UpdateChipLocation",
+             std::bind(&SvtDbChipDto::updateChipLocation, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbChipDto::GetChipLocationHistory
+  addRequest("GetChipLocationHistory",
+             std::bind(&SvtDbChipDto::getChipLocationHistory, this,
+                       std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
@@ -58,10 +62,10 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   auto &entry_j = msgData["create"];
   SvtDbAgent::SvtDbEntry chipEntry;
 
-  parseData(entry_j, chipEntry);
+  parseJsonData(entry_j, chipEntry);
 
   //! create entry in DB
-  Singleton<SvtLogger>::instance()->logInfo("Creating chip in DB");
+  getLogger()->logInfo("Creating chip in DB");
   const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
 
   if (!createEntryInDB(chipEntry))
@@ -78,51 +82,35 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   }
   getEntryWithId(chipEntry, newEntryId);
 
-  Singleton<SvtLogger>::instance()->logInfo("Creating chip location in DB");
+  getLogger()->logInfo("Creating chip location in DB");
   //! Create waferLocations
   SvtDbEntry chipLoc;
   chipLoc.values.insert({"chipId", newEntryId});
   chipLoc.values.insert(
       {"generalLocation", chipEntry.values["generalLocation"]});
   chipLoc.values.insert({"note", "Location at creation"});
-  if (!createEntryInDB(chipLoc))
+  if (!chipLocDto->createEntryInDB(chipLoc))
   {
     throw std::runtime_error("ERROR: Could not create chip location entry");
     return;
   }
 
-  Singleton<SvtLogger>::instance()->logInfo("Creating reply SvtDbAgentMessage");
+  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
   createEntryReplyMsg(chipEntry, replyMsg);
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbChipLocationDto::SvtDbChipLocationDto()
+void SvtDbAgent::SvtDbChipDto::updateChipLocation(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  setTableName("ChipLocation");
-
-  addColName("chipId");
-  addColName("generalLocation");
-  addColName("creationTime");
-  addColName("username");
-  addColName("note");
-
-  createAllRequest();
+  //! update wafer location
+  //! create entry in WaferLocation table
+  chipLocDto->createEntry(msg, replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbChipLocationDto::createAllRequest()
-{
-  //! SvtDbChipLocationDto::UpdateChipLocation
-  addRequest("UpdateChipLocation",
-             std::bind(&SvtDbChipLocationDto::updateEntry, this,
-                       std::placeholders::_1, std::placeholders::_2));
-  addRequest("GetChipLocationHistory",
-             std::bind(&SvtDbChipLocationDto::getAllEntries, this,
-                       std::placeholders::_1, std::placeholders::_2));
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbChipLocationDto::getAllEntries(
+void SvtDbAgent::SvtDbChipDto::getChipLocationHistory(
     const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
 {
   try
