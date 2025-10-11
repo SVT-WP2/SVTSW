@@ -11,10 +11,9 @@
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
 
 #include <sstream>
+
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
 {
@@ -47,6 +46,14 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
   addRequest("UpdateWafer",
              std::bind(&SvtDbWaferDto::updateEntry, this, std::placeholders::_1,
                        std::placeholders::_2));
+  //! SvtDbWaferDto::UpdateWaferLocation
+  addRequest("UpdateWaferLocation",
+             std::bind(&SvtDbWaferDto::updateWaferLocation, this,
+                       std::placeholders::_1, std::placeholders::_2));
+  //! SvtDbWaferDto::GetWaferLocationHistory
+  addRequest("GetWaferLocationHistory",
+             std::bind(&SvtDbWaferDto::getWaferLocationHistory, this,
+                       std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
@@ -63,10 +70,12 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   auto &entry_j = msgData["create"];
   SvtDbAgent::SvtDbEntry waferEntry;
 
-  parseData(entry_j, waferEntry);
+  parseJsonData(entry_j, waferEntry);
 
   //! create entry in DB
-  Singleton<SvtLogger>::instance()->logInfo("Creating Wafer in DB");
+  getLogger()->logInfo("Creating Wafer in DB");
+  const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
+
   if (!createEntryInDB(waferEntry))
   {
     throw std::runtime_error("Entry was not created in " + getTableName());
@@ -74,24 +83,29 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
+  if (newEntryId != currMaxEntryId + 1)
+  {
+    throw std::runtime_error("Entry was not created in " + getTableName());
+    return;
+  }
   getEntryWithId(waferEntry, newEntryId);
 
-  Singleton<SvtLogger>::instance()->logInfo("Creating wafer location in DB");
+  getLogger()->logInfo("Creating wafer location in DB");
   //! Create waferLocations
   SvtDbEntry waferLoc;
   waferLoc.values.insert({"waferId", newEntryId});
   waferLoc.values.insert(
       {"generalLocation", waferEntry.values["generalLocation"]});
   waferLoc.values.insert({"note", "Location at creation"});
-  if (!createEntryInDB(waferLoc))
+  if (!waferLocDto->createEntryInDB(waferLoc))
   {
     throw std::runtime_error("ERROR: Could not create wafer location entry");
     return;
   }
 
-  Singleton<SvtLogger>::instance()->logInfo("Creating all Asics in DB");
+  getLogger()->logInfo("Creating all Asics in DB");
   createAllAsics(waferEntry);
-  Singleton<SvtLogger>::instance()->logInfo("Creating reply SvtDbAgentMessage");
+  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
   createEntryReplyMsg(waferEntry, replyMsg);
 }
 
@@ -101,8 +115,9 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   int waferId = wafer.values.at("id").get<int>();
   int waferTypeId = wafer.values.at("waferTypeId").get<int>();
 
+  SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
   SvtDbEntry waferTypeEntry;
-  getEntryWithId(waferTypeEntry, waferTypeId);
+  waferType->getEntryWithId(waferTypeEntry, waferTypeId);
 
   std::string waferMap = waferTypeEntry.values["waferMap"].get<std::string>();
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
@@ -116,7 +131,6 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   }
 
   //! loop group rows
-  SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
   for (const auto &g_row_item : g_map_ordered)
   {
     size_t mapG_col_index = 0;
@@ -132,19 +146,19 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
       std::vector<int> mecDamagedAsics;
       std::vector<int> coveredAsics;
       std::vector<int> mecIntegerAsics;
-      if (!waferType->parse_range(g_size, mapG_col["ExistingAsics"],
-                                  existingAsics) ||
-          !waferType->parse_range(g_size, mapG_col["MechanicallyDamagedASICs"],
-                                  mecDamagedAsics) ||
-          !waferType->parse_range(g_size, mapG_col["ASICsCoveredByGreenLayer"],
-                                  coveredAsics) ||
-          !waferType->parse_range(g_size, mapG_col["MechanicallyIntegerASICs"],
-                                  mecIntegerAsics))
+      if (!waferType->extractRange(g_size, mapG_col["ExistingAsics"],
+                                   existingAsics) ||
+          !waferType->extractRange(g_size, mapG_col["MechanicallyDamagedASICs"],
+                                   mecDamagedAsics) ||
+          !waferType->extractRange(g_size, mapG_col["ASICsCoveredByGreenLayer"],
+                                   coveredAsics) ||
+          !waferType->extractRange(g_size, mapG_col["MechanicallyIntegerASICs"],
+                                   mecIntegerAsics))
       {
         std::ostringstream ss;
         ss << "Error creating Asic. MapGroups: " << g_row_item.second
            << ", group col: " << mapG_col_index;
-        Singleton<SvtLogger>::instance()->logError(ss.str());
+        getLogger()->logError(ss.str());
 
         throw std::runtime_error("Wrong array found");
       }
@@ -178,7 +192,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
           std::ostringstream ss;
           ss << "Error creating Asic. MapGroups: " << g_row_item.second
              << ", group col: " << mapG_col_index;
-          Singleton<SvtLogger>::instance()->logError(ss.str());
+          getLogger()->logError(ss.str());
           ss.str("");
           ss.clear();
           ss << "Wrong Asic quality property for asic  " << asic_index;
@@ -194,7 +208,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
           std::ostringstream ss;
           ss << "Error creating Asic. MapGroups: " << g_row_item.second
              << ", group col: " << mapG_col_index << std::endl;
-          Singleton<SvtLogger>::instance()->logError(ss.str());
+          getLogger()->logError(ss.str());
           throw std::runtime_error("invalid familyType");
         }
 
@@ -205,7 +219,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         asic.values.insert({"familyType", asic_familytype});
         asic.values.insert({"quality", asic_quality});
 
-        createEntryInDB(asic);
+        Singleton<SvtDbAsicDto>::instance()->createEntryInDB(asic);
         ++asic_col;
       }
       ++mapG_col_index;
@@ -216,34 +230,17 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 }
 
 //========================================================================+
-SvtDbAgent::SvtDbWaferLocationDto::SvtDbWaferLocationDto()
+void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  setTableName("WaferLocation");
-
-  addColName("waferId");
-  addColName("generalLocation");
-  addColName("creationTime");
-  addColName("username");
-  addColName("note");
-
-  createAllRequest();
+  //! update wafer location
+  //! create entry in WaferLocation table
+  waferLocDto->createEntry(msg, replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferLocationDto::createAllRequest()
-{
-  //! SvtDbWaferLocationDto::UpdateWaferLocation
-  addRequest("UpdateWaferLocation",
-             std::bind(&SvtDbWaferLocationDto::updateEntry, this,
-                       std::placeholders::_1, std::placeholders::_2));
-
-  addRequest("GetWaferLocationHistory",
-             std::bind(&SvtDbWaferLocationDto::getAllEntries, this,
-                       std::placeholders::_1, std::placeholders::_2));
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbWaferLocationDto::getAllEntries(
+void SvtDbAgent::SvtDbWaferDto::getWaferLocationHistory(
     const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
 {
   try
@@ -253,9 +250,9 @@ void SvtDbAgent::SvtDbWaferLocationDto::getAllEntries(
     filters.mFilters.values.insert({"waferId", waferId});
 
     std::vector<SvtDbAgent::SvtDbEntry> entries;
-    if (getAllEntriesFromDB(entries, filters))
+    if (waferLocDto->getAllEntriesFromDB(entries, filters))
     {
-      getAllEntriesReplyMsg(entries, replyMsg);
+      waferLocDto->getAllEntriesReplyMsg(entries, replyMsg);
     }
   }
   catch (const std::exception &e)

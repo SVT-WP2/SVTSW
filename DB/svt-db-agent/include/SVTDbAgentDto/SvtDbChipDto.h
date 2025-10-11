@@ -15,6 +15,25 @@ namespace SvtDbAgent
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
 
+  class SvtDbChipLocationDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbChipLocationDto()
+    {
+      setTableName("ChipLocation");
+
+      addColName("chipId");
+      addColName("generalLocation");
+      addColName("creationTime");
+      addColName("username");
+      addColName("note");
+    };
+    ~SvtDbChipLocationDto() = default;
+
+   private:
+    virtual void createAllRequest() final {};
+  };
+
   class SvtDbChipDto : public SvtDbBaseDto
   {
    public:
@@ -22,21 +41,20 @@ namespace SvtDbAgent
     ~SvtDbChipDto() = default;
 
    private:
-    void createAllRequest() final;
+    //! request DTO funcions
     void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
                      SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-  };
+    virtual void
+    updateChipLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
+                       SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void getChipLocationHistory(const SvtDbAgentMessage &,
+                                        SvtDbAgentReplyMsg &) final;
 
-  class SvtDbChipLocationDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbChipLocationDto();
-    ~SvtDbChipLocationDto() = default;
-
-   private:
     void createAllRequest() final;
-    virtual void getAllEntries(const SvtDbAgentMessage &,
-                               SvtDbAgentReplyMsg &) final;
+
+    SvtDbChipLocationDto *chipLocDto =
+        Singleton<SvtDbChipLocationDto>::instance();
   };
+
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_CHIP_DTO_H

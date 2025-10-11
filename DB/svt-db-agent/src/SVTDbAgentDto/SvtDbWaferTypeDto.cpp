@@ -47,23 +47,23 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::parseData(const nlohmann::json &entry_j,
-                                              SvtDbEntry &entry)
+void SvtDbAgent::SvtDbWaferTypeDto::parseJsonData(const nlohmann::json &j_data,
+                                                  SvtDbEntry &entry)
 {
   std::string err_msg;
-  const std::string waferMap_s = entry_j.value("waferMap", "");
+  const std::string waferMap_s = j_data.value("waferMap", "");
   if (!checkWaferMap(waferMap_s, err_msg))
   {
     throw std::runtime_error(err_msg);
     return;
   }
-  this->SvtDbBaseDto::parseData(entry_j, entry);
+  this->SvtDbBaseDto::parseJsonData(j_data, entry);
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbWaferTypeDto::parse_range(const int g_size,
-                                                const nlohmann::json &array_j,
-                                                std::vector<int> &range)
+bool SvtDbAgent::SvtDbWaferTypeDto::extractRange(const int g_size,
+                                                 const nlohmann::json &array_j,
+                                                 std::vector<int> &range)
 {
   if (!array_j.is_null() && array_j.size())
   {
@@ -162,13 +162,13 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferMap(
       std::vector<int> mecDamagedAsics;
       std::vector<int> coveredAsics;
       std::vector<int> mecIntegerAsics;
-      if (!parse_range(g_size, g_col["ExistingAsics"], existingAsics) ||
-          !parse_range(g_size, g_col["MechanicallyDamagedASICs"],
-                       mecDamagedAsics) ||
-          !parse_range(g_size, g_col["ASICsCoveredByGreenLayer"],
-                       coveredAsics) ||
-          !parse_range(g_size, g_col["MechanicallyIntegerASICs"],
-                       mecIntegerAsics))
+      if (!extractRange(g_size, g_col["ExistingAsics"], existingAsics) ||
+          !extractRange(g_size, g_col["MechanicallyDamagedASICs"],
+                        mecDamagedAsics) ||
+          !extractRange(g_size, g_col["ASICsCoveredByGreenLayer"],
+                        coveredAsics) ||
+          !extractRange(g_size, g_col["MechanicallyIntegerASICs"],
+                        mecIntegerAsics))
       {
         std::ostringstream ss;
         ss << "Map Group: " << g_row << " Col: " << asic_col
