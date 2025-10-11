@@ -8,6 +8,7 @@
  * @brief Svt Db wafer probe machine DTO
  * */
 
+#include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
@@ -15,34 +16,62 @@ namespace SvtDbAgent
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
 
+  class SvtDbWaferLoadedInMachineDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWaferLoadedInMachineDto()
+    {
+      setTableName("");
+
+      addColName("machineId");
+      addColName("waferId");
+      addColName("date");
+      addColName("username");
+      addColName("status");
+    };
+    ~SvtDbWaferLoadedInMachineDto() = default;
+
+   private:
+    void createAllRequest() final {};
+  };
+
+  class SvtDbProbeCardInstalledInMachineDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbProbeCardInstalledInMachineDto()
+    {
+      setTableName("");
+
+      addColName("machineId");
+      addColName("probeCardId");
+      addColName("date");
+      addColName("username");
+    };
+    ~SvtDbProbeCardInstalledInMachineDto() = default;
+
+   private:
+    void createAllRequest() final {};
+  };
+
   class SvtDbWPMachineDto : public SvtDbBaseDto
   {
    public:
     SvtDbWPMachineDto();
     ~SvtDbWPMachineDto() = default;
 
-   private:
-    void createAllRequest() final;
-  };
-
-  class SvtDbWaferLoadedInMachineDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbWaferLoadedInMachineDto();
-    ~SvtDbWaferLoadedInMachineDto() = default;
+    //! Request DTO functions
+    void updateWaferLoadedInMachine(const SvtDbAgentMessage &msg,
+                                    SvtDbAgentReplyMsg &);
+    void updateProbeCardInstalledInMachine(const SvtDbAgentMessage &msg,
+                                           SvtDbAgentReplyMsg &);
 
    private:
     void createAllRequest() final;
-  };
 
-  class SvtDbProbeCardInstalledInMachineDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbProbeCardInstalledInMachineDto();
-    ~SvtDbProbeCardInstalledInMachineDto() = default;
-
-   private:
-    void createAllRequest() final;
+    SvtDbWaferLoadedInMachineDto *waferLoaded =
+        Singleton<SvtDbWaferLoadedInMachineDto>::instance();
+    SvtDbProbeCardInstalledInMachineDto *pcInstalled =
+        Singleton<SvtDbProbeCardInstalledInMachineDto>::instance();
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

@@ -21,10 +21,11 @@ namespace SvtDbAgent
     SvtDbAsicDto();
     ~SvtDbAsicDto() = default;
 
+   private:
+    //! Request
     void getAllEntries(const SvtDbAgentMessage &msg,
                        SvtDbAgentReplyMsg &replyMsg) final;
 
-   private:
     void createAllRequest() final;
     void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
                                SvtDbAgentReplyMsg &msgReply,
