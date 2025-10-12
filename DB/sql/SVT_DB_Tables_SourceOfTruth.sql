@@ -246,7 +246,7 @@ CREATE TABLE "main"."Wafer" (
 CREATE TABLE "main"."WaferLocation" (
   "waferId" integer NOT NULL,
   "generalLocation" main."wpGeneralLocation" NOT NULL,
-  "creationTime" timestamp DEFAULT (CURRENT_TIMESTAMP),
+  "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50),
   "note" text
 );
@@ -382,7 +382,7 @@ CREATE TABLE "main"."Chip" (
 CREATE TABLE "main"."ChipLocation" (
   "chipId" integer NOT NULL,
   "generalLocation" main."wpGeneralLocation",
-  "creationTime" timestamp DEFAULT (CURRENT_TIMESTAMP),
+  "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50),
   "note" text
 );

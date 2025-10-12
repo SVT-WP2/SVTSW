@@ -21,7 +21,7 @@ Table main.Wafer {
 Table main.WaferLocation {
   waferId integer [ref: > main.Wafer.id, not null]
   generalLocation main.wpGeneralLocation [not null]
-  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
   note text
 }
@@ -157,7 +157,7 @@ Table main.Chip{
 Table main.ChipLocation {
   chipId integer [ref: > main.Chip.id, not null]
   generalLocation main.wpGeneralLocation
-  creationTime timestamp [default: `CURRENT_TIMESTAMP`]
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
   note text
 }
