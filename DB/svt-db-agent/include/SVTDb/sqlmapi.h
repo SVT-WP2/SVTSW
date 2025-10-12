@@ -54,13 +54,18 @@ class SimpleQuery
   }
   void addWhereIn(std::string columnName, std::vector<int> values);
 
-  void setOrderById(const bool order) { mOrderById = order; }
+  void setOrderById(const std::string &orderBy, const bool dec = false)
+  {
+    mOrderBy = orderBy;
+    mOrderDec = dec;
+  }
 
  protected:
   std::string mTableName;
+  std::string mOrderBy;
+  bool mOrderDec = false;
   std::vector<std::string> mColumnNames;
   std::vector<std::string> mWhereClauses;
-  bool mOrderById = false;
 };
 
 bool doGenericUpdate(std::string insertString);

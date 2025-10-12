@@ -137,9 +137,11 @@ void SimpleQuery::doQuery(rows_t &rows)
   {
     queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
   }
-  if (mOrderById)
+  if (!mOrderBy.empty())
   {
-    queryString += " ORDER BY id ";
+    queryString += " ORDER BY ";
+    queryString += mOrderBy;
+    queryString += mOrderDec ? " DESC" : "";
   }
   return doGenericQuery(queryString, rows);
 }
