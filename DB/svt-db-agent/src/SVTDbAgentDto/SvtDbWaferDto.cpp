@@ -13,6 +13,7 @@
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 
 #include <sstream>
+#include <string>
 
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
@@ -68,7 +69,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   }
 
   auto &entry_j = msgData["create"];
-  SvtDbAgent::SvtDbEntry waferEntry;
+  SvtDbEntry waferEntry;
 
   parseJsonData(entry_j, waferEntry);
 
@@ -230,13 +231,42 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbWaferDto::updateEntry(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+{
+  if (msg.getPayload()["date"]["update"].contains("generalLocation"))
+  {
+    throw std::runtime_error(
+        "Failed to update entry. update location is not "
+        "allowed using generic update request");
+    return;
+  }
+  this->SvtDbBaseDto::updateEntry(msg, replyMsg);
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  //! update wafer location
+  getLogger()->logInfo("UpdateWaferLocation");
   //! create entry in WaferLocation table
-  waferLocDto->createEntry(msg, replyMsg);
+  SvtDbEntry waferEntry, waferLocEntry;
+  waferLocDto->parseJsonData(msg.getPayload()["data"], waferLocEntry);
+  waferLocDto->createEntryInDB(waferLocEntry);
+
+  //! update wafer location
+  const auto waferId = waferLocEntry.values["waferId"];
+  nlohmann::json data;
+  data["data"]["id"] = waferId;
+  data["data"]["update"]["generalLocation"] =
+      waferLocEntry.values["generalLocation"];
+
+  SvtDbAgentMessage updateMsg;
+  updateMsg.setPayload(data);
+
+  updateEntry(updateMsg, replyMsg);
 }
 
 //========================================================================+
