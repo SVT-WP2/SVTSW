@@ -13,7 +13,6 @@
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 
 #include <sstream>
-#include <string>
 
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
