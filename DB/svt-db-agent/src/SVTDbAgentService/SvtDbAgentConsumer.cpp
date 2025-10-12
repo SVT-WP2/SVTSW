@@ -38,9 +38,26 @@ bool SvtDbAgentConsumer::createConsumer()
   std::shared_ptr<RdKafka::Conf> m_topicConf = std::shared_ptr<RdKafka::Conf>(
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
-  m_globalConf->set("metadata.broker.list", m_broker, m_errStr);
-  m_globalConf->set("group.id", "svt-db-agent", m_errStr);
-  m_globalConf->set("allow.auto.create.topics", "true", m_errStr);
+  if (m_globalConf->set("metadata.broker.list", m_broker, m_errStr) !=
+      RdKafka::Conf::CONF_OK)
+  {
+    logger->logError("Failed to set bootstrap.servers: " + m_errStr);
+    return false;
+  }
+
+  if (m_globalConf->set("group.id", "svt-db-agent", m_errStr) !=
+      RdKafka::Conf::CONF_OK)
+  {
+    logger->logError("Failed to set group.id: " + m_errStr);
+    return false;
+  }
+
+  if (m_globalConf->set("allow.auto.create.topics", "true", m_errStr) !=
+      RdKafka::Conf::CONF_OK)
+  {
+    logger->logError("Failed to set auto create topic setting to: " + m_errStr);
+    return false;
+  }
 
   if (!m_debug.empty())
   {
@@ -53,7 +70,12 @@ bool SvtDbAgentConsumer::createConsumer()
   }
 
   SvtDbAgentEventCb event_cb;
-  m_globalConf->set("event_cb", &event_cb, m_errStr);
+  if (m_globalConf->set("event_cb", &event_cb, m_errStr) !=
+      RdKafka::Conf::CONF_OK)
+  {
+    logger->logError("Failed to set event_cb: " + m_errStr);
+    return false;
+  }
 
   if (m_dumpConfig)
   {
@@ -185,7 +207,7 @@ void SvtDbAgentConsumer::pull()
     {
       stop(false);
     }
-    m_consumer->poll(0);
+    // m_consumer->poll(0);
   }
 }
 
@@ -205,6 +227,6 @@ bool SvtDbAgentConsumer::stop(const bool suspended)
                   SvtLogger::Mode::STANDARD);
   setIsRunning(false);
   m_consumer->stop(m_topic.get(), m_partition);
-  m_consumer->poll(1000);
+  // m_consumer->poll(1000);
   return true;
 }
