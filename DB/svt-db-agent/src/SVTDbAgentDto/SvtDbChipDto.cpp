@@ -100,13 +100,42 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbChipDto::updateEntry(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+{
+  if (msg.getPayload()["date"]["update"].contains("generalLocation"))
+  {
+    throw std::runtime_error(
+        "Failed to update entry. update location is not "
+        "allowed using generic update request");
+    return;
+  }
+  this->SvtDbBaseDto::updateEntry(msg, replyMsg);
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbChipDto::updateChipLocation(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  //! update wafer location
+  getLogger()->logInfo("UpdateWaferLocation");
   //! create entry in WaferLocation table
-  chipLocDto->createEntry(msg, replyMsg);
+  SvtDbEntry chipEntry, chipLocEntry;
+  chipLocDto->parseJsonData(msg.getPayload()["data"], chipLocEntry);
+  chipLocDto->createEntryInDB(chipLocEntry);
+
+  //! update wafer location
+  const auto chipId = chipLocEntry.values["chipId"];
+  nlohmann::json data;
+  data["data"]["id"] = chipId;
+  data["data"]["update"]["generalLocation"] =
+      chipLocEntry.values["generalLocation"];
+
+  SvtDbAgentMessage updateMsg;
+  updateMsg.setPayload(data);
+
+  updateEntry(updateMsg, replyMsg);
 }
 
 //========================================================================+

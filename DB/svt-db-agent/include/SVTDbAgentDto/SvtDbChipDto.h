@@ -24,11 +24,17 @@ namespace SvtDbAgent
 
       addColName("chipId");
       addColName("generalLocation");
-      addColName("creationTime");
+      addColName("date");
       addColName("username");
       addColName("note");
     };
     ~SvtDbChipLocationDto() = default;
+
+    virtual void parseJsonData(const nlohmann::json &j_data,
+                               SvtDbEntry &entry) final
+    {
+      this->SvtDbBaseDto::parseJsonData(j_data, entry);
+    };
 
    private:
     virtual void createAllRequest() final {};
@@ -44,6 +50,8 @@ namespace SvtDbAgent
     //! request DTO funcions
     void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
                      SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void updateEntry(const SvtDbAgentMessage &msg,
+                             SvtDbAgentReplyMsg &replyMsg) final;
     virtual void
     updateChipLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
