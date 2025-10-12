@@ -50,12 +50,17 @@ namespace SvtDbAgent
     virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
                              SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
 
-    //! help functions
+    //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
-                                     const SvtDbFilters &filters);
+                                     const SvtDbFilters &filters,
+                                     const std::string &orderBy = "",
+                                     const bool orderDec = false);
     virtual bool getEntryWithId(SvtDbEntry &entry, int id);
+
     virtual bool createEntryInDB(const SvtDbEntry &entry);
     virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
+
+    //! Reply Message
     virtual void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
                                        SvtDbAgentReplyMsg &msgReply,
                                        int totalCount = -1);

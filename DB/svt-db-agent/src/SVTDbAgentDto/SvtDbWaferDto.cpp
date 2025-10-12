@@ -13,6 +13,7 @@
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 
 #include <sstream>
+#include <stdexcept>
 
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
@@ -234,7 +235,7 @@ void SvtDbAgent::SvtDbWaferDto::updateEntry(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  if (msg.getPayload()["date"]["update"].contains("generalLocation"))
+  if (msg.getPayload()["data"]["update"].contains("generalLocation"))
   {
     throw std::runtime_error(
         "Failed to update entry. update location is not "
@@ -249,7 +250,6 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  getLogger()->logInfo("UpdateWaferLocation");
   //! create entry in WaferLocation table
   SvtDbEntry waferEntry, waferLocEntry;
   waferLocDto->parseJsonData(msg.getPayload()["data"], waferLocEntry);
@@ -257,15 +257,25 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
 
   //! update wafer location
   const auto waferId = waferLocEntry.values["waferId"];
-  nlohmann::json data;
-  data["data"]["id"] = waferId;
-  data["data"]["update"]["generalLocation"] =
-      waferLocEntry.values["generalLocation"];
 
-  SvtDbAgentMessage updateMsg;
-  updateMsg.setPayload(data);
+  std::vector<SvtDbEntry> entries;
+  SvtDbFilters filters;
+  filters.mFilters.values.insert({"waferId", waferId});
+  waferLocDto->getAllEntriesFromDB(entries, filters, "date", true);
 
-  updateEntry(updateMsg, replyMsg);
+  if (entries.size())
+  {
+    waferEntry.values.insert(
+        {"generalLocation", entries.at(0).values["generalLocation"]});
+    updateEntryInDB(waferId, waferEntry);
+    getEntryWithId(waferEntry, waferId);
+    createEntryReplyMsg(waferEntry, replyMsg);
+  }
+  else
+  {
+    throw std::runtime_error("Failed to access Wafer location records");
+    return;
+  }
 }
 
 //========================================================================+

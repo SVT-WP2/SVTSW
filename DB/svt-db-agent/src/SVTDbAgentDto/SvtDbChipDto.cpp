@@ -10,6 +10,8 @@
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 
+#include <stdexcept>
+
 //========================================================================+
 SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
 {
@@ -119,7 +121,6 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
     const SvtDbAgent::SvtDbAgentMessage &msg,
     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  getLogger()->logInfo("UpdateWaferLocation");
   //! create entry in WaferLocation table
   SvtDbEntry chipEntry, chipLocEntry;
   chipLocDto->parseJsonData(msg.getPayload()["data"], chipLocEntry);
@@ -127,15 +128,25 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
 
   //! update wafer location
   const auto chipId = chipLocEntry.values["chipId"];
-  nlohmann::json data;
-  data["data"]["id"] = chipId;
-  data["data"]["update"]["generalLocation"] =
-      chipLocEntry.values["generalLocation"];
 
-  SvtDbAgentMessage updateMsg;
-  updateMsg.setPayload(data);
+  std::vector<SvtDbEntry> entries;
+  SvtDbFilters filters;
+  filters.mFilters.values.insert({"chipId", chipId});
+  chipLocDto->getAllEntriesFromDB(entries, filters, "date", true);
 
-  updateEntry(updateMsg, replyMsg);
+  if (entries.size())
+  {
+    chipEntry.values.insert(
+        {"generalLocation", entries.at(0).values["generalLocation"]});
+    updateEntryInDB(chipId, chipEntry);
+    getEntryWithId(chipEntry, chipId);
+    createEntryReplyMsg(chipEntry, replyMsg);
+  }
+  else
+  {
+    throw std::runtime_error("Failed to access Chip location records");
+    return;
+  }
 }
 
 //========================================================================+

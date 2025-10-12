@@ -49,7 +49,8 @@ bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
 
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
-    std::vector<SvtDbEntry> &entries, const SvtDbFilters &filters)
+    std::vector<SvtDbEntry> &entries, const SvtDbFilters &filters,
+    const std::string &orderBy, const bool orderDec)
 {
   entries.clear();
   SimpleQuery query;
@@ -81,10 +82,9 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     }
   }
 
-  if (std::find(getColNames().begin(), getColNames().end(), "id") !=
-      getColNames().end())
+  if (!orderBy.empty())
   {
-    query.setOrderById(true);
+    query.setOrderById(orderBy, orderDec);
   }
 
   try
@@ -292,7 +292,12 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
   parseJsonFilters(j_data, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
-  if (getAllEntriesFromDB(entries, filters))
+  bool tableWithId = std::find(getColNames().begin(), getColNames().end(),
+                               "id") != getColNames().end();
+  bool result = tableWithId ? getAllEntriesFromDB(entries, filters, "id", false)
+                            : getAllEntriesFromDB(entries, filters);
+
+  if (result)
   {
     getAllEntriesReplyMsg(entries, replyMsg);
   }
