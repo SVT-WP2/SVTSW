@@ -11,8 +11,6 @@
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
-#include <librdkafka/rdkafkacpp.h>
-
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -21,6 +19,12 @@ namespace
 {
   constexpr int kKafkaWaitTime_ms = 1;
 }  // namespace
+
+namespace RdKafka
+{
+  class Consumer;
+  class Topic;
+}  // namespace RdKafka
 
 namespace SvtDbAgent
 {
