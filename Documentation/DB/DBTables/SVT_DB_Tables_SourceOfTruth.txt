@@ -42,6 +42,7 @@ Table main.WaferTypeImage {
 Table main.Asic {
   id integer [primary key, increment]
   waferId integer [ref: > main.Wafer.id, not null]
+  chipId integer [ref: > main.Chip.id]
   serialNumber varchar(50) [unique, not null]
   familyType main.asicFamilyType [not null]
   waferMapPosition varchar(50) [not null]
@@ -150,7 +151,6 @@ Table main.ProbeCardConfiguration {
 Table main.Chip{
   id integer [primary key, increment]
   serialNumber varchar(50) UNIQUE
-  asicId integer [ref: > main.Asic.id]
   generalLocation main.wpGeneralLocation
 }
 
@@ -193,6 +193,7 @@ Table main.SLDOTestConfiguration {
 Table main.SLDOTestList {
   name main.sldoTestTypes
   config integer [ref: > main.SLDOTestConfiguration.id]
+  input JSON
   version integer
 }
 
