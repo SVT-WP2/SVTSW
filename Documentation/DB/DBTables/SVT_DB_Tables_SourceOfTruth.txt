@@ -193,6 +193,7 @@ Table main.SLDOTestConfiguration {
 Table main.SLDOTestList {
   name main.sldoTestTypes
   config integer [ref: > main.SLDOTestConfiguration.id]
+  input JSON
   version integer
 }
 

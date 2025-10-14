@@ -417,6 +417,7 @@ CREATE TABLE "main"."SLDOTestConfiguration" (
 CREATE TABLE "main"."SLDOTestList" (
   "name" main."sldoTestTypes",
   "config" integer,
+  "input" JSON,
   "version" integer
 );
 
