@@ -1077,6 +1077,9 @@ components:
                 waferId:
                   type: number
                   description: Optional filter used to fetch all ASICs for the particular wafer
+                chipId:
+                  type: number
+                  description: Optional filter used to fetch ASIC related
                 familyType:
                   type: string
                 quality:
@@ -1633,6 +1636,9 @@ components:
       properties:
         id:
           type: number
+        chipId:
+          type: number
+          nullable: true
         serialNumber:
           type: string
         familyType:
@@ -1664,15 +1670,12 @@ components:
       required:
         - id
         - serialNumber
-        - acicId
         - generalLocation
       properties:
         id:
           type: number
         serialNumber:
           type: string
-        asicId:
-          type: number
         generalLocation:
           type: string
 
