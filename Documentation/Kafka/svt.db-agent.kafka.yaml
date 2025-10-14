@@ -320,6 +320,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
 
+  /svt.db-agent.request/UpdateAsic:
+    post:
+      tags:
+        - Asics
+      summary: Update Asic
+      description: Returns updated Asic in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateAsicMessage'
+
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateAsicReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/GetAllChips:
     post:
       tags:
@@ -1125,7 +1158,36 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/AsicDto'
+    #
+    # ASIC :: UPDATE
+    #
+    UpdateAsicMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateAsic'
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: Asic Id
+            update:
+              $ref: "#/components/schemas/AsicUpdateDto"
 
+    UpdateAsicReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateAsicReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/AsicDto'
     #
     # CHIPS :: LIST
     #
@@ -1626,12 +1688,18 @@ components:
       type: object
       required:
         - id
+        - waferId
+        - chipId
         - serialNumber
         - familyType
         - waferMapPosition
         - quality
       properties:
         id:
+          type: number
+        waferId:
+          type: number
+        chipId:
           type: number
         serialNumber:
           type: string
@@ -1645,11 +1713,18 @@ components:
     AsicCreateDto:
       type: object
       required:
+        - waferId
+        - chipId
         - serialNumber
         - familyType
         - waferMapPosition
         - quality
       properties:
+        waferId:
+          type: number
+        chipId:
+          type: number
+          nullable: true
         serialNumber:
           type: string
         familyType:
@@ -1659,20 +1734,25 @@ components:
         quality:
           type: string
 
+    AsicUpdateDto:
+      type: object
+      required:
+        - chipId
+      properties:
+        chipId:
+          type: number
+
     ChipDto:
       type: object
       required:
         - id
         - serialNumber
-        - acicId
         - generalLocation
       properties:
         id:
           type: number
         serialNumber:
           type: string
-        asicId:
-          type: number
         generalLocation:
           type: string
 
@@ -1680,13 +1760,10 @@ components:
       type: object
       required:
         - serialNumber
-        - asicId
         - generalLocation
       properties:
         serialNumber:
           type: string
-        asicId:
-          type: number
         generalLocation:
           type: string
 
