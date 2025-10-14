@@ -1,0 +1,631 @@
+openapi: 3.0.3
+info:
+  title: SVT Wafer Prober Agent API (Kafka Command Contract)
+  version: 1.1.0
+  description: |
+    This OpenAPI document describes the message **contract** for the SVT Wafer Prober Agent.
+    The agent consumes Kafka messages on topic `svt.wp-agent`. Each "path" here corresponds
+    to a command message you can send. Treat these as documentation stubs; actual transport
+    is Kafka, not HTTP.
+
+    **Message shape (Kafka)**
+    ```json
+    {
+      "message": "<CommandName>",
+      "params": { /* command-specific parameters (optional) */ }
+    }
+    ```
+
+    **Response shape (from the Agent)**
+    - Success:
+      ```json
+      { "status": "success", "output": "Human readable message" } }
+      ```
+    - Error:
+      ```json
+      {
+        "status": "BadRequest|NotFound|PreconditionFailed|UnexpectedError|Timeout",
+        "error": {
+          "code": "WP_4xx|WP_5xx",
+          "message": "What failed",
+          "hint": "How to fix it",
+          "context": { "command": "AutoFocus", "...": "..." },
+          "correlationId": "optional"
+        }
+      }
+      ```
+
+servers:
+  - url: https://kafka-docs.local
+    description: Documentation-only server (transport is Kafka)
+
+tags:
+  - name: Project
+  - name: Chuck
+  - name: Camera
+  - name: Wafer
+  - name: Testing
+  - name: Sequencer
+  - name: Utility
+
+paths:
+
+  #########################
+  # Project
+  #########################
+
+  /svt.wp-agent/Initialize:
+    post:
+      tags: [Project]
+      summary: Initialize connection and cache prober globally
+      description: |
+        Connects to the prober using MPI Sentio (or other) driver and caches the prober
+        inside the global singleton. After this call, subsequent commands **do not need**
+        `address` or `machine_type`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitializeParams'
+            examples:
+              Example:
+                value:
+                  address: wpmit01.cern.ch:35555
+                  machine_type: sentio
+                  project_name: NKF7
+      responses:
+        '200':
+          description: Initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                Ok:
+                  value:
+                    status: success
+                    output: Initialized and prober cached.
+        '400':
+          description: Bad request (missing/invalid params)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Missing:
+                  value:
+                    status: BadRequest
+                    error:
+                      code: WP_400
+                      message: "address and machine_type are required"
+                      hint: "Provide address=host:port and machine_type=sentio."
+                      context: { command: Initialize }
+        '500':
+          description: Driver/connection failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                DriverFail:
+                  value:
+                    status: UnexpectedError
+                    error:
+                      code: WP_500
+                      message: "Connection refused"
+                      hint: "Check network/VPN, driver availability, and host:port."
+                      context: { command: Initialize, address: "wpmit01.cern.ch:35555" }
+
+  /svt.wp-agent/ShowProjectStatus:
+    post:
+      tags: [Project]
+      summary: Show current global/project status
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                Example:
+                  value:
+                    status: success
+                    output: "OK"
+                    data:
+                      address: wpmit01.cern.ch:35555
+                      machine_type: sentio
+                      project_name: NKF7
+                      prober_cached: true
+
+  /svt.wp-agent/OpenProject:
+    post:
+      tags: [Project]
+      summary: Open a wafer test project
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenProjectParams'
+            examples:
+              WithName:
+                value:
+                  project_name: NKF7
+      responses:
+        '200':
+          description: Project opened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '412':
+          description: Not initialized (no prober)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NotInitialized:
+                  value:
+                    status: PreconditionFailed
+                    error:
+                      code: WP_412
+                      message: "Not initialized. Call Initialize first."
+                      hint: "Initialize once; then OpenProject without machine params."
+                      context: { command: OpenProject }
+
+  #########################
+  # Chuck
+  #########################
+
+  /svt.wp-agent/MoveChuckXY:
+    post:
+      tags: [Chuck]
+      summary: Move chuck to absolute XY (µm)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveChuckXYParams'
+            examples:
+              Example:
+                value: { x: 201196.4, y: -461457.3 }
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                Moved:
+                  value:
+                    status: success
+                    output: "Moved to (201196.4, -461457.3) µm"
+        '400':
+          description: Missing/invalid params (x,y)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Missing:
+                  value:
+                    status: BadRequest
+                    error:
+                      code: WP_400
+                      message: "Missing required params: x, y"
+                      hint: "Send both x and y in µm, e.g. {\"x\":12000,\"y\":8000}."
+                      context: { command: MoveChuckXY }
+        '412':
+          description: Not initialized (no prober)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /svt.wp-agent/MoveChuckHome:
+    post:
+      tags: [Chuck]
+      summary: Move chuck to home
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Homed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '412':
+          description: Not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /svt.wp-agent/MoveChuckToWorkArea:
+    post:
+      tags: [Chuck]
+      summary: Switch work area (0=Probing, 1=Off-Axis)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveChuckToWorkAreaParams'
+            examples:
+              OffAxis:
+                value: { work_area: 1 }
+      responses:
+        '200':
+          description: Switched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad param (work_area)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '412':
+          description: Not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /svt.wp-agent/GoToContact:
+    post:
+      tags: [Chuck]
+      summary: Lower chuck to contact
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/GoToSeparation:
+    post:
+      tags: [Chuck]
+      summary: Raise chuck to separation
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/FindHome:
+    post:
+      tags: [Chuck]
+      summary: Home axes
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  #########################
+  # Camera
+  #########################
+
+  /svt.wp-agent/AutoFocus:
+    post:
+      tags: [Camera]
+      summary: Auto-focus active camera
+      responses:
+        '200':
+          description: Focused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                Ok:
+                  value: { status: success, output: "Auto-focus command successfully executed." }
+        '412':
+          description: Not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NotInitialized:
+                  value:
+                    status: PreconditionFailed
+                    error:
+                      code: WP_412
+                      message: "Not initialized. Call Initialize first."
+                      hint: "Call Initialize with address/machine_type, then retry AutoFocus."
+                      context: { command: AutoFocus }
+        '500':
+          description: Driver error (camera not available, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /svt.wp-agent/SwitchCamera:
+    post:
+      tags: [Camera]
+      summary: Switch active camera
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwitchCameraParams'
+            examples:
+              OffAxis:
+                value: { camera: "OffAxis" }
+      responses:
+        '200':
+          description: Switched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '412':
+          description: Not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  #########################
+  # Wafer
+  #########################
+
+  /svt.wp-agent/Load:
+    post:
+      tags: [Wafer]
+      summary: Load wafer
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/Unload:
+    post:
+      tags: [Wafer]
+      summary: Unload wafer
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/AlignWafer:
+    post:
+      tags: [Wafer]
+      summary: Run wafer alignment routine
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/Cleaning:
+    post:
+      tags: [Wafer]
+      summary: Start cleaning procedure (if supported)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  #########################
+  # Testing
+  #########################
+
+  /svt.wp-agent/RunPTPA:
+    post:
+      tags: [Testing]
+      summary: Start PTPA automation
+      responses:
+        '200': { description: Started/Completed, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '500': { description: Driver error, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/StepNextDie:
+    post:
+      tags: [Testing]
+      summary: Step to the next die
+      responses:
+        '200': { description: Stepped, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /svt.wp-agent/GoToDie:
+    post:
+      tags: [Testing]
+      summary: Move to a specific die (row/col)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoToDieParams'
+            examples:
+              Example:
+                value: { row: 10, col: 15 }
+      responses:
+        '200': { description: Moved, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+        '400': { description: Bad params, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  #########################
+  # Sequencer
+  #########################
+
+  /svt.wp-agent/RunSequencer:
+    post:
+      tags: [Sequencer]
+      summary: Execute a JSON sequence (array of steps)
+      description: |
+        `filepath` must point to a JSON file whose top-level value is an **array** of steps:
+        ```json
+        [
+          { "command": "Initialize", "params": { "address": "...", "machine_type": "sentio" } },
+          { "command": "AutoFocus" }
+        ]
+        ```
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunSequencerParams'
+            examples:
+              Example:
+                value:
+                  filepath: sequencer/NKF7_AutoSequence.json
+      responses:
+        '200':
+          description: Sequence executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                Done:
+                  value:
+                    status: success
+                    output: "Sequence from /abs/path/NKF7_AutoSequence.json executed successfully."
+        '404':
+          description: File not found / invalid path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                MissingFile:
+                  value:
+                    status: NotFound
+                    error:
+                      code: WP_404
+                      message: "Sequence file not found: /abs/path/seq.json"
+                      hint: "Check the path. Use an absolute path if running from another cwd."
+                      context: { command: RunSequencer, filepath: "/abs/path/seq.json" }
+        '400':
+          description: Invalid JSON / wrong top-level structure (must be array)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+
+    # -------- Request Schemas --------
+
+    InitializeParams:
+      type: object
+      required: [address, machine_type]
+      properties:
+        address:
+          type: string
+          description: Host:port of the prober controller.
+          example: wpmit01.cern.ch:35555
+        machine_type:
+          type: string
+          description: Prober driver type (e.g., "sentio").
+          example: sentio
+        project_name:
+          type: string
+          nullable: true
+          description: Optional project name to open upon initialization.
+
+    OpenProjectParams:
+      type: object
+      properties:
+        project_name:
+          type: string
+          description: Project name to open (optional if already set globally).
+
+    MoveChuckXYParams:
+      type: object
+      required: [x, y]
+      properties:
+        x:
+          type: number
+          format: double
+          description: X (µm)
+        y:
+          type: number
+          format: double
+          description: Y (µm)
+
+    MoveChuckToWorkAreaParams:
+      type: object
+      required: [work_area]
+      properties:
+        work_area:
+          type: integer
+          enum: [0, 1]
+          description: 0=Probing, 1=Off-Axis
+
+    GoToDieParams:
+      type: object
+      required: [row, col]
+      properties:
+        row:
+          type: integer
+        col:
+          type: integer
+
+    SwitchCameraParams:
+      type: object
+      properties:
+        camera:
+          type: string
+          description: Optional camera name (driver dependent).
+          example: OffAxis
+
+    RunSequencerParams:
+      type: object
+      required: [filepath]
+      properties:
+        filepath:
+          type: string
+          description: Path to a JSON file with an **array** of {command,params} steps.
+
+    # -------- Response Schemas --------
+
+    SuccessResponse:
+      type: object
+      required: [status, output]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        output:
+          type: string
+          description: Human-readable summary.
+
+
+    ErrorResponse:
+      type: object
+      required: [status, error]
+      properties:
+        status:
+          type: string
+          enum:
+            - BadRequest
+            - NotFound
+            - PreconditionFailed
+            - UnexpectedError
+            - Timeout
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: WP_412
+            message:
+              type: string
+            hint:
+              type: string
+              nullable: true
+            context:
+              type: object
+              nullable: true
+              additionalProperties: true
+            correlationId:
+              type: string
+              nullable: true

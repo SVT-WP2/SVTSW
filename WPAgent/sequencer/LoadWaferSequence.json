@@ -1,0 +1,49 @@
+[
+  {
+    "command": "WP_SENTIO_SVT_INITIALISE",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio",
+      "project_name": "MOSAIX_FlatPad"
+    }
+  },
+  {
+    "command": "WP_SENTIO_INITIALISE_TESTING_PROJECT",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio",
+      "project_name": "MOSAIX_FlatPad"
+    }
+  },
+  {
+    "command": "WP_LOAD_WAFER",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio"
+    }
+  },
+  {
+    "command": "WP_CURRENT_STABILITY_MULTIPLE_TOUCHES",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio",
+      "channel": 2,
+      "voltage": 1.4,
+      "current_limit": 0.045,
+      "cycles": 10
+    }
+  },
+  {
+    "command": "WP_SIGNAL_TEST",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio",
+      "channel": 2,
+      "voltage": 1.5,
+      "current_limit": 0.05,
+      "log_path": "signal_test_log.csv",
+      "waveform_file": "waveform_C1.csv",
+      "screenshot_file": "scope_C1_capture.png"
+    }
+  }
+]
