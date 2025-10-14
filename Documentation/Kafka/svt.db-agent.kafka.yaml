@@ -1629,12 +1629,15 @@ components:
       type: object
       required:
         - id
+        - waferId
         - serialNumber
         - familyType
         - waferMapPosition
         - quality
       properties:
         id:
+          type: number
+        waferId:
           type: number
         chipId:
           type: number
@@ -1651,11 +1654,14 @@ components:
     AsicCreateDto:
       type: object
       required:
+        - waferId
         - serialNumber
         - familyType
         - waferMapPosition
         - quality
       properties:
+        waferId:
+          type: number
         serialNumber:
           type: string
         familyType:
