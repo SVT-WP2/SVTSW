@@ -7,8 +7,10 @@
 
 #include "SVTDbAgentDto/SvtDbChipDto.h"
 #include "SVTDb/SvtDbInterface.h"
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtUtilities.h"
 
 #include <stdexcept>
 
@@ -61,15 +63,22 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
     throw std::runtime_error("Non object create was found");
   }
 
-  auto &entry_j = msgData["create"];
-  SvtDbAgent::SvtDbEntry chipEntry;
+  auto entry_j = msgData["create"];
+  if (!entry_j.contains("asicId"))
+  {
+    throw std::runtime_error("Failed to create chip without an asicId.");
+    return;
+  }
+  const int asicId = entry_j["asicId"].get<int>();
+  entry_j.erase("asicId");
 
+  SvtDbAgent::SvtDbEntry chipEntry;
   parseJsonData(entry_j, chipEntry);
 
   //! create entry in DB
   getLogger()->logInfo("Creating chip in DB");
-  const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
 
+  const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
   if (!createEntryInDB(chipEntry))
   {
     throw std::runtime_error("Entry was not created in " + getTableName());
@@ -83,6 +92,11 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
     return;
   }
   getEntryWithId(chipEntry, newEntryId);
+
+  //! Update Asic chipId
+  SvtDbEntry asicEntry;
+  asicEntry.values.insert({"chipId", newEntryId});
+  Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
   getLogger()->logInfo("Creating chip location in DB");
   //! Create waferLocations
