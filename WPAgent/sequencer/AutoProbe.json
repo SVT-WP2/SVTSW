@@ -1,0 +1,38 @@
+[
+  {
+    "command": "Initialize",
+    "params": {
+      "address": "wpmit01.cern.ch:35555",
+      "machine_type": "sentio",
+      "project_name": "nkf7_arrow_e_test_21_07"
+    }
+  },
+  {
+    "command": "Load"
+  },
+  {
+    "command": "MoveChuckToWorkArea",
+    "params": {
+      "work_area": 1
+    }
+  },
+  {
+    "command": "AutoFocus"
+  },
+  {
+    "command": "MoveChuckXY",
+    "params": {
+      "x": 201196.4,
+      "y": -461457.3
+    }
+  },
+  {
+    "command": "AlignWafer"
+  },
+  {
+    "command": "MoveChuckHome"
+  },
+  {
+    "command": "RunPTPA"
+  }
+]
