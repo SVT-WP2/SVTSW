@@ -17,6 +17,7 @@ SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 
   addColName("id");
   addColName("waferId");
+  addColName("chipId");
   addColName("serialNumber");
   addColName("familyType");
   addColName("waferMapPosition");
