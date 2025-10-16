@@ -20,7 +20,6 @@ SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
   setTableName("Chip");
 
   addColName("id");
-  addColName("asicId");
   addColName("serialNumber");
   addColName("generalLocation");
 
