@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_SERVICE_H
-#define SVT_DB_AGENT_SERVICE_H
+#pragma once
 
 /*!
  * @file SvtDbAgentService.h
@@ -8,18 +7,18 @@
  * @brief Db agent manager
  */
 
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
-#include "SvtDbAgentMessage.h"
-#include "SvtDbAgentRequest.h"
-
-#include <librdkafka/rdkafkacpp.h>
-#include <cmath>
-#include <nlohmann/json.hpp>
-
 #include <cstdint>
 #include <memory>
 #include <string_view>
+
+#include <librdkafka/rdkafkacpp.h>
+
+#include <nlohmann/json.hpp>
+
+#include "SVTUtilities/SvtDbAgentGlobal.h"
+#include "SVTUtilities/SvtLogger.h"
+#include "SvtDbAgentMessage.h"
+#include "SvtDbAgentRequest.h"
 
 enum SvtDbAgentTopicEnum : uint8_t
 {
@@ -79,4 +78,3 @@ namespace SvtDbAgent
     bool log_messages = false;
   };
 }  // namespace SvtDbAgent
-#endif  // !SVTDB_AGENT_H

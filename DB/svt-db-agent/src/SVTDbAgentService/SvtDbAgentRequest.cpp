@@ -23,24 +23,20 @@ SvtDbAgentRequest::SvtDbAgentRequest() { createAllDtos(); }
 //========================================================================+
 void SvtDbAgentRequest::createAllDtos()
 {
-  dtoList["SvtDbEnumDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbEnumDto>::instance();
+  dtoList["SvtDbEnumDto"] = Singleton<SvtDbAgent::SvtDbEnumDto>::instance();
   dtoList["SvtDbWaferTypeDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance();
-  dtoList["SvtDbWaferDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferDto>::instance();
+      Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance();
+  dtoList["SvtDbWaferDto"] = Singleton<SvtDbAgent::SvtDbWaferDto>::instance();
   dtoList["SvtDbWaferLocationDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance();
-  dtoList["SvtDbAsicDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbAsicDto>::instance();
-  dtoList["SvtDbChipDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbChipDto>::instance();
+      Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance();
+  dtoList["SvtDbAsicDto"] = Singleton<SvtDbAgent::SvtDbAsicDto>::instance();
+  dtoList["SvtDbChipDto"] = Singleton<SvtDbAgent::SvtDbChipDto>::instance();
   dtoList["SvtDbProbeCardDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
+      Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
   dtoList["SvtDbWPMachineDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance();
+      Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance();
   dtoList["SvtDbWPProjectDto"] =
-      SvtDbAgent::Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance();
+      Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance();
 }
 
 //========================================================================+

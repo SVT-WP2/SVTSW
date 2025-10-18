@@ -1,222 +1,234 @@
-#include "SVTUtilities/SvtLogger.h"
+/*!
+ * @file SvtLogger.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Oct-2025
+ * @brief Logger implementation
+ */
 
 #include <stdarg.h>
 #include <ctime>
 #include <iomanip>
-#include <iostream>
 #include <mutex>
 #include <sstream>
 
+#include "SVTUtilities/SvtLogger.h"
+
 //========================================================================+
-SvtLogger::SvtLogger()
-  : logVerbosity_(0U)
-  , logVerbosityFile_(0U)
-  , msgId_(0U)
+SvtLogger::SvtLogger() = default;
+
+//========================================================================+
+SvtLogger::~SvtLogger() { closeFile(); }
+
+//========================================================================+
+std::string SvtLogger::getTime()
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::time_t time_now = std::time(nullptr);
+  std::time_t timer =
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  struct tm timeinfo;
+  localtime_r(&timer, &timeinfo);
   std::stringstream ss;
-  ss << std::put_time(std::localtime(&time_now), "%Y-%m-%d");
-  std::string date(ss.str());
-
-  char *logFilePath = getenv("SVT_DB_AGENT_LOG_FILE");
-  if (logFilePath == nullptr)
-    logFileRoot_ = "./Svt_db_agent";
-  else
-    logFileRoot_ = std::string(logFilePath);
-  logFileName_ = logFileRoot_ + "-" + date + ".log";
-
-  logFile_.open(logFileName_, std::ios::app);
-  if (!logFile_.is_open() || !logFile_.good())
-  {
-    logFileName_ = "";  //
-    std::cerr << "SvtLogger::log unable to create the file " << logFileName_
-              << std::endl;
-  }
-
-  char *logVer = getenv("SVT_DB_AGENT_LOG_VERBOSITY");
-  if (logVer != nullptr)
-  {
-    if (std::string(logVer).find("STANDARD") != std::string::npos)
-      logVerbosity_ = Mode::STANDARD;
-    else if (std::string(logVer).find("VERBOSE") != std::string::npos)
-      logVerbosity_ = Mode::VERBOSE;
-    else if (std::string(logVer).find("ALL") != std::string::npos)
-      logVerbosity_ = Mode::ALL;
-    else
-      logVerbosity_ = Mode::STANDARD;
-  }
-  else
-    logVerbosity_ = Mode::STANDARD;
-
-  logVerbosityFile_ = logVerbosity_;
+  ss << std::put_time(&timeinfo, "%d-%m-%Y %X");
+  return ss.str();
 }
 
 //========================================================================+
-SvtLogger::~SvtLogger()
+void SvtLogger::logError(const std::string &msg, uint32_t severity)
 {
-  std::lock_guard lock(mutex_);
-  logFile_.close();
+  log(std::string(ANSI_COLOR_RED) + "ERROR: [" + getTime() +
+          "]: " + ANSI_COLOR_RESET,
+      msg, severity);
 }
 
 //========================================================================+
-bool SvtLogger::setLogVerbosityFile(uint32_t verbosity)
+void SvtLogger::logWarning(const std::string &msg, uint32_t severity)
 {
-  if (verbosity > Mode::ALL)
-  {
-    return false;
-  }
-  else
-  {
-    std::lock_guard lock(mutex_);
-    logVerbosityFile_ = verbosity;
-    return true;
-  }
+  log(std::string(ANSI_COLOR_YELLOW) + "WARNING: [" + getTime() +
+          "]: " + ANSI_COLOR_RESET,
+      msg, severity);
 }
 
 //========================================================================+
-void SvtLogger::logError(std::string message, uint32_t severity)
+void SvtLogger::logInfo(const std::string &msg, uint32_t severity)
 {
-  if ((severity <= logVerbosity_) || (severity <= logVerbosityFile_))
-  {
-    // if (dimChannel != "")
-    //   message = "DIM channel " + dimChannel + ": " + message;
-    this->log(std::string(ANSI_COLOR_RED) + "ERROR" + ANSI_COLOR_RESET, message,
-              severity);
-  }
+  log(std::string(ANSI_COLOR_GREEN) + "INFO [" + getTime() +
+          "]: " + ANSI_COLOR_RESET,
+      msg, severity);
 }
 
 //========================================================================+
-void SvtLogger::logWarning(std::string message, uint32_t severity)
+void SvtLogger::logDebug(const std::string &msg, uint32_t severity)
 {
-  if ((severity <= logVerbosity_) || (severity <= logVerbosityFile_))
-  {
-    this->log(std::string(ANSI_COLOR_YELLOW) + "WARNING" + ANSI_COLOR_RESET,
-              message, severity);
-  }
+  log(std::string(ANSI_COLOR_BLUE) + "DEBUG [" + getTime() +
+          "]: " + ANSI_COLOR_RESET,
+      msg, severity);
 }
 
 //========================================================================+
-void SvtLogger::logInfo(std::string message, uint32_t severity)
+void SvtLogger::logSummary(const std::string &msg, uint32_t severity)
 {
-  if ((severity <= logVerbosity_) || (severity <= logVerbosityFile_))
-  {
-    this->log(std::string(ANSI_COLOR_GREEN) + "INFO" + ANSI_COLOR_RESET,
-              message, severity);
-  }
+  log(std::string(ANSI_COLOR_WHITE) + "SUMMARY " + ANSI_COLOR_BLUE + "[" +
+          getTime() + "]: " + ANSI_COLOR_RESET,
+      msg, severity);
 }
 
-// logs one message, adds date
 //========================================================================+
-void SvtLogger::log(const std::string type, const std::string message,
-                    uint32_t severity)
+void SvtLogger::logLive(const std::string &msg, bool isEnd, uint32_t severity)
 {
-  std::string desiredLogFile = "";
-  std::string logMsg = "";
+  if (severity <= mTermVerbosity)
   {
-    std::lock_guard lock(mutex_);
-    // get timestamps
-    std::time_t time_now = std::time(nullptr);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time_now), "%Y-%m-%d");
-    std::string date = ss.str();
-    ss << std::put_time(std::localtime(&time_now), " %OH:%OM:%OS");
-    std::string time = ss.str();
-
-    // get message id
-    std::stringstream ssMsgId;
-    ssMsgId << std::setfill('0') << std::setw(10) << msgId_++;
-
-    desiredLogFile = logFileRoot_ + "-" + date + ".log";
-    logMsg = time + "::" + ssMsgId.str() + "::[" + type + "]:" + message + "\n";
-
-    if (severity <= logVerbosityFile_)
+    mTerminal << "\r" << ANSI_COLOR_GREEN << "LIVE [" << getTime()
+              << "]: " << ANSI_COLOR_RESET << msg;
+    if (isEnd)
     {
-      if (logFileName_ != desiredLogFile)
-      {
-        logFile_.close();
-        logFile_.open(desiredLogFile, std::ios::app);
-        if (logFile_.is_open())
-        {
-          if (!logFile_.fail())
-            logFileName_ = desiredLogFile;
-        }
-        else
-        {
-          std::cerr << "SvtLogger::log unable to create the file "
-                    << desiredLogFile << std::endl;
-          return;
-        }
-      }
-      logFile_ << logMsg;
-      logFile_.flush();
+      mTerminal << "\n";  // Move to next line when ending
+    }
+    mTerminal << std::flush;
+  }
+  if (severity <= mFileVerbosity)
+  {
+    if (mLogfile.is_open())
+    {
+      mLogfile << "[" << getTime() << "]: " << msg << std::endl;
     }
   }
-
-  if (severity <= logVerbosity_)
-    std::cout << logMsg;  // is thread-safe
 }
 
 //========================================================================+
-std::string SvtLogger::to_hex(uint32_t inValue) const
+void SvtLogger::log(const std::string &type, const std::string &msg,
+                    uint32_t severity)
 {
-  std::stringstream ss;
-  ss << "0x" << std::uppercase << std::setfill('0') << std::setw(8) << std::hex
-     << inValue;
-  return ss.str();
-}
+  std::lock_guard lock(mutex_);
 
-//========================================================================+
-std::string SvtLogger::to_hex(std::vector<uint32_t> &inVect) const
-{
-  std::string ss = " ";
-  // for(auto itinVect : inVect) ss += SvtLogger::to_hex(inVect[i])+"\n";
-  for (uint32_t i = 0; i < inVect.size(); ++i)
-    ss += SvtLogger::to_hex(inVect[i]) + " ";
-  return ss;
-}
+  std::string fullMessage = stripAnsi(type) + msg;
 
-//========================================================================+
-std::string SvtLogger::to_hex(std::vector<int> &inVect) const
-{
-  std::string ss = " ";
-  // for(auto itinVect : inVect) ss += SvtLogger::to_hex(inVect[i])+"\n";
-  for (uint32_t i = 0; i < inVect.size(); ++i)
-    ss += SvtLogger::to_hex(inVect[i]) + " ";
-  return ss;
-}
-
-//========================================================================+
-std::string SvtLogger::to_dec(uint32_t inValue) const
-{
-  std::stringstream ss;
-  ss << std::setfill('0') << std::setw(8) << inValue;
-  return ss.str();
-}
-
-//========================================================================+
-std::string SvtLogger::to_dec(std::vector<uint32_t> &inVect) const
-{
-  std::string ss = " ";
-  // for(auto itinVect : inVect) ss += SvtLogger::to_hex(inVect[i])+"\n";
-  for (uint32_t i = 0; i < inVect.size(); ++i)
-    ss += SvtLogger::to_dec(inVect[i]) + " ";
-  return ss;
-}
-
-//========================================================================+
-std::string SvtLogger::to_dec_d(double inValue) const
-{
-  return std::to_string(inValue);
-}
-
-//========================================================================+
-std::string SvtLogger::to_dec_d(std::vector<double> &inVect) const
-{
-  std::string ss = " ";
-  for (uint32_t i = 0; i < inVect.size(); ++i)
+  if (severity <= mTermVerbosity)
   {
-    ss += SvtLogger::to_dec_d(inVect[i]) + " ";
+    mTerminal << type << msg << std::endl;
   }
-  return ss;
+  if (severity <= mFileVerbosity)
+  {
+    if (mLogfile.is_open())
+    {
+      mLogfile << fullMessage << std::endl;
+    }
+  }
+}
+
+//========================================================================+
+void SvtLogger::closeFile()
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (mLogfile.is_open())
+  {
+    mLogfile.close();
+  }
+}
+
+//========================================================================+
+void SvtLogger::setVerbosity(SvtLogger::Mode termVerbosity,
+                             SvtLogger::Mode fileVerbosity)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  mTermVerbosity = termVerbosity;
+  mFileVerbosity = fileVerbosity;
+}
+
+//========================================================================+
+void SvtLogger::setFile(const std::string &filename)
+{
+  std::string time = getTime();
+  std::string date = time.substr(0, time.find(' '));
+
+  std::string _filename = filename + "-" + date + ".log";
+
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  if (mLogfile.is_open())
+  {
+    mLogfile.close();
+  }
+  mLogfile.open(_filename, std::ios::app);
+  if (!mLogfile.is_open())
+  {
+    logError("Failed to open log file: " + filename);
+  }
+}
+
+//========================================================================+
+void SvtLogger::configure(const std::string &filename,
+                          SvtLogger::Mode termVerbosity,
+                          SvtLogger::Mode fileVerbosity)
+{
+  setVerbosity(termVerbosity, fileVerbosity);
+  if (filename == "none")
+  {
+    logWarning(
+        "No logFileName provided, log informations will not be saved to "
+        "any file");
+  }
+  else
+  {
+    setFile(filename);
+  }
+}
+
+//========================================================================+
+std::string SvtLogger::to_hex(uint64_t inValue, int width)
+{
+  std::stringstream ss;
+  ss << "0x" << std::uppercase << std::setfill('0') << std::setw(width)
+     << std::hex << inValue;
+  return ss.str();
+}
+
+/*
+ * @param inValue: the value to convert to binary
+ * @param width: the width of the binary string
+ * @return: the binary string
+ */
+//========================================================================+
+std::string SvtLogger::to_bin(uint32_t inValue, int width)
+{
+  std::stringstream ss;
+  ss << "0b" << std::uppercase << std::setfill('0') << std::setw(width);
+  ss << std::bitset<32>(inValue).to_string().substr(32 - width);
+  return ss.str();
+}
+
+/*
+ * @param inValue: the value to convert to binary
+ * @param width: the width of the binary string
+ * @return: the binary string
+ */
+//========================================================================+
+std::string SvtLogger::to_bin(uint64_t inValue, int width)
+{
+  std::stringstream ss;
+  ss << "0b" << std::uppercase << std::setfill('0') << std::setw(width);
+  ss << std::bitset<64>(inValue).to_string().substr(64 - width);
+  return ss.str();
+}
+
+//========================================================================+
+std::string SvtLogger::stripAnsi(const std::string &input)
+{
+  std::string output;
+  bool inEscape = false;
+  for (char c : input)
+  {
+    if (c == '\033')
+    {
+      inEscape = true;
+    }
+    else if (inEscape && c == 'm')
+    {
+      inEscape = false;
+    }
+    else if (!inEscape)
+    {
+      output += c;
+    }
+  }
+  return output;
 }

@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_REPLY_H
-#define SVT_DB_AGENT_REPLY_H
+#pragma once
 
 #include <librdkafka/rdkafkacpp.h>
 #include <nlohmann/json.hpp>
@@ -73,4 +72,3 @@ namespace SvtDbAgent
   };
 
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_AGENT_REPLY_H

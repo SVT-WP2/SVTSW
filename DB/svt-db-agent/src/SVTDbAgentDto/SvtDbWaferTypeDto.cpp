@@ -16,8 +16,6 @@
 #include <stdexcept>
 #include <string>
 
-using SvtDbAgent::Singleton;
-
 //========================================================================+
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {

@@ -38,24 +38,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 file(GLOB SOURCES_DB
-  "src/SVTUtilities/SvtUtilities.cpp"
-  "src/SVTUtilities/SvtLogger.cpp"
   "src/Database/databaseinterface.cpp"
-  "src/SVTDb/sqlmapi.cpp"
-  "src/SVTDb/SvtDbInterface.cpp"
-  "src/SVTDbAgentDto/SvtDbBaseDto.cpp"
-  "src/SVTDbAgentDto/SvtDbEnumDto.cpp"
-  "src/SVTDbAgentDto/SvtDbWaferTypeDto.cpp"
-  "src/SVTDbAgentDto/SvtDbWaferDto.cpp"
-  "src/SVTDbAgentDto/SvtDbAsicDto.cpp"
-  "src/SVTDbAgentDto/SvtDbChipDto.cpp"
-  "src/SVTDbAgentDto/SvtDbProbeCardDto.cpp"
-  "src/SVTDbAgentDto/SvtDbWPMachineDto.cpp"
-  "src/SVTDbAgentDto/SvtDbWPProjectDto.cpp"
-  "src/SVTDbAgentService/SvtDbAgentConsumer.cpp"
-  "src/SVTDbAgentService/SvtDbAgentProducer.cpp"
-  "src/SVTDbAgentService/SvtDbAgentRequest.cpp"
-  "src/SVTDbAgentService/SvtDbAgentService.cpp"
+  "src/SVTUtilities/*.cpp"
+  "src/SVTConfig/*.cpp"
+  "src/SVTDb/*.cpp"
+  "src/SVTDbAgentDto/*.cpp"
+  "src/SVTDbAgentService/*.cpp"
 )
 
 add_custom_target(version
@@ -87,7 +75,7 @@ ENDIF()
 
 # Define the directory containing your source files
 set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
-# Get a list of all .cpp files in the SOURCE_DIR
+# # Get a list of all .cpp files in the SOURCE_DIR
 file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
 # Prepend main project executable source
 list(PREPEND CPP_FILES "${SRC_TEST_DIR}/../svt_db_agent.cpp")
@@ -99,7 +87,7 @@ foreach(CPP_FILE ${CPP_FILES})
     # Add the executable
     add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
     add_dependencies(${EXECUTABLE_NAME} version)
- 
+
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PQXX_INCLUDE_DIRS} ${RDKAFKA_INCLUDE_DIRS})
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()

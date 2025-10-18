@@ -1,5 +1,4 @@
-#ifndef __DATABASE_INTERFACE__
-#define __DATABASE_INTERFACE__
+#pragma once
 
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
@@ -50,11 +49,9 @@ class DatabaseInterface
   bool reconnect();
   bool close();
 
-  SvtLogger *logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+  SvtLogger *logger = Singleton<SvtLogger>::instance();
 
   bool mUnavailable;
 
   std::recursive_mutex mMutex;
 };
-
-#endif

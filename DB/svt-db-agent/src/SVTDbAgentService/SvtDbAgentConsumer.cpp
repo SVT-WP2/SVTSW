@@ -5,14 +5,15 @@
  * @brief Db agent Kafka service
  */
 
-#include "SVTDbAgentService/SvtDbAgentConsumer.h"
-#include "SVTDbAgentService/SvtDbAgentCb.h"
-
-#include <librdkafka/rdkafkacpp.h>
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <thread>
+
+#include <librdkafka/rdkafkacpp.h>
+
+#include "SVTDbAgentService/SvtDbAgentCb.h"
+#include "SVTDbAgentService/SvtDbAgentConsumer.h"
 
 using namespace SvtDbAgent;
 
