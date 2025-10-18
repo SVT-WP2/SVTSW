@@ -26,6 +26,11 @@ std::string version = std::string(VERSION);
 
 SvtLogger *logger = Singleton<SvtLogger>::instance();
 
+std::string SvtDbAgent::db_name;
+std::string SvtDbAgent::db_schema;
+std::string SvtDbAgent::kafka_server;
+std::string SvtDbAgent::kafka_port;
+
 //========================================================================+
 std::shared_ptr<SvtDbAgentSetupConfig>
 createSbAgentSetupeConfig(const std::string &dbAgentSetuwpConfigFile)
@@ -115,7 +120,7 @@ int main(int argc, const char *argv[])
   {
     SvtDbAgent::SvtDbAgentService *_dbAgent =
         Singleton<SvtDbAgent::SvtDbAgentService>::instance();
-    if (!_dbAgent->initEnumTypeList(SvtDbAgent::db_schema))
+    if (!_dbAgent->initEnumTypeList())
     {
       logger->logError("ERROR: We could not initialize enum from DB.");
       return EXIT_FAILURE;

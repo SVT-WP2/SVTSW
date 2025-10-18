@@ -5,6 +5,11 @@
 
 #include <librdkafka/rdkafkacpp.h>
 
+#include "SVTUtilities/SvtDbAgentGlobal.h"
+std::string SvtDbAgent::db_name;
+std::string SvtDbAgent::db_schema;
+std::string SvtDbAgent::kafka_server;
+std::string SvtDbAgent::kafka_port;
 class MyEventCb : public RdKafka::EventCb
 {
  public:
