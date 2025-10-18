@@ -1,13 +1,11 @@
-#include "Database/databaseinterface.h"
+#include "Database/DatabaseInterface.h"
 #include "SVTUtilities/SvtLogger.h"
 
-#include <cstdio>
 #include <cstring>
 #include <iostream>
 
 using std::string;
 using std::vector;
-using SvtDbAgent::Singleton;
 
 //========================================================================+
 DatabaseInterface::DatabaseInterface() { mUnavailable = false; }

@@ -11,6 +11,7 @@
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtJsonUtils.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -201,8 +202,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         }
 
         std::string asic_familytype;
-        SvtDbAgent::get_v(waferMap_j["Groups"][g_name][asic_index],
-                          "FamilyType", asic_familytype);
+        SvtDbAgent::readStringVariable(waferMap_j["Groups"][g_name][asic_index],
+                                       "FamilyType", asic_familytype);
 
         if (asic_familytype.empty())
         {

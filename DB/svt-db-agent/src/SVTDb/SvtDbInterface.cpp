@@ -5,12 +5,12 @@
  * @brief Database interface for SVT test
  */
 
-#include "SVTDb/SvtDbInterface.h"
-#include "SVTDb/sqlmapi.h"
-#include "SVTUtilities/SvtUtilities.h"
-
 #include <string>
 #include <vector>
+
+#include "SVTDb/SvtDbInterface.h"
+#include "SVTDb/sqlmapi.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
 
 //========================================================================+
 size_t SvtDbInterface::getAllVersions(

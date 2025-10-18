@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_REQUEST_H
-#define SVT_DB_AGENT_REQUEST_H
+#pragma once
 
 #include <SVTUtilities/SvtLogger.h>
 #include <SVTUtilities/SvtUtilities.h>
@@ -30,5 +29,3 @@ namespace SvtDbAgent
     std::map<std::string_view, SvtDbAgent::SvtDbBaseDto *> dtoList;
   };
 }  // namespace SvtDbAgent
-
-#endif  //! SVT_DB_AGENT_REQUEST_H

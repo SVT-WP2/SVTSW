@@ -1,5 +1,4 @@
-#ifndef SVT_DB_IF_H
-#define SVT_DB_IF_H
+#pragma once
 
 /*!
  * @file SvtDbOnterface.h
@@ -36,5 +35,3 @@ namespace SvtDbInterface
 
   size_t getAllVersions(std::vector<dbVersion> &versions);
 }  // namespace SvtDbInterface
-
-#endif

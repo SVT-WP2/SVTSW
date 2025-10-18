@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_PRODUCER_H
-#define SVT_DB_AGENT_PRODUCER_H
+#pragma once
 
 /*!
  * @file SvtDbAgentProducer.h
@@ -52,4 +51,3 @@ namespace SvtDbAgent
     bool m_dumpConfig = false;
   };
 }  // namespace SvtDbAgent
-#endif  // !SVTDB_AGENT_H

@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_CONSUMER_H
-#define SVT_DB_AGENT_CONSUMER_H
+#pragma once
 
 /*!
  * @file SvtDbAgentConsumer.h
@@ -53,7 +52,7 @@ namespace SvtDbAgent
     bool stop(const bool suspend = false);
 
    private:
-    SvtLogger *logger = SvtDbAgent::Singleton<SvtLogger>::instance();
+    SvtLogger *logger = Singleton<SvtLogger>::instance();
     void pull();
 
     std::shared_ptr<RdKafka::Consumer> m_consumer;
@@ -74,4 +73,3 @@ namespace SvtDbAgent
     std::thread m_thread;
   };
 }  // namespace SvtDbAgent
-#endif  // !SVTDB_AGENT_H
