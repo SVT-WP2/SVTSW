@@ -7,7 +7,9 @@
   set +u
   if [ -n "$1" ]; then
     CONF_FILE=${1:-}
-    export "$(grep -E -v "(^#.*|^$)" "$CONF_FILE" | xargs -0 -n 1)"
+    read -ra options < <(grep -E -v "(^#|^$)" "$CONF_FILE" | xargs -0 -L 1)
+    export "${options[@]}"
+    echo "$SVT_DB_AGENT_LOG_FILE"
   fi
   set -u
   "$thisScriptPath"/build/bin/svt_db_agent
