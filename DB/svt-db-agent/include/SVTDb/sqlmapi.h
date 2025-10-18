@@ -1,9 +1,9 @@
 #ifndef SQLMAPI_H
 #define SQLMAPI_H
 
-#include "Database/databaseinterface.h"
-
 #include "nlohmann/json.hpp"
+
+#include "Database/DatabaseInterface.h"
 
 extern std::atomic<int> queryTime;
 extern std::atomic<int> queryCount;

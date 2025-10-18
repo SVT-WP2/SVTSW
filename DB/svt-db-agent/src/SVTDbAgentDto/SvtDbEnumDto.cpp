@@ -8,10 +8,8 @@
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "SVTDb/sqlmapi.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
 #include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
-
-using SvtDbAgent::Singleton;
 
 std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 

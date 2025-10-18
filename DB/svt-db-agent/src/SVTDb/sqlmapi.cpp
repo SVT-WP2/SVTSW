@@ -1,16 +1,23 @@
-#include "SVTDb/sqlmapi.h"
-#include "Database/databaseinterface.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "nlohmann/json.hpp"
+/*!
+ * @file sqlmapi.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Oct-2025
+ * @brief sqlApi
+ */
 
 #include <atomic>
 #include <stdexcept>
 #include <string>
 
+#include "nlohmann/json.hpp"
+
+#include "SVTDb/sqlmapi.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
+#include "SVTUtilities/SvtLogger.h"
+
 using std::string;
 using std::vector;
-using SvtDbAgent::Singleton;
-using DatabaseIF = SvtDbAgent::Singleton<DatabaseInterface>;
+using DatabaseIF = Singleton<DatabaseInterface>;
 
 std::atomic<int> queryTime;
 std::atomic<int> queryCount;

@@ -1,5 +1,4 @@
-#ifndef SVT_DB_AGENT_CB_H
-#define SVT_DB_AGENT_CB_H
+#pragma once
 
 /*!
  * @file SvtDbAgentCb.h
@@ -21,8 +20,7 @@ namespace SvtDbAgent
    public:
     void event_cb(RdKafka::Event &event)
     {
-      SvtDbAgent::Singleton<SvtLogger>::instance()->logInfo(
-          "SvtDbAgentEventCb called.");
+      Singleton<SvtLogger>::instance()->logInfo("SvtDbAgentEventCb called.");
       std::ostringstream msg;
       switch (event.type())
       {
@@ -33,31 +31,30 @@ namespace SvtDbAgent
           msg << "FATAL ";
           //! TODO
           // Stop consumer and producer thread
-          SvtDbAgent::Singleton<SvtDbAgentService>::instance()->stopConsumer(
-              false);
+          Singleton<SvtDbAgentService>::instance()->stopConsumer(false);
         }
         msg << "ERROR (" << RdKafka::err2str(event.err()) << "): " << event.str();
-        SvtDbAgent::Singleton<SvtLogger>::instance()->logError(msg.str());
+        Singleton<SvtLogger>::instance()->logError(msg.str());
         break;
 
       case RdKafka::Event::EVENT_STATS:
-        SvtDbAgent::Singleton<SvtLogger>::instance()->logWarning(
-            "\"STATS\": " + event.str(), SvtLogger::Mode::STANDARD);
+        Singleton<SvtLogger>::instance()->logWarning("\"STATS\": " + event.str(),
+                                                     SvtLogger::Mode::STANDARD);
         break;
 
       case RdKafka::Event::EVENT_LOG:
         msg.clear();
         msg << "LOG-" << event.severity() << "-" << event.fac() << ": "
             << event.str();
-        SvtDbAgent::Singleton<SvtLogger>::instance()->logWarning(
-            msg.str(), SvtLogger::Mode::STANDARD);
+        Singleton<SvtLogger>::instance()->logWarning(msg.str(),
+                                                     SvtLogger::Mode::STANDARD);
         break;
 
       default:
         msg << "EVENT " << event.type() << " (" << RdKafka::err2str(event.err())
             << "): " << event.str();
-        SvtDbAgent::Singleton<SvtLogger>::instance()->logInfo(
-            msg.str(), SvtLogger::Mode::STANDARD);
+        Singleton<SvtLogger>::instance()->logInfo(msg.str(),
+                                                  SvtLogger::Mode::STANDARD);
         break;
       }
     }
@@ -68,8 +65,7 @@ namespace SvtDbAgent
    public:
     void consume_cb(RdKafka::Message &msg, void *opaque)
     {
-      SvtDbAgent::Singleton<SvtDbAgentService>::instance()->processMsgCb(&msg,
-                                                                         opaque);
+      Singleton<SvtDbAgentService>::instance()->processMsgCb(&msg, opaque);
     }
   };
 
@@ -94,13 +90,11 @@ namespace SvtDbAgent
         status_name = "Unknown?";
         break;
       }
-      SvtDbAgent::Singleton<SvtLogger>::instance()->logInfo(
+      Singleton<SvtLogger>::instance()->logInfo(
           "Message delivery for (" + std::to_string(message.len()) +
           " bytes): " + status_name + ": " + message.errstr());
       if (message.key())
-        SvtDbAgent::Singleton<SvtLogger>::instance()->logInfo("Key: " +
-                                                              *(message.key()));
+        Singleton<SvtLogger>::instance()->logInfo("Key: " + *(message.key()));
     }
   };
 }  // namespace SvtDbAgent
-#endif  // SVT_DB_AGENT_CB_H

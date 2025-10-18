@@ -5,26 +5,39 @@
  * @brief svt_db_agent executable
  */
 
-#include "Database/databaseinterface.h"
-#include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
-
-#include "version.h"
-
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <string>
 #include <thread>
 
-using SvtDbAgent::Singleton;
+#include "version.h"
+
+#include "Database/DatabaseInterface.h"
+#include "SVTConfig/SvtDbAgentSetupConfig.h"
+#include "SVTDbAgentService/SvtDbAgentService.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
+#include "SVTUtilities/SvtLogger.h"
+#include "SVTUtilities/SvtUtilities.h"
+
 using DatabaseIF = Singleton<DatabaseInterface>;
 
 std::string version = std::string(VERSION);
 
 SvtLogger *logger = Singleton<SvtLogger>::instance();
+
+//========================================================================+
+std::shared_ptr<SvtDbAgentSetupConfig>
+createSbAgentSetupeConfig(const std::string &dbAgentSetuwpConfigFile)
+{
+  auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetuwpConfigFile);
+  if (!setupConfig.has_value())
+  {
+    logger->logError("Unable to create test config");
+    return nullptr;
+  }
+  return setupConfig.value();
+}
 
 //========================================================================+
 bool connectToDB(std::string &user, std::string &pass, std::string &conn,
@@ -50,24 +63,44 @@ bool connectToDB(std::string &user, std::string &pass, std::string &conn,
 }
 
 //========================================================================+
-int main()
+int main(int argc, const char *argv[])
 {
-  logger->logInfo("********************** Svt Db Agent, version:" + version,
-                  SvtLogger::Mode::STANDARD);
+  if (argc < 2)
+  {
+    logger->logError("Usage svt-db-agent <setup config file>");
+    exit(-1);
+  }
+
+  std::string setupConfigFile = argv[1];
+
+  const auto setupConfig = createSbAgentSetupeConfig(setupConfigFile);
+  const auto dbConfig = setupConfig->getDbConfig();
+
+  //! Set Global variables
+  SvtDbAgent::db_name = dbConfig->getDbName();
+  SvtDbAgent::db_schema = dbConfig->getDbSchema();
+  SvtDbAgent::kafka_server = setupConfig->getKafkaServer();
+  SvtDbAgent::kafka_port = setupConfig->getKafkaPort();
+
+  logger->configure(setupConfig->getLogFilePath(),
+                    setupConfig->getTermVerbosity(),
+                    setupConfig->getFileVebosity());
+  logger->logInfo("********************** Svt Db Agent, version:" + version);
 
   DatabaseInterface *dbInterface = DatabaseIF::instance();
 
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
   // problems
-  std::string psqlhost = "dbod-svt-sw-pgdb.cern.ch";
-  std::string psqlport = "6600";
-  std::string psqluser = "admin";
-  std::string psqlpass = "";
-  std::string psqldb = SvtDbAgent::db_name;
+  std::string psqlhost = dbConfig->getHost();
+  std::string psqlport = dbConfig->getPort();
+  std::string psqluser = dbConfig->getUser();
+  std::string psqlpass = dbConfig->getPass();
+
   if (!dbInterface->isConnected())
   {
-    if (!connectToDB(psqluser, psqlpass, psqldb, psqlhost, psqlport))
+    if (!connectToDB(psqluser, psqlpass, SvtDbAgent::db_name, psqlhost,
+                     psqlport))
     {
       logger->logError("Cannot connect to DB");
       return EXIT_FAILURE;
@@ -100,9 +133,7 @@ int main()
   }
   catch (const std::exception &e)
   {
-    std::cout << std::endl
-              << "### Caught exception in the main thread ###" << std::endl
-              << std::endl;
+    logger->logError("\n### Caught exception in the main thread ###\n");
     std::cout << e.what() << std::endl;
     return EXIT_FAILURE;
   }
