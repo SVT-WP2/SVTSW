@@ -6,12 +6,16 @@
  */
 
 // #include "SVTUtilities/SvtLogger.h"
-// #include "SVTUtilities/SvtUtilities.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
 //
 // #include "version.h"
 //
 // #include <nlohmann/json.hpp>
 //
+std::string SvtDbAgent::db_name;
+std::string SvtDbAgent::db_schema;
+std::string SvtDbAgent::kafka_server;
+std::string SvtDbAgent::kafka_port;
 #include <cstdlib>
 // #include <iostream>
 //

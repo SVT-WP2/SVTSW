@@ -9,9 +9,9 @@
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "SVTDbAgentService/SvtDbAgentConsumer.h"
 #include "SVTDbAgentService/SvtDbAgentProducer.h"
+#include "SVTUtilities/SvtDbAgentGlobal.h"
 #include "SVTUtilities/SvtLogger.h"
 
-#include "SVTUtilities/SvtUtilities.h"
 #include "librdkafka/rdkafkacpp.h"
 
 #include <cstring>
@@ -30,14 +30,14 @@ SvtDbAgentService::SvtDbAgentService() {}
 SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(5000); }
 
 //========================================================================+
-bool SvtDbAgentService::initEnumTypeList(const std::string &schema)
+bool SvtDbAgentService::initEnumTypeList()
 {
   logger->logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
   auto enumDto =
       dynamic_cast<SvtDbEnumDto *>(m_Request->getDto("SvtDbEnumDto"));
 
-  if (!enumDto->getAllEnumTypesInDB(schema, enum_types))
+  if (!enumDto->getAllEnumTypesInDB(SvtDbAgent::db_schema, enum_types))
   {
     return false;
   }

@@ -11,8 +11,8 @@
 
 namespace SvtDbAgent
 {
-  static std::string db_name;
-  static std::string db_schema;
-  static std::string kafka_server;
-  static std::string kafka_port;
+  extern std::string db_name;
+  extern std::string db_schema;
+  extern std::string kafka_server;
+  extern std::string kafka_port;
 };  // namespace SvtDbAgent
