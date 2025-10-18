@@ -1,6 +1,6 @@
 {
   "logger": {
-    "filePath": "/data/ycorrale/SvtDbAgentLog/SvtDbAgent",
+    "filePath": "/data/ycorrale/SvtDbAgentLog/SvtDbAgent-dev",
     "termVerbosity": "PRODUCTION",
     "fileVerbosity": "ALL"
   },
@@ -9,11 +9,11 @@
     "psqlPort": "6600",
     "psqlUser": "admin",
     "psqlPass": "",
-    "psqlDbName": "svt_sw_db",
+    "psqlDbName": "svt_sw_db_test",
     "psqlDbSchema": "main"
   },
   "kafka": {
     "server": "localhost",
-    "port": "9092"
+    "port": "9095"
   }
 }

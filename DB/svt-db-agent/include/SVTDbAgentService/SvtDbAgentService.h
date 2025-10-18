@@ -46,7 +46,7 @@ namespace SvtDbAgent
     SvtDbAgentService();
     ~SvtDbAgentService();
 
-    bool initEnumTypeList(const std::string &schema);
+    bool initEnumTypeList();
     bool configureService(bool stop_eof = false);
     void processMsgCb(RdKafka::Message *msg, void *opaque);
     void setDebug(std::string debug) { m_debug = debug; }
