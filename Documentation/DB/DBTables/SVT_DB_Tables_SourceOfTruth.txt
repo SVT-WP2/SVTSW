@@ -4,7 +4,12 @@ Table main.WaferType {
   engineeringRun main.engineeringRun [not null]
   foundry main.foundryName [not null]
   technology main.waferTech [not null]
-  waferMap JSON [not null]
+}
+
+Table main.WaferTypeExtras{
+  waferTypeId integer [ref: > main.WaferType.id, not null]
+  imageBase64String text
+  waferMap JSON
 }
 
 Table main.Wafer {
@@ -32,11 +37,6 @@ Table main.Version {
   baseVersion integer [ref: > main.Version.id]
   creationTime timestamp [default: `CURRENT_TIMESTAMP`]
   note text
-}
-
-Table main.WaferTypeImage {
-  waferTypeId integer [ref: > main.WaferType.id, not null]
-  imageBase64String text [not null]
 }
 
 Table main.Asic {
