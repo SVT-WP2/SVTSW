@@ -87,6 +87,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
 
+  /svt.db-agent.request/GetWaferMap:
+    post:
+      tags:
+        - Wafer Types
+      summary: Get Wafer Map.
+      description: Return the wafer type map for the wafer type id (waferTypeId)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetWaferMapMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetWaferMapReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
   /svt.db-agent.request/GetAllWafers:
     post:
       tags:
@@ -889,6 +921,34 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/WaferTypeDto'
+
+    GetWaferMapMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetWaferMap'
+        data:
+          type: object
+          required:
+            - waferTypeId
+          properties:
+            waferTypeId:
+              type: number
+              description: Wafer type id
+
+    GetWaferMapReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetWaferMapReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaferMapDto'
+
     #
     # WAFER TYPES :: CREATE
     #
@@ -1032,7 +1092,7 @@ components:
         data:
           type: object
           required:
-          - waferId
+            - waferId
           properties:
             waferId:
               type: number
@@ -1476,7 +1536,6 @@ components:
         - engineeringRun
         - foundry
         - technology
-        - waferMap
       properties:
         id:
           type: number
@@ -1488,6 +1547,12 @@ components:
           type: number
         technology:
           type: number
+
+    WaferMapDto:
+      type: object
+      required:
+        - waferMap
+      properties:
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
