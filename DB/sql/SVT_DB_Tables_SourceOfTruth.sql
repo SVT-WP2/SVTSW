@@ -228,8 +228,13 @@ CREATE TABLE "main"."WaferType" (
   "name" varchar(50) NOT NULL,
   "engineeringRun" main."engineeringRun" NOT NULL,
   "foundry" main."foundryName" NOT NULL,
-  "technology" main."waferTech" NOT NULL,
-  "waferMap" JSON NOT NULL
+  "technology" main."waferTech" NOT NULL
+);
+
+CREATE TABLE "main"."WaferTypeExtras" (
+  "waferTypeId" integer NOT NULL,
+  "imageBase64String" text,
+  "waferMap" JSON
 );
 
 CREATE TABLE "main"."Wafer" (
@@ -257,11 +262,6 @@ CREATE TABLE "main"."Version" (
   "baseVersion" integer,
   "creationTime" timestamp DEFAULT (CURRENT_TIMESTAMP),
   "note" text
-);
-
-CREATE TABLE "main"."WaferTypeImage" (
-  "waferTypeId" integer NOT NULL,
-  "imageBase64String" text NOT NULL
 );
 
 CREATE TABLE "main"."Asic" (
@@ -431,13 +431,13 @@ CREATE TABLE "main"."SLDOTest" (
   "testValues" JSON
 );
 
+ALTER TABLE "main"."WaferTypeExtras" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
+
 ALTER TABLE "main"."Wafer" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
 
 ALTER TABLE "main"."WaferLocation" ADD FOREIGN KEY ("waferId") REFERENCES "main"."Wafer" ("id");
 
 ALTER TABLE "main"."Version" ADD FOREIGN KEY ("baseVersion") REFERENCES "main"."Version" ("id");
-
-ALTER TABLE "main"."WaferTypeImage" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
 
 ALTER TABLE "main"."Asic" ADD FOREIGN KEY ("waferId") REFERENCES "main"."Wafer" ("id");
 
