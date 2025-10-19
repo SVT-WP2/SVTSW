@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iomanip>
 #include <mutex>
+#include <sstream>
 
 #include "SVTUtilities/SvtLogger.h"
 
