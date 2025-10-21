@@ -1,18 +1,18 @@
 Table main.WaferType {
   id integer [primary key, increment]
-  name varchar(50) [not null]
-  engineeringRun main.engineeringRun [not null]
+  name varchar(50) [unique, not null]
+  engineeringRun main.engineeringRun [unique, not null]
   foundry main.foundryName [not null]
   technology main.waferTech [not null]
 }
 
 Table main.WaferTypeMap{
-  waferTypeId integer [ref: > main.WaferType.id, not null]
+  waferTypeId integer [ref: > main.WaferType.id, unique, not null]
   waferMap JSON
 }
 
 Table main.WaferTypeImage{
-  waferTypeId integer [ref: > main.WaferType.id, not null]
+  waferTypeId integer [ref: > main.WaferType.id, unique, not null]
   imageBase64String text
 }
 
