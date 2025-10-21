@@ -22,4 +22,5 @@ namespace SvtDbAgent
                          std::vector<int> &var);
   bool readDoubleVector(json &config, const std::string &key,
                         std::vector<double> &var);
+  bool recursive_erase_key(json &j, const std::string_view &key);
 }  // namespace SvtDbAgent
