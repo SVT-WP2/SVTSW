@@ -4,6 +4,8 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "SVTUtilities/SvtJsonUtils.h"
+
 namespace SvtDbAgent
 {
   enum SvtDbAgentMsgStatus : uint8_t
@@ -33,7 +35,11 @@ namespace SvtDbAgent
     {
       headers[_key] = _val;
     }
-    virtual void setPayload(const nlohmann::json &json) { payload = json; }
+    void setPayload(const nlohmann::json &json) { payload = json; }
+    void eraseFromPayload(const std::string_view &key)
+    {
+      SvtDbAgent::recursive_erase_key(payload, key);
+    }
 
    protected:
     nlohmann::json headers = {};

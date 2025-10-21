@@ -161,7 +161,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
     rollbackUpdate();
     return -1;
   }
-  commitUpdate();
+  // commitUpdate();
   return true;
 }
 

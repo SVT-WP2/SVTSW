@@ -8,6 +8,8 @@
  * @brief Svt Db Wafer type DTO
  * */
 
+#include <string_view>
+#include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
@@ -15,15 +17,37 @@ namespace SvtDbAgent
   class SvtDbAgentMessage;
   class SvtDbAgentReplyMsg;
 
-  // class SvtDbWaferTypeImageDto : public SvtDbBaseDto
-  // {
-  //   SvtDbWaferTypeImageDto()
-  //   {
-  //     addColName("waferTypeId");
-  //     addColName("imageBase64String");
-  //   }
-  //   ~SvtDbWaferTypeImageDto() = default;
-  // };
+  class SvtDbWaferTypeMapDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWaferTypeMapDto()
+    {
+      setTableName("WaferTypeMap");
+
+      addColName("waferTypeId");
+      addColName("waferMap");
+    }
+    ~SvtDbWaferTypeMapDto() = default;
+
+   private:
+    void createAllRequest() final {}
+  };
+
+  class SvtDbWaferTypeImageDto : public SvtDbBaseDto
+  {
+   public:
+    SvtDbWaferTypeImageDto()
+    {
+      setTableName("WaferTypeImage");
+
+      addColName("waferTypeId");
+      addColName("imageBase64String");
+    }
+    ~SvtDbWaferTypeImageDto() = default;
+
+   private:
+    void createAllRequest() final {}
+  };
 
   class SvtDbWaferTypeDto : public SvtDbBaseDto
   {
@@ -34,13 +58,19 @@ namespace SvtDbAgent
     friend class SvtDbWaferDto;
 
    private:
-    virtual void createAllRequest() final;
-    virtual void parseJsonData(const nlohmann::json &j_data,
-                               SvtDbEntry &entry) final;
+    SvtDbWaferTypeMapDto *waferMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
+    SvtDbWaferTypeImageDto *waferTypeimageDto = Singleton<SvtDbWaferTypeImageDto>::instance();
 
+    virtual void createAllRequest() final;
+    // virtual void parseJsonData(const nlohmann::json &j_data,
+    //                            SvtDbEntry &entry) final;
+    virtual void createEntry(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
+    virtual void getWaferMap(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
+
+    bool createWaferMap(const int waferTypeId, const std::string &);
     bool extractRange(const int g_size, const nlohmann::json &array_j,
                       std::vector<int> &range);
-    bool checkWaferMap(const std::string_view waferMap, std::string &err_msg);
+    bool checkWaferMap(const std::string_view &waferMap, std::string &err_msg);
   };
 
 };  // namespace SvtDbAgent
