@@ -231,10 +231,14 @@ CREATE TABLE "main"."WaferType" (
   "technology" main."waferTech" NOT NULL
 );
 
-CREATE TABLE "main"."WaferTypeExtras" (
+CREATE TABLE "main"."WaferTypeMap" (
   "waferTypeId" integer NOT NULL,
-  "imageBase64String" text,
   "waferMap" JSON
+);
+
+CREATE TABLE "main"."WaferTypeImage" (
+  "waferTypeId" integer NOT NULL,
+  "imageBase64String" text
 );
 
 CREATE TABLE "main"."Wafer" (
@@ -431,7 +435,9 @@ CREATE TABLE "main"."SLDOTest" (
   "testValues" JSON
 );
 
-ALTER TABLE "main"."WaferTypeExtras" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
+ALTER TABLE "main"."WaferTypeMap" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
+
+ALTER TABLE "main"."WaferTypeImage" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
 
 ALTER TABLE "main"."Wafer" ADD FOREIGN KEY ("waferTypeId") REFERENCES "main"."WaferType" ("id");
 
