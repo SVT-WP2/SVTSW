@@ -87,11 +87,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
 
-  /svt.db-agent.request/GetWaferMap:
+  /svt.db-agent.request/GetWaferTypeMap:
     post:
       tags:
         - Wafer Types
-      summary: Get Wafer Map.
+      summary: Get WaferTypeMap.
       description: Return the wafer type map for the wafer type id (waferTypeId)
       requestBody:
         content:
@@ -100,7 +100,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetWaferMapMessage'
+                - $ref: '#/components/schemas/GetWaferTypeMapMessage'
         required: true
       responses:
         '200':
@@ -111,7 +111,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetWaferMapReplyMessage'
+                  - $ref: '#/components/schemas/GetWaferTypeMapReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -922,11 +922,11 @@ components:
               items:
                 $ref: '#/components/schemas/WaferTypeDto'
 
-    GetWaferMapMessage:
+    GetWaferTypeMapMessage:
       properties:
         type:
           type: string
-          default: 'GetWaferMap'
+          default: 'GetWaferTypeMap'
         data:
           type: object
           required:
@@ -936,18 +936,16 @@ components:
               type: number
               description: Wafer type id
 
-    GetWaferMapReplyMessage:
+    GetWaferTypeMapReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetWaferMapReply'
+          default: 'GetWaferTypeMapReply'
         data:
           type: object
           properties:
-            items:
-              type: array
-              items:
-                $ref: '#/components/schemas/WaferMapDto'
+            entity:
+              $ref: '#/components/schemas/WaferTypeMapDto'
 
     #
     # WAFER TYPES :: CREATE
@@ -1548,7 +1546,7 @@ components:
         technology:
           type: number
 
-    WaferMapDto:
+    WaferTypeMapDto:
       type: object
       required:
         - waferMap
