@@ -166,21 +166,5 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
 void SvtDbAgent::SvtDbChipDto::getChipLocationHistory(
     const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
 {
-  try
-  {
-    const auto &chipId = msg.getPayload()["data"]["chipId"];
-    SvtDbFilters filters;
-    filters.mFilters.values.insert({"chipId", chipId});
-
-    std::vector<SvtDbAgent::SvtDbEntry> entries;
-    if (getAllEntriesFromDB(entries, filters))
-    {
-      getAllEntriesReplyMsg(entries, replyMsg);
-    }
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-    return;
-  }
+  SvtDbAgent::getLocationHistory<SvtDbAgent::SvtDbChipLocationDto>(msg, replyMsg, "chipId", chipLocDto);
 }

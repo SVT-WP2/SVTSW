@@ -8,6 +8,7 @@
  * @brief Base DTO class
  */
 
+#include "SVTDbAgentService/SvtDbAgentMessage.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
 
@@ -21,9 +22,6 @@
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   struct SvtDbEntry
   {
     std::map<std::string, nlohmann::basic_json<>> values;
@@ -102,5 +100,28 @@ namespace SvtDbAgent
 
     SvtLogger *logger = Singleton<SvtLogger>::instance();
   };
+
+  template <class T>
+  void getLocationHistory(const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg, const std::string &nameId, T *locDto)
+  {
+    try
+    {
+      const auto &id = msg.getPayload()["data"][nameId];
+      SvtDbFilters filters;
+      filters.mFilters.values.insert({nameId, id});
+
+      std::vector<SvtDbAgent::SvtDbEntry> entries;
+      if (locDto->getAllEntriesFromDB(entries, filters))
+      {
+        locDto->getAllEntriesReplyMsg(entries, replyMsg);
+      }
+    }
+    catch (const std::exception &e)
+    {
+      throw e;
+      return;
+    }
+  };
+
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_BASE_DTO_H
