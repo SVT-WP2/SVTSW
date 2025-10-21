@@ -15,6 +15,38 @@ namespace
 }
 
 //========================================================================+
+bool SvtDbAgent::recursive_erase_key(json &j, const std::string_view &key)
+{
+  if (j.is_object())
+  {
+    // Iterate through object members
+    for (auto it = j.begin(); it != j.end();)
+    {
+      if (it.key() == key)
+      {
+        // Erase the key if found
+        it = j.erase(it);  // Erase returns the iterator to the next element
+      }
+      else
+      {
+        // Recursively call for nested objects/arrays
+        recursive_erase_key(*it, key);
+        ++it;
+      }
+    }
+  }
+  else if (j.is_array())
+  {
+    // Iterate through array elements
+    for (auto &element : j)
+    {
+      recursive_erase_key(element, key);
+    }
+  }
+  return true;
+}
+
+//========================================================================+
 bool SvtDbAgent::readStringVariable(json &config, const std::string &key,
                                     std::string &var)
 {
