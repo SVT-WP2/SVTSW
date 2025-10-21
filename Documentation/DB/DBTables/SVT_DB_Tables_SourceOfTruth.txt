@@ -6,10 +6,14 @@ Table main.WaferType {
   technology main.waferTech [not null]
 }
 
-Table main.WaferTypeExtras{
+Table main.WaferTypeMap{
+  waferTypeId integer [ref: > main.WaferType.id, not null]
+  waferMap JSON
+}
+
+Table main.WaferTypeImage{
   waferTypeId integer [ref: > main.WaferType.id, not null]
   imageBase64String text
-  waferMap JSON
 }
 
 Table main.Wafer {
