@@ -283,21 +283,5 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
 void SvtDbAgent::SvtDbWaferDto::getWaferLocationHistory(
     const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
 {
-  try
-  {
-    const auto &waferId = msg.getPayload()["data"]["waferId"];
-    SvtDbFilters filters;
-    filters.mFilters.values.insert({"waferId", waferId});
-
-    std::vector<SvtDbAgent::SvtDbEntry> entries;
-    if (waferLocDto->getAllEntriesFromDB(entries, filters))
-    {
-      waferLocDto->getAllEntriesReplyMsg(entries, replyMsg);
-    }
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-    return;
-  }
+  getLocationHistory<SvtDbAgent::SvtDbWaferLocationDto>(msg, replyMsg, "waferId", waferLocDto);
 }
