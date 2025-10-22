@@ -8,6 +8,7 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtLogger.h"
 
 #include <sstream>
 //========================================================================+
@@ -73,7 +74,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
                  "size: "
               << entries.size();
 
-      throw std::runtime_error(err_msg.str());
+      THROW_RUNTIME_ERROR(err_msg.str());
       return;
     }
     size_t tail_size = entries.size() - pager_offset;

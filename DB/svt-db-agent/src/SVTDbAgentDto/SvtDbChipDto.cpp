@@ -59,13 +59,13 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("Non object create was found");
+    THROW_RUNTIME_ERROR("Non object create was found");
   }
 
   auto entry_j = msgData["create"];
   if (!entry_j.contains("asicId"))
   {
-    throw std::runtime_error("Failed to create chip without an asicId.");
+    THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
     return;
   }
   const int asicId = entry_j["asicId"].get<int>();
@@ -80,14 +80,14 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
   if (!createEntryInDB(chipEntry))
   {
-    throw std::runtime_error("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
     return;
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
   if (newEntryId != currMaxEntryId + 1)
   {
-    throw std::runtime_error("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
     return;
   }
   getEntryWithId(chipEntry, newEntryId);
@@ -106,7 +106,7 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   chipLoc.values.insert({"note", "Location at creation"});
   if (!chipLocDto->createEntryInDB(chipLoc))
   {
-    throw std::runtime_error("ERROR: Could not create chip location entry");
+    THROW_RUNTIME_ERROR("ERROR: Could not create chip location entry");
     return;
   }
 
@@ -121,7 +121,7 @@ void SvtDbAgent::SvtDbChipDto::updateEntry(
 {
   if (msg.getPayload()["date"]["update"].contains("generalLocation"))
   {
-    throw std::runtime_error(
+    THROW_RUNTIME_ERROR(
         "Failed to update entry. update location is not "
         "allowed using generic update request");
     return;
@@ -157,7 +157,7 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
   }
   else
   {
-    throw std::runtime_error("Failed to access Chip location records");
+    THROW_RUNTIME_ERROR("Failed to access Chip location records");
     return;
   }
 }

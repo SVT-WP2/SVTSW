@@ -125,7 +125,7 @@ void raiseError(string errorMessage)
 {
   // std::cout << errorMessage << std::endl;
   Singleton<SvtLogger>::instance()->logError(errorMessage);
-  throw std::runtime_error(errorMessage);
+  THROW_RUNTIME_ERROR(errorMessage);
 }
 
 //========================================================================+
