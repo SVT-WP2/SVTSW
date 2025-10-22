@@ -18,8 +18,8 @@ info:
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
-
   version: 0.0.1
+#
 paths:
   /svt.db-agent.request/GetAllWaferTypes:
     post:
@@ -35,7 +35,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllWaferTypesMessage'
-
         required: true
       responses:
         '200':
@@ -53,7 +52,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/CreateWaferType:
     post:
       tags:
@@ -68,7 +66,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateWaferTypeMessage'
-
         required: true
       responses:
         '200':
@@ -86,7 +83,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetWaferTypeMap:
     post:
       tags:
@@ -118,7 +114,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllWafers:
     post:
       tags:
@@ -133,7 +128,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllWafersMessage'
-
         required: true
       responses:
         '200':
@@ -151,7 +145,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/CreateWafer:
     post:
       tags:
@@ -166,7 +159,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateWaferMessage'
-
         required: true
       responses:
         '200':
@@ -184,7 +176,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/UpdateWafer:
     post:
       tags:
@@ -199,7 +190,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/UpdateWaferMessage'
-
         required: true
       responses:
         '200':
@@ -217,7 +207,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/UpdateWaferLocation:
     post:
       tags:
@@ -232,7 +221,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/UpdateWaferLocationMessage'
-
         required: true
       responses:
         '200':
@@ -250,7 +238,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetWaferLocationHistory:
     post:
       tags:
@@ -260,15 +247,12 @@ paths:
       requestBody:
         content:
           application/json:
-           schema:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/RequestMessage'
-            - $ref: '#/components/schemas/GetWaferLocationHistoryMessage'
-
-        required:
-          true
-
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetWaferLocationHistoryMessage'
+        required: true
       responses:
         '200':
           description: Reply Message
@@ -285,7 +269,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllAsics:
     post:
       tags:
@@ -300,7 +283,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllAsicsMessage'
-
         required: true
       responses:
         '200':
@@ -318,7 +300,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/CreateAsic:
     post:
       tags:
@@ -333,7 +314,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateAsicMessage'
-
         required: true
       responses:
         '200':
@@ -351,7 +331,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllChips:
     post:
       tags:
@@ -366,7 +345,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllChipsMessage'
-
         required: true
       responses:
         '200':
@@ -384,7 +362,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
-
   /svt.db-agent.request/CreateChip:
     post:
       tags:
@@ -399,7 +376,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateChipMessage'
-
         required: true
       responses:
         '200':
@@ -417,7 +393,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
-
   /svt.db-agent.request/CreateManyChips:
     post:
       tags:
@@ -432,7 +407,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateManyChipsMessage'
-
         required: true
       responses:
         '200':
@@ -450,7 +424,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
-
   /svt.db-agent.request/UpdateChipLocation:
     post:
       tags:
@@ -465,7 +438,6 @@ paths:
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
                 - $ref: "#/components/schemas/UpdateChipLocationMessage"
-
         required: true
       responses:
         '200':
@@ -483,7 +455,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
-
   /svt.db-agent.request/GetChipLocationHistory:
     post:
       tags:
@@ -493,15 +464,12 @@ paths:
       requestBody:
         content:
           application/json:
-           schema:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/RequestMessage'
-            - $ref: '#/components/schemas/GetChipLocationHistoryMessage'
-
-        required:
-          true
-
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetChipLocationHistoryMessage'
+        required: true
       responses:
         '200':
           description: Reply Message
@@ -518,7 +486,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllWaferProbeMachines:
     post:
       tags:
@@ -533,7 +500,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllWaferProbeMachinesMessage'
-
         required: true
       responses:
         '200':
@@ -551,7 +517,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/CreateWaferProbeMachine:
     post:
       tags:
@@ -566,7 +531,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateWaferProbeMachineMessage'
-
         required: true
       responses:
         '200':
@@ -584,7 +548,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/UpdateWaferProbeMachine:
     post:
       tags:
@@ -599,7 +562,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/UpdateWaferProbeMachineMessage'
-
         required: true
       responses:
         '200':
@@ -617,7 +579,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/UpdateWpMachineLoadedWafer:
     post:
       tags:
@@ -632,7 +593,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/UpdateWpMachineLoadedWaferMessage'
-
         required: true
       responses:
         '200':
@@ -650,7 +610,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/UpdateWpMachineInstalledProbeCard:
     post:
       tags:
@@ -665,7 +624,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/UpdateWpMachineInstalledProbeCardMessage'
-
         required: true
       responses:
         '200':
@@ -683,7 +641,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllWaferProbeProjects:
     post:
       tags:
@@ -698,7 +655,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllWaferProbeProjectsMessage'
-
         required: true
       responses:
         '200':
@@ -716,7 +672,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/CreateWaferProbeProject:
     post:
       tags:
@@ -731,7 +686,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/CreateWaferProbeProjectMessage'
-
         required: true
       responses:
         '200':
@@ -749,7 +703,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllProbeCards:
     post:
       tags:
@@ -764,7 +717,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllProbeCardsMessage'
-
         required: true
       responses:
         '200':
@@ -782,7 +734,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -797,7 +748,6 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
                 - $ref: '#/components/schemas/GetAllEnumsRequest'
-
         required: true
       responses:
         '200':
@@ -815,6 +765,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+#
 components:
   schemas:
     RequestMessage:
@@ -826,7 +777,6 @@ components:
           type: string
         data:
           type: object
-
     ReplyMessage:
       type: object
       required:
@@ -848,7 +798,6 @@ components:
               type: number
             message:
               type: string
-
     ReplyStatus:
       type: string
       enum:
@@ -856,7 +805,6 @@ components:
         - BadRequest
         - NotFound
         - UnexpectedError
-
     GetAllEnumsRequest:
       properties:
         type:
@@ -869,7 +817,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/SvtEnumName'
-
     GetAllEnumsReply:
       properties:
         type:
@@ -941,7 +888,6 @@ components:
                   description: Wafer Type ids array. If array is empty / undefined => all wafers will be returned.
                   items:
                     type: number
-
     GetAllWaferTypesReplyMessage:
       properties:
         type:
@@ -954,7 +900,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/WaferTypeDto'
-
     GetWaferTypeMapMessage:
       properties:
         type:
@@ -968,7 +913,6 @@ components:
             waferTypeId:
               type: number
               description: Wafer type id
-
     GetWaferTypeMapReplyMessage:
       properties:
         type:
@@ -979,7 +923,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferTypeMapDto'
-
     #
     # WAFER TYPES :: CREATE
     #
@@ -993,7 +936,6 @@ components:
           properties:
             create:
               $ref: "#/components/schemas/WaferTypeCreateDto"
-
     CreateWaferTypeReplyMessage:
       properties:
         type:
@@ -1023,7 +965,6 @@ components:
                   description: Wafer ids array. If array is empty / undefined => all wafers will be returned.
                   items:
                     type: number
-
     GetAllWafersReplyMessage:
       properties:
         type:
@@ -1049,7 +990,6 @@ components:
           properties:
             create:
               $ref: "#/components/schemas/WaferCreateDto"
-
     CreateWaferReplyMessage:
       properties:
         type:
@@ -1079,7 +1019,6 @@ components:
               description: Wafer Id
             update:
               $ref: "#/components/schemas/WaferUpdateDto"
-
     UpdateWaferReplyMessage:
       properties:
         type:
@@ -1100,7 +1039,6 @@ components:
           default: 'UpdateWaferLocation'
         data:
           $ref: "#/components/schemas/WaferUpdateLocationDto"
-
     UpdateWaferLocationReplyMessage:
       properties:
         type:
@@ -1111,7 +1049,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferDto'
-
     #
     # WAFER LOCATION RECORDS
     #
@@ -1128,7 +1065,6 @@ components:
             waferId:
               type: number
               description: Wafer id
-
     GetWaferLocationHistoryReplyMessage:
       properties:
         type:
@@ -1141,7 +1077,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/WaferLocationHistoryRecordDto'
-
     #
     # ASICS :: LIST
     #
@@ -1180,7 +1115,6 @@ components:
                   description: Asic ids array. If array is empty / undefined => all Asics will be returned.
                   items:
                     type: number
-
     GetAllAsicsReplyMessage:
       properties:
         type:
@@ -1208,7 +1142,6 @@ components:
           properties:
             create:
               $ref: "#/components/schemas/AsicCreateDto"
-
     CreateAsicReplyMessage:
       properties:
         type:
@@ -1219,7 +1152,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/AsicDto'
-
     #
     # CHIPS :: LIST
     #
@@ -1243,7 +1175,6 @@ components:
                   description: Chip ids array. If array is empty / undefined => all Chip will be returned.
                   items:
                     type: number
-
     GetAllChipsReplyMessage:
       properties:
         type:
@@ -1256,7 +1187,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ChipDto'
-
     #
     # CHIPS :: CREATE
     #
@@ -1270,7 +1200,6 @@ components:
           properties:
             create:
               $ref: '#/components/schemas/ChipCreateDto'
-
     CreateChipReplyMessage:
       properties:
         type:
@@ -1280,8 +1209,7 @@ components:
           type: object
           properties:
             entity:
-                $ref: '#/components/schemas/ChipDto'
-
+              $ref: '#/components/schemas/ChipDto'
     #
     # CHIPS :: CREATE MANY
     #
@@ -1305,7 +1233,6 @@ components:
                   type: array
                   items:
                     $ref: '#/components/schemas/ManyChipsCreateDto'
-
     CreateManyChipsReplyMessage:
       properties:
         type:
@@ -1318,7 +1245,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ChipDto'
-
     #
     # CHIPS :: UPDATE LOCAION
     #
@@ -1329,7 +1255,6 @@ components:
           default: 'UpdateChipLocation'
         data:
           $ref: '#/components/schemas/ChipUpdateLocationDto'
-
     UpdateChipLocationReplyMessage:
       properties:
         type:
@@ -1340,7 +1265,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/ChipDto'
-
     #
     # CHIP LOCATION RECORDS
     #
@@ -1352,12 +1276,11 @@ components:
         data:
           type: object
           required:
-          - chipId
+            - chipId
           properties:
             chipId:
               type: number
               description: Chip id
-
     GetChipLocationHistoryReplyMessage:
       properties:
         type:
@@ -1370,7 +1293,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ChipLocationHistoryRecordDto'
-
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -1390,7 +1312,6 @@ components:
                   description: Wafer Probe Machine ids array. If array is empty / undefined => all Wafer Probe Machines will be returned.
                   items:
                     type: number
-
     GetAllWaferProbeMachinesReplyMessage:
       properties:
         type:
@@ -1416,7 +1337,6 @@ components:
           properties:
             create:
               $ref: "#/components/schemas/WaferProbeMachineCreateDto"
-
     CreateWaferProbeMachineReplyMessage:
       properties:
         type:
@@ -1427,7 +1347,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-
     #
     # WAFER PROBE MACHINES :: UPDATE
     #
@@ -1447,7 +1366,6 @@ components:
               description: WaferProbeMachine Id
             update:
               $ref: "#/components/schemas/WaferProbeMachineUpdateDto"
-
     UpdateWaferProbeMachineReplyMessage:
       properties:
         type:
@@ -1458,7 +1376,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-
     #
     # WAFER PROBE MACHINES :: UPDATE :: LOADED WAFER
     #
@@ -1469,7 +1386,6 @@ components:
           default: 'UpdateWpMachineLoadedWafer'
         data:
           $ref: "#/components/schemas/WpMachineLoadedWaferUpdateDto"
-
     UpdateWpMachineLoadedWaferReplyMessage:
       properties:
         type:
@@ -1480,7 +1396,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-
     #
     # WAFER PROBE MACHINES :: UPDATE :: INSTALLED PROBE CARD
     #
@@ -1491,7 +1406,6 @@ components:
           default: 'UpdateWpMachineInstalledProbeCard'
         data:
           $ref: "#/components/schemas/WpMachineInstalledProbeCardUpdateDto"
-
     UpdateWpMachineInstalledProbeCardReplyMessage:
       properties:
         type:
@@ -1502,7 +1416,6 @@ components:
           properties:
             entity:
               $ref: '#/components/schemas/WaferProbeMachineDto'
-
     #
     # WAFER PROBE PROJECTS :: LIST
     #
@@ -1522,7 +1435,6 @@ components:
                   description: WaferProbeProjects ids array. If array is empty / undefined => all WaferProbeProjects will be returned.
                   items:
                     type: number
-
     GetAllWaferProbeProjectsReplyMessage:
       properties:
         type:
@@ -1535,7 +1447,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/WaferProbeProjectDto'
-
     #
     # WAFER PROBE PROJECTS :: CREATE
     #
@@ -1549,7 +1460,6 @@ components:
           properties:
             create:
               $ref: "#/components/schemas/WaferProbeProjectCreateDto"
-
     CreateWaferProbeProjectReplyMessage:
       properties:
         type:
@@ -1579,7 +1489,6 @@ components:
                   description: ProbeCard ids array. If array is empty / undefined => all ProbeCards will be returned.
                   items:
                     type: number
-
     GetAllProbeCardsReplyMessage:
       properties:
         type:
@@ -1615,7 +1524,6 @@ components:
           type: number
         technology:
           type: number
-
     WaferTypeMapDto:
       type: object
       required:
@@ -1624,7 +1532,6 @@ components:
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
-
     WaferTypeCreateDto:
       type: object
       required:
@@ -1645,7 +1552,6 @@ components:
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
-
     WaferDto:
       type: object
       required:
@@ -1674,7 +1580,6 @@ components:
         productionDate:
           type: string
           description: Date only in format `2025-06-03`
-
     WaferCreateDto:
       type: object
       required:
@@ -1700,7 +1605,6 @@ components:
         productionDate:
           type: string
           nullable: true
-
     WaferUpdateDto:
       type: object
       properties:
@@ -1713,7 +1617,6 @@ components:
         productionDate:
           type: string
           nullable: true
-
     WaferUpdateLocationDto:
       type: object
       required:
@@ -1735,7 +1638,6 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
-
     WaferLocationHistoryRecordDto:
       type: object
       required:
@@ -1757,7 +1659,6 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
-
     AsicDto:
       type: object
       required:
@@ -1783,7 +1684,6 @@ components:
           type: string
         quality:
           type: string
-
     AsicCreateDto:
       type: object
       required:
@@ -1803,7 +1703,6 @@ components:
           type: string
         quality:
           type: string
-
     ChipDto:
       type: object
       required:
@@ -1817,7 +1716,6 @@ components:
           type: string
         generalLocation:
           type: string
-
     ChipCreateDto:
       type: object
       required:
@@ -1831,7 +1729,6 @@ components:
           type: number
         generalLocation:
           type: string
-          
     ManyChipsCreateDto:
       type: object
       required:
@@ -1842,7 +1739,6 @@ components:
           type: string
         asicId:
           type: number
-
     ChipUpdateLocationDto:
       type: object
       required:
@@ -1864,7 +1760,6 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
-
     ChipLocationHistoryRecordDto:
       type: object
       required:
@@ -1886,7 +1781,6 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
-
     WaferProbeMachineDto:
       type: object
       required:
@@ -1929,7 +1823,6 @@ components:
         installedProbeCardId:
           type: number
           nullable: true
-
     WaferProbeMachineCreateDto:
       type: object
       required:
@@ -1961,7 +1854,6 @@ components:
           type: string
         vendor:
           type: string
-
     WaferProbeMachineUpdateDto:
       type: object
       required:
@@ -1984,7 +1876,6 @@ components:
           type: string
         swVersion:
           type: string
-
     WpMachineLoadedWaferUpdateDto:
       type: object
       required:
@@ -1996,7 +1887,6 @@ components:
         loadedWaferId:
           type: number
           nullable: true
-
     WpMachineInstalledProbeCardUpdateDto:
       type: object
       required:
@@ -2008,7 +1898,6 @@ components:
         installedProbeCardId:
           type: number
           nullable: true
-
     WaferProbeProjectDto:
       type: object
       required:
@@ -2041,7 +1930,6 @@ components:
         local2GlobalMap:
           type: string
           description: Stringified JSON in the correct format.
-
     WaferProbeProjectCreateDto:
       type: object
       required:
@@ -2071,7 +1959,6 @@ components:
         local2GlobalMap:
           type: string
           description: Stringified JSON in the correct format.
-
     ProbeCardDto:
       type: object
       required:
@@ -2109,7 +1996,6 @@ components:
           type: array
           items:
             type: string
-
     SvtEnumName:
       type: string
       enum:
