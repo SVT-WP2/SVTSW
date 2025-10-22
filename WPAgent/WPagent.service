@@ -1,0 +1,18 @@
+[Unit]
+Description=Wafer Prober agent
+Requires=kafka.service
+
+[Service]
+Type=simple
+User=scaregar #root
+
+WorkingDirectory=/data/scaregar/SVTSW/WPAgent
+ExecStart=/usr/bin/python3.12 /data/scaregar/SVTSW/WPAgent/main.py listen
+
+Restart=always
+TimeoutStartSec=2
+RestartSec=2
+LimitMEMLock=infinity
+
+[Install]
+WantedBy=default.target
