@@ -31,6 +31,8 @@ namespace SvtDbAgent
 
    private:
     void createAllRequest() final {}
+    virtual void getAllEntries(const SvtDbAgentMessage &,
+                               SvtDbAgentReplyMsg &) final {};
   };
 
   class SvtDbWaferTypeImageDto : public SvtDbBaseDto
@@ -58,7 +60,7 @@ namespace SvtDbAgent
     friend class SvtDbWaferDto;
 
    private:
-    SvtDbWaferTypeMapDto *waferMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
+    SvtDbWaferTypeMapDto *waferTypeMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
     SvtDbWaferTypeImageDto *waferTypeimageDto = Singleton<SvtDbWaferTypeImageDto>::instance();
 
     virtual void createAllRequest() final;

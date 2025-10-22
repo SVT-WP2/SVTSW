@@ -27,9 +27,9 @@ namespace SvtDbAgent
                        SvtDbAgentReplyMsg &replyMsg) final;
 
     void createAllRequest() final;
-    void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
-                               SvtDbAgentReplyMsg &msgReply,
-                               int totalCount = -1) final;
+    void createReplyMsg(const std::vector<SvtDbEntry> &entries,
+                        SvtDbAgentReplyMsg &msgReply,
+                        int totalCount = -1) final;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_TYPE_DTO_H

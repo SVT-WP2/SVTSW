@@ -19,32 +19,89 @@
 #include <vector>
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::addRequest(
-    std::string_view reqName,
-    std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)> fun)
+void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
+                                             SvtDbAgentReplyMsg &replyMsg)
 {
-  if (request_map.find(reqName) == request_map.end())
+  const auto &j_data = msg.getPayload()["data"];
+  SvtDbFilters filters;
+  parseJsonFilters(j_data, filters);
+
+  std::vector<SvtDbAgent::SvtDbEntry> entries;
+  bool tableWithId = std::find(getColNames().begin(), getColNames().end(),
+                               "id") != getColNames().end();
+  bool result = tableWithId ? getAllEntriesFromDB(entries, filters, "id", false)
+                            : getAllEntriesFromDB(entries, filters);
+
+  if (result)
   {
-    request_map[reqName] = fun;
-  }
-  else
-  {
-    getLogger()->logError("Request " + std::string(reqName) +
-                          " already exist in request list.");
+    createReplyMsg(entries, replyMsg);
   }
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
-                                                 const SvtDbAgentMessage &msg,
-                                                 SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
+                                           SvtDbAgentReplyMsg &replyMsg)
 {
-  if (request_map.find(reqName) != request_map.end())
+  const auto &msgData = msg.getPayload()["data"];
+  if (!msgData.contains("create"))
   {
-    request_map[reqName](msg, replyMsg);
-    return true;
+    throw std::runtime_error("Object item create was found");
   }
-  return false;
+
+  auto &entry_j = msgData["create"];
+  SvtDbEntry entry;
+
+  parseJsonData(entry_j, entry);
+
+  //! create entry in DB
+  if (!createEntryInDB(entry))
+  {
+    throw std::runtime_error("Entry was not created in " + getTableName());
+    return;
+  }
+
+  const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
+  getEntryWithId(entry, newEntryId);
+  createReplyMsg(entry, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
+                                           SvtDbAgentReplyMsg &replyMsg)
+{
+  const auto &msgData = msg.getPayload()["data"];
+  if (!msgData.contains("id"))
+  {
+    throw std::runtime_error("Object item id was found");
+  }
+  if (!msgData.contains("update"))
+  {
+    throw std::runtime_error("Object item update was found");
+  }
+
+  const auto &Id = msgData["id"];
+  const auto &entry_j = msgData["update"];
+  SvtDbAgent::SvtDbEntry entry;
+
+  for (const auto &[key, value] : entry_j.items())
+  {
+    entry.values.insert({key, value});
+  }
+
+  if (!SvtDbInterface::checkIdExist(getTableName(), Id))
+  {
+    std::ostringstream ss("");
+    ss << "Object with id " << Id << " does not found.";
+    throw std::runtime_error(ss.str());
+  }
+
+  if (!updateEntryInDB(Id, entry))
+  {
+    throw std::runtime_error("Entry was not updated");
+  }
+
+  getEntryWithId(entry, Id);
+  createReplyMsg(entry, replyMsg);
 }
 
 //========================================================================+
@@ -203,6 +260,80 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
+    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
+    int totalCount)
+{
+  try
+  {
+    nlohmann::ordered_json data;
+    nlohmann::ordered_json items = nlohmann::json::array();
+    for (const auto &entry : entries)
+    {
+      nlohmann::ordered_json entry_j;
+      for (const auto &item : entry.values)
+      {
+        entry_j[item.first] = item.second;
+      }
+      items.push_back(entry_j);
+    }
+    data["items"] = items;
+    if (totalCount >= 0)
+    {
+      data["totalCount"] = totalCount;
+    }
+    msgReply.setData(data);
+    msgReply.setStatus(
+        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
+    msgReply.setError(0, "");
+  }
+  catch (const std::exception &e)
+  {
+    throw e;
+    return;
+  }
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
+    const SvtDbEntry &entry, SvtDbAgentReplyMsg &msgReply)
+{
+  try
+  {
+    nlohmann::ordered_json data;
+    nlohmann::ordered_json entry_j;
+    for (const auto &item : entry.values)
+    {
+      entry_j[item.first] = item.second;
+    }
+
+    data["entity"] = entry_j;
+    msgReply.setData(data);
+    msgReply.setStatus(
+        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
+    msgReply.setError(0, "");
+  }
+  catch (const std::exception &e)
+  {
+    throw e;
+    return;
+  }
+}
+
+//========================================================================+
+bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
+                                                 const SvtDbAgentMessage &msg,
+                                                 SvtDbAgentReplyMsg &replyMsg)
+{
+  if (request_map.find(reqName) != request_map.end())
+  {
+    request_map[reqName](msg, replyMsg);
+    return true;
+  }
+  return false;
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
                                              SvtDbEntry &entry)
 {
@@ -249,148 +380,17 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::getAllEntriesReplyMsg(
-    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
-    int totalCount)
+void SvtDbAgent::SvtDbBaseDto::addRequest(
+    std::string_view reqName,
+    std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)> fun)
 {
-  try
+  if (request_map.find(reqName) == request_map.end())
   {
-    nlohmann::ordered_json data;
-    nlohmann::ordered_json items = nlohmann::json::array();
-    for (const auto &entry : entries)
-    {
-      nlohmann::ordered_json entry_j;
-      for (const auto &item : entry.values)
-      {
-        entry_j[item.first] = item.second;
-      }
-      items.push_back(entry_j);
-    }
-    data["items"] = items;
-    if (totalCount >= 0)
-    {
-      data["totalCount"] = totalCount;
-    }
-    msgReply.setData(data);
-    msgReply.setStatus(
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
-    msgReply.setError(0, "");
+    request_map[reqName] = fun;
   }
-  catch (const std::exception &e)
+  else
   {
-    throw e;
-    return;
-  }
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
-                                             SvtDbAgentReplyMsg &replyMsg)
-{
-  const auto &j_data = msg.getPayload()["data"];
-  SvtDbFilters filters;
-  parseJsonFilters(j_data, filters);
-
-  std::vector<SvtDbAgent::SvtDbEntry> entries;
-  bool tableWithId = std::find(getColNames().begin(), getColNames().end(),
-                               "id") != getColNames().end();
-  bool result = tableWithId ? getAllEntriesFromDB(entries, filters, "id", false)
-                            : getAllEntriesFromDB(entries, filters);
-
-  if (result)
-  {
-    getAllEntriesReplyMsg(entries, replyMsg);
-  }
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
-                                           SvtDbAgentReplyMsg &replyMsg)
-{
-  const auto &msgData = msg.getPayload()["data"];
-  if (!msgData.contains("create"))
-  {
-    throw std::runtime_error("Object item create was found");
-  }
-
-  auto &entry_j = msgData["create"];
-  SvtDbEntry entry;
-
-  parseJsonData(entry_j, entry);
-
-  //! create entry in DB
-  if (!createEntryInDB(entry))
-  {
-    throw std::runtime_error("Entry was not created in " + getTableName());
-    return;
-  }
-
-  const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
-  getEntryWithId(entry, newEntryId);
-  createEntryReplyMsg(entry, replyMsg);
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
-                                           SvtDbAgentReplyMsg &replyMsg)
-{
-  const auto &msgData = msg.getPayload()["data"];
-  if (!msgData.contains("id"))
-  {
-    throw std::runtime_error("Object item id was found");
-  }
-  if (!msgData.contains("update"))
-  {
-    throw std::runtime_error("Object item update was found");
-  }
-
-  const auto &Id = msgData["id"];
-  const auto &entry_j = msgData["update"];
-  SvtDbAgent::SvtDbEntry entry;
-
-  for (const auto &[key, value] : entry_j.items())
-  {
-    entry.values.insert({key, value});
-  }
-
-  if (!SvtDbInterface::checkIdExist(getTableName(), Id))
-  {
-    std::ostringstream ss("");
-    ss << "Object with id " << Id << " does not found.";
-    throw std::runtime_error(ss.str());
-  }
-
-  if (!updateEntryInDB(Id, entry))
-  {
-    throw std::runtime_error("Entry was not updated");
-  }
-
-  getEntryWithId(entry, Id);
-  createEntryReplyMsg(entry, replyMsg);
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntryReplyMsg(
-    const SvtDbEntry &entry, SvtDbAgentReplyMsg &msgReply)
-{
-  try
-  {
-    nlohmann::ordered_json data;
-    nlohmann::ordered_json entry_j;
-    for (const auto &item : entry.values)
-    {
-      entry_j[item.first] = item.second;
-    }
-
-    data["entity"] = entry_j;
-    msgReply.setData(data);
-    msgReply.setStatus(
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
-    msgReply.setError(0, "");
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-    return;
+    getLogger()->logError("Request " + std::string(reqName) +
+                          " already exist in request list.");
   }
 }

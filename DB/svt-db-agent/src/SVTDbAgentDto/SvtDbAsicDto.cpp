@@ -58,7 +58,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
   {
     auto empty_list = std::vector<SvtDbEntry>();
     auto &asics = entries.size() <= 5000 ? entries : empty_list;
-    getAllEntriesReplyMsg(asics, replyMsg, asics.size());
+    createReplyMsg(asics, replyMsg, asics.size());
   }
   else
   {
@@ -83,18 +83,18 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
         entries.begin() + pager_offset +
         ((tail_size < pager_limit) ? tail_size : pager_limit);
     std::vector<SvtDbEntry> asics(first, last);
-    getAllEntriesReplyMsg(asics, replyMsg, entries.size());
+    createReplyMsg(asics, replyMsg, entries.size());
   }
   return;
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbAsicDto::getAllEntriesReplyMsg(
+void SvtDbAgent::SvtDbAsicDto::createReplyMsg(
     const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
     int totalCount)
 {
   getLogger()->logInfo("Creating message with " +
                        std::to_string(entries.size()) + " out of " +
                        std::to_string(totalCount));
-  this->SvtDbBaseDto::getAllEntriesReplyMsg(entries, msgReply, totalCount);
+  this->SvtDbBaseDto::createReplyMsg(entries, msgReply, totalCount);
 }
