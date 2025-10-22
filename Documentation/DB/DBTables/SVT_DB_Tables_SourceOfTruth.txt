@@ -166,6 +166,28 @@ Table main.ChipLocation {
   note text
 }
 
+Table main.EquipmentType
+{
+  id integer [primary key]
+  equitmentType varchar(50) [unique, not null]
+}
+
+Table main.Equipment
+{
+  id integer [primary key]
+  equipmentTypeId integer [ ref: >  main.EquipmentType.id]
+  generalLocation main.wpGeneralLocation [not null]
+  description JSON [not null]
+}
+
+Table main.EquipmentLocation{
+  equiptmentId integer [ref: > main.Equipment.id]
+  generalLocation main.wpGeneralLocation
+  date date [default: `CURRENT_DATE`]
+  username varchar(50)
+  note text
+}
+
 Table main.SLDO{
   id integer [primary key, increment]
   chipId integer [ref: > main.Chip.id]
@@ -176,13 +198,6 @@ Table main.TestSetup {
   id integer [primary key]
   name main.testSetupType
   generalLocation main.wpGeneralLocation
-}
-
-Table main.TestSetupEquipment
-{
-  testSetupId integer [ref: > main.TestSetup.id]
-  equipment main.testEquipments
-  equipmentDetails JSON
 }
 
 Table main.SLDOTestConfiguration {
