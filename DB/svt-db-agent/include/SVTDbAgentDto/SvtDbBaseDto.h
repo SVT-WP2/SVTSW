@@ -59,11 +59,11 @@ namespace SvtDbAgent
     virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
 
     //! Reply Message
-    virtual void getAllEntriesReplyMsg(const std::vector<SvtDbEntry> &entries,
-                                       SvtDbAgentReplyMsg &msgReply,
-                                       int totalCount = -1);
-    virtual void createEntryReplyMsg(const SvtDbEntry &entry,
-                                     SvtDbAgentReplyMsg &msgReply);
+    virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
+                                SvtDbAgentReplyMsg &msgReply,
+                                int totalCount = -1);
+    virtual void createReplyMsg(const SvtDbEntry &entry,
+                                SvtDbAgentReplyMsg &msgReply);
 
     //! Getters
     const std::string &getTableName() { return mTableName; }
@@ -113,7 +113,7 @@ namespace SvtDbAgent
       std::vector<SvtDbAgent::SvtDbEntry> entries;
       if (locDto->getAllEntriesFromDB(entries, filters))
       {
-        locDto->getAllEntriesReplyMsg(entries, replyMsg);
+        locDto->createReplyMsg(entries, replyMsg);
       }
     }
     catch (const std::exception &e)

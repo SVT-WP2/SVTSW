@@ -91,7 +91,31 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtDbAgent::SvtDbAgentMess
 //========================================================================+
 void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtDbAgent::SvtDbAgentMessage &msg, SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
 {
-  waferMapDto->getAllEntries(msg, replyMsg);
+  const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
+  if (waferTypeId < 0)
+  {
+    THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
+    return;
+  }
+  std::vector<SvtDbEntry> entries;
+  SvtDbFilters filters;
+  filters.mFilters.values.insert({"waferTypeId", waferTypeId});
+  waferTypeMapDto->getAllEntriesFromDB(entries, filters);
+
+  if (entries.size())
+  {
+    if (entries.size() != 1)
+    {
+      getLogger()->logWarning("More than one wafer type map found for wafertypeId: " + std::to_string(waferTypeId));
+      getLogger()->logWarning("Returning the first only");
+    }
+    createReplyMsg(entries.at(0), replyMsg);
+  }
+  else
+  {
+    THROW_RUNTIME_ERROR("Failed to access Wafer location records");
+    return;
+  }
 }
 
 //========================================================================+
@@ -100,7 +124,7 @@ bool SvtDbAgent::SvtDbWaferTypeDto::createWaferMap(const int waferTypeId, const 
   SvtDbEntry waferMap;
   waferMap.values.insert({"waferTypeId", waferTypeId});
   waferMap.values.insert({"waferMap", waferMap_s});
-  return waferMapDto->createEntryInDB(waferMap);
+  return waferTypeMapDto->createEntryInDB(waferMap);
 }
 
 //========================================================================+

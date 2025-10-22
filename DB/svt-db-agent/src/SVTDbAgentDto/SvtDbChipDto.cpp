@@ -111,7 +111,7 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   }
 
   getLogger()->logInfo("Creating reply SvtDbAgentMessage");
-  createEntryReplyMsg(chipEntry, replyMsg);
+  createReplyMsg(chipEntry, replyMsg);
 }
 
 //========================================================================+
@@ -153,7 +153,7 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
         {"generalLocation", entries.at(0).values["generalLocation"]});
     updateEntryInDB(chipId, chipEntry);
     getEntryWithId(chipEntry, chipId);
-    createEntryReplyMsg(chipEntry, replyMsg);
+    createReplyMsg(chipEntry, replyMsg);
   }
   else
   {

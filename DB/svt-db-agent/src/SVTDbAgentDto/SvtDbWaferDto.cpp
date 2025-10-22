@@ -108,7 +108,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   getLogger()->logInfo("Creating all Asics in DB");
   createAllAsics(waferEntry);
   getLogger()->logInfo("Creating reply SvtDbAgentMessage");
-  createEntryReplyMsg(waferEntry, replyMsg);
+  createReplyMsg(waferEntry, replyMsg);
 }
 
 //========================================================================+
@@ -270,7 +270,7 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
         {"generalLocation", entries.at(0).values["generalLocation"]});
     updateEntryInDB(waferId, waferEntry);
     getEntryWithId(waferEntry, waferId);
-    createEntryReplyMsg(waferEntry, replyMsg);
+    createReplyMsg(waferEntry, replyMsg);
   }
   else
   {
