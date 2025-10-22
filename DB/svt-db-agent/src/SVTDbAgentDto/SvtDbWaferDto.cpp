@@ -66,7 +66,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("Non object create was found");
+    THROW_RUNTIME_ERROR("Non object create was found");
   }
 
   auto &entry_j = msgData["create"];
@@ -80,14 +80,14 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
 
   if (!createEntryInDB(waferEntry))
   {
-    throw std::runtime_error("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
     return;
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
   if (newEntryId != currMaxEntryId + 1)
   {
-    throw std::runtime_error("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
     return;
   }
   getEntryWithId(waferEntry, newEntryId);
@@ -101,7 +101,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   waferLoc.values.insert({"note", "Location at creation"});
   if (!waferLocDto->createEntryInDB(waferLoc))
   {
-    throw std::runtime_error("ERROR: Could not create wafer location entry");
+    THROW_RUNTIME_ERROR("ERROR: Could not create wafer location entry");
     return;
   }
 
@@ -162,7 +162,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
            << ", group col: " << mapG_col_index;
         getLogger()->logError(ss.str());
 
-        throw std::runtime_error("Wrong array found");
+        THROW_RUNTIME_ERROR("Wrong array found");
       }
       //! create asics from existingAsics
       for (const auto &asic_index : existingAsics)
@@ -198,7 +198,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
           ss.str("");
           ss.clear();
           ss << "Wrong Asic quality property for asic  " << asic_index;
-          throw std::runtime_error(ss.str());
+          THROW_RUNTIME_ERROR(ss.str());
         }
 
         std::string asic_familytype;
@@ -211,7 +211,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
           ss << "Error creating Asic. MapGroups: " << g_row_item.second
              << ", group col: " << mapG_col_index << std::endl;
           getLogger()->logError(ss.str());
-          throw std::runtime_error("invalid familyType");
+          THROW_RUNTIME_ERROR("invalid familyType");
         }
 
         SvtDbEntry asic;
@@ -238,7 +238,7 @@ void SvtDbAgent::SvtDbWaferDto::updateEntry(
 {
   if (msg.getPayload()["data"]["update"].contains("generalLocation"))
   {
-    throw std::runtime_error(
+    THROW_RUNTIME_ERROR(
         "Failed to update entry. update location is not "
         "allowed using generic update request");
     return;
@@ -274,7 +274,7 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
   }
   else
   {
-    throw std::runtime_error("Failed to access Wafer location records");
+    THROW_RUNTIME_ERROR("Failed to access Wafer location records");
     return;
   }
 }

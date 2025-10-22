@@ -45,7 +45,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
-    throw std::runtime_error("Object item create was found");
+    THROW_RUNTIME_ERROR("Object item create was found");
   }
 
   auto &entry_j = msgData["create"];
@@ -56,7 +56,7 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
   //! create entry in DB
   if (!createEntryInDB(entry))
   {
-    throw std::runtime_error("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
     return;
   }
 
@@ -72,11 +72,11 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("id"))
   {
-    throw std::runtime_error("Object item id was found");
+    THROW_RUNTIME_ERROR("Object item id was found");
   }
   if (!msgData.contains("update"))
   {
-    throw std::runtime_error("Object item update was found");
+    THROW_RUNTIME_ERROR("Object item update was found");
   }
 
   const auto &Id = msgData["id"];
@@ -92,12 +92,12 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
   {
     std::ostringstream ss("");
     ss << "Object with id " << Id << " does not found.";
-    throw std::runtime_error(ss.str());
+    THROW_RUNTIME_ERROR(ss.str());
   }
 
   if (!updateEntryInDB(Id, entry))
   {
-    throw std::runtime_error("Entry was not updated");
+    THROW_RUNTIME_ERROR("Entry was not updated");
   }
 
   getEntryWithId(entry, Id);
@@ -170,7 +170,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     {
       if (filters.ids.size() != entries.size())
       {
-        throw std::runtime_error(
+        THROW_RUNTIME_ERROR(
             "unmatching returned elements and requested filter size");
       }
     }
