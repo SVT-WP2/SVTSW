@@ -7,7 +7,7 @@ Type=simple
 User=root
 
 WorkingDirectory=/data/scaregar/SVTSW/WPAgent
-ExecStart=/usr/bin/python3.12 /data/scaregar/SVTSW/WPAgent/main.py listen
+ExecStart=/usr/local/bin/python3.12 /data/scaregar/SVTSW/WPAgent/main.py listen
 
 Restart=always
 TimeoutStartSec=2
