@@ -385,12 +385,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
 
-  /svt.db-agent.request/CreateChips:
+  /svt.db-agent.request/CreateChip:
     post:
       tags:
         - Chips
-      summary: Create chips
-      description: Returns created chip array in the reply message
+      summary: Create chip
+      description: Returns the newly created chip in the reply message
       requestBody:
         content:
           application/json:
@@ -398,7 +398,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateChipsMessage'
+                - $ref: '#/components/schemas/CreateChipMessage'
 
         required: true
       responses:
@@ -410,7 +410,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateChipsReplyMessage'
+                  - $ref: '#/components/schemas/CreateChipReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -418,11 +418,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
 
-  /svt.db-agent.request/CreateChipsFromFile:
+  /svt.db-agent.request/CreateManyChips:
     post:
       tags:
         - Chips
-      summary: Create chips from a json file
+      summary: Create many chips
       description: Returns created chip array in the reply message
       requestBody:
         content:
@@ -431,7 +431,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateChipsFromFileMessage'
+                - $ref: '#/components/schemas/CreateManyChipsMessage'
 
         required: true
       responses:
@@ -443,7 +443,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateChipsFromFileReplyMessage'
+                  - $ref: '#/components/schemas/CreateManyChipsReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -1260,11 +1260,36 @@ components:
     #
     # CHIPS :: CREATE
     #
-    CreateChipsMessage:
+    CreateChipMessage:
       properties:
         type:
           type: string
-          default: 'CreateChips'
+          default: 'CreateChip'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: '#/components/schemas/ChipCreateDto'
+
+    CreateChipReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateChipReply'
+        data:
+          type: object
+          properties:
+            entity:
+                $ref: '#/components/schemas/ChipDto'
+
+    #
+    # CHIPS :: CREATE MANY
+    #
+    CreateManyChipsMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateManyChips'
         data:
           type: object
           properties:
@@ -1279,47 +1304,13 @@ components:
                 items:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ChipCreateDto'
+                    $ref: '#/components/schemas/ManyChipsCreateDto'
 
-    CreateChipsReplyMessage:
+    CreateManyChipsReplyMessage:
       properties:
         type:
           type: string
-          default: 'CreateChipsReply'
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: '#/components/schemas/ChipDto'
-
-    #
-    # CHIPS :: CREATE FROM FILE
-    #
-    CreateChipsFromFileMessage:
-      properties:
-        type:
-          type: string
-          default: 'CreateChipsFromFile'
-        data:
-          type: object
-          properties:
-            create:
-              type: object
-              required:
-              - file
-              properties:
-                file:
-                  type: string
-                  description: Stringfied Json format
-
-
-    CreateChipsFromFileReplyMessage:
-      properties:
-        type:
-          type: string
-          default: 'CreateChipsFromFileReply'
+          default: 'CreateManyChipsReply'
         data:
           type: object
           properties:
@@ -1828,6 +1819,20 @@ components:
           type: string
 
     ChipCreateDto:
+      type: object
+      required:
+        - serialNumber
+        - asicId
+        - generalLocation
+      properties:
+        serialNumber:
+          type: string
+        asicId:
+          type: number
+        generalLocation:
+          type: string
+          
+    ManyChipsCreateDto:
       type: object
       required:
         - serialNumber
