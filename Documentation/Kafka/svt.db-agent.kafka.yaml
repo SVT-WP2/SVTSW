@@ -734,6 +734,192 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetAllEquipmentTypes:
+    post:
+      tags:
+        - Equipment Types
+      summary: Get All Equipment Types
+      description: Returns Equipment Types list in the reply message. Optional filter by Equipment Type Ids can be applied to return exact set of Equipment Types.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllEquipmentTypesMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllEquipmentTypesReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateEquipmentType:
+    post:
+      tags:
+        - Equipment Types
+      summary: Create EquipmentType
+      description: Returns the newly created EquipmentType in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateEquipmentTypeMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateEquipmentTypeReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetAllEquipments:
+    post:
+      tags:
+        - Equipments
+      summary: Get All Equipments
+      description: Returns Equipments list in the reply message. Optional filter by EquipmentIds can be applied to return exact set of Equipments.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetAllEquipmentsMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetAllEquipmentsReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateEquipment:
+    post:
+      tags:
+        - Equipments
+      summary: Create Equipment
+      description: Returns the newly created Equipment in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CreateEquipmentMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CreateEquipmentReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateEquipmentLocation:
+    post:
+      tags:
+        - Equipments
+      summary: Update Equipment Location
+      description: Returns updated Equipment in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UpdateEquipmentLocationMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UpdateEquipmentLocationReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetEquipmentLocationHistory:
+    post:
+      tags:
+        - Equipments
+      summary: Get Equipment Location History Records
+      description: Return list of location records for a wafer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetEquipmentLocationHistoryMessage'
+        required: true
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetEquipmentLocationHistoryReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -1502,6 +1688,162 @@ components:
               items:
                 $ref: '#/components/schemas/ProbeCardDto'
     #
+    # EQUIPMENT TYPES :: LIST
+    #
+    GetAllEquipmentTypesMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEquipmentTypes'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Equipment Type ids array. If array is empty / undefined => all wafers will be returned.
+                  items:
+                    type: number
+    GetAllEquipmentTypesReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEquipmentTypesReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/EquipmentTypeDto'
+    #
+    # EQUIPMENT TYPES :: CREATE
+    #
+    CreateEquipmentTypeMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateEquipmentType'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/EquipmentTypeCreateDto"
+    CreateEquipmentTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateEquipmentTypeReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/EquipmentTypeDto'
+    #
+    # EQUIPMENTS :: LIST
+    #
+    GetAllEquipmentsMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEquipments'
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: Equipment ids array. If array is empty / undefined => all equipments will be returned.
+                  items:
+                    type: number
+    GetAllEquipmentsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetAllEquipmentsReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/EquipmentDto'
+    #
+    # EQUIPMENTS :: CREATE
+    #
+    CreateEquipmentMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateEquipment'
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/EquipmentCreateDto"
+    CreateEquipmentReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'CreateEquipmentReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/EquipmentDto'
+    #
+    # EQUIPMENTS :: UPDATE LOCATION
+    #
+    UpdateEquipmentLocationMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateEquipmentLocation'
+        data:
+          $ref: "#/components/schemas/EquipmentUpdateLocationDto"
+    UpdateEquipmentLocationReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UpdateEquipmentLocationReply'
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: '#/components/schemas/EquipmentDto'
+    #
+    # EQUIPMENT LOCATION RECORDS
+    #
+    GetEquipmentLocationHistoryMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetEquipmentLocationHistory'
+        data:
+          type: object
+          required:
+            - waferId
+          properties:
+            waferId:
+              type: number
+              description: Equipment id
+    GetEquipmentLocationHistoryReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetEquipmentLocationHistoryReply'
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/EquipmentLocationHistoryRecordDto'
+    #
     # DTOs
     #
 
@@ -1996,6 +2338,96 @@ components:
           type: array
           items:
             type: string
+    EquipmentTypeDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+    EquipmentTypeCreateDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    EquipmentDto:
+      type: object
+      required:
+        - id
+        - equipmentTypeId
+        - generalLocation
+        - specification
+      properties:
+        id:
+          type: number
+        equipmentTypeId:
+          type: number
+        generalLocation:
+          type: string
+        specification:
+          type: "string"
+          description: Stringified JSON with equipment's description
+    EquipmentCreateDto:
+      type: object
+      required:
+        - equipmentTypeId
+        - generalLocation
+        - specification
+      properties:
+        equipmentTypeId:
+          type: number
+        generalLocation:
+          type: string
+        specification:
+          type: string
+          nullable: true
+    EquipmentUpdateLocationDto:
+      type: object
+      required:
+        - equipmentId
+        - generalLocation
+        - username
+        - note
+      properties:
+        equipmentId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
+    EquipmentLocationHistoryRecordDto:
+      type: object
+      required:
+        - equipmentId
+        - generalLocation
+        - username
+        - note
+      properties:
+        equipmentId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
     SvtEnumName:
       type: string
       enum:
