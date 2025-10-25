@@ -400,7 +400,7 @@ CREATE TABLE "main"."Equipment" (
   "id" integer PRIMARY KEY,
   "equipmentTypeId" integer,
   "generalLocation" main."wpGeneralLocation" NOT NULL,
-  "description" JSON NOT NULL
+  "specification" JSON NOT NULL
 );
 
 CREATE TABLE "main"."EquipmentLocation" (
