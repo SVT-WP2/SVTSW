@@ -177,7 +177,7 @@ Table main.Equipment
   id integer [primary key]
   equipmentTypeId integer [ ref: >  main.EquipmentType.id]
   generalLocation main.wpGeneralLocation [not null]
-  description JSON [not null]
+  specification JSON [not null]
 }
 
 Table main.EquipmentLocation{
