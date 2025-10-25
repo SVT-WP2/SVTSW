@@ -169,7 +169,7 @@ Table main.ChipLocation {
 Table main.EquipmentType
 {
   id integer [primary key]
-  equitmentType varchar(50) [unique, not null]
+  name varchar(50) [unique, not null]
 }
 
 Table main.Equipment
