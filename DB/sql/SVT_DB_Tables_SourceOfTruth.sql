@@ -393,7 +393,7 @@ CREATE TABLE "main"."ChipLocation" (
 
 CREATE TABLE "main"."EquipmentType" (
   "id" integer PRIMARY KEY,
-  "equitmentType" varchar(50) UNIQUE NOT NULL
+  "name" varchar(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE "main"."Equipment" (
