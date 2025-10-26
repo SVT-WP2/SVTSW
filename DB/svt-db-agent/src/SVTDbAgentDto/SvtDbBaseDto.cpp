@@ -10,6 +10,7 @@
 #include "SVTDb/sqlmapi.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtLogger.h"
 
 #include <algorithm>
 #include <functional>
@@ -364,16 +365,19 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
   if (j_data.contains("filter"))
   {
     const auto filterData = j_data["filter"];
-    if (filterData.contains("ids"))
+    for (auto it = filterData.cbegin(); it != filterData.cend(); ++it)
     {
-      filters.ids = filterData["ids"].get<std::vector<int>>();
-    }
-    for (const auto &colName : getColNames())
-    {
-      if (filterData.contains(colName))
+      if (it.key() == "ids")
       {
-        auto &value = filterData[colName];
-        filters.mFilters.values.insert({colName, value});
+        filters.ids = it->get<std::vector<int>>();
+      }
+      else if (std::find(getColNames().begin(), getColNames().cend(), it.key()) != getColNames().end())
+      {
+        filters.mFilters.values.insert({it.key(), it.value()});
+      }
+      else
+      {
+        THROW_RUNTIME_ERROR("Error: " + it.key() + " is not an allowed filter.");
       }
     }
   }
