@@ -48,8 +48,10 @@ namespace SvtDbAgent
 
    private:
     //! request DTO funcions
-    void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                     SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void createManyEntries(const SvtDbAgent::SvtDbAgentMessage &msg,
+                                   SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+    virtual void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
+                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
     virtual void updateEntry(const SvtDbAgentMessage &msg,
                              SvtDbAgentReplyMsg &replyMsg) final;
     virtual void
@@ -58,6 +60,7 @@ namespace SvtDbAgent
     virtual void getChipLocationHistory(const SvtDbAgentMessage &,
                                         SvtDbAgentReplyMsg &) final;
 
+    bool createChip(const nlohmann::json &, SvtDbEntry &);
     void createAllRequest() final;
 
     SvtDbChipLocationDto *chipLocDto =

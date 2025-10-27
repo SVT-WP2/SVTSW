@@ -6,7 +6,6 @@
  */
 
 #include <atomic>
-#include <stdexcept>
 #include <string>
 
 #include "nlohmann/json.hpp"

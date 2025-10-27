@@ -11,6 +11,7 @@
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 #include "SVTUtilities/SvtLogger.h"
+#include "nlohmann/json_fwd.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -23,9 +24,15 @@
 void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
                                              SvtDbAgentReplyMsg &replyMsg)
 {
-  const auto &j_data = msg.getPayload()["data"];
+  getAllEntries(msg.getPayload()["data"], replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
+                                             SvtDbAgentReplyMsg &replyMsg)
+{
   SvtDbFilters filters;
-  parseJsonFilters(j_data, filters);
+  parseJsonFilters(data_j, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   bool tableWithId = std::find(getColNames().begin(), getColNames().end(),
@@ -48,11 +55,15 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
   {
     THROW_RUNTIME_ERROR("Object item create was found");
   }
+  createEntry(msgData["create"], replyMsg);
+}
 
-  auto &entry_j = msgData["create"];
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::createEntry(const nlohmann::json &data_j,
+                                           SvtDbAgentReplyMsg &replyMsg)
+{
   SvtDbEntry entry;
-
-  parseJsonData(entry_j, entry);
+  parseJsonData(data_j, entry);
 
   //! create entry in DB
   if (!createEntryInDB(entry))
@@ -80,28 +91,32 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
     THROW_RUNTIME_ERROR("Object item update was found");
   }
 
-  const auto &Id = msgData["id"];
-  const auto &entry_j = msgData["update"];
-  SvtDbAgent::SvtDbEntry entry;
+  updateEntry(msgData["id"], msgData["update"], replyMsg);
+}
 
-  for (const auto &[key, value] : entry_j.items())
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::updateEntry(const int id, const nlohmann::json &data_j,
+                                           SvtDbAgentReplyMsg &replyMsg)
+{
+  SvtDbAgent::SvtDbEntry entry;
+  for (const auto &[key, value] : data_j.items())
   {
     entry.values.insert({key, value});
   }
 
-  if (!SvtDbInterface::checkIdExist(getTableName(), Id))
+  if (!SvtDbInterface::checkIdExist(getTableName(), id))
   {
     std::ostringstream ss("");
-    ss << "Object with id " << Id << " does not found.";
+    ss << "Object with id " << id << " does not found.";
     THROW_RUNTIME_ERROR(ss.str());
   }
 
-  if (!updateEntryInDB(Id, entry))
+  if (!updateEntryInDB(id, entry))
   {
     THROW_RUNTIME_ERROR("Entry was not updated");
   }
 
-  getEntryWithId(entry, Id);
+  getEntryWithId(entry, id);
   createReplyMsg(entry, replyMsg);
 }
 

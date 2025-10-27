@@ -79,6 +79,13 @@ namespace SvtDbAgent
     void addColName(const std::string &name) { mColNames.push_back(name); }
     void setTableName(const std::string &tName) { mTableName = tName; }
 
+    virtual void getAllEntries(const nlohmann::json &data_j,
+                               SvtDbAgentReplyMsg &replyMsg);
+    virtual void createEntry(const nlohmann::json &data_j,
+                             SvtDbAgentReplyMsg &replyMsg);
+    virtual void updateEntry(const int id, const nlohmann::json &data_j,
+                             SvtDbAgentReplyMsg &replyMsg);
+
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
                                   SvtDbFilters &filters);
