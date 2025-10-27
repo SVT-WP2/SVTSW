@@ -11,6 +11,7 @@
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 #include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
+#include "nlohmann/json_fwd.hpp"
 
 #include <algorithm>
 #include <list>
@@ -19,6 +20,7 @@
 #include <string>
 #include <string_view>
 
+using bind_type = void (SvtDbAgent::SvtDbWaferTypeDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {
@@ -38,14 +40,14 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
 {
   //! SvtDbWaferTypeDto::GetAllWaferTypes
   addRequest("GetAllWaferTypes",
-             std::bind(&SvtDbWaferTypeDto::getAllEntries, this,
+             std::bind(static_cast<bind_type>(&SvtDbWaferTypeDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferTypeDto::CreateWaferType
   addRequest("CreateWaferType",
              std::bind(&SvtDbWaferTypeDto::createEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
   addRequest("getWaferMap",
-             std::bind(&SvtDbWaferTypeDto::getWaferMap, this, std::placeholders::_1, std::placeholders::_2));
+             std::bind(static_cast<bind_type>(&SvtDbWaferTypeDto::getWaferMap), this, std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
@@ -89,14 +91,8 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtDbAgent::SvtDbAgentMess
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtDbAgent::SvtDbAgentMessage &msg, SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbWaferTypeDto::getWaferMapEntry(const int waferTypeId, SvtDbEntry &entry)
 {
-  const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
-  if (waferTypeId < 0)
-  {
-    THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
-    return;
-  }
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
   filters.mFilters.values.insert({"waferTypeId", waferTypeId});
@@ -109,13 +105,42 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtDbAgent::SvtDbAgentMess
       getLogger()->logWarning("More than one wafer type map found for wafertypeId: " + std::to_string(waferTypeId));
       getLogger()->logWarning("Returning the first only");
     }
-    createReplyMsg(entries.at(0), replyMsg);
+    entry = entries.at(0);
   }
   else
   {
     THROW_RUNTIME_ERROR("Failed to access Wafer location records");
     return;
   }
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtDbAgent::SvtDbAgentMessage &msg, SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+{
+  const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
+  if (waferTypeId < 0)
+  {
+    THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
+    return;
+  }
+
+  SvtDbEntry waferMap;
+  getWaferMapEntry(waferTypeId, waferMap);
+  createReplyMsg(waferMap, replyMsg);
+}
+
+//========================================================================+
+const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const int waferTypeId)
+{
+  if (waferTypeId < 0)
+  {
+    THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
+    return "";
+  }
+
+  SvtDbEntry waferMap;
+  getWaferMapEntry(waferTypeId, waferMap);
+  return waferMap.values["waferMap"];
 }
 
 //========================================================================+

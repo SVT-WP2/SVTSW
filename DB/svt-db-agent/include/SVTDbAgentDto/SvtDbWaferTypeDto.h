@@ -9,8 +9,10 @@
  * */
 
 #include <string_view>
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbBaseDto.h"
+#include "nlohmann/json_fwd.hpp"
 
 namespace SvtDbAgent
 {
@@ -31,8 +33,6 @@ namespace SvtDbAgent
 
    private:
     void createAllRequest() final {}
-    virtual void getAllEntries(const SvtDbAgentMessage &,
-                               SvtDbAgentReplyMsg &) final {};
   };
 
   class SvtDbWaferTypeImageDto : public SvtDbBaseDto
@@ -58,6 +58,7 @@ namespace SvtDbAgent
     ~SvtDbWaferTypeDto() = default;
 
     friend class SvtDbWaferDto;
+    friend class SvtDbAsicDto;
 
    private:
     SvtDbWaferTypeMapDto *waferTypeMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
@@ -68,6 +69,8 @@ namespace SvtDbAgent
     //                            SvtDbEntry &entry) final;
     virtual void createEntry(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
     virtual void getWaferMap(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
+    virtual void getWaferMapEntry(const int waferTypeId, SvtDbEntry &entry);
+    virtual const std::string getWaferMap(const int waferTypeId);
 
     bool createWaferMap(const int waferTypeId, const std::string &);
     bool extractRange(const int g_size, const nlohmann::json &array_j,

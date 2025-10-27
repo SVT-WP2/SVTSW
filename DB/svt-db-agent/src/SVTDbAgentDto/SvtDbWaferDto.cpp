@@ -14,8 +14,9 @@
 #include "SVTUtilities/SvtJsonUtils.h"
 
 #include <sstream>
-#include <stdexcept>
+#include <string>
 
+using bind_type = void (SvtDbAgent::SvtDbWaferDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
 {
@@ -38,7 +39,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
 {
   //! SvtDbWaferDto::GetAllWafers
   addRequest("GetAllWafers",
-             std::bind(&SvtDbWaferDto::getAllEntries, this,
+             std::bind(static_cast<bind_type>(&SvtDbWaferDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferDto::CreateWafer
   addRequest("CreateWafer",
@@ -118,10 +119,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   int waferTypeId = wafer.values.at("waferTypeId").get<int>();
 
   SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
-  SvtDbEntry waferTypeEntry;
-  waferType->getEntryWithId(waferTypeEntry, waferTypeId);
 
-  std::string waferMap = waferTypeEntry.values["waferMap"].get<std::string>();
+  const auto waferMap = waferType->getWaferMap(waferTypeId);
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
 
   std::map<int, std::string> g_map_ordered;

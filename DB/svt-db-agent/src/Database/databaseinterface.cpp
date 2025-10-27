@@ -192,7 +192,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     }
 
     //! prepare statement
-    // logger.logInfo(query);
+    // logger->logInfo(query);
     mDBConnection->prepare(query_name, query);
     pqxx::prepped prepare_name{query_name};
     pqxx::result res{mDBWork->exec(prepare_name)};
