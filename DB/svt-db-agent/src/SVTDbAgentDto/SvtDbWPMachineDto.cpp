@@ -10,6 +10,7 @@
 #include <exception>
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
 
+using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
 {
@@ -36,15 +37,15 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
 {
   //! SvtDbWPMachineDto::GetAllWaferProbeMachines
   addRequest("GetAllWaferProbeMachines",
-             std::bind(&SvtDbWPMachineDto::getAllEntries, this,
+             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::CreateWaferProbeMachine
   addRequest("CreateWaferProbeMachine",
-             std::bind(&SvtDbWPMachineDto::createEntry, this,
+             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::createEntry), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::UpdateWaferProbeMachine
   addRequest("UpdateWaferProbeMachine",
-             std::bind(&SvtDbWPMachineDto::updateEntry, this,
+             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::updateEntry), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::UpdateWaferProbeMachine
   addRequest("UpdateWpMachineLoadedWafer",

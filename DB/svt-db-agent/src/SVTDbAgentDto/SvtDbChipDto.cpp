@@ -10,10 +10,13 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SVTUtilities/SvtLogger.h"
 #include "SVTUtilities/SvtUtilities.h"
+#include "nlohmann/json_fwd.hpp"
 
-#include <stdexcept>
+#include <string>
 
+using bind_type = void (SvtDbAgent::SvtDbChipDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
 {
@@ -31,11 +34,15 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 {
   //! SvtDbChipDto::GetAllChips
   addRequest("GetAllChips",
-             std::bind(&SvtDbChipDto::getAllEntries, this,
+             std::bind(static_cast<bind_type>(&SvtDbChipDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbChipDto::CreateChip
   addRequest("CreateChip",
              std::bind(&SvtDbChipDto::createEntry, this, std::placeholders::_1,
+                       std::placeholders::_2));
+  //! SvtDbChipDto::CreateManyChips
+  addRequest("CreateManyChips",
+             std::bind(&SvtDbChipDto::createManyEntries, this, std::placeholders::_1,
                        std::placeholders::_2));
   //! SvtDbChipDto::UpdateChip
   addRequest("UpdateChip",
@@ -62,17 +69,29 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
     THROW_RUNTIME_ERROR("Non object create was found");
   }
 
-  auto entry_j = msgData["create"];
-  if (!entry_j.contains("asicId"))
+  SvtDbAgent::SvtDbEntry chipEntry;
+  if (!createChip(msgData["create"], chipEntry))
   {
-    THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
+    THROW_RUNTIME_ERROR("Error creating chip entry");
     return;
   }
-  const int asicId = entry_j["asicId"].get<int>();
-  entry_j.erase("asicId");
 
-  SvtDbAgent::SvtDbEntry chipEntry;
-  parseJsonData(entry_j, chipEntry);
+  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
+  createReplyMsg(chipEntry, replyMsg);
+}
+//========================================================================+
+bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, SvtDbEntry &chipEntry)
+{
+  if (!chipEntry_j.contains("asicId"))
+  {
+    THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
+    return false;
+  }
+  const int asicId = chipEntry_j["asicId"].get<int>();
+  auto tempEntry_j = chipEntry_j;
+  tempEntry_j.erase("asicId");
+
+  parseJsonData(tempEntry_j, chipEntry);
 
   //! create entry in DB
   getLogger()->logInfo("Creating chip in DB");
@@ -81,14 +100,14 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   if (!createEntryInDB(chipEntry))
   {
     THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
-    return;
+    return false;
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
   if (newEntryId != currMaxEntryId + 1)
   {
     THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
-    return;
+    return false;
   }
   getEntryWithId(chipEntry, newEntryId);
 
@@ -107,11 +126,50 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
   if (!chipLocDto->createEntryInDB(chipLoc))
   {
     THROW_RUNTIME_ERROR("ERROR: Could not create chip location entry");
+    return false;
+  }
+
+  return true;
+};
+
+//========================================================================+
+void SvtDbAgent::SvtDbChipDto::createManyEntries(
+    const SvtDbAgent::SvtDbAgentMessage &msg,
+    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+{
+  const auto &msgData = msg.getPayload()["data"];
+  if (!msgData.contains("create"))
+  {
+    THROW_RUNTIME_ERROR("Non object create was found");
     return;
   }
 
-  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
-  createReplyMsg(chipEntry, replyMsg);
+  const auto &msgCreate = msgData["create"];
+
+  if (!msgCreate.contains("generalLocation"))
+  {
+    THROW_RUNTIME_ERROR("Required field generalLocation was not found");
+    return;
+  }
+  const auto location = msgCreate["generalLocation"].get<std::string>();
+
+  if (!msgCreate.contains("items"))
+  {
+    THROW_RUNTIME_ERROR("Required field items was not found");
+    return;
+  }
+  const auto &items = msgCreate["items"];
+  nlohmann::json filters = nlohmann::json::array();
+  for (auto item : items)
+  {
+    item["generalLocation"] = location;
+    SvtDbEntry chipEntry;
+    createChip(item, chipEntry);
+    filters.push_back(chipEntry.values["id"]);
+  }
+  nlohmann::json data;
+  data["filters"] = filters;
+  getAllEntries(filters, replyMsg);
 }
 
 //========================================================================+
