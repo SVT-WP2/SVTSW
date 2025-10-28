@@ -168,13 +168,6 @@ CREATE TYPE "main"."waferInMachineStatus" AS ENUM (
   'Unloaded'
 );
 
-CREATE TYPE "main"."testEquipments" AS ENUM (
-  'oscilloscope',
-  'powerSupply',
-  'signalGenetaor',
-  'SMU'
-);
-
 CREATE TYPE "main"."sldoTestTypes" AS ENUM (
   'Power_ramp_up',
   'PSRR',
