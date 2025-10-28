@@ -394,13 +394,6 @@ Enum main.waferInMachineStatus {
   Unloaded
 }
 
-Enum main.testEquipments {
-  oscilloscope
-  powerSupply
-  signalGenetaor
-  SMU
-}
-
 Enum main.sldoTestTypes {
   Power_ramp_up
   PSRR
