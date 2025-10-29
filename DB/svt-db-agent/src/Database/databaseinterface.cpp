@@ -1,5 +1,5 @@
 #include "Database/DatabaseInterface.h"
-#include "SVTUtilities/SvtLogger.h"
+#include "SvtLogger.h"
 
 #include <cstring>
 #include <iostream>
@@ -8,17 +8,16 @@ using std::string;
 using std::vector;
 
 //========================================================================+
-DatabaseInterface::DatabaseInterface() { mUnavailable = false; }
-
 bool DatabaseInterface::Init(const string &user, const string &password,
-                             const string &connString, const string &host,
-                             const string &port)
+                             const string &host,
+                             const string &port, const string &dbName, const string &dbSchema)
 {
   mUser = user;
   mPassword = password;
-  mConnString = connString;
   mHost = host;
   mPort = port;
+  mDbName = dbName;
+  mDbSchema = dbSchema;
 
   mDBConnection = nullptr;
   mDBWork = nullptr;
@@ -64,7 +63,7 @@ bool DatabaseInterface::connect()
   try
   {
     std::string connstring = "host=" + this->mHost + " port=" + this->mPort +
-                             " dbname=" + this->mConnString +
+                             " dbname=" + this->mDbName +
                              " user=" + this->mUser +
                              " password=" + this->mPassword;
 
@@ -82,9 +81,8 @@ bool DatabaseInterface::connect()
   }
   catch (std::exception const &e)
   {
-    Singleton<SvtLogger>::instance()->logError(std::string("Error: ") +
-                                               e.what());
-
+    logger->logError(std::string("Error: ") +
+                     e.what());
     close();
 
     return false;

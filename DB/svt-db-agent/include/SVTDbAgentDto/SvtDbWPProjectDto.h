@@ -8,7 +8,7 @@
  * @brief Svt Db Wafer Probe Project DTO
  * */
 
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SvtDbBaseDto.h"
 
 #include <nlohmann/json.hpp>
 

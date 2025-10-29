@@ -9,16 +9,14 @@
 
 #include <cstdint>
 #include <memory>
-#include <string_view>
 
 #include <librdkafka/rdkafkacpp.h>
 
 #include <nlohmann/json.hpp>
 
-#include "SVTUtilities/SvtDbAgentGlobal.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SvtDbAgentMessage.h"
 #include "SvtDbAgentRequest.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
 enum SvtDbAgentTopicEnum : uint8_t
 {
@@ -27,7 +25,7 @@ enum SvtDbAgentTopicEnum : uint8_t
   NumTopicNames = 2
 };
 
-const std::array<std::string_view, SvtDbAgentTopicEnum::NumTopicNames>
+const std::array<std::string, SvtDbAgentTopicEnum::NumTopicNames>
     topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
 
 namespace RdKafka
@@ -35,10 +33,14 @@ namespace RdKafka
   class Message;
 };
 
+namespace SvtKafka
+{
+  class SvtKafkaConsumer;
+  class SvtKafkaProducer;
+}  // namespace SvtKafka
+
 namespace SvtDbAgent
 {
-  class SvtDbAgentConsumer;
-  class SvtDbAgentProducer;
 
   class SvtDbAgentService
   {
@@ -48,8 +50,8 @@ namespace SvtDbAgent
 
     bool initEnumTypeList();
     bool configureService(bool stop_eof = false);
-    void processMsgCb(RdKafka::Message *msg, void *opaque);
-    void setDebug(std::string debug) { m_debug = debug; }
+    void processMsgCb(RdKafka::Message &msg, void *opaque);
+    void setDebug(std::string debug) { mDebug = debug; }
 
     void stopConsumer(const bool suspeneded);
     bool getIsConsRunnning();
@@ -57,23 +59,24 @@ namespace SvtDbAgent
     void setLogMessages(const bool val) { log_messages = val; }
     bool getLogMessages() { return log_messages; }
 
-    std::string &getBrokerName() { return m_brokerName; }
+    void getBrokerName(const std::string &name) { mBrokerName = name; }
+    std::string &getBrokerName() { return mBrokerName; }
 
    private:
-    SvtLogger *logger = Singleton<SvtLogger>::instance();
+    SvtUtils::SvtLogger *mLogger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
 
-    void parseMsg(const SvtDbAgentMessage &msg,
-                  const SvtDbAgentMsgStatus &status);
+    void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
+                  const SvtKafka::SvtKafkaMsgStatus &status);
 
-    std::shared_ptr<SvtDbAgentConsumer> m_Consumer;
-    std::shared_ptr<SvtDbAgentProducer> m_Producer;
+    std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer;
 
-    SvtDbAgentRequest *m_Request = Singleton<SvtDbAgentRequest>::instance();
+    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer;
 
-    std::string m_brokerName =
-        SvtDbAgent::kafka_server + std::string(":") + SvtDbAgent::kafka_port;
-    std::string m_errStr;
-    std::string m_debug;
+    SvtDbAgentRequest *mRequest = SvtUtils::Singleton<SvtDbAgentRequest>::instance();
+
+    std::string mBrokerName;
+    std::string mErrStr;
+    std::string mDebug;
 
     bool log_messages = false;
   };

@@ -5,18 +5,20 @@
  * @brief SvtDbWaferDto
  */
 
-#include "SVTDbAgentDto/SvtDbChipDto.h"
+#include <string>
+
+#include "nlohmann/json_fwd.hpp"
+
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
-#include "nlohmann/json_fwd.hpp"
+#include "SVTDbAgentDto/SvtDbChipDto.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
-#include <string>
-
-using bind_type = void (SvtDbAgent::SvtDbChipDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbChipDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
 {
@@ -60,8 +62,8 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 
 //========================================================================+
 void SvtDbAgent::SvtDbChipDto::createEntry(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
@@ -76,7 +78,7 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
     return;
   }
 
-  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
+  getLogger()->logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(chipEntry, replyMsg);
 }
 //========================================================================+
@@ -134,8 +136,8 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, Svt
 
 //========================================================================+
 void SvtDbAgent::SvtDbChipDto::createManyEntries(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
@@ -174,8 +176,8 @@ void SvtDbAgent::SvtDbChipDto::createManyEntries(
 
 //========================================================================+
 void SvtDbAgent::SvtDbChipDto::updateEntry(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   if (msg.getPayload()["date"]["update"].contains("generalLocation"))
   {
@@ -189,8 +191,8 @@ void SvtDbAgent::SvtDbChipDto::updateEntry(
 
 //========================================================================+
 void SvtDbAgent::SvtDbChipDto::updateChipLocation(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   //! create entry in WaferLocation table
   SvtDbEntry chipEntry, chipLocEntry;
@@ -222,7 +224,7 @@ void SvtDbAgent::SvtDbChipDto::updateChipLocation(
 
 //========================================================================+
 void SvtDbAgent::SvtDbChipDto::getChipLocationHistory(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbAgent::getLocationHistory<SvtDbAgent::SvtDbChipLocationDto>(msg, replyMsg, "chipId", chipLocDto);
 }

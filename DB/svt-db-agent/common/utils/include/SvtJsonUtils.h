@@ -10,7 +10,7 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-namespace SvtDbAgent
+namespace SvtUtils
 {
   bool readStringVariable(json &config, const std::string &key, std::string &var);
   bool readIntegerVariable(json &config, const std::string &key, int &var);
@@ -23,4 +23,4 @@ namespace SvtDbAgent
   bool readDoubleVector(json &config, const std::string &key,
                         std::vector<double> &var);
   bool recursive_erase_key(json &j, const std::string_view &key);
-}  // namespace SvtDbAgent
+}  // namespace SvtUtils

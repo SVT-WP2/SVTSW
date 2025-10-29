@@ -8,9 +8,8 @@
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 #include "nlohmann/json_fwd.hpp"
 
 #include <algorithm>
@@ -20,7 +19,9 @@
 #include <string>
 #include <string_view>
 
-using bind_type = void (SvtDbAgent::SvtDbWaferTypeDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbWaferTypeDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
 {
@@ -51,7 +52,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtDbAgent::SvtDbAgentMessage &msg, SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   std::string_view waferMap_field = "waferMap";
   auto newMsg = msg;
@@ -115,7 +116,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferMapEntry(const int waferTypeId, SvtD
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtDbAgent::SvtDbAgentMessage &msg, SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
   if (waferTypeId < 0)

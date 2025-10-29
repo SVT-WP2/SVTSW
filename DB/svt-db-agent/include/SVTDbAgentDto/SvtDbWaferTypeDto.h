@@ -9,16 +9,14 @@
  * */
 
 #include <string_view>
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
-#include "SVTUtilities/SvtUtilities.h"
-#include "SvtDbBaseDto.h"
+
 #include "nlohmann/json_fwd.hpp"
+
+#include "SvtDbAsicDto.h"
+#include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   class SvtDbWaferTypeMapDto : public SvtDbBaseDto
   {
    public:
@@ -67,8 +65,8 @@ namespace SvtDbAgent
     virtual void createAllRequest() final;
     // virtual void parseJsonData(const nlohmann::json &j_data,
     //                            SvtDbEntry &entry) final;
-    virtual void createEntry(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
-    virtual void getWaferMap(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &);
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &);
+    virtual void getWaferMap(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &);
     virtual void getWaferMapEntry(const int waferTypeId, SvtDbEntry &entry);
     virtual const std::string getWaferMap(const int waferTypeId);
 

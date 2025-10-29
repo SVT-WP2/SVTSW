@@ -6,13 +6,14 @@
  */
 
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SVTDb/sqlmapi.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtDbAgentGlobal.h"
-#include "SVTUtilities/SvtLogger.h"
+#include "Database/DatabaseInterface.h"
+#include "SVTDb/SvtDbInterface.h"
+#include "SvtKafkaMessage.h"
 
 std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::createAllRequest()
 {
@@ -36,7 +37,7 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumTypesInDB(
   enum_types.clear();
   try
   {
-    doGenericQuery(query, rows);
+    SvtDbInterface::doGenericQuery(query, rows);
     for (auto &row : rows)
     {
       if (!schema.compare(row.at(0).get<std::string>()))
@@ -44,7 +45,7 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumTypesInDB(
         enum_types.push_back(row.at(1).get<std::string>());
       }
     }
-    finishQuery(rows);
+    SvtDbInterface::finishQuery(rows);
   }
   catch (const std::exception &e)
   {
@@ -64,10 +65,10 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumValuesInDB(
   enum_values.clear();
   try
   {
-    doGenericQuery(query, rows);
+    SvtDbInterface::doGenericQuery(query, rows);
     const auto str_res = rows[0][0].get<std::string>();
     std::string_view res{str_res};
-    finishQuery(rows);
+    SvtDbInterface::finishQuery(rows);
 
     res.remove_prefix(res.find('{') + 1);
     res.remove_suffix(res.size() - res.find_last_of('}'));
@@ -98,12 +99,12 @@ bool SvtDbAgent::SvtDbEnumDto::addEnumValueInDB(std::string type_name,
   std::string cmd =
       "ALTER TYPE " + type_name + " ADD VALUE IF NOT EXISTS '" + value + "';";
 
-  if (!doGenericUpdate(cmd))
+  if (!SvtDbInterface::doGenericUpdate(cmd))
   {
-    rollbackUpdate();
+    SvtDbInterface::rollbackUpdate();
     return false;
   }
-  commitUpdate();
+  SvtDbInterface::commitUpdate();
   return true;
 }
 
@@ -159,8 +160,8 @@ void SvtDbAgent::SvtDbEnumDto::print()
 
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::getAllEntries(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   std::vector<std::string> enum_types =
@@ -173,9 +174,9 @@ void SvtDbAgent::SvtDbEnumDto::getAllEntries(
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::getAllEnumValuesReplyMsg(
     const std::vector<std::string> &types,
-    SvtDbAgent::SvtDbAgentReplyMsg &msgReply)
+    SvtKafkaReplyMsg &msgReply)
 {
-  std::string enum_name(SvtDbAgent::db_schema);
+  std::string enum_name(DatabaseInterface::getDbSchema());
   try
   {
     nlohmann::ordered_json data;
@@ -189,7 +190,7 @@ void SvtDbAgent::SvtDbEnumDto::getAllEnumValuesReplyMsg(
     }
     msgReply.setData(data);
     msgReply.setStatus(
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
+        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
     msgReply.setError(0, "");
   }
   catch (const std::exception &e)

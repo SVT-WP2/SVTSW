@@ -5,11 +5,6 @@
 
 #include <librdkafka/rdkafkacpp.h>
 
-#include "SVTUtilities/SvtDbAgentGlobal.h"
-std::string SvtDbAgent::db_name;
-std::string SvtDbAgent::db_schema;
-std::string SvtDbAgent::kafka_server;
-std::string SvtDbAgent::kafka_port;
 class MyEventCb : public RdKafka::EventCb
 {
  public:
@@ -86,7 +81,7 @@ int main()
 
   // Start consuming messages
   std::vector<RdKafka::TopicPartition *> topics = {
-      RdKafka::TopicPartition::create(topic_name, 0)};
+      RdKafka::TopicPartition::create(topic_name, 0, RdKafka::Topic::OFFSET_END)};
   consumer->assign(topics);
 
   // Or let kafka to do it automatically
