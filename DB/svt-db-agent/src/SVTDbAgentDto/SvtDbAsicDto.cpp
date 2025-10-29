@@ -7,12 +7,15 @@
 
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
 #include <sstream>
 
-using bind_type = void (SvtDbAgent::SvtDbAsicDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+
+using bind_type = void (SvtDbAgent::SvtDbAsicDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 {
@@ -44,8 +47,8 @@ void SvtDbAgent::SvtDbAsicDto::createAllRequest()
 
 //========================================================================+
 void SvtDbAgent::SvtDbAsicDto::getAllEntries(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   SvtDbFilters filters;
@@ -93,7 +96,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
 
 //========================================================================+
 void SvtDbAgent::SvtDbAsicDto::createReplyMsg(
-    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
+    const std::vector<SvtDbEntry> &entries, SvtKafkaReplyMsg &msgReply,
     int totalCount)
 {
   getLogger()->logInfo("Creating message with " +

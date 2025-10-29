@@ -12,9 +12,6 @@
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   class SvtDbWaferLocationDto : public SvtDbBaseDto
   {
    public:
@@ -48,15 +45,15 @@ namespace SvtDbAgent
 
    private:
     //! request DTO funcions
-    virtual void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-    virtual void updateEntry(const SvtDbAgentMessage &msg,
-                             SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
     virtual void
-    updateWaferLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
-                        SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-    virtual void getWaferLocationHistory(const SvtDbAgentMessage &,
-                                         SvtDbAgentReplyMsg &) final;
+    updateWaferLocation(const SvtKafka::SvtKafkaMessage &msg,
+                        SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+    virtual void getWaferLocationHistory(const SvtKafka::SvtKafkaMessage &,
+                                         SvtKafka::SvtKafkaReplyMsg &) final;
 
     virtual void createAllRequest() final;
 

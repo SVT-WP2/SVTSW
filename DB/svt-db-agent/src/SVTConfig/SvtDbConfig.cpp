@@ -6,7 +6,7 @@
  */
 
 #include "SVTConfig/SvtDbConfig.h"
-#include "SVTUtilities/SvtJsonUtils.h"
+#include "SvtJsonUtils.h"
 
 SvtDbConfig::SvtDbConfig(_svtdbconfig_ctor_tag)
   : SvtConfig()
@@ -23,12 +23,12 @@ std::shared_ptr<SvtDbConfig> SvtDbConfig::factory(json &config)
 
 bool SvtDbConfig::decodeJson(json &config)
 {
-  bool result = SvtDbAgent::readStringVariable(config, "psqlHost", mHost);
-  result &= SvtDbAgent::readStringVariable(config, "psqlPort", mPort);
-  result &= SvtDbAgent::readStringVariable(config, "psqlUser", mUser);
-  result &= SvtDbAgent::readStringVariable(config, "psqlPass", mPass);
-  result &= SvtDbAgent::readStringVariable(config, "psqlDbName", mDbName);
-  result &= SvtDbAgent::readStringVariable(config, "psqlDbSchema", mDbSchema);
+  bool result = SvtUtils::readStringVariable(config, "psqlHost", mHost);
+  result &= SvtUtils::readStringVariable(config, "psqlPort", mPort);
+  result &= SvtUtils::readStringVariable(config, "psqlUser", mUser);
+  result &= SvtUtils::readStringVariable(config, "psqlPass", mPass);
+  result &= SvtUtils::readStringVariable(config, "psqlDbName", mDbName);
+  result &= SvtUtils::readStringVariable(config, "psqlDbSchema", mDbSchema);
 
   mInitialized = result;
   return result;

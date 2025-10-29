@@ -1,31 +1,33 @@
 #pragma once
 
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 #include <pqxx/pqxx>
 
 #include <mutex>
+#include <string>
 
 using row_t = std::vector<nlohmann::basic_json<>>;
 using rows_t = std::vector<row_t>;
+using SvtUtils::Singleton;
+using SvtUtils::SvtLogger;
 
 class DatabaseInterface
 {
  public:
-  DatabaseInterface();
+  DatabaseInterface() = default;
   ~DatabaseInterface();
 
   bool Init(const std::string &user, const std::string &password,
-            const std::string &connString, const std::string &host,
-            const std::string &port);
+            const std::string &host,
+            const std::string &port, const std::string &dbName, const std::string &dbSchema);
   bool connect();
 
   bool isConnected();
   bool isConnected(std::string &message);
 
-  void setUnavailable(bool unavailable) { mUnavailable = unavailable; };
-  bool isUnavailable() { return mUnavailable; };
+  bool isInitialized() { return mInitialized; }
 
   void executeQuery(const std::string &query, bool &status,
                     std::string &message, rows_t &rows);
@@ -40,8 +42,13 @@ class DatabaseInterface
   bool commitUpdate(bool commit = true);
   std::recursive_mutex *getMutex() { return &mMutex; };
 
+  static const std::string &getDbSchema() { return mDbSchema; }
+
  private:
-  std::string mUser, mPassword, mConnString, mHost, mPort;
+  std::string mUser, mPassword, mHost, mPort, mDbName;
+  static std::string mDbSchema;
+
+  bool mInitialized = false;
 
   pqxx::connection *mDBConnection;
   pqxx::nontransaction *mDBWork;
@@ -50,8 +57,6 @@ class DatabaseInterface
   bool close();
 
   SvtLogger *logger = Singleton<SvtLogger>::instance();
-
-  bool mUnavailable;
 
   std::recursive_mutex mMutex;
 };

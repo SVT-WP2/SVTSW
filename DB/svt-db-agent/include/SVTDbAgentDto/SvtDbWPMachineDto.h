@@ -8,14 +8,10 @@
  * @brief Svt Db wafer probe machine DTO
  * */
 
-#include "SVTUtilities/SvtUtilities.h"
 #include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   class SvtDbWaferLoadedInMachineDto : public SvtDbBaseDto
   {
    public:
@@ -60,10 +56,10 @@ namespace SvtDbAgent
     ~SvtDbWPMachineDto() = default;
 
     //! Request DTO functions
-    void updateWaferLoadedInMachine(const SvtDbAgentMessage &msg,
-                                    SvtDbAgentReplyMsg &);
-    void updateProbeCardInstalledInMachine(const SvtDbAgentMessage &msg,
-                                           SvtDbAgentReplyMsg &);
+    void updateWaferLoadedInMachine(const SvtKafka::SvtKafkaMessage &msg,
+                                    SvtKafka::SvtKafkaReplyMsg &);
+    void updateProbeCardInstalledInMachine(const SvtKafka::SvtKafkaMessage &msg,
+                                           SvtKafka::SvtKafkaReplyMsg &);
 
    private:
     void createAllRequest() final;

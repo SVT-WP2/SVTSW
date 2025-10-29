@@ -8,8 +8,10 @@
  */
 
 #include "SvtConfig.h"
+#include "SvtDbConfig.h"
 
-#include "SVTConfig/SvtDbConfig.h"
+using SvtUtils::Singleton;
+using SvtUtils::SvtLogger;
 
 class SvtDbAgentSetupConfig : public SvtConfig
 {

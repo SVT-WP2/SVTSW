@@ -6,11 +6,14 @@
  * @brief SvtDbWPMachine
  */
 
-#include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include <exception>
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
 
-using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+#include "SVTDbAgentDto/SvtDbWPMachineDto.h"
+#include "SvtKafkaMessage.h"
+
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
 {
@@ -59,7 +62,7 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
 
 //========================================================================+
 void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   try
   {
@@ -75,4 +78,4 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
 
 //========================================================================+
 void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg) {}
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg) {}

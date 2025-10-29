@@ -5,9 +5,12 @@
  * @brief
  */
 
-#include "SVTUtilities/SvtJsonUtils.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtJsonUtils.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
+
+using SvtUtils::Singleton;
+using SvtUtils::SvtLogger;
 
 namespace
 {
@@ -15,7 +18,7 @@ namespace
 }
 
 //========================================================================+
-bool SvtDbAgent::recursive_erase_key(json &j, const std::string_view &key)
+bool SvtUtils::recursive_erase_key(json &j, const std::string_view &key)
 {
   if (j.is_object())
   {
@@ -47,8 +50,8 @@ bool SvtDbAgent::recursive_erase_key(json &j, const std::string_view &key)
 }
 
 //========================================================================+
-bool SvtDbAgent::readStringVariable(json &config, const std::string &key,
-                                    std::string &var)
+bool SvtUtils::readStringVariable(json &config, const std::string &key,
+                                  std::string &var)
 {
   if (config.contains(key))
   {
@@ -63,8 +66,8 @@ bool SvtDbAgent::readStringVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readIntegerVariable(json &config, const std::string &key,
-                                     int &var)
+bool SvtUtils::readIntegerVariable(json &config, const std::string &key,
+                                   int &var)
 {
   if (config.contains(key))
   {
@@ -88,8 +91,8 @@ bool SvtDbAgent::readIntegerVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readDoubleVariable(json &config, const std::string &key,
-                                    double &var)
+bool SvtUtils::readDoubleVariable(json &config, const std::string &key,
+                                  double &var)
 {
   if (config.contains(key))
   {
@@ -113,8 +116,8 @@ bool SvtDbAgent::readDoubleVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readBooleanVariable(json &config, const std::string &key,
-                                     bool &var)
+bool SvtUtils::readBooleanVariable(json &config, const std::string &key,
+                                   bool &var)
 {
   if (!config.contains(key))
   {
@@ -151,8 +154,8 @@ bool SvtDbAgent::readBooleanVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readIntegerVector(json &config, const std::string &key,
-                                   std::vector<int> &var)
+bool SvtUtils::readIntegerVector(json &config, const std::string &key,
+                                 std::vector<int> &var)
 {
   if (config.contains(key))
   {
@@ -179,8 +182,8 @@ bool SvtDbAgent::readIntegerVector(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readDoubleVector(json &config, const std::string &key,
-                                  std::vector<double> &var)
+bool SvtUtils::readDoubleVector(json &config, const std::string &key,
+                                std::vector<double> &var)
 {
   if (config.contains(key))
   {
@@ -207,8 +210,8 @@ bool SvtDbAgent::readDoubleVector(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtDbAgent::readStringVector(json &config, const std::string &key,
-                                  std::vector<std::string> &var)
+bool SvtUtils::readStringVector(json &config, const std::string &key,
+                                std::vector<std::string> &var)
 {
   if (config.contains(key))
   {
