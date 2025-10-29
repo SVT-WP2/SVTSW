@@ -5,13 +5,16 @@
  * @brief DbAgent setup config
  */
 
-#include "SVTConfig/SvtDbAgentSetupConfig.h"
 #include <optional>
-#include "SVTUtilities/SvtJsonUtils.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+
+#include "SVTConfig/SvtDbAgentSetupConfig.h"
+#include "SvtJsonUtils.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 using json = nlohmann::json;
+using SvtUtils::Singleton;
+using SvtUtils::SvtLogger;
 
 SvtDbAgentSetupConfig::SvtDbAgentSetupConfig(_dbagent_setupconfig_ctor_tag) {}
 
@@ -42,12 +45,12 @@ bool SvtDbAgentSetupConfig::decodeJson(json &config)
   {
     if (it.key() == "logger")
     {
-      SvtDbAgent::readStringVariable(it.value(), "filePath", mLogFilePath);
+      SvtUtils::readStringVariable(it.value(), "filePath", mLogFilePath);
     }
     if (it.key() == "kafka")
     {
-      SvtDbAgent::readStringVariable(it.value(), "server", mKafkaServer);
-      SvtDbAgent::readStringVariable(it.value(), "port", mKaflaPort);
+      SvtUtils::readStringVariable(it.value(), "server", mKafkaServer);
+      SvtUtils::readStringVariable(it.value(), "port", mKaflaPort);
     }
     if (it.key() == "DataBase")
     {

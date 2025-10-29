@@ -12,9 +12,6 @@
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   class SvtDbChipLocationDto : public SvtDbBaseDto
   {
    public:
@@ -48,17 +45,17 @@ namespace SvtDbAgent
 
    private:
     //! request DTO funcions
-    virtual void createManyEntries(const SvtDbAgent::SvtDbAgentMessage &msg,
-                                   SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
-    virtual void createEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-    virtual void updateEntry(const SvtDbAgentMessage &msg,
-                             SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void createManyEntries(const SvtKafka::SvtKafkaMessage &msg,
+                                   SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
     virtual void
-    updateChipLocation(const SvtDbAgent::SvtDbAgentMessage &msg,
-                       SvtDbAgent::SvtDbAgentReplyMsg &replyMsg) final;
-    virtual void getChipLocationHistory(const SvtDbAgentMessage &,
-                                        SvtDbAgentReplyMsg &) final;
+    updateChipLocation(const SvtKafka::SvtKafkaMessage &msg,
+                       SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+    virtual void getChipLocationHistory(const SvtKafka::SvtKafkaMessage &,
+                                        SvtKafka::SvtKafkaReplyMsg &) final;
 
     bool createChip(const nlohmann::json &, SvtDbEntry &);
     void createAllRequest() final;

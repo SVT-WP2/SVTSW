@@ -10,13 +10,15 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtJsonUtils.h"
+#include "SvtJsonUtils.h"
+#include "SvtKafkaMessage.h"
 
 #include <sstream>
 #include <string>
 
-using bind_type = void (SvtDbAgent::SvtDbWaferDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbWaferDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
 {
@@ -61,8 +63,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
 
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::createEntry(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
@@ -108,7 +110,7 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
 
   getLogger()->logInfo("Creating all Asics in DB");
   createAllAsics(waferEntry);
-  getLogger()->logInfo("Creating reply SvtDbAgentMessage");
+  getLogger()->logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(waferEntry, replyMsg);
 }
 
@@ -201,8 +203,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         }
 
         std::string asic_familytype;
-        SvtDbAgent::readStringVariable(waferMap_j["Groups"][g_name][asic_index],
-                                       "FamilyType", asic_familytype);
+        SvtUtils::readStringVariable(waferMap_j["Groups"][g_name][asic_index],
+                                     "FamilyType", asic_familytype);
 
         if (asic_familytype.empty())
         {
@@ -232,8 +234,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::updateEntry(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   if (msg.getPayload()["data"]["update"].contains("generalLocation"))
   {
@@ -247,8 +249,8 @@ void SvtDbAgent::SvtDbWaferDto::updateEntry(
 
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    SvtDbAgent::SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg,
+    SvtKafkaReplyMsg &replyMsg)
 {
   //! create entry in WaferLocation table
   SvtDbEntry waferEntry, waferLocEntry;
@@ -280,7 +282,7 @@ void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
 
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::getWaferLocationHistory(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   getLocationHistory<SvtDbAgent::SvtDbWaferLocationDto>(msg, replyMsg, "waferId", waferLocDto);
 }

@@ -8,9 +8,9 @@
  * @brief Base DTO class
  */
 
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 #include <nlohmann/json.hpp>
 
@@ -22,6 +22,9 @@
 
 namespace SvtDbAgent
 {
+  using SvtUtils::Singleton;
+  using SvtUtils::SvtLogger;
+
   struct SvtDbEntry
   {
     std::map<std::string, nlohmann::basic_json<>> values;
@@ -41,12 +44,12 @@ namespace SvtDbAgent
     virtual ~SvtDbBaseDto() { clear(); }
 
     //! request DTO funcions
-    virtual void getAllEntries(const SvtDbAgentMessage &msg,
-                               SvtDbAgentReplyMsg &replyMsg);
-    virtual void createEntry(const SvtDbAgentMessage &msg,
-                             SvtDbAgentReplyMsg &replyMsg);
-    virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
 
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
@@ -60,10 +63,10 @@ namespace SvtDbAgent
 
     //! Reply Message
     virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
-                                SvtDbAgentReplyMsg &msgReply,
+                                SvtKafka::SvtKafkaReplyMsg &msgReply,
                                 int totalCount = -1);
     virtual void createReplyMsg(const SvtDbEntry &entry,
-                                SvtDbAgentReplyMsg &msgReply);
+                                SvtKafka::SvtKafkaReplyMsg &msgReply);
 
     //! Getters
     const std::string &getTableName() { return mTableName; }
@@ -72,26 +75,26 @@ namespace SvtDbAgent
 
     SvtLogger *getLogger() { return logger; }
 
-    bool findRequestAndRun(std::string_view, const SvtDbAgentMessage &,
-                           SvtDbAgentReplyMsg &);
+    bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
+                           SvtKafka::SvtKafkaReplyMsg &);
 
    protected:
     void addColName(const std::string &name) { mColNames.push_back(name); }
     void setTableName(const std::string &tName) { mTableName = tName; }
 
     virtual void getAllEntries(const nlohmann::json &data_j,
-                               SvtDbAgentReplyMsg &replyMsg);
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void createEntry(const nlohmann::json &data_j,
-                             SvtDbAgentReplyMsg &replyMsg);
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void updateEntry(const int id, const nlohmann::json &data_j,
-                             SvtDbAgentReplyMsg &replyMsg);
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
 
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
                                   SvtDbFilters &filters);
     virtual void addRequest(
         std::string_view,
-        std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>);
+        std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>);
 
     virtual void createAllRequest() = 0;
 
@@ -102,14 +105,14 @@ namespace SvtDbAgent
     std::string mTableName;
 
     std::map<std::string_view,
-             std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>>
+             std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>
         request_map;
 
     SvtLogger *logger = Singleton<SvtLogger>::instance();
   };
 
   template <class T>
-  void getLocationHistory(const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg, const std::string &nameId, T *locDto)
+  void getLocationHistory(const SvtKafka::SvtKafkaMessage &msg, SvtKafka::SvtKafkaReplyMsg &replyMsg, const std::string &nameId, T *locDto)
   {
     try
     {
