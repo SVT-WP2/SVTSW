@@ -7,6 +7,7 @@
  * @brief Database interface for SVT test
  */
 
+#include <atomic>
 #include <cstddef>
 #include <string>
 #include <vector>
