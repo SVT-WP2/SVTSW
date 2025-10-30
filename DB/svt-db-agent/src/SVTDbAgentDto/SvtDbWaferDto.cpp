@@ -7,13 +7,10 @@
 
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDb/SvtDbInterface.h"
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SvtJsonUtils.h"
 #include "SvtKafkaMessage.h"
 
-#include <sstream>
 #include <string>
 
 using SvtKafka::SvtKafkaMessage;
@@ -122,8 +119,8 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 
   SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
 
-  const auto waferMap = waferType->getWaferMap(waferTypeId);
-  nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
+  const auto waferTypeMap = waferType->getWaferTypeMap(waferTypeId);
+  nlohmann::json waferMap_j = nlohmann::json::parse(waferTypeMap);
 
   std::map<int, std::string> g_map_ordered;
 

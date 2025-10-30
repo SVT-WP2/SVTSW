@@ -66,14 +66,14 @@ namespace SvtDbAgent
     // virtual void parseJsonData(const nlohmann::json &j_data,
     //                            SvtDbEntry &entry) final;
     virtual void createEntry(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &);
-    virtual void getWaferMap(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &);
-    virtual void getWaferMapEntry(const int waferTypeId, SvtDbEntry &entry);
-    virtual const std::string getWaferMap(const int waferTypeId);
+    virtual void getWaferTypeMap(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &);
+    virtual void getWaferTypeMapEntry(const int waferTypeId, SvtDbEntry &entry);
+    virtual const std::string getWaferTypeMap(const int waferTypeId);
 
-    bool createWaferMap(const int waferTypeId, const std::string &);
+    bool createWaferTypeMap(const int waferTypeId, const std::string &);
     bool extractRange(const int g_size, const nlohmann::json &array_j,
                       std::vector<int> &range);
-    bool checkWaferMap(const std::string_view &waferMap, std::string &err_msg);
+    bool checkWaferTypeMap(const std::string_view &waferMap, std::string &err_msg);
   };
 
 };  // namespace SvtDbAgent
