@@ -47,8 +47,8 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
   addRequest("CreateWaferType",
              std::bind(&SvtDbWaferTypeDto::createEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
-  addRequest("getWaferMap",
-             std::bind(static_cast<bind_type>(&SvtDbWaferTypeDto::getWaferMap), this, std::placeholders::_1, std::placeholders::_2));
+  addRequest("GetWaferTypeMap",
+             std::bind(static_cast<bind_type>(&SvtDbWaferTypeDto::getWaferTypeMap), this, std::placeholders::_1, std::placeholders::_2));
 }
 
 //========================================================================+
@@ -73,7 +73,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtK
   const auto &waferMap = msgData["create"][waferMap_field];
   std::string waferMap_s = waferMap.get<std::string>();
   std::string err_msg;
-  if (!checkWaferMap(waferMap_s, err_msg))
+  if (!checkWaferTypeMap(waferMap_s, err_msg))
   {
     THROW_RUNTIME_ERROR(err_msg);
     return;
@@ -84,7 +84,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtK
   this->SvtDbBaseDto::createEntry(newMsg, replyMsg);
 
   auto waferTypeId = SvtDbInterface::getMaxId("WaferType");
-  if (!createWaferMap(waferTypeId, waferMap_s))
+  if (!createWaferTypeMap(waferTypeId, waferMap_s))
   {
     THROW_RUNTIME_ERROR("Failed creating the wafer map in the DB");
     return;
@@ -92,7 +92,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtK
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::getWaferMapEntry(const int waferTypeId, SvtDbEntry &entry)
+void SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, SvtDbEntry &entry)
 {
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
@@ -116,7 +116,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferMapEntry(const int waferTypeId, SvtD
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMap(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
   const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
   if (waferTypeId < 0)
@@ -126,12 +126,12 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const SvtKafkaMessage &msg, SvtK
   }
 
   SvtDbEntry waferMap;
-  getWaferMapEntry(waferTypeId, waferMap);
+  getWaferTypeMapEntry(waferTypeId, waferMap);
   createReplyMsg(waferMap, replyMsg);
 }
 
 //========================================================================+
-const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const int waferTypeId)
+const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMap(const int waferTypeId)
 {
   if (waferTypeId < 0)
   {
@@ -140,12 +140,12 @@ const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferMap(const int waferType
   }
 
   SvtDbEntry waferMap;
-  getWaferMapEntry(waferTypeId, waferMap);
+  getWaferTypeMapEntry(waferTypeId, waferMap);
   return waferMap.values["waferMap"];
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbWaferTypeDto::createWaferMap(const int waferTypeId, const std::string &waferMap_s)
+bool SvtDbAgent::SvtDbWaferTypeDto::createWaferTypeMap(const int waferTypeId, const std::string &waferMap_s)
 {
   SvtDbEntry waferMap;
   waferMap.values.insert({"waferTypeId", waferTypeId});
@@ -181,13 +181,13 @@ bool SvtDbAgent::SvtDbWaferTypeDto::extractRange(const int g_size,
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferMap(
+bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(
     const std::string_view &waferMap, std::string &err_msg)
 {
   bool ret = true;
   if (!nlohmann::json::accept(waferMap))
   {
-    err_msg += "WaferMap don't follow json format.\n";
+    err_msg += "WaferTypeMap don't follow json format.\n";
     ret = false;
   }
   nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
