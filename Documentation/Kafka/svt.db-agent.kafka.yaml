@@ -2359,26 +2359,32 @@ components:
       type: object
       required:
         - id
+        - name
         - equipmentTypeId
         - generalLocation
         - specification
       properties:
         id:
           type: number
+        name:
+          type: string
         equipmentTypeId:
           type: number
         generalLocation:
           type: string
         specification:
-          type: "string"
+          type: string
           description: Stringified JSON with equipment's description
     EquipmentCreateDto:
       type: object
       required:
+        - name
         - equipmentTypeId
         - generalLocation
         - specification
       properties:
+        name:
+          type: string
         equipmentTypeId:
           type: number
         generalLocation:
