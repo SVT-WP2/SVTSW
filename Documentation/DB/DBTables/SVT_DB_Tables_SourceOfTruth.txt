@@ -168,16 +168,17 @@ Table main.ChipLocation {
 
 Table main.EquipmentType
 {
-  id integer [primary key]
+  id integer [primary key, increment]
   name varchar(50) [unique, not null]
 }
 
 Table main.Equipment
 {
-  id integer [primary key]
+  id integer [primary key, increment]
+  name varchar(50) [unique, not null]
   equipmentTypeId integer [ ref: >  main.EquipmentType.id]
   generalLocation main.wpGeneralLocation [not null]
-  specification JSON [not null]
+  specification JSON
 }
 
 Table main.EquipmentLocation{
