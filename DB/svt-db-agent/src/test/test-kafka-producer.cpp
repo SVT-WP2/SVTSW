@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
 
   // Create Producer
   std::unique_ptr<SvtKafka::SvtKafkaProducer> producer = std::make_unique<SvtKafka::SvtKafkaProducer>(brokers);
+  producer->start();
 
   // Send Message
   SvtKafka::SvtKafkaMessage msg;
