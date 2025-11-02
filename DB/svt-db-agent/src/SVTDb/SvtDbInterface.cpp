@@ -471,9 +471,17 @@ size_t SvtDbInterface::getMaxId(const std::string &tableName)
   doGenericQuery(queryString, rows);
   int maxId = -1;
 
-  if (!rows.empty())
+  if (!rows.empty() && !rows.at(0).empty())
   {
-    maxId = rows.at(0).at(0).get<int>();
+    const auto &row = rows.at(0).at(0);
+    if (!row.is_null())
+    {
+      maxId = row.get<int>();
+    }
+    else
+    {
+      maxId = 0;
+    }
   }
   else
   {
