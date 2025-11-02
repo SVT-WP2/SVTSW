@@ -22,7 +22,7 @@
 
 #define THROW_RUNTIME_ERROR(msg)                               \
   throw std::runtime_error("[" + std::string(__FILE__) + ":" + \
-                           std::to_string(__LINE__) + "] " + msg)
+                           std::to_string(__LINE__) + "\n] " + msg)
 namespace SvtUtils
 {
   class SvtLogger
