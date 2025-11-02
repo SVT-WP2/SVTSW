@@ -10,8 +10,6 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbChipDto.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SVTDbAgentDto/SvtDbEquipDto.h"
-#include "SVTDbAgentDto/SvtDbEquipTypeDto.h"
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include "SVTDbAgentDto/SvtDbWPProjectDto.h"
@@ -34,16 +32,12 @@ void SvtDbAgentRequest::createAllDtos()
   dtoList["SvtDbWaferDto"] = Singleton<SvtDbAgent::SvtDbWaferDto>::instance();
   dtoList["SvtDbAsicDto"] = Singleton<SvtDbAgent::SvtDbAsicDto>::instance();
   dtoList["SvtDbChipDto"] = Singleton<SvtDbAgent::SvtDbChipDto>::instance();
-  dtoList["SvtDbEquipDto"] =
-      Singleton<SvtDbAgent::SvtDbEquipDto>::instance();
   dtoList["SvtDbProbeCardDto"] =
       Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
   dtoList["SvtDbWPMachineDto"] =
       Singleton<SvtDbAgent::SvtDbWPMachineDto>::instance();
   dtoList["SvtDbWPProjectDto"] =
       Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance();
-  dtoList["SvtDbEquipTypeDto"] =
-      Singleton<SvtDbAgent::SvtDbEquipTypeDto>::instance();
 }
 
 //===========================================================================+
