@@ -1,5 +1,4 @@
-#ifndef SVT_DB_BASE_DTO_H
-#define SVT_DB_BASE_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbBaseDto.h
@@ -84,10 +83,10 @@ namespace SvtDbAgent
 
     virtual void getAllEntries(const nlohmann::json &data_j,
                                SvtKafka::SvtKafkaReplyMsg &replyMsg);
-    virtual void createEntry(const nlohmann::json &data_j,
-                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
-    virtual void updateEntry(const int id, const nlohmann::json &data_j,
-                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void createEntryAndReply(const nlohmann::json &data_j,
+                                     SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void updateEntryAndReply(const int id, const nlohmann::json &data_j,
+                                     SvtKafka::SvtKafkaReplyMsg &replyMsg);
 
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
@@ -111,27 +110,4 @@ namespace SvtDbAgent
     SvtLogger *logger = Singleton<SvtLogger>::instance();
   };
 
-  template <class T>
-  void getLocationHistory(const SvtKafka::SvtKafkaMessage &msg, SvtKafka::SvtKafkaReplyMsg &replyMsg, const std::string &nameId, T *locDto)
-  {
-    try
-    {
-      const auto &id = msg.getPayload()["data"][nameId];
-      SvtDbFilters filters;
-      filters.mFilters.values.insert({nameId, id});
-
-      std::vector<SvtDbAgent::SvtDbEntry> entries;
-      if (locDto->getAllEntriesFromDB(entries, filters))
-      {
-        locDto->createReplyMsg(entries, replyMsg);
-      }
-    }
-    catch (const std::exception &e)
-    {
-      throw e;
-      return;
-    }
-  };
-
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_BASE_DTO_H
