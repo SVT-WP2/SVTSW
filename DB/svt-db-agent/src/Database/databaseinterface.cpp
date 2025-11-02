@@ -1,5 +1,4 @@
 #include "Database/DatabaseInterface.h"
-#include "SvtLogger.h"
 
 #include <cstring>
 #include <iostream>
@@ -47,8 +46,7 @@ bool DatabaseInterface::close()
     }
     catch (pqxx::sql_error const &e)
     {
-      logger->logError(std::string("SQL error: ") + e.what());
-      logger->logError(std::string("Query was: ") + e.query());
+      logger->logError(std::string("DB::close SQL error: ") + e.what());
     }
   }
 
@@ -72,8 +70,7 @@ bool DatabaseInterface::connect()
   }
   catch (pqxx::sql_error const &e)
   {
-    logger->logError(std::string("SQL error: ") + e.what());
-    logger->logError(std::string("Query was: ") + e.query());
+    logger->logError(std::string("DB::connect SQL error: ") + e.what());
 
     close();
 
@@ -122,8 +119,7 @@ bool DatabaseInterface::reconnect()
   }
   catch (pqxx::sql_error const &e)
   {
-    logger->logError(std::string("SQL error: ") + e.what());
-    logger->logError(std::string("Query was: ") + e.query());
+    logger->logError(std::string("DB::reconnect SQL error: ") + e.what());
     close();
     return false;
   }
@@ -162,7 +158,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
                                      string &message, rows_t &rows)
 {
   status = DatabaseInterface::isConnected(message);
-  std::string query_name("query");
+  std::string query_name("query_name");
 
   if (!status)
   {
@@ -231,9 +227,11 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
   catch (pqxx::sql_error const &e)
   {
     // clear prepare
-    mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     message = std::string("SQL error: ") + e.what() +
-              std::string("Query was: ") + e.query();
+              std::string("Query was: ") + e.query() +
+              std::string(" with statement: ") + query;
+
+    mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     status = false;
   }
   clearQueryResult(rows);
