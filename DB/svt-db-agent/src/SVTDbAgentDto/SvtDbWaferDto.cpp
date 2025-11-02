@@ -5,19 +5,18 @@
  * @brief SvtDbWaferDto
  */
 
-#include "SVTDbAgentDto/SvtDbWaferDto.h"
-#include "SVTDb/SvtDbInterface.h"
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SvtKafkaMessage.h"
-
+#include <sstream>
 #include <string>
+
+#include "SVTDbAgentDto/SvtDbWaferDto.h"
+#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
 using bind_type = void (SvtDbAgent::SvtDbWaferDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
+  : SvtDbBaseLocationDto("WaferLocation", "waferId")
 {
   setTableName("Wafer");
 
@@ -50,11 +49,11 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
                        std::placeholders::_2));
   //! SvtDbWaferDto::UpdateWaferLocation
   addRequest("UpdateWaferLocation",
-             std::bind(&SvtDbWaferDto::updateWaferLocation, this,
+             std::bind(static_cast<bind_type>(&SvtDbWaferDto::updateLocation), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferDto::GetWaferLocationHistory
   addRequest("GetWaferLocationHistory",
-             std::bind(&SvtDbWaferDto::getWaferLocationHistory, this,
+             std::bind(static_cast<bind_type>(&SvtDbWaferDto::getLocationHistory), this,
                        std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -63,50 +62,16 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
     const SvtKafkaMessage &msg,
     SvtKafkaReplyMsg &replyMsg)
 {
-  const auto &msgData = msg.getPayload()["data"];
-  if (!msgData.contains("create"))
-  {
-    THROW_RUNTIME_ERROR("Non object create was found");
-  }
-
-  auto &entry_j = msgData["create"];
   SvtDbEntry waferEntry;
-
-  parseJsonData(entry_j, waferEntry);
-
-  //! create entry in DB
-  getLogger()->logInfo("Creating Wafer in DB");
-  const auto currMaxEntryId = SvtDbInterface::getMaxId(getTableName());
-
-  if (!createEntryInDB(waferEntry))
+  if (!createEntryWithLocation(msg, waferEntry))
   {
-    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
-    return;
-  }
-
-  const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
-  if (newEntryId != currMaxEntryId + 1)
-  {
-    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
-    return;
-  }
-  getEntryWithId(waferEntry, newEntryId);
-
-  getLogger()->logInfo("Creating wafer location in DB");
-  //! Create waferLocations
-  SvtDbEntry waferLoc;
-  waferLoc.values.insert({"waferId", newEntryId});
-  waferLoc.values.insert(
-      {"generalLocation", waferEntry.values["generalLocation"]});
-  waferLoc.values.insert({"note", "Location at creation"});
-  if (!waferLocDto->createEntryInDB(waferLoc))
-  {
-    THROW_RUNTIME_ERROR("ERROR: Could not create wafer location entry");
+    getLogger()->logError("Failed wafer and location creation in DB.");
     return;
   }
 
   getLogger()->logInfo("Creating all Asics in DB");
   createAllAsics(waferEntry);
+
   getLogger()->logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(waferEntry, replyMsg);
 }
@@ -227,59 +192,4 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   }
 
   return;
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbWaferDto::updateEntry(
-    const SvtKafkaMessage &msg,
-    SvtKafkaReplyMsg &replyMsg)
-{
-  if (msg.getPayload()["data"]["update"].contains("generalLocation"))
-  {
-    THROW_RUNTIME_ERROR(
-        "Failed to update entry. update location is not "
-        "allowed using generic update request");
-    return;
-  }
-  this->SvtDbBaseDto::updateEntry(msg, replyMsg);
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbWaferDto::updateWaferLocation(
-    const SvtKafkaMessage &msg,
-    SvtKafkaReplyMsg &replyMsg)
-{
-  //! create entry in WaferLocation table
-  SvtDbEntry waferEntry, waferLocEntry;
-  waferLocDto->parseJsonData(msg.getPayload()["data"], waferLocEntry);
-  waferLocDto->createEntryInDB(waferLocEntry);
-
-  //! update wafer location
-  const auto waferId = waferLocEntry.values["waferId"];
-
-  std::vector<SvtDbEntry> entries;
-  SvtDbFilters filters;
-  filters.mFilters.values.insert({"waferId", waferId});
-  waferLocDto->getAllEntriesFromDB(entries, filters, "date", true);
-
-  if (entries.size())
-  {
-    waferEntry.values.insert(
-        {"generalLocation", entries.at(0).values["generalLocation"]});
-    updateEntryInDB(waferId, waferEntry);
-    getEntryWithId(waferEntry, waferId);
-    createReplyMsg(waferEntry, replyMsg);
-  }
-  else
-  {
-    THROW_RUNTIME_ERROR("Failed to access Wafer location records");
-    return;
-  }
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbWaferDto::getWaferLocationHistory(
-    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
-{
-  getLocationHistory<SvtDbAgent::SvtDbWaferLocationDto>(msg, replyMsg, "waferId", waferLocDto);
 }

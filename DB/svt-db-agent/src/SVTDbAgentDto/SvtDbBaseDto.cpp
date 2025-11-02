@@ -57,12 +57,12 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtKafkaMessage &msg,
   {
     THROW_RUNTIME_ERROR("Object item create was found");
   }
-  createEntry(msgData["create"], replyMsg);
+  createEntryAndReply(msgData["create"], replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntry(const nlohmann::json &data_j,
-                                           SvtKafkaReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::createEntryAndReply(const nlohmann::json &data_j,
+                                                   SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbEntry entry;
   parseJsonData(data_j, entry);
@@ -93,12 +93,12 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtKafkaMessage &msg,
     THROW_RUNTIME_ERROR("Object item update was found");
   }
 
-  updateEntry(msgData["id"], msgData["update"], replyMsg);
+  updateEntryAndReply(msgData["id"], msgData["update"], replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::updateEntry(const int id, const nlohmann::json &data_j,
-                                           SvtKafkaReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann::json &data_j,
+                                                   SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbAgent::SvtDbEntry entry;
   for (const auto &[key, value] : data_j.items())
