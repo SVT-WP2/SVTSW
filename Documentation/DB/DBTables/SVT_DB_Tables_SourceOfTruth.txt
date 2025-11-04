@@ -320,6 +320,7 @@ Enum main.wpConnectionType {
 }
 
 Enum main.wpGeneralLocation {
+  CERN
   CERN_186_R_E10
   Prague
   LosAlamos

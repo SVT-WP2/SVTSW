@@ -93,6 +93,7 @@ CREATE TYPE "main"."wpConnectionType" AS ENUM (
 );
 
 CREATE TYPE "main"."wpGeneralLocation" AS ENUM (
+  'CERN',
   'CERN_186_R_E10',
   'Prague',
   'LosAlamos',
