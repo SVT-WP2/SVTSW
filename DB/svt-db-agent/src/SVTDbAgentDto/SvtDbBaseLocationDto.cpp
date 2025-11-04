@@ -41,7 +41,7 @@ bool SvtDbAgent::SvtDbBaseLocationDto::createEntryWithLocation(
   }
   getEntryWithId(entry, newEntryId);
 
-  //! Create waferLocations
+  //! Create Locations
   SvtDbEntry locEntry;
   locEntry.values.insert({mLocIdName, newEntryId});
   locEntry.values.insert(
