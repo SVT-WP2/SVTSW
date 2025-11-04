@@ -182,7 +182,7 @@ Table main.Equipment
 }
 
 Table main.EquipmentLocation{
-  equiptmentId integer [ref: > main.Equipment.id]
+  equipmentId integer [ref: > main.Equipment.id]
   generalLocation main.wpGeneralLocation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
