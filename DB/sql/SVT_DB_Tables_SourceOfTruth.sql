@@ -398,7 +398,7 @@ CREATE TABLE "main"."Equipment" (
 );
 
 CREATE TABLE "main"."EquipmentLocation" (
-  "equiptmentId" integer,
+  "equipmentId" integer,
   "generalLocation" main."wpGeneralLocation",
   "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50),
@@ -495,7 +495,7 @@ ALTER TABLE "main"."ChipLocation" ADD FOREIGN KEY ("chipId") REFERENCES "main"."
 
 ALTER TABLE "main"."Equipment" ADD FOREIGN KEY ("equipmentTypeId") REFERENCES "main"."EquipmentType" ("id");
 
-ALTER TABLE "main"."EquipmentLocation" ADD FOREIGN KEY ("equiptmentId") REFERENCES "main"."Equipment" ("id");
+ALTER TABLE "main"."EquipmentLocation" ADD FOREIGN KEY ("equipmentId") REFERENCES "main"."Equipment" ("id");
 
 ALTER TABLE "main"."SLDO" ADD FOREIGN KEY ("chipId") REFERENCES "main"."Chip" ("id");
 
