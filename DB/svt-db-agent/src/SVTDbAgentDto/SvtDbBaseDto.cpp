@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -356,19 +357,22 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
                                              SvtDbEntry &entry)
 {
   //! remove id record
-  std::vector<std::string> AdjIntColName(getColNames().begin(),
-                                         getColNames().end());
+  std::vector<std::string> AdjColName(getColNames().begin(),
+                                      getColNames().end());
   std::vector<std::string>::const_iterator iter =
-      std::find(AdjIntColName.begin(), AdjIntColName.end(), "id");
-  if (iter != AdjIntColName.end())
+      std::find(AdjColName.begin(), AdjColName.end(), "id");
+  if (iter != AdjColName.end())
   {
-    AdjIntColName.erase(iter);
+    AdjColName.erase(iter);
   }
-  if (j_data.size() != (AdjIntColName.size()))
+  if (j_data.size() != (AdjColName.size()))
   {
-    throw std::invalid_argument("insufficient number of parameters");
+    std::ostringstream ss;
+    ss << "Incorrect number of paramenters. Table columns size without id: ";
+    ss << AdjColName.size() << " and entry size is: " << j_data.size();
+    throw std::invalid_argument(ss.str());
   }
-  for (const auto &colName : AdjIntColName)
+  for (const auto &colName : AdjColName)
   {
     const auto &value = j_data[colName];
     entry.values.insert({colName, value});
