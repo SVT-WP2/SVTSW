@@ -6,10 +6,9 @@
  * @brief SvtDbWPMachine
  */
 
-#include <exception>
-
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
@@ -64,18 +63,28 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
 void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
     const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
-  try
+  const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
+  const auto loadedWaferId_j = msg.getPayload()["data"]["loadedWaferId"];
+  if (machineId_j.is_null())
   {
-    const auto machineId = msg.getPayload()["data"]["machineId"];
-    const auto waferId = msg.getPayload()["data"]["waferId"];
+    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
   }
-  catch (std::exception &e)
-  {
-    throw e;
-    return;
-  }
+  nlohmann::json update_j;
+  update_j["loadedWaferId"] = loadedWaferId_j;
+  updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
 }
 
 //========================================================================+
 void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
-    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg) {}
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
+{
+  const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
+  const auto installedProbeCardId_j = msg.getPayload()["data"]["installedProbeCardId"];
+  if (machineId_j.is_null())
+  {
+    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
+  }
+  nlohmann::json update_j;
+  update_j["installedProbeCardId"] = installedProbeCardId_j;
+  updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
+}
