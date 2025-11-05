@@ -58,7 +58,7 @@ namespace SvtDbAgent
     virtual bool getEntryWithId(SvtDbEntry &entry, int id);
 
     virtual bool createEntryInDB(const SvtDbEntry &entry);
-    virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
+    virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry, bool allowNull = false);
 
     //! Reply Message
     virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
@@ -86,7 +86,7 @@ namespace SvtDbAgent
     virtual void createEntryAndReply(const nlohmann::json &data_j,
                                      SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void updateEntryAndReply(const int id, const nlohmann::json &data_j,
-                                     SvtKafka::SvtKafkaReplyMsg &replyMsg);
+                                     SvtKafka::SvtKafkaReplyMsg &replyMsg, bool allowNull = false);
 
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
