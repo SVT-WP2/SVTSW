@@ -275,6 +275,10 @@ void SvtDbInterface::SimpleUpdate::addColumnAndValue(string columnName,
       addColumnAndValue(columnName, value.get<float>());
     }
   }
+  else
+  {
+    addColumnAndValue(columnName, std::string("NULL"));
+  }
 }
 
 //========================================================================+

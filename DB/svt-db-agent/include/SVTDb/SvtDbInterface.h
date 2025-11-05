@@ -136,9 +136,17 @@ namespace SvtDbInterface
                            const nlohmann::basic_json<> &value);
     void addColumnAndValue(std::string columnName, std::string value)
     {
-      // strings have to have '' around the value
-      mColumnNamesAndValues.push_back(formatStr(columnName) + " = '" + value +
-                                      "'");
+      if (value == "NULL")
+      {
+        // strings have to have '' around the value
+        mColumnNamesAndValues.push_back(formatStr(columnName) + " = " + value);
+      }
+      else
+      {
+        // strings have to have '' around the value
+        mColumnNamesAndValues.push_back(formatStr(columnName) + " = '" + value +
+                                        "'");
+      }
     }
     void addColumnAndValue(std::string columnName, int value)
     {

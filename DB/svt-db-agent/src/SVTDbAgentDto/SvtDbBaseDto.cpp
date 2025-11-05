@@ -99,7 +99,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtKafkaMessage &msg,
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann::json &data_j,
-                                                   SvtKafkaReplyMsg &replyMsg)
+                                                   SvtKafkaReplyMsg &replyMsg, bool allowNull)
 {
   SvtDbAgent::SvtDbEntry entry;
   for (const auto &[key, value] : data_j.items())
@@ -114,7 +114,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann:
     THROW_RUNTIME_ERROR(ss.str());
   }
 
-  if (!updateEntryInDB(id, entry))
+  if (!updateEntryInDB(id, entry, allowNull))
   {
     THROW_RUNTIME_ERROR("Entry was not updated");
   }
@@ -243,7 +243,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
 
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
-                                               const SvtDbEntry &entry)
+                                               const SvtDbEntry &entry, bool allowNull)
 {
   SvtDbInterface::SimpleUpdate update;
 
@@ -256,11 +256,12 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
   //! checkinput values and Add columns & values
   for (const auto &item : entry.values)
   {
-    if (!item.second.is_null())
+    if (!allowNull && item.second.is_null())
     {
-      update.addColumnAndValue(item.first, item.second);
-      ++totUpdateParameters;
+      continue;
     }
+    update.addColumnAndValue(item.first, item.second);
+    ++totUpdateParameters;
   }
 
   if (!totUpdateParameters)
