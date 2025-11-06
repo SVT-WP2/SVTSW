@@ -308,7 +308,7 @@ CREATE TABLE "main"."WaferProbeMachine" (
 CREATE TABLE "main"."WaferLoadedInMachine" (
   "machineId" integer,
   "waferId" integer,
-  "date" date,
+  "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50),
   "status" main."waferInMachineStatus"
 );
@@ -316,7 +316,7 @@ CREATE TABLE "main"."WaferLoadedInMachine" (
 CREATE TABLE "main"."ProbeCardInstalledInMachine" (
   "machineId" integer,
   "probeCardId" integer,
-  "date" date,
+  "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50)
 );
 
