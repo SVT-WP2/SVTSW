@@ -1,5 +1,4 @@
-#ifndef SVT_DB_BASE_DTO_H
-#define SVT_DB_BASE_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbBaseDto.h
@@ -8,24 +7,60 @@
  * @brief Base DTO class
  */
 
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 #include <nlohmann/json.hpp>
 
 #include <functional>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace SvtDbAgent
 {
+  using SvtUtils::Singleton;
+  using SvtUtils::SvtLogger;
+
   struct SvtDbEntry
   {
-    std::map<std::string, nlohmann::basic_json<>> values;
-    SvtDbEntry() = default;
+   public:
+    explicit SvtDbEntry() = default;
+    ~SvtDbEntry() = default;
+
+    void addValue(const std::string &_key, const nlohmann::basic_json<> &_val)
+    {
+      if (mValues.find(_key) != mValues.end())
+      {
+        mValues[_key] = _val;
+      }
+      else
+      {
+        mValues.insert({_key, _val});
+      }
+    }
+
+    nlohmann::basic_json<> getValue(const std::string &_key) const
+    {
+      try
+      {
+        return mValues.at(_key);
+      }
+      catch (const std::out_of_range &ex)
+      {
+        THROW_RUNTIME_ERROR("ERROR: Out of range " + ex.what());
+        return {};
+      }
+    }
+
+    const std::map<std::string, nlohmann::basic_json<>> getValues() const { return mValues; }
+
+   private:
+    std::string mName;
+    std::map<std::string, nlohmann::basic_json<>> mValues;
   };
 
   struct SvtDbFilters
@@ -41,12 +76,12 @@ namespace SvtDbAgent
     virtual ~SvtDbBaseDto() { clear(); }
 
     //! request DTO funcions
-    virtual void getAllEntries(const SvtDbAgentMessage &msg,
-                               SvtDbAgentReplyMsg &replyMsg);
-    virtual void createEntry(const SvtDbAgentMessage &msg,
-                             SvtDbAgentReplyMsg &replyMsg);
-    virtual void updateEntry(const SvtDbAgent::SvtDbAgentMessage &msg,
-                             SvtDbAgent::SvtDbAgentReplyMsg &replyMsg);
+    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
 
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
@@ -56,14 +91,14 @@ namespace SvtDbAgent
     virtual bool getEntryWithId(SvtDbEntry &entry, int id);
 
     virtual bool createEntryInDB(const SvtDbEntry &entry);
-    virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry);
+    virtual bool updateEntryInDB(const int id, const SvtDbEntry &entry, bool allowNull = false);
 
     //! Reply Message
     virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
-                                SvtDbAgentReplyMsg &msgReply,
+                                SvtKafka::SvtKafkaReplyMsg &msgReply,
                                 int totalCount = -1);
     virtual void createReplyMsg(const SvtDbEntry &entry,
-                                SvtDbAgentReplyMsg &msgReply);
+                                SvtKafka::SvtKafkaReplyMsg &msgReply);
 
     //! Getters
     const std::string &getTableName() { return mTableName; }
@@ -72,26 +107,26 @@ namespace SvtDbAgent
 
     SvtLogger *getLogger() { return logger; }
 
-    bool findRequestAndRun(std::string_view, const SvtDbAgentMessage &,
-                           SvtDbAgentReplyMsg &);
+    bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
+                           SvtKafka::SvtKafkaReplyMsg &);
 
    protected:
     void addColName(const std::string &name) { mColNames.push_back(name); }
     void setTableName(const std::string &tName) { mTableName = tName; }
 
     virtual void getAllEntries(const nlohmann::json &data_j,
-                               SvtDbAgentReplyMsg &replyMsg);
-    virtual void createEntry(const nlohmann::json &data_j,
-                             SvtDbAgentReplyMsg &replyMsg);
-    virtual void updateEntry(const int id, const nlohmann::json &data_j,
-                             SvtDbAgentReplyMsg &replyMsg);
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void createEntryAndReply(const nlohmann::json &data_j,
+                                     SvtKafka::SvtKafkaReplyMsg &replyMsg);
+    virtual void updateEntryAndReply(const int id, const nlohmann::json &data_j,
+                                     SvtKafka::SvtKafkaReplyMsg &replyMsg, bool allowNull = false);
 
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
                                   SvtDbFilters &filters);
     virtual void addRequest(
         std::string_view,
-        std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>);
+        std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>);
 
     virtual void createAllRequest() = 0;
 
@@ -102,33 +137,10 @@ namespace SvtDbAgent
     std::string mTableName;
 
     std::map<std::string_view,
-             std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)>>
+             std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>
         request_map;
 
     SvtLogger *logger = Singleton<SvtLogger>::instance();
   };
 
-  template <class T>
-  void getLocationHistory(const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg, const std::string &nameId, T *locDto)
-  {
-    try
-    {
-      const auto &id = msg.getPayload()["data"][nameId];
-      SvtDbFilters filters;
-      filters.mFilters.values.insert({nameId, id});
-
-      std::vector<SvtDbAgent::SvtDbEntry> entries;
-      if (locDto->getAllEntriesFromDB(entries, filters))
-      {
-        locDto->createReplyMsg(entries, replyMsg);
-      }
-    }
-    catch (const std::exception &e)
-    {
-      throw e;
-      return;
-    }
-  };
-
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_BASE_DTO_H

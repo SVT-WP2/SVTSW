@@ -6,9 +6,11 @@
  */
 
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include "SvtKafkaMessage.h"
 
-using bind_type = void (SvtDbAgent::SvtDbProbeCardDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbProbeCardDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
 {

@@ -5,45 +5,51 @@
  * @brief Db agent
  */
 
-#include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SVTDbAgentService/SvtDbAgentConsumer.h"
-#include "SVTDbAgentService/SvtDbAgentProducer.h"
-#include "SVTUtilities/SvtDbAgentGlobal.h"
-#include "SVTUtilities/SvtLogger.h"
-
-#include "librdkafka/rdkafkacpp.h"
-
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <memory>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "Database/DatabaseInterface.h"
+#include "SvtKafkaMessage.h"
+#include "librdkafka/rdkafkacpp.h"
+
+#include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentService/SvtDbAgentService.h"
+#include "SvtKafkaConsumer.h"
+#include "SvtKafkaProducer.h"
+
 using namespace SvtDbAgent;
+using SvtKafka::SvtKafkaConsumer;
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaProducer;
+using SvtKafka::SvtKafkaReplyMsg;
 //========================================================================+
-SvtDbAgentService::SvtDbAgentService() {}
+SvtDbAgentService::SvtDbAgentService()
+{
+}
 
 //===============================================~~=========================+
-SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(5000); }
+SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(1000); }
 
 //========================================================================+
 bool SvtDbAgentService::initEnumTypeList()
 {
-  logger->logInfo("Initialize enum type list");
+  mLogger->logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
-  auto enumDto =
-      dynamic_cast<SvtDbEnumDto *>(m_Request->getDto("SvtDbEnumDto"));
 
-  if (!enumDto->getAllEnumTypesInDB(SvtDbAgent::db_schema, enum_types))
+  auto *enumDto = Singleton<SvtDbEnumDto>::instance();
+
+  if (!enumDto->getAllEnumTypesInDB(DatabaseInterface::getDbSchema(), enum_types))
   {
     return false;
   }
   for (auto &enum_type : enum_types)
   {
-    std::string enum_name(SvtDbAgent::db_schema);
+    std::string enum_name(DatabaseInterface::getDbSchema());
     enum_name += std::string(".");
     enum_name += "\"" + enum_type + "\"";
 
@@ -68,10 +74,13 @@ bool SvtDbAgentService::initEnumTypeList()
 //========================================================================+
 bool SvtDbAgentService::configureService(bool stop_eof)
 {
-  m_Consumer = std::shared_ptr<SvtDbAgentConsumer>(
-      new SvtDbAgentConsumer(m_brokerName, stop_eof));
-  m_Producer =
-      std::shared_ptr<SvtDbAgentProducer>(new SvtDbAgentProducer(m_brokerName));
+  mConsumer = std::shared_ptr<SvtKafkaConsumer>(
+      new SvtKafkaConsumer(mBrokerName, topicNames[Request], stop_eof));
+  mConsumer->setConsumeCbFun(std::bind(&SvtDbAgentService::processMsgCb, this, std::placeholders::_1, std::placeholders::_2));
+  mConsumer->start();
+  mProducer =
+      std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName));
+  mProducer->start();
 
   return true;
 }
@@ -79,39 +88,38 @@ bool SvtDbAgentService::configureService(bool stop_eof)
 //========================================================================+
 void SvtDbAgentService::stopConsumer(const bool suspended)
 {
-  m_Consumer->stop(suspended);
+  mConsumer->stop(suspended);
 }
 
 //========================================================================+
 bool SvtDbAgentService::getIsConsRunnning()
 {
-  return m_Consumer->getIsRunning();
+  return mConsumer->getIsRunning();
 }
 
 //========================================================================+
-void SvtDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
+void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
 {
   const RdKafka::Headers *headers;
 
-  SvtDbAgent::SvtDbAgentReplyMsg svtMsg;
-  SvtDbAgent::SvtDbAgentMsgStatus status =
-      SvtDbAgent::SvtDbAgentMsgStatus::Success;
-  switch (message->err())
+  SvtKafkaReplyMsg svtMsg;
+  SvtKafka::SvtKafkaMsgStatus status =
+      SvtKafka::SvtKafkaMsgStatus::Success;
+  switch (message.err())
   {
   case RdKafka::ERR__TIMED_OUT:
-    logger->logError("KafkaError: ERR__TIMED_OUT");
-    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
+    mLogger->logError("KafkaError: ERR__TIMED_OUT");
+    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR_NO_ERROR:
     /* Real message */
-    logger->logInfo("Read msg at offset " + std::to_string(message->offset()),
-                    SvtLogger::Mode::STANDARD);
-    if (message->key())
+    mLogger->logInfo("Read msg at offset " + std::to_string(message.offset()));
+    if (message.key())
     {
-      logger->logInfo("Key: " + *message->key(), SvtLogger::Mode::STANDARD);
+      mLogger->logInfo("Key: " + *message.key());
     }
-    headers = message->headers();
+    headers = message.headers();
     if (headers)
     {
       const auto &hdrs = headers->get_all();
@@ -142,47 +150,47 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message *message, void *opaque)
       }
     }
     {
-      auto bufferPayload = static_cast<const char *>(message->payload());
+      auto bufferPayload = static_cast<const char *>(message.payload());
       svtMsg.setPayload(nlohmann::json::parse(
-          bufferPayload, bufferPayload + static_cast<int>(message->len())));
+          bufferPayload, bufferPayload + static_cast<int>(message.len())));
       // printf("%.*s\n", static_cast<int>(message->len()),
       //        static_cast<const char *>(message->payload()));
     }
-    status = SvtDbAgent::SvtDbAgentMsgStatus::Success;
+    status = SvtKafka::SvtKafkaMsgStatus::Success;
     break;
 
   case RdKafka::ERR__PARTITION_EOF:
     /* Last message */
-    logger->logError("KafkaError: ERR__PARTITION_EOF");
+    mLogger->logError("KafkaError: ERR__PARTITION_EOF");
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR__UNKNOWN_TOPIC:
   case RdKafka::ERR__UNKNOWN_PARTITION:
-    logger->logError("KafkaError: Consume failed, " + message->errstr());
+    mLogger->logError("KafkaError: Consume failed, " + message.errstr());
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
   default:
     /* Errors */
-    logger->logError("KafkaError: Consume failed, " + message->errstr());
+    mLogger->logError("KafkaError: Consume failed, " + message.errstr());
     *(static_cast<bool *>(opaque)) = false;
-    status = SvtDbAgent::SvtDbAgentMsgStatus::UnexpectedError;
+    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
   }
   parseMsg(svtMsg, status);
 }
 
 //========================================================================+
 void SvtDbAgentService::parseMsg(
-    const SvtDbAgent::SvtDbAgentMessage &msg,
-    const SvtDbAgent::SvtDbAgentMsgStatus &status)
+    const SvtKafkaMessage &msg,
+    const SvtKafka::SvtKafkaMsgStatus &status)
 {
   std::initializer_list<std::string_view> hdr_name_list = {
       "kafka_correlationId", "kafka_replyPartition"};
   //! fill headers for reply message
-  SvtDbAgent::SvtDbAgentReplyMsg replyMsg;
+  SvtKafkaReplyMsg replyMsg;
   for (const auto &header : hdr_name_list)
   {
     replyMsg.AddHeader(header,
@@ -190,23 +198,23 @@ void SvtDbAgentService::parseMsg(
   }
   replyMsg.AddHeader("kafka_nest-is-disposed", "00");
 
-  if (status != SvtDbAgent::SvtDbAgentMsgStatus::Success)
+  if (status != SvtKafka::SvtKafkaMsgStatus::Success)
   {
     replyMsg.setType("");
-    replyMsg.setStatus(SvtDbAgent::msgStatus[status]);
+    replyMsg.setStatus(SvtKafka::msgStatus[status]);
     replyMsg.setData(nlohmann::ordered_json());
     replyMsg.setError(-1, "");
   }
   else
   {
     auto type = msg.getPayload()["type"].get<std::string>();
-    logger->logInfo("Received message with request type: " + type);
+    mLogger->logInfo("Received message with request type: " + type);
     if (type.empty())
     {
-      logger->logError("Request have not type information. Skipping");
+      mLogger->logError("Request have not type information. Skipping");
       replyMsg.setType("");
       replyMsg.setStatus(
-          SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+          SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::BadRequest]);
       replyMsg.setData(nlohmann::ordered_json());
       replyMsg.setError(-1, "Empty type");
     }
@@ -215,24 +223,24 @@ void SvtDbAgentService::parseMsg(
       replyMsg.setType(type + std::string("Reply"));
       try
       {
-        if (!m_Request->findRequestAndRun(type, msg, replyMsg))
+        if (!mRequest->findRequestAndRun(type, msg, replyMsg))
         {
           std::ostringstream ss;
           ss << "Error: Request " << type << " not Found";
-          logger->logError(ss.str());
+          mLogger->logError(ss.str());
           replyMsg.setData(nlohmann::ordered_json());
-          replyMsg.setStatus(SvtDbAgent::msgStatus
-                                 [SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+          replyMsg.setStatus(SvtKafka::msgStatus
+                                 [SvtKafka::SvtKafkaMsgStatus::BadRequest]);
           replyMsg.setError(-1, ss.str());
         }
       }
       catch (const std::exception &e)
       {
-        logger->logError("Error: requesting " + type + ". " +
-                         std::string(e.what()));
+        mLogger->logError("Error: requesting " + type + ". " +
+                          std::string(e.what()));
         replyMsg.setData(nlohmann::ordered_json());
         replyMsg.setStatus(
-            SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::BadRequest]);
+            SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::BadRequest]);
         replyMsg.setError(-1, e.what());
       }
     }  //!<! request type is not empty
@@ -241,13 +249,13 @@ void SvtDbAgentService::parseMsg(
 
   if (log_messages)
   {
-    logger->logInfo("Request messages: \n" + std::string("Header = ") +
-                    msg.getHeaders().dump() + std::string("\nPayload = ") +
-                    msg.getPayload().dump());
-    logger->logInfo("Reply messages: \n" + std::string("Header = ") +
-                    replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
-                    replyMsg.getPayload().dump());
+    mLogger->logInfo("Request messages: \n" + std::string("Header = ") +
+                     msg.getHeaders().dump() + std::string("\nPayload = ") +
+                     msg.getPayload().dump());
+    mLogger->logInfo("Reply messages: \n" + std::string("Header = ") +
+                     replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
+                     replyMsg.getPayload().dump());
   }
 
-  m_Producer->push(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
+  mProducer->send(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
 }

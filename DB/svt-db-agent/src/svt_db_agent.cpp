@@ -5,6 +5,7 @@
  * @brief svt_db_agent executable
  */
 
+#include <csignal>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -16,26 +17,31 @@
 #include "Database/DatabaseInterface.h"
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
 #include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SVTUtilities/SvtDbAgentGlobal.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
 
-using DatabaseIF = Singleton<DatabaseInterface>;
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
+
+using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
 std::string version = std::string(VERSION);
 
-SvtLogger *logger = Singleton<SvtLogger>::instance();
+SvtUtils::SvtLogger *logger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
 
-std::string SvtDbAgent::db_name;
-std::string SvtDbAgent::db_schema;
-std::string SvtDbAgent::kafka_server;
-std::string SvtDbAgent::kafka_port;
+bool run = true;
+//========================================================================+
+void sigterm_handler(int sig)
+{
+  std::ostringstream ss;
+  ss << "Caught signal " << sig << ", initiating shutdown...";
+  logger->logWarning(ss.str());
+  run = false;
+}
 
 //========================================================================+
 std::shared_ptr<SvtDbAgentSetupConfig>
-createSbAgentSetupeConfig(const std::string &dbAgentSetuwpConfigFile)
+createSbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
 {
-  auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetuwpConfigFile);
+  auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
   {
     logger->logError("Unable to create test config");
@@ -45,23 +51,22 @@ createSbAgentSetupeConfig(const std::string &dbAgentSetuwpConfigFile)
 }
 
 //========================================================================+
-bool connectToDB(std::string &user, std::string &pass, std::string &conn,
-                 std::string &host, std::string &port)
+bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const std::string &pass,
+                 std::string &host, const std::string &port, const std::string &dbName, const std::string &dbSchema)
 {
-  DatabaseInterface *dbInterface = DatabaseIF::instance();
-  if (!dbInterface->Init(user, pass, conn, host, port))
+  if (!dbInterface->Init(user, pass, host, port, dbName, dbSchema))
   {
     return false;
   }
 
   if (dbInterface->connect())
   {
-    logger->logInfo("Successfully connected to " + conn + ".");
+    logger->logInfo("Successfully connected to " + dbName + ".");
     return true;
   }
   else
   {
-    logger->logError("Cannot connet to " + conn + "!");
+    logger->logError("Cannot connet to " + dbName + "!");
   }
 
   return false;
@@ -70,6 +75,10 @@ bool connectToDB(std::string &user, std::string &pass, std::string &conn,
 //========================================================================+
 int main(int argc, const char *argv[])
 {
+  // Register signal handlers for graceful shutdown
+  std::signal(SIGINT, sigterm_handler);   // Ctrl+C
+  std::signal(SIGTERM, sigterm_handler);  // kill command
+
   if (argc < 2)
   {
     logger->logError("Usage svt-db-agent <setup config file>");
@@ -80,12 +89,6 @@ int main(int argc, const char *argv[])
 
   const auto setupConfig = createSbAgentSetupeConfig(setupConfigFile);
   const auto dbConfig = setupConfig->getDbConfig();
-
-  //! Set Global variables
-  SvtDbAgent::db_name = dbConfig->getDbName();
-  SvtDbAgent::db_schema = dbConfig->getDbSchema();
-  SvtDbAgent::kafka_server = setupConfig->getKafkaServer();
-  SvtDbAgent::kafka_port = setupConfig->getKafkaPort();
 
   logger->configure(setupConfig->getLogFilePath(),
                     setupConfig->getTermVerbosity(),
@@ -101,11 +104,13 @@ int main(int argc, const char *argv[])
   std::string psqlport = dbConfig->getPort();
   std::string psqluser = dbConfig->getUser();
   std::string psqlpass = dbConfig->getPass();
+  std::string psqlDbName = dbConfig->getDbName();
+  std::string psqlDbSchema = dbConfig->getDbSchema();
 
   if (!dbInterface->isConnected())
   {
-    if (!connectToDB(psqluser, psqlpass, SvtDbAgent::db_name, psqlhost,
-                     psqlport))
+    if (!connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
+                     psqlport, psqlDbName, psqlDbSchema))
     {
       logger->logError("Cannot connect to DB");
       return EXIT_FAILURE;
@@ -113,13 +118,16 @@ int main(int argc, const char *argv[])
     else
     {
       logger->logInfo("Databaseinterface is connected");
-      logger->logInfo("Using Scheme: " + SvtDbAgent::db_schema);
+      logger->logInfo("Using Scheme: " + psqlDbSchema);
     }
   }
   try
   {
+    std::string kafka_broker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
     SvtDbAgent::SvtDbAgentService *_dbAgent =
         Singleton<SvtDbAgent::SvtDbAgentService>::instance();
+    _dbAgent->getBrokerName(kafka_broker);
+    // _dbAgent->setLogMessages(true);
     if (!_dbAgent->initEnumTypeList())
     {
       logger->logError("ERROR: We could not initialize enum from DB.");
@@ -129,7 +137,7 @@ int main(int argc, const char *argv[])
     {
       return EXIT_FAILURE;
     }
-    while (_dbAgent->getIsConsRunnning())
+    while (_dbAgent->getIsConsRunnning() && run)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       // int time = gTimer.getTicksInSeconds();

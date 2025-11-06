@@ -1,21 +1,21 @@
 #pragma once
 
 /*!
- * @file SvtDbWafer.h
+ * @file SvtDbEquipDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
- * @date Jun-2025
- * @brief Svt Db wafer DTO
- * */
+ * @date Oct-2025
+ * @brief Equipment type dto
+ */
 
 #include "SvtDbBaseLocationDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbWaferDto : public SvtDbBaseLocationDto
+  class SvtDbEquipDto : public SvtDbBaseLocationDto
   {
    public:
-    SvtDbWaferDto();
-    ~SvtDbWaferDto() = default;
+    SvtDbEquipDto();
+    ~SvtDbEquipDto() = default;
 
    private:
     //! request DTO funcions
@@ -23,8 +23,5 @@ namespace SvtDbAgent
                              SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
 
     virtual void createAllRequest() final;
-
-    //! Create asics for wafer
-    void createAllAsics(const SvtDbAgent::SvtDbEntry &wafer);
   };
 };  // namespace SvtDbAgent

@@ -16,9 +16,6 @@
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   extern std::map<std::string, std::vector<std::string>> enum_type_value_map;
 
   class SvtDbEnumDto : public SvtDbBaseDto
@@ -27,8 +24,8 @@ namespace SvtDbAgent
     SvtDbEnumDto() { createAllRequest(); }
     ~SvtDbEnumDto() = default;
 
-    virtual void getAllEntries(const SvtDbAgentMessage &msg,
-                               SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
 
     bool getAllEnumTypesInDB(const std::string &schema,
                              std::vector<std::string> &enum_types);
@@ -39,7 +36,7 @@ namespace SvtDbAgent
     void addValue(const std::string &type, std::string &value);
 
     void getAllEnumValuesReplyMsg(const std::vector<std::string> &type_filters,
-                                  SvtDbAgent::SvtDbAgentReplyMsg &msgReply);
+                                  SvtKafka::SvtKafkaReplyMsg &msgReply);
 
     std::vector<std::string> getTypeNames();
 

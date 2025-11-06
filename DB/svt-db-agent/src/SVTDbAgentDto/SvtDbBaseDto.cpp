@@ -5,31 +5,34 @@
  * @brief Base DTO class implementation
  */
 
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDb/SvtDbInterface.h"
-#include "SVTDb/sqlmapi.h"
-#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
-#include "SVTUtilities/SvtLogger.h"
-#include "nlohmann/json_fwd.hpp"
-
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "nlohmann/json_fwd.hpp"
+
+#include "SVTDb/SvtDbInterface.h"
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
+
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtDbAgentMessage &msg,
-                                             SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtKafkaMessage &msg,
+                                             SvtKafkaReplyMsg &replyMsg)
 {
   getAllEntries(msg.getPayload()["data"], replyMsg);
 }
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
-                                             SvtDbAgentReplyMsg &replyMsg)
+                                             SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbFilters filters;
   parseJsonFilters(data_j, filters);
@@ -47,20 +50,20 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtDbAgentMessage &msg,
-                                           SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtKafkaMessage &msg,
+                                           SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
     THROW_RUNTIME_ERROR("Object item create was found");
   }
-  createEntry(msgData["create"], replyMsg);
+  createEntryAndReply(msgData["create"], replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntry(const nlohmann::json &data_j,
-                                           SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::createEntryAndReply(const nlohmann::json &data_j,
+                                                   SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbEntry entry;
   parseJsonData(data_j, entry);
@@ -78,8 +81,8 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const nlohmann::json &data_j,
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
-                                           SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtKafkaMessage &msg,
+                                           SvtKafkaReplyMsg &replyMsg)
 {
   const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("id"))
@@ -91,17 +94,17 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const SvtDbAgentMessage &msg,
     THROW_RUNTIME_ERROR("Object item update was found");
   }
 
-  updateEntry(msgData["id"], msgData["update"], replyMsg);
+  updateEntryAndReply(msgData["id"], msgData["update"], replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::updateEntry(const int id, const nlohmann::json &data_j,
-                                           SvtDbAgentReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann::json &data_j,
+                                                   SvtKafkaReplyMsg &replyMsg, bool allowNull)
 {
   SvtDbAgent::SvtDbEntry entry;
   for (const auto &[key, value] : data_j.items())
   {
-    entry.values.insert({key, value});
+    entry.addValue(key, value);
   }
 
   if (!SvtDbInterface::checkIdExist(getTableName(), id))
@@ -111,7 +114,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntry(const int id, const nlohmann::json &d
     THROW_RUNTIME_ERROR(ss.str());
   }
 
-  if (!updateEntryInDB(id, entry))
+  if (!updateEntryInDB(id, entry, allowNull))
   {
     THROW_RUNTIME_ERROR("Entry was not updated");
   }
@@ -126,7 +129,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     const std::string &orderBy, const bool orderDec)
 {
   entries.clear();
-  SimpleQuery query;
+  SvtDbInterface::SimpleQuery query;
 
   query.setTableName(getTableName());
 
@@ -140,7 +143,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     query.addWhereIn("id", filters.ids);
   }
 
-  for (const auto &filter : filters.mFilters.values)
+  for (const auto &filter : filters.mFilters.getValues())
   {
     if (std::find(getColNames().begin(), getColNames().end(), filter.first) !=
         getColNames().end())
@@ -176,7 +179,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       for (const auto &colValue : row)
       {
         const std::string &colName = getColNames().at(valId);
-        rowEntry.values.insert({colName, colValue});
+        rowEntry.addValue(colName, colValue);
         ++valId;
       }
       entries.push_back(rowEntry);
@@ -219,30 +222,30 @@ bool SvtDbAgent::SvtDbBaseDto::getEntryWithId(SvtDbEntry &entry, int id)
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
 {
-  SimpleInsert insert;
+  SvtDbInterface::SimpleInsert insert;
 
   insert.setTableName(getTableName());
 
   //! checkinput values and Add columns & values
-  for (const auto &item : entry.values)
+  for (const auto &item : entry.getValues())
   {
     insert.addColumnAndValue(item.first, item.second);
   }
 
   if (!insert.doInsert())
   {
-    rollbackUpdate();
+    SvtDbInterface::rollbackUpdate();
     return -1;
   }
-  // commitUpdate();
+  SvtDbInterface::commitUpdate();
   return true;
 }
 
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
-                                               const SvtDbEntry &entry)
+                                               const SvtDbEntry &entry, bool allowNull)
 {
-  SimpleUpdate update;
+  SvtDbInterface::SimpleUpdate update;
 
   update.setTableName(getTableName());
 
@@ -251,13 +254,14 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
   //! checkinput values and Add columns & values
   int totUpdateParameters = 0;
   //! checkinput values and Add columns & values
-  for (const auto &item : entry.values)
+  for (const auto &item : entry.getValues())
   {
-    if (!item.second.is_null())
+    if (!allowNull && item.second.is_null())
     {
-      update.addColumnAndValue(item.first, item.second);
-      ++totUpdateParameters;
+      continue;
     }
+    update.addColumnAndValue(item.first, item.second);
+    ++totUpdateParameters;
   }
 
   if (!totUpdateParameters)
@@ -267,17 +271,17 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
 
   if (!update.doUpdate())
   {
-    rollbackUpdate();
+    SvtDbInterface::rollbackUpdate();
     return false;
   }
-  commitUpdate();
+  SvtDbInterface::commitUpdate();
 
   return true;
 }
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
-    const std::vector<SvtDbEntry> &entries, SvtDbAgentReplyMsg &msgReply,
+    const std::vector<SvtDbEntry> &entries, SvtKafkaReplyMsg &msgReply,
     int totalCount)
 {
   try
@@ -287,7 +291,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     for (const auto &entry : entries)
     {
       nlohmann::ordered_json entry_j;
-      for (const auto &item : entry.values)
+      for (const auto &item : entry.getValues())
       {
         entry_j[item.first] = item.second;
       }
@@ -300,7 +304,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     }
     msgReply.setData(data);
     msgReply.setStatus(
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
+        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
     msgReply.setError(0, "");
   }
   catch (const std::exception &e)
@@ -312,13 +316,13 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
-    const SvtDbEntry &entry, SvtDbAgentReplyMsg &msgReply)
+    const SvtDbEntry &entry, SvtKafkaReplyMsg &msgReply)
 {
   try
   {
     nlohmann::ordered_json data;
     nlohmann::ordered_json entry_j;
-    for (const auto &item : entry.values)
+    for (const auto &item : entry.getValues())
     {
       entry_j[item.first] = item.second;
     }
@@ -326,7 +330,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     data["entity"] = entry_j;
     msgReply.setData(data);
     msgReply.setStatus(
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success]);
+        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
     msgReply.setError(0, "");
   }
   catch (const std::exception &e)
@@ -338,8 +342,8 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
 
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
-                                                 const SvtDbAgentMessage &msg,
-                                                 SvtDbAgentReplyMsg &replyMsg)
+                                                 const SvtKafkaMessage &msg,
+                                                 SvtKafkaReplyMsg &replyMsg)
 {
   if (request_map.find(reqName) != request_map.end())
   {
@@ -354,22 +358,25 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
                                              SvtDbEntry &entry)
 {
   //! remove id record
-  std::vector<std::string> AdjIntColName(getColNames().begin(),
-                                         getColNames().end());
+  std::vector<std::string> AdjColName(getColNames().begin(),
+                                      getColNames().end());
   std::vector<std::string>::const_iterator iter =
-      std::find(AdjIntColName.begin(), AdjIntColName.end(), "id");
-  if (iter != AdjIntColName.end())
+      std::find(AdjColName.begin(), AdjColName.end(), "id");
+  if (iter != AdjColName.end())
   {
-    AdjIntColName.erase(iter);
+    AdjColName.erase(iter);
   }
-  if (j_data.size() != (AdjIntColName.size()))
+  if (j_data.size() != (AdjColName.size()))
   {
-    throw std::invalid_argument("insufficient number of parameters");
+    std::ostringstream ss;
+    ss << "Incorrect number of paramenters. Table columns size without id: ";
+    ss << AdjColName.size() << " and entry size is: " << j_data.size();
+    throw std::invalid_argument(ss.str());
   }
-  for (const auto &colName : AdjIntColName)
+  for (const auto &colName : AdjColName)
   {
     const auto &value = j_data[colName];
-    entry.values.insert({colName, value});
+    entry.addValue(colName, value);
   }
 }
 
@@ -388,7 +395,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
       }
       else if (std::find(getColNames().begin(), getColNames().cend(), it.key()) != getColNames().end())
       {
-        filters.mFilters.values.insert({it.key(), it.value()});
+        filters.mFilters.addValue(it.key(), it.value());
       }
       else
       {
@@ -401,7 +408,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::addRequest(
     std::string_view reqName,
-    std::function<void(const SvtDbAgentMessage &, SvtDbAgentReplyMsg &)> fun)
+    std::function<void(const SvtKafkaMessage &, SvtKafkaReplyMsg &)> fun)
 {
   if (request_map.find(reqName) == request_map.end())
   {

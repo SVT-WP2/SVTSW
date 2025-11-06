@@ -12,9 +12,6 @@
 
 namespace SvtDbAgent
 {
-  class SvtDbAgentMessage;
-  class SvtDbAgentReplyMsg;
-
   class SvtDbAsicDto : public SvtDbBaseDto
   {
    public:
@@ -23,13 +20,13 @@ namespace SvtDbAgent
 
    private:
     //! Request
-    void getAllEntries(const SvtDbAgentMessage &msg,
-                       SvtDbAgentReplyMsg &replyMsg) final;
+    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
+                               SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
 
     void createAllRequest() final;
-    void createReplyMsg(const std::vector<SvtDbEntry> &entries,
-                        SvtDbAgentReplyMsg &msgReply,
-                        int totalCount = -1) final;
+    virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
+                                SvtKafka::SvtKafkaReplyMsg &msgReply,
+                                int totalCount = -1) final;
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_TYPE_DTO_H

@@ -39,7 +39,6 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 file(GLOB SOURCES_DB
   "src/Database/databaseinterface.cpp"
-  "src/SVTUtilities/*.cpp"
   "src/SVTConfig/*.cpp"
   "src/SVTDb/*.cpp"
   "src/SVTDbAgentDto/*.cpp"
@@ -57,25 +56,30 @@ add_custom_target(version
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(deps/nlohmann_json build-nlohmann_json)
+IF (NOT TARGET nlohmann_json)
+  set(JSON_BuildTests OFF CACHE INTERNAL "")
+  add_subdirectory(deps/nlohmann_json build-nlohmann_json)
+ENDIF()
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/utils svt-utils)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/kafka svt-kafka)
 
 IF (UNIX AND NOT APPLE)
   add_subdirectory(deps/libpqxx build-pqxx)
-  set(svt_db_agent_lib pqxx rdkafka++ nlohmann_json::nlohmann_json pthread)
+  set(svt_db_agent_lib pqxx rdkafka++ pthread svt-utils svt-kafka)
 
 ELSE()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PQXX REQUIRED libpqxx)
   pkg_check_modules(RDKAFKA REQUIRED rdkafka++)
 
-  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} ${RDKAFKA_LINK_LIBRARIES} nlohmann_json::nlohmann_json pthread)
+  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} ${RDKAFKA_LINK_LIBRARIES} pthread svt-utils svt-kafka)
 
 ENDIF()
 
 # Define the directory containing your source files
 set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
-# # Get a list of all .cpp files in the SOURCE_DIR
+# Get a list of all .cpp files in the SOURCE_DIR
 file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
 # Prepend main project executable source
 list(PREPEND CPP_FILES "${SRC_TEST_DIR}/../svt_db_agent.cpp")

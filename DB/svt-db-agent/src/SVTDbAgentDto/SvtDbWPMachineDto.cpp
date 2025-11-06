@@ -7,10 +7,14 @@
  */
 
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
-#include <exception>
-#include "SVTDbAgentService/SvtDbAgentMessage.h"
+#include <string>
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
-using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
 {
@@ -59,20 +63,69 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
 
 //========================================================================+
 void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg)
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
-  try
+  const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
+  const auto loadedWaferId_j = msg.getPayload()["data"]["loadedWaferId"];
+  if (machineId_j.is_null())
   {
-    const auto machineId = msg.getPayload()["data"]["machineId"];
-    const auto waferId = msg.getPayload()["data"]["waferId"];
+    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
   }
-  catch (std::exception &e)
+  const auto wpMachineId = machineId_j.get<int>();
+  SvtDbEntry wpMachine;
+  getEntryWithId(wpMachine, wpMachineId);
+
+  SvtDbEntry loadedWaferEntry;
+  loadedWaferEntry.addValue("machineId", machineId_j.get<int>());
+  const auto &oldLoadedWfaerId = wpMachine.getValue("loadedWaferId");
+  if (loadedWaferId_j.is_null())
   {
-    throw e;
-    return;
+    if (!oldLoadedWfaerId.is_null())
+    {
+      loadedWaferEntry.addValue("status", "Unloaded");
+      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+      waferLoaded->createEntryInDB(loadedWaferEntry);
+    }
+    else
+    {
+      THROW_RUNTIME_ERROR("WARN! No Wafer loaded.");
+      return;
+    }
   }
+  else
+  {
+    if (!oldLoadedWfaerId.is_null())
+    {
+      getLogger()->logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWfaerId.get<int>()));
+      loadedWaferEntry.addValue("status", "Unloaded");
+      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+    }
+    loadedWaferEntry.addValue("status", "Loaded");
+    loadedWaferEntry.addValue("waferId", loadedWaferId_j.get<int>());
+    waferLoaded->createEntryInDB(loadedWaferEntry);
+  }
+
+  nlohmann::json update_j;
+  update_j["loadedWaferId"] = loadedWaferId_j;
+  updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
 }
 
 //========================================================================+
 void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
-    const SvtDbAgentMessage &msg, SvtDbAgentReplyMsg &replyMsg) {}
+    const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
+{
+  const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
+  const auto installedProbeCardId_j = msg.getPayload()["data"]["installedProbeCardId"];
+  if (machineId_j.is_null())
+  {
+    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
+  }
+  SvtDbEntry installedPCardEntry;
+  installedPCardEntry.addValue("machineId", machineId_j.get<int>());
+  installedPCardEntry.addValue("probeCardId", installedProbeCardId_j);
+  pcInstalled->createEntryInDB(installedPCardEntry);
+
+  nlohmann::json update_j;
+  update_j["installedProbeCardId"] = installedProbeCardId_j;
+  updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
+}
