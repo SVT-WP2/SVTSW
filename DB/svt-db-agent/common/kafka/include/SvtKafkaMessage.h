@@ -1,14 +1,16 @@
 #pragma once
 
-#include <librdkafka/rdkafkacpp.h>
-#include <nlohmann/json.hpp>
 #include <string>
 
-#include "SVTUtilities/SvtJsonUtils.h"
+#include <librdkafka/rdkafkacpp.h>
 
-namespace SvtDbAgent
+#include <nlohmann/json.hpp>
+
+#include "SvtJsonUtils.h"
+
+namespace SvtKafka
 {
-  enum SvtDbAgentMsgStatus : uint8_t
+  enum SvtKafkaMsgStatus : uint8_t
   {
     // sucess
     Success = 0,
@@ -22,10 +24,10 @@ namespace SvtDbAgent
     NumStatus
   };
 
-  const std::array<std::string_view, SvtDbAgentMsgStatus::NumStatus> msgStatus = {
+  const std::array<std::string_view, SvtKafkaMsgStatus::NumStatus> msgStatus = {
       {"Success", "BadRequest", /*"NotFound",*/ "UnexpectedError"}};
 
-  class SvtDbAgentMessage
+  class SvtKafkaMessage
   {
    public:
     virtual const nlohmann::json &getHeaders() const { return headers; }
@@ -38,7 +40,7 @@ namespace SvtDbAgent
     void setPayload(const nlohmann::json &json) { payload = json; }
     void eraseFromPayload(const std::string_view &key)
     {
-      SvtDbAgent::recursive_erase_key(payload, key);
+      SvtUtils::recursive_erase_key(payload, key);
     }
 
    protected:
@@ -46,7 +48,7 @@ namespace SvtDbAgent
     nlohmann::json payload = {};
   };
 
-  class SvtDbAgentReplyMsg : public SvtDbAgentMessage
+  class SvtKafkaReplyMsg : public SvtKafkaMessage
   {
    public:
     void setType(const std::string &_type) { type = _type; }
@@ -71,10 +73,10 @@ namespace SvtDbAgent
     //! reply message data field
     std::string type;
     std::string_view status =
-        SvtDbAgent::msgStatus[SvtDbAgent::SvtDbAgentMsgStatus::Success];
+        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success];
     nlohmann::ordered_json data;
     int error_code = 0;
     std::string error_msg = "";
   };
 
-};  // namespace SvtDbAgent
+};  // namespace SvtKafka

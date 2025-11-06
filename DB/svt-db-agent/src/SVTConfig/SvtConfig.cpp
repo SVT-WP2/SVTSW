@@ -10,7 +10,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "SVTUtilities/SvtLogger.h"
+#include "SvtLogger.h"
 
 using json = nlohmann::json;
 

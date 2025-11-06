@@ -89,7 +89,7 @@ Table main.WaferProbeMachine {
 Table main.WaferLoadedInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   waferId integer [ref: > main.Wafer.id]
-  date date
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
   status main.waferInMachineStatus
 }
@@ -97,7 +97,7 @@ Table main.WaferLoadedInMachine {
 Table main.ProbeCardInstalledInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   probeCardId integer [ref: > main.ProbeCard.id]
-  date date
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
 }
 
@@ -166,6 +166,29 @@ Table main.ChipLocation {
   note text
 }
 
+Table main.EquipmentType
+{
+  id integer [primary key, increment]
+  name varchar(50) [unique, not null]
+}
+
+Table main.Equipment
+{
+  id integer [primary key, increment]
+  name varchar(50) [unique, not null]
+  equipmentTypeId integer [ ref: >  main.EquipmentType.id]
+  generalLocation main.wpGeneralLocation [not null]
+  specification JSON
+}
+
+Table main.EquipmentLocation{
+  equipmentId integer [ref: > main.Equipment.id]
+  generalLocation main.wpGeneralLocation
+  date date [default: `CURRENT_DATE`]
+  username varchar(50)
+  note text
+}
+
 Table main.SLDO{
   id integer [primary key, increment]
   chipId integer [ref: > main.Chip.id]
@@ -176,13 +199,6 @@ Table main.TestSetup {
   id integer [primary key]
   name main.testSetupType
   generalLocation main.wpGeneralLocation
-}
-
-Table main.TestSetupEquipment
-{
-  testSetupId integer [ref: > main.TestSetup.id]
-  equipment main.testEquipments
-  equipmentDetails JSON
 }
 
 Table main.SLDOTestConfiguration {
@@ -304,6 +320,7 @@ Enum main.wpConnectionType {
 }
 
 Enum main.wpGeneralLocation {
+  CERN
   CERN_186_R_E10
   Prague
   LosAlamos
@@ -377,13 +394,6 @@ Enum main.contactMechanicalQuality {
 Enum main.waferInMachineStatus {
   Loaded
   Unloaded
-}
-
-Enum main.testEquipments {
-  oscilloscope
-  powerSupply
-  signalGenetaor
-  SMU
 }
 
 Enum main.sldoTestTypes {

@@ -13,7 +13,6 @@ ExecStart=/data/ycorrale/SVTSW/DB/svt-db-agent/SvtDbAgent.sh /data/ycorrale/SVTS
 Restart=always
 TimeoutStartSec=2
 RestartSec=2
-#LimitMEMLock=infinity
 
 [Install]
 WantedBy=default.target

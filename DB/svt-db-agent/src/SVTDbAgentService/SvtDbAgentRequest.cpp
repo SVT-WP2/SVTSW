@@ -5,17 +5,22 @@
  * @brief implementation of request
  */
 
-#include "SVTDbAgentService/SvtDbAgentRequest.h"
 #include <string_view>
+
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbChipDto.h"
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentDto/SvtDbEquipDto.h"
+#include "SVTDbAgentDto/SvtDbEquipTypeDto.h"
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include "SVTDbAgentDto/SvtDbWPProjectDto.h"
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
+#include "SVTDbAgentService/SvtDbAgentRequest.h"
 
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
 using namespace SvtDbAgent;
 //========================================================================+
 SvtDbAgentRequest::SvtDbAgentRequest() { createAllDtos(); }
@@ -27,10 +32,10 @@ void SvtDbAgentRequest::createAllDtos()
   dtoList["SvtDbWaferTypeDto"] =
       Singleton<SvtDbAgent::SvtDbWaferTypeDto>::instance();
   dtoList["SvtDbWaferDto"] = Singleton<SvtDbAgent::SvtDbWaferDto>::instance();
-  dtoList["SvtDbWaferLocationDto"] =
-      Singleton<SvtDbAgent::SvtDbWaferLocationDto>::instance();
   dtoList["SvtDbAsicDto"] = Singleton<SvtDbAgent::SvtDbAsicDto>::instance();
   dtoList["SvtDbChipDto"] = Singleton<SvtDbAgent::SvtDbChipDto>::instance();
+  dtoList["SvtDbEquipTypeDto"] = Singleton<SvtDbAgent::SvtDbEquipTypeDto>::instance();
+  dtoList["SvtDbEquipDto"] = Singleton<SvtDbAgent::SvtDbEquipDto>::instance();
   dtoList["SvtDbProbeCardDto"] =
       Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
   dtoList["SvtDbWPMachineDto"] =
@@ -39,19 +44,10 @@ void SvtDbAgentRequest::createAllDtos()
       Singleton<SvtDbAgent::SvtDbWPProjectDto>::instance();
 }
 
-//========================================================================+
-SvtDbBaseDto *SvtDbAgentRequest::getDto(std::string_view dtoName)
-{
-  if (dtoList.find(dtoName) != dtoList.end())
-    return dtoList[dtoName];
-  else
-    return nullptr;
-}
-
 //===========================================================================+
 bool SvtDbAgentRequest::findRequestAndRun(std::string_view reqName,
-                                          const SvtDbAgentMessage &msg,
-                                          SvtDbAgentReplyMsg &replyMsg)
+                                          const SvtKafkaMessage &msg,
+                                          SvtKafkaReplyMsg &replyMsg)
 {
   bool req_found = false;
   for (auto &[dtoName, dto] : dtoList)

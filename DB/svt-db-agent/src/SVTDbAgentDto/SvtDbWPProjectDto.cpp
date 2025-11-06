@@ -7,7 +7,9 @@
 
 #include "SVTDbAgentDto/SvtDbWPProjectDto.h"
 
-using bind_type = void (SvtDbAgent::SvtDbWPProjectDto::*)(const SvtDbAgent::SvtDbAgentMessage &, SvtDbAgent::SvtDbAgentReplyMsg &);
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+using bind_type = void (SvtDbAgent::SvtDbWPProjectDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
 {

@@ -9,8 +9,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include "SVTUtilities/SvtLogger.h"
-#include "SVTUtilities/SvtUtilities.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
+
+using SvtUtils::Singleton;
+using SvtUtils::SvtLogger;
 
 class SvtConfig
 {

@@ -12,8 +12,9 @@
 #include <mutex>
 #include <sstream>
 
-#include "SVTUtilities/SvtLogger.h"
+#include "SvtLogger.h"
 
+using SvtUtils::SvtLogger;
 //========================================================================+
 SvtLogger::SvtLogger() = default;
 
