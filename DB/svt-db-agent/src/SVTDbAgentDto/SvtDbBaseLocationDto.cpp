@@ -8,6 +8,7 @@
 #include "SVTDbAgentDto/SvtDbBaseLocationDto.h"
 #include <memory>
 #include <sstream>
+#include <string>
 #include "SVTDb/SvtDbInterface.h"
 
 //========================================================================+
@@ -43,10 +44,9 @@ bool SvtDbAgent::SvtDbBaseLocationDto::createEntryWithLocation(
 
   //! Create Locations
   SvtDbEntry locEntry;
-  locEntry.values.insert({mLocIdName, newEntryId});
-  locEntry.values.insert(
-      {"generalLocation", entry.values["generalLocation"]});
-  locEntry.values.insert({"note", "Location at creation"});
+  locEntry.addValue(mLocIdName, newEntryId);
+  locEntry.addValue("generalLocation", entry.getValue("generalLocation"));
+  locEntry.addValue("note", "Location at creation");
   if (!getLocDto()->createEntryInDB(locEntry))
   {
     THROW_RUNTIME_ERROR("ERROR: Could not create location entry in " + getTableName());
@@ -91,7 +91,7 @@ void SvtDbAgent::SvtDbBaseLocationDto::getLocationHistory(const SvtKafka::SvtKaf
   {
     const auto &id = msg.getPayload()["data"][mLocIdName];
     SvtDbFilters filters;
-    filters.mFilters.values.insert({mLocIdName, id});
+    filters.mFilters.addValue(mLocIdName, id);
 
     std::vector<SvtDbAgent::SvtDbEntry> entries;
     if (locDto->getAllEntriesFromDB(entries, filters))
@@ -117,17 +117,17 @@ void SvtDbAgent::SvtDbBaseLocationDto::updateLocation(
   getLocDto()->createEntryInDB(locEntry);
 
   //! update wafer location
-  const auto id = locEntry.values[mLocIdName];
+  const auto id = locEntry.getValue(mLocIdName);
 
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
-  filters.mFilters.values.insert({mLocIdName, id});
+  filters.mFilters.addValue(mLocIdName, id);
   getLocDto()->getAllEntriesFromDB(entries, filters, "date", true);
 
   if (entries.size())
   {
-    entry.values.insert(
-        {"generalLocation", entries.at(0).values["generalLocation"]});
+    entry.addValue(
+        "generalLocation", entries.at(0).getValue("generalLocation"));
     updateEntryInDB(id, entry);
     getEntryWithId(entry, id);
     createReplyMsg(entry, replyMsg);

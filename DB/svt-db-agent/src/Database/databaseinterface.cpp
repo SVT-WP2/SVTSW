@@ -230,6 +230,8 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     message = std::string("SQL error: ") + e.what() +
               std::string("Query was: ") + e.query() +
               std::string(" with statement: ") + query;
+    logger->logError(message);
+    message = e.what();
 
     mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     status = false;
