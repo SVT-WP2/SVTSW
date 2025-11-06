@@ -58,7 +58,6 @@ class DBAwareWaferProberAgent(WaferProberAgent):
 
         self.producer.send(self.request_topic, message)
         self.producer.flush()
-        print(f"📤 Sent DB request: {msg_type}")
 
     # ------------------------------------------------------------------
     # Public: Wafer queries
@@ -91,7 +90,6 @@ class DBAwareWaferProberAgent(WaferProberAgent):
     #     def on_wafer(reply):
     #         wafers = reply["data"].get("items", [])
     #         if not wafers:
-    #             print(f"❌ Wafer {wafer_id} not found.")
     #             return
     #         wafer = wafers[0]
     #         result["wafer"] = wafer
@@ -101,8 +99,6 @@ class DBAwareWaferProberAgent(WaferProberAgent):
     #             result["wafer_type"] = reply2["data"].get("items", [])[0]
     #             def on_hist(reply3):
     #                 result["history"] = reply3["data"].get("items", [])
-    #                 print("✅ Full wafer info:")
-    #                 print(json.dumps(result, indent=2))
     #             self.get_wafer_location_history(wafer_id, callback=on_hist)
 
     #         self.get_wafer_type_by_id(wafer_type_id, callback=on_type)
