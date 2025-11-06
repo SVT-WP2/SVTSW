@@ -7,6 +7,8 @@
  */
 
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
+#include <string>
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SvtKafkaMessage.h"
 #include "SvtLogger.h"
 
@@ -69,6 +71,40 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
   {
     THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
   }
+  const auto wpMachineId = machineId_j.get<int>();
+  SvtDbEntry wpMachine;
+  getEntryWithId(wpMachine, wpMachineId);
+
+  SvtDbEntry loadedWaferEntry;
+  loadedWaferEntry.addValue("machineId", machineId_j.get<int>());
+  const auto &oldLoadedWfaerId = wpMachine.getValue("loadedWaferId");
+  if (loadedWaferId_j.is_null())
+  {
+    if (!oldLoadedWfaerId.is_null())
+    {
+      loadedWaferEntry.addValue("status", "Unloaded");
+      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+      waferLoaded->createEntryInDB(loadedWaferEntry);
+    }
+    else
+    {
+      THROW_RUNTIME_ERROR("WARN! No Wafer loaded.");
+      return;
+    }
+  }
+  else
+  {
+    if (!oldLoadedWfaerId.is_null())
+    {
+      getLogger()->logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWfaerId.get<int>()));
+      loadedWaferEntry.addValue("status", "Unloaded");
+      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+    }
+    loadedWaferEntry.addValue("status", "Loaded");
+    loadedWaferEntry.addValue("waferId", loadedWaferId_j.get<int>());
+    waferLoaded->createEntryInDB(loadedWaferEntry);
+  }
+
   nlohmann::json update_j;
   update_j["loadedWaferId"] = loadedWaferId_j;
   updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
@@ -84,6 +120,11 @@ void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
   {
     THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
   }
+  SvtDbEntry installedPCardEntry;
+  installedPCardEntry.addValue("machineId", machineId_j.get<int>());
+  installedPCardEntry.addValue("probeCardId", installedProbeCardId_j);
+  pcInstalled->createEntryInDB(installedPCardEntry);
+
   nlohmann::json update_j;
   update_j["installedProbeCardId"] = installedProbeCardId_j;
   updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);

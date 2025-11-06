@@ -17,7 +17,7 @@ namespace SvtDbAgent
    public:
     SvtDbWaferLoadedInMachineDto()
     {
-      setTableName("");
+      setTableName("WaferLoadedInMachine");
 
       addColName("machineId");
       addColName("waferId");
@@ -36,7 +36,7 @@ namespace SvtDbAgent
    public:
     SvtDbProbeCardInstalledInMachineDto()
     {
-      setTableName("");
+      setTableName("ProbeCardInstalledInMachine");
 
       addColName("machineId");
       addColName("probeCardId");
