@@ -7,6 +7,7 @@
 
 #include "SVTDb/SvtDbInterface.h"
 #include "Database/DatabaseInterface.h"
+#include "SvtUtilities.h"
 
 using std::string;
 using std::vector;

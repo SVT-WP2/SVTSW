@@ -96,7 +96,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, 
 {
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
-  filters.mFilters.values.insert({"waferTypeId", waferTypeId});
+  filters.mFilters.addValue("waferTypeId", waferTypeId);
   waferTypeMapDto->getAllEntriesFromDB(entries, filters);
 
   if (entries.size())
@@ -141,15 +141,15 @@ const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMap(const int wafer
 
   SvtDbEntry waferMap;
   getWaferTypeMapEntry(waferTypeId, waferMap);
-  return waferMap.values["waferMap"];
+  return waferMap.getValue("waferMap");
 }
 
 //========================================================================+
 bool SvtDbAgent::SvtDbWaferTypeDto::createWaferTypeMap(const int waferTypeId, const std::string &waferMap_s)
 {
   SvtDbEntry waferMap;
-  waferMap.values.insert({"waferTypeId", waferTypeId});
-  waferMap.values.insert({"waferMap", waferMap_s});
+  waferMap.addValue("waferTypeId", waferTypeId);
+  waferMap.addValue("waferMap", waferMap_s);
   return waferTypeMapDto->createEntryInDB(waferMap);
 }
 

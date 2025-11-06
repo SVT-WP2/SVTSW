@@ -77,7 +77,7 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, Svt
   }
   //! Update Asic chipId
   SvtDbEntry asicEntry;
-  asicEntry.values.insert({"chipId", chipEntry.values["id"]});
+  asicEntry.addValue("chipId", chipEntry.getValue("id"));
   Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
   return false;
@@ -138,7 +138,7 @@ void SvtDbAgent::SvtDbChipDto::createManyEntries(
     item["generalLocation"] = location;
     SvtDbEntry chipEntry;
     createChip(item, chipEntry);
-    filters.push_back(chipEntry.values["id"]);
+    filters.push_back(chipEntry.getValue("id"));
   }
   nlohmann::json data;
   data["filters"] = filters;

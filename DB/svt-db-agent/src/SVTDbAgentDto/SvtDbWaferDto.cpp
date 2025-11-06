@@ -79,8 +79,8 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
 //========================================================================+
 void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
 {
-  int waferId = wafer.values.at("id").get<int>();
-  int waferTypeId = wafer.values.at("waferTypeId").get<int>();
+  int waferId = wafer.getValue("id").get<int>();
+  int waferTypeId = wafer.getValue("waferTypeId").get<int>();
 
   SvtDbWaferTypeDto *waferType = Singleton<SvtDbWaferTypeDto>::instance();
 
@@ -133,7 +133,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         std::ostringstream asic_waferMapPos;
         asic_waferMapPos << asic_row << "_" << asic_col;
         std::ostringstream asic_SN;
-        asic_SN << wafer.values.at("serialNumber").get<std::string>() << "_"
+        asic_SN << wafer.getValue("serialNumber").get<std::string>() << "_"
                 << asic_waferMapPos.str();
 
         std::string asic_quality;
@@ -178,11 +178,11 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
         }
 
         SvtDbEntry asic;
-        asic.values.insert({"waferId", waferId});
-        asic.values.insert({"serialNumber", asic_SN.str()});
-        asic.values.insert({"waferMapPosition", asic_waferMapPos.str()});
-        asic.values.insert({"familyType", asic_familytype});
-        asic.values.insert({"quality", asic_quality});
+        asic.addValue("waferId", waferId);
+        asic.addValue("serialNumber", asic_SN.str());
+        asic.addValue("waferMapPosition", asic_waferMapPos.str());
+        asic.addValue("familyType", asic_familytype);
+        asic.addValue("quality", asic_quality);
 
         Singleton<SvtDbAsicDto>::instance()->createEntryInDB(asic);
         ++asic_col;

@@ -15,6 +15,7 @@
 
 #include <functional>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,8 +27,40 @@ namespace SvtDbAgent
 
   struct SvtDbEntry
   {
-    std::map<std::string, nlohmann::basic_json<>> values;
-    SvtDbEntry() = default;
+   public:
+    explicit SvtDbEntry() = default;
+    ~SvtDbEntry() = default;
+
+    void addValue(const std::string &_key, const nlohmann::basic_json<> &_val)
+    {
+      if (mValues.find(_key) != mValues.end())
+      {
+        mValues[_key] = _val;
+      }
+      else
+      {
+        mValues.insert({_key, _val});
+      }
+    }
+
+    nlohmann::basic_json<> getValue(const std::string &_key) const
+    {
+      try
+      {
+        return mValues.at(_key);
+      }
+      catch (const std::out_of_range &ex)
+      {
+        THROW_RUNTIME_ERROR("ERROR: Out of range " + ex.what());
+        return {};
+      }
+    }
+
+    const std::map<std::string, nlohmann::basic_json<>> getValues() const { return mValues; }
+
+   private:
+    std::string mName;
+    std::map<std::string, nlohmann::basic_json<>> mValues;
   };
 
   struct SvtDbFilters

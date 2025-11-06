@@ -104,7 +104,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann:
   SvtDbAgent::SvtDbEntry entry;
   for (const auto &[key, value] : data_j.items())
   {
-    entry.values.insert({key, value});
+    entry.addValue(key, value);
   }
 
   if (!SvtDbInterface::checkIdExist(getTableName(), id))
@@ -143,7 +143,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     query.addWhereIn("id", filters.ids);
   }
 
-  for (const auto &filter : filters.mFilters.values)
+  for (const auto &filter : filters.mFilters.getValues())
   {
     if (std::find(getColNames().begin(), getColNames().end(), filter.first) !=
         getColNames().end())
@@ -179,7 +179,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       for (const auto &colValue : row)
       {
         const std::string &colName = getColNames().at(valId);
-        rowEntry.values.insert({colName, colValue});
+        rowEntry.addValue(colName, colValue);
         ++valId;
       }
       entries.push_back(rowEntry);
@@ -227,7 +227,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
   insert.setTableName(getTableName());
 
   //! checkinput values and Add columns & values
-  for (const auto &item : entry.values)
+  for (const auto &item : entry.getValues())
   {
     insert.addColumnAndValue(item.first, item.second);
   }
@@ -237,7 +237,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
     SvtDbInterface::rollbackUpdate();
     return -1;
   }
-  // commitUpdate();
+  SvtDbInterface::commitUpdate();
   return true;
 }
 
@@ -254,7 +254,7 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
   //! checkinput values and Add columns & values
   int totUpdateParameters = 0;
   //! checkinput values and Add columns & values
-  for (const auto &item : entry.values)
+  for (const auto &item : entry.getValues())
   {
     if (!allowNull && item.second.is_null())
     {
@@ -291,7 +291,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     for (const auto &entry : entries)
     {
       nlohmann::ordered_json entry_j;
-      for (const auto &item : entry.values)
+      for (const auto &item : entry.getValues())
       {
         entry_j[item.first] = item.second;
       }
@@ -322,7 +322,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
   {
     nlohmann::ordered_json data;
     nlohmann::ordered_json entry_j;
-    for (const auto &item : entry.values)
+    for (const auto &item : entry.getValues())
     {
       entry_j[item.first] = item.second;
     }
@@ -376,7 +376,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
   for (const auto &colName : AdjColName)
   {
     const auto &value = j_data[colName];
-    entry.values.insert({colName, value});
+    entry.addValue(colName, value);
   }
 }
 
@@ -395,7 +395,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
       }
       else if (std::find(getColNames().begin(), getColNames().cend(), it.key()) != getColNames().end())
       {
-        filters.mFilters.values.insert({it.key(), it.value()});
+        filters.mFilters.addValue(it.key(), it.value());
       }
       else
       {
