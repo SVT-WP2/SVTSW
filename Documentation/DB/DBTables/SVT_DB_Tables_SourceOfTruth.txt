@@ -89,7 +89,7 @@ Table main.WaferProbeMachine {
 Table main.WaferLoadedInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   waferId integer [ref: > main.Wafer.id]
-  date date
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
   status main.waferInMachineStatus
 }
@@ -97,7 +97,7 @@ Table main.WaferLoadedInMachine {
 Table main.ProbeCardInstalledInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   probeCardId integer [ref: > main.ProbeCard.id]
-  date date
+  date date [default: `CURRENT_DATE`]
   username varchar(50)
 }
 
