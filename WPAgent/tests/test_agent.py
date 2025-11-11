@@ -269,14 +269,14 @@ class TestRunner:
         start = time.time()
 
         # Run tests
-        # self.test("Initialization", self.test_initialization)
+        self.test("Initialization", self.test_initialization)
         # self.test("Sequential Commands", self.test_sequential_commands)
-        # self.test("Busy Flag (Concurrent Commands)", self.test_busy_flag)
-        # self.test("Commands with Parameters", self.test_commands_with_params)
+        self.test("Busy Flag (Concurrent Commands)", self.test_busy_flag)
+        self.test("Commands with Parameters", self.test_commands_with_params)
         self.test("State Machine Transitions", self.test_state_transitions)
-        # self.test("Invalid Command Handling", self.test_invalid_command)
-        # self.test("Re-initialization", self.test_reinitialization)
-        # self.test("Project Status", self.test_project_status)
+        self.test("Invalid Command Handling", self.test_invalid_command)
+        self.test("Re-initialization", self.test_reinitialization)
+        self.test("Project Status", self.test_project_status)
 
         # Summary
         duration = time.time() - start
