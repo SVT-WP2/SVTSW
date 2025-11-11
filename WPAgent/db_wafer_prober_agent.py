@@ -1,111 +1,142 @@
-# WPAgent/db_aware_wafer_prober_agent.py
-from WPAgent.wafer_prober_agent import WaferProberAgent
-from kafka import KafkaProducer, KafkaConsumer
-import json, uuid, threading
+from wafer_prober_agent import WaferProberAgent
 
-class DBAwareWaferProberAgent(WaferProberAgent):
+
+TABLE_DEFINITIONS = {
+    "WaferType": [
+        "id", "name", "engineeringRun", "foundry", "technology"
+    ],
+    "WaferTypeMap": [
+        "waferTypeId", "waferMap"
+    ],
+    "WaferTypeImage": [
+        "waferTypeId", "imageBase64String"
+    ],
+    "Wafer": [
+        "id", "waferTypeId", "serialNumber", "batchNumber",
+        "thinningDate", "dicingDate", "productionDate", "generalLocation"
+    ],
+    "WaferLocation": [
+        "waferId", "generalLocation", "date", "username", "note"
+    ],
+    "Version": [
+        "id", "name", "baseVersion", "creationTime", "note"
+    ],
+    "Asic": [
+        "id", "waferId", "chipId", "serialNumber",
+        "familyType", "waferMapPosition", "quality"
+    ],
+    "ProbeCard": [
+        "id", "serialNumber", "vendor", "name", "model",
+        "version", "arrivalDate", "location", "type", "vendorCleaningInterval"
+    ],
+    "ProbeCardFamilyType": [
+        "probeCardId", "asicFamilyType"
+    ],
+    "WaferProbeMachine": [
+        "id", "serialNumber", "name", "hostName", "connectionType",
+        "connectionPort", "generalLocation", "software", "swVersion",
+        "vendor", "loadedWaferId", "installedProbeCardId"
+    ],
+    "WaferLoadedInMachine": [
+        "machineId", "waferId", "date", "username", "status"
+    ],
+    "ProbeCardInstalledInMachine": [
+        "machineId", "probeCardId", "date", "username"
+    ],
+    "WaferProbeProject": [
+        "id", "wpMachineId", "waferTypeId", "asicFamilyType",
+        "orientation", "name", "alignmentDie", "homeDie", "local2GlobalMap"
+    ],
+    "ProbeCardMaintenance": [
+        "id", "probeCardId", "cleaningDate", "totNumContacts",
+        "numContactsSinceLastCleaning", "numContactsDuringCleaning",
+        "cleaningOverdrive"
+    ],
+    "AsicProbing": [
+        "id", "asicId", "numContacts", "mechanicalQuality", "arrivalDate"
+    ],
+    "AsicConfiguration": [
+        "id", "probeStationId", "versionId", "isTestingAllowed"
+    ],
+    "WpConfiguration": [
+        "id", "wpMachineId", "versionId", "orientation"
+    ],
+    "ProbeCardConfiguration": [
+        "id", "probeCardId", "versionId", "cleaningInterval"
+    ],
+    "Chip": [
+        "id", "serialNumber", "generalLocation"
+    ],
+    "ChipLocation": [
+        "chipId", "generalLocation", "date", "username", "note"
+    ],
+    "EquipmentType": [
+        "id", "name"
+    ],
+    "Equipment": [
+        "id", "name", "equipmentTypeId", "generalLocation", "specification"
+    ],
+    "EquipmentLocation": [
+        "equipmentId", "generalLocation", "date", "username", "note"
+    ],
+    "SLDO": [
+        "id", "chipId", "serialNumber"
+    ],
+    "TestSetup": [
+        "id", "name", "generalLocation"
+    ],
+    "SLDOTestConfiguration": [
+        "id", "name", "mode", "loadCapacitance",
+        "loadCurrent", "temperature"
+    ],
+    "SLDOTestList": [
+        "name", "config", "input", "version"
+    ],
+    "SLDOTest": [
+        "id", "name", "timestamp", "SLDOid", "testSetupId",
+        "configId", "testValues"
+    ]
+}
+
+
+
+
+class DBRetrivalAgent(WaferProberAgent):
     """
-    Extends WaferProberAgent with communication to SVT DB Agent via Kafka.
-    Handles wafer-related data queries (GetAllWafers, GetWaferTypeMap, etc.).
+    Retrive information from the wafer-probe database and communicate
+    results over Kafka.
     """
 
-    def __init__(self, kafka_broker_url: str = "localhost:9092"):
-        # Initialize everything from the base class (command handler, etc.)
-        super().__init__()
+    def get_table_all(self, table: str, timeout: float = 10.0):
+        # Fetch all rows for the given table name via Kafka request/reply.
+        if table not in TABLE_DEFINITIONS:
+            raise ValueError(f"Unknown table: {table}")
 
-        # New DB-related Kafka topics and clients
-        self.kafka_broker_url = kafka_broker_url
-        self.request_topic = "svt.db-agent.request"
-        self.reply_topic = f"{self.request_topic}.reply"
-
-        self.producer = KafkaProducer(
-            bootstrap_servers=self.kafka_broker_url,
-            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-        )
-        self.consumer = KafkaConsumer(
-            self.reply_topic,
-            bootstrap_servers=self.kafka_broker_url,
-            group_id=f"wp_agent_{uuid.uuid4()}",
-            auto_offset_reset="latest",
-            value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+        payload = {"type": "GetDBTable", "params": {"table": table}} #command type of DB agent? 
+        reply = self.kafka.request_reply( 
+            request_topic="svt.db-agent",   #the Kafka topic of DBagent
+            reply_topic="svt.wp-agent.reply", ##??
+            payload=payload,
+            reply_type="GetDBTableResult",
+            timeout=timeout,
         )
 
-        self.pending_requests = {}
-        self._start_reply_listener()
+        if not reply or reply.get("status") != "success":
+            raise RuntimeError(f"DB request failed for table '{table}': {reply}")
+
+        rows = reply.get("rows") or reply.get("output") or []  # How DB retunrs the fileds?
+        # Attach table structure metadata so you know available fields
+        return {
+            "table": table,
+            "fields": TABLE_DEFINITIONS[table],
+            "rows": rows,
+        }
 
 
-    # ------------------------------------------------------------------
-    # Internal: Request/Reply flow
-    # ------------------------------------------------------------------
-    def _start_reply_listener(self):
-        """Start a thread to continuously listen for DB replies."""
-        def listen():
-            for msg in self.consumer:
-                reply = msg.value
-                msg_id = reply.get("correlationId")
-                if msg_id and msg_id in self.pending_requests:
-                    cb = self.pending_requests.pop(msg_id)
-                    cb(reply)
-        threading.Thread(target=listen, daemon=True).start()
+    def get_field_values(self, table: str, field: str, timeout: float = 10.0):
+            """Get only one specific column from a table."""
+            result = self.get_table_all(table, timeout)
+            if field not in result["fields"]:
+                raise ValueError(f"Field '{field}' not found in table '{table}'")
+            return [row.get(field) for row in result["rows"] if field in row]
 
-    def _send_request(self, msg_type: str, data: dict, callback=None):
-        """Send a DB agent request."""
-        corr_id = str(uuid.uuid4())
-        message = {"type": msg_type, "data": data, "correlationId": corr_id}
-
-        if callback:
-            self.pending_requests[corr_id] = callback
-
-        self.producer.send(self.request_topic, message)
-        self.producer.flush()
-
-    # ------------------------------------------------------------------
-    # Public: Wafer queries
-    # ------------------------------------------------------------------
-    def get_all_wafers(self, callback=None):
-        self._send_request("GetAllWafers", {"filter": {"ids": []}}, callback)
-
-    def get_wafer_by_id(self, wafer_id: int, callback=None):
-        self._send_request("GetAllWafers", {"filter": {"ids": [wafer_id]}}, callback)
-
-    def get_all_wafer_types(self, callback=None):
-        self._send_request("GetAllWaferTypes", {"filter": {"ids": []}}, callback)
-
-    def get_wafer_type_by_id(self, wafer_type_id: int, callback=None):
-        self._send_request("GetAllWaferTypes", {"filter": {"ids": [wafer_type_id]}}, callback)
-
-    def get_wafer_type_map(self, wafer_type_id: int, callback=None):
-        self._send_request("GetWaferTypeMap", {"waferTypeId": wafer_type_id}, callback)
-
-    def get_wafer_location_history(self, wafer_id: int, callback=None):
-        self._send_request("GetWaferLocationHistory", {"waferId": wafer_id}, callback)
-
-    # ------------------------------------------------------------------
-    # Example composite call
-    # ------------------------------------------------------------------
-    # def get_full_wafer_info(self, wafer_id: int):
-    #     """Chain calls to get wafer + type + location history."""
-    #     result = {}
-
-    #     def on_wafer(reply):
-    #         wafers = reply["data"].get("items", [])
-    #         if not wafers:
-    #             return
-    #         wafer = wafers[0]
-    #         result["wafer"] = wafer
-    #         wafer_type_id = wafer["waferTypeId"]
-
-    #         def on_type(reply2):
-    #             result["wafer_type"] = reply2["data"].get("items", [])[0]
-    #             def on_hist(reply3):
-    #                 result["history"] = reply3["data"].get("items", [])
-    #             self.get_wafer_location_history(wafer_id, callback=on_hist)
-
-    #         self.get_wafer_type_by_id(wafer_type_id, callback=on_type)
-
-    #     self.get_wafer_by_id(wafer_id, callback=on_wafer)
-
-    def close(self):
-        self.producer.close()
-        self.consumer.close()
-        
