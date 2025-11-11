@@ -4,8 +4,13 @@ WPAgent Test Runner with Mock Prober
 Run tests without connecting to real hardware
 """
 
-import time
+# ✅ ADD PARENT DIRECTORY TO PATH
 import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import time
 from threading import Thread
 
 # Test configuration
@@ -15,7 +20,7 @@ USE_MOCK_PROBER = True  # Set to True to use mock prober
 def setup_mock_prober():
     """Configure factory to use mock prober"""
     from drivers import factory
-    from mock_prober import MockProberImpl, SlowMockProberImpl
+    from tests.mock_prober import MockProberImpl, SlowMockProberImpl
 
     # Add mock prober to factory
     factory.prober_classes['sentio'] = MockProberImpl
@@ -291,7 +296,7 @@ class TestRunner:
         print(f"Duration: {duration:.2f}s")
 
         if self.failed == 0:
-            self.log("\nALL TESTS PASSED! \n", Colors.GREEN + Colors.BOLD)
+            self.log("\n ALL TESTS PASSED! \n", Colors.GREEN + Colors.BOLD)
         else:
             self.log(f"\n⚠️  {self.failed} TEST(S) FAILED\n", Colors.RED + Colors.BOLD)
 
