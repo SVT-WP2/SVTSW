@@ -80,7 +80,7 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, Svt
   asicEntry.addValue("chipId", chipEntry.getValue("id"));
   Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
-  return false;
+  return true;
 };
 
 //========================================================================+
