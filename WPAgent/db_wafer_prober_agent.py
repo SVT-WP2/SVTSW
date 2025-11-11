@@ -125,7 +125,6 @@ class DBRetrivalAgent(WaferProberAgent):
             raise RuntimeError(f"DB request failed for table '{table}': {reply}")
 
         rows = reply.get("rows") or reply.get("output") or []  # How DB retunrs the fileds?
-        # Attach table structure metadata so you know available fields
         return {
             "table": table,
             "fields": TABLE_DEFINITIONS[table],
