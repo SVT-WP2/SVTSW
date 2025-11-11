@@ -41,30 +41,6 @@ class WaferProberAgent:
         print("Available Commands:")
         for cmd in handler.listAvailableCommands():
             print(f" - {cmd}")
-    # NOT SURE I NEED IT HERE
-    def status(self):
-        """Get current agent status"""
-        from actions.WPProjectActions import get_project_status
-        result = get_project_status()
 
-        if result["status"] == "success":
-            data = result.get("data", {})
-            print("\n Agent Status:")
-            print(f"  Address: {data.get('address', 'Not set')}")
-            print(f"  Machine Type: {data.get('machine_type', 'Not set')}")
-            print(f"  Project: {data.get('project_name', 'Not set')}")
-            print(f"  Prober Status: {data.get('prober_status', 'Unknown')}")
-            print(f"  Initialized: {'✅ Yes' if data.get('prober_initialized') else '❌ No'}")
-            print(f"  Ready: {'✅ Yes' if data.get('ready_for_commands') else f'❌ No '}")
-        elif result["status"] == "uninitialized":
-            data = result.get("data", {})
-            print("\n Agent Status:")
-            print(f"  Initialized: ❌ No")
-            print(f"  Status: Waiting for 'Initialize' command")
-            print(f"  Ready: ❌ No - {data.get('ready_message', 'Not initialized')}")
-        else:
-            print(f"⚠️  {result['output']}")
-
-        return result
 
 
