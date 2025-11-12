@@ -2,8 +2,28 @@ from drivers.factory import get_prober
 from WPAgentUtilities.WPHelpers import resolve_project_parameters
 
 
+def _ensure_initialized():
+    """
+    Helper function to check if prober is initialized before executing commands.
+    Returns error dict if not ready, None if ready.
+    """
+    from WPAgentUtilities.WPHelpers import check_prober_ready
+
+    is_ready, message = check_prober_ready()
+    if not is_ready:
+        return {
+            "status": "error",
+            "output": message
+        }
+    return None
+
+
 def move_chuck_xy(x, y, address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.move_chuck_xy(x, y)
     prober.local_mode()
@@ -11,7 +31,11 @@ def move_chuck_xy(x, y, address=None, machine_type=None):
 
 
 def run_ptpa(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.run_ptpa()
     prober.local_mode()
@@ -19,15 +43,23 @@ def run_ptpa(address=None, machine_type=None):
 
 
 def step_next_die(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     result = prober.step_next_die()
     prober.local_mode()
     return {"status": "success", "output": f"Stepped to next die: {result}"}
 
 
-def go_to_die(col, row, subsite=0,address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+def go_to_die(col, row, subsite=0, address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     result = prober.go_to_die(col, row, subsite)
     prober.local_mode()
@@ -35,7 +67,11 @@ def go_to_die(col, row, subsite=0,address=None, machine_type=None):
 
 
 def switch_camera(mount_point, address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.switch_camera(mount_point)
     prober.local_mode()
@@ -43,7 +79,11 @@ def switch_camera(mount_point, address=None, machine_type=None):
 
 
 def move_chuck_home(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.move_chuck_home()
     prober.local_mode()
@@ -51,7 +91,11 @@ def move_chuck_home(address=None, machine_type=None):
 
 
 def unload_wafer(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.unload_wafer()
     prober.local_mode()
@@ -59,7 +103,11 @@ def unload_wafer(address=None, machine_type=None):
 
 
 def clean_probe_station(address=None, machine_type=None, **kwargs):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.clean_probe_station(**kwargs)
     prober.local_mode()
@@ -67,8 +115,12 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
 
 
 def open_project(address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
     # Open project should be done with extra arguments chipname and orientation
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     # To be updated in the future by this
     # path = f"C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\{chipName}_{orientation}"
@@ -79,7 +131,11 @@ def open_project(address=None, machine_type=None):
 
 
 def load_wafer(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.load_wafer()
     prober.local_mode()
@@ -87,7 +143,11 @@ def load_wafer(address=None, machine_type=None):
 
 
 def find_home(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.find_home()
     prober.local_mode()
@@ -95,15 +155,23 @@ def find_home(address=None, machine_type=None):
 
 
 def align_wafer(home_die_col, home_die_row, address=None, machine_type=None, subsite=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    prober.align_wafer(home_die_col, home_die_row)
+    prober.align_wafer(home_die_col, home_die_row, subsite)
     prober.local_mode()
     return {"status": "success", "output": f"Wafer is aligned"}
 
 
 def go_to_contact(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.go_to_contact()
     prober.local_mode()
@@ -111,7 +179,11 @@ def go_to_contact(address=None, machine_type=None):
 
 
 def go_to_separation(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.go_to_separation()
     prober.local_mode()
@@ -119,22 +191,36 @@ def go_to_separation(address=None, machine_type=None):
 
 
 def auto_focus(address=None, machine_type=None):
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.auto_focus()
     prober.local_mode()
-    return {"status": "success", "output": f"Auto-focus command succesfully executed"}
+    return {"status": "success", "output": f"Auto-focus command successfully executed"}
 
 
 def move_chuck_work_area(work_area=0, address=None, machine_type=None):
-    """An enumeration containing probe station work areas. The OffAxis work area is only present if the specific model of probe station supports it.
+    """
+    Move chuck to specified work area.
+
+    An enumeration containing probe station work areas. The OffAxis work area is only
+    present if the specific model of probe station supports it.
 
     Attributes:
-        Probing (0): The probing work area is the area in which the chuck is under the downward looking microscope. This is where the wafer is probed.
-        Offaxis (1): The off axis work area is the area in which the chuck is under the off axis camera. This is where off axis ptpa is performed. The wafer cannot be probed here because there is no probe card.
+        Probing (0): The probing work area is the area in which the chuck is under
+                     the downward looking microscope. This is where the wafer is probed.
+        Offaxis (1): The off axis work area is the area in which the chuck is under
+                     the off axis camera. This is where off axis ptpa is performed.
+                     The wafer cannot be probed here because there is no probe card.
     """
+    error = _ensure_initialized()
+    if error:
+        return error
 
-    address, _, machine_type = resolve_project_parameters(address, machine_type)
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.move_chuck_work_area(work_area)
     prober.local_mode()

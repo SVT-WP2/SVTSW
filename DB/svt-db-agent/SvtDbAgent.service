@@ -8,7 +8,7 @@ User=root
 
 #EnvironmentFile=/data/ycorrale/SVTSW/DB/svt-db-agent/SvtDbAgent.conf
 WorkingDirectory=/data/ycorrale/SVTSW/DB/svt-db-agent/
-ExecStart=/data/ycorrale/SVTSW/DB/svt-db-agent/SvtDbAgent.sh /data/ycorrale/SVTSW/DB/svt-db-agent/configs/SvtDbAgent_config.json
+ExecStart=/data/SVTSoftware/SVTSW/DB/svt-db-agent/SvtDbAgent.sh /data/ycorrale/SVTSW/DB/svt-db-agent/configs/SvtDbAgent_config.json
 
 Restart=always
 TimeoutStartSec=2
