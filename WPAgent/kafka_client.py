@@ -10,6 +10,7 @@ from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
 
 logger = WPAgentLogger()
 
+
 class KafkaClient:
     def __init__(self, bootstrap_servers='localhost:9092', group_id='wafer-executor'):
         self.bootstrap_servers = bootstrap_servers
@@ -36,7 +37,6 @@ class KafkaClient:
             fs = admin.create_topics([new_topic])
             try:
                 fs[topic_name].result()
-                print(f"[✅ Topic Created] {topic_name}")
             except Exception as e:
                 print(f"[⚠️ Topic Error] Failed to create topic '{topic_name}': {e}")
         else:
@@ -76,16 +76,9 @@ class KafkaClient:
                 params=params,
                 result=None,
             )
-            # If you use request/reply, you can also add headers here
-            # headers = [
-            #     ("kafka_correlationId", str(uuid.uuid4()).encode("utf-8")),
-            #     ("kafka_replyTopic", f"{self.topic}.reply".encode("utf-8")),
-            #     ("kafka_replyPartition", b"0"),
-            # ]
             self.producer.produce(
                 self.topic,
                 value=json.dumps(payload).encode("utf-8"),
-                # headers=headers,
                 callback=self._delivery_report,
             )
             self.producer.poll(0)
@@ -93,20 +86,32 @@ class KafkaClient:
 
         self.producer.flush()
 
-    def listen(self):
-        print(f" Listening on topic '{self.topic}' via {self.bootstrap_servers}...")
+    def listen(self, poll_timeout=0.1):
+        """
+        Listen for and process Kafka messages.
+
+        Args:
+            poll_timeout: Timeout in seconds for each poll (default: 0.1s = 100ms)
+                         Lower = faster response but higher CPU
+                         Higher = slower response but lower CPU
+                         Recommended: 0.05 to 0.2 seconds
+        """
+
         logger.log_command(
-            messageOut=f"Kafka listener started on topic '{self.topic}'",
+            messageOut=f"Kafka listener started on topic '{self.topic}' (poll_timeout={poll_timeout}s)",
             severityLevel=Severity.INFO,
             command="KAFKA_LISTEN",
-            params=None,
+            params={"poll_timeout": poll_timeout},
             result=None
         )
+
         try:
             while True:
-                msg = self.consumer.poll(1.0)
+                msg = self.consumer.poll(poll_timeout)
+
                 if msg is None:
                     continue
+
                 if msg.error():
                     print(f"[❌ Kafka error] {msg.error()}")
                     logger.log_command(
@@ -116,6 +121,10 @@ class KafkaClient:
                         result={"error": str(msg.error())}
                     )
                     continue
+
+                # Record receive time for diagnostics
+                receive_time = time.time()
+
                 try:
                     payload = json.loads(msg.value().decode("utf-8"))
 
@@ -126,7 +135,7 @@ class KafkaClient:
                     if hasattr(self, "_convert_param_types"):
                         params = self._convert_param_types(params)
 
-                    print(f"\n[ Received] {command}")
+                    print(f"\n[📥 Received] {command}")
                     logger.log_command(
                         messageOut=f"Received command: {command}",
                         severityLevel=Severity.INFO,
@@ -136,11 +145,27 @@ class KafkaClient:
                     )
                     print(f"[ Params] {params}" if params else "[ℹ️ No parameters]")
 
+                    # Record execution start time
+                    exec_start = time.time()
+
                     result = execute_command(command, params)
+
+                    # Record execution end time
+                    exec_end = time.time()
+
+                    # Calculate timings
+                    sent_at = payload.get("sent_at")
+                    if sent_at:
+                        kafka_delay = (receive_time - sent_at) * 1000
+                        print(f"[️ Kafka delay] {kafka_delay:.1f}ms")
+
+                    exec_time = (exec_end - exec_start) * 1000
+
                     if result["status"] == "success":
                         print(f"[✅ OK] {result['output']}")
                     else:
                         print(f"[❌ ERROR] {result['output']}")
+
                 except Exception as e:
                     logger.log_command(
                         messageOut=f"Exception during command execution: {str(e)}",
@@ -148,8 +173,10 @@ class KafkaClient:
                         command=command if 'command' in locals() else "UNKNOWN",
                         result={"error": str(e)}
                     )
+                    print(f"[❌ Exception] {e}")
+
         except KeyboardInterrupt:
-            print("[⛔️] Listener stopped.")
+            print("\n[🛑 Listener stopped]")
         finally:
             self.consumer.close()
 
@@ -177,14 +204,14 @@ class KafkaClient:
         self.consumer.subscribe(list(wanted))
 
     def request_reply(
-        self,
-        request_topic: str,
-        reply_topic: str,
-        payload: Dict[str, Any],
-        reply_type: str,
-        timeout: float = 10.0,
-        match_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
-        add_request_id: bool = True,
+            self,
+            request_topic: str,
+            reply_topic: str,
+            payload: Dict[str, Any],
+            reply_type: str,
+            timeout: float = 10.0,
+            match_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
+            add_request_id: bool = True,
     ) -> Optional[Dict[str, Any]]:
         req_id = None
         if add_request_id:
