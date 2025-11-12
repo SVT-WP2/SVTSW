@@ -6,6 +6,9 @@ prober_classes = {
 }
 
 
+# Mock probers will be added dynamically by test scripts
+
+
 class ProberFactory:
     """Singleton factory that maintains a single prober instance per configuration"""
     _instance = None
@@ -59,7 +62,7 @@ class ProberFactory:
         print("🔄 Prober factory reset")
 
 
-
+# Convenience function to maintain backward compatibility
 def get_prober(machine_type: str, address: str):
     """
     Get a prober instance. Now uses singleton factory.
