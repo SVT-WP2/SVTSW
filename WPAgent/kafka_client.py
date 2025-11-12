@@ -7,6 +7,7 @@ import uuid
 from typing import Callable, Optional, Dict, Any, List
 from cmd_map import execute_command
 from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
+from listener_heartbeat import ListenerHealthCheck, ListenerHealthMonitor
 
 logger = WPAgentLogger()
 
@@ -25,6 +26,10 @@ class KafkaClient:
             'auto.offset.reset': 'earliest'
         })
         self.consumer.subscribe([self.topic])
+
+        # Initialize heartbeat monitoring
+        self.health_check = ListenerHealthCheck(bootstrap_servers=self.bootstrap_servers)
+        self.heartbeat_monitor = ListenerHealthMonitor(self.health_check)
 
     def _ensure_topic_exists(self, topic_name, num_partitions=1, replication_factor=1):
         admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
@@ -105,6 +110,9 @@ class KafkaClient:
             result=None
         )
 
+        # Start heartbeat monitoring
+        self.heartbeat_monitor.start()
+
         try:
             while True:
                 msg = self.consumer.poll(poll_timeout)
@@ -178,6 +186,8 @@ class KafkaClient:
         except KeyboardInterrupt:
             print("\n[🛑 Listener stopped]")
         finally:
+            # Stop heartbeat monitoring
+            self.heartbeat_monitor.stop()
             self.consumer.close()
 
     def _convert_param_types(self, params):
