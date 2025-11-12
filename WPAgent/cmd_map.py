@@ -16,7 +16,7 @@ COMMAND_ROUTER = {
     "SwitchCamera": testing_actions.switch_camera,
     "MoveChuckHome": testing_actions.move_chuck_home,
     "Unload": testing_actions.unload_wafer,
-    "Cleaning": testing_actions.clean_probe_station,  # TODO: Check this script in Testing Action
+    "Cleaning": testing_actions.clean_probe_station,
     "AlignWafer": testing_actions.align_wafer,
     "GoToContact": testing_actions.go_to_contact,
     "GoToSeparation": testing_actions.go_to_separation,
@@ -25,7 +25,7 @@ COMMAND_ROUTER = {
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
 
     #  Project Init
-    "InitializeTestingProject": project_actions.initialise_testing_project,  # TODO: Do we need this function
+    "InitializeTestingProject": project_actions.initialise_testing_project,
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
 
@@ -41,21 +41,16 @@ logger = WPAgentLogger(
     kafka_servers='localhost:9092',
     severity_threshold=Severity.CRITICAL  # Only WARNING and above go to Kafka
 )
-# at the top of cmd_map.py
-from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
-from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+
 
 def _exec_in_sequence(message_type, params=None):
     # if the agent is busy, nudge it to a ready/idle state
     if not agentStateMachine.isReadyToExecute():
         try:
-            # If your SM has a dedicated Idle/Reset event, use that instead:
-            # agentStateMachine.updateState(SvtWpAgentEvent.Idle)
             agentStateMachine.updateState(SvtWpAgentEvent.Success)
         except Exception:
             pass
     return execute_command(message_type, params)
-
 
 
 def get_filepath_param(params):
@@ -70,6 +65,7 @@ def get_filepath_param(params):
             if isinstance(k, str) and k.endswith(".json"):
                 return k
     return None
+
 
 def execute_command(message_type, params=None):
     # --- Normalize params so we never try ** on a string ---
@@ -98,15 +94,21 @@ def execute_command(message_type, params=None):
         logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, params, result)
         return result
 
-    if not agentStateMachine.isReadyToExecute():
-        return {
+    # ✅ CHECK IF AGENT IS BUSY (NEW!)
+    can_execute, reason = agentStateMachine.canExecute(message_type)
+    if not can_execute:
+        result = {
             "status": "error",
-            # fix typo: messageType -> message_type
-            "output": f"Agent is in '{agentStateMachine.getState().name}' state. Cannot execute '{message_type}'."
+            "output": reason
         }
+        logger.log_command(reason, Severity.WARNING, message_type, params, result)
+        return result
 
     try:
+        # Set current command and start execution
+        agentStateMachine.setCurrentCommand(message_type)
         agentStateMachine.updateState(SvtWpAgentEvent.Start)
+
         action = COMMAND_ROUTER[message_type]
         result = action(**params)
 
@@ -124,4 +126,3 @@ def execute_command(message_type, params=None):
 
     logger.log_command(result.get("output", ""), severity, message_type, params, result)
     return result
-
