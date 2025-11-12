@@ -37,7 +37,6 @@ class KafkaClient:
             fs = admin.create_topics([new_topic])
             try:
                 fs[topic_name].result()
-                print(f"[✅ Topic Created] {topic_name}")
             except Exception as e:
                 print(f"[⚠️ Topic Error] Failed to create topic '{topic_name}': {e}")
         else:
@@ -97,8 +96,6 @@ class KafkaClient:
                          Higher = slower response but lower CPU
                          Recommended: 0.05 to 0.2 seconds
         """
-        print(f"Listening on topic '{self.topic}' via {self.bootstrap_servers}...")
-        print(f"Poll timeout: {poll_timeout * 1000:.0f}ms (avg delay: ~{poll_timeout * 500:.0f}ms)")
 
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.topic}' (poll_timeout={poll_timeout}s)",
@@ -110,7 +107,6 @@ class KafkaClient:
 
         try:
             while True:
-                # ✅ OPTIMIZED: Reduced timeout for faster response
                 msg = self.consumer.poll(poll_timeout)
 
                 if msg is None:
@@ -161,10 +157,9 @@ class KafkaClient:
                     sent_at = payload.get("sent_at")
                     if sent_at:
                         kafka_delay = (receive_time - sent_at) * 1000
-                        print(f"[⏱️ Kafka delay] {kafka_delay:.1f}ms")
+                        print(f"[️ Kafka delay] {kafka_delay:.1f}ms")
 
                     exec_time = (exec_end - exec_start) * 1000
-                    print(f"[⏱️ Execution time] {exec_time:.1f}ms")
 
                     if result["status"] == "success":
                         print(f"[✅ OK] {result['output']}")
