@@ -7,7 +7,7 @@ import uuid
 from typing import Callable, Optional, Dict, Any, List
 from cmd_map import execute_command
 from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
-from listener_heartbeat import ListenerHealthCheck, ListenerHealthMonitor
+from services.listener_heartbeat import ListenerHealthCheck, ListenerHealthMonitor
 
 logger = WPAgentLogger()
 
