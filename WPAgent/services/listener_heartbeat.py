@@ -23,11 +23,12 @@ class ListenerHealthCheck:
         self._ensure_topic_exists()
 
         # For checking health
+        # FIX: Changed 'latest' to 'earliest' so we can see existing heartbeats
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.bootstrap_servers,
-            'group.id': 'heartbeat-checker',
-            'auto.offset.reset': 'latest',
-            'enable.auto.commit': True
+            'group.id': f'heartbeat-checker-{time.time()}',  # Unique group ID each time
+            'auto.offset.reset': 'earliest',  # FIX: Read from beginning
+            'enable.auto.commit': False  # Don't commit offsets
         })
         self.consumer.subscribe([self.HEARTBEAT_TOPIC])
 
@@ -79,6 +80,7 @@ class ListenerHealthCheck:
         """
         start_time = time.time()
         last_heartbeat_time = None
+        current_time = time.time()
 
         # Poll for recent heartbeat
         while time.time() - start_time < timeout:
@@ -90,20 +92,23 @@ class ListenerHealthCheck:
                     heartbeat_time = heartbeat.get("timestamp")
 
                     if heartbeat_time:
-                        age = time.time() - heartbeat_time
+                        age = current_time - heartbeat_time
 
                         # If heartbeat is recent enough, listener is alive
                         if age < self.HEARTBEAT_TIMEOUT:
                             return True, age
 
-                        last_heartbeat_time = heartbeat_time
+                        # Keep track of most recent heartbeat
+                        if last_heartbeat_time is None or heartbeat_time > last_heartbeat_time:
+                            last_heartbeat_time = heartbeat_time
 
-                except Exception:
+                except Exception as e:
+                    # Silently ignore parse errors
                     pass
 
         # No recent heartbeat found
         if last_heartbeat_time:
-            age = time.time() - last_heartbeat_time
+            age = current_time - last_heartbeat_time
             return False, age
         else:
             return False, float('inf')
