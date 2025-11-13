@@ -5,6 +5,9 @@ from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
 from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
 from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
 
+from services.listener_heartbeat import ListenerHealthCheck
+
+
 COMMAND_ROUTER = {
     #  Testing Actions
     "MoveChuckXY": testing_actions.move_chuck_xy,
@@ -41,6 +44,8 @@ logger = WPAgentLogger(
     kafka_servers='localhost:9092',
     severity_threshold=Severity.CRITICAL  # Only WARNING and above go to Kafka
 )
+
+health_check = ListenerHealthCheck(bootstrap_servers='localhost:9092')
 
 
 def _exec_in_sequence(message_type, params=None):
