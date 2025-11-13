@@ -9,16 +9,21 @@ class WaferProberAgent:
         self.kafka = KafkaClient()
         self.health_check = ListenerHealthCheck()
 
-    def send(self, command, params=None, repeat=1, delay=0, check_health=True):
+    def send(self, command, params=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
         """
-        Send a command via Kafka.
+        Send a command via Kafka and wait for response.
 
         Args:
             command: Command name to execute
             params: Command parameters (dict or string)
-            repeat: Number of times to repeat the command, repeat=1 means that it will be run once
-            delay: Delay between repeats in seconds
+            repeat: Number of times to repeat the command (default: 1)
+            delay: Delay between repeats in seconds (default: 0)
             check_health: Whether to check listener health before sending (default: True)
+            wait_for_reply: Whether to wait for response from listener (default: True)
+            timeout: How long to wait for reply in seconds (default: 30.0)
+
+        Returns:
+            dict: Response from listener with status and output
         """
         # Check if listener is alive before sending
         if check_health:
@@ -32,26 +37,60 @@ class WaferProberAgent:
                     print(f"⚠️  WARNING: Listener appears to be down!")
                     print(f"   Last heartbeat was {age:.1f}s ago (timeout: {self.health_check.HEARTBEAT_TIMEOUT}s)")
 
-                print(f"\n❓ The command '{command}' will be queued but may not execute.")
+                print(f"\n❓ The command '{command}' may not execute.")
                 print(f"   Options:")
                 print(f"   1. Start the listener: python main.py listen")
-                print(f"   2. Send anyway (will queue): Continue")
+                print(f"   2. Send anyway (may timeout): Continue")
                 print(f"   3. Cancel: Ctrl+C")
 
                 response = input(f"\n   Continue sending? (yes/no): ").strip().lower()
 
                 if response not in ['yes', 'y']:
                     print("❌ Command cancelled")
-                    return
+                    return {
+                        "status": "cancelled",
+                        "output": "Command cancelled by user"
+                    }
 
-                print("📤 Sending command anyway (will be queued)...")
+                print("📤 Sending command anyway...")
 
-        self.kafka.send(command, params, repeat, delay)
+        # Send command and wait for reply
+        return self.kafka.send(
+            command=command,
+            params=params,
+            repeat=repeat,
+            delay=delay,
+            wait_for_reply=wait_for_reply,
+            timeout=timeout
+        )
+
+    def send_async(self, command, params=None, repeat=1, delay=0):
+        """
+        Send a command without waiting for reply (fire and forget).
+        Useful for non-critical commands or batch operations.
+
+        Args:
+            command: Command name to execute
+            params: Command parameters (dict or string)
+            repeat: Number of times to repeat the command
+            delay: Delay between repeats in seconds
+        """
+        print(f"📤 Sending '{command}' (async - no reply expected)")
+        return self.kafka.send(
+            command=command,
+            params=params,
+            repeat=repeat,
+            delay=delay,
+            wait_for_reply=False
+        )
 
     def listen(self):
+        """Start the listener service"""
         self.kafka.listen()
 
     def run_both(self, command, params=None, repeat=1, delay=0):
+        """Start listener in background and send command"""
+
         def consume():
             self.kafka.listen()
 
@@ -59,13 +98,14 @@ class WaferProberAgent:
         thread.start()
 
         time.sleep(2)
-        self.kafka.send(command, params, repeat, delay)
+        self.send(command, params, repeat, delay)
 
         while True:
             time.sleep(1)
 
     def list_commands(self):
-        from command_handler import CommandHandler  # <- Import locally
+        """List all available commands"""
+        from command_handler import CommandHandler
         handler = CommandHandler.getInstance()
         print("Available Commands:")
         for cmd in handler.listAvailableCommands():
@@ -104,16 +144,24 @@ class WaferProberAgent:
         """
         return self.health_check.wait_for_listener(max_wait=max_wait)
 
-    def send_force(self, command, params=None, repeat=1, delay=0):
+    def send_force(self, command, params=None, repeat=1, delay=0, timeout=30.0):
         """
         Force send a command without checking listener health.
-        Use this when you know the listener will start later.
+        Still waits for reply.
 
         Args:
             command: Command name to execute
             params: Command parameters (dict or string)
             repeat: Number of times to repeat the command
             delay: Delay between repeats in seconds
+            timeout: How long to wait for reply (seconds)
         """
         print(f"⚠️  Sending '{command}' WITHOUT health check (forced)")
-        self.kafka.send(command, params, repeat, delay)
+        return self.kafka.send(
+            command=command,
+            params=params,
+            repeat=repeat,
+            delay=delay,
+            wait_for_reply=True,
+            timeout=timeout
+        )
