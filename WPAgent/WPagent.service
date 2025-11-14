@@ -6,8 +6,8 @@ Requires=kafka.service
 Type=simple
 User=root
 
-WorkingDirectory=/data/scaregar/SVTSW/WPAgent
-ExecStart=/usr/local/bin/python3.12 /data/scaregar/SVTSW/WPAgent/main.py listen
+WorkingDirectory=/data/SVTSoftware/SVTSW/WPAgent
+ExecStart=/usr/local/bin/python3.12 /data/SVTSoftware/SVTSW/WPAgent/main.py listen
 
 Restart=always
 TimeoutStartSec=2
