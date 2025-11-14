@@ -1,6 +1,7 @@
 import actions.WPTestingActions as testing_actions
 import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
+import actions.WPCommandActions as command_actions
 from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
 from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
 from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
@@ -32,11 +33,14 @@ COMMAND_ROUTER = {
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
 
+    #  Sequencer Actions
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(
         filepath=get_filepath_param(params if params else None),
         executor=_exec_in_sequence
     )
 }
+
+COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)
 
 # Instantiation of logger
 logger = WPAgentLogger(
