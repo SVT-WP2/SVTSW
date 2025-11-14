@@ -1,3 +1,4 @@
+import json
 from command_handler import CommandHandler
 
 def list_available_commands(router, **kwargs):
@@ -8,5 +9,5 @@ def list_available_commands(router, **kwargs):
         "available_commands": commands,
         "output": f"{len(commands)} commands available"
     }
-    print(result)
-    return result
+    formatted_result = json.dumps(result, indent=4)
+    return {"status": "success", "output": formatted_result}
