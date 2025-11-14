@@ -1,7 +1,4 @@
-"""
-Database-related actions for WPAgent
-Uses singleton KafkaDBService instance
-"""
+
 from services.kafka_db_service import KafkaDBService
 
 # Module-level singleton

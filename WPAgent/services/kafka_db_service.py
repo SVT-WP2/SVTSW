@@ -99,11 +99,11 @@ class KafkaDBService:
             print(f"   ⚠️ Error checking topics: {e}")
 
     def _request_reply(
-        self,
-        message_type: str,
-        data: Dict[str, Any],
-        reply_type: str,
-        timeout: float = 10.0
+            self,
+            message_type: str,
+            data: Dict[str, Any],
+            reply_type: str,
+            timeout: float = 10.0
     ) -> Optional[Dict[str, Any]]:
         """
         Send request to DB Agent and wait for reply
@@ -197,9 +197,9 @@ class KafkaDBService:
         return None
 
     def get_all_enums(
-        self,
-        enum_names: Optional[List[str]] = None,
-        timeout: float = 10.0
+            self,
+            enum_names: Optional[List[str]] = None,
+            timeout: float = 10.0
     ) -> Dict[str, List[str]]:
         """Get enumeration values from database"""
         data = {}
@@ -229,8 +229,8 @@ class KafkaDBService:
         return data.get("waferMapOrientation", [])
 
     def get_all_wafer_probe_machines(
-        self,
-        timeout: float = 10.0
+            self,
+            timeout: float = 10.0
     ) -> List[Dict[str, Any]]:
         """
         Get all wafer probe machines from database
