@@ -175,10 +175,14 @@ class KafkaClient:
             self.reply_consumer = KafkaConsumer({
                 'bootstrap.servers': self.bootstrap_servers,
                 'group.id': f'reply-consumer-{uuid.uuid4()}',
-                'auto.offset.reset': 'latest',
+                'auto.offset.reset': 'earliest',  # FIX: Changed from 'latest' to catch all replies
                 'enable.auto.commit': False
             })
             self.reply_consumer.subscribe([self.reply_topic])
+
+            # Warm up consumer to ensure subscription is active
+            for _ in range(3):
+                self.reply_consumer.poll(0.1)
 
         start_time = time.time()
 
