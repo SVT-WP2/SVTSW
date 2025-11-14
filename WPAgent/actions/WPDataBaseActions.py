@@ -1,34 +1,27 @@
 """
 Database-related actions for WPAgent
-Fixed to use module-level singleton and avoid circular imports
+Uses singleton KafkaDBService instance
 """
 from services.kafka_db_service import KafkaDBService
 
-# ⚠️ Create singleton instance at module level
-# This ensures only ONE instance is used across all function calls
+# Module-level singleton
 _db_service = None
 
 
 def _get_db_service():
-    """
-    Get or create singleton DB service
-
-    Returns:
-        KafkaDBService: Singleton instance
-    """
+    """Get or create singleton DB service"""
     global _db_service
     if _db_service is None:
-        print("🔄 Initializing DB service...")
-        _db_service = KafkaDBService()
+        _db_service = KafkaDBService.get_instance()
     return _db_service
 
 
-def list_probers(timeout: float = 10.0):
+def list_probers(timeout: float = 15.0):
     """
     Get and display all wafer probe machines from the database
 
     Args:
-        timeout: Request timeout in seconds
+        timeout: Request timeout in seconds (default: 15s)
 
     Returns:
         dict: Status result with list of probers
@@ -36,9 +29,10 @@ def list_probers(timeout: float = 10.0):
     try:
         db_service = _get_db_service()
 
-        print("📡 Requesting wafer probe machines from database...")
+        print("\n" + "="*60)
+        print("  REQUESTING WAFER PROBE MACHINES")
+        print("="*60)
 
-        # Get all wafer probe machines
         machines = db_service.get_all_wafer_probe_machines(timeout=timeout)
 
         if not machines:
@@ -47,13 +41,12 @@ def list_probers(timeout: float = 10.0):
                 "output": "No wafer probe machines found or database agent not responding"
             }
 
-        # Format the output
-        output_lines = [f"Found {len(machines)} wafer probe machine(s):\n"]
+        # Format output
+        output_lines = [f"\nFound {len(machines)} wafer probe machine(s):\n"]
 
         for idx, machine in enumerate(machines, 1):
-            output_lines.append(f"\n{idx}. Machine Details:")
+            output_lines.append(f"\n{idx}. {machine.get('name', 'N/A')}")
             output_lines.append(f"   ID: {machine.get('id', 'N/A')}")
-            output_lines.append(f"   Name: {machine.get('name', 'N/A')}")
             output_lines.append(f"   Type: {machine.get('type', 'N/A')}")
             output_lines.append(f"   Address: {machine.get('address', 'N/A')}")
             output_lines.append(f"   Status: {machine.get('status', 'N/A')}")
@@ -61,6 +54,7 @@ def list_probers(timeout: float = 10.0):
 
         output = "\n".join(output_lines)
         print(output)
+        print("\n" + "="*60 + "\n")
 
         return {
             "status": "success",
@@ -73,7 +67,7 @@ def list_probers(timeout: float = 10.0):
 
     except Exception as e:
         error_msg = f"Failed to retrieve wafer probe machines: {str(e)}"
-        print(f"❌ {error_msg}")
+        print(f"\n❌ {error_msg}")
         import traceback
         traceback.print_exc()
         return {
@@ -82,12 +76,12 @@ def list_probers(timeout: float = 10.0):
         }
 
 
-def list_chip_types(timeout: float = 10.0):
+def list_chip_types(timeout: float = 15.0):
     """
     Get and display all available chip types from the database
 
     Args:
-        timeout: Request timeout in seconds
+        timeout: Request timeout in seconds (default: 15s)
 
     Returns:
         dict: Status result with list of chip types
@@ -95,7 +89,9 @@ def list_chip_types(timeout: float = 10.0):
     try:
         db_service = _get_db_service()
 
-        print("📡 Requesting chip types from database...")
+        print("\n" + "="*60)
+        print("  REQUESTING CHIP TYPES")
+        print("="*60)
 
         chip_types = db_service.get_chip_types(timeout=timeout)
 
@@ -105,10 +101,12 @@ def list_chip_types(timeout: float = 10.0):
                 "output": "No chip types found or database agent not responding"
             }
 
-        output = f"Available chip types ({len(chip_types)}):\n" + "\n".join(
-            f"  - {ct}" for ct in chip_types
-        )
+        output = f"\nAvailable chip types ({len(chip_types)}):\n"
+        for ct in chip_types:
+            output += f"  • {ct}\n"
+
         print(output)
+        print("="*60 + "\n")
 
         return {
             "status": "success",
@@ -118,7 +116,7 @@ def list_chip_types(timeout: float = 10.0):
 
     except Exception as e:
         error_msg = f"Failed to retrieve chip types: {str(e)}"
-        print(f"❌ {error_msg}")
+        print(f"\n❌ {error_msg}")
         import traceback
         traceback.print_exc()
         return {
@@ -127,12 +125,12 @@ def list_chip_types(timeout: float = 10.0):
         }
 
 
-def list_orientations(timeout: float = 10.0):
+def list_orientations(timeout: float = 15.0):
     """
     Get and display all available wafer orientations from the database
 
     Args:
-        timeout: Request timeout in seconds
+        timeout: Request timeout in seconds (default: 15s)
 
     Returns:
         dict: Status result with list of orientations
@@ -140,7 +138,9 @@ def list_orientations(timeout: float = 10.0):
     try:
         db_service = _get_db_service()
 
-        print("📡 Requesting wafer orientations from database...")
+        print("\n" + "="*60)
+        print("  REQUESTING WAFER ORIENTATIONS")
+        print("="*60)
 
         orientations = db_service.get_orientations(timeout=timeout)
 
@@ -150,10 +150,12 @@ def list_orientations(timeout: float = 10.0):
                 "output": "No orientations found or database agent not responding"
             }
 
-        output = f"Available wafer orientations ({len(orientations)}):\n" + "\n".join(
-            f"  - {o}" for o in orientations
-        )
+        output = f"\nAvailable wafer orientations ({len(orientations)}):\n"
+        for o in orientations:
+            output += f"  • {o}\n"
+
         print(output)
+        print("="*60 + "\n")
 
         return {
             "status": "success",
@@ -163,46 +165,7 @@ def list_orientations(timeout: float = 10.0):
 
     except Exception as e:
         error_msg = f"Failed to retrieve orientations: {str(e)}"
-        print(f"❌ {error_msg}")
-        import traceback
-        traceback.print_exc()
-        return {
-            "status": "error",
-            "output": error_msg
-        }
-
-
-def test_db_connection(timeout: float = 5.0):
-    """
-    Test if database agent is reachable
-
-    Args:
-        timeout: Test timeout in seconds
-
-    Returns:
-        dict: Status result with connection test results
-    """
-    try:
-        db_service = _get_db_service()
-
-        print("🔍 Testing database agent connection...")
-
-        is_connected = db_service.test_connection(timeout=timeout)
-
-        if is_connected:
-            return {
-                "status": "success",
-                "output": "Database agent is reachable and responding"
-            }
-        else:
-            return {
-                "status": "error",
-                "output": "Database agent is not responding. Check if it's running on localhost:9095"
-            }
-
-    except Exception as e:
-        error_msg = f"Failed to test database connection: {str(e)}"
-        print(f"❌ {error_msg}")
+        print(f"\n❌ {error_msg}")
         import traceback
         traceback.print_exc()
         return {
