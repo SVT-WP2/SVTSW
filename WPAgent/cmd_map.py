@@ -1,6 +1,7 @@
 import actions.WPTestingActions as testing_actions
 import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
+import actions.WPDataBaseActions as database_actions
 import actions.WPCommandActions as command_actions
 from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
 from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
@@ -37,7 +38,12 @@ COMMAND_ROUTER = {
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(
         filepath=get_filepath_param(params if params else None),
         executor=_exec_in_sequence
-    )
+    ),
+
+    #  Database Actions
+    "ListProbers": database_actions.list_probers,
+    "ListChipTypes": database_actions.list_chip_types,
+    "ListOrientations": database_actions.list_orientations,
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)

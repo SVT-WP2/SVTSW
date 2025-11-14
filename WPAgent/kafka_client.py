@@ -412,12 +412,22 @@ class KafkaClient:
             if msg is None:
                 continue
             if msg.error():
-                logger.log(Severity.ERROR, f"[KafkaClient] {msg.error()}")
+                logger.log_command(
+                    messageOut=f"[KafkaClient] {msg.error()}",
+                    severityLevel=Severity.ERROR,
+                    command="KAFKA_REQUEST_REPLY",
+                    result={"error": str(msg.error())}
+                )
                 continue
             try:
                 value = json.loads(msg.value().decode("utf-8"))
             except Exception as e:
-                logger.log(Severity.ERROR, f"[KafkaClient] JSON parse error: {e}")
+                logger.log_command(
+                    messageOut=f"[KafkaClient] JSON parse error: {e}",
+                    severityLevel=Severity.ERROR,
+                    command="KAFKA_REQUEST_REPLY",
+                    result={"error": str(e)}
+                )
                 continue
             if value.get("type") != reply_type:
                 continue
@@ -427,5 +437,10 @@ class KafkaClient:
                 continue
             return value
 
-        logger.log(Severity.WARNING, f"[KafkaClient] Timeout waiting for reply_type={reply_type}")
+        logger.log_command(
+            messageOut=f"[KafkaClient] Timeout waiting for reply_type={reply_type}",
+            severityLevel=Severity.WARNING,
+            command="KAFKA_REQUEST_REPLY",
+            result={"timeout": True}
+        )
         return None
