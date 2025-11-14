@@ -1,126 +1,30 @@
+"""
+Updated KafkaDBService using singleton DBKafkaClient
+Fixes circular imports and ensures consistent DB communication
+"""
 from typing import List, Dict, Optional, Any
-from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
-import json
-import uuid
-import time
+from services.db_kafka_client import DBKafkaClient
 
 
 class KafkaDBService:
     """Service for communicating with DB Agent via Kafka on localhost:9095"""
 
-    DB_REQUEST_TOPIC = "svt.db-agent.request"
-    DB_REPLY_TOPIC = "svt.db-agent.request.reply"
-    DB_KAFKA_BROKER = "localhost:9095"  # DB Agent uses different Kafka broker
-
     def __init__(self, kafka_client=None):
         """
-        Initialize with optional KafkaClient (not used for DB Agent)
-        DB Agent uses its own Kafka broker at localhost:9095
+        Initialize with optional KafkaClient (not used for DB operations)
+        DB operations use dedicated DBKafkaClient singleton
 
         Args:
-            kafka_client: Optional, not used for DB operations
+            kafka_client: Optional, not used for DB operations (for backward compatibility)
         """
-        # Create dedicated Kafka producer/consumer for DB Agent
-        self.producer = KafkaProducer({
-            'bootstrap.servers': self.DB_KAFKA_BROKER
-        })
+        # Use singleton DB Kafka client
+        self.db_client = DBKafkaClient.get_instance()
 
-        self.consumer = None  # Created on-demand
-
-    def _get_consumer(self):
-        """Get or create consumer for DB replies"""
-        if self.consumer is None:
-            self.consumer = KafkaConsumer({
-                'bootstrap.servers': self.DB_KAFKA_BROKER,
-                'group.id': f'wp-agent-db-consumer-{uuid.uuid4()}',
-                'auto.offset.reset': 'latest',  # Only new messages
-                'enable.auto.commit': False
-            })
-            self.consumer.subscribe([self.DB_REPLY_TOPIC])
-        return self.consumer
-
-    def _request_reply(self, message_type: str, data: Dict[str, Any], reply_type: str, timeout: float = 10.0) -> \
-    Optional[Dict[str, Any]]:
-        """
-        Send request to DB Agent and wait for reply
-
-        NOTE: We don't use requestId because:
-        1. It's optional in Swagger
-        2. We consume only new messages (auto.offset.reset=latest)
-        3. We look for the specific reply_type we're waiting for
-        4. Simpler = better!
-
-        Args:
-            message_type: Type of message (e.g., "GetAllWaferProbeMachines")
-            data: Data payload for the message
-            reply_type: Expected reply type (e.g., "GetAllWaferProbeMachinesReply")
-            timeout: Timeout in seconds
-
-        Returns:
-            Reply data or None if timeout
-        """
-        # Build message according to Swagger spec (NO requestId needed)
-        payload = {
-            "type": message_type,
-            "data": data
-        }
-
-        # Send request
-        self.producer.produce(
-            self.DB_REQUEST_TOPIC,
-            value=json.dumps(payload).encode("utf-8")
-        )
-        self.producer.flush()
-
-        print(f"📤 Sent request to DB Agent (broker: {self.DB_KAFKA_BROKER})")
-        print(f"   Topic: {self.DB_REQUEST_TOPIC}")
-        print(f"   Type: {message_type}")
-        print(f"   Waiting for reply type: {reply_type}...")
-
-        # Get consumer (will only see new messages after this point)
-        consumer = self._get_consumer()
-        start = time.time()
-
-        while time.time() - start < timeout:
-            msg = consumer.poll(1.0)
-
-            if msg is None:
-                continue
-
-            if msg.error():
-                print(f"⚠️ Consumer error: {msg.error()}")
-                continue
-
-            try:
-                value = json.loads(msg.value().decode("utf-8"))
-
-                # Check if this is the reply type we're waiting for
-                # Since we use auto.offset.reset=latest, any message we get
-                # after sending our request is likely our reply
-                if value.get("type") == reply_type:
-                    status = value.get("status")
-                    print(f"✅ Received reply from DB Agent (status: {status})")
-
-                    # Check status
-                    if status != "Success":
-                        error = value.get("error", {})
-                        error_msg = error.get("message", "Unknown error")
-                        print(f"❌ DB Agent returned error: {error_msg}")
-                        return None
-
-                    return value
-                else:
-                    # Different message type - ignore
-                    print(f"   ℹ️ Ignoring message type: {value.get('type')}")
-
-            except Exception as e:
-                print(f"⚠️ Failed to parse message: {e}")
-                continue
-
-        print(f"⏱️ Timeout waiting for reply (waited {timeout}s)")
-        return None
-
-    def get_all_enums(self, enum_names: Optional[List[str]] = None, timeout: float = 10.0) -> Dict[str, List[str]]:
+    def get_all_enums(
+        self, 
+        enum_names: Optional[List[str]] = None, 
+        timeout: float = 10.0
+    ) -> Dict[str, List[str]]:
         """
         Get enumeration values from database
 
@@ -131,12 +35,17 @@ class KafkaDBService:
         Returns:
             Dictionary mapping enum names to their values
         """
-        # According to Swagger: GetAllEnumsRequest
+        # Build request data according to Swagger spec
         data = {}
         if enum_names:
             data["enumsNames"] = enum_names
 
-        reply = self._request_reply("GetAllEnums", data, "GetAllEnumsReply", timeout)
+        reply = self.db_client.request_reply(
+            message_type="GetAllEnums",
+            data=data,
+            reply_type="GetAllEnumsReply",
+            timeout=timeout
+        )
 
         if not reply:
             return {}
@@ -170,7 +79,10 @@ class KafkaDBService:
         data = self.get_all_enums(["waferMapOrientation"], timeout=timeout)
         return data.get("waferMapOrientation", [])
 
-    def get_all_wafer_probe_machines(self, timeout: float = 10.0) -> List[Dict[str, Any]]:
+    def get_all_wafer_probe_machines(
+        self, 
+        timeout: float = 10.0
+    ) -> List[Dict[str, Any]]:
         """
         Get all wafer probe machines from database
 
@@ -192,11 +104,11 @@ class KafkaDBService:
             }
         }
 
-        reply = self._request_reply(
-            "GetAllWaferProbeMachines",
-            data,
-            "GetAllWaferProbeMachinesReply",
-            timeout
+        reply = self.db_client.request_reply(
+            message_type="GetAllWaferProbeMachines",
+            data=data,
+            reply_type="GetAllWaferProbeMachinesReply",
+            timeout=timeout
         )
 
         if not reply:
@@ -215,8 +127,19 @@ class KafkaDBService:
 
         return machines
 
+    def test_connection(self, timeout: float = 5.0) -> bool:
+        """
+        Test if DB Agent is reachable
+
+        Args:
+            timeout: Test timeout in seconds
+
+        Returns:
+            True if DB Agent responds, False otherwise
+        """
+        return self.db_client.test_connection(timeout=timeout)
+
     def close(self):
-        """Clean up resources"""
-        if self.consumer:
-            self.consumer.close()
-        self.producer.flush()
+        """Clean up resources (singleton handles its own cleanup)"""
+        # Singleton persists, but we can call close if needed
+        pass

@@ -1,8 +1,26 @@
 """
 Database-related actions for WPAgent
-Fixed to avoid circular import with kafka_client
+Fixed to use module-level singleton and avoid circular imports
 """
 from services.kafka_db_service import KafkaDBService
+
+# ⚠️ Create singleton instance at module level
+# This ensures only ONE instance is used across all function calls
+_db_service = None
+
+
+def _get_db_service():
+    """
+    Get or create singleton DB service
+
+    Returns:
+        KafkaDBService: Singleton instance
+    """
+    global _db_service
+    if _db_service is None:
+        print("🔄 Initializing DB service...")
+        _db_service = KafkaDBService()
+    return _db_service
 
 
 def list_probers(timeout: float = 10.0):
@@ -16,12 +34,7 @@ def list_probers(timeout: float = 10.0):
         dict: Status result with list of probers
     """
     try:
-        # Lazy import to avoid circular dependency
-        from kafka_client import KafkaClient
-
-        # Create Kafka client and DB service
-        kafka_client = KafkaClient()
-        db_service = KafkaDBService(kafka_client)
+        db_service = _get_db_service()
 
         print("📡 Requesting wafer probe machines from database...")
 
@@ -61,6 +74,8 @@ def list_probers(timeout: float = 10.0):
     except Exception as e:
         error_msg = f"Failed to retrieve wafer probe machines: {str(e)}"
         print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
         return {
             "status": "error",
             "output": error_msg
@@ -78,11 +93,7 @@ def list_chip_types(timeout: float = 10.0):
         dict: Status result with list of chip types
     """
     try:
-        # Lazy import to avoid circular dependency
-        from kafka_client import KafkaClient
-
-        kafka_client = KafkaClient()
-        db_service = KafkaDBService(kafka_client)
+        db_service = _get_db_service()
 
         print("📡 Requesting chip types from database...")
 
@@ -94,7 +105,9 @@ def list_chip_types(timeout: float = 10.0):
                 "output": "No chip types found or database agent not responding"
             }
 
-        output = f"Available chip types ({len(chip_types)}):\n" + "\n".join(f"  - {ct}" for ct in chip_types)
+        output = f"Available chip types ({len(chip_types)}):\n" + "\n".join(
+            f"  - {ct}" for ct in chip_types
+        )
         print(output)
 
         return {
@@ -106,6 +119,8 @@ def list_chip_types(timeout: float = 10.0):
     except Exception as e:
         error_msg = f"Failed to retrieve chip types: {str(e)}"
         print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
         return {
             "status": "error",
             "output": error_msg
@@ -123,11 +138,7 @@ def list_orientations(timeout: float = 10.0):
         dict: Status result with list of orientations
     """
     try:
-        # Lazy import to avoid circular dependency
-        from kafka_client import KafkaClient
-
-        kafka_client = KafkaClient()
-        db_service = KafkaDBService(kafka_client)
+        db_service = _get_db_service()
 
         print("📡 Requesting wafer orientations from database...")
 
@@ -139,7 +150,9 @@ def list_orientations(timeout: float = 10.0):
                 "output": "No orientations found or database agent not responding"
             }
 
-        output = f"Available wafer orientations ({len(orientations)}):\n" + "\n".join(f"  - {o}" for o in orientations)
+        output = f"Available wafer orientations ({len(orientations)}):\n" + "\n".join(
+            f"  - {o}" for o in orientations
+        )
         print(output)
 
         return {
@@ -151,6 +164,47 @@ def list_orientations(timeout: float = 10.0):
     except Exception as e:
         error_msg = f"Failed to retrieve orientations: {str(e)}"
         print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "output": error_msg
+        }
+
+
+def test_db_connection(timeout: float = 5.0):
+    """
+    Test if database agent is reachable
+
+    Args:
+        timeout: Test timeout in seconds
+
+    Returns:
+        dict: Status result with connection test results
+    """
+    try:
+        db_service = _get_db_service()
+
+        print("🔍 Testing database agent connection...")
+
+        is_connected = db_service.test_connection(timeout=timeout)
+
+        if is_connected:
+            return {
+                "status": "success",
+                "output": "Database agent is reachable and responding"
+            }
+        else:
+            return {
+                "status": "error",
+                "output": "Database agent is not responding. Check if it's running on localhost:9095"
+            }
+
+    except Exception as e:
+        error_msg = f"Failed to test database connection: {str(e)}"
+        print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
         return {
             "status": "error",
             "output": error_msg
