@@ -33,7 +33,7 @@ class KafkaDBService:
             self.consumer = KafkaConsumer({
                 'bootstrap.servers': self.DB_KAFKA_BROKER,
                 'group.id': f'wp-agent-db-consumer-{uuid.uuid4()}',
-                'auto.offset.reset': 'latest',
+                'auto.offset.reset': 'latest',  # Only new messages
                 'enable.auto.commit': False
             })
             self.consumer.subscribe([self.DB_REPLY_TOPIC])
@@ -44,6 +44,12 @@ class KafkaDBService:
         """
         Send request to DB Agent and wait for reply
 
+        NOTE: We don't use requestId because:
+        1. It's optional in Swagger
+        2. We consume only new messages (auto.offset.reset=latest)
+        3. We look for the specific reply_type we're waiting for
+        4. Simpler = better!
+
         Args:
             message_type: Type of message (e.g., "GetAllWaferProbeMachines")
             data: Data payload for the message
@@ -53,13 +59,9 @@ class KafkaDBService:
         Returns:
             Reply data or None if timeout
         """
-        # Add request ID (as per Swagger: RequestMessage has optional requestId)
-        req_id = str(uuid.uuid4())
-
-        # Build message according to Swagger spec
+        # Build message according to Swagger spec (NO requestId needed)
         payload = {
             "type": message_type,
-            "requestId": req_id,
             "data": data
         }
 
@@ -73,10 +75,9 @@ class KafkaDBService:
         print(f"📤 Sent request to DB Agent (broker: {self.DB_KAFKA_BROKER})")
         print(f"   Topic: {self.DB_REQUEST_TOPIC}")
         print(f"   Type: {message_type}")
-        print(f"   Request ID: {req_id[:8]}...")
         print(f"   Waiting for reply type: {reply_type}...")
 
-        # Wait for reply
+        # Get consumer (will only see new messages after this point)
         consumer = self._get_consumer()
         start = time.time()
 
@@ -93,9 +94,10 @@ class KafkaDBService:
             try:
                 value = json.loads(msg.value().decode("utf-8"))
 
-                # Check if this is our reply
-                # According to Swagger: ReplyMessage has type, status, data, error
-                if value.get("type") == reply_type and value.get("requestId") == req_id:
+                # Check if this is the reply type we're waiting for
+                # Since we use auto.offset.reset=latest, any message we get
+                # after sending our request is likely our reply
+                if value.get("type") == reply_type:
                     status = value.get("status")
                     print(f"✅ Received reply from DB Agent (status: {status})")
 
@@ -107,6 +109,9 @@ class KafkaDBService:
                         return None
 
                     return value
+                else:
+                    # Different message type - ignore
+                    print(f"   ℹ️ Ignoring message type: {value.get('type')}")
 
             except Exception as e:
                 print(f"⚠️ Failed to parse message: {e}")
@@ -129,7 +134,7 @@ class KafkaDBService:
         # According to Swagger: GetAllEnumsRequest
         data = {}
         if enum_names:
-            data["enumsNames"] = enum_names  # Note: "enumsNames" not "enumNames"
+            data["enumsNames"] = enum_names
 
         reply = self._request_reply("GetAllEnums", data, "GetAllEnumsReply", timeout)
 
@@ -149,7 +154,7 @@ class KafkaDBService:
             List of chip type names
         """
         data = self.get_all_enums(["asicFamilyType"], timeout=timeout)
-        # Note: Swagger shows "asicFamilType" (typo in their API?)
+        # Note: Swagger shows "asicFamilType" (typo?) so try both
         return data.get("asicFamilyType", []) or data.get("asicFamilType", [])
 
     def get_orientations(self, timeout: float = 10.0) -> List[str]:
@@ -183,7 +188,7 @@ class KafkaDBService:
         # Build request data according to Swagger spec
         data = {
             "filter": {
-                # Empty filter means get all machines
+                # Empty filter = get all machines
             }
         }
 
