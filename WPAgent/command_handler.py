@@ -1,4 +1,3 @@
-from cmd_map import COMMAND_ROUTER, execute_command
 from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
 
 #Initialisation of the logger
@@ -17,16 +16,9 @@ class CommandHandler:
             cls._instance = cls()
         return cls._instance
 
-    def listAvailableCommands(self):
-        commands = list(COMMAND_ROUTER.keys())
-        logger.log_command(
-            messageOut="Available commands listed",
-            severityLevel=Severity.INFO,
-            command="WP_LIST_AVAILABLE_COMMANDS",
-            params=None,
-            result={"available_commands": commands}
-        )
-        return commands
+    def listAvailableCommands(self, commands_list):
+        return list(commands_list.keys())
 
     def handleCommand(self, command, params=None):
+        from cmd_map import execute_command
         return execute_command(command, params)
