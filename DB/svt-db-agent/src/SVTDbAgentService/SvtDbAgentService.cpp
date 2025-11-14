@@ -15,6 +15,7 @@
 
 #include "Database/DatabaseInterface.h"
 #include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 #include "librdkafka/rdkafkacpp.h"
 
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
@@ -113,50 +114,58 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
     break;
 
   case RdKafka::ERR_NO_ERROR:
-    /* Real message */
-    mLogger->logInfo("Read msg at offset " + std::to_string(message.offset()));
-    if (message.key())
+    try
     {
-      mLogger->logInfo("Key: " + *message.key());
-    }
-    headers = message.headers();
-    if (headers)
-    {
-      const auto &hdrs = headers->get_all();
-      for (size_t i = 0; i < hdrs.size(); i++)
+      /* Real message */
+      mLogger->logInfo("Read msg at offset " + std::to_string(message.offset()));
+      if (message.key())
       {
-        const auto &hdr = hdrs[i];
-
-        std::string hdr_val;
-        if (hdr.value() != NULL)
-        {
-          hdr_val =
-              std::string((const char *) hdr.value(), (int) hdr.value_size());
-        }
-        else
-        {
-          hdr_val = "";
-        }
-        svtMsg.AddHeader(hdr.key().data(), hdr_val.data());
-        // if (hdr.value() != NULL)
-        // {
-        //   printf(" Header: %s = \"%.*s\"\n", hdr.key().c_str(),
-        //          (int) hdr.value_size(), (const char *) hdr.value());
-        // }
-        // else
-        // {
-        //   printf(" Header:  %s = NULL\n", hdr.key().c_str());
-        // }
+        mLogger->logInfo("Key: " + *message.key());
       }
+      headers = message.headers();
+      if (headers)
+      {
+        const auto &hdrs = headers->get_all();
+        for (size_t i = 0; i < hdrs.size(); i++)
+        {
+          const auto &hdr = hdrs[i];
+
+          std::string hdr_val;
+          if (hdr.value() != NULL)
+          {
+            hdr_val =
+                std::string((const char *) hdr.value(), (int) hdr.value_size());
+          }
+          else
+          {
+            hdr_val = "";
+          }
+          svtMsg.AddHeader(hdr.key().data(), hdr_val.data());
+          // if (hdr.value() != NULL)
+          // {
+          //   printf(" Header: %s = \"%.*s\"\n", hdr.key().c_str(),
+          //          (int) hdr.value_size(), (const char *) hdr.value());
+          // }
+          // else
+          // {
+          //   printf(" Header:  %s = NULL\n", hdr.key().c_str());
+          // }
+        }
+      }
+      {
+        auto bufferPayload = static_cast<const char *>(message.payload());
+        svtMsg.setPayload(nlohmann::json::parse(
+            bufferPayload, bufferPayload + static_cast<int>(message.len())));
+        // printf("%.*s\n", static_cast<int>(message->len()),
+        //        static_cast<const char *>(message->payload()));
+      }
+      status = SvtKafka::SvtKafkaMsgStatus::Success;
     }
+    catch (const std::exception &e)
     {
-      auto bufferPayload = static_cast<const char *>(message.payload());
-      svtMsg.setPayload(nlohmann::json::parse(
-          bufferPayload, bufferPayload + static_cast<int>(message.len())));
-      // printf("%.*s\n", static_cast<int>(message->len()),
-      //        static_cast<const char *>(message->payload()));
+      status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
+      THROW_RUNTIME_ERROR("Failed to parse kafka message: " + e.what());
     }
-    status = SvtKafka::SvtKafkaMsgStatus::Success;
     break;
 
   case RdKafka::ERR__PARTITION_EOF:
@@ -185,14 +194,25 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
 //========================================================================+
 void SvtDbAgentService::parseMsg(
     const SvtKafkaMessage &msg,
-    const SvtKafka::SvtKafkaMsgStatus &status)
+    const SvtKafka::SvtKafkaMsgStatus &_status)
 {
+  SvtKafka::SvtKafkaMsgStatus status = _status;
+  std::string msgError;
+
   std::initializer_list<std::string_view> hdr_name_list = {
       "kafka_correlationId", "kafka_replyPartition"};
+  const auto &msgHeader = msg.getHeaders();
   //! fill headers for reply message
   SvtKafkaReplyMsg replyMsg;
   for (const auto &header : hdr_name_list)
   {
+    if (!msgHeader.contains(header))
+    {
+      msgError = "Failed to retrieve " + std::string(header) + " from message headers:\n";
+      msgError += "Headers: " + msgHeader.dump();
+      status = SvtKafka::SvtKafkaMsgStatus::BadRequest;
+      break;
+    }
     replyMsg.AddHeader(header,
                        msg.getHeaders()[header].get<std::string>().data());
   }
@@ -203,7 +223,8 @@ void SvtDbAgentService::parseMsg(
     replyMsg.setType("");
     replyMsg.setStatus(SvtKafka::msgStatus[status]);
     replyMsg.setData(nlohmann::ordered_json());
-    replyMsg.setError(-1, "");
+    replyMsg.setError(-1, msgError);
+    mLogger->logError(msgError);
   }
   else
   {
