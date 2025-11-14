@@ -103,13 +103,7 @@ class WaferProberAgent:
         while True:
             time.sleep(1)
 
-    def list_commands(self):
-        """List all available commands"""
-        from command_handler import CommandHandler
-        handler = CommandHandler.getInstance()
-        print("Available Commands:")
-        for cmd in handler.listAvailableCommands():
-            print(f" - {cmd}")
+
 
     def check_listener_health(self):
         """Check if the listener is alive and responding"""
