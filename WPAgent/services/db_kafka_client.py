@@ -49,7 +49,7 @@ class DBKafkaClient:
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_BROKER,
             'group.id': 'wp-agent-db-consumer',  # Stable group ID
-            'auto.offset.reset': 'earliest',  # Read from beginning if no offset
+            'auto.offset.reset': 'latest',  # Read from beginning if no offset
             'enable.auto.commit': False,  # Manual offset management
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,

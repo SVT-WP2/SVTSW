@@ -13,6 +13,11 @@ class KafkaDBService:
     DB_REPLY_TOPIC = "svt.db-agent.request.reply"
     DB_KAFKA_BROKER = "localhost:9095"
 
+    # Header names as per SVT conventions
+    HEADER_CORRELATION_ID = 'kafka_correlationId'
+    HEADER_REPLY_TOPIC = 'kafka_replyTopic'
+    HEADER_REPLY_PARTITION = 'kafka_replyPartition'
+
     # Singleton instance
     _instance = None
     _initialized = False
@@ -27,12 +32,11 @@ class KafkaDBService:
     def __init__(self):
         """Initialize DB service (use get_instance() for singleton)"""
         if KafkaDBService._initialized:
-            return  # Already initialized
+            return
 
         print(f"🔄 Initializing KafkaDBService...")
         print(f"   Broker: {self.DB_KAFKA_BROKER}")
 
-        # Ensure topics exist
         self._ensure_topics_exist()
 
         # Create producer
@@ -41,12 +45,11 @@ class KafkaDBService:
             'request.timeout.ms': 30000
         })
 
-        # Create consumer with stable group ID and 'earliest' offset
-        # ⚠️ CRITICAL: 'earliest' ensures we don't miss quick replies
+        # Create consumer with 'earliest' offset
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_KAFKA_BROKER,
-            'group.id': 'wp-agent-db-consumer',  # Stable group ID
-            'auto.offset.reset': 'earliest',  # ⚠️ CRITICAL: Changed from 'latest'
+            'group.id': 'wp-agent-db-consumer',
+            'auto.offset.reset': 'latest',
             'enable.auto.commit': False,
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000
@@ -54,7 +57,7 @@ class KafkaDBService:
 
         self.consumer.subscribe([self.DB_REPLY_TOPIC])
 
-        # Warm up consumer (ensure subscription is active)
+        # Warm up consumer
         print(f"   Warming up consumer...")
         for _ in range(3):
             self.consumer.poll(0.1)
@@ -101,38 +104,54 @@ class KafkaDBService:
     def _request_reply(
             self,
             message_type: str,
-            data: Dict[str, Any],
+            data: Optional[Dict[str, Any]],
             reply_type: str,
             timeout: float = 10.0
     ) -> Optional[Dict[str, Any]]:
         """
-        Send request to DB Agent and wait for reply
+        Send request to DB Agent and wait for reply using Kafka headers
 
         Args:
             message_type: Type of message (e.g., "GetAllWaferProbeMachines")
-            data: Data payload for the message
-            reply_type: Expected reply type (e.g., "GetAllWaferProbeMachinesReply")
+            data: Data payload (can be None for some requests)
+            reply_type: Expected reply type
             timeout: Timeout in seconds
 
         Returns:
             Reply data or None if timeout
         """
-        # Build message - NO requestId as per your requirement
-        payload = {
-            "type": message_type,
-            "data": data
+        # Generate correlation ID
+        correlation_id = str(uuid.uuid4())
+
+        # Build message body as per SVT conventions
+        message_body = {
+            "type": message_type
+        }
+        if data is not None:
+            message_body["data"] = data
+
+        # Build headers as per SVT conventions
+        headers = {
+            self.HEADER_CORRELATION_ID: correlation_id.encode('utf-8'),
+            self.HEADER_REPLY_TOPIC: self.DB_REPLY_TOPIC.encode('utf-8'),
+            self.HEADER_REPLY_PARTITION: str(0).encode('utf-8')
         }
 
-        # Debug: Print the actual payload
+        # Debug output
         print(f"\n📤 Sending to DB Agent:")
         print(f"   Topic: {self.DB_REQUEST_TOPIC}")
-        print(f"   Payload: {json.dumps(payload, indent=2)}")
+        print(f"   Headers:")
+        print(f"      kafka_correlationId: {correlation_id}")
+        print(f"      kafka_replyTopic: {self.DB_REPLY_TOPIC}")
+        print(f"      kafka_replyPartition: 0")
+        print(f"   Body: {json.dumps(message_body, indent=2)}")
 
-        # Send request
+        # Send request with headers
         try:
             self.producer.produce(
                 self.DB_REQUEST_TOPIC,
-                value=json.dumps(payload).encode("utf-8")
+                value=json.dumps(message_body).encode("utf-8"),
+                headers=list(headers.items())  # Convert dict to list of tuples
             )
             self.producer.flush()
             print(f"   ✅ Request sent")
@@ -140,9 +159,9 @@ class KafkaDBService:
             print(f"   ❌ Send failed: {e}")
             return None
 
-        print(f"   ⏳ Waiting for '{reply_type}' (timeout: {timeout}s)...")
+        print(f"   ⏳ Waiting for reply (correlation_id: {correlation_id[:8]}...)...")
 
-        # Wait for reply
+        # Wait for reply with matching correlation ID
         start = time.time()
         messages_seen = 0
 
@@ -152,7 +171,7 @@ class KafkaDBService:
             if msg is None:
                 elapsed = time.time() - start
                 if elapsed > 3 and messages_seen == 0:
-                    print(f"   ⏳ Still waiting... ({elapsed:.0f}s, no messages)")
+                    print(f"   ⏳ Still waiting... ({elapsed:.0f}s)")
                 continue
 
             if msg.error():
@@ -162,26 +181,37 @@ class KafkaDBService:
             messages_seen += 1
 
             try:
-                value = json.loads(msg.value().decode("utf-8"))
-                received_type = value.get("type")
+                # Check headers for correlation ID
+                msg_headers = msg.headers()
+                if msg_headers:
+                    msg_correlation_id = None
+                    for key, value in msg_headers:
+                        if key == self.HEADER_CORRELATION_ID:
+                            msg_correlation_id = value.decode('utf-8')
+                            break
 
-                print(f"   📥 Received: {received_type}")
+                    # Check if correlation ID matches
+                    if msg_correlation_id != correlation_id:
+                        continue
 
-                # Check if this is the reply we want
-                if received_type == reply_type:
-                    status = value.get("status")
-                    print(f"   ✅ Match! Status: {status}")
+                    print(f"   📥 Got message with matching correlationId!")
 
-                    # Check status
-                    if status != "Success":
-                        error = value.get("error", {})
-                        error_msg = error.get("message", "Unknown error")
-                        print(f"   ❌ DB Agent error: {error_msg}")
-                        return None
+                # Parse message body
+                reply_body = json.loads(msg.value().decode("utf-8"))
+                reply_type_received = reply_body.get("type")
+                status = reply_body.get("status")
 
-                    return value
-                else:
-                    print(f"   ℹ️ Ignoring: {received_type}")
+                print(f"   Reply type: {reply_type_received}")
+                print(f"   Status: {status}")
+
+                # Check status
+                if status != "Success":
+                    error = reply_body.get("error", {})
+                    error_msg = error.get("message", "Unknown error")
+                    print(f"   ❌ DB Agent error: {error_msg}")
+                    return None
+
+                return reply_body
 
             except json.JSONDecodeError as e:
                 print(f"   ⚠️ JSON parse error: {e}")
@@ -201,10 +231,21 @@ class KafkaDBService:
             enum_names: Optional[List[str]] = None,
             timeout: float = 10.0
     ) -> Dict[str, List[str]]:
-        """Get enumeration values from database"""
-        data = {}
+        """
+        Get enumeration values from database
+
+        Message format:
+        {
+          "type": "GetAllEnums",
+          "data": {
+            "enumsNames": ["asicFamilyType", ...]  // optional
+          }
+        }
+        """
+        # Build data - can be None if no specific enums requested
+        data = None
         if enum_names:
-            data["enumsNames"] = enum_names
+            data = {"enumsNames": enum_names}
 
         reply = self._request_reply(
             message_type="GetAllEnums",
@@ -235,7 +276,7 @@ class KafkaDBService:
         """
         Get all wafer probe machines from database
 
-        Sends message in format:
+        Message format:
         {
           "type": "GetAllWaferProbeMachines",
           "data": {
@@ -245,10 +286,9 @@ class KafkaDBService:
           }
         }
         """
-        # ✅ CORRECTED: Proper structure with ids array
         data = {
             "filter": {
-                "ids": []  # Empty array = get all machines
+                "ids": []
             }
         }
 
