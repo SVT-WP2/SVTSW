@@ -45,9 +45,9 @@ def list_probers(timeout: float = 15.0):
             output_lines.append(f"\n{idx}. {machine.get('name', 'N/A')}")
             output_lines.append(f"   ID: {machine.get('id', 'N/A')}")
             output_lines.append(f"   Type: {machine.get('type', 'N/A')}")
-            output_lines.append(f"   Address: {machine.get('address', 'N/A')}")
-            output_lines.append(f"   Status: {machine.get('status', 'N/A')}")
-            output_lines.append(f"   Location: {machine.get('location', 'N/A')}")
+            output_lines.append(f"   Host name: {machine.get('hostName', 'N/A')}")
+            output_lines.append(f"   Connection Port: {machine.get('connectionPort', 'N/A')}")
+            output_lines.append(f"   Location: {machine.get('generalLocation', 'N/A')}")
 
         output = "\n".join(output_lines)
         print(output)
