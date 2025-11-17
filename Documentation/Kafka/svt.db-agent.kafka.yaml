@@ -1826,9 +1826,9 @@ components:
         data:
           type: object
           required:
-            - waferId
+            - equipmentId
           properties:
-            waferId:
+            equipmentId:
               type: number
               description: Equipment id
     GetEquipmentLocationHistoryReplyMessage:
