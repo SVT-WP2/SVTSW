@@ -31,8 +31,8 @@ SvtDbAgent::SvtDbEquipDto::SvtDbEquipDto()
 //========================================================================+
 void SvtDbAgent::SvtDbEquipDto::createAllRequest()
 {
-  //! SvtDbEquipDto::GetAllEquipments
-  addRequest("GetAllEquipments",
+  //! SvtDbEquipDto::GetAllEquipment
+  addRequest("GetAllEquipment",
              std::bind(static_cast<bind_type>(&SvtDbEquipDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbEquipment::CreateEquipment
@@ -51,15 +51,4 @@ void SvtDbAgent::SvtDbEquipDto::createAllRequest()
   addRequest("GetEquipmentLocationHistory",
              std::bind(static_cast<bind_type>(&SvtDbEquipDto::getLocationHistory), this,
                        std::placeholders::_1, std::placeholders::_2));
-}
-
-//========================================================================+
-void SvtDbAgent::SvtDbEquipDto::createEntry(
-    const SvtKafkaMessage &msg,
-    SvtKafkaReplyMsg &replyMsg)
-{
-  SvtDbEntry entry;
-  createEntryWithLocation(msg, entry);
-  getLogger()->logInfo("Creating reply SvtKafkaMessage");
-  createReplyMsg(entry, replyMsg);
 }
