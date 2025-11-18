@@ -796,12 +796,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/GetAllEquipments:
+  /svt.db-agent.request/GetAllEquipment:
     post:
       tags:
-        - Equipments
-      summary: Get All Equipments
-      description: Returns Equipments list in the reply message. Optional filter by EquipmentIds can be applied to return exact set of Equipments.
+        - Equipment
+      summary: Get All Equipment
+      description: Returns Equipment list in the reply message. Optional filter by EquipmentIds can be applied to return exact set of Equipment.
       requestBody:
         content:
           application/json:
@@ -809,7 +809,7 @@ paths:
               type: object
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllEquipmentsMessage'
+                - $ref: '#/components/schemas/GetAllEquipmentMessage'
         required: true
       responses:
         '200':
@@ -820,7 +820,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllEquipmentsReplyMessage'
+                  - $ref: '#/components/schemas/GetAllEquipmentReplyMessage'
         default:
           description: Unexpected error
           content:
@@ -830,7 +830,7 @@ paths:
   /svt.db-agent.request/CreateEquipment:
     post:
       tags:
-        - Equipments
+        - Equipment
       summary: Create Equipment
       description: Returns the newly created Equipment in the reply message
       requestBody:
@@ -861,7 +861,7 @@ paths:
   /svt.db-agent.request/UpdateEquipmentLocation:
     post:
       tags:
-        - Equipments
+        - Equipment
       summary: Update Equipment Location
       description: Returns updated Equipment in the reply message
       requestBody:
@@ -892,7 +892,7 @@ paths:
   /svt.db-agent.request/GetEquipmentLocationHistory:
     post:
       tags:
-        - Equipments
+        - Equipment
       summary: Get Equipment Location History Records
       description: Return list of location records for a wafer
       requestBody:
@@ -1742,13 +1742,13 @@ components:
             entity:
               $ref: '#/components/schemas/EquipmentTypeDto'
     #
-    # EQUIPMENTS :: LIST
+    # EQUIPMENT :: LIST
     #
-    GetAllEquipmentsMessage:
+    GetAllEquipmentMessage:
       properties:
         type:
           type: string
-          default: 'GetAllEquipments'
+          default: 'GetAllEquipment'
         data:
           type: object
           properties:
@@ -1757,14 +1757,14 @@ components:
               properties:
                 ids:
                   type: array
-                  description: Equipment ids array. If array is empty / undefined => all equipments will be returned.
+                  description: Equipment ids array. If array is empty / undefined => all equipment will be returned.
                   items:
                     type: number
-    GetAllEquipmentsReplyMessage:
+    GetAllEquipmentReplyMessage:
       properties:
         type:
           type: string
-          default: 'GetAllEquipmentsReply'
+          default: 'GetAllEquipmentReply'
         data:
           type: object
           properties:
@@ -1773,7 +1773,7 @@ components:
               items:
                 $ref: '#/components/schemas/EquipmentDto'
     #
-    # EQUIPMENTS :: CREATE
+    # EQUIPMENT :: CREATE
     #
     CreateEquipmentMessage:
       properties:

@@ -70,6 +70,17 @@ bool SvtDbAgent::SvtDbBaseLocationDto::createEntryWithLocation(
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbBaseLocationDto::createEntry(
+    const SvtKafka::SvtKafkaMessage &msg,
+    SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  SvtDbEntry entry;
+  createEntryWithLocation(msg, entry);
+  getLogger()->logInfo("Creating reply SvtKafkaMessage");
+  createReplyMsg(entry, replyMsg);
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbBaseLocationDto::updateEntry(
     const SvtKafka::SvtKafkaMessage &msg,
     SvtKafka::SvtKafkaReplyMsg &replyMsg)
