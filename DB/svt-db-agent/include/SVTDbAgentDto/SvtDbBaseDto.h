@@ -25,6 +25,8 @@ namespace SvtDbAgent
   using SvtUtils::Singleton;
   using SvtUtils::SvtLogger;
 
+  using Map = std::map<std::string, bool>;
+
   struct SvtDbEntry
   {
    public:
@@ -103,7 +105,7 @@ namespace SvtDbAgent
     //! Getters
     const std::string &getTableName() { return mTableName; }
 
-    const std::vector<std::string> &getColNames() { return mColNames; }
+    const Map &getColNames() { return mColNames; }
 
     SvtLogger *getLogger() { return logger; }
 
@@ -111,7 +113,10 @@ namespace SvtDbAgent
                            SvtKafka::SvtKafkaReplyMsg &);
 
    protected:
-    void addColName(const std::string &name) { mColNames.push_back(name); }
+    void addColName(const std::string &name, const bool _req = true)
+    {
+      mColNames[name] = _req;
+    }
     void setTableName(const std::string &tName) { mTableName = tName; }
 
     virtual void getAllEntries(const nlohmann::json &data_j,
@@ -131,9 +136,12 @@ namespace SvtDbAgent
     virtual void createAllRequest() = 0;
 
    private:
-    void clear() { std::vector<std::string>().swap(mColNames); }
+    void clear()
+    {
+      mColNames.clear();
+    }
 
-    std::vector<std::string> mColNames;
+    Map mColNames;
     std::string mTableName;
 
     std::map<std::string_view,

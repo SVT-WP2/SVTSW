@@ -30,8 +30,8 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   addColName("software");
   addColName("swVersion");
   addColName("vendor");
-  addColName("loadedWaferId");
-  addColName("installedProbeCardId");
+  addColName("loadedWaferId", false);
+  addColName("installedProbeCardId", false);
 
   createAllRequest();
 }
