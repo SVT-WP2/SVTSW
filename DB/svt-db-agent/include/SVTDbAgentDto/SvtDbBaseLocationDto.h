@@ -51,8 +51,10 @@ namespace SvtDbAgent
     virtual bool createEntryWithLocation(
         const SvtKafka::SvtKafkaMessage &,
         SvtDbEntry &);
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
-                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+                             SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void
     updateLocation(const SvtKafka::SvtKafkaMessage &msg,
                    SvtKafka::SvtKafkaReplyMsg &replyMsg);

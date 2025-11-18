@@ -18,10 +18,6 @@ namespace SvtDbAgent
     ~SvtDbEquipDto() = default;
 
    private:
-    //! request DTO funcions
-    virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,
-                             SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
-
     virtual void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
