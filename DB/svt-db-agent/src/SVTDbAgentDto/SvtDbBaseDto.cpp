@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -38,10 +39,8 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
   parseJsonFilters(data_j, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
-  bool tableWithId = std::find(getColNames().begin(), getColNames().end(),
-                               "id") != getColNames().end();
-  bool result = tableWithId ? getAllEntriesFromDB(entries, filters, "id", false)
-                            : getAllEntriesFromDB(entries, filters);
+  bool result = getColNames().find("id") != getColNames().end() ? getAllEntriesFromDB(entries, filters, "id", false)
+                                                                : getAllEntriesFromDB(entries, filters);
 
   if (result)
   {
@@ -135,7 +134,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   for (const auto &colName : getColNames())
   {
-    query.addColumn(colName);
+    query.addColumn(colName.first);
   }
 
   if (!filters.ids.empty())
@@ -145,7 +144,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   for (const auto &filter : filters.mFilters.getValues())
   {
-    if (std::find(getColNames().begin(), getColNames().end(), filter.first) !=
+    if (getColNames().find(filter.first) !=
         getColNames().end())
     {
       query.addWhereEquals(filter.first, filter.second);
@@ -178,7 +177,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       int valId = 0;
       for (const auto &colValue : row)
       {
-        const std::string &colName = getColNames().at(valId);
+        const std::string &colName = std::next(getColNames().begin(), valId)->first;
         rowEntry.addValue(colName, colValue);
         ++valId;
       }
@@ -358,25 +357,18 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
                                              SvtDbEntry &entry)
 {
   //! remove id record
-  std::vector<std::string> AdjColName(getColNames().begin(),
-                                      getColNames().end());
-  std::vector<std::string>::const_iterator iter =
-      std::find(AdjColName.begin(), AdjColName.end(), "id");
-  if (iter != AdjColName.end())
-  {
-    AdjColName.erase(iter);
-  }
-  if (j_data.size() != (AdjColName.size()))
+  size_t count_required = std::count_if(getColNames().cbegin(), getColNames().cend(), [](const auto &p)
+                                        { return ((p.first != "id") && (p.second)); });
+  if (j_data.size() < count_required)
   {
     std::ostringstream ss;
-    ss << "Incorrect number of paramenters. Table columns size without id: ";
-    ss << AdjColName.size() << " and entry size is: " << j_data.size();
+    ss << "Incorrect number of paramenters. Required: ";
+    ss << count_required << " and entry size is: " << j_data.size();
     throw std::invalid_argument(ss.str());
   }
-  for (const auto &colName : AdjColName)
+  for (auto it = j_data.begin(); it != j_data.end(); ++it)
   {
-    const auto &value = j_data[colName];
-    entry.addValue(colName, value);
+    entry.addValue(it.key(), it.value());
   }
 }
 
@@ -393,7 +385,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
       {
         filters.ids = it->get<std::vector<int>>();
       }
-      else if (std::find(getColNames().begin(), getColNames().cend(), it.key()) != getColNames().end())
+      else if (getColNames().find(it.key()) != getColNames().end())
       {
         filters.mFilters.addValue(it.key(), it.value());
       }
