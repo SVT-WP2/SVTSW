@@ -82,6 +82,20 @@ def get_filepath_param(params):
     return None
 
 
+def _normalize_boolean_param(value):
+    """
+    Normalize various boolean representations to Python bool.
+    Handles: "true"/"false", "True"/"False", "1"/"0", 1/0, True/False
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ('true', '1', 'yes')
+    if isinstance(value, int):
+        return value != 0
+    return False
+
+
 def execute_command(message_type, params=None):
     # --- Normalize params so we never try ** on a string ---
     if isinstance(params, str):
@@ -104,12 +118,19 @@ def execute_command(message_type, params=None):
         except Exception:
             params = {}
 
+    # Normalize boolean parameters for Initialize command
+    if message_type in ["Initialize", "InitializeTestingProject"]:
+        if "with_db" in params:
+            params["with_db"] = _normalize_boolean_param(params["with_db"])
+        if "force" in params:
+            params["force"] = _normalize_boolean_param(params["force"])
+
     if message_type not in COMMAND_ROUTER:
         result = {"status": "error", "output": f"Unknown command: {message_type}"}
         logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, params, result)
         return result
 
-    # ✅ CHECK IF AGENT IS BUSY (NEW!)
+    # ✅ CHECK IF AGENT IS BUSY
     can_execute, reason = agentStateMachine.canExecute(message_type)
     if not can_execute:
         result = {
@@ -135,6 +156,8 @@ def execute_command(message_type, params=None):
             severity = Severity.ERROR
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         result = {"status": "error", "output": str(e)}
         agentStateMachine.updateState(SvtWpAgentEvent.Error)
         severity = Severity.ERROR
