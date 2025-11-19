@@ -1,4 +1,3 @@
-import actions.WPTestingActions as testing_actions
 import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
 import actions.WPDataBaseActions as database_actions
@@ -10,24 +9,31 @@ from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachi
 from services.listener_heartbeat import ListenerHealthCheck
 
 
+# Lazy import for testing actions to avoid loading sentio_prober_control at module import time
+def _get_testing_actions():
+    """Lazy import of testing actions to defer sentio_prober_control import"""
+    import actions.WPTestingActions as testing_actions
+    return testing_actions
+
+
 COMMAND_ROUTER = {
-    #  Testing Actions
-    "MoveChuckXY": testing_actions.move_chuck_xy,
-    "RunPTPA": testing_actions.run_ptpa,
-    "StepNextDie": testing_actions.step_next_die,
-    "GoToDie": testing_actions.go_to_die,
-    "OpenProject": testing_actions.open_project,
-    "FindHome": testing_actions.find_home,
-    "SwitchCamera": testing_actions.switch_camera,
-    "MoveChuckHome": testing_actions.move_chuck_home,
-    "Unload": testing_actions.unload_wafer,
-    "Cleaning": testing_actions.clean_probe_station,
-    "AlignWafer": testing_actions.align_wafer,
-    "GoToContact": testing_actions.go_to_contact,
-    "GoToSeparation": testing_actions.go_to_separation,
-    "AutoFocus": testing_actions.auto_focus,
-    "Load": testing_actions.load_wafer,
-    "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
+    #  Testing Actions - using lambda for lazy evaluation
+    "MoveChuckXY": lambda **params: _get_testing_actions().move_chuck_xy(**params),
+    "RunPTPA": lambda **params: _get_testing_actions().run_ptpa(**params),
+    "StepNextDie": lambda **params: _get_testing_actions().step_next_die(**params),
+    "GoToDie": lambda **params: _get_testing_actions().go_to_die(**params),
+    "OpenProject": lambda **params: _get_testing_actions().open_project(**params),
+    "FindHome": lambda **params: _get_testing_actions().find_home(**params),
+    "SwitchCamera": lambda **params: _get_testing_actions().switch_camera(**params),
+    "MoveChuckHome": lambda **params: _get_testing_actions().move_chuck_home(**params),
+    "Unload": lambda **params: _get_testing_actions().unload_wafer(**params),
+    "Cleaning": lambda **params: _get_testing_actions().clean_probe_station(**params),
+    "AlignWafer": lambda **params: _get_testing_actions().align_wafer(**params),
+    "GoToContact": lambda **params: _get_testing_actions().go_to_contact(**params),
+    "GoToSeparation": lambda **params: _get_testing_actions().go_to_separation(**params),
+    "AutoFocus": lambda **params: _get_testing_actions().auto_focus(**params),
+    "Load": lambda **params: _get_testing_actions().load_wafer(**params),
+    "MoveChuckToWorkArea": lambda **params: _get_testing_actions().move_chuck_work_area(**params),
 
     #  Project Init
     "InitializeTestingProject": project_actions.initialise_testing_project,
@@ -118,10 +124,8 @@ def execute_command(message_type, params=None):
         except Exception:
             params = {}
 
-    # Normalize boolean parameters for Initialize command
+    # Normalize boolean parameters for Initialize command (only force now)
     if message_type in ["Initialize", "InitializeTestingProject"]:
-        if "with_db" in params:
-            params["with_db"] = _normalize_boolean_param(params["with_db"])
         if "force" in params:
             params["force"] = _normalize_boolean_param(params["force"])
 
