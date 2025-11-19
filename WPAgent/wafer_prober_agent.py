@@ -25,6 +25,65 @@ class WaferProberAgent:
         Returns:
             dict: Response from listener with status and output
         """
+        # ========================================================================
+        # SPECIAL HANDLING: Initialize with with_db parameter
+        # ========================================================================
+        # Intercept database initialization and handle it producer-side
+        # This keeps the CLI interface simple: python main.py send Initialize with_db=true
+        # But handles the interaction on producer side where user can see/respond
+        if command == "Initialize" and params:
+            # Normalize params to dict if needed
+            if isinstance(params, str):
+                # Parse "key=value" or "key1=value1 key2=value2" format
+                param_dict = {}
+                for item in params.split():
+                    if '=' in item:
+                        k, v = item.split('=', 1)
+                        param_dict[k] = v
+                params = param_dict
+
+            # Check for with_db parameter
+            if isinstance(params, dict):
+                with_db_value = str(params.get('with_db', '')).lower()
+                if with_db_value in ['true', '1', 'yes']:
+                    # Database initialization requested - handle producer-side
+                    print("🔍 Database initialization requested - handling producer-side...")
+
+                    try:
+                        from actions.WPInitializationService import WPInitializationService
+
+                        init_service = WPInitializationService(self)
+
+                        # Extract other parameters
+                        project_name = params.get('project_name')
+                        force_value = str(params.get('force', '')).lower()
+                        force = force_value in ['true', '1', 'yes']
+                        db_timeout = float(params.get('db_timeout', 15.0))
+
+                        # Do producer-side database initialization
+                        # This will show prompts to user and send final command to listener
+                        return init_service.initialize_from_database(
+                            project_name=project_name,
+                            force=force,
+                            db_timeout=db_timeout
+                        )
+                    except ImportError as e:
+                        return {
+                            "status": "error",
+                            "output": f"initialization_service.py not found. Please install it for database initialization. Error: {e}"
+                        }
+                    except Exception as e:
+                        import traceback
+                        traceback.print_exc()
+                        return {
+                            "status": "error",
+                            "output": f"Database initialization failed: {str(e)}"
+                        }
+
+        # ========================================================================
+        # Normal command flow continues here
+        # ========================================================================
+
         # Check if listener is alive before sending
         if check_health:
             is_alive, age = self.health_check.is_listener_alive(timeout=2.0)
@@ -37,7 +96,7 @@ class WaferProberAgent:
                     print(f"⚠️  WARNING: Listener appears to be down!")
                     print(f"   Last heartbeat was {age:.1f}s ago (timeout: {self.health_check.HEARTBEAT_TIMEOUT}s)")
 
-                print(f"\n❓ The command '{command}' may not execute.")
+                print(f"\n❌ The command '{command}' may not execute.")
                 print(f"   Options:")
                 print(f"   1. Start the listener: python main.py listen")
                 print(f"   2. Send anyway (may timeout): Continue")

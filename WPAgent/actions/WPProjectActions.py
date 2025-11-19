@@ -4,150 +4,12 @@ from WPAgentUtilities.WPHelpers import (resolve_project_parameters, ensure_probe
 from services.kafka_db_service import KafkaDBService
 
 
-def _get_user_selection_from_machines(machines):
-    """
-    Display available machines and prompt user to select one.
-
-    Args:
-        machines: List of machine dictionaries from database
-
-    Returns:
-        Selected machine dict or None if cancelled
-    """
-    print("\n" + "=" * 70)
-    print("  AVAILABLE WAFER PROBE MACHINES")
-    print("=" * 70)
-
-    for idx, machine in enumerate(machines, 1):
-        print(f"\n{idx}. {machine.get('name', 'N/A')}")
-        print(f"   ID: {machine.get('id', 'N/A')}")
-        print(f"   Type: {machine.get('type', 'N/A')}")
-        print(f"   Host: {machine.get('hostName', 'N/A')}:{machine.get('connectionPort', 'N/A')}")
-        print(f"   Location: {machine.get('generalLocation', 'N/A')}")
-
-    print("\n" + "=" * 70)
-
-    while True:
-        try:
-            selection = input(f"\nSelect machine (1-{len(machines)}) or 'q' to quit: ").strip()
-
-            if selection.lower() == 'q':
-                print("❌ Initialization cancelled by user")
-                return None
-
-            idx = int(selection)
-            if 1 <= idx <= len(machines):
-                selected = machines[idx - 1]
-                print(f"\n✅ Selected: {selected.get('name')}")
-                return selected
-            else:
-                print(f"⚠️  Please enter a number between 1 and {len(machines)}")
-
-        except ValueError:
-            print("⚠️  Invalid input. Please enter a number or 'q' to quit.")
-        except KeyboardInterrupt:
-            print("\n❌ Initialization cancelled by user")
-            return None
+# Database initialization removed - now handled by initialization_service.py on producer side
+# This keeps the listener non-interactive
 
 
-def _initialize_from_database(project_name=None, force=False, timeout=15.0):
-    """
-    Initialize prober by retrieving available machines from database and prompting user selection.
-
-    Args:
-        project_name: Optional project name to use
-        force: Force re-initialization even if already initialized
-        timeout: Database query timeout in seconds
-
-    Returns:
-        dict: Status result
-    """
-    try:
-        db_service = KafkaDBService.get_instance()
-
-        print("\n🔍 Fetching available wafer probe machines from database...")
-        machines = db_service.get_all_wafer_probe_machines(timeout=timeout)
-
-        if not machines:
-            return {
-                "status": "error",
-                "output": "No wafer probe machines found in database or database agent not responding"
-            }
-
-        # Let user select a machine
-        selected_machine = _get_user_selection_from_machines(machines)
-
-        if not selected_machine:
-            return {
-                "status": "error",
-                "output": "No machine selected - initialization cancelled"
-            }
-
-        # Extract machine parameters
-        machine_type = selected_machine.get('type', '').lower()
-        host_name = selected_machine.get('hostName', '')
-        connection_port = selected_machine.get('connectionPort', '')
-        machine_id = selected_machine.get('id', '')
-        machine_name = selected_machine.get('name', '')
-
-        if not machine_type or not host_name:
-            return {
-                "status": "error",
-                "output": f"Missing required machine parameters (type: {machine_type}, host: {host_name})"
-            }
-
-        # Build address
-        if connection_port:
-            address = f"{host_name}:{connection_port}"
-        else:
-            address = host_name
-
-        print(f"\n🔧 Initializing {machine_name} ({machine_type}) at {address}...")
-
-        # Initialize using the selected machine parameters
-        result = ensure_prober_initialized(
-            address=address,
-            machine_type=machine_type,
-            project_name=project_name
-        )
-
-        if result["status"] == "success":
-            # Store additional metadata in globals
-            globals_ = SvtWPAagentGlobalParameters.getInstance()
-            globals_.set_prober_status("initialized")
-
-            # Store machine ID and name for reference
-            if not hasattr(globals_, 'machine_id'):
-                globals_.machine_id = machine_id
-                globals_.machine_name = machine_name
-            else:
-                globals_.machine_id = machine_id
-                globals_.machine_name = machine_name
-
-            return {
-                "status": "success",
-                "output": f"✅ Initialized {machine_name} at {address}",
-                "data": {
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
-                    "machine_type": machine_type,
-                    "address": address,
-                    "project_name": project_name
-                }
-            }
-        else:
-            return result
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {
-            "status": "error",
-            "output": f"Database initialization failed: {str(e)}"
-        }
-
-
-def _initialize_manual(address=None, machine_type=None, project_name=None, force=False):
+def _initialize_manual(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
+                       machine_name=None, initialization_mode=None):
     """
     Initialize prober with manually provided parameters (original behavior).
 
@@ -156,6 +18,9 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
         machine_type: Type of prober machine
         project_name: Optional project name
         force: Force re-initialization
+        machine_id: Optional database machine ID (for tracking)
+        machine_name: Optional database machine name (for tracking)
+        initialization_mode: Optional initialization mode ("manual" or "database")
 
     Returns:
         dict: Status result
@@ -187,10 +52,40 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
 
         if result["status"] == "success":
             globals_.set_prober_status("initialized")
+
+            # Store database metadata if provided (from producer-side selection)
+            if machine_id:
+                globals_.machine_id = machine_id
+            if machine_name:
+                globals_.machine_name = machine_name
+            if initialization_mode:
+                globals_.initialization_mode = initialization_mode
+            else:
+                # Default to manual if not specified
+                globals_.initialization_mode = "manual"
+
             info = globals_.get_info()
+
+            # Build output message
+            if machine_name:
+                output_msg = f"Initialized {machine_name} at {info.get('address')}"
+            else:
+                output_msg = f"Initialized WP at {info.get('address')}"
+
+            if project_name:
+                output_msg += f" with project '{project_name}'"
+
             return {
                 "status": "success",
-                "output": f"Initialized WP at {info.get('address')} with project '{info.get('project_name')}'"
+                "output": output_msg,
+                "data": {
+                    "address": address,
+                    "machine_type": machine_type,
+                    "project_name": project_name,
+                    "machine_id": machine_id,
+                    "machine_name": machine_name,
+                    "initialization_mode": initialization_mode or "manual"
+                }
             }
         else:
             return result
@@ -204,7 +99,8 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
         }
 
 
-def initialise_testing_project(address=None, machine_type=None, project_name=None, with_db=False, force=False):
+def initialise_testing_project(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
+                               machine_name=None, initialization_mode=None):
     """
     Legacy initialization function - redirects to svt_initialise_wp with same parameters.
     """
@@ -212,26 +108,31 @@ def initialise_testing_project(address=None, machine_type=None, project_name=Non
         address=address,
         machine_type=machine_type,
         project_name=project_name,
-        with_db=with_db,
-        force=force
+        force=force,
+        machine_id=machine_id,
+        machine_name=machine_name,
+        initialization_mode=initialization_mode
     )
 
 
-def svt_initialise_wp(address=None, machine_type=None, project_name=None, with_db=False, force=False, db_timeout=15.0):
+def svt_initialise_wp(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
+                      machine_name=None, initialization_mode=None):
     """
     Initialize the WP agent with prober connection.
 
-    Supports two modes:
-    1. Manual mode (with_db=False): Uses provided address and machine_type
-    2. Database mode (with_db=True): Retrieves machines from DB and prompts user selection
+    This is called by the listener when it receives an Initialize command.
+    All parameters should be provided (no interactive prompts here).
+
+    For database-driven initialization, use WPInitializationService on the producer side.
 
     Args:
-        address: Prober network address (required if with_db=False)
-        machine_type: Type of prober machine (required if with_db=False)
+        address: Prober network address (required)
+        machine_type: Type of prober machine (required)
         project_name: Name of the project (optional)
-        with_db: If True, retrieve machines from database and prompt user selection
         force: Force re-initialization even if already initialized
-        db_timeout: Timeout for database queries (seconds)
+        machine_id: Database machine ID (optional, for tracking)
+        machine_name: Database machine name (optional, for tracking)
+        initialization_mode: "manual" or "database" (optional, for tracking)
 
     Returns:
         dict: Status result with initialization details
@@ -240,8 +141,14 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None, with_d
         # Manual initialization
         svt_initialise_wp(address="wpmit01.cern.ch:35555", machine_type="sentio")
 
-        # Database-driven initialization
-        svt_initialise_wp(with_db=True, project_name="my_project")
+        # With database metadata (sent from producer-side WPInitializationService)
+        svt_initialise_wp(
+            address="wpmit01.cern.ch:35555",
+            machine_type="sentio",
+            machine_id="123",
+            machine_name="SENTIO Prober 1",
+            initialization_mode="database"
+        )
     """
     try:
         factory = ProberFactory.get_instance()
@@ -259,31 +166,25 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None, with_d
                 }
             }
 
-        # Route to appropriate initialization method
-        if with_db:
-            print("\n📊 Using DATABASE-DRIVEN initialization...")
-            return _initialize_from_database(
-                project_name=project_name,
-                force=force,
-                timeout=db_timeout
-            )
-        else:
-            print("\n🔧 Using MANUAL initialization...")
+        # Validate required parameters
+        if not address or not machine_type:
+            return {
+                "status": "error",
+                "output": "Initialization requires 'address' and 'machine_type' parameters. "
+                          "For database-driven initialization, use WPInitializationService on the producer side."
+            }
 
-            # Validate required parameters for manual mode
-            if not address or not machine_type:
-                return {
-                    "status": "error",
-                    "output": "Manual initialization requires 'address' and 'machine_type' parameters. "
-                              "Use with_db=True for database-driven initialization."
-                }
-
-            return _initialize_manual(
-                address=address,
-                machine_type=machine_type,
-                project_name=project_name,
-                force=force
-            )
+        # Route to manual initialization (the only mode for listener)
+        print("\n🔧 Listener: Initializing prober...")
+        return _initialize_manual(
+            address=address,
+            machine_type=machine_type,
+            project_name=project_name,
+            force=force,
+            machine_id=machine_id,
+            machine_name=machine_name,
+            initialization_mode=initialization_mode
+        )
 
     except Exception as e:
         import traceback
