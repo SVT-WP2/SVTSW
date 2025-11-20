@@ -626,8 +626,8 @@ We welcome contributions! Please follow these guidelines:
 
 ## Contact
 
-- **Organization**: SVT
-- **Project**: 
+- **Organization**: SVT SW COre team
+- **Project**: "Call me maybe"
 
 ---
 
