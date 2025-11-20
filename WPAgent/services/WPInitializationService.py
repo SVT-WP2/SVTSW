@@ -9,18 +9,11 @@ from services.kafka_db_service import KafkaDBService
 class WPInitializationService:
     """
     Service for initializing wafer prober with database-driven machine selection.
-    Keeps initialization logic separate from Kafka communication layer.
     """
 
     def __init__(self, agent):
-        """
-        Initialize the service.
-
-        Args:
-            agent: WaferProberAgent instance for sending commands
-        """
         self.agent = agent
-
+    #TODO : project name has to be from information wich asic and orientation we test
     def initialize_from_database(self, project_name=None, force=False, db_timeout=15.0):
         """
         Initialize prober by selecting from database on the PRODUCER side.
@@ -62,7 +55,7 @@ class WPInitializationService:
                 }
 
             # Extract parameters from selected machine
-            machine_type = selected_machine.get('type', '').lower()
+            machine_type = selected_machine.get('software', '').lower()
             host_name = selected_machine.get('hostName', '')
             connection_port = selected_machine.get('connectionPort', '')
             machine_id = selected_machine.get('id', '')
@@ -76,7 +69,7 @@ class WPInitializationService:
 
             # Build address
             if connection_port:
-                address = f"{host_name}:{connection_port}"
+                address = f"{machine_name}01.{host_name}:{connection_port}"
             else:
                 address = host_name
 

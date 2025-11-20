@@ -1,6 +1,6 @@
 import json
 import time
-from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
+from utilities.WPAgentLogger import WPAgentLogger, Severity
 
 # Initialize logger
 logger = WPAgentLogger()

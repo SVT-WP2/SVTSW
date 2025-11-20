@@ -19,7 +19,7 @@ def resolve_project_parameters(address=None, project_name=None, machine_type=Non
     # Only load from DB if ALL parameters are missing
     if not all([address, project_name, machine_type]):
         if not globals_.address or not globals_.project_name or not globals_.machine_type:
-            print("📄 Resolving missing parameters from DB...")
+            print("GO AND CHECK HOW YOU LOAD ..")
             globals_.load_from_db()
 
         # Use global values as fallback

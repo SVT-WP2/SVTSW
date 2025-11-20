@@ -117,7 +117,7 @@ class TestRunner:
     def test_busy_flag(self):
         """Test 3: Test busy flag blocks concurrent commands"""
         from cmd_map import execute_command
-        from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+        from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
         import threading
 
         results = {"first": None, "second": None}
@@ -176,8 +176,8 @@ class TestRunner:
 
     def test_state_transitions(self):
         """Test 5: State machine transitions"""
-        from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
-        from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentState, SvtWpAgentEvent
+        from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+        from stateMachine.SvtWpAgentStateMachine import SvtWpAgentState, SvtWpAgentEvent
         from cmd_map import execute_command
 
         print("\n5a. Initial state:")

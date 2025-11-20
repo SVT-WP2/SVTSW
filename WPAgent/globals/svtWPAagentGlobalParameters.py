@@ -103,13 +103,9 @@ class SvtWPAagentGlobalParameters:
         """
         print("📄 Simulating DB load...")
         db_data = {
-            "address": "wpmit01.cern.ch:35555",
-            "machine_type": "sentio",
             "chip_name": "nkf7",
             "orientation": "E",
             "project_name": "nkf7_12_02_2025_arrow_E",
-            "prober_status": "inuse",
-            "initialization_mode": "database"
         }
         self._apply_data(db_data)
 

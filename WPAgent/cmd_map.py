@@ -1,10 +1,9 @@
 import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
 import actions.WPDataBaseActions as database_actions
-import actions.WPCommandActions as command_actions
-from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
-from SVTWpAgentStateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
-from SVTWpAgentStateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+from utilities.WPAgentLogger import WPAgentLogger, Severity
+from stateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
+from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
 
 from services.listener_heartbeat import ListenerHealthCheck
 
@@ -27,7 +26,7 @@ COMMAND_ROUTER = {
     "SwitchCamera": lambda **params: _get_testing_actions().switch_camera(**params),
     "MoveChuckHome": lambda **params: _get_testing_actions().move_chuck_home(**params),
     "Unload": lambda **params: _get_testing_actions().unload_wafer(**params),
-    "Cleaning": lambda **params: _get_testing_actions().clean_probe_station(**params),
+    "Cleaning": lambda **params: _get_testing_actions().clean_probe_station(**params), # TODO: not implemented
     "AlignWafer": lambda **params: _get_testing_actions().align_wafer(**params),
     "GoToContact": lambda **params: _get_testing_actions().go_to_contact(**params),
     "GoToSeparation": lambda **params: _get_testing_actions().go_to_separation(**params),
@@ -40,7 +39,7 @@ COMMAND_ROUTER = {
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
 
-    #  Sequencer Actions
+    #  Sequencer
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(
         filepath=get_filepath_param(params if params else None),
         executor=_exec_in_sequence

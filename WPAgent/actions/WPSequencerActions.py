@@ -1,8 +1,8 @@
 # actions/WPSequencerActions.py
 import time
 import json
-from WPAgentUtilities.WPAgentLogger import WPAgentLogger, Severity
-from sequencer.WPSequencer import WPSequencer 
+from utilities.WPAgentLogger import WPAgentLogger, Severity
+from sequencer.WPSequencer import WPSequencer
 
 
 def run_sequence(filepath=None, executor=None):
