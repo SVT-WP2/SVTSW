@@ -5,6 +5,7 @@ from utilities.WPAgentLogger import WPAgentLogger, Severity
 from stateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
 from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
+import actions.WPCommandActions as command_actions
 
 from services.listener_heartbeat import ListenerHealthCheck
 

@@ -1,4 +1,3 @@
-from cmd_map import COMMAND_ROUTER, execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 
 #Initialisation of the logger
