@@ -28,9 +28,7 @@ class WaferProberAgent:
         # ========================================================================
         # SPECIAL HANDLING: Initialize with with_db parameter
         # ========================================================================
-        # Intercept database initialization and handle it producer-side
-        # This keeps the CLI interface simple: python main.py send Initialize with_db=true
-        # But handles the interaction on producer side where user can see/respond
+
         if command == "Initialize" and params:
             # Normalize params to dict if needed
             if isinstance(params, str):
@@ -50,7 +48,7 @@ class WaferProberAgent:
                     print("🔍 Database initialization requested - handling producer-side...")
 
                     try:
-                        from actions.WPInitializationService import WPInitializationService
+                        from services.WPInitializationService import WPInitializationService
 
                         init_service = WPInitializationService(self)
 
@@ -161,7 +159,6 @@ class WaferProberAgent:
 
         while True:
             time.sleep(1)
-
 
 
     def check_listener_health(self):

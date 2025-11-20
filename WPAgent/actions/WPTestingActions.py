@@ -1,5 +1,5 @@
 from drivers.factory import get_prober
-from WPAgentUtilities.WPHelpers import resolve_project_parameters
+from utilities.WPHelpers import resolve_project_parameters
 
 
 def _ensure_initialized():
@@ -7,7 +7,7 @@ def _ensure_initialized():
     Helper function to check if prober is initialized before executing commands.
     Returns error dict if not ready, None if ready.
     """
-    from WPAgentUtilities.WPHelpers import check_prober_ready
+    from utilities.WPHelpers import check_prober_ready
 
     is_ready, message = check_prober_ready()
     if not is_ready:

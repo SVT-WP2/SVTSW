@@ -26,8 +26,8 @@ class SentioProberImpl(AbstractProber):
     def step_next_die(self):
         return self.prober.map.step_next_die()
 
-    def go_to_die(self):
-        return self.prober.map.step_die()
+    def go_to_die(self, col: int, row: int):
+        return self.prober.map.step_die(col,row)
 
     def switch_camera(self, mount_point: str):
         from sentio_prober_control.Sentio.Enumerations import CameraMountPoint
@@ -53,7 +53,7 @@ class SentioProberImpl(AbstractProber):
         col, row, sub = self.prober.map.step_die(home_die_col, home_die_row, subsite)
         print(f"Column Index {col}, Row Index {row}, Subsite Index: {sub}")
         reps = self.prober.send_cmd(f"vis:align_wafer")
-        self.prober.wait_complete(resp.cmd_id())
+        self.prober.wait_complete(reps.cmd_id())
 
     def go_to_contact(self):
         self.prober.move_chuck_contact()

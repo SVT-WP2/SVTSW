@@ -22,7 +22,7 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
-    def go_to_die(self):
+    def go_to_die(self,col: int, row: int):
         pass
 
     @abstractmethod

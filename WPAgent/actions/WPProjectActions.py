@@ -1,6 +1,6 @@
 from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.factory import get_prober, ProberFactory
-from WPAgentUtilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
+from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
 from services.kafka_db_service import KafkaDBService
 
 
