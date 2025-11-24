@@ -4,7 +4,7 @@ from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initi
 from services.kafka_db_service import KafkaDBService
 
 
-# Database initialization removed - now handled by initialization_service.py on producer side
+# Database initialization removed - now handled by services/WPInitializationService.py on producer side
 # This keeps the listener non-interactive
 
 
@@ -232,4 +232,58 @@ def get_project_status():
         "status": "success",
         "output": status_info,
         "data": status_info
+    }
+
+
+def reset_agent_state():
+    """
+    Reset the agent state machine to Idle.
+    This command ALWAYS works, even when agent is in Failed state.
+
+    Use this to recover from Failed state.
+    """
+    from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+
+    old_state = agentStateMachine.getState().name
+
+    # Reset the state machine
+    agentStateMachine.reset()
+
+    new_state = agentStateMachine.getState().name
+
+    print(f"🔄 Agent state reset: {old_state} → {new_state}")
+
+    return {
+        "status": "success",
+        "output": f"✅ Agent state reset from '{old_state}' to '{new_state}'",
+        "data": {
+            "old_state": old_state,
+            "new_state": new_state
+        }
+    }
+
+
+def get_agent_state():
+    """
+    Get current agent state.
+    This command ALWAYS works, even when agent is in Failed state.
+    """
+    from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+
+    state = agentStateMachine.getState()
+    current_command = agentStateMachine.getCurrentCommand()
+    retry_count = agentStateMachine.retryCount
+    max_retries = agentStateMachine.maxRetries
+
+    return {
+        "status": "success",
+        "output": f"Agent state: {state.name}",
+        "data": {
+            "state": state.name,
+            "current_command": current_command,
+            "retry_count": retry_count,
+            "max_retries": max_retries,
+            "is_ready": agentStateMachine.isReadyToExecute(),
+            "is_busy": agentStateMachine.isBusy()
+        }
     }

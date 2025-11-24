@@ -9,7 +9,6 @@ import actions.WPCommandActions as command_actions
 
 from services.listener_heartbeat import ListenerHealthCheck
 
-
 COMMAND_ROUTER = {
 
     "MoveChuckXY": testing_actions.move_chuck_xy,
@@ -30,7 +29,7 @@ COMMAND_ROUTER = {
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
 
     #  Project Init
-    "InitializeTestingProject": project_actions.initialise_testing_project, #TODO i dont know do we need it ?
+    "InitializeTestingProject": project_actions.initialise_testing_project,  # TODO i dont know do we need it ?
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
 
@@ -44,9 +43,14 @@ COMMAND_ROUTER = {
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
     "ListOrientations": database_actions.list_orientations,
+
+    # State management commands (bypass state check)
+    "ResetAgent": project_actions.reset_agent_state,
+    "GetAgentState": project_actions.get_agent_state,
 }
 
-COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)
+COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER,
+                                                                                                   **kwargs)
 
 # Instantiation of logger
 logger = WPAgentLogger(
@@ -97,13 +101,10 @@ def _normalize_boolean_param(value):
 
 
 def execute_command(message_type, params=None):
-    # --- Normalize params so we never try ** on a string ---
+    # Normalize params
     if isinstance(params, str):
-        # common cases:
-        # RunSequencer "sequencer/TestSequance.json"
         if message_type == "RunSequencer" and params.endswith(".json"):
             params = {"filepath": params}
-        # also tolerate "key=value" form
         elif "=" in params:
             k, v = params.split("=", 1)
             params = {k: v}
@@ -112,31 +113,66 @@ def execute_command(message_type, params=None):
     elif params is None:
         params = {}
     elif not isinstance(params, dict):
-        # last-resort normalization
         try:
             params = dict(params)
         except Exception:
             params = {}
 
-    # Normalize boolean parameters for Initialize command (only force now)
-    if message_type in ["Initialize", "InitializeTestingProject"]:
-        if "force" in params:
-            params["force"] = _normalize_boolean_param(params["force"])
+    # Commands that bypass state check
+    BYPASS_STATE_CHECK = ["ResetAgent", "GetAgentState"]
 
     if message_type not in COMMAND_ROUTER:
         result = {"status": "error", "output": f"Unknown command: {message_type}"}
         logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, params, result)
         return result
 
-    # ✅ CHECK IF AGENT IS BUSY
-    can_execute, reason = agentStateMachine.canExecute(message_type)
-    if not can_execute:
-        result = {
-            "status": "error",
-            "output": reason
-        }
-        logger.log_command(reason, Severity.WARNING, message_type, params, result)
-        return result
+    # Check if agent can execute (unless bypass command)
+    if message_type not in BYPASS_STATE_CHECK:
+        can_execute, reason = agentStateMachine.canExecute(message_type)
+        if not can_execute:
+            result = {
+                "status": "error",
+                "output": reason
+            }
+            logger.log_command(reason, Severity.WARNING, message_type, params, result)
+            return result
+
+    try:
+        # Set current command and start execution (unless bypass)
+        if message_type not in BYPASS_STATE_CHECK:
+            agentStateMachine.setCurrentCommand(message_type)
+            agentStateMachine.updateState(SvtWpAgentEvent.Start)
+
+        action = COMMAND_ROUTER[message_type]
+        result = action(**params)
+
+        # Update state based on result (unless bypass)
+        if message_type not in BYPASS_STATE_CHECK:
+            if result.get("status") == "success":
+                agentStateMachine.updateState(SvtWpAgentEvent.Success)
+                severity = Severity.INFO
+            else:
+                # Check if parameter error (don't fail agent)
+                error_msg = result.get("output", "").lower()
+                if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
+                    agentStateMachine._reset()  # Reset without failing
+                    severity = Severity.WARNING
+                else:
+                    agentStateMachine.updateState(SvtWpAgentEvent.Error)
+                    severity = Severity.ERROR
+        else:
+            severity = Severity.INFO
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        result = {"status": "error", "output": str(e)}
+        if message_type not in BYPASS_STATE_CHECK:
+            agentStateMachine.updateState(SvtWpAgentEvent.Error)
+        severity = Severity.ERROR
+
+    logger.log_command(result.get("output", ""), severity, message_type, params, result)
+    return result
 
     try:
         # Set current command and start execution
