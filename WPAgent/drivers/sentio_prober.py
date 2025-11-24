@@ -17,6 +17,11 @@ class SentioProberImpl(AbstractProber):
         zero_x, zero_y = self.prober.get_chuck_xy("Wafer", "Zero")
         return self.prober.move_chuck_xy("Zero", zero_x + x, zero_y + y)
 
+    #TODO:Have to be tested
+    def move_chuck_z(self, z: float):
+        zero_z = self.prober.get_chuck_z("Zero")
+        return self.prober.move_chuck_z("Zero", zero_z + z)
+
     def run_ptpa(self):
         self.prober.vision.switch_camera(CameraMountPoint.OffAxis)
         self.prober.vision.auto_focus()
