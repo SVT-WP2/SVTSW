@@ -112,7 +112,7 @@ class WaferProberAgent:
                 print("📤 Sending command anyway...")
 
         # Send command and wait for reply
-        return self.kafka.send(
+        response = self.kafka.send(
             command=command,
             params=params,
             repeat=repeat,
@@ -120,6 +120,7 @@ class WaferProberAgent:
             wait_for_reply=wait_for_reply,
             timeout=timeout
         )
+        return None
 
     def send_async(self, command, params=None, repeat=1, delay=0):
         """
