@@ -30,6 +30,18 @@ def move_chuck_xy(x, y, address=None, machine_type=None):
     return {"status": "success", "output": f"Moved chuck to x={x}, y={y}"}
 
 
+def move_chuck_z(z, address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+    prober = get_prober(machine_type, address)
+    prober.move_chuck_z(z)
+    prober.local_mode()
+    return {"status": "success", "output": f"Moved chuck to x={x}, y={y}"}
+
+
 def run_ptpa(address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
@@ -225,3 +237,14 @@ def move_chuck_work_area(work_area=0, address=None, machine_type=None):
     prober.move_chuck_work_area(work_area)
     prober.local_mode()
     return {"status": "success", "output": f"Moved to {work_area} workarea"}
+
+
+def local_state(address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+    prober = get_prober(machine_type, address)
+    prober.local_mode()
+    return {"status": "success", "output": f"Auto-focus command successfully executed"}

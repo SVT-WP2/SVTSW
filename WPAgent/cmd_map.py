@@ -12,6 +12,7 @@ from services.listener_heartbeat import ListenerHealthCheck
 COMMAND_ROUTER = {
 
     "MoveChuckXY": testing_actions.move_chuck_xy,
+    "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
     "StepNextDie": testing_actions.step_next_die,
     "GoToDie": testing_actions.go_to_die,
@@ -27,6 +28,7 @@ COMMAND_ROUTER = {
     "AutoFocus": testing_actions.auto_focus,
     "Load": testing_actions.load_wafer,
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
+    "LocalMode": testing_actions.local_state,
 
     #  Project Init
     "InitializeTestingProject": project_actions.initialise_testing_project,  # TODO i dont know do we need it ?
