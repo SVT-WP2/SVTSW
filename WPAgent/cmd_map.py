@@ -174,27 +174,6 @@ def execute_command(message_type, params=None):
     logger.log_command(result.get("output", ""), severity, message_type, params, result)
     return result
 
-    try:
-        # Set current command and start execution
-        agentStateMachine.setCurrentCommand(message_type)
-        agentStateMachine.updateState(SvtWpAgentEvent.Start)
 
-        action = COMMAND_ROUTER[message_type]
-        result = action(**params)
 
-        if result.get("status") == "success":
-            agentStateMachine.updateState(SvtWpAgentEvent.Success)
-            severity = Severity.INFO
-        else:
-            agentStateMachine.updateState(SvtWpAgentEvent.Error)
-            severity = Severity.ERROR
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        result = {"status": "error", "output": str(e)}
-        agentStateMachine.updateState(SvtWpAgentEvent.Error)
-        severity = Severity.ERROR
-
-    logger.log_command(result.get("output", ""), severity, message_type, params, result)
-    return result

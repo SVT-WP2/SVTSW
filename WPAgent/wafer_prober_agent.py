@@ -145,22 +145,6 @@ class WaferProberAgent:
         """Start the listener service"""
         self.kafka.listen()
 
-    def run_both(self, command, params=None, repeat=1, delay=0):
-        """Start listener in background and send command"""
-
-        def consume():
-            self.kafka.listen()
-
-        thread = threading.Thread(target=consume, daemon=True)
-        thread.start()
-
-        time.sleep(2)
-        self.send(command, params, repeat, delay)
-
-        while True:
-            time.sleep(1)
-
-
     def check_listener_health(self):
         """Check if the listener is alive and responding"""
         print("🔍 Checking listener health...")
