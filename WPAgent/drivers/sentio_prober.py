@@ -20,8 +20,10 @@ class SentioProberImpl(AbstractProber):
     def run_ptpa(self):
         self.prober.vision.switch_camera(CameraMountPoint.OffAxis)
         self.prober.vision.auto_focus()
-        resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
-        self.prober.wait_complete(resp.cmd_id())
+        #TODO: Have to be tested
+        self.prober.vision.compensation.start_execute(mode='OffAxis',type='BothWithProbeTips')
+        # resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
+        # self.prober.wait_complete(resp.cmd_id())
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
@@ -52,8 +54,10 @@ class SentioProberImpl(AbstractProber):
     def align_wafer(self, home_die_col, home_die_row, subsite=None ):
         col, row, sub = self.prober.map.step_die(home_die_col, home_die_row, subsite)
         print(f"Column Index {col}, Row Index {row}, Subsite Index: {sub}")
-        reps = self.prober.send_cmd(f"vis:align_wafer")
-        self.prober.wait_complete(reps.cmd_id())
+        #TODO : Have to be tested
+        self.prober.vision.align_wafer()
+        # reps = self.prober.send_cmd(f"vis:align_wafer")
+        # self.prober.wait_complete(reps.cmd_id())
 
     def go_to_contact(self):
         self.prober.move_chuck_contact()
