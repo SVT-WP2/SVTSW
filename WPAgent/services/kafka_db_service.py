@@ -258,12 +258,13 @@ class KafkaDBService:
             return {}
 
         return reply.get("data", {}) or {}
-
+    #TODO Need to be Implemented in correct way
     def get_chip_types(self, timeout: float = 10.0) -> List[str]:
         """Get available chip types"""
         data = self.get_all_enums(["asicFamilyType"], timeout=timeout)
         return data.get("asicFamilyType", []) or data.get("asicFamilType", [])
 
+    # TODO Need to be Implemented in correct way
     def get_orientations(self, timeout: float = 10.0) -> List[str]:
         """Get available wafer map orientations"""
         data = self.get_all_enums(["waferMapOrientation"], timeout=timeout)
@@ -311,6 +312,62 @@ class KafkaDBService:
             print(f"\n⚠️ No machines in response")
 
         return machines
+
+    def get_all_wafer_probe_projects(self,
+            timeout: float = 15.0
+        ) -> List[Dict[str, Any]]:
+        """
+        Get all wafer probe projects from database.
+
+        Returns:
+            dict: Response with projects list
+            {
+                "status": "Success",
+                "type": "GetAllWaferProbeProjectsReply",
+                "data": {
+                    "items": [
+                        {
+                            "id": 0,
+                            "wpMachineId": 0,
+                            "waferTypeId": 0,
+                            "name": "string",
+                            "asicFamilyType": "string",
+                            "orientation": "string",
+                            "alignmentDie": "string",
+                            "homeDie": "string",
+                            "local2GlobalMap": "string"
+                        },
+                        ...
+                    ]
+                }
+            }
+        """
+        data = {
+            "filter": {
+                "ids": []
+            }
+        }
+
+        reply = self._request_reply(
+            message_type="GetAllWaferProbeProjects",
+            data=data,
+            reply_type="GetAllWaferProbeProjectsReply",
+            timeout=timeout
+        )
+
+        if not reply:
+            return []
+
+        reply_data = reply.get("data", {})
+        projects = reply_data.get("items", [])
+
+        if projects:
+            print(f"\n✅ Got {len(projects)} project(s)")
+        else:
+            print(f"\n⚠️ No projects in response")
+
+        return projects
+
 
     def close(self):
         """Clean up resources"""

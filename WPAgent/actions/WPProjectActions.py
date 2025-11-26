@@ -100,77 +100,165 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
         }
 
 
+# Updated svt_initialise_wp Function
 
-def svt_initialise_wp(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
-                      machine_name=None, initialization_mode=None):
+def svt_initialise_wp(address=None, machine_type=None, project_name=None,
+                      alignment_die=None, home_die=None, force=False,
+                      machine_id=None, machine_name=None,
+                      project_id=None, asic_family=None, orientation=None,
+                      initialization_mode=None):
     """
     Initialize the WP agent with prober connection.
 
-    This is called by the listener when it receives an Initialize command.
-    All parameters should be provided (no interactive prompts here).
-
-    For database-driven initialization, use WPInitializationService on the producer side.
-
     Args:
-        address: Prober network address (required)
-        machine_type: Type of prober machine (required)
+        address: Prober network address (REQUIRED for manual mode)
+        machine_type: Type of prober machine (REQUIRED for manual mode, e.g., "sentio")
         project_name: Name of the project (optional)
-        force: Force re-initialization even if already initialized
-        machine_id: Database machine ID (optional, for tracking)
-        machine_name: Database machine name (optional, for tracking)
+        alignment_die: Alignment die position as "col,row,subsite" (optional)
+        home_die: Home die position as "col,row,subsite" (optional)
+        force: Force re-initialization even if already initialized (default: False)
+        machine_id: Database machine ID (optional, for metadata)
+        machine_name: Database machine name (optional, for metadata)
+        project_id: Database project ID (optional, for metadata)
+        asic_family: ASIC family type (optional, for metadata)
+        orientation: Wafer orientation (optional, for metadata)
         initialization_mode: "manual" or "database" (optional, for tracking)
 
     Returns:
         dict: Status result with initialization details
 
     Examples:
-        # Manual initialization
-        svt_initialise_wp(address="wpmit01.cern.ch:35555", machine_type="sentio")
+        # Manual initialization (basic)
+        Initialize(address="wpmit01.cern.ch:35555", machine_type="sentio")
 
-        # With database metadata (sent from producer-side WPInitializationService)
-        svt_initialise_wp(
+        # Manual initialization (with project and die positions)
+        Initialize(
             address="wpmit01.cern.ch:35555",
             machine_type="sentio",
-            machine_id="123",
+            project_name="RD53B_Test",
+            alignment_die="5,10,0",
+            home_die="1,1,0"
+        )
+
+        # Database initialization (called by WPInitializationService)
+        Initialize(
+            address="wpmit01.cern.ch:35555",
+            machine_type="sentio",
+            project_name="RD53B_Wafer_Test_v1",
+            alignment_die="5,10,0",
+            home_die="1,1,0",
+            machine_id=1,
             machine_name="SENTIO Prober 1",
+            project_id=15,
+            asic_family="RD53B",
+            orientation="0",
             initialization_mode="database"
         )
     """
-    try:
-        factory = ProberFactory.get_instance()
+    from drivers.factory import ProberFactory
 
-        # Check if already initialized
-        if factory.is_initialized() and not force:
-            globals_ = SvtWPAagentGlobalParameters.getInstance()
+    globals_ = SvtWPAagentGlobalParameters.getInstance()
+    factory = ProberFactory.get_instance()
+
+    # Check if already initialized and not forcing
+    if factory.is_initialized() and not force:
+        return {
+            "status": "success",
+            "output": f"Already initialized at {globals_.address}. Use force=True to reinitialize.",
+            "data": {
+                "already_initialized": True,
+                "current_address": globals_.address,
+                "current_machine_type": globals_.machine_type
+            }
+        }
+
+    # Validate required parameters
+    if not address or not machine_type:
+        return {
+            "status": "error",
+            "output": "Initialization requires 'address' and 'machine_type' parameters."
+        }
+
+    # Reset if forcing re-initialization
+    if force:
+        factory.reset()
+
+    try:
+        # Initialize prober
+        result = ensure_prober_initialized(address, machine_type, project_name)
+
+        if result["status"] == "success":
+            globals_.set_prober_status("initialized")
+
+            # Store basic info
+            globals_.set_address(address)
+            globals_.set_machine_type(machine_type)
+            if project_name:
+                globals_.set_project_name(project_name)
+
+            # Store machine metadata (from database)
+            if machine_id:
+                globals_.machine_id = machine_id
+            if machine_name:
+                globals_.machine_name = machine_name
+            if initialization_mode:
+                globals_.initialization_mode = initialization_mode
+
+            # Parse and store die positions
+            if alignment_die:
+                parsed_alignment = _parse_die_position(alignment_die)
+                if parsed_alignment:
+                    globals_.set_alignment_die(parsed_alignment)
+                    print(
+                        f"   📍 Alignment die: Col {parsed_alignment['col']}, Row {parsed_alignment['row']}, Subsite {parsed_alignment['subsite']}")
+                else:
+                    print(f"   ⚠️  Invalid alignment die format: '{alignment_die}'")
+
+            if home_die:
+                parsed_home = _parse_die_position(home_die)
+                if parsed_home:
+                    globals_.set_home_die(parsed_home)
+                    print(
+                        f"   🏠 Home die: Col {parsed_home['col']}, Row {parsed_home['row']}, Subsite {parsed_home['subsite']}")
+                else:
+                    print(f"   ⚠️  Invalid home die format: '{home_die}'")
+
+            # Store project metadata (from database)
+            if project_id or asic_family or orientation:
+                metadata = {}
+                if project_id:
+                    metadata['project_id'] = project_id
+                if asic_family:
+                    metadata['asic_family'] = asic_family
+                if orientation:
+                    metadata['orientation'] = orientation
+
+                globals_.set_project_metadata(metadata)
+
+            # Build output message
+            output_msg = f"Initialized WP at {address}"
+            if project_name:
+                output_msg += f" with project '{project_name}'"
+
             return {
                 "status": "success",
-                "output": f"Already initialized at {globals_.address}. Use force=True to reinitialize.",
+                "output": output_msg,
                 "data": {
-                    "already_initialized": True,
-                    "current_address": globals_.address,
-                    "current_machine_type": globals_.machine_type
+                    "address": address,
+                    "machine_type": machine_type,
+                    "project_name": project_name,
+                    "alignment_die": alignment_die,
+                    "home_die": home_die,
+                    "machine_id": machine_id,
+                    "machine_name": machine_name,
+                    "project_id": project_id,
+                    "asic_family": asic_family,
+                    "orientation": orientation,
+                    "initialization_mode": initialization_mode
                 }
             }
-
-        # Validate required parameters
-        if not address or not machine_type:
-            return {
-                "status": "error",
-                "output": "Initialization requires 'address' and 'machine_type' parameters. "
-                          "For database-driven initialization, use WPInitializationService on the producer side."
-            }
-
-        # Route to manual initialization (the only mode for listener)
-        print("\n🔧 Listener: Initializing prober...")
-        return _initialize_manual(
-            address=address,
-            machine_type=machine_type,
-            project_name=project_name,
-            force=force,
-            machine_id=machine_id,
-            machine_name=machine_name,
-            initialization_mode=initialization_mode
-        )
+        else:
+            return result
 
     except Exception as e:
         import traceback
@@ -180,6 +268,37 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None, force=
             "output": f"Initialization failed: {str(e)}"
         }
 
+
+def _parse_die_position(die_str):
+    """
+    Parse die position string "col,row" or "col,row,subsite".
+
+    Args:
+        die_str: String like "5,10" or "5,10,0"
+
+    Returns:
+        dict: {"col": int, "row": int, "subsite": int} or None if invalid
+
+    Examples:
+        _parse_die_position("5,10") → {"col": 5, "row": 10, "subsite": 0}
+        _parse_die_position("5,10,0") → {"col": 5, "row": 10, "subsite": 0}
+        _parse_die_position("invalid") → None
+    """
+    if not die_str or not isinstance(die_str, str):
+        return None
+
+    try:
+        parts = die_str.split(",")
+        if len(parts) >= 2:
+            return {
+                "col": int(parts[0].strip()),
+                "row": int(parts[1].strip()),
+                "subsite": int(parts[2].strip()) if len(parts) > 2 else 0
+            }
+    except (ValueError, IndexError):
+        return None
+
+    return None
 
 def get_project_status():
     """

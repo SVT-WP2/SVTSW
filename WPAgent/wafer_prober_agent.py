@@ -61,7 +61,6 @@ class WaferProberAgent:
                         # Do producer-side database initialization
                         # This will show prompts to user and send final command to listener
                         return init_service.initialize_from_database(
-                            project_name=project_name,
                             force=force,
                             db_timeout=db_timeout
                         )
