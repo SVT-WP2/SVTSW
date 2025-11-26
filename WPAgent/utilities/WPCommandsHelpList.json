@@ -14,7 +14,7 @@
         "description": "Type of prober ('sentio', required for manual mode)"
       },
       "project_name": {
-        "required": false,
+        "required": "conditional",
         "type": "string",
         "description": "Optional project name"
       },

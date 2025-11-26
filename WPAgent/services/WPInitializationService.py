@@ -109,7 +109,7 @@ class WPInitializationService:
                 "output": f"Database initialization failed: {str(e)}"
             }
 
-    def initialize_manual(self, address, machine_type, project_name=None, force=False):
+    def initialize_manual(self, address, machine_type, project_name, force=False):
         """
         Initialize prober with manual parameters (wrapper for convenience).
 
