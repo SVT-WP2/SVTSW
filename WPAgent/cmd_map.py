@@ -35,6 +35,7 @@ COMMAND_ROUTER = {
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
     "Getinfo":project_actions.get_info,
+    "help":project_actions.help_command,
 
     #  Sequencer
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(
