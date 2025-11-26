@@ -166,16 +166,80 @@ def find_home(address=None, machine_type=None):
     return {"status": "success", "output": f"Found home position"}
 
 
-def align_wafer(col, row, address=None, machine_type=None, subsite=0):
+def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
+                address=None, machine_type=None):
+    """
+    Perform wafer alignment.
+
+    Uses alignment die from initialization if home_die_col/home_die_row not provided.
+
+    Args:
+        align_die_col: Column index (optional if set during initialization)
+        align_die_row: Row index (optional if set during initialization)
+        subsite: Subsite index (optional, default: 0)
+        address: Prober address (optional)
+        machine_type: Machine type (optional)
+
+    Returns:
+        dict: Status and output message
+
+    Examples:
+        # Use stored alignment die (from initialization)
+        AlignWafer()
+
+        # Override with specific die
+        AlignWafer(align_die_col=5, align_die_row=10)
+
+        # With subsite
+        AlignWafer(align_die_col=5, align_die_row=10, subsite=1)
+    """
+    from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    # Check if initialized
     error = _ensure_initialized()
     if error:
         return error
 
+    # Get prober
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    prober.align_wafer(col, row, subsite)
-    prober.local_mode()
-    return {"status": "success", "output": f"Wafer is aligned"}
+
+    # Get die position from initialization if not provided
+    if align_die_col is None or align_die_row is None:
+        globals_ = SvtWPAagentGlobalParameters.getInstance()
+        alignment_die = globals_.get_alignment_die()
+
+        if alignment_die:
+            align_die_col = alignment_die["col"]
+            align_die_row = alignment_die["row"]
+            subsite = subsite if subsite is not None else alignment_die["subsite"]
+            print(
+                f"   📍 Using alignment die from initialization: Col {align_die_col}, Row {align_die_row}, Subsite {subsite}")
+        else:
+            return {
+                "status": "error",
+                "output": "Alignment die not specified. Please provide home_die_col and home_die_row parameters, "
+                          "or set alignment_die during initialization."
+            }
+
+    # Set default subsite if still None
+    if subsite is None:
+        subsite = 0
+
+    # Execute alignment
+    try:
+        prober.align_wafer(align_die_col, align_die_row, subsite)
+        prober.local_mode()
+
+        return {
+            "status": "success",
+            "output": f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "output": f"Wafer alignment failed: {str(e)}"
+        }
 
 
 def go_to_contact(address=None, machine_type=None):
