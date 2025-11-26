@@ -13,6 +13,9 @@ class SvtWPAagentGlobalParameters:
         self.orientation = None
         self.project_name = None
         self.prober_status = "available"
+        self._alignment_die = None
+        self._home_die = None
+        self._project_metadata = {}
 
         # Database-related parameters
         self.machine_id = None  # Database ID of the prober
@@ -24,6 +27,30 @@ class SvtWPAagentGlobalParameters:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
+
+    def set_alignment_die(self, die_position):
+        """Set alignment die position"""
+        self._alignment_die = die_position
+
+    def get_alignment_die(self):
+        """Get alignment die position"""
+        return self._alignment_die
+
+    def set_home_die(self, die_position):
+        """Set home die position"""
+        self._home_die = die_position
+
+    def get_home_die(self):
+        """Get home die position"""
+        return self._home_die
+
+    def set_project_metadata(self, metadata):
+        """Store project metadata (project_id, asic_family, orientation, etc.)"""
+        self._project_metadata = metadata
+
+    def get_project_metadata(self):
+        """Get project metadata"""
+        return self._project_metadata
 
     def set_address(self, address):
         self.address = address
