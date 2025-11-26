@@ -99,7 +99,7 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
             "output": f"Initialization failed: {str(e)}"
         }
 
-
+# TODO: check if its absolutly the same with normal init and make a move :)
 def initialise_testing_project(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
                                machine_name=None, initialization_mode=None):
     """

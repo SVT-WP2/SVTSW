@@ -68,10 +68,21 @@
   },
 
   "AlignWafer": {
-    "description": "Perform wafer alignment",
+    "description": "Perform wafer alignment from the specified die, to be sure that alignment will be successful",
     "category": "Vision",
-    "parameters": {},
-    "example": "python main.py send AlignWafer",
+    "parameters": {
+      "col": {
+        "required": true,
+        "type": "int",
+        "description": "Die column index"
+      },
+      "row": {
+        "required": true,
+        "type": "int",
+        "description": "Die row index"
+      }
+    },
+    "example": "python main.py send AlignWafer --params='{\"col\":5,\"row\":10}'",,
     "execution_time": "20-60 seconds"
   },
 
@@ -99,6 +110,22 @@
       }
     },
     "example": "python main.py send MoveChuckXY --params='{\"x\":155539.9,\"y\":-238764.7}'",
+    "execution_time": "2-5 seconds"
+  },
+
+  "MoveChuckZ": {
+    "description": "Move the chuck to specified Z coordinates",
+    "category": "Movement",
+    "parameters": {
+      "z": {
+        "required": true,
+        "type": "float",
+        "description": "Z coordinate in micrometers"
+      }
+
+    },
+    "example": "python main.py send MoveChuckXY --params='{\"z\":10500.9}'",
+    "example_2":"python3.12 main.py send MoveChuckZ z=10500",
     "execution_time": "2-5 seconds"
   },
 
@@ -145,8 +172,14 @@
   "MoveChuckToWorkArea": {
     "description": "Move chuck to the work area",
     "category": "Movement",
-    "parameters": {},
-    "example": "python main.py send MoveChuckToWorkArea",
+    "parameters": {
+      "work_area": {
+        "required": true,
+        "type": "string",
+        "description": "Working position to switch to. Available for MPI Probe Station: Probing, OffAxis"
+      }
+    },
+    "example": "python main.py send MoveChuckToWorkArea --params='{\"work_area\":\"OffAxis\"}'",
     "execution_time": "2-5 seconds"
   },
 
@@ -170,13 +203,13 @@
     "description": "Switch between available cameras",
     "category": "Vision",
     "parameters": {
-      "camera_id": {
-        "required": false,
-        "type": "int",
-        "description": "Camera ID to switch to"
+      "mount_point": {
+        "required": true,
+        "type": "string",
+        "description": "Camera position to switch to. Available for MPI Probe Station: Vce, OffAxis, Scope, Chuck"
       }
     },
-    "example": "python main.py send SwitchCamera --params='{\"camera_id\":1}'",
+    "example": "python main.py send SwitchCamera --params='{\"mount_point\":\"OffAxis\"}'",
     "execution_time": "1-2 seconds"
   },
 
@@ -195,7 +228,7 @@
   },
 
   "Cleaning": {
-    "description": "Clean the probe station",
+    "description": "Clean the probe station NOT IMPLEMENTED",
     "category": "Wafer Handling",
     "parameters": {},
     "example": "python main.py send Cleaning",
@@ -217,10 +250,17 @@
   },
 
   "ShowProjectStatus": {
-    "description": "Display current project status, connection info, die position, and wafer map",
+    "description": "Display current project status, connection info, die position, and wafer map information",
     "category": "Status",
     "parameters": {},
     "example": "python main.py send ShowProjectStatus",
+    "execution_time": "< 1 second"
+  },
+  "GetInfo": {
+    "description": "Display die position, and wafer map information",
+    "category": "Status",
+    "parameters": {},
+    "example": "python main.py send GetInfo",
     "execution_time": "< 1 second"
   },
 
@@ -247,6 +287,14 @@
     "example": "python main.py send ResetAgent",
     "execution_time": "< 1 second",
     "notes": "Use this when agent is stuck in Failed state"
+  },
+
+  "LocalMode": {
+    "description": "Put probe station into local mode",
+    "category": "System",
+    "parameters": {},
+    "example": "python main.py send LocalMode",
+    "execution_time": "< 1 second"
   },
 
   "ListProbers": {
