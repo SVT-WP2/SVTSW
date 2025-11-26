@@ -66,7 +66,7 @@ def step_next_die(address=None, machine_type=None):
     return {"status": "success", "output": f"Stepped to next die: {result}"}
 
 
-def go_to_die(col: int, row: int, subsite: int=0, address=None, machine_type=None):
+def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
         return error
@@ -249,6 +249,7 @@ def local_state(address=None, machine_type=None):
     prober.local_mode()
     return {"status": "success", "output": f"Auto-focus command successfully executed"}
 
+
 # TODO: need to be tested
 def get_camera_status(address=None, machine_type=None):
     error = _ensure_initialized()
@@ -257,7 +258,17 @@ def get_camera_status(address=None, machine_type=None):
 
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    resp= prober.send_cmd(f"vis:get_prop")
+    resp = prober.send_cmd(f"vis:get_prop")
     return {"status": "success", "output": f"{resp}"}
 
 
+# TODO: need to be tested
+def go_to_previous_die(address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+    prober = get_prober(machine_type, address)
+    resp = prober.send_cmd(f"map:step_previous_die")
+    return {"status": "success", "output": f" Moved to previous die"}
