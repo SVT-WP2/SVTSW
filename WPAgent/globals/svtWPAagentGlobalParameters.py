@@ -120,6 +120,7 @@ class SvtWPAagentGlobalParameters:
         self._apply_data(config)
         self.initialization_mode = config.get("initialization_mode", "manual")
 
+    # TODO: have to be deleted
     def load_from_db(self):
         """
         Placeholder for loading from a real database.
