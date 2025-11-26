@@ -34,8 +34,8 @@ COMMAND_ROUTER = {
     #  Project Init
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
-    "GetInfo":project_actions.get_info,
-    "help":project_actions.help_command,
+    "GetInfo": project_actions.get_info,
+    "help": project_actions.help_command,
     "GetCameraStatus": testing_actions.get_camera_status,
 
     #  Sequencer
@@ -75,6 +75,22 @@ def _exec_in_sequence(message_type, params=None):
         except Exception:
             pass
     return execute_command(message_type, params)
+
+
+def _try_local_mode():
+    """Try to set prober to local mode after error"""
+    try:
+        from drivers.factory import ProberFactory
+        from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        factory = ProberFactory.get_instance()
+        if factory.is_initialized():
+            globals_ = SvtWPAagentGlobalParameters.getInstance()
+            prober = factory.get_prober(globals_.machine_type, globals_.address)
+            prober.local_mode()
+            print("   🔓 Switched to local mode after an error")
+    except:
+        pass
 
 
 def get_filepath_param(params):
@@ -165,6 +181,7 @@ def execute_command(message_type, params=None):
                 else:
                     agentStateMachine.updateState(SvtWpAgentEvent.Error)
                     severity = Severity.ERROR
+                    _try_local_mode()  # Go to local mode on error
         else:
             severity = Severity.INFO
 
@@ -175,10 +192,7 @@ def execute_command(message_type, params=None):
         if message_type not in BYPASS_STATE_CHECK:
             agentStateMachine.updateState(SvtWpAgentEvent.Error)
         severity = Severity.ERROR
+        _try_local_mode()  # Go to local mode on exception
 
     logger.log_command(result.get("output", ""), severity, message_type, params, result)
     return result
-
-
-
-
