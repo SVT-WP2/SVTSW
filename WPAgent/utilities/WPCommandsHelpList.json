@@ -82,7 +82,7 @@
         "description": "Die row index"
       }
     },
-    "example": "python main.py send AlignWafer --params='{\"col\":5,\"row\":10}'",,
+    "example": "python main.py send AlignWafer --params='{\"col\":5,\"row\":10}'",
     "execution_time": "20-60 seconds"
   },
 
