@@ -39,7 +39,7 @@ def move_chuck_z(z, address=None, machine_type=None):
     prober = get_prober(machine_type, address)
     prober.move_chuck_z(z)
     prober.local_mode()
-    return {"status": "success", "output": f"Moved chuck to x={x}, y={y}"}
+    return {"status": "success", "output": f"Moved chuck to z={z}"}
 
 
 def run_ptpa(address=None, machine_type=None):
@@ -66,14 +66,14 @@ def step_next_die(address=None, machine_type=None):
     return {"status": "success", "output": f"Stepped to next die: {result}"}
 
 
-def go_to_die(col, row, subsite=0, address=None, machine_type=None):
+def go_to_die(col: int, row: int, subsite: int=0, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
         return error
 
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    result = prober.go_to_die(col, row, subsite)
+    result = prober.go_to_die(col, row)
     prober.local_mode()
     return {"status": "success", "output": f"Moved to die: {result}"}
 
@@ -166,14 +166,14 @@ def find_home(address=None, machine_type=None):
     return {"status": "success", "output": f"Found home position"}
 
 
-def align_wafer(home_die_col, home_die_row, address=None, machine_type=None, subsite=None):
+def align_wafer(col, row, address=None, machine_type=None, subsite=0):
     error = _ensure_initialized()
     if error:
         return error
 
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    prober.align_wafer(home_die_col, home_die_row, subsite)
+    prober.align_wafer(col, row, subsite)
     prober.local_mode()
     return {"status": "success", "output": f"Wafer is aligned"}
 

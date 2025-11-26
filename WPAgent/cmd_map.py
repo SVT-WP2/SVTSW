@@ -34,6 +34,7 @@ COMMAND_ROUTER = {
     "InitializeTestingProject": project_actions.initialise_testing_project,  # TODO i dont know do we need it ?
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
+    "Getinfo":project_actions.get_info,
 
     #  Sequencer
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(
