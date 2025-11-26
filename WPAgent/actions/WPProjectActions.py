@@ -99,21 +99,6 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
             "output": f"Initialization failed: {str(e)}"
         }
 
-# TODO: check if its absolutly the same with normal init and make a move :)
-def initialise_testing_project(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
-                               machine_name=None, initialization_mode=None):
-    """
-    Legacy initialization function - redirects to svt_initialise_wp with same parameters.
-    """
-    return svt_initialise_wp(
-        address=address,
-        machine_type=machine_type,
-        project_name=project_name,
-        force=force,
-        machine_id=machine_id,
-        machine_name=machine_name,
-        initialization_mode=initialization_mode
-    )
 
 
 def svt_initialise_wp(address=None, machine_type=None, project_name=None, force=False, machine_id=None,

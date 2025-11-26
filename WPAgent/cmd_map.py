@@ -31,7 +31,6 @@ COMMAND_ROUTER = {
     "LocalMode": testing_actions.local_state,
 
     #  Project Init
-    "InitializeTestingProject": project_actions.initialise_testing_project,  # TODO i dont know do we need it ?
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
     "GetInfo":project_actions.get_info,
