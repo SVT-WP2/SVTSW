@@ -18,6 +18,16 @@
         "type": "string",
         "description": "Optional project name"
       },
+      "alignment_die": {
+        "required": false,
+        "type": "string",
+        "description": "Alignment die position as 'col,row,subsite' (e.g., '5,10,0')"
+      },
+      "home_die": {
+        "required": false,
+        "type": "string",
+        "description": "Home die position as 'col,row,subsite' (e.g., '1,1,0')"
+      },
       "force": {
         "required": false,
         "type": "boolean",
@@ -30,9 +40,10 @@
       }
     },
     "example": "python main.py send Initialize --params='{\"address\":\"wpmit01.cern.ch:35555\",\"machine_type\":\"sentio\"}'",
+    "example_with_dies": "python main.py send Initialize --params='{\"address\":\"wpmit01.cern.ch:35555\",\"machine_type\":\"sentio\",\"alignment_die\":\"5,10,0\",\"home_die\":\"1,1,0\"}'",
     "example_db": "python main.py send Initialize --params='{\"with_db\":true}'",
-    "execution_time": "< 1 second (manual) or 5-10 seconds (database)",
-    "notes": "Two modes: (1) Manual - provide address & machine_type, (2) Database - use with_db=true for interactive selection"
+    "execution_time": "< 1 second (manual) or 5-30 seconds (database)",
+    "notes": "Two modes: (1) Manual - provide address, machine_type, and optionally die positions, (2) Database - interactive selection of prober, ASIC family, orientation, and project (die positions set automatically)"
   },
 
   "Load": {
@@ -52,11 +63,29 @@
   },
 
   "FindHome": {
-    "description": "Find the home position of the chuck",
+    "description": "Find the home position of the chuck. Uses home die from initialization if not specified.",
     "category": "Positioning",
-    "parameters": {},
+    "parameters": {
+      "home_die_col": {
+        "required": false,
+        "type": "int",
+        "description": "Home die column (optional if set during initialization)"
+      },
+      "home_die_row": {
+        "required": false,
+        "type": "int",
+        "description": "Home die row (optional if set during initialization)"
+      },
+      "subsite": {
+        "required": false,
+        "type": "int",
+        "description": "Subsite index (default: 0)"
+      }
+    },
     "example": "python main.py send FindHome",
-    "execution_time": "10-20 seconds"
+    "example_with_params": "python main.py send FindHome --params='{\"home_die_col\":1,\"home_die_row\":1}'",
+    "execution_time": "10-20 seconds",
+    "notes": "If home_die was set during initialization, it will automatically use that position. Otherwise performs default FindHome."
   },
 
   "AutoFocus": {
@@ -68,22 +97,29 @@
   },
 
   "AlignWafer": {
-    "description": "Perform wafer alignment from the specified die, to be sure that alignment will be successful",
+    "description": "Perform wafer alignment. Uses alignment die from initialization if not specified.",
     "category": "Vision",
     "parameters": {
-      "col": {
-        "required": true,
+      "align_die_col": {
+        "required": false,
         "type": "int",
-        "description": "Die column index"
+        "description": "Alignment die column (optional if set during initialization)"
       },
-      "row": {
-        "required": true,
+      "align_die_row": {
+        "required": false,
         "type": "int",
-        "description": "Die row index"
+        "description": "Alignment die row (optional if set during initialization)"
+      },
+      "subsite": {
+        "required": false,
+        "type": "int",
+        "description": "Subsite index (default: 0)"
       }
     },
-    "example": "python main.py send AlignWafer --params='{\"col\":5,\"row\":10}'",
-    "execution_time": "20-60 seconds"
+    "example": "python main.py send AlignWafer",
+    "example_with_params": "python main.py send AlignWafer --params='{\"align_die_col\":5,\"align_die_row\":10}'",
+    "execution_time": "20-60 seconds",
+    "notes": "If alignment_die was set during initialization, it will automatically use that position. Otherwise requires home_die_col and home_die_row parameters."
   },
 
   "RunPTPA": {
@@ -114,7 +150,7 @@
   },
 
   "MoveChuckZ": {
-    "description": "Move the chuck to specified Z coordinates",
+    "description": "Move the chuck to specified Z coordinate",
     "category": "Movement",
     "parameters": {
       "z": {
@@ -122,10 +158,9 @@
         "type": "float",
         "description": "Z coordinate in micrometers"
       }
-
     },
-    "example": "python main.py send MoveChuckXY --params='{\"z\":10500.9}'",
-    "example_2":"python3.12 main.py send MoveChuckZ z=10500",
+    "example": "python main.py send MoveChuckZ --params='{\"z\":10500.9}'",
+    "example_2": "python main.py send MoveChuckZ z=10500",
     "execution_time": "2-5 seconds"
   },
 
@@ -150,6 +185,14 @@
       }
     },
     "example": "python main.py send GoToDie --params='{\"col\":5,\"row\":10}'",
+    "execution_time": "2-5 seconds"
+  },
+
+  "GoToPreviousDie": {
+    "description": "Move to the previous die in the sequence",
+    "category": "Movement",
+    "parameters": {},
+    "example": "python main.py send GoToPreviousDie",
     "execution_time": "2-5 seconds"
   },
 
@@ -213,6 +256,14 @@
     "execution_time": "1-2 seconds"
   },
 
+  "GetCameraStatus": {
+    "description": "Get current camera status and information",
+    "category": "Vision",
+    "parameters": {},
+    "example": "python main.py send GetCameraStatus",
+    "execution_time": "< 1 second"
+  },
+
   "OpenProject": {
     "description": "Open a project file",
     "category": "Project",
@@ -228,11 +279,12 @@
   },
 
   "Cleaning": {
-    "description": "Clean the probe station NOT IMPLEMENTED",
+    "description": "Clean the probe station (NOT IMPLEMENTED)",
     "category": "Wafer Handling",
     "parameters": {},
     "example": "python main.py send Cleaning",
-    "execution_time": "60-180 seconds"
+    "execution_time": "60-180 seconds",
+    "notes": "This command is not yet implemented"
   },
 
   "RunSequencer": {
@@ -250,14 +302,16 @@
   },
 
   "ShowProjectStatus": {
-    "description": "Display current project status, connection info, die position, and wafer map information",
+    "description": "Display current project status, connection info, die position, and wafer information",
     "category": "Status",
     "parameters": {},
     "example": "python main.py send ShowProjectStatus",
-    "execution_time": "< 1 second"
+    "execution_time": "< 1 second",
+    "notes": "Shows prober connection, project name, agent state, current die position, and total die count"
   },
+
   "GetInfo": {
-    "description": "Display die position, and wafer map information",
+    "description": "Display current die position and wafer map information",
     "category": "Status",
     "parameters": {},
     "example": "python main.py send GetInfo",
@@ -294,7 +348,8 @@
     "category": "System",
     "parameters": {},
     "example": "python main.py send LocalMode",
-    "execution_time": "< 1 second"
+    "execution_time": "< 1 second",
+    "notes": "Automatically called after errors to return control to manual operation"
   },
 
   "ListProbers": {
