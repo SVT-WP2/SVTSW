@@ -29,6 +29,7 @@ COMMAND_ROUTER = {
     "Load": testing_actions.load_wafer,
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
     "LocalMode": testing_actions.local_state,
+    "GoToPreviousDie": testing_actions.go_to_previous_die,
 
     #  Project Init
     "Initialize": project_actions.svt_initialise_wp,
