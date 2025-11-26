@@ -345,7 +345,7 @@ def get_info():
         "Number": int(parts[0]),
         "col": int(parts[1]),
         "row": int(parts[2]),
-        "Count" : int(counts[0])
+        "Count": int(counts[0])
     }
 
     return {
@@ -353,7 +353,6 @@ def get_info():
         "output": f"Current die: Count {die_info['Count']}, Number {die_info['Number']}, Row {die_info['row']}, Column {die_info['col']}",
         "data": die_info
     }
-
 
 
 def reset_agent_state():
@@ -408,3 +407,357 @@ def get_agent_state():
             "is_busy": agentStateMachine.isBusy()
         }
     }
+
+def help_command(command=None):
+        """
+        Display help information for commands.
+
+        Args:
+            command (optional): Specific command to get help for
+
+        Returns:
+            dict: Help information
+
+        Examples:
+            help_command()  # Show all commands
+            help_command("Initialize")  # Show help for Initialize command
+        """
+
+        #  TODO: Complete commands
+        COMMAND_HELP = {
+            "Initialize": {
+                "description": "Initialize connection to the wafer prober",
+                "category": "Setup",
+                "parameters": {
+                    "address": {"required": True, "type": "string",
+                                "description": "Prober network address (e.g., 'wpmit01.cern.ch:35555')"},
+                    "machine_type": {"required": True, "type": "string", "description": "Type of prober ('sentio')"},
+                    "project_name": {"required": False, "type": "string", "description": "Optional project name"},
+                    "force": {"required": False, "type": "boolean",
+                              "description": "Force re-initialization (default: false)"}
+                },
+                "examples": [
+                    'python main.py send Initialize --params=\'{"address":"wpmit01.cern.ch:35555","machine_type":"sentio"}\'',
+                    'python main.py send Initialize --params=\'{"address":"wpmit01.cern.ch:35555","machine_type":"sentio","project_name":"MyProject"}\''
+                ],
+                "execution_time": "< 1 second"
+            },
+
+            "Load": {
+                "description": "Load a wafer onto the chuck",
+                "category": "Wafer Handling",
+                "parameters": {},
+                "examples": [
+                    'python main.py send Load'
+                ],
+                "execution_time": "30-60 seconds"
+            },
+
+            "Unload": {
+                "description": "Unload the wafer from the chuck",
+                "category": "Wafer Handling",
+                "parameters": {},
+                "examples": [
+                    'python main.py send Unload'
+                ],
+                "execution_time": "30-60 seconds"
+            },
+
+            "FindHome": {
+                "description": "Find the home position of the chuck",
+                "category": "Positioning",
+                "parameters": {},
+                "examples": [
+                    'python main.py send FindHome'
+                ],
+                "execution_time": "10-20 seconds"
+            },
+
+            "AutoFocus": {
+                "description": "Perform automatic focus adjustment",
+                "category": "Vision",
+                "parameters": {},
+                "examples": [
+                    'python main.py send AutoFocus'
+                ],
+                "execution_time": "12-18 seconds (variable)"
+            },
+
+            "AlignWafer": {
+                "description": "Perform wafer alignment",
+                "category": "Vision",
+                "parameters": {},
+                "examples": [
+                    'python main.py send AlignWafer'
+                ],
+                "execution_time": "20-60 seconds"
+            },
+
+            "RunPTPA": {
+                "description": "Run Pad Touch Position Alignment",
+                "category": "Alignment",
+                "parameters": {},
+                "examples": [
+                    'python main.py send RunPTPA'
+                ],
+                "execution_time": "90-180 seconds (highly variable)"
+            },
+
+            "MoveChuckXY": {
+                "description": "Move the chuck to specified X,Y coordinates",
+                "category": "Movement",
+                "parameters": {
+                    "x": {"required": True, "type": "float", "description": "X coordinate in micrometers"},
+                    "y": {"required": True, "type": "float", "description": "Y coordinate in micrometers"}
+                },
+                "examples": [
+                    'python main.py send MoveChuckXY --params=\'{"x":1000,"y":2000}\'',
+                    'python main.py send MoveChuckXY --params=\'{"x":155539.9,"y":-238764.7}\''
+                ],
+                "execution_time": "2-5 seconds"
+            },
+
+            "GoToDie": {
+                "description": "Move to a specific die on the wafer",
+                "category": "Movement",
+                "parameters": {
+                    "col": {"required": True, "type": "int", "description": "Die column index"},
+                    "row": {"required": True, "type": "int", "description": "Die row index"},
+                    "subsite": {"required": False, "type": "int", "description": "Subsite index (default: 0)"}
+                },
+                "examples": [
+                    'python main.py send GoToDie --params=\'{"col":5,"row":10}\'',
+                    'python main.py send GoToDie --params=\'{"col":2,"row":3,"subsite":1}\''
+                ],
+                "execution_time": "2-5 seconds"
+            },
+
+            "StepNextDie": {
+                "description": "Step to the next die in the sequence",
+                "category": "Movement",
+                "parameters": {},
+                "examples": [
+                    'python main.py send StepNextDie'
+                ],
+                "execution_time": "2-5 seconds"
+            },
+
+            "MoveChuckHome": {
+                "description": "Move chuck to home position",
+                "category": "Movement",
+                "parameters": {},
+                "examples": [
+                    'python main.py send MoveChuckHome'
+                ],
+                "execution_time": "2-5 seconds"
+            },
+
+            "GoToContact": {
+                "description": "Move probes to contact position",
+                "category": "Probe Control",
+                "parameters": {},
+                "examples": [
+                    'python main.py send GoToContact'
+                ],
+                "execution_time": "1-2 seconds"
+            },
+
+            "GoToSeparation": {
+                "description": "Move probes to separation position",
+                "category": "Probe Control",
+                "parameters": {},
+                "examples": [
+                    'python main.py send GoToSeparation'
+                ],
+                "execution_time": "1-2 seconds"
+            },
+
+            "RunSequencer": {
+                "description": "Execute a sequence of commands from a JSON file",
+                "category": "Automation",
+                "parameters": {
+                    "filepath": {"required": True, "type": "string", "description": "Path to sequence JSON file"}
+                },
+                "examples": [
+                    'python main.py send RunSequencer --params=\'{"filepath":"/sequencer/TestSequence.json"}\'',
+                    'python main.py send RunSequencer --params=\'{"filepath":"/path/to/my_sequence.json"}\''
+                ],
+                "execution_time": "Variable (depends on sequence)"
+            },
+
+            "ShowProjectStatus": {
+                "description": "Display current project status, connection info, die position, and wafer map",
+                "category": "Status",
+                "parameters": {},
+                "examples": [
+                    'python main.py send ShowProjectStatus'
+                ],
+                "execution_time": "< 1 second"
+            },
+
+            "ListAvailableCommands": {
+                "description": "List all available commands",
+                "category": "Status",
+                "parameters": {},
+                "examples": [
+                    'python main.py send ListAvailableCommands'
+                ],
+                "execution_time": "< 1 second"
+            },
+
+            "GetAgentState": {
+                "description": "Get current agent state machine status",
+                "category": "Status",
+                "parameters": {},
+                "examples": [
+                    'python main.py send GetAgentState'
+                ],
+                "execution_time": "< 1 second"
+            },
+
+            "ResetAgent": {
+                "description": "Reset agent state machine to Idle (recovery command)",
+                "category": "System",
+                "parameters": {},
+                "examples": [
+                    'python main.py send ResetAgent'
+                ],
+                "execution_time": "< 1 second",
+                "notes": "Use this when agent is stuck in Failed state"
+            },
+
+            "ListProbers": {
+                "description": "List all available probers from database",
+                "category": "Database",
+                "parameters": {},
+                "examples": [
+                    'python main.py send ListProbers'
+                ],
+                "execution_time": "1-3 seconds"
+            },
+
+            "Help": {
+                "description": "Display help information for commands",
+                "category": "System",
+                "parameters": {
+                    "command": {"required": False, "type": "string", "description": "Specific command to get help for"}
+                },
+                "examples": [
+                    'python main.py send Help',
+                    'python main.py send Help --params=\'{"command":"Initialize"}\'',
+                    'python main.py send Help --params=\'{"command":"MoveChuckXY"}\''
+                ],
+                "execution_time": "< 1 second"
+            }
+        }
+
+        # If specific command requested
+        if command:
+            if command not in COMMAND_HELP:
+                return {
+                    "status": "error",
+                    "output": f"Command '{command}' not found. Use 'Help' without parameters to see all commands."
+                }
+
+            cmd_info = COMMAND_HELP[command]
+
+            # Format detailed help for specific command
+            output_lines = []
+            output_lines.append(f"╔══════════════════════════════════════════════════════════════")
+            output_lines.append(f"║ Command: {command}")
+            output_lines.append(f"╠══════════════════════════════════════════════════════════════")
+            output_lines.append(f"║")
+            output_lines.append(f"║ Description:")
+            output_lines.append(f"║   {cmd_info['description']}")
+            output_lines.append(f"║")
+            output_lines.append(f"║ Category: {cmd_info['category']}")
+            output_lines.append(f"║ Execution Time: {cmd_info['execution_time']}")
+
+            if cmd_info['parameters']:
+                output_lines.append(f"║")
+                output_lines.append(f"║ Parameters:")
+                for param_name, param_info in cmd_info['parameters'].items():
+                    req = "REQUIRED" if param_info['required'] else "optional"
+                    output_lines.append(f"║   • {param_name} ({param_info['type']}, {req})")
+                    output_lines.append(f"║     {param_info['description']}")
+            else:
+                output_lines.append(f"║")
+                output_lines.append(f"║ Parameters: None")
+
+            output_lines.append(f"║")
+            output_lines.append(f"║ Examples:")
+            for example in cmd_info['examples']:
+                output_lines.append(f"║   {example}")
+
+            if 'notes' in cmd_info:
+                output_lines.append(f"║")
+                output_lines.append(f"║ Notes:")
+                output_lines.append(f"║   {cmd_info['notes']}")
+
+            output_lines.append(f"╚══════════════════════════════════════════════════════════════")
+
+            return {
+                "status": "success",
+                "output": "\n".join(output_lines),
+                "data": cmd_info
+            }
+
+        # Show all commands grouped by category
+        categories = {}
+        for cmd_name, cmd_info in COMMAND_HELP.items():
+            category = cmd_info['category']
+            if category not in categories:
+                categories[category] = []
+            categories[category].append(cmd_name)
+
+        output_lines = []
+        output_lines.append("╔══════════════════════════════════════════════════════════════")
+        output_lines.append("║ WPAgent - Available Commands")
+        output_lines.append("╠══════════════════════════════════════════════════════════════")
+        output_lines.append("║")
+        output_lines.append("║ Usage:")
+        output_lines.append("║   python main.py send <Command> [--params='{\"key\":\"value\"}']")
+        output_lines.append("║")
+        output_lines.append("║ Get detailed help:")
+        output_lines.append("║   python main.py send Help --params='{\"command\":\"<CommandName>\"}'")
+        output_lines.append("║")
+
+        for category in sorted(categories.keys()):
+            output_lines.append(f"║ ─────────────────────────────────────────────────────────────")
+            output_lines.append(f"║ {category}")
+            output_lines.append(f"║ ─────────────────────────────────────────────────────────────")
+            for cmd_name in sorted(categories[category]):
+                cmd_info = COMMAND_HELP[cmd_name]
+                output_lines.append(f"║   • {cmd_name}")
+                output_lines.append(f"║     {cmd_info['description']}")
+
+        output_lines.append("║")
+        output_lines.append("╠══════════════════════════════════════════════════════════════")
+        output_lines.append("║ Parameter Format:")
+        output_lines.append("╠══════════════════════════════════════════════════════════════")
+        output_lines.append("║")
+        output_lines.append("║ ✅ Correct:")
+        output_lines.append("║   --params='{\"x\":1000,\"y\":2000}'")
+        output_lines.append("║   --params='{\"address\":\"wpmit01.cern.ch:35555\",\"machine_type\":\"sentio\"}'")
+        output_lines.append("║")
+        output_lines.append("║ ❌ Wrong:")
+        output_lines.append("║   \"x=1000 y=2000\"")
+        output_lines.append("║   x=1000,y=2000")
+        output_lines.append("║")
+        output_lines.append("║ Notes:")
+        output_lines.append("║   • Use JSON format: {\"key\":value}")
+        output_lines.append("║   • Use single quotes around entire JSON")
+        output_lines.append("║   • Numbers have no quotes: {\"x\":1000}")
+        output_lines.append("║   • Strings need quotes: {\"address\":\"host:port\"}")
+        output_lines.append("║   • Booleans: true/false (no quotes)")
+        output_lines.append("║")
+        output_lines.append("╚══════════════════════════════════════════════════════════════")
+
+        return {
+            "status": "success",
+            "output": "\n".join(output_lines),
+            "data": {
+                "total_commands": len(COMMAND_HELP),
+                "categories": categories
+            }
+        }
