@@ -197,17 +197,21 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None, force=
 
 def get_project_status():
     """
-    Get current project and initialization status.
-
-    Returns:
-        dict: Status information including initialization state and machine details
+    Get current project and initialization status including:
+    - Prober station (PS) connection information
+    - Current die position
+    - Total number of dies on wafer map
+    - Wafer map dimensions
     """
+    from drivers.factory import ProberFactory
+
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
 
     info = globals_.get_info()
     is_ready, ready_msg = check_prober_ready()
 
+    # Basic status info
     status_info = {
         **info,
         "prober_initialized": factory.is_initialized(),
@@ -215,24 +219,141 @@ def get_project_status():
         "ready_message": ready_msg
     }
 
-    # Add machine ID and name if available
+    # Add machine ID and name if available (from database initialization)
     if hasattr(globals_, 'machine_id'):
         status_info["machine_id"] = globals_.machine_id
     if hasattr(globals_, 'machine_name'):
         status_info["machine_name"] = globals_.machine_name
 
-    if not info["project_name"]:
+    # Get die information if prober is initialized
+    if factory.is_initialized():
+        try:
+            prober = factory.get_prober(globals_.machine_type, globals_.address)
+
+            # Get current die position
+            try:
+
+                current_die = prober.get_current_index()
+                status_info["current_die"] = {
+                    "col": current_die[0],
+                    "row": current_die[1],
+                    "subsite": current_die[2] if len(current_die) > 2 else 0
+                }
+            except Exception as e:
+                status_info["current_die"] = None
+                status_info["current_die_error"] = str(e)
+
+            # Get wafer map information
+            try:
+                # Get map dimensions
+                num_cols = prober.prober.map.get_num_cols()
+                num_rows = prober.prober.map.get_num_rows()
+
+                status_info["wafer_map"] = {
+                    "num_cols": num_cols,
+                    "num_rows": num_rows,
+                    "total_dies": num_cols * num_rows
+                }
+
+                # Try to get die count (tested dies vs total)
+                try:
+
+                    die_count = prober.prober.map.get_num_dies()
+                    status_info["wafer_map"]["num_dies"] = die_count
+                except:
+                    pass
+
+            except Exception as e:
+                status_info["wafer_map"] = None
+                status_info["wafer_map_error"] = str(e)
+
+            # Get chuck position
+            try:
+                from sentio_prober_control.Sentio.Enumerations import ChuckSite
+                from sentio_prober_control.Sentio.ProberBase import ChuckXYReference
+
+                chuck_x, chuck_y = prober.prober.get_chuck_xy(ChuckSite.Wafer, ChuckXYReference.Zero)
+                status_info["chuck_position"] = {
+                    "x": chuck_x,
+                    "y": chuck_y,
+                    "unit": "micrometers"
+                }
+            except Exception as e:
+                status_info["chuck_position"] = None
+                status_info["chuck_position_error"] = str(e)
+
+        except Exception as e:
+            status_info["die_info_error"] = f"Could not get die information: {str(e)}"
+
+    # Check if not initialized
+    if not info["project_name"] and not factory.is_initialized():
         return {
             "status": "uninitialized",
             "output": "Global parameters not set. Run 'Initialize' command.",
             "data": status_info
         }
 
+    # Format output message
+    output_lines = []
+    output_lines.append(f"Connected to: {info.get('address', 'N/A')}")
+
+    if status_info.get("machine_name"):
+        output_lines.append(f"Machine: {status_info['machine_name']}")
+
+    output_lines.append(f"Machine Type: {info.get('machine_type', 'N/A')}")
+
+    if info.get('project_name'):
+        output_lines.append(f"Project: {info.get('project_name')}")
+
+    # Add die information to output
+    if status_info.get("current_die"):
+        die = status_info["current_die"]
+        output_lines.append(f"Current Die: Col {die['col']}, Row {die['row']}, Subsite {die['subsite']}")
+
+    if status_info.get("wafer_map"):
+        wmap = status_info["wafer_map"]
+        output_lines.append(
+            f"Wafer Map: {wmap['num_cols']} cols × {wmap['num_rows']} rows ({wmap['total_dies']} total dies)")
+
+    if status_info.get("chuck_position"):
+        pos = status_info["chuck_position"]
+        output_lines.append(f"Chuck Position: X={pos['x']:.2f}µm, Y={pos['y']:.2f}µm")
+
+    output_lines.append(f"Status: {ready_msg}")
+
+    output_message = "\n".join(output_lines)
+
     return {
         "status": "success",
-        "output": status_info,
+        "output": output_message,
         "data": status_info
     }
+
+
+def get_info():
+    factory = ProberFactory.get_instance()
+    globals_ = SvtWPAagentGlobalParameters.getInstance()
+    prober = factory.get_prober(globals_.machine_type, globals_.address)
+
+    # This returns a string like "2,3,0"
+    current_index = prober.get_current_index()
+    counts = prober.get_dies_number().split(",")
+
+    # Parse it
+    parts = current_index.split(",")
+    die_info = {
+        "Number": int(parts[0]),
+        "col": int(parts[1]),
+        "row": int(parts[2]),
+        "Count" : int(counts[0])
+    }
+
+    return {
+        "status": "success",
+        "output": f"Current die: Count {die_info['Count']}, Number {die_info['Number']}, Row {die_info['row']}, Column {die_info['col']}",
+        "data": die_info
+    }
+
 
 
 def reset_agent_state():
