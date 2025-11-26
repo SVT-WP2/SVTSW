@@ -1,9 +1,10 @@
 {
-  "FileName": "string",
-  "MotherFilename": "string",
+  "FileName": "ER1WaferMap_v0.json",
+  "MotherFilename": "ER1_mother.json",
   "DateOfCreation": "2025-05-08 18:29:15",
-  "DateOfLastUpdate": "2025-05-29 13:45:02",
+  "DateOfLastUpdate": "2025-11-16 08:59:59",
   "Revision": "0.0.0",
+  "Orientation": "East",
 
   "Groups": {
     "Group_0": [{ "PosInGroup": 0, "FamilyType": "BABYMOSS" }],
