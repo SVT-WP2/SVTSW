@@ -315,7 +315,7 @@ def get_info():
 
     return {
         "status": "success",
-        "output": f"Current die: Count {die_info['Count']}, Number {die_info['Number']}, Row {die_info['row']}, Column {die_info['col']}",
+        "output": f"Current die: Count of selected dies {die_info['Count']}, Number {die_info['Number']}, Row {die_info['row']}, Column {die_info['col']}",
         "data": die_info
     }
 
