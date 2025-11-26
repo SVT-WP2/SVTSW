@@ -270,5 +270,5 @@ def go_to_previous_die(address=None, machine_type=None):
 
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    resp = prober.send_cmd(f"map:step_previous_die")
+    prober.send_cmd(f"map:step_previous_die")
     return {"status": "success", "output": f" Moved to previous die"}
