@@ -35,6 +35,7 @@ COMMAND_ROUTER = {
     "ShowProjectStatus": project_actions.get_project_status,
     "GetInfo":project_actions.get_info,
     "help":project_actions.help_command,
+    "GetCameraStatus": testing_actions.get_camera_status,
 
     #  Sequencer
     "RunSequencer": lambda **params: sequencer_actions.run_sequence(

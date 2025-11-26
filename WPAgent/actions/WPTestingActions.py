@@ -248,3 +248,16 @@ def local_state(address=None, machine_type=None):
     prober = get_prober(machine_type, address)
     prober.local_mode()
     return {"status": "success", "output": f"Auto-focus command successfully executed"}
+
+# TODO: need to be tested
+def get_camera_status(address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+    prober = get_prober(machine_type, address)
+    resp= prober.send_cmd(f"vis:get_prop")
+    return {"status": "success", "output": f"{resp}"}
+
+
