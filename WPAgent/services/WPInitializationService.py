@@ -14,6 +14,34 @@ class WPInitializationService:
     def __init__(self, agent):
         self.agent = agent
 
+
+    @staticmethod
+    def _format_die_position(die_pos):
+        """Convert die position to string format with subsite"""
+        if not die_pos:
+            return None
+
+        # If it's a string, check if it has subsite
+        if isinstance(die_pos, str):
+            parts = die_pos.split(",")
+            if len(parts) == 2:
+                # Missing subsite, add it: "2,2" → "2,2,0"
+                return f"{die_pos},0"
+            elif len(parts) == 3:
+                # Already has subsite: "2,2,0" → "2,2,0"
+                return die_pos
+            else:
+                return None
+
+        # Tuple or list
+        if isinstance(die_pos, (tuple, list)):
+            if len(die_pos) == 2:
+                return f"{die_pos[0]},{die_pos[1]},0"
+            elif len(die_pos) >= 3:
+                return f"{die_pos[0]},{die_pos[1]},{die_pos[2]}"
+
+        return None
+
     def initialize_from_database(self, force=False, db_timeout=15.0):
         """
         Initialize prober with interactive database selection (PRODUCER SIDE).
@@ -32,9 +60,9 @@ class WPInitializationService:
         Returns:
             dict: Initialization result with status and output
         """
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("🔬 Interactive Database Initialization")
-        print("="*70)
+        print("=" * 70)
 
         try:
             db_service = KafkaDBService.get_instance()
@@ -66,9 +94,9 @@ class WPInitializationService:
             # ================================================================
             # STEP 2: Get ASIC family
             # ================================================================
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("📡 Step 2/4: Specify ASIC Family")
-            print("="*70)
+            print("=" * 70)
 
             asic_family = input("\nEnter ASIC family type (e.g., NKF7, MOSS): ").strip()
 
@@ -83,9 +111,9 @@ class WPInitializationService:
             # ================================================================
             # STEP 3: Get orientation
             # ================================================================
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("📡 Step 3/4: Specify Wafer Orientation")
-            print("="*70)
+            print("=" * 70)
 
             orientation = input("\nEnter wafer orientation (e.g., East, West, South, North): ").strip()
 
@@ -100,9 +128,9 @@ class WPInitializationService:
             # ================================================================
             # STEP 4: Get and filter projects
             # ================================================================
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("📡 Step 4/4: Getting projects from database...")
-            print("="*70)
+            print("=" * 70)
 
             all_projects = db_service.get_all_wafer_probe_projects(timeout=db_timeout)
 
@@ -145,9 +173,9 @@ class WPInitializationService:
                 return {
                     "status": "error",
                     "output": f"No projects found matching:\n"
-                             f"  - Prober: {selected_machine.get('name')}\n"
-                             f"  - ASIC Family: {asic_family}\n"
-                             f"  - Orientation: {orientation}°"
+                              f"  - Prober: {selected_machine.get('name')}\n"
+                              f"  - ASIC Family: {asic_family}\n"
+                              f"  - Orientation: {orientation}°"
                 }
 
             # Select project
@@ -164,9 +192,9 @@ class WPInitializationService:
             # ================================================================
             # STEP 5: Initialize with selections
             # ================================================================
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("🔌 Initializing prober connection...")
-            print("="*70)
+            print("=" * 70)
 
             # Extract machine parameters
             machine_type = selected_machine.get('software', '').lower()
@@ -187,6 +215,11 @@ class WPInitializationService:
             else:
                 address = host_name
 
+            # Format die positions (around line 195)
+            alignment_die_str = self._format_die_position(selected_project.get("alignmentDie"))
+            home_die_str = self._format_die_position(selected_project.get("homeDie"))
+
+
             # Send Initialize command with all parameters
             result = self.agent.send(
                 command="Initialize",
@@ -194,8 +227,8 @@ class WPInitializationService:
                     "address": address,
                     "machine_type": machine_type,
                     "project_name": selected_project.get("name"),
-                    "alignment_die": selected_project.get("alignmentDie"),
-                    "home_die": selected_project.get("homeDie"),
+                    "alignment_die": alignment_die_str,
+                    "home_die": home_die_str,
                     "force": force,
                     # Metadata
                     "machine_id": machine_id,
@@ -215,14 +248,14 @@ class WPInitializationService:
 
             # Display summary if successful
             if result.get("status") == "success":
-                print("\n" + "="*70)
+                print("\n" + "=" * 70)
                 print("✅ Initialization Complete!")
-                print("="*70)
+                print("=" * 70)
                 print(f"Prober: {machine_name}")
                 print(f"Address: {address}")
                 print(f"Project: {selected_project.get('name')}")
                 print(f"ASIC Family: {selected_project.get('asicFamilyType')}")
-                print(f"Orientation: {selected_project.get('orientation')}°")
+                print(f"Orientation: {selected_project.get('orientation')}")
 
                 alignment_die = selected_project.get('alignmentDie')
                 home_die = selected_project.get('homeDie')
@@ -232,7 +265,7 @@ class WPInitializationService:
                 if home_die:
                     print(f"Home Die: {home_die}")
 
-                print("="*70 + "\n")
+                print("=" * 70 + "\n")
 
                 # Enhance result with metadata
                 if "data" not in result:
@@ -243,8 +276,8 @@ class WPInitializationService:
                     "project_id": selected_project.get("id"),
                     "asic_family": selected_project.get("asicFamilyType"),
                     "orientation": selected_project.get("orientation"),
-                    "alignment_die": alignment_die,
-                    "home_die": home_die,
+                    "alignment_die": alignment_die_str,
+                    "home_die": home_die_str,
                     "initialization_mode": "database"
                 })
 
@@ -265,7 +298,7 @@ class WPInitializationService:
             }
 
     def initialize_manual(self, address, machine_type, project_name=None,
-                         alignment_die=None, home_die=None, force=False):
+                          alignment_die=None, home_die=None, force=False):
         """
         Initialize prober with manual parameters (wrapper for convenience).
 
@@ -345,11 +378,11 @@ class WPInitializationService:
 
             if asic_family:
                 filtered_projects = [p for p in filtered_projects
-                                    if p.get("asicFamilyType", "").lower() == asic_family.lower()]
+                                     if p.get("asicFamilyType", "").lower() == asic_family.lower()]
 
             if orientation:
                 filtered_projects = [p for p in filtered_projects
-                                    if str(p.get("orientation", "")).lower() == str(orientation).lower()]
+                                     if str(p.get("orientation", "")).lower() == str(orientation).lower()]
 
             print(f"\n✅ Found {len(filtered_projects)} project(s)")
             if asic_family or orientation:
@@ -440,13 +473,13 @@ class WPInitializationService:
         Returns:
             Selected machine dict or None if cancelled
         """
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("📋 Available Probe Machines:")
-        print("="*70)
+        print("=" * 70)
 
         self._display_machines(machines)
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
 
         while True:
             try:
@@ -479,13 +512,13 @@ class WPInitializationService:
         Returns:
             Selected project dict or None if cancelled
         """
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("📋 Matching Projects:")
-        print("="*70)
+        print("=" * 70)
 
         self._display_projects(projects)
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
 
         while True:
             try:
@@ -525,7 +558,7 @@ class WPInitializationService:
             print(f"\n{idx}. {project.get('name', 'Unknown')}")
             print(f"   ID: {project.get('id', 'N/A')}")
             print(f"   ASIC Family: {project.get('asicFamilyType', 'N/A')}")
-            print(f"   Orientation: {project.get('orientation', 'N/A')}°")
+            print(f"   Orientation: {project.get('orientation', 'N/A')}")
 
             alignment_die = project.get('alignmentDie')
             home_die = project.get('homeDie')

@@ -120,22 +120,6 @@ class SvtWPAagentGlobalParameters:
         self._apply_data(config)
         self.initialization_mode = config.get("initialization_mode", "manual")
 
-    # TODO: have to be deleted
-    def load_from_db(self):
-        """
-        Placeholder for loading from a real database.
-        Replace this method later with actual DB access logic.
-
-        Note: This is kept for backward compatibility but should be replaced
-        with the new database-driven initialization flow.
-        """
-        print("📄 Simulating DB load...")
-        db_data = {
-            "chip_name": "nkf7",
-            "orientation": "E",
-            "project_name": "nkf7_12_02_2025_arrow_E",
-        }
-        self._apply_data(db_data)
 
     def _apply_data(self, data: dict):
         """

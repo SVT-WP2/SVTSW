@@ -111,11 +111,11 @@ class MockProberImpl(AbstractProber):
         time.sleep(1.5)
         print("✅ Home position found")
 
-    def align_wafer(self, home_die_col, home_die_row, subsite=None):
+    def align_wafer(self, align_die_col, align_die_row, subsite=None):
         """Simulate wafer alignment"""
-        print(f"📐 Aligning wafer at home die ({home_die_col}, {home_die_row})")
+        print(f"📐 Aligning wafer at  die ({align_die_col}, {align_die_row})")
         time.sleep(3)
-        self.current_die = {"col": home_die_col, "row": home_die_row, "subsite": subsite or 0}
+        self.current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite or 0}
         print("✅ Wafer aligned")
 
     def go_to_contact(self):

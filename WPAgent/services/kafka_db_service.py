@@ -137,14 +137,6 @@ class KafkaDBService:
             self.HEADER_REPLY_PARTITION: str(0).encode('utf-8')
         }
 
-        # Debug output
-        print(f"\n📤 Sending to DB Agent:")
-        print(f"   Topic: {self.DB_REQUEST_TOPIC}")
-        print(f"   Headers:")
-        print(f"      kafka_correlationId: {correlation_id}")
-        print(f"      kafka_replyTopic: {self.DB_REPLY_TOPIC}")
-        print(f"      kafka_replyPartition: 0")
-        print(f"   Body: {json.dumps(message_body, indent=2)}")
 
         # Send request with headers
         try:

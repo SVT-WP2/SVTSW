@@ -195,6 +195,16 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
             globals_.set_machine_type(machine_type)
             if project_name:
                 globals_.set_project_name(project_name)
+                try:
+                    prober = get_prober(machine_type, address)
+                    project_path = os.path.join(
+                        "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
+                        project_name
+                    )
+
+                    prober.open_project(project_path)
+                except Exception as e:
+                    print(f"   ⚠️  Warning: Could not open project: {str(e)}")
 
             # Store machine metadata (from database)
             if machine_id:
@@ -271,34 +281,42 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
 
 def _parse_die_position(die_str):
     """
-    Parse die position string "col,row" or "col,row,subsite".
+    Parse die position from string OR tuple.
 
     Args:
-        die_str: String like "5,10" or "5,10,0"
+        die_str: Can be "5,10,0", "5,10", (5,10,0), (5,10), [5,10,0], etc.
 
     Returns:
-        dict: {"col": int, "row": int, "subsite": int} or None if invalid
-
-    Examples:
-        _parse_die_position("5,10") → {"col": 5, "row": 10, "subsite": 0}
-        _parse_die_position("5,10,0") → {"col": 5, "row": 10, "subsite": 0}
-        _parse_die_position("invalid") → None
+        dict: {"col": int, "row": int, "subsite": int} or None
     """
-    if not die_str or not isinstance(die_str, str):
+    if not die_str:
         return None
 
-    try:
-        parts = die_str.split(",")
-        if len(parts) >= 2:
-            return {
-                "col": int(parts[0].strip()),
-                "row": int(parts[1].strip()),
-                "subsite": int(parts[2].strip()) if len(parts) > 2 else 0
-            }
-    except (ValueError, IndexError):
-        return None
+    # If it's already a tuple or list
+    if isinstance(die_str, (tuple, list)):
+        try:
+            if len(die_str) == 2:
+                return {"col": int(die_str[0]), "row": int(die_str[1]), "subsite": 0}
+            elif len(die_str) >= 3:
+                return {"col": int(die_str[0]), "row": int(die_str[1]), "subsite": int(die_str[2])}
+        except (ValueError, IndexError):
+            return None
+
+    # If it's a string
+    if isinstance(die_str, str):
+        try:
+            parts = die_str.split(",")
+            if len(parts) >= 2:
+                return {
+                    "col": int(parts[0].strip()),
+                    "row": int(parts[1].strip()),
+                    "subsite": int(parts[2].strip()) if len(parts) > 2 else 0
+                }
+        except (ValueError, IndexError):
+            return None
 
     return None
+
 
 def get_project_status():
     """
