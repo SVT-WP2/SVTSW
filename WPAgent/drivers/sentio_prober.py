@@ -110,3 +110,7 @@ class SentioProberImpl(AbstractProber):
         else:
             # Last resort - convert to string
             return str(resp)
+
+    def get_camera_status(self):
+        resp = "doesnt exist"
+        return resp
