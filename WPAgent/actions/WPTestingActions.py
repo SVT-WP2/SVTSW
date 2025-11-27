@@ -126,7 +126,7 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
     return {"status": "success", "output": "Cleaning completed"}
 
 
-def open_project(address=None, machine_type=None):
+def open_project(path:str, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
         return error
@@ -135,7 +135,6 @@ def open_project(address=None, machine_type=None):
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     # To be updated in the future by this
-    # path = f"C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\{chipName}_{orientation}"
     path = f"C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\MOSAIX_FlatPad"
     prober.open_project(path)
     prober.local_mode()
@@ -171,7 +170,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
     """
     Perform wafer alignment.
 
-    Uses alignment die from initialization if home_die_col/home_die_row not provided.
+    Uses alignment die from initialization if align_die_col/align_die_row not provided.
 
     Args:
         align_die_col: Column index (optional if set during initialization)
@@ -218,7 +217,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         else:
             return {
                 "status": "error",
-                "output": "Alignment die not specified. Please provide home_die_col and home_die_row parameters, "
+                "output": "Alignment die not specified. Please provide align_die_col and align_die_row parameters, "
                           "or set alignment_die during initialization."
             }
 
@@ -311,7 +310,7 @@ def local_state(address=None, machine_type=None):
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.local_mode()
-    return {"status": "success", "output": f"Auto-focus command successfully executed"}
+    return {"status": "success", "output": f"Local mode"}
 
 
 # TODO: need to be tested  IT DOESNT EXIST
@@ -326,7 +325,6 @@ def get_camera_status(address=None, machine_type=None):
     return {"status": "success", "output": f"{resp}"}
 
 
-# TODO: need to be tested
 def go_to_previous_die(address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
@@ -334,5 +332,5 @@ def go_to_previous_die(address=None, machine_type=None):
 
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
-    prober.send_cmd(f"map:step_previous_die")
+    prober.step_prev_die()
     return {"status": "success", "output": f" Moved to previous die"}

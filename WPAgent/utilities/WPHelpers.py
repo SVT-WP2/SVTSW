@@ -16,12 +16,7 @@ def resolve_project_parameters(address=None, project_name=None, machine_type=Non
     """
     globals_ = SvtWPAagentGlobalParameters.getInstance()
 
-    # Only load from DB if ALL parameters are missing
     if not all([address, project_name, machine_type]):
-        # if not globals_.address or not globals_.project_name or not globals_.machine_type:
-        #     print("GO AND CHECK HOW YOU LOAD ..")
-        #     globals_.load_from_db()
-
         # Use global values as fallback
         address = address or globals_.address
         project_name = project_name or globals_.project_name

@@ -32,8 +32,8 @@ class SentioProberImpl(AbstractProber):
         return self.prober.map.step_next_die()
 
     def step_prev_die(self):
-        # have to be implemented as a string map:step_previous_die
-        return
+        return self.prober.send_cmd("map:step_previous_die")
+
 
     def go_to_die(self, col: int, row: int):
         return self.prober.map.step_die(col, row)
