@@ -207,6 +207,11 @@ class WPInitializationService:
                 },
                 timeout=30.0
             )
+            if not result:
+                return {
+                    "status": "error",
+                    "output": "Initialization command timed out. Please check if listener is running."
+                }
 
             # Display summary if successful
             if result.get("status") == "success":
