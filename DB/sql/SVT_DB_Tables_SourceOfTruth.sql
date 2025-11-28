@@ -25,7 +25,7 @@ CREATE TYPE "main"."asicFamilyType" AS ENUM (
   'BABYMOST',
   'NKF7',
   'MOSAIX',
-  'BabyMOSAIX',
+  'BABYMOSAIX',
   'LAS',
   'AncMPW1',
   'AncMPW2',
