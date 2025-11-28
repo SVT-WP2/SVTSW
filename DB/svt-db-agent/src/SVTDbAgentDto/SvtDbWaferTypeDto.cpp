@@ -201,6 +201,11 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(
   //! get all defined asic family types
   std::vector<std::string> enum_familyTypes =
       Singleton<SvtDbEnumDto>::instance()->getEnumValues("asicFamilyType");
+  if (enum_familyTypes.empty())
+  {
+    err_msg = "No ASIC FamilyType found.";
+    return false;
+  }
   for (const auto &[g_name, g_asics] : waferMap_j["Groups"].items())
   {
     int expected_index = 0;
