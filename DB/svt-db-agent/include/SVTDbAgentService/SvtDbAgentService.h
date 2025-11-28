@@ -48,7 +48,6 @@ namespace SvtDbAgent
     SvtDbAgentService();
     ~SvtDbAgentService();
 
-    bool initEnumTypeList();
     bool configureService(bool stop_eof = false);
     void processMsgCb(RdKafka::Message &msg, void *opaque);
     void setDebug(std::string debug) { mDebug = debug; }
@@ -59,7 +58,7 @@ namespace SvtDbAgent
     void setLogMessages(const bool val) { log_messages = val; }
     bool getLogMessages() { return log_messages; }
 
-    void getBrokerName(const std::string &name) { mBrokerName = name; }
+    void setBrokerName(const std::string &name) { mBrokerName = name; }
     std::string &getBrokerName() { return mBrokerName; }
 
    private:

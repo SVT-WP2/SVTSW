@@ -21,7 +21,11 @@ namespace SvtDbAgent
   class SvtDbEnumDto : public SvtDbBaseDto
   {
    public:
-    SvtDbEnumDto() { createAllRequest(); }
+    SvtDbEnumDto()
+    {
+      init();
+      createAllRequest();
+    }
     ~SvtDbEnumDto() = default;
 
     virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
@@ -38,13 +42,16 @@ namespace SvtDbAgent
     void getAllEnumValuesReplyMsg(const std::vector<std::string> &type_filters,
                                   SvtKafka::SvtKafkaReplyMsg &msgReply);
 
+    bool getIsInitialized() { return isInitialized; }
     std::vector<std::string> getTypeNames();
-
     std::vector<std::string> getEnumValues(const std::string &enum_type);
 
     void print();
 
    private:
+    bool isInitialized = false;
+
+    virtual void init() final;
     virtual void createAllRequest() final;
   };
 
