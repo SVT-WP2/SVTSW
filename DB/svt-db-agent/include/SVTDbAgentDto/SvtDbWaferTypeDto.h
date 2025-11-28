@@ -12,7 +12,6 @@
 
 #include "nlohmann/json_fwd.hpp"
 
-#include "SvtDbAsicDto.h"
 #include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
@@ -56,7 +55,6 @@ namespace SvtDbAgent
     ~SvtDbWaferTypeDto() = default;
 
     friend class SvtDbWaferDto;
-    friend class SvtDbAsicDto;
 
    private:
     SvtDbWaferTypeMapDto *waferTypeMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
@@ -71,9 +69,11 @@ namespace SvtDbAgent
     virtual const std::string getWaferTypeMap(const int waferTypeId);
 
     bool createWaferTypeMap(const int waferTypeId, const std::string &);
-    bool extractRange(const int g_size, const nlohmann::json &array_j,
-                      std::vector<int> &range);
-    bool checkWaferTypeMap(const std::string_view &waferMap, std::string &err_msg);
+
+   public:
+    static bool extractRange(const int g_size, const nlohmann::json &array_j,
+                             std::vector<int> &range);
+    static bool checkWaferTypeMap(const std::string_view &waferMap, std::string &err_msg);
   };
 
 };  // namespace SvtDbAgent
