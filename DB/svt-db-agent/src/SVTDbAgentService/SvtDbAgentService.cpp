@@ -13,12 +13,10 @@
 #include <string>
 #include <vector>
 
-#include "Database/DatabaseInterface.h"
 #include "SvtKafkaMessage.h"
 #include "SvtLogger.h"
 #include "librdkafka/rdkafkacpp.h"
 
-#include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "SVTDbAgentService/SvtDbAgentService.h"
 #include "SvtKafkaConsumer.h"
 #include "SvtKafkaProducer.h"
@@ -35,42 +33,6 @@ SvtDbAgentService::SvtDbAgentService()
 
 //===============================================~~=========================+
 SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(1000); }
-
-//========================================================================+
-bool SvtDbAgentService::initEnumTypeList()
-{
-  mLogger->logInfo("Initialize enum type list");
-  std::vector<std::string> enum_types;
-
-  auto *enumDto = Singleton<SvtDbEnumDto>::instance();
-
-  if (!enumDto->getAllEnumTypesInDB(DatabaseInterface::getDbSchema(), enum_types))
-  {
-    return false;
-  }
-  for (auto &enum_type : enum_types)
-  {
-    std::string enum_name(DatabaseInterface::getDbSchema());
-    enum_name += std::string(".");
-    enum_name += "\"" + enum_type + "\"";
-
-    std::vector<std::string> enum_values;
-    if (!enumDto->getAllEnumValuesInDB(enum_name, enum_values))
-    {
-      return false;
-    }
-    for (auto &value : enum_values)
-    {
-      enumDto->addValue(enum_type, value);
-    }
-  }
-
-  if (log_messages)
-  {
-    enumDto->print();
-  }
-  return true;
-}
 
 //========================================================================+
 bool SvtDbAgentService::configureService(bool stop_eof)

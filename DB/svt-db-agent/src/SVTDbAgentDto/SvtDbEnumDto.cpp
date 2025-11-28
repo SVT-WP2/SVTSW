@@ -9,11 +9,50 @@
 #include "Database/DatabaseInterface.h"
 #include "SVTDb/SvtDbInterface.h"
 #include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
 
 std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
+//========================================================================+
+void SvtDbAgent::SvtDbEnumDto::init()
+{
+  if (isInitialized)
+  {
+    return;
+  }
+
+  getLogger()->logInfo("Initialize enum type list");
+  std::vector<std::string> enum_types;
+
+  if (!getAllEnumTypesInDB(DatabaseInterface::getDbSchema(), enum_types))
+  {
+    THROW_RUNTIME_ERROR("Failed getting types in the DB.");
+    return;
+  }
+  for (auto &enum_type : enum_types)
+  {
+    std::string enum_name(DatabaseInterface::getDbSchema());
+    enum_name += std::string(".");
+    enum_name += "\"" + enum_type + "\"";
+
+    std::vector<std::string> enum_values;
+    if (!getAllEnumValuesInDB(enum_name, enum_values))
+    {
+      THROW_RUNTIME_ERROR("Failed getting values in the DB for type: " + enum_name);
+      return;
+    }
+    for (auto &value : enum_values)
+    {
+      addValue(enum_type, value);
+    }
+  }
+
+  isInitialized = true;
+  return;
+}
+
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::createAllRequest()
 {
@@ -118,6 +157,9 @@ void SvtDbAgent::SvtDbEnumDto::addValue(const std::string &type,
 //========================================================================+
 std::vector<std::string> SvtDbAgent::SvtDbEnumDto::getTypeNames()
 {
+  if (!isInitialized)
+    init();
+
   std::vector<std::string> keys;
   std::transform(
       enum_type_value_map.begin(), enum_type_value_map.end(),
@@ -133,6 +175,9 @@ std::vector<std::string> SvtDbAgent::SvtDbEnumDto::getTypeNames()
 std::vector<std::string>
 SvtDbAgent::SvtDbEnumDto::getEnumValues(const std::string &enum_type)
 {
+  if (!isInitialized)
+    init();
+
   if (enum_type_value_map.find(enum_type) != enum_type_value_map.cend())
   {
     return enum_type_value_map.at(enum_type);
