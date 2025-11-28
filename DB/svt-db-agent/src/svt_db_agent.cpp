@@ -126,13 +126,8 @@ int main(int argc, const char *argv[])
     std::string kafka_broker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
     SvtDbAgent::SvtDbAgentService *_dbAgent =
         Singleton<SvtDbAgent::SvtDbAgentService>::instance();
-    _dbAgent->getBrokerName(kafka_broker);
+    _dbAgent->setBrokerName(kafka_broker);
     // _dbAgent->setLogMessages(true);
-    if (!_dbAgent->initEnumTypeList())
-    {
-      logger->logError("ERROR: We could not initialize enum from DB.");
-      return EXIT_FAILURE;
-    }
     if (!_dbAgent->configureService(false))
     {
       return EXIT_FAILURE;
