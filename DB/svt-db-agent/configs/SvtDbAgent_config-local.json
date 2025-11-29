@@ -1,6 +1,6 @@
 {
   "logger": {
-    "filePath": "SvtDbAgent-dev",
+    "filePath": "/Users/ycorrales/Work/EIC/SVT/SVTSW/DB/svt-db-agent/SvtDbAgent-dev",
     "termVerbosity": "PRODUCTION",
     "fileVerbosity": "ALL"
   },
