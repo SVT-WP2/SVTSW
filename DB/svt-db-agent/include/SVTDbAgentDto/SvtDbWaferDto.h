@@ -8,6 +8,7 @@
  * */
 
 #include "SvtDbBaseLocationDto.h"
+#include "nlohmann/json_fwd.hpp"
 
 namespace SvtDbAgent
 {
@@ -26,5 +27,8 @@ namespace SvtDbAgent
 
     //! Create asics for wafer
     void createAllAsics(const SvtDbAgent::SvtDbEntry &wafer);
+
+   public:
+    void createAllAsics(const int waferId, const std::string &waferSN, const nlohmann::json &waferTypeMap_j, const bool check_only = false);
   };
 };  // namespace SvtDbAgent

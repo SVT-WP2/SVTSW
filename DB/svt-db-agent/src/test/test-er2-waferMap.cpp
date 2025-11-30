@@ -1,6 +1,5 @@
 
 #include <fstream>
-#include <iterator>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -12,7 +11,9 @@
 
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
 
+#include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
+#include "nlohmann/json_fwd.hpp"
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
@@ -105,15 +106,19 @@ int main(int argc, const char *argv[])
     {
       THROW_RUNTIME_ERROR("File: " + waferMap_fl_name + " not found.");
     }
+    nlohmann::json waferTypeMap_j = nlohmann::json::parse(waferMap_fl);
+    waferMap_fl.close();
 
-    std::string errorMsg;
-    std::vector<char> str_buffer;
-    str_buffer.assign(std::istreambuf_iterator<char>(waferMap_fl), std::istreambuf_iterator<char>());
-    auto isWaferMap = SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(std::string_view(str_buffer.data(), str_buffer.size()), errorMsg);
-    if (!isWaferMap)
+    if (false)
     {
-      logger->logError(errorMsg);
+      std::string errorMsg;
+      auto isWaferMap = SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(waferTypeMap_j.dump(), errorMsg);
+      if (!isWaferMap)
+      {
+        logger->logError(errorMsg);
+      }
     }
+    Singleton<SvtDbAgent::SvtDbWaferDto>::instance()->createAllAsics(0, "WaferSN", waferTypeMap_j, true);
   }
   catch (const std::exception &e)
   {
