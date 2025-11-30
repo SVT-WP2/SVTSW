@@ -50,7 +50,7 @@ bool SvtUtils::recursive_erase_key(json &j, const std::string_view &key)
 }
 
 //========================================================================+
-bool SvtUtils::readStringVariable(json &config, const std::string &key,
+bool SvtUtils::readStringVariable(const json &config, const std::string &key,
                                   std::string &var)
 {
   if (config.contains(key))
@@ -66,7 +66,7 @@ bool SvtUtils::readStringVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readIntegerVariable(json &config, const std::string &key,
+bool SvtUtils::readIntegerVariable(const json &config, const std::string &key,
                                    int &var)
 {
   if (config.contains(key))
@@ -91,7 +91,7 @@ bool SvtUtils::readIntegerVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readDoubleVariable(json &config, const std::string &key,
+bool SvtUtils::readDoubleVariable(const json &config, const std::string &key,
                                   double &var)
 {
   if (config.contains(key))
@@ -116,7 +116,7 @@ bool SvtUtils::readDoubleVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readBooleanVariable(json &config, const std::string &key,
+bool SvtUtils::readBooleanVariable(const json &config, const std::string &key,
                                    bool &var)
 {
   if (!config.contains(key))
@@ -154,7 +154,7 @@ bool SvtUtils::readBooleanVariable(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readIntegerVector(json &config, const std::string &key,
+bool SvtUtils::readIntegerVector(const json &config, const std::string &key,
                                  std::vector<int> &var)
 {
   if (config.contains(key))
@@ -182,7 +182,7 @@ bool SvtUtils::readIntegerVector(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readDoubleVector(json &config, const std::string &key,
+bool SvtUtils::readDoubleVector(const json &config, const std::string &key,
                                 std::vector<double> &var)
 {
   if (config.contains(key))
@@ -210,7 +210,7 @@ bool SvtUtils::readDoubleVector(json &config, const std::string &key,
 }
 
 //========================================================================+
-bool SvtUtils::readStringVector(json &config, const std::string &key,
+bool SvtUtils::readStringVector(const json &config, const std::string &key,
                                 std::vector<std::string> &var)
 {
   if (config.contains(key))
