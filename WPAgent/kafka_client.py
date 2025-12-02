@@ -219,6 +219,34 @@ class KafkaClient:
         print(f"   Offset: latest (only new messages)")
         print(f"   Heartbeat: enabled\n")
 
+        print(f"⏳ Waiting for consumer to be ready...")
+        max_wait = 30.0
+        start = time.time()
+        ready = False
+
+        while time.time() - start < max_wait:
+            # Poll to join consumer group and get partition assignment
+            self.request_consumer.poll(0.1)
+
+            # Check if assigned
+            assignment = self.request_consumer.assignment()
+            if assignment:
+                elapsed = time.time() - start
+                print(f"✅ Consumer ready in {elapsed:.1f}s")
+                print(f"   Partitions: {assignment}\n")
+                ready = True
+                break
+
+            time.sleep(0.1)
+
+        if not ready:
+            print(f"⚠️  Consumer not ready after {max_wait}s\n")
+
+        print("=" * 70)
+        print("🎯 LISTENER IS READY - YOU CAN NOW SEND COMMANDS!")
+        print("=" * 70)
+        print()
+
         try:
             while True:
                 msg = self.request_consumer.poll(poll_timeout)

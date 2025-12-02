@@ -34,6 +34,7 @@ class KafkaDBService:
         if KafkaDBService._initialized:
             return
 
+        KafkaDBService._initialized = True
         print(f"🔄 Initializing KafkaDBService...")
         print(f"   Broker: {self.DB_KAFKA_BROKER}")
 
