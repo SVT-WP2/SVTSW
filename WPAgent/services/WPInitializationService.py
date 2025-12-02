@@ -238,8 +238,9 @@ class WPInitializationService:
                     "orientation": selected_project.get("orientation"),
                     "initialization_mode": "database"
                 },
-                timeout=30.0
+                timeout=90.0
             )
+
             if not result:
                 return {
                     "status": "error",
@@ -324,7 +325,7 @@ class WPInitializationService:
                 "force": force,
                 "initialization_mode": "manual"
             },
-            timeout=30.0
+            timeout=90.0
         )
 
     def list_available_machines(self, timeout=15.0):

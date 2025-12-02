@@ -195,6 +195,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
             globals_.set_machine_type(machine_type)
             if project_name:
                 globals_.set_project_name(project_name)
+
                 try:
                     prober = get_prober(machine_type, address)
                     project_path = os.path.join(
