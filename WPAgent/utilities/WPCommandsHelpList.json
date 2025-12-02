@@ -274,7 +274,7 @@
         "description": "Path to project file"
       }
     },
-    "example": "python main.py send OpenProject --params='{\"project_path\":\"/path/to/project.prj\"}'",
+    "example": "python main.py send OpenProject --params='{\"project_name\":\"project_name\"}'",
     "execution_time": "2-5 seconds"
   },
 

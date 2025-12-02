@@ -127,7 +127,7 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
     return {"status": "success", "output": "Cleaning completed"}
 
 
-def open_project(path: str, address=None, machine_type=None):
+def open_project(project_name: str, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
         return error
@@ -137,9 +137,9 @@ def open_project(path: str, address=None, machine_type=None):
     # To be updated in the future by this
     project_path = os.path.join(
         "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
-        path
+        project_name
     )
-    prober.open_project(path)
+    prober.open_project(project_name)
     prober.local_mode()
     return {"status": "success", "output": f"Opened project: {project_path}"}
 
