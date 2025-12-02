@@ -1,50 +1,51 @@
 {
   "Initialize": {
-    "description": "Initialize connection to the wafer prober (manual or database-driven)",
-    "category": "Setup",
-    "parameters": {
-      "address": {
-        "required": "conditional",
-        "type": "string",
-        "description": "Prober network address (required for manual mode)"
-      },
-      "machine_type": {
-        "required": "conditional",
-        "type": "string",
-        "description": "Type of prober ('sentio', required for manual mode)"
-      },
-      "project_name": {
-        "required": "conditional",
-        "type": "string",
-        "description": "Optional project name"
-      },
-      "alignment_die": {
-        "required": false,
-        "type": "string",
-        "description": "Alignment die position as 'col,row,subsite' (e.g., '5,10,0')"
-      },
-      "home_die": {
-        "required": false,
-        "type": "string",
-        "description": "Home die position as 'col,row,subsite' (e.g., '1,1,0')"
-      },
-      "force": {
-        "required": false,
-        "type": "boolean",
-        "description": "Force re-initialization (default: false)"
-      },
-      "with_db": {
-        "required": false,
-        "type": "boolean",
-        "description": "Use database for initialization (interactive)"
-      }
+  "description": "Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)",
+  "category": "Setup",
+  "parameters": {
+    "address": {
+      "required": "conditional",
+      "type": "string",
+      "description": "Prober network address (REQUIRED for manual mode, format: 'host:port')"
     },
-    "example": "python main.py send Initialize --params='{\"address\":\"wpmit01.cern.ch:35555\",\"machine_type\":\"sentio\"}'",
-    "example_with_dies": "python main.py send Initialize --params='{\"address\":\"wpmit01.cern.ch:35555\",\"machine_type\":\"sentio\",\"alignment_die\":\"5,10,0\",\"home_die\":\"1,1,0\"}'",
-    "example_db": "python main.py send Initialize --params='{\"with_db\":true}'",
-    "execution_time": "< 1 second (manual) or 5-30 seconds (database)",
-    "notes": "Two modes: (1) Manual - provide address, machine_type, and optionally die positions, (2) Database - interactive selection of prober, ASIC family, orientation, and project (die positions set automatically)"
+    "machine_type": {
+      "required": "conditional",
+      "type": "string",
+      "description": "Type of prober (REQUIRED for manual mode, value: 'sentio')"
+    },
+    "project_name": {
+      "required": false,
+      "type": "string",
+      "description": "Project name to open (optional, auto-opens .prj file)"
+    },
+    "alignment_die": {
+      "required": false,
+      "type": "string or tuple",
+      "description": "Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified."
+    },
+    "home_die": {
+      "required": false,
+      "type": "string or tuple",
+      "description": "Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified."
+    },
+    "force": {
+      "required": false,
+      "type": "boolean",
+      "description": "Force re-initialization (default: false)"
+    },
+    "with_db": {
+      "required": false,
+      "type": "boolean",
+      "description": "Use database mode for interactive initialization"
+    }
   },
+  "example": "python main.py send Initialize --params='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\"}'",
+  "example_with_project": "python main.py send Initialize --params='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\",\"project_name\":\"NKF7_Test\"}'",
+  "example_with_dies": "python main.py send Initialize --params='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\",\"alignment_die\":\"2,2,0\",\"home_die\":\"5,2,0\"}'",
+  "example_db": "python main.py send Initialize with_db=true",
+  "execution_time": "5-15 seconds (manual) or 30-90 seconds (database)",
+  "notes": "MANUAL MODE: Provide address and machine_type. DATABASE MODE: Interactive flow selects prober/ASIC/orientation/project. Die positions stored for AlignWafer and FindHome commands."
+},
 
   "Load": {
     "description": "Load a wafer onto the chuck",
