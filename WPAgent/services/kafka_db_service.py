@@ -49,11 +49,11 @@ class KafkaDBService:
         # Create consumer with 'earliest' offset
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_KAFKA_BROKER,
-            'group.id': 'wp-agent-db-consumer',
-            'auto.offset.reset': 'latest',
+            'group.id': f'wp-agent-db-consumer-{uuid.uuid4()}',
+            'auto.offset.reset': 'earliest',
             'enable.auto.commit': False,
-            'session.timeout.ms': 10000,
-            'heartbeat.interval.ms': 3000
+            'session.timeout.ms': 60000,
+            'heartbeat.interval.ms': 90000
         })
 
         self.consumer.subscribe([self.DB_REPLY_TOPIC])

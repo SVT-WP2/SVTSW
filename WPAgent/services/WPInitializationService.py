@@ -281,7 +281,10 @@ class WPInitializationService:
                     "home_die": home_die_str,
                     "initialization_mode": "database"
                 })
-
+            try:
+                db_service.close()
+            except:
+                pass
             return result
 
         except KeyboardInterrupt:
