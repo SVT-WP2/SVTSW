@@ -46,7 +46,6 @@ COMMAND_ROUTER = {
     #  Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
-    "ListOrientations": database_actions.list_orientations,
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
