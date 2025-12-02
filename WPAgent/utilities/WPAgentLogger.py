@@ -25,7 +25,7 @@ class WPAgentLogger:
         log_file='WPAgentLogger.log',
         level=logging.INFO,
         kafka_enabled=False,
-        kafka_servers='localhost:9092',
+        kafka_servers='localhost:9095',
         kafka_topic='prober-logs',
         severity_threshold=Severity.INFO
     ):

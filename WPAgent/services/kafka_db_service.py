@@ -34,6 +34,7 @@ class KafkaDBService:
         if KafkaDBService._initialized:
             return
 
+        KafkaDBService._initialized = True
         print(f"🔄 Initializing KafkaDBService...")
         print(f"   Broker: {self.DB_KAFKA_BROKER}")
 
@@ -48,11 +49,11 @@ class KafkaDBService:
         # Create consumer with 'earliest' offset
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_KAFKA_BROKER,
-            'group.id': 'wp-agent-db-consumer',
-            'auto.offset.reset': 'latest',
+            'group.id': f'wp-agent-db-consumer-{uuid.uuid4()}',
+            'auto.offset.reset': 'earliest',
             'enable.auto.commit': False,
-            'session.timeout.ms': 10000,
-            'heartbeat.interval.ms': 3000
+            'session.timeout.ms': 60000,
+            'heartbeat.interval.ms': 90000
         })
 
         self.consumer.subscribe([self.DB_REPLY_TOPIC])
@@ -137,14 +138,6 @@ class KafkaDBService:
             self.HEADER_REPLY_PARTITION: str(0).encode('utf-8')
         }
 
-        # Debug output
-        print(f"\n📤 Sending to DB Agent:")
-        print(f"   Topic: {self.DB_REQUEST_TOPIC}")
-        print(f"   Headers:")
-        print(f"      kafka_correlationId: {correlation_id}")
-        print(f"      kafka_replyTopic: {self.DB_REPLY_TOPIC}")
-        print(f"      kafka_replyPartition: 0")
-        print(f"   Body: {json.dumps(message_body, indent=2)}")
 
         # Send request with headers
         try:
@@ -259,15 +252,6 @@ class KafkaDBService:
 
         return reply.get("data", {}) or {}
 
-    def get_chip_types(self, timeout: float = 10.0) -> List[str]:
-        """Get available chip types"""
-        data = self.get_all_enums(["asicFamilyType"], timeout=timeout)
-        return data.get("asicFamilyType", []) or data.get("asicFamilType", [])
-
-    def get_orientations(self, timeout: float = 10.0) -> List[str]:
-        """Get available wafer map orientations"""
-        data = self.get_all_enums(["waferMapOrientation"], timeout=timeout)
-        return data.get("waferMapOrientation", [])
 
     def get_all_wafer_probe_machines(
             self,
@@ -311,6 +295,114 @@ class KafkaDBService:
             print(f"\n⚠️ No machines in response")
 
         return machines
+
+    def get_all_wafer_probe_projects(self,
+            timeout: float = 15.0
+        ) -> List[Dict[str, Any]]:
+        """
+        Get all wafer probe projects from database.
+
+        Returns:
+            dict: Response with projects list
+            {
+                "status": "Success",
+                "type": "GetAllWaferProbeProjectsReply",
+                "data": {
+                    "items": [
+                        {
+                            "id": 0,
+                            "wpMachineId": 0,
+                            "waferTypeId": 0,
+                            "name": "string",
+                            "asicFamilyType": "string",
+                            "orientation": "string",
+                            "alignmentDie": "string",
+                            "homeDie": "string",
+                            "local2GlobalMap": "string"
+                        },
+                        ...
+                    ]
+                }
+            }
+        """
+        data = {
+            "filter": {
+                "ids": []
+            }
+        }
+
+        reply = self._request_reply(
+            message_type="GetAllWaferProbeProjects",
+            data=data,
+            reply_type="GetAllWaferProbeProjectsReply",
+            timeout=timeout
+        )
+
+        if not reply:
+            return []
+
+        reply_data = reply.get("data", {})
+        projects = reply_data.get("items", [])
+
+        if projects:
+            print(f"\n✅ Got {len(projects)} project(s)")
+        else:
+            print(f"\n⚠️ No projects in response")
+
+        return projects
+
+    def get_chip_types(self,
+            timeout: float = 15.0
+        ) -> List[Dict[str, Any]]:
+        """
+        Get all asics from database.
+
+        Returns:
+            dict: Response with projects list
+            {
+                "status": "Success",
+                "type": "GetAllAsics",
+                  "data": {
+                    "pager": {
+                      "limit": 0,
+                      "offset": 0
+                    },
+                    "filter": {
+                      "waferId": 0,
+                      "chipId": 0,
+                      "familyType": "string",
+                      "quality": "string",
+                      "ids": [
+                        0
+                      ]
+                }
+            }
+        """
+        data = {
+            "filter": {
+                "ids": []
+            }
+        }
+
+        reply = self._request_reply(
+            message_type="GetAllAsics",
+            data=data,
+            reply_type="GetAllAsicsReply",
+            timeout=timeout
+        )
+
+        if not reply:
+            return []
+
+        reply_data = reply.get("data", {})
+        asics = reply_data.get("items", [])
+
+        if asics:
+            print(f"\n✅ Got {len(asics)} asic(s)")
+        else:
+            print(f"\n⚠️ No asics in response")
+
+        return asics
 
     def close(self):
         """Clean up resources"""

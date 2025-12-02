@@ -13,7 +13,7 @@ logger = WPAgentLogger()
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers='localhost:9092', group_id='wafer-executor'):
+    def __init__(self, bootstrap_servers='localhost:9095', group_id='wafer-executor'):
         self.bootstrap_servers = bootstrap_servers
         self.group_id = group_id
         self.request_topic = 'svt.wp-agent.request'
@@ -94,6 +94,10 @@ class KafkaClient:
 
         results = []
 
+        if wait_for_reply and self.reply_consumer is None:
+            print(f"⏳ Initializing reply consumer...")
+            self._ensure_reply_consumer_ready()
+
         for i in range(repeat):
             request_id = str(uuid.uuid4())
 
@@ -160,29 +164,12 @@ class KafkaClient:
         return results if repeat > 1 else (results[0] if results else None)
 
     def _wait_for_reply(self, request_id: str, timeout: float) -> Optional[Dict]:
-        """
-        Wait for a reply message with matching request_id
+        """Wait for a reply message with matching request_id"""
 
-        Args:
-            request_id: The request ID to match
-            timeout: How long to wait (seconds)
-
-        Returns:
-            dict: Reply message or None if timeout
-        """
-        # Create reply consumer if not exists
+        # Consumer should already be initialized by send()
         if self.reply_consumer is None:
-            self.reply_consumer = KafkaConsumer({
-                'bootstrap.servers': self.bootstrap_servers,
-                'group.id': f'reply-consumer-{uuid.uuid4()}',
-                'auto.offset.reset': 'earliest',  # FIX: Changed from 'latest' to catch all replies
-                'enable.auto.commit': False
-            })
-            self.reply_consumer.subscribe([self.reply_topic])
-
-            # Warm up consumer to ensure subscription is active
-            for _ in range(3):
-                self.reply_consumer.poll(0.1)
+            print(f"⚠️  Reply consumer not initialized!")
+            return None
 
         start_time = time.time()
 
@@ -193,7 +180,6 @@ class KafkaClient:
                 continue
 
             if msg.error():
-                print(f"[⚠️ Reply consumer error] {msg.error()}")
                 continue
 
             try:
@@ -203,7 +189,6 @@ class KafkaClient:
                     return reply
 
             except Exception as e:
-                print(f"[⚠️ Failed to parse reply] {e}")
                 continue
 
         return None
@@ -233,6 +218,34 @@ class KafkaClient:
         print(f"   Consumer group: {self.group_id}")
         print(f"   Offset: latest (only new messages)")
         print(f"   Heartbeat: enabled\n")
+
+        print(f"⏳ Waiting for consumer to be ready...")
+        max_wait = 30.0
+        start = time.time()
+        ready = False
+
+        while time.time() - start < max_wait:
+            # Poll to join consumer group and get partition assignment
+            self.request_consumer.poll(0.1)
+
+            # Check if assigned
+            assignment = self.request_consumer.assignment()
+            if assignment:
+                elapsed = time.time() - start
+                print(f"✅ Consumer ready in {elapsed:.1f}s")
+                print(f"   Partitions: {assignment}\n")
+                ready = True
+                break
+
+            time.sleep(0.1)
+
+        if not ready:
+            print(f"⚠️  Consumer not ready after {max_wait}s\n")
+
+        print("=" * 70)
+        print("🎯 LISTENER IS READY - YOU CAN NOW SEND COMMANDS!")
+        print("=" * 70)
+        print()
 
         try:
             while True:
@@ -368,6 +381,36 @@ class KafkaClient:
         else:
             # Silently succeed - don't spam console
             pass
+
+    def _ensure_reply_consumer_ready(self):
+        """Ensure reply consumer is initialized and ready"""
+        if self.reply_consumer is not None:
+            return  # Already initialized
+
+        # Create reply consumer
+        consumer_group = f'reply-consumer-{uuid.uuid4()}'
+
+        self.reply_consumer = KafkaConsumer({
+            'bootstrap.servers': self.bootstrap_servers,
+            'group.id': consumer_group,
+            'auto.offset.reset': 'earliest',
+            'enable.auto.commit': False,
+            'session.timeout.ms': 60000,
+            'max.poll.interval.ms': 120000
+        })
+        self.reply_consumer.subscribe([self.reply_topic])
+
+        # Wait for consumer to be ready
+        start = time.time()
+        while time.time() - start < 5.0:
+            self.reply_consumer.poll(0.1)
+            if self.reply_consumer.assignment():
+                elapsed = time.time() - start
+                print(f"   ✅ Reply consumer ready ({elapsed:.1f}s)")
+                return
+            time.sleep(0.1)
+
+        print(f"   ⚠️  Reply consumer timeout (may miss fast replies)")
 
     def subscribe_if_needed(self, topics: List[str]) -> None:
         """Subscribe to additional topics if needed"""
