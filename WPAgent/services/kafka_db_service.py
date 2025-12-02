@@ -252,12 +252,6 @@ class KafkaDBService:
         return reply.get("data", {}) or {}
 
 
-    # TODO Need to be Implemented in correct way
-    def get_orientations(self, timeout: float = 10.0) -> List[str]:
-        """Get available wafer map orientations"""
-        data = self.get_all_enums(["waferMapOrientation"], timeout=timeout)
-        return data.get("waferMapOrientation", [])
-
     def get_all_wafer_probe_machines(
             self,
             timeout: float = 10.0
