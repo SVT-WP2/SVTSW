@@ -1,5 +1,6 @@
 from drivers.factory import get_prober
 from utilities.WPHelpers import resolve_project_parameters
+import os
 
 
 def _ensure_initialized():
@@ -126,19 +127,21 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
     return {"status": "success", "output": "Cleaning completed"}
 
 
-def open_project(path:str, address=None, machine_type=None):
+def open_project(path: str, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    # Open project should be done with extra arguments chipname and orientation
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     # To be updated in the future by this
-    path = f"C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\MOSAIX_FlatPad"
+    project_path = os.path.join(
+        "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
+        path
+    )
     prober.open_project(path)
     prober.local_mode()
-    return {"status": "success", "output": f"Opened project: {path}"}
+    return {"status": "success", "output": f"Opened project: {project_path}"}
 
 
 def load_wafer(address=None, machine_type=None):
