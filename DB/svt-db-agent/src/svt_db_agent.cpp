@@ -12,7 +12,7 @@
 #include <string>
 #include <thread>
 
-#include "version.h"
+// #include "version.h"
 
 #include "Database/DatabaseInterface.h"
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
@@ -23,7 +23,7 @@
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
-std::string version = std::string(VERSION);
+// std::string version = std::string(VERSION);
 
 SvtUtils::SvtLogger *logger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
 
@@ -93,7 +93,7 @@ int main(int argc, const char *argv[])
   logger->configure(setupConfig->getLogFilePath(),
                     setupConfig->getTermVerbosity(),
                     setupConfig->getFileVebosity());
-  logger->logInfo("********************** Svt Db Agent, version:" + version);
+  logger->logInfo("********************** Svt Db Agent **********************");
 
   DatabaseInterface *dbInterface = DatabaseIF::instance();
 

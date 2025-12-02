@@ -24,12 +24,12 @@ RUN apt install librdkafka-dev -y
 
 # Copy the source code into the container
 COPY . .
-RUN bash compile.sh
-RUN cat build/bin/svt_db_agent
-RUN ./build/bin/svt_db_agent ./configs/SvtDbAgent_config-dev.json
+RUN bash ./compile.sh
 
 EXPOSE 6600
 EXPOSE 9095
+
+CMD ["/app/build/bin/svt_db_agent", "/app/configs/SvtDbAgent_config-dev.json"]
 
 
 
