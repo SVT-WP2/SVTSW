@@ -250,11 +250,7 @@ class KafkaDBService:
             return {}
 
         return reply.get("data", {}) or {}
-    #TODO Need to be Implemented in correct way
-    def get_chip_types(self, timeout: float = 10.0) -> List[str]:
-        """Get available chip types"""
-        data = self.get_all_enums(["asicFamilyType"], timeout=timeout)
-        return data.get("asicFamilyType", []) or data.get("asicFamilType", [])
+
 
     # TODO Need to be Implemented in correct way
     def get_orientations(self, timeout: float = 10.0) -> List[str]:
@@ -360,6 +356,58 @@ class KafkaDBService:
 
         return projects
 
+    def get_chip_types(self,
+            timeout: float = 15.0
+        ) -> List[Dict[str, Any]]:
+        """
+        Get all asics from database.
+
+        Returns:
+            dict: Response with projects list
+            {
+                "status": "Success",
+                "type": "GetAllAsics",
+                  "data": {
+                    "pager": {
+                      "limit": 0,
+                      "offset": 0
+                    },
+                    "filter": {
+                      "waferId": 0,
+                      "chipId": 0,
+                      "familyType": "string",
+                      "quality": "string",
+                      "ids": [
+                        0
+                      ]
+                }
+            }
+        """
+        data = {
+            "filter": {
+                "ids": []
+            }
+        }
+
+        reply = self._request_reply(
+            message_type="GetAllAsics",
+            data=data,
+            reply_type="GetAllAsicsReply",
+            timeout=timeout
+        )
+
+        if not reply:
+            return []
+
+        reply_data = reply.get("data", {})
+        asics = reply_data.get("items", [])
+
+        if asics:
+            print(f"\n✅ Got {len(asics)} asic(s)")
+        else:
+            print(f"\n⚠️ No asics in response")
+
+        return asics
 
     def close(self):
         """Clean up resources"""
