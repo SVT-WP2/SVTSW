@@ -61,7 +61,6 @@ class WaferProberAgent:
                         # Do producer-side database initialization
                         # This will show prompts to user and send final command to listener
                         return init_service.initialize_from_database(
-                            project_name=project_name,
                             force=force,
                             db_timeout=db_timeout
                         )
@@ -112,7 +111,7 @@ class WaferProberAgent:
                 print("📤 Sending command anyway...")
 
         # Send command and wait for reply
-        return self.kafka.send(
+        response = self.kafka.send(
             command=command,
             params=params,
             repeat=repeat,
@@ -120,6 +119,7 @@ class WaferProberAgent:
             wait_for_reply=wait_for_reply,
             timeout=timeout
         )
+        return response
 
     def send_async(self, command, params=None, repeat=1, delay=0):
         """
@@ -144,22 +144,6 @@ class WaferProberAgent:
     def listen(self):
         """Start the listener service"""
         self.kafka.listen()
-
-    def run_both(self, command, params=None, repeat=1, delay=0):
-        """Start listener in background and send command"""
-
-        def consume():
-            self.kafka.listen()
-
-        thread = threading.Thread(target=consume, daemon=True)
-        thread.start()
-
-        time.sleep(2)
-        self.send(command, params, repeat, delay)
-
-        while True:
-            time.sleep(1)
-
 
     def check_listener_health(self):
         """Check if the listener is alive and responding"""
