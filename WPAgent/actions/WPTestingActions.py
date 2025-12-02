@@ -313,18 +313,6 @@ def local_state(address=None, machine_type=None):
     return {"status": "success", "output": f"Local mode"}
 
 
-# TODO: need to be tested  IT DOESNT EXIST
-def get_camera_status(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    resp = prober.get_camera_status()
-    return {"status": "success", "output": f"{resp}"}
-
-
 def go_to_previous_die(address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
