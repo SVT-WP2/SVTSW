@@ -119,7 +119,7 @@ class WaferProberAgent:
             wait_for_reply=wait_for_reply,
             timeout=timeout
         )
-        return None
+        return response
 
     def send_async(self, command, params=None, repeat=1, delay=0):
         """

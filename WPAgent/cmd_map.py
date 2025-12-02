@@ -60,11 +60,11 @@ COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_
 # Instantiation of logger
 logger = WPAgentLogger(
     kafka_enabled=True,
-    kafka_servers='localhost:9092',
+    kafka_servers='localhost:9095',
     severity_threshold=Severity.CRITICAL  # Only WARNING and above go to Kafka
 )
 
-health_check = ListenerHealthCheck(bootstrap_servers='localhost:9092')
+health_check = ListenerHealthCheck(bootstrap_servers='localhost:9095')
 
 
 def _exec_in_sequence(message_type, params=None):
