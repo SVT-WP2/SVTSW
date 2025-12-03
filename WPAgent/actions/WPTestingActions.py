@@ -51,6 +51,7 @@ def run_ptpa(address=None, machine_type=None):
     address, _, machine_type = resolve_project_parameters(address, None, machine_type)
     prober = get_prober(machine_type, address)
     prober.run_ptpa()
+
     prober.local_mode()
     return {"status": "success", "output": "PTPA executed"}
 
