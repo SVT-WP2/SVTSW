@@ -26,7 +26,7 @@ class SentioProberImpl(AbstractProber):
         # TODO: Have to be tested
         # self.prober.vision.compensation.start_execute(mode='OffAxis',type='BothWithProbeTips')
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
-        # self.prober.wait_complete(resp.cmd_id())
+        self.prober.wait_complete(resp.cmd_id())
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
