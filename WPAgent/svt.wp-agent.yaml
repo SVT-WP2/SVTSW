@@ -1,631 +1,1253 @@
 openapi: 3.0.3
 info:
   title: SVT Wafer Prober Agent API (Kafka Command Contract)
-  version: 1.1.0
-  description: |
-    This OpenAPI document describes the message **contract** for the SVT Wafer Prober Agent.
-    The agent consumes Kafka messages on topic `svt.wp-agent`. Each "path" here corresponds
-    to a command message you can send. Treat these as documentation stubs; actual transport
-    is Kafka, not HTTP.
-
-    **Message shape (Kafka)**
-    ```json
-    {
-      "message": "<CommandName>",
-      "params": { /* command-specific parameters (optional) */ }
-    }
-    ```
-
-    **Response shape (from the Agent)**
-    - Success:
-      ```json
-      { "status": "success", "output": "Human readable message" } }
-      ```
-    - Error:
-      ```json
-      {
-        "status": "BadRequest|NotFound|PreconditionFailed|UnexpectedError|Timeout",
-        "error": {
-          "code": "WP_4xx|WP_5xx",
-          "message": "What failed",
-          "hint": "How to fix it",
-          "context": { "command": "AutoFocus", "...": "..." },
-          "correlationId": "optional"
-        }
-      }
-      ```
+  version: 2.0.0
+  description: >
+    This OpenAPI document describes the message contract for the SVT Wafer Prober Agent.
+    The agent consumes Kafka messages on topic `svt.wp-agent.request` and replies on `svt.wp-agent.reply`.
+    
+    ## -
+      What you send: Only type and params fields. The kafka_client automatically adds
+    request_id, sent_at, and reply_to.
+    
+    ## -
+      What you receive: The kafka_client wraps the command result with
+    type=CommandReply, request_id, command, status, output, execution_time_ms, and timestamp.
+    
+    
+    Some commands also include a data field with structured information.
 
 servers:
-  - url: https://kafka-docs.local
-    description: Documentation-only server (transport is Kafka)
+  - url: kafka://localhost:9092/svt.wp-agent.request
+    description: Kafka request topic
 
 tags:
-  - name: Project
-  - name: Chuck
-  - name: Camera
-  - name: Wafer
+  - name: Setup
+  - name: Wafer Handling
+  - name: Movement
+  - name: Positioning
+  - name: Probe Control
+  - name: Vision
+  - name: Alignment
   - name: Testing
-  - name: Sequencer
-  - name: Utility
+  - name: Status
+  - name: System
+  - name: Database
+  - name: Automation
 
 paths:
 
   #########################
-  # Project
+  # Setup
   #########################
 
-  /svt.wp-agent/Initialize:
+  /svt.wp-agent.request/Initialize:
     post:
-      tags: [Project]
-      summary: Initialize connection and cache prober globally
+      tags: [Setup]
+      summary: Initialize connection to wafer prober
       description: |
-        Connects to the prober using MPI Sentio (or other) driver and caches the prober
-        inside the global singleton. After this call, subsequent commands **do not need**
-        `address` or `machine_type`.
+        Two initialization modes:
+        1. Manual: Provide address and machine_type
+        2. Database: Use with_db=true for interactive selection
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InitializeParams'
+              $ref: '#/components/schemas/InitializeRequest'
             examples:
-              Example:
+              Manual:
                 value:
-                  address: wpmit01.cern.ch:35555
-                  machine_type: sentio
-                  project_name: NKF7
+                  type: "Initialize"
+                  params:
+                    address: "WPMIT01.cern.ch:35555"
+                    machine_type: "sentio"
+              ManualWithProject:
+                value:
+                  type: "Initialize"
+                  params:
+                    address: "WPMIT01.cern.ch:35555"
+                    machine_type: "sentio"
+                    project_name: "NKF7_Test"
+                    alignment_die: "2,2,0"
+                    home_die: "5,2,0"
+              Database:
+                value:
+                  type: "Initialize"
+                  params:
+                    with_db: true
       responses:
         '200':
-          description: Initialized
+          description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Ok:
+                Success:
                   value:
-                    status: success
-                    output: Initialized and prober cached.
+                    type: "CommandReply"
+                    request_id: "abc-123"
+                    command: "Initialize"
+                    status: "success"
+                    output: "Initialized WP at WPMIT01.cern.ch:35555"
+                    execution_time_ms: 8234.5
+                    timestamp: 1733155208.234
         '400':
-          description: Bad request (missing/invalid params)
+          description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Missing:
+                MissingParams:
                   value:
-                    status: BadRequest
-                    error:
-                      code: WP_400
-                      message: "address and machine_type are required"
-                      hint: "Provide address=host:port and machine_type=sentio."
-                      context: { command: Initialize }
-        '500':
-          description: Driver/connection failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                DriverFail:
-                  value:
-                    status: UnexpectedError
-                    error:
-                      code: WP_500
-                      message: "Connection refused"
-                      hint: "Check network/VPN, driver availability, and host:port."
-                      context: { command: Initialize, address: "wpmit01.cern.ch:35555" }
+                    type: "CommandReply"
+                    request_id: "abc-123"
+                    command: "Initialize"
+                    status: "error"
+                    output: "Initialization requires 'address' and 'machine_type' parameters"
+                    execution_time_ms: 0.1
+                    timestamp: 1733155200.1
 
-  /svt.wp-agent/ShowProjectStatus:
+  /svt.wp-agent.request/ShowProjectStatus:
     post:
-      tags: [Project]
-      summary: Show current global/project status
+      tags: [Status]
+      summary: Show current project and prober status
       requestBody:
         required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ShowProjectStatus"
+                  params: {}
       responses:
         '200':
           description: Status returned
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Example:
+                Initialized:
                   value:
-                    status: success
-                    output: "OK"
-                    data:
-                      address: wpmit01.cern.ch:35555
-                      machine_type: sentio
-                      project_name: NKF7
-                      prober_cached: true
+                    type: "CommandReply"
+                    request_id: "status-001"
+                    command: "ShowProjectStatus"
+                    status: "success"
+                    output: "Connected to WPMIT01.cern.ch:35555, Machine WPMIT, Type sentio, Project NKF7_Test, State Idle"
+                    execution_time_ms: 52.3
+                    timestamp: 1733155300.052
 
-  /svt.wp-agent/OpenProject:
+  /svt.wp-agent.request/OpenProject:
     post:
-      tags: [Project]
-      summary: Open a wafer test project
+      tags: [Setup]
+      summary: Open a project file
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenProjectParams'
+              $ref: '#/components/schemas/CommandRequest'
             examples:
-              WithName:
+              WithPath:
                 value:
-                  project_name: NKF7
+                  type: "OpenProject"
+                  params:
+                    project_name: "NKF7_Test"
       responses:
         '200':
           description: Project opened
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '412':
-          description: Not initialized (no prober)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                NotInitialized:
+                Opened:
                   value:
-                    status: PreconditionFailed
-                    error:
-                      code: WP_412
-                      message: "Not initialized. Call Initialize first."
-                      hint: "Initialize once; then OpenProject without machine params."
-                      context: { command: OpenProject }
+                    type: "CommandReply"
+                    request_id: "open-001"
+                    command: "OpenProject"
+                    status: "success"
+                    output: "Opened project: C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\NKF7_Test.prj"
+                    execution_time_ms: 4233.4
+                    timestamp: 1733155404.233
 
   #########################
-  # Chuck
+  # Movement
   #########################
 
-  /svt.wp-agent/MoveChuckXY:
+  /svt.wp-agent.request/MoveChuckXY:
     post:
-      tags: [Chuck]
-      summary: Move chuck to absolute XY (µm)
+      tags: [Movement]
+      summary: Move chuck to XY coordinates
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MoveChuckXYParams'
+              $ref: '#/components/schemas/CommandRequest'
             examples:
-              Example:
-                value: { x: 201196.4, y: -461457.3 }
+              ValidMove:
+                value:
+                  type: "MoveChuckXY"
+                  params:
+                    x: 155539.9
+                    y: -238764.7
       responses:
         '200':
           description: Moved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Moved:
+                Success:
                   value:
-                    status: success
-                    output: "Moved to (201196.4, -461457.3) µm"
-        '400':
-          description: Missing/invalid params (x,y)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                Missing:
-                  value:
-                    status: BadRequest
-                    error:
-                      code: WP_400
-                      message: "Missing required params: x, y"
-                      hint: "Send both x and y in µm, e.g. {\"x\":12000,\"y\":8000}."
-                      context: { command: MoveChuckXY }
-        '412':
-          description: Not initialized (no prober)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: "CommandReply"
+                    request_id: "move-001"
+                    command: "MoveChuckXY"
+                    status: "success"
+                    output: "Moved chuck to x=155539.9, y=-238764.7"
+                    execution_time_ms: 3245.6
+                    timestamp: 1733155503.245
 
-  /svt.wp-agent/MoveChuckHome:
+  /svt.wp-agent.request/MoveChuckZ:
     post:
-      tags: [Chuck]
-      summary: Move chuck to home
-      requestBody:
-        required: false
-      responses:
-        '200':
-          description: Homed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '412':
-          description: Not initialized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /svt.wp-agent/MoveChuckToWorkArea:
-    post:
-      tags: [Chuck]
-      summary: Switch work area (0=Probing, 1=Off-Axis)
+      tags: [Movement]
+      summary: Move chuck to Z coordinate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MoveChuckToWorkAreaParams'
+              $ref: '#/components/schemas/CommandRequest'
             examples:
-              OffAxis:
-                value: { work_area: 1 }
+              ValidMove:
+                value:
+                  type: "MoveChuckZ"
+                  params:
+                    z: 10500.9
       responses:
         '200':
-          description: Switched
+          description: Moved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Bad param (work_area)
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "move-z-001"
+                    command: "MoveChuckZ"
+                    status: "success"
+                    output: "Moved chuck to z=10500.9"
+                    execution_time_ms: 2134.8
+                    timestamp: 1733155602.134
+
+  /svt.wp-agent.request/GoToDie:
+    post:
+      tags: [Movement]
+      summary: Move to specific die
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidDie:
+                value:
+                  type: "GoToDie"
+                  params:
+                    col: 5
+                    row: 10
+      responses:
+        '200':
+          description: Moved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '412':
-          description: Not initialized
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "die-001"
+                    command: "GoToDie"
+                    status: "success"
+                    output: "Moved to die: (5, 10)"
+                    execution_time_ms: 2456.3
+                    timestamp: 1733157202.456
+
+  /svt.wp-agent.request/StepNextDie:
+    post:
+      tags: [Movement]
+      summary: Step to next die
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "StepNextDie"
+                  params: {}
+      responses:
+        '200':
+          description: Stepped
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "step-001"
+                    command: "StepNextDie"
+                    status: "success"
+                    output: "Stepped to next die: (6, 10)"
+                    execution_time_ms: 2345.1
+                    timestamp: 1733157002.345
 
-  /svt.wp-agent/GoToContact:
+  /svt.wp-agent.request/GoToPreviousDie:
     post:
-      tags: [Chuck]
-      summary: Lower chuck to contact
+      tags: [Testing]
+      summary: Move to previous die
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToPreviousDie"
+                  params: {}
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "prev-001"
+                    command: "GoToPreviousDie"
+                    status: "success"
+                    output: "Moved to previous die"
+                    execution_time_ms: 2123.4
+                    timestamp: 1733157102.123
 
-  /svt.wp-agent/GoToSeparation:
+  /svt.wp-agent.request/MoveChuckHome:
     post:
-      tags: [Chuck]
-      summary: Raise chuck to separation
+      tags: [Movement]
+      summary: Move chuck to home
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "MoveChuckHome"
+                  params: {}
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '200':
+          description: Moved home
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "home-001"
+                    command: "MoveChuckHome"
+                    status: "success"
+                    output: "Chuck moved home"
+                    execution_time_ms: 3456.7
+                    timestamp: 1733156003.456
 
-  /svt.wp-agent/FindHome:
+  /svt.wp-agent.request/MoveChuckToWorkArea:
     post:
-      tags: [Chuck]
-      summary: Home axes
+      tags: [Movement]
+      summary: Move to work area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              Probing:
+                value:
+                  type: "MoveChuckToWorkArea"
+                  params:
+                    work_area: 0
+              OffAxis:
+                value:
+                  type: "MoveChuckToWorkArea"
+                  params:
+                    work_area: 1
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "work-001"
+                    command: "MoveChuckToWorkArea"
+                    status: "success"
+                    output: "Moved to 0 workarea"
+                    execution_time_ms: 4567.8
+                    timestamp: 1733156104.567
 
   #########################
-  # Camera
+  # Positioning
   #########################
 
-  /svt.wp-agent/AutoFocus:
+  /svt.wp-agent.request/FindHome:
     post:
-      tags: [Camera]
+      tags: [Positioning]
+      summary: Find home position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              UseStoredDie:
+                value:
+                  type: "FindHome"
+                  params: {}
+              SpecificDie:
+                value:
+                  type: "FindHome"
+                  params:
+                    home_die_col: 1
+                    home_die_row: 1
+      responses:
+        '200':
+          description: Home found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "home-001"
+                    command: "FindHome"
+                    status: "success"
+                    output: "Found home position"
+                    execution_time_ms: 15234.5
+                    timestamp: 1733156115.234
+
+  #########################
+  # Probe Control
+  #########################
+
+  /svt.wp-agent.request/GoToContact:
+    post:
+      tags: [Probe Control]
+      summary: Move probes to contact
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToContact"
+                  params: {}
+      responses:
+        '200':
+          description: At contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "contact-001"
+                    command: "GoToContact"
+                    status: "success"
+                    output: "Probe station is in contact"
+                    execution_time_ms: 1234.5
+                    timestamp: 1733155901.234
+
+  /svt.wp-agent.request/GoToSeparation:
+    post:
+      tags: [Probe Control]
+      summary: Move probes to separation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToSeparation"
+                  params: {}
+      responses:
+        '200':
+          description: At separation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "sep-001"
+                    command: "GoToSeparation"
+                    status: "success"
+                    output: "Probe station is in separation"
+                    execution_time_ms: 987.6
+                    timestamp: 1733156000.987
+
+  #########################
+  # Vision
+  #########################
+
+  /svt.wp-agent.request/AlignWafer:
+    post:
+      tags: [Vision]
+      summary: Perform wafer alignment
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              UseStoredDie:
+                value:
+                  type: "AlignWafer"
+                  params: {}
+              SpecificDie:
+                value:
+                  type: "AlignWafer"
+                  params:
+                    align_die_col: 5
+                    align_die_row: 10
+      responses:
+        '200':
+          description: Aligned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "align-001"
+                    command: "AlignWafer"
+                    status: "success"
+                    output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
+                    execution_time_ms: 45678.9
+                    timestamp: 1733156745.678
+
+  /svt.wp-agent.request/AutoFocus:
+    post:
+      tags: [Vision]
       summary: Auto-focus active camera
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "AutoFocus"
+                  params: {}
       responses:
         '200':
           description: Focused
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Ok:
-                  value: { status: success, output: "Auto-focus command successfully executed." }
-        '412':
-          description: Not initialized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                NotInitialized:
+                Success:
                   value:
-                    status: PreconditionFailed
-                    error:
-                      code: WP_412
-                      message: "Not initialized. Call Initialize first."
-                      hint: "Call Initialize with address/machine_type, then retry AutoFocus."
-                      context: { command: AutoFocus }
-        '500':
-          description: Driver error (camera not available, etc.)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: "CommandReply"
+                    request_id: "focus-001"
+                    command: "AutoFocus"
+                    status: "success"
+                    output: "Auto-focus command successfully executed"
+                    execution_time_ms: 15234.6
+                    timestamp: 1733156215.234
 
-  /svt.wp-agent/SwitchCamera:
+  /svt.wp-agent.request/SwitchCamera:
     post:
-      tags: [Camera]
+      tags: [Vision]
       summary: Switch active camera
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SwitchCameraParams'
+              $ref: '#/components/schemas/CommandRequest'
             examples:
+              Chuck:
+                value:
+                  type: "SwitchCamera"
+                  params:
+                    mount_point: "Chuck"
               OffAxis:
-                value: { camera: "OffAxis" }
+                value:
+                  type: "SwitchCamera"
+                  params:
+                    mount_point: "OffAxis"
       responses:
         '200':
           description: Switched
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '412':
-          description: Not initialized
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "cam-001"
+                    command: "SwitchCamera"
+                    status: "success"
+                    output: "Switched camera to Chuck"
+                    execution_time_ms: 1234.5
+                    timestamp: 1733156301.234
+
+  /svt.wp-agent.request/GetCameraStatus:
+    post:
+      tags: [Vision]
+      summary: Get camera status
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetCameraStatus"
+                  params: {}
+      responses:
+        '200':
+          description: Status retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "camstat-001"
+                    command: "GetCameraStatus"
+                    status: "success"
+                    output: "Camera Status: chuck (gain: 1.5, exposure: 50), scope (gain: 2.0, exposure: 100)"
+                    execution_time_ms: 156.3
+                    timestamp: 1733156400.156
 
   #########################
-  # Wafer
+  # Alignment
   #########################
 
-  /svt.wp-agent/Load:
+  /svt.wp-agent.request/RunPTPA:
     post:
-      tags: [Wafer]
-      summary: Load wafer
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  /svt.wp-agent/Unload:
-    post:
-      tags: [Wafer]
-      summary: Unload wafer
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  /svt.wp-agent/AlignWafer:
-    post:
-      tags: [Wafer]
-      summary: Run wafer alignment routine
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  /svt.wp-agent/Cleaning:
-    post:
-      tags: [Wafer]
-      summary: Start cleaning procedure (if supported)
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  #########################
-  # Testing
-  #########################
-
-  /svt.wp-agent/RunPTPA:
-    post:
-      tags: [Testing]
-      summary: Start PTPA automation
-      responses:
-        '200': { description: Started/Completed, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-        '500': { description: Driver error, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  /svt.wp-agent/StepNextDie:
-    post:
-      tags: [Testing]
-      summary: Step to the next die
-      responses:
-        '200': { description: Stepped, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  /svt.wp-agent/GoToDie:
-    post:
-      tags: [Testing]
-      summary: Move to a specific die (row/col)
+      tags: [Alignment]
+      summary: Run PTPA
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GoToDieParams'
+              $ref: '#/components/schemas/CommandRequest'
             examples:
-              Example:
-                value: { row: 10, col: 15 }
-      responses:
-        '200': { description: Moved, content: { application/json: { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
-        '400': { description: Bad params, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-        '412': { description: Not initialized, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-
-  #########################
-  # Sequencer
-  #########################
-
-  /svt.wp-agent/RunSequencer:
-    post:
-      tags: [Sequencer]
-      summary: Execute a JSON sequence (array of steps)
-      description: |
-        `filepath` must point to a JSON file whose top-level value is an **array** of steps:
-        ```json
-        [
-          { "command": "Initialize", "params": { "address": "...", "machine_type": "sentio" } },
-          { "command": "AutoFocus" }
-        ]
-        ```
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RunSequencerParams'
-            examples:
-              Example:
+              NoParams:
                 value:
-                  filepath: sequencer/NKF7_AutoSequence.json
+                  type: "RunPTPA"
+                  params: {}
+      responses:
+        '200':
+          description: PTPA completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "ptpa-001"
+                    command: "RunPTPA"
+                    status: "success"
+                    output: "PTPA executed"
+                    execution_time_ms: 125678.3
+                    timestamp: 1733157025.678
+
+  #########################
+  # Wafer Handling
+  #########################
+
+  /svt.wp-agent.request/Load:
+    post:
+      tags: [Wafer Handling]
+      summary: Load wafer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "Load"
+                  params: {}
+      responses:
+        '200':
+          description: Loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "load-001"
+                    command: "Load"
+                    status: "success"
+                    output: "Wafer has been loaded to center"
+                    execution_time_ms: 45678.2
+                    timestamp: 1733156545.678
+
+  /svt.wp-agent.request/Unload:
+    post:
+      tags: [Wafer Handling]
+      summary: Unload wafer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "Unload"
+                  params: {}
+      responses:
+        '200':
+          description: Unloaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "unload-001"
+                    command: "Unload"
+                    status: "success"
+                    output: "Wafer unloaded"
+                    execution_time_ms: 38945.1
+                    timestamp: 1733156638.945
+
+  /svt.wp-agent.request/Cleaning:
+    post:
+      tags: [Wafer Handling]
+      summary: Clean probe station
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "Cleaning"
+                  params: {}
+      responses:
+        '200':
+          description: Cleaning completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "clean-001"
+                    command: "Cleaning"
+                    status: "success"
+                    output: "Cleaning completed"
+                    execution_time_ms: 125000.0
+                    timestamp: 1733156925.000
+
+  #########################
+  # Status
+  #########################
+
+  /svt.wp-agent.request/GetInfo:
+    post:
+      tags: [Status]
+      summary: Get current die information
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetInfo"
+                  params: {}
+      responses:
+        '200':
+          description: Info retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "info-001"
+                    command: "GetInfo"
+                    status: "success"
+                    output: "Current die: Count of selected dies 1234, Number 45, Row 10, Column 5"
+                    execution_time_ms: 234.5
+                    timestamp: 1733157400.234
+
+  /svt.wp-agent.request/GetAgentState:
+    post:
+      tags: [System]
+      summary: Get agent state
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetAgentState"
+                  params: {}
+      responses:
+        '200':
+          description: State retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Idle:
+                  value:
+                    type: "CommandReply"
+                    request_id: "state-001"
+                    command: "GetAgentState"
+                    status: "success"
+                    output: "Agent state: Idle"
+                    execution_time_ms: 0.5
+                    timestamp: 1733157500.5
+
+  /svt.wp-agent.request/ListAvailableCommands:
+    post:
+      tags: [Status]
+      summary: List all commands
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ListAvailableCommands"
+                  params: {}
+      responses:
+        '200':
+          description: Commands listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "list-001"
+                    command: "ListAvailableCommands"
+                    status: "success"
+                    output: "42 commands available"
+                    execution_time_ms: 1.2
+                    timestamp: 1733157600.001
+
+  #########################
+  # System
+  #########################
+
+  /svt.wp-agent.request/ResetAgent:
+    post:
+      tags: [System]
+      summary: Reset agent state
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ResetAgent"
+                  params: {}
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "reset-001"
+                    command: "ResetAgent"
+                    status: "success"
+                    output: "Agent state reset from 'Failed' to 'Idle'"
+                    execution_time_ms: 0.3
+                    timestamp: 1733157700.3
+
+  /svt.wp-agent.request/LocalMode:
+    post:
+      tags: [System]
+      summary: Set local mode
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "LocalMode"
+                  params: {}
+      responses:
+        '200':
+          description: Local mode set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "local-001"
+                    command: "LocalMode"
+                    status: "success"
+                    output: "Local mode"
+                    execution_time_ms: 456.7
+                    timestamp: 1733157800.456
+
+  /svt.wp-agent.request/Help:
+    post:
+      tags: [System]
+      summary: Get help
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              AllCommands:
+                value:
+                  type: "Help"
+                  params: {}
+              SpecificCommand:
+                value:
+                  type: "Help"
+                  params:
+                    command: "MoveChuckXY"
+      responses:
+        '200':
+          description: Help displayed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "help-001"
+                    command: "Help"
+                    status: "success"
+                    output: "WPAgent - Available Commands..."
+                    execution_time_ms: 1.8
+                    timestamp: 1733157900.001
+
+  #########################
+  # Database
+  #########################
+
+  /svt.wp-agent.request/ListProbers:
+    post:
+      tags: [Database]
+      summary: List all probers
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ListProbers"
+                  params: {}
+      responses:
+        '200':
+          description: Probers listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "db-001"
+                    command: "ListProbers"
+                    status: "success"
+                    output: "Found 3 wafer probe machine(s)"
+                    execution_time_ms: 2456.3
+                    timestamp: 1733158002.456
+
+  /svt.wp-agent.request/ListChipTypes:
+    post:
+      tags: [Database]
+      summary: List chip types
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ListChipTypes"
+                  params: {}
+      responses:
+        '200':
+          description: Chip types listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "db-002"
+                    command: "ListChipTypes"
+                    status: "success"
+                    output: "Available chip types (3): NKF7, MOSS, MOSAIX"
+                    execution_time_ms: 1876.2
+                    timestamp: 1733158101.876
+
+  /svt.wp-agent.request/ListOrientations:
+    post:
+      tags: [Database]
+      summary: List orientations
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "ListOrientations"
+                  params: {}
+      responses:
+        '200':
+          description: Orientations listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "db-003"
+                    command: "ListOrientations"
+                    status: "success"
+                    output: "Available wafer orientations (4): East, West, North, South"
+                    execution_time_ms: 1654.8
+                    timestamp: 1733158201.654
+
+  #########################
+  # Automation
+  #########################
+
+  /svt.wp-agent.request/RunSequencer:
+    post:
+      tags: [Automation]
+      summary: Execute sequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidSequence:
+                value:
+                  type: "RunSequencer"
+                  params:
+                    filepath: "/sequencer/TestSequence.json"
       responses:
         '200':
           description: Sequence executed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/CommandReply'
               examples:
-                Done:
+                Success:
                   value:
-                    status: success
-                    output: "Sequence from /abs/path/NKF7_AutoSequence.json executed successfully."
-        '404':
-          description: File not found / invalid path
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                MissingFile:
-                  value:
-                    status: NotFound
-                    error:
-                      code: WP_404
-                      message: "Sequence file not found: /abs/path/seq.json"
-                      hint: "Check the path. Use an absolute path if running from another cwd."
-                      context: { command: RunSequencer, filepath: "/abs/path/seq.json" }
-        '400':
-          description: Invalid JSON / wrong top-level structure (must be array)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: "CommandReply"
+                    request_id: "seq-001"
+                    command: "RunSequencer"
+                    status: "success"
+                    output: "Sequence from /sequencer/TestSequence.json executed successfully"
+                    execution_time_ms: 89456.7
+                    timestamp: 1733157389.456
 
 components:
   schemas:
-
-    # -------- Request Schemas --------
-
-    InitializeParams:
+    # Generic request envelope used by most commands
+    CommandRequest:
       type: object
-      required: [address, machine_type]
+      required: [type]
       properties:
-        address:
+        type:
           type: string
-          description: Host:port of the prober controller.
-          example: wpmit01.cern.ch:35555
-        machine_type:
+          description: Command name
+          example: "ShowProjectStatus"
+        params:
+          type: object
+          description: Command-specific parameters
+          additionalProperties: true
+
+    # Specialized request for Initialize (with detailed params)
+    InitializeRequest:
+      type: object
+      required: [type]
+      properties:
+        type:
           type: string
-          description: Prober driver type (e.g., "sentio").
-          example: sentio
-        project_name:
+          enum: [Initialize]
+        params:
+          type: object
+          properties:
+            address:
+              type: string
+              example: "WPMIT01.cern.ch:35555"
+            machine_type:
+              type: string
+              example: "sentio"
+            project_name:
+              type: string
+            alignment_die:
+              type: string
+              example: "2,2,0"
+            home_die:
+              type: string
+              example: "5,2,0"
+            force:
+              type: boolean
+            with_db:
+              type: boolean
+
+    # What kafka_client sends back
+    CommandReply:
+      type: object
+      required: [type, request_id, command, status, output, execution_time_ms, timestamp]
+      properties:
+        type:
           type: string
-          nullable: true
-          description: Optional project name to open upon initialization.
-
-    OpenProjectParams:
-      type: object
-      properties:
-        project_name:
+          enum: [CommandReply]
+        request_id:
           type: string
-          description: Project name to open (optional if already set globally).
-
-    MoveChuckXYParams:
-      type: object
-      required: [x, y]
-      properties:
-        x:
-          type: number
-          format: double
-          description: X (µm)
-        y:
-          type: number
-          format: double
-          description: Y (µm)
-
-    MoveChuckToWorkAreaParams:
-      type: object
-      required: [work_area]
-      properties:
-        work_area:
-          type: integer
-          enum: [0, 1]
-          description: 0=Probing, 1=Off-Axis
-
-    GoToDieParams:
-      type: object
-      required: [row, col]
-      properties:
-        row:
-          type: integer
-        col:
-          type: integer
-
-    SwitchCameraParams:
-      type: object
-      properties:
-        camera:
+          format: uuid
+        command:
           type: string
-          description: Optional camera name (driver dependent).
-          example: OffAxis
-
-    RunSequencerParams:
-      type: object
-      required: [filepath]
-      properties:
-        filepath:
-          type: string
-          description: Path to a JSON file with an **array** of {command,params} steps.
-
-    # -------- Response Schemas --------
-
-    SuccessResponse:
-      type: object
-      required: [status, output]
-      properties:
         status:
           type: string
-          enum: [success]
+          enum: [success, error]
         output:
           type: string
-          description: Human-readable summary.
-
-
-    ErrorResponse:
-      type: object
-      required: [status, error]
-      properties:
-        status:
-          type: string
-          enum:
-            - BadRequest
-            - NotFound
-            - PreconditionFailed
-            - UnexpectedError
-            - Timeout
-        error:
+        execution_time_ms:
+          type: number
+          format: double
+        timestamp:
+          type: number
+          format: double
+        data:
           type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              example: WP_412
-            message:
-              type: string
-            hint:
-              type: string
-              nullable: true
-            context:
-              type: object
-              nullable: true
-              additionalProperties: true
-            correlationId:
-              type: string
-              nullable: true
+          nullable: true
+          description: Optional extra structured payload
+          additionalProperties: true

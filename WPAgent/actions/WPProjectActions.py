@@ -597,23 +597,6 @@ def help_command(command=None):
 
         output_lines.append("")
 
-        # # Additional examples if present
-        # if 'example_db' in cmd_info:
-        #     output_lines.append("")
-        #     output_lines.append("Database mode:")
-        #     output_lines.append(f"  {cmd_info['example_db']}")
-        #
-        # if 'example_specific' in cmd_info:
-        #     output_lines.append("")
-        #     output_lines.append("Get help for specific command:")
-        #     output_lines.append(f"  {cmd_info['example_specific']}")
-        #
-        # if 'notes' in cmd_info:
-        #     output_lines.append("")
-        #     output_lines.append("Notes:")
-        #     output_lines.append(f"  {cmd_info['notes']}")
-        #
-        # output_lines.append("")
         output_lines.append("=" * 70)
 
         return {
