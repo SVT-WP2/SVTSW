@@ -1,6 +1,7 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
 from sentio_prober_control.Sentio.Enumerations import *
 from interfaces.prober_interface import AbstractProber
+from sentio_prober_control.Sentio.Enumerations import ChuckXYReference, ChuckZReference
 
 
 class SentioProberImpl(AbstractProber):
@@ -18,13 +19,9 @@ class SentioProberImpl(AbstractProber):
         return self.prober.move_chuck_xy(ChuckXYReference.Zero, x, y)
 
     def move_chuck_z(self, z: float):
-        return self.prober.move_chuck_z(ChuckXYReference.Zero, z)
+        return self.prober.move_chuck_z(ChuckZReference.Zero, z)
 
     def run_ptpa(self):
-        # self.prober.vision.switch_camera(CameraMountPoint.OffAxis)
-        # self.prober.vision.auto_focus()
-        # TODO: Have to be tested
-        # self.prober.vision.compensation.start_execute(mode='OffAxis',type='BothWithProbeTips')
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
         self.prober.wait_complete(resp.cmd_id())
 
@@ -33,7 +30,6 @@ class SentioProberImpl(AbstractProber):
 
     def step_prev_die(self):
         return self.prober.send_cmd("map:step_previous_die")
-
 
     def go_to_die(self, col: int, row: int):
         return self.prober.map.step_die(col, row)
@@ -63,6 +59,7 @@ class SentioProberImpl(AbstractProber):
         print(f"Column Index {col}, Row Index {row}, Subsite Index: {sub}")
         # TODO : Have to be tested
         self.prober.vision.align_wafer()
+
         # reps = self.prober.send_cmd(f"vis:align_wafer")
         # self.prober.wait_complete(reps.cmd_id())
 
@@ -73,7 +70,8 @@ class SentioProberImpl(AbstractProber):
         self.prober.move_chuck_separation()
 
     def auto_focus(self):
-        self.prober.vision.auto_focus()
+        resp= self.prober.vision.auto_focus()
+        self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_work_area(self, work_area):
         from sentio_prober_control.Sentio.Enumerations import WorkArea
