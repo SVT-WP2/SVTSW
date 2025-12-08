@@ -277,13 +277,14 @@ python3.12 main.py send FindHome
 ### 3. Using Python API
 
 ```python
-from wafer_prober_agent import WaferProberAgent
+from WPAgent import WaferProberAgent
 
 # Create agent
 agent = WaferProberAgent()
 
 # Initialize prober from database (interactive)
 from services.WPInitializationService import WPInitializationService
+
 init_service = WPInitializationService(agent)
 result = init_service.initialize_from_database()
 
@@ -367,7 +368,7 @@ python3.12 main.py send ShowProjectStatus
 #### Basic Usage
 
 ```python
-from wafer_prober_agent import WaferProberAgent
+from WPAgent import WaferProberAgent
 
 agent = WaferProberAgent()
 
@@ -384,7 +385,7 @@ else:
 #### Advanced Usage with Error Handling
 
 ```python
-from wafer_prober_agent import WaferProberAgent
+from WPAgent import WaferProberAgent
 
 agent = WaferProberAgent()
 
@@ -394,19 +395,19 @@ try:
         "address": "WPMIT01.cern.ch:35555",
         "machine_type": "sentio"
     })
-    
+
     if result["status"] != "success":
         raise Exception(f"Initialization failed: {result['output']}")
-    
+
     # Load wafer
     result = agent.send("Load")
-    
+
     # Run alignment
     result = agent.send("RunPTPA")
-    
+
     # Move to first die
     result = agent.send("StepFirstDie")
-    
+
 except Exception as e:
     print(f"Error: {e}")
 ```
@@ -414,7 +415,7 @@ except Exception as e:
 #### Database Initialization
 
 ```python
-from wafer_prober_agent import WaferProberAgent
+from WPAgent import WaferProberAgent
 from services.WPInitializationService import WPInitializationService
 
 agent = WaferProberAgent()

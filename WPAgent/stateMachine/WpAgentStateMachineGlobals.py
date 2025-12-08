@@ -1,0 +1,3 @@
+from stateMachine.WpAgentStateMachine import SvtWpAgentStateMachine
+
+agentStateMachine = SvtWpAgentStateMachine(maxRetries=3)

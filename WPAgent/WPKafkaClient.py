@@ -5,9 +5,9 @@ import time
 import ast
 import uuid
 from typing import Callable, Optional, Dict, Any, List
-from cmd_map import execute_command
+from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
-from services.listener_heartbeat import ListenerHealthCheck, ListenerHealthMonitor
+from services.WPListenerHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 
 logger = WPAgentLogger()
 

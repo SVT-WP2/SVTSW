@@ -98,7 +98,7 @@ class TestRunner:
 
     def test_sequential_commands(self):
         """Test 2: Execute commands sequentially"""
-        from cmd_map import execute_command
+        from WPCmdMap import execute_command
 
         commands = [
             ("MoveChuckHome", {}),
@@ -116,8 +116,8 @@ class TestRunner:
 
     def test_busy_flag(self):
         """Test 3: Test busy flag blocks concurrent commands"""
-        from cmd_map import execute_command
-        from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+        from WPCmdMap import execute_command
+        from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
         import threading
 
         results = {"first": None, "second": None}
@@ -159,7 +159,7 @@ class TestRunner:
 
     def test_commands_with_params(self):
         """Test 4: Commands with various parameters"""
-        from cmd_map import execute_command
+        from WPCmdMap import execute_command
 
         test_cases = [
             ("MoveChuckXY", {"x": 50, "y": 100}),
@@ -176,9 +176,9 @@ class TestRunner:
 
     def test_state_transitions(self):
         """Test 5: State machine transitions"""
-        from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
-        from stateMachine.SvtWpAgentStateMachine import SvtWpAgentState, SvtWpAgentEvent
-        from cmd_map import execute_command
+        from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+        from stateMachine.WpAgentStateMachine import SvtWpAgentState, SvtWpAgentEvent
+        from WPCmdMap import execute_command
 
         print("\n5a. Initial state:")
         print(f"   State: {agentStateMachine.getState().name}")
@@ -199,7 +199,7 @@ class TestRunner:
 
     def test_invalid_command(self):
         """Test 6: Invalid command handling"""
-        from cmd_map import execute_command
+        from WPCmdMap import execute_command
 
         print("\n6. Testing invalid command...")
         result = execute_command("NonExistentCommand", {})

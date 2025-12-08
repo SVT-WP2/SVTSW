@@ -2,12 +2,12 @@ import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
 import actions.WPDataBaseActions as database_actions
 from utilities.WPAgentLogger import WPAgentLogger, Severity
-from stateMachine.SvtWpAgentStateMachine import SvtWpAgentEvent
-from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+from stateMachine.WpAgentStateMachine import SvtWpAgentEvent
+from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 
-from services.listener_heartbeat import ListenerHealthCheck
+from services.WPListenerHeartbeat import ListenerHealthCheck
 
 COMMAND_ROUTER = {
 
@@ -79,7 +79,7 @@ def _try_local_mode():
     """Try to set prober to local mode after error"""
     try:
         from drivers.WPFactory import ProberFactory
-        from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         factory = ProberFactory.get_instance()
         if factory.is_initialized():

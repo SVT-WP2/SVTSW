@@ -196,7 +196,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         # With subsite
         AlignWafer(align_die_col=5, align_die_row=10, subsite=1)
     """
-    from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     # Check if initialized
     error = _ensure_initialized()

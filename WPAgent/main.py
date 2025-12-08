@@ -1,4 +1,4 @@
-from wafer_prober_agent import WaferProberAgent
+from WPAgent import WaferProberAgent
 import fire
 import sys
 

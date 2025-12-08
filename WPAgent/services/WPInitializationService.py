@@ -3,7 +3,7 @@ Initialization Service for Wafer Prober Agent
 Handles database-driven and manual initialization with producer-side interaction
 """
 
-from services.kafka_db_service import KafkaDBService
+from services.WPKafkaDbService import KafkaDBService
 
 
 class WPInitializationService:

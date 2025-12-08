@@ -11,7 +11,7 @@ def run_sequence(filepath=None, executor=None):
     if executor is None:
         return {"status": "error", "output": "Missing executor function for sequence execution."}
 
-    from cmd_map import execute_command  # optional; can be removed now since executor is passed in
+    from WPCmdMap import execute_command  # optional; can be removed now since executor is passed in
     sequencer = WPSequencer(executor=executor)
     sequencer.load_sequence(filepath)
     sequencer.run_sequence()
