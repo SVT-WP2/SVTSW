@@ -90,26 +90,26 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  CLI / Python API / Web Interface                      │  │
 │  │  - Parse commands                                      │  │
-│  │  - Interactive prompts (database selection, etc.)     │  │
+│  │  - Interactive prompts (database selection, etc.)      │  │
 │  │  - Validate parameters                                 │  │
-│  └─────────────────────┬────────────────────────────────┘  │
+│  └─────────────────────┬──────────────────────────────────┘  │
 │                        │                                     │
-│  ┌─────────────────────▼────────────────────────────────┐  │
-│  │  WaferProberAgent                                     │  │
-│  │  - Send commands with unique request IDs             │  │
-│  │  - Check listener health via heartbeat               │  │
-│  │  - Wait for responses with timeout                   │  │
-│  │  - Handle consumer group management                  │  │
-│  └─────────────────────┬────────────────────────────────┘  │
-└────────────────────────┼────────────────────────────────────┘
+│  ┌─────────────────────▼────────────────────────────────┐    │
+│  │  WaferProberAgent                                    │    │
+│  │  - Send commands with unique request IDs             │    │
+│  │  - Check listener health via heartbeat               │    │
+│  │  - Wait for responses with timeout                   │    │
+│  │  - Handle consumer group management                  │    │
+│  └─────────────────────┬────────────────────────────────┘    │
+└────────────────────────┼─────────────────────────────────────┘
                          │
-                    ┌────▼────┐
-                    │  Kafka  │
-                    │  Topics │
-                    │  - svt.wp-agent.request                │
-                    │  - svt.wp-agent.reply                  │
-                    │  - svt.wp-agent.heartbeat              │
-                    └────┬────┘
+                    ┌────▼──────────────────────┐
+                    │  Kafka                    │
+                    │  Topics                   │
+                    │  - svt.wp-agent.request   │
+                    │  - svt.wp-agent.reply     │
+                    │  - svt.wp-agent.heartbeat │
+                    └────┬──────────────────────┘
                          │
 ┌────────────────────────┼────────────────────────────────────┐
 │                    CONSUMER (Hardware Side)                 │
@@ -118,14 +118,14 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 │  │  - Receive commands with static consumer group       │   │
 │  │  - Route to handlers                                 │   │
 │  │  - Send replies with metadata                        │   │
-│  │  - Publish heartbeats every 5 seconds               │   │
+│  │  - Publish heartbeats every 5 seconds                │   │
 │  └─────────────────────┬────────────────────────────────┘   │
 │                        │                                    │
 │  ┌─────────────────────▼────────────────────────────────┐   │
 │  │  Command Handlers (Actions)                          │   │
 │  │  - Execute commands                                  │   │
-│  │  - Manage state (Idle/Busy/Error/Failed)           │   │
-│  │  - Store die positions and project info             │   │
+│  │  - Manage state (Idle/Busy/Error/Failed)             │   │
+│  │  - Store die positions and project info              │   │
 │  │  - Control hardware via drivers                      │   │
 │  └─────────────────────┬────────────────────────────────┘   │
 │                        │                                    │
@@ -142,10 +142,10 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 
 ```
 WPAgent/
-├── wafer_prober_agent.py       # Main API - Producer side
-├── kafka_client.py              # Kafka communication layer
-├── cmd_map.py                   # Command routing
-├── command_handler.py           # Command execution
+├── WPAgent.py       # Main API - Producer side
+├── WPKafkaClient.py              # Kafka communication layer
+├── WPCmdMap.py                   # Command routing
+├── WPCommandHandler.py           # Command execution
 │
 ├── actions/                     # Command handlers (Consumer side)
 │   ├── WPProjectActions.py     # Initialization & project commands
@@ -154,17 +154,17 @@ WPAgent/
 │   └── WPDataBaseActions.py    # Database queries
 │
 ├── drivers/                     # Hardware drivers
-│   ├── prober_interface.py     # Abstract interface
-│   ├── sentio_prober.py        # SENTIO implementation
-│   └── factory.py              # Driver factory
+│   ├── WPProberInterface.py     # Abstract interface
+│   ├── WPSentioProber.py        # SENTIO implementation
+│   └── WPFactory.py              # Driver factory
 │
 ├── services/                    # Services
 │   ├── WPInitializationService.py  # Producer-side init with DB selection
-│   ├── kafka_db_service.py     # Database service with unique consumer groups
-│   └── listener_heartbeat.py   # Health monitoring
+│   ├── WPKafkaDbService.py     # Database service with unique consumer groups
+│   └── WPListenerHeartbeat.py   # Health monitoring
 │
 ├── globals/                     # Global state
-│   └── svtWPAagentGlobalParameters.py  # Stores die positions, state
+│   └── WPAagentGlobalParameters.py  # Stores die positions, state
 │
 └── WPAgentUtilities/           # Utilities
     ├── WPAgentLogger.py        # Logging with file and console output
@@ -199,7 +199,7 @@ pip install confluent-kafka fire
 
 #### 1. Kafka Configuration
 
-Edit `kafka_client.py` or set environment variables:
+Edit `WPKafkaClient.py` or set environment variables:
 
 ```bash
 export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
@@ -543,7 +543,7 @@ python3.12 main.py send ListProbers
 
 ### Kafka Configuration
 
-Edit `kafka_client.py` or set environment variables:
+Edit `WPKafkaClient.py` or set environment variables:
 
 ```python
 # Default configuration
@@ -556,7 +556,7 @@ CONSUMER_GROUP_ID = "wp-agent-listener"  # Static for listener
 
 ### Database Kafka Configuration
 
-Edit `kafka_db_service.py`:
+Edit `WPKafkaDbService.py`:
 
 ```python
 # Database Kafka broker
@@ -583,7 +583,7 @@ CONSOLE_LOGGING = True
 
 ### Timeout Configuration
 
-Edit `wafer_prober_agent.py`:
+Edit `WPAgent.py`:
 
 ```python
 # Command timeout (seconds)
@@ -693,7 +693,7 @@ def my_new_command(param1: str, param2: int, address=None, machine_type=None):
         }
 ```
 
-2. **Register in cmd_map.py**:
+2. **Register in WPCmdMap.py**:
 
 ```python
 COMMAND_MAP = {
@@ -951,6 +951,6 @@ def example_function(param1: str, param2: int) -> dict:
 
 **[⬆ Back to Top](#-wafer-prober-agent-wp-agent)**
 
-Made with ❤️ at CERN | Powered by 
+Made with ❤️  | Powered by 
 
 </div>
