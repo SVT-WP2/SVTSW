@@ -20,5 +20,5 @@ class CommandHandler:
         return list(commands_list.keys())
 
     def handleCommand(self, command, params=None):
-        from cmd_map import execute_command
+        from WPCmdMap import execute_command
         return execute_command(command, params)

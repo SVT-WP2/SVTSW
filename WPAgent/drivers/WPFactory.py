@@ -1,4 +1,4 @@
-from drivers.sentio_prober import SentioProberImpl
+from drivers.WPSentioProber import SentioProberImpl
 
 # Add any other machine used for WP testing
 prober_classes = {

@@ -1,4 +1,4 @@
-from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
 
 def resolve_project_parameters(address=None, project_name=None, machine_type=None):

@@ -1,5 +1,5 @@
 
-from services.kafka_db_service import KafkaDBService
+from services.WPKafkaDbService import KafkaDBService
 
 # Module-level singleton
 _db_service = None

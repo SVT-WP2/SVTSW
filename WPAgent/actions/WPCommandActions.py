@@ -1,5 +1,5 @@
 import json
-from command_handler import CommandHandler
+from WPCommandHandler import CommandHandler
 
 def list_available_commands(router, **kwargs):
     handler = CommandHandler.getInstance()

@@ -1,6 +1,6 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
 from sentio_prober_control.Sentio.Enumerations import *
-from interfaces.prober_interface import AbstractProber
+from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio.Enumerations import ChuckXYReference, ChuckZReference
 
 

@@ -1,6 +1,6 @@
 import time
 import random
-from interfaces.prober_interface import AbstractProber
+from interfaces.WPProberInterface import AbstractProber
 
 
 class MockProberImpl(AbstractProber):

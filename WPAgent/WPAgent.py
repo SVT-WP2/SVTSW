@@ -1,5 +1,5 @@
-from kafka_client import KafkaClient
-from services.listener_heartbeat import ListenerHealthCheck
+from WPKafkaClient import KafkaClient
+from services.WPListenerHeartbeat import ListenerHealthCheck
 import threading
 import time
 

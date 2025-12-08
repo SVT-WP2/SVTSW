@@ -1,7 +1,7 @@
-from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
+from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
 from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
-from services.kafka_db_service import KafkaDBService
+from services.WPKafkaDbService import KafkaDBService
 import json
 import os
 
@@ -328,7 +328,7 @@ def get_project_status():
     - Agent state
     """
     from drivers.WPFactory import ProberFactory
-    from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+    from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
@@ -465,7 +465,7 @@ def reset_agent_state():
 
     Use this to recover from Failed state.
     """
-    from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+    from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
     old_state = agentStateMachine.getState().name
 
@@ -491,7 +491,7 @@ def get_agent_state():
     Get current agent state.
     This command ALWAYS works, even when agent is in Failed state.
     """
-    from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
+    from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
     state = agentStateMachine.getState()
     current_command = agentStateMachine.getCurrentCommand()
