@@ -1,4 +1,4 @@
-from drivers.factory import get_prober
+from drivers.WPFactory import get_prober
 from utilities.WPHelpers import resolve_project_parameters
 import os
 

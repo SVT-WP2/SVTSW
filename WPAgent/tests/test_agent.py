@@ -19,7 +19,7 @@ USE_MOCK_PROBER = True  # Set to True to use mock prober
 
 def setup_mock_prober():
     """Configure factory to use mock prober"""
-    from drivers import factory
+    from drivers import WPFactory
     from tests.mock_prober import MockProberImpl, SlowMockProberImpl
 
     # Add mock prober to factory
@@ -79,7 +79,7 @@ class TestRunner:
     def test_initialization(self):
         """Test 1: Initialize the agent"""
         from actions.WPProjectActions import svt_initialise_wp
-        from drivers.factory import ProberFactory
+        from drivers.WPFactory import ProberFactory
 
         print("\n1. Initializing WP Agent...")
         result = svt_initialise_wp(
