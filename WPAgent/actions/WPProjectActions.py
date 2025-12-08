@@ -1,5 +1,5 @@
 from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
-from drivers.factory import get_prober, ProberFactory
+from drivers.WPFactory import get_prober, ProberFactory
 from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
 from services.kafka_db_service import KafkaDBService
 import json
@@ -155,7 +155,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
             initialization_mode="database"
         )
     """
-    from drivers.factory import ProberFactory
+    from drivers.WPFactory import ProberFactory
 
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
@@ -327,7 +327,7 @@ def get_project_status():
     - Total number of dies on wafer map
     - Agent state
     """
-    from drivers.factory import ProberFactory
+    from drivers.WPFactory import ProberFactory
     from stateMachine.SvtWpAgentStateMachineGlobals import agentStateMachine
 
     globals_ = SvtWPAagentGlobalParameters.getInstance()

@@ -46,7 +46,7 @@ def ensure_prober_initialized(address=None, machine_type=None, project_name=None
     Returns:
         dict: Status result with 'status' and 'output' keys
     """
-    from drivers.factory import ProberFactory
+    from drivers.WPFactory import ProberFactory
 
     factory = ProberFactory.get_instance()
 
@@ -92,7 +92,7 @@ def check_prober_ready():
     Returns:
         tuple: (is_ready: bool, message: str)
     """
-    from drivers.factory import ProberFactory
+    from drivers.WPFactory import ProberFactory
 
     factory = ProberFactory.get_instance()
 

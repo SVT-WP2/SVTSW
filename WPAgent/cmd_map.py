@@ -78,7 +78,7 @@ def _exec_in_sequence(message_type, params=None):
 def _try_local_mode():
     """Try to set prober to local mode after error"""
     try:
-        from drivers.factory import ProberFactory
+        from drivers.WPFactory import ProberFactory
         from globals.svtWPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         factory = ProberFactory.get_instance()
