@@ -1,0 +1,895 @@
+openapi: '3.0.1'
+info:
+  title: SVT Test Agent
+  description: |
+    The Kafka communication layer definitions for `SVT Test Agent Service`.
+
+    ### Naming Conventions
+    - The path format of routes has the format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - Final replies are sent to the `*.reply` topic:
+      - request topic `svt.test-agent.request` → reply topic `svt.test-agent.request.reply`
+    - Streaming (progress) updates are sent to `svt.test-agent.status` with type `*StreamReply`.
+
+    ### POST Request Meaning
+    - **Request body** describes the Kafka message you publish to the request topic.
+    - **200 Response** documents the message emitted to `*.reply`.
+    - To demonstrate streaming vs final replies, the 200 response uses `oneOf` with examples.
+
+    ### Useful Links
+    - Online Swagger Editor: https://editor-next.swagger.io
+    - SVT Kafka Naming Conventions: https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md
+  version: 0.0.1
+
+paths:
+  /svt.test-agent.request/RunTestNew:
+    post:
+      tags: [Test Execution]
+      summary: RunTest — New
+      description: |
+        Starts a completely new test and produces reply messages:
+
+        - **Stream reply** (`RunTestStreamReply`): sent repeatedly while the test is running.
+        - **Final reply** (`RunTestReply`): sent once when the test finishes.
+
+        Both share the same envelope but differ by the `type` field.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunTestNewMessage'
+            examples:
+              example:
+                value:
+                  command: "RunTest: New"
+                  data:
+                    chipId: "<integer>"
+                    testId: "<integer>"
+                    testSetupId: "<integer>"
+                    configId: "<integer>"
+                    requestId: "<C<chipId>_T<testId>>"
+                    params:
+                      chipName: "<string>"
+                      testName: "<string>"
+                      testConfiguration:
+                        "<Configuration parameters related to the test>": "<values>"
+                      inputs:
+                        "<Input parameters related to the test>": "<values>"
+      responses:
+        '200':
+          description: Reply messages (both stream and final).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RunTestReplyMessage'
+                  - $ref: '#/components/schemas/RunTestStreamReplyMessage'
+              examples:
+                stream:
+                  summary: Streaming status update
+                  value:
+                    type: "RunTestStreamReply"
+                    testStatus: "TestRunning"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      message: "Progress level of the test (e.g., 'TestRunning: <chipName> <testName> 80%.')"
+                final:
+                  summary: Final reply
+                  value:
+                    type: "RunTestReply"
+                    testStatus: "TestSuccess"
+                    requestId: "<C<chipId>_T<testId>>"
+                    testValues:
+                      inputs:
+                        "<Input parameters related to the test>": "<values>"
+                      outputs:
+                        "<Output parameters related to the test results>": "<values>"
+                error:                                     
+                  summary: Error reply (same envelope as replies; failure case)
+                  value:
+                    type: "RunTestReply"
+                    status: "TestFail/TestAgentFail/DBAgentFail/DBFail/KafkaFail"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      error: "specific error message(e.g. , 'Abort failed: No active test to abort.')"
+              
+  /svt.test-agent.request/RunTestPreDef:
+    post:
+      tags: [Test Execution]
+      summary: RunTest — PreDef
+      description: |
+        Run a test using predefined chip/test/setup/config on the database.
+        User supplies only `inputs` (no `testConfiguration`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunTestPreDefMessage'
+            examples:
+              example:
+                value:
+                  command: "RunTest: PreDef"
+                  data:
+                    chipId: "<integer>"
+                    testId: "<integer>"
+                    testSetupId: "<integer>"
+                    configId: "<integer>"
+                    requestId: "<C<chipId>_T<testId>>"
+                    params:
+                      inputs:
+                        "<Input parameters related to the test>": "<values>"
+      responses:
+        '200':
+          description: Reply messages (both stream and final).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RunTestReplyMessage'
+                  - $ref: '#/components/schemas/RunTestStreamReplyMessage'
+              examples:
+                stream:
+                  summary: Streaming status update
+                  value:
+                    type: "RunTestStreamReply"
+                    testStatus: "TestRunning"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      message: "Progress level of the test (e.g., 'TestRunning: <chipName> <testName> 80%.')"
+                final:
+                  summary: Final reply
+                  value:
+                    type: "RunTestReply"
+                    testStatus: "TestSuccess"
+                    requestId: "<C<chipId>_T<testId>>"
+                    testValues:
+                      inputs:
+                        "<Input parameters related to the test>": "<values>"
+                      outputs:
+                        "<Output parameters related to the test results>": "<values>"
+                error:                                     
+                  summary: Error reply (same envelope as replies; failure case)
+                  value:
+                    type: "RunTestReply"
+                    status: "TestFail/TestAgentFail/DBAgentFail/DBFail/KafkaFail"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      error: "specific error message(e.g. , 'Abort failed: No active test to abort.')"
+                      
+  /svt.test-agent.request/RunTestLoop:
+    post:
+      tags: [Test Execution]
+      summary: RunTest — Loop
+      description: |
+        Runs a test in a loop for a specified number of iterations and produces reply messages:
+
+        - **Stream replies** (`RunLoopTestStreamReply`):
+          - **start** phase
+          - per-iteration **running** updates
+          - per-iteration **ends** notifications (with that iteration's results)
+        - **Final reply** (`RunLoopTestReply`): includes results for all iterations.
+        - **Error reply** (`ErrorReplyMessage`): sent if the request fails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunTestLoopMessage'
+            examples:
+              example:
+                value:
+                  command: "RunTest: Loop"
+                  requestId: "<C<chipId>_T<testId>>"
+                  data:
+                    chipId: integer
+                    testId: integer
+                    testSetupId: integer
+                    configId: integer
+                    params:
+                      iterations: integer
+                      inputs:
+                        "<Input parameters related to the test>": "<values>"
+      responses:
+        '200':
+          description: Reply messages (stream, final, or error).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RunLoopTestStreamReplyMessage'
+                  - $ref: '#/components/schemas/RunLoopTestReplyMessage'
+                  - $ref: '#/components/schemas/ErrorReplyMessage'
+              examples:
+                loop-start:
+                  summary: Loop start (stream)
+                  value:
+                    type: "RunLoopTestStreamReply"
+                    testStatus: "TestRunning"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      phase: "start"
+                      iterations: integer
+                      message: "Loop starting."
+                iteration-running:
+                  summary: Iteration running (stream)
+                  value:
+                    type: "RunLoopTestStreamReply"
+                    testStatus: "TestRunning"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      iteration: integer
+                      totalIterations: integer
+                      phase: "Looping"
+                      message: "Progress level of the test (e.g., 'TestLoopRunning-Iteration 1/2: SLDO PowerRampUp 20%.')"
+                iteration-ends:
+                  summary: Iteration ends (stream)
+                  value:
+                    type: "RunLoopTestStreamReply"
+                    testStatus: "TestRunning"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      iteration: integer
+                      completed: true
+                      outputs:
+                        inputs:
+                          "<Input parameters related to the test>": "<values>"
+                        outputs:
+                          "<Output parameters related to the test results>": "<values>"
+                final:
+                  summary: Final reply (all iterations)
+                  value:
+                    type: "RunLoopTestReply"
+                    testStatus: "TestSuccess"
+                    requestId: "<C<chipId>_T<testId>>"
+                    testValues:
+                      iterations:
+                        - Iteration: integer
+                            inputs:
+                              "<Input parameters related to the test>": "<values>"
+                            outputs:
+                              "<Output parameters related to the test results>": "<values>"
+                        - Iteration: integer
+                            inputs:
+                              "<Input parameters related to the test>": "<values>"
+                            outputs:
+                              "<Output parameters related to the test results>": "<values>"
+                error:                                     
+                  summary: Error reply (same envelope as replies; failure case)
+                  value:
+                    type: "RunLoopTestReply"
+                    status: "TestFail/TestAgentFail/DBAgentFail/DBFail/KafkaFail"
+                    requestId: "<C<chipId>_T<testId>>"
+                    statusDetails:
+                      error: "specific error message(e.g. , 'Abort failed: No active test to abort.')"
+                      
+  /svt.test-agent.request/RunTestSequence:
+    post:
+      tags: [Test Execution]
+      summary: RunTest — Sequence
+      description: |
+        Executes a **sequence of test steps** as a single plan.
+
+        - **Stream replies** (`RunTestSequenceStreamReply`):
+          - Sequence start
+          - Per-step start/progress/completion updates
+          - Sequence end
+        - **Final reply** (`RunTestSequenceReply`): detailed results for all steps.
+        - **Error reply** (`ErrorReplyMessage`): sent if execution fails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunTestSequenceMessage'
+            examples:
+              example:
+                value:
+                  command: "RunTest: Sequence"
+                  requestId: "C0000_T0000000"
+                  data:
+                    chipId: 0
+                    params:
+                      planName: "Demo sequence"
+                      chipName: "SLDO"
+                      steps:
+                        - testId: 12
+                          iterations: 2
+                          inputs:
+                            vInTarget(V): 1.5
+                            iInLimit(A): 1.5
+                            rampRate(kV/s): 3.1
+                        - testId: 13
+                          testName: "PSRR"
+                          testConfiguration:
+                            mode: 0
+                            loadCapacitance(nF): 100
+                            loadCurrent(mA): 40
+                            temperature(C): 25
+                          inputs:
+                            vInTarget(V): 1.5
+                            iInLimit(A): 1.5
+                            rampRate(kV/s): 3.1
+                            signalAmplitude(mV): 10
+                            signalFrequency(Hz): 10000
+                            
+      responses:
+        '200':
+          description: Reply messages (stream, final, or error).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RunTestSequenceStreamReplyMessage'
+                  - $ref: '#/components/schemas/RunTestSequenceReplyMessage'
+                  - $ref: '#/components/schemas/ErrorReplyMessage'
+              examples:
+                seq-start:
+                  summary: Sequence start
+                  value:
+                    type: "RunTestSequenceStreamReply"
+                    testStatus: "TestRunning"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    statusDetails:
+                      planName: "Demo sequence"
+                      phase: "start"
+                      totalSteps: 2
+                step-start:
+                  summary: Step start
+                  value:
+                    type: "RunTestSequenceStreamReply"
+                    testStatus: "TestRunning"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    statusDetails:
+                      step: 1
+                      chipName: "SLDO"
+                      testName: "PowerRampUp"
+                      iterations: 2
+                      phase: "start"
+                step-progress:
+                  summary: Step progress
+                  value:
+                    type: "RunTestSequenceStreamReply"
+                    testStatus: "TestRunning"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    statusDetails:
+                      step: 1
+                      chipName: "SLDO"
+                      testName: "PowerRampUp"
+                      phase: "Sequence step"
+                      iteration: 1
+                      totalIterations: 2
+                      message: "SequenceStep 1 (SLDO PowerRampUp) : Iteration 1/2 running."
+                step-complete:
+                  summary: Step completed
+                  value:
+                    type: "RunTestSequenceStreamReply"
+                    testStatus: "TestRunning"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    statusDetails:
+                      step: 1
+                      chipName: "SLDO"
+                      testName: "PowerRampUp"
+                      phase: "end"
+                      status: "TestSuccess"
+                      lastMsg: "OK"
+                      testValues: []
+                seq-end:
+                  summary: Sequence end
+                  value:
+                    type: "RunTestSequenceStreamReply"
+                    testStatus: "TestRunning"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    statusDetails:
+                      planName: "Demo sequence"
+                      phase: "finish"
+                      overall: "ok"
+                      message: "Sequence 'Demo sequence' completed."
+                final:
+                  summary: Final reply
+                  value:
+                    type: "RunTestSequenceReply"
+                    testStatus: "TestSuccess"
+                    agentStatus: "TestAgentSuccess"
+                    requestId: "C0000_T0000000"
+                    testValues:
+                      - - step: 1
+                          chipName: "SLDO"
+                          testName: "PowerRampUp"
+                          iterations: 2
+                          status: "TestSuccess"
+                      - - step: 2
+                          chipName: "SLDO"
+                          testName: "PSRR"
+                          iterations: 1
+                          status: "TestSuccess"
+                error:
+                  summary: Error reply
+                  value:
+                    type: "RunTestSequenceReply"
+                    status: "DBFail"
+                    statusDetails:
+                      error: "DB error while fetching test plan."
+                    requestId: "C0000_T0000000"
+
+components:
+  schemas:
+    RequestMessage:
+      type: object
+      required: [command, data]
+      properties:
+        command:
+          type: string
+          description: Exact TestAgent command string.
+          enum:
+            - "RunTest: New"
+            - "RunTest: PreDef"
+            - "RunTest: Loop"
+            - "RunTest: Sequence"
+        data:
+          type: object
+          description: Command payload.
+        requestId:
+          type: string
+          description: Optional identifier for correlating replies with the request.
+
+    ReplyErrorEnvelope:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "RunTestReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        agentStatus:
+          $ref: '#/components/schemas/AgentStatus'
+        requestId:
+          type: string
+        error:
+          type: object
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+
+    # ===== Requests =====
+    RunTestNewMessage:
+      type: object
+      required: [command, data]
+      properties:
+        command:
+          type: string
+          enum: ["RunTest: New"]
+        data:
+          allOf:
+            - $ref: '#/components/schemas/CommonRunEnvelope'
+            - type: object
+              required: [params]
+              properties:
+                params:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonParamsBase'
+                    - type: object
+                      required: [testConfiguration, inputs]
+                      properties:
+                        testConfiguration:
+                          $ref: '#/components/schemas/TestConfiguration'
+                        inputs:
+                          $ref: '#/components/schemas/TestInputs'
+
+    RunTestPreDefMessage:
+      type: object
+      required: [command, data]
+      properties:
+        command:
+          type: string
+          enum: ["RunTest: PreDef"]
+        data:
+          allOf:
+            - $ref: '#/components/schemas/CommonRunEnvelope'
+            - type: object
+              required: [params]
+              properties:
+                params:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonParamsBase'
+                    - type: object
+                      required: [inputs]
+                      properties:
+                        inputs:
+                          $ref: '#/components/schemas/TestInputs'
+                          
+    ErrorStatus:
+      type: string
+      description: High-level failure category for replies that fail before/while running a test.
+      enum:
+        - DBFail
+        - ValidationFail
+        - BackendFail
+        - UnexpectedError
+
+    ErrorStatusDetails:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message (free text).
+
+    ErrorReplyMessage:
+      type: object
+      required: [type, status, statusDetails, requestId]
+      properties:
+        type:
+          type: string
+          example: "RunLoopTestReply"
+          description: Reply type of the failing operation (e.g., RunTestReply, RunLoopTestReply).
+        status:
+          $ref: '#/components/schemas/ErrorStatus'
+        statusDetails:
+          $ref: '#/components/schemas/ErrorStatusDetails'
+        requestId:
+          type: string
+          example: "C0000_T0000012"
+          
+    RunTestLoopMessage:
+      type: object
+      required: [command, data]
+      properties:
+        command:
+          type: string
+          enum: ["RunTest: Loop"]
+        data:
+          allOf:
+            - $ref: '#/components/schemas/CommonRunEnvelope'
+            - type: object
+              required: [params]
+              properties:
+                params:
+                  type: object
+                  required: [iterations, inputs]
+                  properties:
+                    iterations:
+                      type: integer
+                      minimum: 1
+                    inputs:
+                      $ref: '#/components/schemas/TestInputs'
+
+    RunTestSequenceMessage:
+      type: object
+      required: [command, data]
+      properties:
+        command:
+          type: string
+          enum: ["RunTest: Sequence"]
+        data:
+          type: object
+          required: [chipId, params]
+          properties:
+            chipId:
+              type: integer
+            params:
+              type: object
+              required: [planName, steps]
+              properties:
+                planName:
+                  type: string
+                chipName:
+                  type: string
+                steps:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SequenceStep'
+
+    SequenceStep:
+      type: object
+      required: [testId, inputs]
+      properties:
+        testId:
+          type: integer
+        testName:
+          type: string
+        iterations:
+          type: integer
+          default: 1
+        testConfiguration:
+          $ref: '#/components/schemas/TestConfiguration'
+        inputs:
+          $ref: '#/components/schemas/TestInputs'
+
+    SequenceStatusDetails:
+      type: object
+      description: Progress/status for a sequence step or plan.
+      properties:
+        planName:
+          type: string
+        step:
+          type: integer
+        chipName:
+          type: string
+        testName:
+          type: string
+        iterations:
+          type: integer
+        phase:
+          type: string
+        iteration:
+          type: integer
+        totalIterations:
+          type: integer
+        status:
+          type: string
+        lastMsg:
+          type: string
+        message:
+          type: string
+        testValues:
+          type: array
+          items:
+            type: object
+
+    RunTestSequenceStreamReplyMessage:
+      type: object
+      required: [type, testStatus, agentStatus, requestId, statusDetails]
+      properties:
+        type:
+          type: string
+          example: "RunTestSequenceStreamReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        agentStatus:
+          $ref: '#/components/schemas/AgentStatus'
+        requestId:
+          type: string
+        statusDetails:
+          $ref: '#/components/schemas/SequenceStatusDetails'
+
+    RunTestSequenceReplyMessage:
+      type: object
+      required: [type, testStatus, agentStatus, requestId, testValues]
+      properties:
+        type:
+          type: string
+          example: "RunTestSequenceReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        agentStatus:
+          $ref: '#/components/schemas/AgentStatus'
+        requestId:
+          type: string
+        testValues:
+          type: array
+          items:
+            type: array
+            description: Each step group
+            items:
+              type: object
+    # Loop stream reply
+    LoopStatusDetails:
+      type: object
+      description: Loop progress details (fields vary by phase).
+      properties:
+        phase:
+          type: string
+          description: Start/Looping/etc.
+          example: "start"
+        iterations:
+          type: integer
+          description: Present at loop start; total iterations configured.
+        iteration:
+          type: integer
+          description: Current iteration index (1-based).
+        totalIterations:
+          type: integer
+          description: Total iterations in the loop.
+        completed:
+          type: boolean
+          description: True if the referenced iteration is complete.
+        message:
+          type: string
+          description: Human-readable message for this loop status.
+        outputs:
+          $ref: '#/components/schemas/LoopIterationResult'
+
+    LoopIterationResult:
+      type: object
+      properties:
+        inputs:
+          $ref: '#/components/schemas/TestInputs'
+        outputs:
+          type: object
+          properties:
+            vOut(V):
+              type: number
+              example: 1.23
+
+    RunLoopTestStreamReplyMessage:
+      type: object
+      required: [type, testStatus, requestId, statusDetails]
+      properties:
+        type:
+          type: string
+          example: "RunLoopTestStreamReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        requestId:
+          type: string
+          example: "C0000_T0000012"
+        statusDetails:
+          $ref: '#/components/schemas/LoopStatusDetails'
+
+    # Loop final reply
+    LoopIterationSummary:
+      type: object
+      required: [Iteration, inputs, outputs]
+      properties:
+        Iteration:
+          type: integer
+          description: 1-based iteration number (capitalized to match payload).
+        inputs:
+          $ref: '#/components/schemas/TestInputs'
+        outputs:
+          type: object
+          properties:
+            vOut(V):
+              type: number
+              example: 1.23
+
+    LoopTestValues:
+      type: object
+      required: [iterations]
+      properties:
+        iterations:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoopIterationSummary'
+
+    RunLoopTestReplyMessage:
+      type: object
+      required: [type, testStatus, requestId, testValues]
+      properties:
+        type:
+          type: string
+          example: "RunLoopTestReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        requestId:
+          type: string
+          example: "C0000_T0000012"
+        testValues:
+          $ref: '#/components/schemas/LoopTestValues'
+
+    # ===== Common Request Fragments =====
+    CommonRunEnvelope:
+      type: object
+      required: [chipId, testId, testSetupId, configId]
+      properties:
+        chipId:
+          type: number
+        testId:
+          type: number
+        testSetupId:
+          type: number
+        configId:
+          type: number
+
+    CommonParamsBase:
+      type: object
+      properties:
+        chipName:
+          type: string
+          description: Human-readable chip name (e.g., "SLDO").
+        testName:
+          type: string
+          description: Human-readable test name (e.g., "PowerRampUp").
+
+    TestConfiguration:
+      type: object
+      required: [mode, loadCapacitance(nF), loadCurrent(mA), temperature(C)]
+      properties:
+        mode:
+          type: integer
+        loadCapacitance(nF):
+          type: number
+        loadCurrent(mA):
+          type: number
+        temperature(C):
+          type: number
+
+    TestInputs:
+      type: object
+      required: [vInTarget(V), iInLimit(A), rampRate(kV/s)]
+      properties:
+        vInTarget(V):
+          type: number
+        iInLimit(A):
+          type: number
+        rampRate(kV/s):
+          type: number
+
+    # ===== Replies =====
+    RunTestReplyMessage:
+      type: object
+      required: [type, testStatus, agentStatus, requestId, testValues]
+      properties:
+        type:
+          type: string
+          example: "RunTestReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        agentStatus:
+          $ref: '#/components/schemas/AgentStatus'
+        requestId:
+          type: string
+          example: "C0000_T0000012"
+        testValues:
+          $ref: '#/components/schemas/TestValues'
+
+    RunTestStreamReplyMessage:
+      type: object
+      required: [type, testStatus, agentStatus, requestId, statusDetails]
+      properties:
+        type:
+          type: string
+          example: "RunTestStreamReply"
+        testStatus:
+          $ref: '#/components/schemas/TestStatus'
+        agentStatus:
+          $ref: '#/components/schemas/AgentStatus'
+        requestId:
+          type: string
+          example: "C0000_T0000012"
+        statusDetails:
+          $ref: '#/components/schemas/StatusDetails'
+
+    StatusDetails:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: Human-readable progress message.
+          example: "TestRunning: SLDO PowerRampUp 80%."
+        # Optionally add normalized progress & timestamp later:
+        # progressPct:
+        #   type: number
+        #   minimum: 0
+        #   maximum: 100
+        # timestampUtc:
+        #   type: string
+        #   format: date-time
+
+    TestValues:
+      type: object
+      required: [inputs, outputs]
+      properties:
+        inputs:
+          $ref: '#/components/schemas/TestInputs'
+        outputs:
+          type: object
+          properties:
+            vOut(V):
+              type: number
+              example: 1.23
+
+    TestStatus:
+      type: string
+      enum: [TestQueued, TestRunning, TestSuccess, TestFail]
+
+    AgentStatus:
+      type: string
+      enum: [TestAgentSuccess, TestAgentFail]

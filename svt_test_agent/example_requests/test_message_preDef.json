@@ -1,0 +1,25 @@
+{
+    "command": "RunTest: New",
+    "data": {
+        "chipId": 0,
+        "testId": 12,
+        "testSetupId": 0,
+        "configId": 0,
+        "params": {
+            "iteration": 1,
+            "chipName": "SLDO",
+            "testName": "PowerRampUp",
+            "testConfiguration": {
+                "mode": 0,
+                "loadCapacitance(nF)": 10,
+                "loadCurrent(mA)": 40,
+                "temperature(C)": 25
+            },
+            "inputs": {
+                "vInTarget(V)": 1.5,
+                "iInLimit(A)": 1.5,
+                "rampRate(kV/s)": 3.1
+            }
+        }
+    }    
+}
