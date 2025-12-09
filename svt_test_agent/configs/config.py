@@ -17,8 +17,6 @@ from typing import Final
 # =============================================================================
 # Kafka Topics
 # =============================================================================
-# Topics are namespaced under "svt.*" to avoid collisions when multiple agents
-# or systems share the same Kafka cluster.
 
 DB_REQUEST_TOPIC: Final = "svt.db-agent.request"
 DB_REPLY_TOPIC:   Final = "svt.db-agent.request.reply"
