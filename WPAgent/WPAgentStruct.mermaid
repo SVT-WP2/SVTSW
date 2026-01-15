@@ -1,0 +1,196 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fff','primaryTextColor':'#000','primaryBorderColor':'#000','lineColor':'#000','secondaryColor':'#fff','tertiaryColor':'#fff','background':'#ffffff','mainBkg':'#ffffff','secondBkg':'#ffffff','tertiaryBkg':'#ffffff'}}}%%
+graph TB
+    subgraph "Entry Points"
+        CLI[CLI Interface<br/>fire.Fire]
+        MAIN[main.py]
+    end
+
+    subgraph "Agent Core"
+        WPA[WaferProberAgent<br/>wafer_prober_agent.py]
+        WPA_SEND[send method]
+        WPA_LISTEN[listen method]
+        WPA_HEALTH[check_listener_health]
+    end
+
+    subgraph "Communication Layer"
+        KC[KafkaClient<br/>kafka_client.py]
+        PRODUCER[Kafka Producer<br/>localhost:9095]
+        CONSUMER[Kafka Consumer<br/>localhost:9095]
+
+        subgraph "Topics"
+            REQ_TOPIC[svt.wp-agent.command]
+            REPLY_TOPIC[svt.wp-agent.command.reply]
+            HB_TOPIC[svt.wp-agent.heartbeat]
+        end
+
+        HEALTH[ListenerHealthCheck<br/>listener_heartbeat.py]
+    end
+
+    subgraph "Database Communication"
+        DBKC[DBKafkaClient<br/>db_kafka_client.py]
+        KDBS[KafkaDBService<br/>kafka_db_service.py]
+
+        subgraph "DB Topics"
+            DB_REQ[svt.db-agent.request]
+            DB_REPLY[svt.db-agent.request.reply]
+        end
+    end
+
+    subgraph "Command Processing"
+        CMD_HANDLER[CommandHandler<br/>command_handler.py]
+        CMD_MAP[COMMAND_ROUTER<br/>cmd_map.py]
+        EXEC[execute_command]
+    end
+
+    subgraph "State Management"
+        STATE[SvtWpAgentStateMachine<br/>SvtWpAgentStateMachine.py]
+        STATE_GLOBAL[agentStateMachine<br/>Global Instance]
+
+        STATES[States:<br/>Idle, Running,<br/>Retrying, Failed,<br/>Aborted]
+        EVENTS[Events:<br/>Start, Success,<br/>Error, Abort]
+    end
+
+    subgraph "Global Parameters"
+        GLOBALS[SvtWPAagentGlobalParameters<br/>Singleton]
+        PARAMS[address<br/>machine_type<br/>chip_name<br/>project_name<br/>alignment_die<br/>home_die]
+    end
+
+    subgraph "Action Modules"
+        PROJ_ACT[WPProjectActions<br/>Initialize, GetInfo, Help]
+        TEST_ACT[WPTestingActions<br/>Move, Load, Align, etc.]
+        SEQ_ACT[WPSequencerActions<br/>RunSequencer]
+        DB_ACT[WPDataBaseActions<br/>ListProbers, ListChipTypes]
+        CMD_ACT[WPCommandActions<br/>ListAvailableCommands]
+    end
+
+    subgraph "Sequencer"
+        SEQ[WPSequencer<br/>WPSequencer.py]
+        SEQ_FILE[JSON Sequence File]
+    end
+
+    subgraph "Driver Layer"
+        FACTORY[ProberFactory<br/>factory.py<br/>Singleton]
+        IFACE[AbstractProber<br/>prober_interface.py]
+        SENTIO[SentioProberImpl<br/>sentio_prober.py]
+        SENTIO_LIB[SentioProber Library<br/>sentio_prober_control]
+    end
+
+    subgraph "Services"
+        INIT_SVC[WPInitializationService<br/>Database Init Flow]
+        DB_SVC[IDBService<br/>db_service.py<br/>Protocol]
+    end
+
+    subgraph "Utilities"
+        LOGGER[WPAgentLogger<br/>Singleton]
+        HELPERS[WPHelpers<br/>resolve_project_parameters<br/>check_prober_ready]
+        HELP_JSON[WPCommandsHelpList.json]
+    end
+
+    subgraph "External Hardware"
+        HARDWARE[Sentio Prober<br/>WPMIT01.cern.ch:35555]
+    end
+
+    subgraph "External Services"
+        DB_AGENT[Database Agent<br/>Kafka Service]
+    end
+
+    %% Entry to Agent
+    CLI --> MAIN
+    MAIN --> WPA
+
+    %% Agent to Communication
+    WPA --> WPA_SEND
+    WPA --> WPA_LISTEN
+    WPA --> WPA_HEALTH
+
+    WPA_SEND --> KC
+    WPA_LISTEN --> KC
+    WPA_HEALTH --> HEALTH
+
+    %% Kafka Communication
+    KC --> PRODUCER
+    KC --> CONSUMER
+    PRODUCER --> REQ_TOPIC
+    CONSUMER --> REPLY_TOPIC
+    HEALTH --> HB_TOPIC
+
+    %% Database Communication
+    WPA_SEND -.DB Init.-> INIT_SVC
+    INIT_SVC --> KDBS
+    KDBS --> DBKC
+    DBKC --> DB_REQ
+    DBKC --> DB_REPLY
+    DB_REQ --> DB_AGENT
+    DB_AGENT --> DB_REPLY
+
+    %% Command Processing Flow
+    CONSUMER --> CMD_HANDLER
+    CMD_HANDLER --> EXEC
+    EXEC --> CMD_MAP
+
+    %% State Management
+    EXEC --> STATE_GLOBAL
+    STATE_GLOBAL --> STATE
+    STATE --> STATES
+    STATE --> EVENTS
+
+    %% Command Routing
+    CMD_MAP --> PROJ_ACT
+    CMD_MAP --> TEST_ACT
+    CMD_MAP --> SEQ_ACT
+    CMD_MAP --> DB_ACT
+    CMD_MAP --> CMD_ACT
+
+    %% Global Parameters
+    PROJ_ACT --> GLOBALS
+    TEST_ACT --> GLOBALS
+    GLOBALS --> PARAMS
+
+    %% Sequencer Flow
+    SEQ_ACT --> SEQ
+    SEQ --> SEQ_FILE
+    SEQ --> EXEC
+
+    %% Database Actions
+    DB_ACT --> KDBS
+    KDBS --> DB_SVC
+
+    %% Driver Layer
+    TEST_ACT --> HELPERS
+    HELPERS --> FACTORY
+    FACTORY --> IFACE
+    IFACE --> SENTIO
+    SENTIO --> SENTIO_LIB
+    SENTIO_LIB --> HARDWARE
+
+    %% Logging
+    EXEC --> LOGGER
+    PROJ_ACT --> LOGGER
+    TEST_ACT --> LOGGER
+    LOGGER -.Kafka Logs.-> PRODUCER
+
+    %% Helpers
+    PROJ_ACT --> HELPERS
+    PROJ_ACT --> HELP_JSON
+
+    %% Styling
+    classDef entry fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000000
+    classDef core fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000000
+    classDef comm fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000000
+    classDef cmd fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000000
+    classDef state fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000000
+    classDef action fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000000
+    classDef driver fill:#e0f2f1,stroke:#004d40,stroke-width:2px,color:#000000
+    classDef util fill:#efebe9,stroke:#3e2723,stroke-width:2px,color:#000000
+    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:3px,color:#000000
+
+    class CLI,MAIN entry
+    class WPA,WPA_SEND,WPA_LISTEN,WPA_HEALTH core
+    class KC,PRODUCER,CONSUMER,REQ_TOPIC,REPLY_TOPIC,HB_TOPIC,HEALTH,DBKC,KDBS,DB_REQ,DB_REPLY comm
+    class CMD_HANDLER,CMD_MAP,EXEC cmd
+    class STATE,STATE_GLOBAL,STATES,EVENTS state
+    class GLOBALS,PARAMS state
+    class PROJ_ACT,TEST_ACT,SEQ_ACT,DB_ACT,CMD_ACT,SEQ,SEQ_FILE action
+    class FACTORY,IFACE,SENTIO,SENTIO_LIB driver
+    class LOGGER,HELPERS,HELP_JSON,INIT_SVC,DB_SVC util
+    class HARDWARE,DB_AGENT external
