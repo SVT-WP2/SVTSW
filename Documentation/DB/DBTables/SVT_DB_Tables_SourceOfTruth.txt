@@ -82,13 +82,16 @@ Table main.WaferProbeMachine {
   software main.wpSwType [not null]
   swVersion varchar(50) [not null]
   vendor main.wpVendor [not null]
-  loadedWaferId integer [ref: > main.Wafer.id]
-  installedProbeCardId integer [ref: > main.ProbeCard.id]
+  loadedWaferId integer [ref: > main.Wafer.id, default: null]
+  loaderWaferOrientation main.waferMapOrientation [default: null]
+  installedProbeCardId integer [ref: > main.ProbeCard.id, default:null]
+  installedProbeCardOrientation main.waferMapOrientation [default: null]
 }
 
 Table main.WaferLoadedInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   waferId integer [ref: > main.Wafer.id]
+  orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
   status main.waferInMachineStatus
@@ -97,6 +100,7 @@ Table main.WaferLoadedInMachine {
 Table main.ProbeCardInstalledInMachine {
   machineId integer [ref: > main.WaferProbeMachine.id]
   probeCardId integer [ref: > main.ProbeCard.id]
+  orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
 }
