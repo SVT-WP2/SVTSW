@@ -2137,7 +2137,9 @@ components:
         - swVersion
         - vendor
         - loadedWaferId
+        - loadedWaferOrientation
         - installedProbeCardId
+        - installedProbeCardOrientation
       properties:
         id:
           type: number
@@ -2162,8 +2164,14 @@ components:
         loadedWaferId:
           type: number
           nullable: true
+        loadedWaferOrientation:
+          type: string
+          nullable: true
         installedProbeCardId:
           type: number
+          nullable: true
+        installedProbeCardOrientation:
+          type: string
           nullable: true
     WaferProbeMachineCreateDto:
       type: object
@@ -2223,22 +2231,30 @@ components:
       required:
         - wpMachineId
         - loadedWaferId
+        - orientation
       properties:
         wpMachineId:
           type: number
         loadedWaferId:
           type: number
           nullable: true
+        orientation:
+          type: string
+          nullable: true
     WpMachineInstalledProbeCardUpdateDto:
       type: object
       required:
         - wpMachineId
         - installedProbeCardId
+        - orientation
       properties:
         wpMachineId:
           type: number
         installedProbeCardId:
           type: number
+          nullable: true
+        orientation:
+          type: string
           nullable: true
     WaferProbeProjectDto:
       type: object

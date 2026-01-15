@@ -333,13 +333,16 @@ CREATE TABLE "main"."WaferProbeMachine" (
   "software" main."wpSwType" NOT NULL,
   "swVersion" varchar(50) NOT NULL,
   "vendor" main."wpVendor" NOT NULL,
-  "loadedWaferId" integer,
-  "installedProbeCardId" integer
+  "loadedWaferId" integer DEFAULT null,
+  "loaderWaferOrientation" main."waferMapOrientation" DEFAULT null,
+  "installedProbeCardId" integer DEFAULT null,
+  "installedProbeCardOrientation" main."waferMapOrientation" DEFAULT null
 );
 
 CREATE TABLE "main"."WaferLoadedInMachine" (
   "machineId" integer,
   "waferId" integer,
+  "orientation" main."waferMapOrientation",
   "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50),
   "status" main."waferInMachineStatus"
@@ -348,6 +351,7 @@ CREATE TABLE "main"."WaferLoadedInMachine" (
 CREATE TABLE "main"."ProbeCardInstalledInMachine" (
   "machineId" integer,
   "probeCardId" integer,
+  "orientation" main."waferMapOrientation",
   "date" date DEFAULT (CURRENT_DATE),
   "username" varchar(50)
 );
