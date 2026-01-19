@@ -326,3 +326,31 @@ def go_to_previous_die(address=None, machine_type=None):
     prober = get_prober(machine_type, address)
     prober.step_prev_die()
     return {"status": "success", "output": f" Moved to previous die"}
+
+
+def get_chuck_position(address=None, machine_type=None):
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+    prober = get_prober(machine_type, address)
+
+    try:
+        position = prober.get_chuck_position()
+        prober.local_mode()
+
+        return {
+            "status": "success",
+            "output": f"Chuck is {position}",
+            "data": {"position": position}
+        }
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+        return {
+            "status": "error",
+            "output": f"Failed to get chuck position: {str(e)}"
+        }

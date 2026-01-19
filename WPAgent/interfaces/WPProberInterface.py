@@ -45,3 +45,8 @@ class AbstractProber(ABC):
     def load_wafer(self):
         pass
 
+    @abstractmethod
+    def get_chuck_position(self):
+        """Get current chuck position (In Contact/In Separation)"""
+        pass
+

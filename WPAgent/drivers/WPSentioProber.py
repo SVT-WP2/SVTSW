@@ -112,3 +112,48 @@ class SentioProberImpl(AbstractProber):
     def get_camera_status(self):
         resp = "doesnt exist"
         return resp
+
+    def get_chuck_position(self):
+        """
+        Get current chuck position status.
+
+        Returns exactly "In Contact" or "In Separation".
+
+        Uses the Sentio Python library method:
+            self.prober.status.get_prop("Z_Position_Hint", "chuck")
+
+        Returns:
+            str: "In Contact" or "In Separation"
+
+        Example:
+            >>> prober.get_chuck_position()
+            "In Contact"
+
+            >>> prober.get_chuck_position()
+            "In Separation"
+        """
+        try:
+            # Query position using Sentio library's status.get_prop() method
+            # This sends: "status:get_prop Z_Position_Hint, chuck"
+            # Response from Sentio: "0,0,Contact" or "0,0,Separation"
+            # Library parses it and returns: "Contact" or "Separation"
+            position = self.prober.status.get_prop("Z_Position_Hint", "chuck")
+
+            # Convert to string and clean up
+            position_str = str(position).strip()
+
+            # Normalize to lowercase for comparison
+            position_lower = position_str.lower()
+
+            # Return formatted status: "In Contact" or "In Separation"
+            if 'contact' in position_lower:
+                return "In Contact"
+            elif 'separation' in position_lower or 'sep' in position_lower:
+                return "In Separation"
+            else:
+                # For any other position (Hover, Lift, Home, Overtravel)
+                # Return as-is with "In " prefix
+                return f"In {position_str}"
+
+        except Exception as e:
+            return f"Error: {str(e)}"

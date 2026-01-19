@@ -343,6 +343,13 @@
     "execution_time": "< 1 second",
     "notes": "Use this when agent is stuck in Failed state"
   },
+  "GetChuckPosition": {
+    "description": "Get current chuck position status (In Contact or In Separation)",
+    "category": "Status",
+    "parameters": {},
+    "example": "python main.py send GetChuckPosition",
+    "execution_time": "< 1 second"
+  },
 
   "LocalMode": {
     "description": "Put probe station into local mode",
