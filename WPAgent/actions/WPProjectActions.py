@@ -442,6 +442,7 @@ def get_info():
     current_index = prober.get_current_index()
     counts = prober.get_dies_number().split(",")
 
+
     # Parse it
     parts = current_index.split(",")
     die_info = {
