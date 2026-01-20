@@ -31,7 +31,9 @@ SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
   addColName("swVersion");
   addColName("vendor");
   addColName("loadedWaferId", false);
+  addColName("loadedWaferOrientation", false);
   addColName("installedProbeCardId", false);
+  addColName("installedProbeCardOrientation", false);
 
   createAllRequest();
 }
@@ -67,23 +69,25 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
 {
   const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
   const auto loadedWaferId_j = msg.getPayload()["data"]["loadedWaferId"];
+  const auto loadedWaferOrientation_j = msg.getPayload()["data"]["loadedWaferOrientation"];
   if (machineId_j.is_null())
   {
-    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
+    THROW_RUNTIME_ERROR("Mising data, machineId is not a nullable field.");
+    return;
   }
   const auto wpMachineId = machineId_j.get<int>();
   SvtDbEntry wpMachine;
   getEntryWithId(wpMachine, wpMachineId);
 
   SvtDbEntry loadedWaferEntry;
-  loadedWaferEntry.addValue("machineId", machineId_j.get<int>());
-  const auto &oldLoadedWfaerId = wpMachine.getValue("loadedWaferId");
+  loadedWaferEntry.addValue("machineId", wpMachineId);
+  const auto &oldLoadedWaferId = wpMachine.getValue("loadedWaferId");
   if (loadedWaferId_j.is_null())
   {
-    if (!oldLoadedWfaerId.is_null())
+    if (!oldLoadedWaferId.is_null())
     {
       loadedWaferEntry.addValue("status", "Unloaded");
-      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+      loadedWaferEntry.addValue("waferId", oldLoadedWaferId.get<int>());
       waferLoaded->createEntryInDB(loadedWaferEntry);
     }
     else
@@ -94,19 +98,26 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
   }
   else
   {
-    if (!oldLoadedWfaerId.is_null())
+    if (loadedWaferOrientation_j.is_null())
     {
-      getLogger()->logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWfaerId.get<int>()));
+      THROW_RUNTIME_ERROR("ERROR: Mising orientation for loaded wafer");
+      return;
+    }
+    if (!oldLoadedWaferId.is_null())
+    {
+      getLogger()->logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWaferId.get<int>()));
       loadedWaferEntry.addValue("status", "Unloaded");
-      loadedWaferEntry.addValue("waferId", oldLoadedWfaerId.get<int>());
+      loadedWaferEntry.addValue("waferId", oldLoadedWaferId);
     }
     loadedWaferEntry.addValue("status", "Loaded");
-    loadedWaferEntry.addValue("waferId", loadedWaferId_j.get<int>());
+    loadedWaferEntry.addValue("waferId", loadedWaferId_j);
+    loadedWaferEntry.addValue("orientation", loadedWaferOrientation_j);
     waferLoaded->createEntryInDB(loadedWaferEntry);
   }
 
   nlohmann::json update_j;
   update_j["loadedWaferId"] = loadedWaferId_j;
+  update_j["loadedWaferOrientation"] = loadedWaferOrientation_j;
   updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
 }
 
@@ -116,16 +127,20 @@ void SvtDbAgent::SvtDbWPMachineDto::updateProbeCardInstalledInMachine(
 {
   const auto machineId_j = msg.getPayload()["data"]["wpMachineId"];
   const auto installedProbeCardId_j = msg.getPayload()["data"]["installedProbeCardId"];
+  const auto installedProbeCardOrientation_j = msg.getPayload()["data"]["installedProbeCardOrientation"];
   if (machineId_j.is_null())
   {
-    THROW_RUNTIME_ERROR("Failed parsing data, machineId is not a nullable field.");
+    THROW_RUNTIME_ERROR("Mising data, machineId is not a nullable field.");
+    return;
   }
   SvtDbEntry installedPCardEntry;
-  installedPCardEntry.addValue("machineId", machineId_j.get<int>());
+  installedPCardEntry.addValue("machineId", machineId_j);
   installedPCardEntry.addValue("probeCardId", installedProbeCardId_j);
+  installedPCardEntry.addValue("orientation", installedProbeCardOrientation_j);
   pcInstalled->createEntryInDB(installedPCardEntry);
 
   nlohmann::json update_j;
   update_j["installedProbeCardId"] = installedProbeCardId_j;
+  update_j["installedProbeCardOrientation"] = installedProbeCardOrientation_j;
   updateEntryAndReply(machineId_j.get<int>(), update_j, replyMsg, true);
 }

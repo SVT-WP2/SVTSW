@@ -9,6 +9,7 @@
  * */
 
 #include "SvtDbBaseDto.h"
+#include "SvtKafkaMessage.h"
 
 namespace SvtDbAgent
 {
@@ -21,6 +22,7 @@ namespace SvtDbAgent
 
       addColName("machineId");
       addColName("waferId");
+      addColName("waferOrientation");
       addColName("date");
       addColName("username");
       addColName("status");
@@ -40,6 +42,7 @@ namespace SvtDbAgent
 
       addColName("machineId");
       addColName("probeCardId");
+      addColName("probeCardOrientation");
       addColName("date");
       addColName("username");
     };
