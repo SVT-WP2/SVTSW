@@ -727,35 +727,123 @@ paths:
 
   /svt.wp-agent.request/Load:
     post:
-      tags: [Wafer Handling]
-      summary: Load wafer
+      tags: [ Wafer Handling ]
+      summary: Load wafer with optional intelligent initialization from ASIC serial number
+      description: |
+        Load a wafer onto the probe station. If `serialNumber` is provided, the system will:
+        1. Query the database to get wafer information
+        2. Determine wafer type, family type, and orientation
+        3. Build the appropriate project name
+        4. Verify probe station configuration
+        5. Load the wafer
+        
+        If `serialNumber` is not provided, loads the wafer using current/default settings.
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CommandRequest'
+              allOf:
+                - $ref: '#/components/schemas/CommandRequest'
+                - type: object
+                  properties:
+                    params:
+                      type: object
+                      properties:
+                        asic_serial:
+                          type: string
+                          description: ASIC serial number for intelligent initialization
+                          example: "ASIC_12345"
             examples:
-              NoParams:
+              WithAsicSerial:
+                summary: Load with ASIC serial number (intelligent mode)
                 value:
                   type: "Load"
-                  params: {}
+                  params:
+                    asic_serial: "ASIC_12345"
+              NoParams:
+                summary: Load without parameters (manual mode)
+                value:
+                  type: "Load"
+                  params: { }
       responses:
         '200':
-          description: Loaded
+          description: Wafer loaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CommandReply'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          asic_serial:
+                            type: string
+                            description: ASIC serial number (if provided)
+                          wafer_serial:
+                            type: string
+                            description: Wafer serial number from database
+                          wafer_type:
+                            type: string
+                            description: Wafer type name
+                          family_type:
+                            type: string
+                            description: ASIC family type
+                          orientation:
+                            type: string
+                            description: Probe card orientation
+                          project_name:
+                            type: string
+                            description: Auto-generated project name
+                          location:
+                            type: string
+                            description: Wafer location from database
+              examples:
+                SuccessWithAsic:
+                  summary: Success with ASIC serial (intelligent mode)
+                  value:
+                    type: "CommandReply"
+                    request_id: "001"
+                    command: "Load"
+                    status: "success"
+                    output: "Wafer loaded with project 'ITkPixV1_RD53B_vertical'"
+                    execution_time_ms: 45678.2
+                    timestamp: 1733156545.678
+                    data:
+                      asic_serial: "ASIC_12345"
+                      wafer_serial: "WAFER_789"
+                      wafer_type: "ITkPixV1"
+                      family_type: "RD53B"
+                      orientation: "vertical"
+                      project_name: "ITkPixV1_RD53B_vertical"
+                      location: "Building 157"
+                SuccessManual:
+                  summary: Success without ASIC serial (manual mode)
+                  value:
+                    type: "CommandReply"
+                    request_id: "load-002"
+                    command: "Load"
+                    status: "success"
+                    output: "Wafer has been loaded to center"
+                    execution_time_ms: 45678.2
+                    timestamp: 1733156545.678
+        '400':
+          description: Bad request - ASIC not found or invalid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommandReply'
               examples:
-                Success:
+                AsicNotFound:
                   value:
                     type: "CommandReply"
-                    request_id: "load-001"
+                    request_id: "load-003"
                     command: "Load"
-                    status: "success"
-                    output: "Wafer has been loaded to center"
-                    execution_time_ms: 45678.2
+                    status: "error"
+                    output: "ASIC with serial number 'INVALID_ASIC' not found in database"
+                    execution_time_ms: 1234.5
                     timestamp: 1733156545.678
 
   /svt.wp-agent.request/Unload:
