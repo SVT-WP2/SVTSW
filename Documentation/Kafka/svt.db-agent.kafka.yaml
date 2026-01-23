@@ -13,7 +13,7 @@ info:
     ### POST Request Meaning
     - Request body describes Kafka Message structure
     - Response
-      - if response is specified, the relevant message will be emmited to the relevant *.reply topic as a reply to that message.
+      - if response is specified, the relevant message will be emitted to the relevant *.reply topic as a reply to that message.
 
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
