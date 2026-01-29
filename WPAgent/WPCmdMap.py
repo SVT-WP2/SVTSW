@@ -6,6 +6,7 @@ from stateMachine.WpAgentStateMachine import SvtWpAgentEvent
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
+from actions import WPCoordinateActions as coord_actions
 
 from services.WPListenerHeartbeat import ListenerHealthCheck
 
@@ -47,6 +48,12 @@ COMMAND_ROUTER = {
     #  Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
+
+    # Coordinate Conversion Commands TODO: will be deleted after it works and implemented in other functions
+    "LoadConversionMap": coord_actions.load_conversion_map,
+    "ConvertGlobalToLocal": coord_actions.convert_global_to_local,
+    "ConvertLocalToGlobal": coord_actions.convert_local_to_global,
+    "ListCoordinateAsics": coord_actions.list_coordinate_asics,
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,

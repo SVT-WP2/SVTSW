@@ -1,0 +1,162 @@
+[
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-1",
+    "row_global": 3,
+    "column_global": 2,
+    "row_local": -1,
+    "column_local": 1
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-1",
+    "row_global": 3,
+    "column_global": 3,
+    "row_local": -1,
+    "column_local": 2
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-1",
+    "row_global": 3,
+    "column_global": 4,
+    "row_local": -1,
+    "column_local": 3
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-1",
+    "row_global": 3,
+    "column_global": 5,
+    "row_local": -1,
+    "column_local": 4
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 2,
+    "row_local": 0,
+    "column_local": 0
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 3,
+    "row_local": 0,
+    "column_local": 1
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 4,
+    "row_local": 0,
+    "column_local": 2
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 5,
+    "row_local": 0,
+    "column_local": 3
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 6,
+    "row_local": 0,
+    "column_local": 4
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-2",
+    "row_global": 6,
+    "column_global": 7,
+    "row_local": 0,
+    "column_local": 5
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 2,
+    "row_local": 8,
+    "column_local": 0
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 3,
+    "row_local": 8,
+    "column_local": 1
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 4,
+    "row_local": 8,
+    "column_local": 2
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 5,
+    "row_local": 8,
+    "column_local": 3
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 6,
+    "row_local": 8,
+    "column_local": 4
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-3",
+    "row_global": 30,
+    "column_global": 7,
+    "row_local": 8,
+    "column_local": 5
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-4",
+    "row_global": 33,
+    "column_global": 2,
+    "row_local": 9,
+    "column_local": 1
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-4",
+    "row_global": 33,
+    "column_global": 3,
+    "row_local": 9,
+    "column_local": 2
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-4",
+    "row_global": 33,
+    "column_global": 4,
+    "row_local": 9,
+    "column_local": 3
+  },
+  {
+    "asic_type": "BABYMOSAIX",
+    "SN_prefix": "babyMOSAIX-4",
+    "row_global": 33,
+    "column_global": 5,
+    "row_local": 9,
+    "column_local": 4
+  }
+]
