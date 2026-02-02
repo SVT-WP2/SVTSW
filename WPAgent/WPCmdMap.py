@@ -7,8 +7,14 @@ from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 from actions import WPCoordinateActions as coord_actions
+from actions.WPWrapper import WPWrapper
+from WPKafkaClient import KafkaClient
 
 from services.WPListenerHeartbeat import ListenerHealthCheck
+
+#  wrapper instance for status queries
+kafka_client = KafkaClient()
+wrapper = WPWrapper(kafka_client)
 
 COMMAND_ROUTER = {
 
@@ -20,7 +26,7 @@ COMMAND_ROUTER = {
     "OpenProject": testing_actions.open_project,
     "FindHome": testing_actions.find_home,
     "SwitchCamera": testing_actions.switch_camera,
-    "MoveChuckHome": testing_actions.move_chuck_home,
+    "MoveHome": testing_actions.move_chuck_home,
     "Unload": testing_actions.unload_wafer,
     "Cleaning": testing_actions.clean_probe_station,
     "AlignWafer": testing_actions.align_wafer,
@@ -58,6 +64,17 @@ COMMAND_ROUTER = {
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
     "GetAgentState": project_actions.get_agent_state,
+
+     # These commands ONLY return status, do NOT execute actions
+    "LoadWafer": wrapper.get_load_wafer_status,
+    "UnloadWafer": wrapper.get_unload_wafer_status,
+    "MoveChuckDie": wrapper.get_move_chuck_die_status,
+    "MoveChuckHome": wrapper.get_move_chuck_home_status,
+    "SetChuckZPositionState": wrapper.get_set_chuck_z_position_status,
+    "GetWpMachineState": wrapper.get_machine_state,
+    #TODO: need to implement go by serialNumber of asic anstatus
+    # "MoveChuckAsic": wrapper.get_move_chuck_asic_status,
+
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER,

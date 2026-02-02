@@ -513,7 +513,7 @@ def move_chuck_home(address=None, machine_type=None):
     if error:
         return {
             "status": "BadRequest",
-            "type": "MoveChuckHomeReply",
+            "type": "MoveHomeReply",
             "error": {"code": 400, "message": error.get("output")}
         }
 
@@ -527,7 +527,7 @@ def move_chuck_home(address=None, machine_type=None):
 
         return {
             "status": "Success",
-            "type": "MoveChuckHomeReply",
+            "type": "MoveHomeReply",
             "data": machine_state
         }
     except Exception as e:
@@ -537,7 +537,7 @@ def move_chuck_home(address=None, machine_type=None):
             pass
         return {
             "status": "UnexpectedError",
-            "type": "MoveChuckHomeReply",
+            "type": "MoveHomeReply",
             "error": {"code": 500, "message": str(e)}
         }
 
