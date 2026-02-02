@@ -95,6 +95,18 @@ class SentioProberImpl(AbstractProber):
             # Last resort - convert to string
             return str(resp)
 
+    def get_current_z_position(self):
+        try:
+            from sentio_prober_control.Sentio.Enumerations import ChuckZReference
+
+            z_position = self.prober.get_chuck_z(ChuckZReference.Zero)
+
+            return float(z_position)
+
+        except Exception as e:
+            print(f"Could not get chuck Z position: {e}")
+            return 0.0
+
     def get_dies_number(self):
 
         resp = self.prober.map.get_num_dies(DieNumber.Selected)
@@ -157,3 +169,38 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
+
+    def get_chuck_xyz_position(self):
+        """
+        Get current XYZ position of chuck.
+
+        For XY: Uses existing get_current_index() which returns die position
+        For Z: Uses get_current_z_position()
+
+        NOTE: Since we don't have absolute XY coordinates from Sentio,
+        we return die indices for col/row and actual Z position.
+        If you need absolute XY in micrometers, you'll need a different approach.
+
+        Returns:
+            dict: {
+                "x": float (die col index),
+                "y": float (die row index),
+                "z": float (absolute Z in micrometers)
+            }
+        """
+        try:
+            # Get die position (this gives us col, row  as coordinates not in micrometers )
+            die_index_str = self.get_current_index()  # Returns "5,3,0"
+            parts = str(die_index_str).strip().split(',')
+
+            col = float(parts[0]) if len(parts) > 0 else 0.0
+            row = float(parts[1]) if len(parts) > 1 else 0.0
+
+            # Get actual Z position in micrometers
+            z = self.get_current_z_position()
+
+            return {"x": col, "y": row, "z": z}
+
+        except Exception as e:
+            print(f"⚠Could not get chuck XYZ position: {e}")
+            return {"x": 0.0, "y": 0.0, "z": 0.0}

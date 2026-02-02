@@ -1,214 +1,176 @@
-import time
-import random
+# ============================================================================
+# MOCK PROBER - For Testing Without Real Hardware
+# ============================================================================
+
+"""
+Mock implementation of the prober interface for testing.
+Simulates all prober behavior without requiring actual hardware.
+"""
+
 from interfaces.WPProberInterface import AbstractProber
 
 
-class MockProberImpl(AbstractProber):
+class MockProber(AbstractProber):
     """
-    Mock prober that simulates real prober behavior with delays
-    Perfect for testing without hardware
+    Mock prober that simulates all operations without real hardware.
+    Tracks internal state for realistic testing.
     """
 
     def __init__(self, address):
-        """Initialize mock prober"""
         self.address = address
-        self.is_initialized = False
-        self.current_position = {"x": 0, "y": 0}
-        self.current_die = {"col": 0, "row": 0, "subsite": 0}
-        self.camera_position = "OffAxis"
-        self.wafer_loaded = False
-        self.at_contact = False
 
-        print(f"🔧 Mock Prober created for {address}")
-        time.sleep(0.5)  # Simulate connection delay
+        # Simulated state
+        self._is_initialized = False
+        self._wafer_loaded = False
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        self._chuck_position = {"x": 0.0, "y": 0.0, "z": 10000.0}  # Start at separation
+        self._z_state = "Separation"  # "Contact", "Separation", "Lift"
+        self._project_opened = False
+
+        print(f"🔧 MockProber created for {address}")
 
     def initialize(self):
-        """Simulate initialization"""
-        print(f"⚙️  Initializing mock prober at {self.address}...")
-        time.sleep(1)  # Simulate init time
-        self.is_initialized = True
+        """Simulate initialization."""
+        self._is_initialized = True
         print("✅ Mock prober initialized")
 
     def open_project(self, path: str):
-        """Simulate opening a project"""
-        print(f"📁 Opening project: {path}")
-        time.sleep(0.8)
-        print("✅ Project opened")
+        """Simulate opening project."""
+        self._project_opened = True
+        print(f"📂 Mock: Opened project {path}")
 
     def move_chuck_xy(self, x: float, y: float):
-        """Simulate chuck movement"""
-        old_pos = self.current_position.copy()
-        print(f"🎯 Moving chuck from ({old_pos['x']}, {old_pos['y']}) to ({x}, {y})")
-        time.sleep(1.5)  # Simulate movement time
-        self.current_position = {"x": x, "y": y}
-        print(f"✅ Chuck moved to ({x}, {y})")
-        return True
+        """Simulate XY movement."""
+        self._chuck_position["x"] = x
+        self._chuck_position["y"] = y
+        print(f"➡️  Mock: Moved chuck to X={x}, Y={y}")
+        return (x, y)
+
+    def move_chuck_z(self, z: float):
+        """Simulate Z movement."""
+        self._chuck_position["z"] = z
+        print(f"⬆️  Mock: Moved chuck to Z={z}")
+        return z
 
     def run_ptpa(self):
-        """Simulate PTPA (Probe Tip Position Alignment)"""
-        print("🔬 Running PTPA...")
-        time.sleep(3)  # PTPA takes longer
-        print("✅ PTPA completed")
+        """Simulate PTPA."""
+        print("🎯 Mock: PTPA executed")
 
     def step_next_die(self):
-        """Simulate stepping to next die"""
-        print(f"➡️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})")
-        time.sleep(0.5)
-        self.current_die['col'] += 1
-        print(f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})")
-        return self.current_die
+        """Simulate stepping to next die."""
+        self._current_die["col"] += 1
+        print(f"👣 Mock: Stepped to die {self._current_die['col']},{self._current_die['row']}")
+        return self._current_die
 
-    def go_to_die(self, col, row, subsite=0):
-        """Simulate going to specific die"""
-        print(f"🎯 Moving to die ({col}, {row}, subsite {subsite})")
-        time.sleep(1)
-        self.current_die = {"col": col, "row": row, "subsite": subsite}
-        print(f"✅ At die ({col}, {row}, subsite {subsite})")
-        return self.current_die
+    def step_prev_die(self):
+        """Simulate stepping to previous die."""
+        self._current_die["col"] -= 1
+        print(f"👣 Mock: Stepped to die {self._current_die['col']},{self._current_die['row']}")
+        return self._current_die
+
+    def go_to_die(self, col: int, row: int):
+        """Simulate moving to specific die."""
+        self._current_die["col"] = col
+        self._current_die["row"] = row
+        print(f"🎯 Mock: Moved to die {col},{row}")
+        return (col, row)
 
     def switch_camera(self, mount_point: str):
-        """Simulate camera switch"""
-        print(f"📷 Switching camera from {self.camera_position} to {mount_point}")
-        time.sleep(0.8)
-        self.camera_position = mount_point
-        print(f"✅ Camera switched to {mount_point}")
+        """Simulate camera switch."""
+        print(f"📷 Mock: Switched camera to {mount_point}")
 
     def move_chuck_home(self):
-        """Simulate moving chuck to home position"""
-        print("🏠 Moving chuck to home position...")
-        time.sleep(2)
-        self.current_position = {"x": 0, "y": 0}
-        print("✅ Chuck at home position")
+        """Simulate moving to home."""
+        self._chuck_position = {"x": 0.0, "y": 0.0, "z": 10000.0}
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        print("🏠 Mock: Moved chuck home")
 
     def unload_wafer(self):
-        """Simulate wafer unload"""
-        if not self.wafer_loaded:
-            print("⚠️  No wafer loaded")
-            return
-        print("📤 Unloading wafer...")
-        time.sleep(2)
-        self.wafer_loaded = False
-        print("✅ Wafer unloaded")
+        """Simulate unloading wafer."""
+        self._wafer_loaded = False
+        self._z_state = "Separation"
+        self._chuck_position["z"] = 10000.0
+        print("📤 Mock: Wafer unloaded")
 
     def local_mode(self):
-        """Simulate switching to local mode"""
-        print("🔓 Switching to local mode")
-        time.sleep(0.3)
+        """Simulate local mode."""
+        print("🔓 Mock: Local mode")
 
     def load_wafer(self):
-        """Simulate wafer load"""
-        if self.wafer_loaded:
-            print("⚠️  Wafer already loaded")
-            return
-        print("📥 Loading wafer...")
-        time.sleep(2.5)
-        self.wafer_loaded = True
-        print("✅ Wafer loaded")
+        """Simulate loading wafer."""
+        self._wafer_loaded = True
+        self._z_state = "Separation"
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        print("📥 Mock: Wafer loaded to center")
 
     def find_home(self):
-        """Simulate finding home position"""
-        print("🔍 Finding home position...")
-        time.sleep(1.5)
-        print("✅ Home position found")
+        """Simulate finding home."""
+        print("🔍 Mock: Home position found")
 
-    def align_wafer(self, align_die_col, align_die_row, subsite=None):
-        """Simulate wafer alignment"""
-        print(f"📐 Aligning wafer at  die ({align_die_col}, {align_die_row})")
-        time.sleep(3)
-        self.current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite or 0}
-        print("✅ Wafer aligned")
+    def align_wafer(self, align_die_col: int, align_die_row: int, subsite: int = 0):
+        """Simulate wafer alignment."""
+        print(f"⚡ Mock: Wafer aligned at die {align_die_col},{align_die_row},{subsite}")
+        return (align_die_col, align_die_row, subsite)
 
     def go_to_contact(self):
-        """Simulate moving to contact position"""
-        print("⬇️  Moving to contact position...")
-        time.sleep(1)
-        self.at_contact = True
-        print("✅ At contact position")
+        """Simulate moving to contact."""
+        self._z_state = "Contact"
+        self._chuck_position["z"] = 0.0
+        print("⬇️  Mock: Moved to contact")
 
     def go_to_separation(self):
-        """Simulate moving to separation position"""
-        print("⬆️  Moving to separation position...")
-        time.sleep(1)
-        self.at_contact = False
-        print("✅ At separation position")
+        """Simulate moving to separation."""
+        self._z_state = "Separation"
+        self._chuck_position["z"] = 10000.0
+        print("⬆️  Mock: Moved to separation")
 
     def auto_focus(self):
-        """Simulate auto focus"""
-        print("🔍 Running auto focus...")
-        time.sleep(2)
-        print("✅ Auto focus completed")
+        """Simulate auto focus."""
+        print("🔍 Mock: Auto-focus completed")
 
     def move_chuck_work_area(self, work_area):
-        """Simulate moving to work area"""
-        print(f"🎯 Moving to work area: {work_area}")
-        time.sleep(1.5)
-        print(f"✅ Moved to {work_area} work area")
+        """Simulate moving to work area."""
+        print(f"🏭 Mock: Moved to work area {work_area}")
 
+    def get_current_index(self):
+        """Return current die index."""
+        result = f"{self._current_die['col']},{self._current_die['row']},{self._current_die['subsite']}"
+        print(f"📍 Mock: Current index = {result}")
+        return result
 
-class SlowMockProberImpl(MockProberImpl):
-    """
-    Extra slow mock prober for testing concurrent command blocking
-    All operations take 5+ seconds
-    """
+    def get_current_die_position(self):
+        """Return current die position as dict."""
+        print(f"📍 Mock: Current die position = {self._current_die}")
+        return self._current_die
 
-    def __init__(self, address):
-        super().__init__(address)
-        print("🐌 Slow Mock Prober initialized (5s delays)")
+    def get_current_z_position(self):
+        """Return current Z position."""
+        z = self._chuck_position["z"]
+        print(f"📏 Mock: Current Z = {z}")
+        return z
 
-    def move_chuck_xy(self, x: float, y: float):
-        """Extra slow movement"""
-        print(f"🐌 SLOW: Moving chuck to ({x}, {y})... (5 seconds)")
-        time.sleep(5)
-        self.current_position = {"x": x, "y": y}
-        print(f"✅ Chuck moved to ({x}, {y})")
-        return True
+    def get_dies_number(self):
+        """Return total number of dies."""
+        print("🔢 Mock: Total dies = 150")
+        return "150"
 
-    def move_chuck_home(self):
-        """Extra slow home movement"""
-        print("🐌 SLOW: Moving chuck to home... (5 seconds)")
-        time.sleep(5)
-        self.current_position = {"x": 0, "y": 0}
-        print("✅ Chuck at home position")
+    def get_camera_status(self):
+        """Return camera status."""
+        print("📷 Mock: Camera status = Active")
+        return "Active"
 
-    def auto_focus(self):
-        """Extra slow auto focus"""
-        print("🐌 SLOW: Running auto focus... (5 seconds)")
-        time.sleep(5)
-        print("✅ Auto focus completed")
+    def get_chuck_position(self):
+        """Return chuck Z state."""
+        result = f"In {self._z_state}"
+        print(f"📍 Mock: Chuck state = {result}")
+        return result
 
-
-class FailingMockProberImpl(MockProberImpl):
-    """
-    Mock prober that randomly fails operations
-    Useful for testing error handling
-    """
-
-    def __init__(self, address, failure_rate=0.3):
-        super().__init__(address)
-        self.failure_rate = failure_rate
-        print(f"⚠️  Failing Mock Prober initialized ({failure_rate * 100}% failure rate)")
-
-    def _should_fail(self):
-        """Randomly decide if operation should fail"""
-        return random.random() < self.failure_rate
-
-    def move_chuck_xy(self, x: float, y: float):
-        """Movement that might fail"""
-        if self._should_fail():
-            print(f"❌ MOCK FAILURE: Could not move chuck to ({x}, {y})")
-            raise Exception(f"Mock failure: Chuck movement failed")
-        return super().move_chuck_xy(x, y)
-
-    def auto_focus(self):
-        """Auto focus that might fail"""
-        if self._should_fail():
-            print("❌ MOCK FAILURE: Auto focus failed")
-            raise Exception("Mock failure: Auto focus failed")
-        return super().auto_focus()
-
-    def step_next_die(self):
-        """Die stepping that might fail"""
-        if self._should_fail():
-            print("❌ MOCK FAILURE: Could not step to next die")
-            raise Exception("Mock failure: Die stepping failed")
-        return super().step_next_die()
+    def get_chuck_xyz_position(self):
+        """Return current XYZ position."""
+        pos = {
+            "x": self._current_die["col"],  # Using die col as X
+            "y": self._current_die["row"],  # Using die row as Y
+            "z": self._chuck_position["z"]
+        }
+        print(f"📍 Mock: Chuck XYZ = {pos}")
+        return pos

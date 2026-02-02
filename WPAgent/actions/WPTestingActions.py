@@ -1,4 +1,5 @@
-from drivers.WPFactory import get_prober
+# from drivers.WPFactory import get_prober
+from tests.mock_factory import get_prober
 from utilities.WPHelpers import resolve_project_parameters
 import os
 
@@ -17,6 +18,69 @@ def _ensure_initialized():
             "output": message
         }
     return None
+
+
+def _get_machine_state(prober, address, machine_type):
+    """
+    Query prober and build complete machine state DTO.
+
+    Returns:
+        dict: Complete WpMachineStateDto matching Swagger spec
+    """
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    globals_ = SvtWPAagentGlobalParameters.getInstance()
+
+    # Get chuck XYZ position from prober
+    chuck_pos = prober.get_chuck_xyz_position()
+
+    # Get Z state from prober (reuses your existing get_chuck_position method)
+    z_state_full = prober.get_chuck_position()  # Returns "In Contact" or "In Separation"
+    # Strip "In " prefix for Swagger format
+    z_state = z_state_full.replace("In ", "") if z_state_full.startswith("In ") else z_state_full
+
+    # Get current die position from prober
+    die_pos = prober.get_current_die_position()
+
+    # Build complete state
+    state = {
+        "wpMachineId": globals_.get_machine_id(),
+        "wpMachineStatus": "Idle",  # Assume idle after command completes
+
+        # Loaded wafer (None if not loaded)
+        "loadedWafer": {
+            "waferId": globals_.get_loaded_wafer_id(),
+            "orientation": globals_.get_wafer_orientation()
+        } if globals_.is_wafer_loaded() else None,
+
+        # Probe card (None if not installed)
+        "installedProbeCard": {
+            "probeCardId": globals_.get_probe_card_id(),
+            "orientation": globals_.get_probe_card_orientation()
+        } if globals_.get_probe_card_id() > 0 else None,
+
+        # Project ID (None if not opened)
+        "openedProjectId": globals_.get_project_id() if globals_.get_project_id() > 0 else None,
+
+        # Current die position
+        "waferMapDiePosition": {
+            "colIndex": die_pos["col"],
+            "rowIndex": die_pos["row"],
+            "subsiteIndex": die_pos["subsite"]
+        },
+
+        # Chuck absolute position in micrometers
+        "chuckAbsolutePosition": {
+            "x": chuck_pos["x"],
+            "y": chuck_pos["y"],
+            "z": chuck_pos["z"]
+        },
+
+        # Chuck Z state
+        "chuckZPositionState": z_state
+    }
+
+    return state
 
 
 def move_chuck_xy(x, y, address=None, machine_type=None):
@@ -68,18 +132,6 @@ def step_next_die(address=None, machine_type=None):
     return {"status": "success", "output": f"Stepped to next die: {result}"}
 
 
-def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    result = prober.go_to_die(col, row)
-    prober.local_mode()
-    return {"status": "success", "output": f"Moved to die: {result}"}
-
-
 def switch_camera(mount_point, address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
@@ -92,30 +144,7 @@ def switch_camera(mount_point, address=None, machine_type=None):
     return {"status": "success", "output": f"Switched camera to {mount_point}"}
 
 
-def move_chuck_home(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.move_chuck_home()
-    prober.local_mode()
-    return {"status": "success", "output": "Chuck moved home"}
-
-
-def unload_wafer(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.unload_wafer()
-    prober.local_mode()
-    return {"status": "success", "output": "Wafer unloaded"}
-
-
+# TODO: Cleaning is not implemented
 def clean_probe_station(address=None, machine_type=None, **kwargs):
     error = _ensure_initialized()
     if error:
@@ -143,18 +172,6 @@ def open_project(project_name: str, address=None, machine_type=None):
     prober.open_project(project_name)
     prober.local_mode()
     return {"status": "success", "output": f"Opened project: {project_path}"}
-
-
-def load_wafer(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.load_wafer()
-    prober.local_mode()
-    return {"status": "success", "output": "Wafer has been loaded to center"}
 
 
 def find_home(address=None, machine_type=None):
@@ -245,30 +262,6 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         }
 
 
-def go_to_contact(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.go_to_contact()
-    prober.local_mode()
-    return {"status": "success", "output": f"Probe station is in contact"}
-
-
-def go_to_separation(address=None, machine_type=None):
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.go_to_separation()
-    prober.local_mode()
-    return {"status": "success", "output": f"Probe station is in separation"}
-
-
 def auto_focus(address=None, machine_type=None):
     error = _ensure_initialized()
     if error:
@@ -353,4 +346,271 @@ def get_chuck_position(address=None, machine_type=None):
         return {
             "status": "error",
             "output": f"Failed to get chuck position: {str(e)}"
+        }
+
+
+def load_wafer(address=None, machine_type=None, wafer_id=None, orientation=None):
+    """
+    Load wafer and return full machine state.
+
+    Args:
+        wafer_id: Wafer ID to track (optional)
+        orientation: Wafer orientation (optional, default "North")
+
+    Returns:
+        dict: Full machine state in Swagger format
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "LoadWaferReply",
+            "error": {
+                "code": 400,
+                "message": error.get("output", "Prober not initialized")
+            }
+        }
+
+    try:
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        # Execute load
+        prober.load_wafer()
+        prober.local_mode()
+
+        # Track loaded wafer in globals if ID provided
+        if wafer_id:
+            globals_ = SvtWPAagentGlobalParameters.getInstance()
+            globals_.set_loaded_wafer(wafer_id, orientation or "North")
+
+        # Get and return current machine state
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "LoadWaferReply",
+            "data": machine_state
+        }
+
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+
+        return {
+            "status": "UnexpectedError",
+            "type": "LoadWaferReply",
+            "error": {
+                "code": 500,
+                "message": str(e)
+            }
+        }
+
+
+def unload_wafer(address=None, machine_type=None):
+    """
+    Unload wafer and return full machine state.
+
+    Returns:
+        dict: Full machine state in Swagger format
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "UnloadWaferReply",
+            "error": {
+                "code": 400,
+                "message": error.get("output", "Prober not initialized")
+            }
+        }
+
+    try:
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        # Execute unload
+        prober.unload_wafer()
+        prober.local_mode()
+
+        # Clear loaded wafer from globals
+        globals_ = SvtWPAagentGlobalParameters.getInstance()
+        globals_.clear_loaded_wafer()
+
+        # Get and return current machine state
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "UnloadWaferReply",
+            "data": machine_state
+        }
+
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+
+        return {
+            "status": "UnexpectedError",
+            "type": "UnloadWaferReply",
+            "error": {
+                "code": 500,
+                "message": str(e)
+            }
+        }
+
+
+def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
+    """
+    Move to die and return full machine state.
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "GoToDieReply",
+            "error": {"code": 400, "message": error.get("output")}
+        }
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        result = prober.go_to_die(col, row)
+        prober.local_mode()
+
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "GoToDieReply",
+            "data": machine_state
+        }
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+        return {
+            "status": "UnexpectedError",
+            "type": "GoToDieReply",
+            "error": {"code": 500, "message": str(e)}
+        }
+
+
+def move_chuck_home(address=None, machine_type=None):
+    """
+    Move chuck home and return full machine state.
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "MoveChuckHomeReply",
+            "error": {"code": 400, "message": error.get("output")}
+        }
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.move_chuck_home()
+        prober.local_mode()
+
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "MoveChuckHomeReply",
+            "data": machine_state
+        }
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+        return {
+            "status": "UnexpectedError",
+            "type": "MoveChuckHomeReply",
+            "error": {"code": 500, "message": str(e)}
+        }
+
+
+def go_to_contact(address=None, machine_type=None):
+    """
+    Move to contact and return full machine state.
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "GoToContactReply",
+            "error": {"code": 400, "message": error.get("output")}
+        }
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.go_to_contact()
+        prober.local_mode()
+
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "GoToContactReply",
+            "data": machine_state
+        }
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+        return {
+            "status": "UnexpectedError",
+            "type": "GoToContactReply",
+            "error": {"code": 500, "message": str(e)}
+        }
+
+
+def go_to_separation(address=None, machine_type=None):
+    """
+    Move to separation and return full machine state.
+    """
+    error = _ensure_initialized()
+    if error:
+        return {
+            "status": "BadRequest",
+            "type": "GoToSeparationReply",
+            "error": {"code": 400, "message": error.get("output")}
+        }
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.go_to_separation()
+        prober.local_mode()
+
+        machine_state = _get_machine_state(prober, address, machine_type)
+
+        return {
+            "status": "Success",
+            "type": "GoToSeparationReply",
+            "data": machine_state
+        }
+    except Exception as e:
+        try:
+            prober.local_mode()
+        except:
+            pass
+        return {
+            "status": "UnexpectedError",
+            "type": "GoToSeparationReply",
+            "error": {"code": 500, "message": str(e)}
         }

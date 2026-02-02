@@ -1,7 +1,6 @@
 class SvtWPAagentGlobalParameters:
     """
     Singleton class to store global parameters for the WP Agent.
-    Supports both manual and database-driven configuration.
     """
     _instance = None
 
@@ -19,8 +18,14 @@ class SvtWPAagentGlobalParameters:
 
         # Database-related parameters
         self.machine_id = None  # Database ID of the prober
-        self.machine_name = None  # Human-readable name from database
+        self.machine_name = None
         self.initialization_mode = None  # "manual" or "database"
+
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+        self.probe_card_id = None
+        self.probe_card_orientation = None
+        self.project_id = None
 
     @classmethod
     def getInstance(cls):
@@ -84,6 +89,64 @@ class SvtWPAagentGlobalParameters:
             raise ValueError(f"Invalid initialization mode: {mode}. Must be 'manual' or 'database'")
         self.initialization_mode = mode
 
+
+    def set_loaded_wafer(self, wafer_id, orientation):
+        """Set loaded wafer info when wafer is loaded."""
+        self.loaded_wafer_id = wafer_id
+        self.wafer_orientation = orientation
+
+    def clear_loaded_wafer(self):
+        """Clear loaded wafer info when wafer is unloaded."""
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+
+    def get_loaded_wafer_id(self):
+        """Get loaded wafer ID."""
+        return self.loaded_wafer_id if self.loaded_wafer_id is not None else 0
+
+    def get_wafer_orientation(self):
+        """Get wafer orientation."""
+        return self.wafer_orientation if self.wafer_orientation else "North"
+
+    def is_wafer_loaded(self):
+        """Check if a wafer is currently loaded."""
+        return self.loaded_wafer_id is not None
+
+    # ========================================================================
+    # TODO; Have to be implemented with DB
+    # ========================================================================
+
+    def set_probe_card(self, probe_card_id, orientation):
+        """Set installed probe card info."""
+        self.probe_card_id = probe_card_id
+        self.probe_card_orientation = orientation
+
+    def get_probe_card_id(self):
+        """Get probe card ID."""
+        return self.probe_card_id if self.probe_card_id is not None else 0
+
+    def get_probe_card_orientation(self):
+        """Get probe card orientation."""
+        return self.probe_card_orientation if self.probe_card_orientation else "vertical"
+
+    # ========================================================================
+    # TODO: Project methods i need to get it from DB
+    # ========================================================================
+
+    def set_project_id(self, project_id):
+        """Set opened project ID."""
+        self.project_id = project_id
+
+    def get_project_id(self):
+        """Get project ID."""
+        return self.project_id if self.project_id is not None else 0
+
+
+    def get_machine_id(self):
+        """Get machine ID."""
+        return self.machine_id if self.machine_id is not None else 0
+
+
     def get_info(self):
         """Get all current parameter values as a dictionary"""
         info = {
@@ -120,7 +183,6 @@ class SvtWPAagentGlobalParameters:
         self._apply_data(config)
         self.initialization_mode = config.get("initialization_mode", "manual")
 
-
     def _apply_data(self, data: dict):
         """
         Internal method to apply data from a dictionary to instance variables.
@@ -154,6 +216,11 @@ class SvtWPAagentGlobalParameters:
         self.machine_id = None
         self.machine_name = None
         self.initialization_mode = None
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+        self.probe_card_id = None
+        self.probe_card_orientation = None
+        self.project_id = None
         print("🔄 Global parameters reset")
 
     def is_initialized(self):
