@@ -40,16 +40,42 @@ paths:
   # Setup
   #########################
 
+  #########################
+  # Setup
+  #########################
+
   /svt.wp-agent.request/Initialize:
     post:
       tags: [Setup]
       summary: Initialize connection to wafer prober
       description: |
-        Two initialization modes:
-        1. Manual: Provide address and machine_type
-        2. Database: Use with_db=true for interactive selection
+        Three initialization modes:
         
-        Note: serialNumber parameter is required for all commands to track ASIC being tested.
+        **1. Manual Mode** - Direct connection with explicit parameters
+          - Required: address, machine_type
+          - Optional: project_name, alignment_die, home_die, force
+          - Use when you know exact prober address and settings
+          - serialNumber can be provided for tracking purposes
+        
+        **2. Database Interactive Mode** - User-guided selection
+          - Required: with_db=true
+          - Optional: force
+          - Agent prompts user interactively to select machine and project from database
+          - serialNumber can be provided for tracking purposes
+          - Best for exploration or manual configuration
+        
+        **3. Serial Number Mode** - Fully automatic initialization ⭐ NEW!
+          - Required: serialNumber (chip serial number, e.g. "W1_1_1")
+          - Optional: force
+          - Automatically resolves everything from database:
+            * Finds ASIC by serial number
+            * Retrieves wafer information (waferId, familyType, location)
+            * Matches machine by location (wafer.generalLocation == machine.generalLocation)
+            * Determines orientation from machine.loadedWafer.orientation
+            * Auto-generates project name: `ER2_{familyType}_Vertical_{orientation}`
+            * Opens project automatically
+          - Best for automated testing workflows where only chip serial is known
+          - No user interaction required
       requestBody:
         required: true
         content:
@@ -57,29 +83,58 @@ paths:
             schema:
               $ref: '#/components/schemas/InitializeRequest'
             examples:
-              Manual:
+              ManualMode:
+                summary: Manual initialization with explicit parameters
                 value:
                   type: "Initialize"
                   params:
-                    serialNumber: "ASIC_12345"
-                    address: "WPMIT01.cern.ch:35555"
-                    machine_type: "sentio"
-              ManualWithProject:
-                value:
-                  type: "Initialize"
-                  params:
-                    serialNumber: "ASIC_12345"
                     address: "WPMIT01.cern.ch:35555"
                     machine_type: "sentio"
                     project_name: "NKF7_Test"
                     alignment_die: "2,2,0"
                     home_die: "5,2,0"
-              Database:
+              
+              ManualModeWithTracking:
+                summary: Manual mode with serialNumber for tracking
                 value:
                   type: "Initialize"
                   params:
-                    serialNumber: "ASIC_12345"
+                    serialNumber: "W1_1_1"
+                    address: "WPMIT01.cern.ch:35555"
+                    machine_type: "sentio"
+                    project_name: "NKF7_Test"
+                    alignment_die: "2,2,0"
+                    home_die: "5,2,0"
+              
+              DatabaseMode:
+                summary: Interactive database selection
+                value:
+                  type: "Initialize"
+                  params:
                     with_db: true
+              
+              DatabaseModeWithTracking:
+                summary: Database mode with serialNumber for tracking
+                value:
+                  type: "Initialize"
+                  params:
+                    serialNumber: "W1_1_1"
+                    with_db: true
+              
+              SerialNumberMode:
+                summary: Auto-resolve everything by chip serial (NEW! ⭐)
+                description: |
+                  Fully automated initialization - provide only the chip serial number
+                  and the system automatically:
+                  - Finds the ASIC in database
+                  - Locates the matching machine
+                  - Generates project name
+                  - Opens project
+                value:
+                  type: "Initialize"
+                  params:
+                    serialNumber: "W1_1_1"
+                    force: false
       responses:
         '200':
           description: Success
@@ -88,7 +143,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommandReply'
               examples:
-                Success:
+                ManualModeSuccess:
+                  summary: Manual mode success
                   value:
                     type: "CommandReply"
                     request_id: "abc-123"
@@ -97,6 +153,48 @@ paths:
                     output: "Initialized WP at WPMIT01.cern.ch:35555"
                     execution_time_ms: 8234.5
                     timestamp: 1733155208.234
+                
+                SerialNumberModeSuccess:
+                  summary: Serial number mode success (auto-resolved)
+                  value:
+                    type: "CommandReply"
+                    request_id: "abc-456"
+                    command: "Initialize"
+                    status: "success"
+                    output: |
+                      Step 1/3: Finding chip...
+                         ✅ Found ASIC 'W1_1_1' at offset 0
+                         ✅ ASIC: serial=W1_1_1, waferId=1, family=BABYMOST
+                      
+                      Step 2/3: Finding wafer location and machine...
+                         ✅ Got 1 wafer(s)
+                         📍 Wafer location: CERN_186_R_E10
+                         ✅ Got 3 machine(s)
+                         ✅ Machine: WPMIT01 at WPMIT0101.WPMIT01:2002
+                         ✅ Location: CERN_186_R_E10, Orientation: North
+                      
+                      Step 3/3: Finding project...
+                         ✅ Got 5 project(s)
+                         🔍 Looking for project: ER2_BABYMOST_Vertical_North
+                         ✅ Found project: ER2_BABYMOST_Vertical_North (id=5)
+                      
+                      ✅ Initialization successful!
+                      
+                      Connected to WPMIT0101.WPMIT01:2002
+                      Machine: WPMIT01
+                      Project: ER2_BABYMOST_Vertical_North
+                    execution_time_ms: 12456.8
+                    timestamp: 1733155220.456
+                    data:
+                      asic_serial: "W1_1_1"
+                      wafer_id: 1
+                      family_type: "BABYMOST"
+                      orientation: "North"
+                      machine_name: "WPMIT01"
+                      machine_address: "WPMIT0101.WPMIT01:2002"
+                      project_name: "ER2_BABYMOST_Vertical_North"
+                      project_id: 5
+                      location: "CERN_186_R_E10"
         '400':
           description: Bad request
           content:
@@ -107,12 +205,24 @@ paths:
                 MissingParams:
                   value:
                     type: "CommandReply"
-                    request_id: "abc-123"
+                    request_id: "abc-789"
                     command: "Initialize"
                     status: "error"
-                    output: "Initialization requires 'address' and 'machine_type' parameters"
+                    output: "Initialization requires 'address' and 'machine_type' parameters, OR 'with_db=true', OR 'serialNumber'"
                     execution_time_ms: 0.1
                     timestamp: 1733155200.1
+                
+                AsicNotFound:
+                  summary: Serial number mode - ASIC not found
+                  value:
+                    type: "CommandReply"
+                    request_id: "abc-999"
+                    command: "Initialize"
+                    status: "error"
+                    output: "Step 1/3: Finding chip...
+                       ❌ ASIC 'INVALID_123' not found in database"
+                    execution_time_ms: 1234.5
+                    timestamp: 1733155300.123
 
   /svt.wp-agent.request/ShowProjectStatus:
     post:
