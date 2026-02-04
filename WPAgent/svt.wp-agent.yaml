@@ -28,7 +28,6 @@ tags:
   - name: Probe Control
   - name: Vision
   - name: Alignment
-  - name: Testing
   - name: Status
   - name: System
   - name: Database
@@ -190,7 +189,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/ShowProjectStatus:
-    post:
+    get:
       tags: [Status]
       summary: Show current project and prober status
       requestBody:
@@ -530,7 +529,26 @@ paths:
                     output: "Chuck moved home"
                     execution_time_ms: 0.0
                     timestamp: 0.0
-
+    get:
+      tags: [ Kafka Messaging ]
+      summary: Get MoveChuckHome status (query only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckHomeMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
   /svt.wp-agent.request/MoveChuckToWorkArea:
     post:
       tags: [Movement]
@@ -658,7 +676,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/GetChuckPosition:
-    post:
+    get:
       tags: [Status]
       summary: Get current chuck position status
       requestBody:
@@ -827,7 +845,7 @@ paths:
   #########################
 
   /svt.wp-agent.request/GetInfo:
-    post:
+    get:
       tags: [Status]
       summary: Get current die information
       requestBody:
@@ -855,7 +873,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/GetCurrentIndex:
-    post:
+    get:
       tags: [Status]
       summary: Get current die index
       requestBody:
@@ -893,7 +911,7 @@ paths:
                       die_index: "string"
 
   /svt.wp-agent.request/GetDiesNumber:
-    post:
+    get:
       tags: [Status]
       summary: Get total number of dies
       requestBody:
@@ -931,7 +949,7 @@ paths:
                       total_dies: 0
 
   /svt.wp-agent.request/GetAgentState:
-    post:
+    get:
       tags: [System]
       summary: Get agent state machine status
       requestBody:
@@ -959,7 +977,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/ListAvailableCommands:
-    post:
+    get:
       tags: [Status]
       summary: List all available commands
       requestBody:
@@ -1047,7 +1065,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/Help:
-    post:
+    get:
       tags: [System]
       summary: Get help information
       requestBody:
@@ -1079,7 +1097,7 @@ paths:
   #########################
 
   /svt.wp-agent.request/ListProbers:
-    post:
+    get:
       tags: [Database]
       summary: List all available probe stations from database
       requestBody:
@@ -1107,7 +1125,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/ListChipTypes:
-    post:
+    get:
       tags: [Database]
       summary: List chip types from database
       requestBody:
@@ -1135,7 +1153,7 @@ paths:
                     timestamp: 0.0
 
   /svt.wp-agent.request/ListOrientations:
-    post:
+    get:
       tags: [Database]
       summary: List wafer orientations from database
       requestBody:
@@ -1200,7 +1218,7 @@ paths:
   # Kafka Messaging Interface
   #########################
 
-  /svt.wp-agent.request/LoadWafer:
+  /svt.wp-agent.request/GetLoadStatus:
     get:
       tags: [Kafka Messaging]
       summary: Get LoadWafer status (query only, no execution)
@@ -1246,7 +1264,7 @@ paths:
                         z: 0.0
                       chuckZPositionState: "Contact"
 
-  /svt.wp-agent.request/UnloadWafer:
+  /svt.wp-agent.request/GetUnloadedWaferStatus:
     get:
       tags: [Kafka Messaging]
       summary: Get UnloadWafer status (query only, no execution)
@@ -1336,7 +1354,7 @@ paths:
                         z: 0.0
                       chuckZPositionState: "Contact"
 
-  /svt.wp-agent.request/MoveChuckDie:
+  /svt.wp-agent.request/GetChuckDieStatus:
     get:
       tags: [Kafka Messaging]
       summary: Get MoveChuckDie status (query only)
@@ -1358,27 +1376,6 @@ paths:
                   - $ref: '#/components/schemas/ReplyMessage'
                   - $ref: '#/components/schemas/MoveChuckDieReplyMessage'
 
-  /svt.wp-agent.request/MoveChuckHome:
-    get:
-      tags: [Kafka Messaging]
-      summary: Get MoveChuckHome status (query only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/MoveChuckHomeMessage'
-      responses:
-        '200':
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
 
   /svt.wp-agent.request/SetChuckZPositionState:
     get:
@@ -1402,7 +1399,7 @@ paths:
                   - $ref: '#/components/schemas/ReplyMessage'
                   - $ref: '#/components/schemas/SetChuckZPositionStateReplyMessage'
 
-  /svt.wp-agent.request/MoveChuckAsic:
+  /svt.wp-agent.request/GetMoveChuckAsicStatus:
     get:
       tags: [Kafka Messaging]
       summary: Get MoveChuckAsic status (query only)
