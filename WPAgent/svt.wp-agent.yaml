@@ -1,19 +1,18 @@
 openapi: 3.0.3
 info:
   title: SVT Wafer Prober Agent API (Kafka Command Contract)
-  version: 2.0.0
+  version: 2.1.0
   description: >
     This OpenAPI document describes the message contract for the SVT Wafer Prober Agent.
     The agent consumes Kafka messages on topic `svt.wp-agent.request` and replies on `svt.wp-agent.reply`.
     
-    ## -
-      What you send: Only type and params fields. The kafka_client automatically adds
+    ## What you send
+    Only type and params fields. The kafka_client automatically adds
     request_id, sent_at, and reply_to.
     
-    ## -
-      What you receive: The kafka_client wraps the command result with
+    ## What you receive
+    The kafka_client wraps the command result with
     type=CommandReply, request_id, command, status, output, execution_time_ms, and timestamp.
-    
     
     Some commands also include a data field with structured information.
 
@@ -49,6 +48,8 @@ paths:
         Two initialization modes:
         1. Manual: Provide address and machine_type
         2. Database: Use with_db=true for interactive selection
+        
+        Note: serialNumber parameter is required for all commands to track ASIC being tested.
       requestBody:
         required: true
         content:
@@ -60,12 +61,14 @@ paths:
                 value:
                   type: "Initialize"
                   params:
+                    serialNumber: "ASIC_12345"
                     address: "WPMIT01.cern.ch:35555"
                     machine_type: "sentio"
               ManualWithProject:
                 value:
                   type: "Initialize"
                   params:
+                    serialNumber: "ASIC_12345"
                     address: "WPMIT01.cern.ch:35555"
                     machine_type: "sentio"
                     project_name: "NKF7_Test"
@@ -75,6 +78,7 @@ paths:
                 value:
                   type: "Initialize"
                   params:
+                    serialNumber: "ASIC_12345"
                     with_db: true
       responses:
         '200':
@@ -124,7 +128,8 @@ paths:
               NoParams:
                 value:
                   type: "ShowProjectStatus"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Status returned
@@ -158,6 +163,7 @@ paths:
                 value:
                   type: "OpenProject"
                   params:
+                    serialNumber: "ASIC_12345"
                     project_name: "NKF7_Test"
       responses:
         '200':
@@ -178,566 +184,25 @@ paths:
                     timestamp: 1733155404.233
 
   #########################
-  # Movement
-  #########################
-
-  /svt.wp-agent.request/MoveChuckXY:
-    post:
-      tags: [Movement]
-      summary: Move chuck to XY coordinates
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              ValidMove:
-                value:
-                  type: "MoveChuckXY"
-                  params:
-                    x: 155539.9
-                    y: -238764.7
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "move-001"
-                    command: "MoveChuckXY"
-                    status: "success"
-                    output: "Moved chuck to x=155539.9, y=-238764.7"
-                    execution_time_ms: 3245.6
-                    timestamp: 1733155503.245
-
-  /svt.wp-agent.request/MoveChuckZ:
-    post:
-      tags: [Movement]
-      summary: Move chuck to Z coordinate
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              ValidMove:
-                value:
-                  type: "MoveChuckZ"
-                  params:
-                    z: 10500.9
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "move-z-001"
-                    command: "MoveChuckZ"
-                    status: "success"
-                    output: "Moved chuck to z=10500.9"
-                    execution_time_ms: 2134.8
-                    timestamp: 1733155602.134
-
-  /svt.wp-agent.request/GoToDie:
-    post:
-      tags: [Movement]
-      summary: Move to specific die
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              ValidDie:
-                value:
-                  type: "GoToDie"
-                  params:
-                    col: 5
-                    row: 10
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "die-001"
-                    command: "GoToDie"
-                    status: "success"
-                    output: "Moved to die: (5, 10)"
-                    execution_time_ms: 2456.3
-                    timestamp: 1733157202.456
-
-  /svt.wp-agent.request/StepNextDie:
-    post:
-      tags: [Movement]
-      summary: Step to next die
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "StepNextDie"
-                  params: {}
-      responses:
-        '200':
-          description: Stepped
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "step-001"
-                    command: "StepNextDie"
-                    status: "success"
-                    output: "Stepped to next die: (6, 10)"
-                    execution_time_ms: 2345.1
-                    timestamp: 1733157002.345
-
-  /svt.wp-agent.request/GoToPreviousDie:
-    post:
-      tags: [Testing]
-      summary: Move to previous die
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "GoToPreviousDie"
-                  params: {}
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "prev-001"
-                    command: "GoToPreviousDie"
-                    status: "success"
-                    output: "Moved to previous die"
-                    execution_time_ms: 2123.4
-                    timestamp: 1733157102.123
-
-  /svt.wp-agent.request/MoveChuckHome:
-    post:
-      tags: [Movement]
-      summary: Move chuck to home
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "MoveChuckHome"
-                  params: {}
-      responses:
-        '200':
-          description: Moved home
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "home-001"
-                    command: "MoveChuckHome"
-                    status: "success"
-                    output: "Chuck moved home"
-                    execution_time_ms: 3456.7
-                    timestamp: 1733156003.456
-
-  /svt.wp-agent.request/MoveChuckToWorkArea:
-    post:
-      tags: [Movement]
-      summary: Move to work area
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              Probing:
-                value:
-                  type: "MoveChuckToWorkArea"
-                  params:
-                    work_area: 0
-              OffAxis:
-                value:
-                  type: "MoveChuckToWorkArea"
-                  params:
-                    work_area: 1
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "work-001"
-                    command: "MoveChuckToWorkArea"
-                    status: "success"
-                    output: "Moved to 0 workarea"
-                    execution_time_ms: 4567.8
-                    timestamp: 1733156104.567
-
-  #########################
-  # Positioning
-  #########################
-
-  /svt.wp-agent.request/FindHome:
-    post:
-      tags: [Positioning]
-      summary: Find home position
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              UseStoredDie:
-                value:
-                  type: "FindHome"
-                  params: {}
-              SpecificDie:
-                value:
-                  type: "FindHome"
-                  params:
-                    home_die_col: 1
-                    home_die_row: 1
-      responses:
-        '200':
-          description: Home found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "home-001"
-                    command: "FindHome"
-                    status: "success"
-                    output: "Found home position"
-                    execution_time_ms: 15234.5
-                    timestamp: 1733156115.234
-
-  #########################
-  # Probe Control
-  #########################
-
-  /svt.wp-agent.request/GoToContact:
-    post:
-      tags: [Probe Control]
-      summary: Move probes to contact
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "GoToContact"
-                  params: {}
-      responses:
-        '200':
-          description: At contact
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "contact-001"
-                    command: "GoToContact"
-                    status: "success"
-                    output: "Probe station is in contact"
-                    execution_time_ms: 1234.5
-                    timestamp: 1733155901.234
-
-  /svt.wp-agent.request/GoToSeparation:
-    post:
-      tags: [Probe Control]
-      summary: Move probes to separation
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "GoToSeparation"
-                  params: {}
-      responses:
-        '200':
-          description: At separation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "sep-001"
-                    command: "GoToSeparation"
-                    status: "success"
-                    output: "Probe station is in separation"
-                    execution_time_ms: 987.6
-                    timestamp: 1733156000.987
-
-  #########################
-  # Vision
-  #########################
-
-  /svt.wp-agent.request/AlignWafer:
-    post:
-      tags: [Vision]
-      summary: Perform wafer alignment
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              UseStoredDie:
-                value:
-                  type: "AlignWafer"
-                  params: {}
-              SpecificDie:
-                value:
-                  type: "AlignWafer"
-                  params:
-                    align_die_col: 5
-                    align_die_row: 10
-      responses:
-        '200':
-          description: Aligned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "align-001"
-                    command: "AlignWafer"
-                    status: "success"
-                    output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
-                    execution_time_ms: 45678.9
-                    timestamp: 1733156745.678
-
-  /svt.wp-agent.request/AutoFocus:
-    post:
-      tags: [Vision]
-      summary: Auto-focus active camera
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "AutoFocus"
-                  params: {}
-      responses:
-        '200':
-          description: Focused
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "focus-001"
-                    command: "AutoFocus"
-                    status: "success"
-                    output: "Auto-focus command successfully executed"
-                    execution_time_ms: 15234.6
-                    timestamp: 1733156215.234
-
-  /svt.wp-agent.request/SwitchCamera:
-    post:
-      tags: [Vision]
-      summary: Switch active camera
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              Chuck:
-                value:
-                  type: "SwitchCamera"
-                  params:
-                    mount_point: "Chuck"
-              OffAxis:
-                value:
-                  type: "SwitchCamera"
-                  params:
-                    mount_point: "OffAxis"
-      responses:
-        '200':
-          description: Switched
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "cam-001"
-                    command: "SwitchCamera"
-                    status: "success"
-                    output: "Switched camera to Chuck"
-                    execution_time_ms: 1234.5
-                    timestamp: 1733156301.234
-
-  /svt.wp-agent.request/GetCameraStatus:
-    post:
-      tags: [Vision]
-      summary: Get camera status
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "GetCameraStatus"
-                  params: {}
-      responses:
-        '200':
-          description: Status retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "camstat-001"
-                    command: "GetCameraStatus"
-                    status: "success"
-                    output: "Camera Status: chuck (gain: 1.5, exposure: 50), scope (gain: 2.0, exposure: 100)"
-                    execution_time_ms: 156.3
-                    timestamp: 1733156400.156
-
-  #########################
-  # Alignment
-  #########################
-
-  /svt.wp-agent.request/RunPTPA:
-    post:
-      tags: [Alignment]
-      summary: Run PTPA
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              NoParams:
-                value:
-                  type: "RunPTPA"
-                  params: {}
-      responses:
-        '200':
-          description: PTPA completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "CommandReply"
-                    request_id: "ptpa-001"
-                    command: "RunPTPA"
-                    status: "success"
-                    output: "PTPA executed"
-                    execution_time_ms: 125678.3
-                    timestamp: 1733157025.678
-
-  #########################
   # Wafer Handling
   #########################
 
   /svt.wp-agent.request/Load:
     post:
-      tags: [ Wafer Handling ]
+      tags: [Wafer Handling]
       summary: Load wafer with optional intelligent initialization from ASIC serial number
       description: |
-        Load a wafer onto the probe station. If `serialNumber` is provided, the system will:
-        1. Query the database to get wafer information
+        Load a wafer onto the probe station. Two modes:
+        
+        **Intelligent Mode (with asic_serial):**
+        1. Query database to get wafer information from ASIC serial
         2. Determine wafer type, family type, and orientation
-        3. Build the appropriate project name
-        4. Verify probe station configuration
+        3. Build appropriate project name: {WaferType}_{FamilyType}_{Orientation}
+        4. Open the project automatically
         5. Load the wafer
         
-        If `serialNumber` is not provided, loads the wafer using current/default settings.
+        **Manual Mode (without asic_serial):**
+        - Load wafer using current/default settings (backward compatible)
       requestBody:
         required: false
         content:
@@ -755,17 +220,19 @@ paths:
                           description: ASIC serial number for intelligent initialization
                           example: "ASIC_12345"
             examples:
-              WithAsicSerial:
-                summary: Load with ASIC serial number (intelligent mode)
+              IntelligentMode:
+                summary: Load with ASIC serial (intelligent mode)
                 value:
                   type: "Load"
                   params:
+                    serialNumber: "ASIC_12345"
                     asic_serial: "ASIC_12345"
-              NoParams:
+              ManualMode:
                 summary: Load without parameters (manual mode)
                 value:
                   type: "Load"
-                  params: { }
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Wafer loaded successfully
@@ -801,11 +268,11 @@ paths:
                             type: string
                             description: Wafer location from database
               examples:
-                SuccessWithAsic:
+                IntelligentSuccess:
                   summary: Success with ASIC serial (intelligent mode)
                   value:
                     type: "CommandReply"
-                    request_id: "001"
+                    request_id: "load-001"
                     command: "Load"
                     status: "success"
                     output: "Wafer loaded with project 'ITkPixV1_RD53B_vertical'"
@@ -819,7 +286,7 @@ paths:
                       orientation: "vertical"
                       project_name: "ITkPixV1_RD53B_vertical"
                       location: "Building 157"
-                SuccessManual:
+                ManualSuccess:
                   summary: Success without ASIC serial (manual mode)
                   value:
                     type: "CommandReply"
@@ -860,7 +327,8 @@ paths:
               NoParams:
                 value:
                   type: "Unload"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Unloaded
@@ -893,7 +361,8 @@ paths:
               NoParams:
                 value:
                   type: "Cleaning"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Cleaning completed
@@ -913,6 +382,636 @@ paths:
                     timestamp: 1733156925.000
 
   #########################
+  # Movement
+  #########################
+
+  /svt.wp-agent.request/MoveChuckXY:
+    post:
+      tags: [Movement]
+      summary: Move chuck to XY coordinates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidMove:
+                value:
+                  type: "MoveChuckXY"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    x: 155539.9
+                    y: -238764.7
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "move-001"
+                    command: "MoveChuckXY"
+                    status: "success"
+                    output: "Moved chuck to x=155539.9, y=-238764.7"
+                    execution_time_ms: 3245.6
+                    timestamp: 1733155503.245
+
+  /svt.wp-agent.request/MoveChuckZ:
+    post:
+      tags: [Movement]
+      summary: Move chuck to Z coordinate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidMove:
+                value:
+                  type: "MoveChuckZ"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    z: 10500.9
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "move-z-001"
+                    command: "MoveChuckZ"
+                    status: "success"
+                    output: "Moved chuck to z=10500.9"
+                    execution_time_ms: 2134.8
+                    timestamp: 1733155602.134
+
+  /svt.wp-agent.request/GoToDie:
+    post:
+      tags: [Movement]
+      summary: Move to specific die
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidDie:
+                value:
+                  type: "GoToDie"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    col: 5
+                    row: 10
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "die-001"
+                    command: "GoToDie"
+                    status: "success"
+                    output: "Moved to die: (5, 10)"
+                    execution_time_ms: 2456.3
+                    timestamp: 1733157202.456
+
+  /svt.wp-agent.request/StepNextDie:
+    post:
+      tags: [Movement]
+      summary: Step to next die
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "StepNextDie"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Stepped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "step-001"
+                    command: "StepNextDie"
+                    status: "success"
+                    output: "Stepped to next die: (6, 10)"
+                    execution_time_ms: 2345.1
+                    timestamp: 1733157002.345
+
+  /svt.wp-agent.request/GoToPreviousDie:
+    post:
+      tags: [Movement]
+      summary: Move to previous die
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToPreviousDie"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "prev-001"
+                    command: "GoToPreviousDie"
+                    status: "success"
+                    output: "Moved to previous die"
+                    execution_time_ms: 2123.4
+                    timestamp: 1733157102.123
+
+  /svt.wp-agent.request/MoveChuckHome:
+    post:
+      tags: [Movement]
+      summary: Move chuck to home position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "MoveChuckHome"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Moved home
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "home-001"
+                    command: "MoveChuckHome"
+                    status: "success"
+                    output: "Chuck moved home"
+                    execution_time_ms: 3456.7
+                    timestamp: 1733156003.456
+    get:
+      tags:
+        - Chuck
+      summary: Move Chuck to Home Position
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckHomeMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+
+  /svt.wp-agent.request/MoveChuckToWorkArea:
+    post:
+      tags: [Movement]
+      summary: Move chuck to work area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              Probing:
+                value:
+                  type: "MoveChuckToWorkArea"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    work_area: 0
+              OffAxis:
+                value:
+                  type: "MoveChuckToWorkArea"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    work_area: 1
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "work-001"
+                    command: "MoveChuckToWorkArea"
+                    status: "success"
+                    output: "Moved to 0 workarea"
+                    execution_time_ms: 4567.8
+                    timestamp: 1733156104.567
+
+  #########################
+  # Positioning
+  #########################
+
+  /svt.wp-agent.request/FindHome:
+    post:
+      tags: [Positioning]
+      summary: Find home position using vision
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              UseStoredDie:
+                value:
+                  type: "FindHome"
+                  params:
+                      serialNumber: "ASIC_12345"
+              SpecificDie:
+                value:
+                  type: "FindHome"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    home_die_col: 1
+                    home_die_row: 1
+      responses:
+        '200':
+          description: Home found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "home-001"
+                    command: "FindHome"
+                    status: "success"
+                    output: "Found home position"
+                    execution_time_ms: 15234.5
+                    timestamp: 1733156115.234
+
+  #########################
+  # Probe Control
+  #########################
+
+  /svt.wp-agent.request/GoToContact:
+    post:
+      tags: [Probe Control]
+      summary: Move probes to contact position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToContact"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: At contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "contact-001"
+                    command: "GoToContact"
+                    status: "success"
+                    output: "Probe station is in contact"
+                    execution_time_ms: 1234.5
+                    timestamp: 1733155901.234
+
+  /svt.wp-agent.request/GoToSeparation:
+    post:
+      tags: [Probe Control]
+      summary: Move probes to separation position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GoToSeparation"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: At separation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "sep-001"
+                    command: "GoToSeparation"
+                    status: "success"
+                    output: "Probe station is in separation"
+                    execution_time_ms: 987.6
+                    timestamp: 1733156000.987
+
+  /svt.wp-agent.request/GetChuckPosition:
+    post:
+      tags: [Status]
+      summary: Get current chuck position status
+      description: |
+        Returns the current position of the chuck (Contact, Separation, Default, etc.)
+        Uses Sentio command: status:get_prop Z_Position_Hint, chuck
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetChuckPosition"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Position retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CommandReply'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          position:
+                            type: string
+                            description: Current chuck position
+                            enum: [In Contact, In Separation, In Default, In Hover, In Lift, In Home, In Overtravel]
+              examples:
+                Contact:
+                  value:
+                    type: "CommandReply"
+                    request_id: "pos-001"
+                    command: "GetChuckPosition"
+                    status: "success"
+                    output: "Chuck is In Contact"
+                    execution_time_ms: 9.6
+                    timestamp: 1733156000.010
+                    data:
+                      position: "In Contact"
+                Separation:
+                  value:
+                    type: "CommandReply"
+                    request_id: "pos-002"
+                    command: "GetChuckPosition"
+                    status: "success"
+                    output: "Chuck is In Separation"
+                    execution_time_ms: 9.6
+                    timestamp: 1733156000.010
+                    data:
+                      position: "In Separation"
+                Default:
+                  value:
+                    type: "CommandReply"
+                    request_id: "pos-003"
+                    command: "GetChuckPosition"
+                    status: "success"
+                    output: "Chuck is In Default"
+                    execution_time_ms: 9.6
+                    timestamp: 1733156000.010
+                    data:
+                      position: "In Default"
+
+  #########################
+  # Vision
+  #########################
+
+  /svt.wp-agent.request/AlignWafer:
+    post:
+      tags: [Vision]
+      summary: Perform wafer alignment
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              UseStoredDie:
+                value:
+                  type: "AlignWafer"
+                  params:
+                      serialNumber: "ASIC_12345"
+              SpecificDie:
+                value:
+                  type: "AlignWafer"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    align_die_col: 5
+                    align_die_row: 10
+      responses:
+        '200':
+          description: Aligned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "align-001"
+                    command: "AlignWafer"
+                    status: "success"
+                    output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
+                    execution_time_ms: 45678.9
+                    timestamp: 1733156745.678
+
+  /svt.wp-agent.request/AutoFocus:
+    post:
+      tags: [Vision]
+      summary: Auto-focus active camera
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "AutoFocus"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Focused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "focus-001"
+                    command: "AutoFocus"
+                    status: "success"
+                    output: "Auto-focus command successfully executed"
+                    execution_time_ms: 15234.6
+                    timestamp: 1733156215.234
+
+  /svt.wp-agent.request/SwitchCamera:
+    post:
+      tags: [Vision]
+      summary: Switch active camera
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              Chuck:
+                value:
+                  type: "SwitchCamera"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    mount_point: "Chuck"
+              OffAxis:
+                value:
+                  type: "SwitchCamera"
+                  params:
+                    serialNumber: "ASIC_12345"
+                    mount_point: "OffAxis"
+      responses:
+        '200':
+          description: Switched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "cam-001"
+                    command: "SwitchCamera"
+                    status: "success"
+                    output: "Switched camera to Chuck"
+                    execution_time_ms: 1234.5
+                    timestamp: 1733156301.234
+
+  #########################
+  # Alignment
+  #########################
+
+  /svt.wp-agent.request/RunPTPA:
+    post:
+      tags: [Alignment]
+      summary: Run Probe Tip Position Alignment (PTPA)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "RunPTPA"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: PTPA completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "ptpa-001"
+                    command: "RunPTPA"
+                    status: "success"
+                    output: "PTPA executed"
+                    execution_time_ms: 125678.3
+                    timestamp: 1733157025.678
+
+  #########################
   # Status
   #########################
 
@@ -930,7 +1029,8 @@ paths:
               NoParams:
                 value:
                   type: "GetInfo"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Info retrieved
@@ -949,10 +1049,102 @@ paths:
                     execution_time_ms: 234.5
                     timestamp: 1733157400.234
 
+  /svt.wp-agent.request/GetCurrentIndex:
+    post:
+      tags: [Status]
+      summary: Get current die index
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetCurrentIndex"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Index retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CommandReply'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          die_index:
+                            type: string
+                            description: Current die position (col,row,subsite)
+                            example: "5,3,0"
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "idx-001"
+                    command: "GetCurrentIndex"
+                    status: "success"
+                    output: "Current die index: 5,3,0"
+                    execution_time_ms: 45.2
+                    timestamp: 1733157400.045
+                    data:
+                      die_index: "5,3,0"
+
+  /svt.wp-agent.request/GetDiesNumber:
+    post:
+      tags: [Status]
+      summary: Get total number of dies
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              NoParams:
+                value:
+                  type: "GetDiesNumber"
+                  params:
+                      serialNumber: "ASIC_12345"
+      responses:
+        '200':
+          description: Count retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CommandReply'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          total_dies:
+                            type: integer
+                            description: Total number of dies on wafer
+                            example: 150
+              examples:
+                Success:
+                  value:
+                    type: "CommandReply"
+                    request_id: "count-001"
+                    command: "GetDiesNumber"
+                    status: "success"
+                    output: "Total dies: 150"
+                    execution_time_ms: 67.8
+                    timestamp: 1733157400.067
+                    data:
+                      total_dies: 150
+
   /svt.wp-agent.request/GetAgentState:
     post:
       tags: [System]
-      summary: Get agent state
+      summary: Get agent state machine status
       requestBody:
         required: false
         content:
@@ -963,7 +1155,8 @@ paths:
               NoParams:
                 value:
                   type: "GetAgentState"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: State retrieved
@@ -985,7 +1178,7 @@ paths:
   /svt.wp-agent.request/ListAvailableCommands:
     post:
       tags: [Status]
-      summary: List all commands
+      summary: List all available commands
       requestBody:
         required: false
         content:
@@ -996,7 +1189,8 @@ paths:
               NoParams:
                 value:
                   type: "ListAvailableCommands"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Commands listed
@@ -1022,7 +1216,7 @@ paths:
   /svt.wp-agent.request/ResetAgent:
     post:
       tags: [System]
-      summary: Reset agent state
+      summary: Reset agent state machine
       requestBody:
         required: false
         content:
@@ -1033,7 +1227,8 @@ paths:
               NoParams:
                 value:
                   type: "ResetAgent"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
       responses:
         '200':
           description: Reset
@@ -1055,7 +1250,7 @@ paths:
   /svt.wp-agent.request/LocalMode:
     post:
       tags: [System]
-      summary: Set local mode
+      summary: Set prober to local mode
       requestBody:
         required: false
         content:
@@ -1088,7 +1283,7 @@ paths:
   /svt.wp-agent.request/Help:
     post:
       tags: [System]
-      summary: Get help
+      summary: Get help information
       requestBody:
         required: false
         content:
@@ -1099,11 +1294,13 @@ paths:
               AllCommands:
                 value:
                   type: "Help"
-                  params: {}
+                  params:
+                      serialNumber: "ASIC_12345"
               SpecificCommand:
                 value:
                   type: "Help"
                   params:
+                    serialNumber: "ASIC_12345"
                     command: "MoveChuckXY"
       responses:
         '200':
@@ -1130,7 +1327,7 @@ paths:
   /svt.wp-agent.request/ListProbers:
     post:
       tags: [Database]
-      summary: List all probers
+      summary: List all available probe stations from database
       requestBody:
         required: false
         content:
@@ -1163,7 +1360,7 @@ paths:
   /svt.wp-agent.request/ListChipTypes:
     post:
       tags: [Database]
-      summary: List chip types
+      summary: List chip types from database
       requestBody:
         required: false
         content:
@@ -1196,7 +1393,7 @@ paths:
   /svt.wp-agent.request/ListOrientations:
     post:
       tags: [Database]
-      summary: List orientations
+      summary: List wafer orientations from database
       requestBody:
         required: false
         content:
@@ -1233,7 +1430,7 @@ paths:
   /svt.wp-agent.request/RunSequencer:
     post:
       tags: [Automation]
-      summary: Execute sequence
+      summary: Execute a command sequence from file
       requestBody:
         required: true
         content:
@@ -1245,6 +1442,7 @@ paths:
                 value:
                   type: "RunSequencer"
                   params:
+                    serialNumber: "ASIC_12345"
                     filepath: "/sequencer/TestSequence.json"
       responses:
         '200':
@@ -1263,6 +1461,221 @@ paths:
                     output: "Sequence from /sequencer/TestSequence.json executed successfully"
                     execution_time_ms: 89456.7
                     timestamp: 1733157389.456
+  # ========================================
+  # Kafka Messaging Interface Endpoints
+  # ========================================
+
+  /svt.wp-agent.request/GetWpMachineState:
+    get:
+      tags:
+        - Common Commands
+      summary: Get Current Wafer Probe Machine State
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetWpMachineStateMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetWpMachineStateReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+  /svt.wp-agent.request/MoveChuckAsic:
+    get:
+      tags:
+        - Chuck
+      summary: Move Chuck to particular ASIC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckAsicMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckAsicReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
+  /svt.wp-agent.request/LoadWafer:
+    get:
+      tags:
+        - Common Commands
+      summary: Load Wafer to the Wafer Probe Machine
+      description: Emits reply message when the wafer load process is completed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/LoadWaferMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/LoadWaferReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
+  /svt.wp-agent.event/WpMachineStateChanged:
+    post:
+      tags:
+        - Events
+      summary: Wafer Probe Machine State Event
+      description: Emits each 2 seconds to notify about the current state of the Wafer Probe Machine
+      responses:
+        '200':
+          description: Message Body
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/EventMessage'
+                  - $ref: '#/components/schemas/WpMachineStateChangedMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.wp-agent.request/MoveChuckDie:
+    get:
+      tags:
+        - Chuck
+      summary: Move Chuck to particular Die on the Wafer Map
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckDieMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckDieReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+  /svt.wp-agent.request/UnloadWafer:
+    get:
+      tags:
+        - Common Commands
+      summary: Unload Wafer from the Wafer Probe Machine
+      description: Emits reply message when the unload process is completed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UnloadWaferMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UnloadWaferReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  
+  /svt.wp-agent.request/SetChuckZPositionState:
+    get:
+      tags:
+        - Chuck
+      summary: Set Chuck Z Position
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SetChuckZPositionStateMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SetChuckZPositionStateReplyMessage'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+
 
 components:
   schemas:
@@ -1290,7 +1703,12 @@ components:
           enum: [Initialize]
         params:
           type: object
+          required: [serialNumber]
           properties:
+            serialNumber:
+              type: string
+              description: ASIC serial number being tested
+              example: "ASIC_12345"
             address:
               type: string
               example: "WPMIT01.cern.ch:35555"
@@ -1339,3 +1757,356 @@ components:
           nullable: true
           description: Optional extra structured payload
           additionalProperties: true
+    # ========================================
+    # Kafka Message Schemas
+    # ========================================
+
+    RequestMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    ReplyMessage:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        status:
+          $ref: "#/components/schemas/ReplyStatus"
+        type:
+          type: string
+        data:
+          type: object
+        error:
+          type: object
+          required:
+            - message
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+    EventMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    ReplyStatus:
+      type: string
+      enum:
+        - Success
+        - BadRequest
+        - NotFound
+        - UnexpectedError
+    #          
+    # LOAD WAFER
+    #
+    LoadWaferMessage:
+      properties:
+        type:
+          type: string
+          default: 'LoadWafer'
+        data:
+          type: object
+          required:
+            - wpMachineId
+            - waferId
+            - orientation
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+            waferId:
+              type: number
+              description: Wafer id to be loaded
+            orientation:
+              type: string
+              description: Wafer id to be loaded
+
+    LoadWaferReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'LoadWaferReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+    #          
+    # UNLOAD WAFER
+    #
+    UnloadWaferMessage:
+      properties:
+        type:
+          type: string
+          default: 'UnloadWafer'
+        data:
+          type: object
+          required:
+            - wpMachineId
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+
+    UnloadWaferReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'UnloadWaferReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # WP MACHINE STATE CHNAGED
+    #
+    WpMachineStateChangedMessage:
+      properties:
+        type:
+          type: string
+          default: 'WpMachineStateChanged'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # GET WP MACHINE STATE
+    #
+    GetWpMachineStateMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetWpMachineState'
+        data:
+          type: object
+          required:
+            - wpMachineId
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+    GetWpMachineStateReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'GetWpMachineStateReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # SET CHUCK Z POSITION
+    #
+    SetChuckZPositionStateMessage:
+      properties:
+        type:
+          type: string
+          default: 'SetChuckZPositionState'
+        data:
+          type: object
+          required:
+            - wpMachineId
+            - chuckZPositionState
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+            chuckZPositionState:
+              $ref: "#/components/schemas/WpChuckZPositionState"
+
+    SetChuckZPositionStateReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'SetChuckZPositionStateReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # MOVE CHUCK HOME
+    #
+    MoveChuckHomeMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckHome'
+        data:
+          type: object
+          required:
+            - wpMachineId
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+
+    MoveChuckHomeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckHomeReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # MOVE CHUCK DIE
+    #
+    MoveChuckDieMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckDie'
+        data:
+          type: object
+          required:
+            - wpMachineId
+            - waferMapDiePosition
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+            waferMapDiePosition:
+              $ref: "#/components/schemas/WaferMapDiePosition"
+
+    MoveChuckDieReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckDieReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # MOVE CHUCK ASIC
+    #
+    MoveChuckAsicMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckAsic'
+        data:
+          type: object
+          required:
+            - wpMachineId
+            - waferMapDiePosition
+          properties:
+            wpMachineId:
+              type: number
+              description: Wafer Probe Machine id
+            asicId:
+              type: number
+              description: ASIC id
+
+    MoveChuckAsicReplyMessage:
+      properties:
+        type:
+          type: string
+          default: 'MoveChuckAsicReply'
+        data:
+          $ref: "#/components/schemas/WpMachineStateDto"
+
+    #
+    # DTOs
+    #
+    # TODO: Not sure what else can be a part of the Current WP Machine State, and if all the fields make sense. This is just a proposal.
+    # TODO: but the idea is to have all the information we know about the machine itself, chuck position (X,Y, Z, current Die index, current AsicId), etc.
+    WpMachineStateDto:
+      type: object
+      required:
+        - wpMachineId
+        - wpMachineStatus
+      properties:
+        wpMachineId:
+          type: number
+          description: Wafer Probe Machine id
+        wpMachineStatus:
+          $ref: "#/components/schemas/WpMachineStatus"
+        loadedWafer:
+          properties:
+            waferId:
+              type: number
+              description: Loaded Wafer id. If no wafer is loaded, this value is null
+              nullable: true
+            orientation:
+              type: string
+              description: Loaded Wafer orientation. If no wafer is loaded, this value is null.
+              nullable: true
+          nullable: true
+          description: Loaded Wafer information. Returns null if no wafer is loaded.
+        installedProbeCard:
+          properties:
+            probeCardId:
+              type: number
+              description: Installed Probe Card id. If no Probe Card is Installed, this value is null
+              nullable: true
+            orientation:
+              type: string
+              description: Installed Probe Card orientation. If no Probe Card is Installed, this value is null.
+              nullable: true
+          nullable: true
+          description: Installed Probe Card  information. Returns null if no Probe Card is Installed.
+        openedProjectId:
+          type: number
+          description: Opened Project id. If no Project is opened, this value is null
+          nullable: true
+        waferMapDiePosition:
+          $ref: "#/components/schemas/WaferMapDiePosition"
+        chuckAbsolutePosition:
+          $ref: "#/components/schemas/ChuckAbsolutePosition"
+        chuckZPositionState:
+          $ref: "#/components/schemas/WpChuckZPositionState"
+
+    WaferMapDiePosition:
+      required:
+        - colIndex
+        - rowIndex
+      properties:
+        colIndex:
+          type: number
+          description: Column index of the Wafer Map
+        rowIndex:
+          type: number
+          description: Column index of the Wafer Map
+        subsiteIndex:
+          type: number
+          description: Subsite index of the Wafer Map. The value is null if not relevant
+          nullable: true
+
+    ChuckAbsolutePosition:
+      description: Chuck absolute position in micrometers
+      required:
+        - x
+        - y
+        - z
+      properties:
+        x:
+          type: number
+          description: Chuck absolute X position in micrometers
+        y:
+          type: number
+          description: Chuck absolute Y position in micrometers
+        z:
+          type: number
+          description: Chuck absolute Z position in micrometers
+
+    # TODO: not sure if the list of available states is complete ...
+    WpMachineStatus:
+      type: string
+      enum:
+        - Idle
+        - Processing
+        - Offline
+        - Error
+
+    # TODO: not sure if the list of available states is complete ... if "Lift" naming is correct.
+    # TODO: @Angelina, please check it and rename if needed
+    WpChuckZPositionState:
+      type: string
+      enum:      
+        - Contact
+        - Separation
+        - Lift
