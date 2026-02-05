@@ -2,17 +2,12 @@ openapi: 3.0.3
 info:
   title: SVT Wafer Prober Agent API (Kafka Command Contract)
   version: 2.2.0
-  description: >
-    This OpenAPI document describes the message contract for the SVT Wafer Prober Agent.
-    The agent consumes Kafka messages on topic `svt.wp-agent.request` and replies on `svt.wp-agent.reply`.
+  description: |
+    This OpenAPI document describes the message contract for the SVT Wafer Prober Agent. The agent consumes Kafka messages on topic `svt.wp-agent.request` and replies on `svt.wp-agent.reply`.
     
-    ## What you send
-    Only type and params fields. The kafka_client automatically adds
-    request_id, sent_at, and reply_to.
+    **What you send:** Only type and params fields. The kafka_client automatically adds request_id, sent_at, and reply_to.
     
-    ## What you receive
-    The kafka_client wraps the command result with
-    type (specific to command), request_id, command, status, output, execution_time_ms, and timestamp.
+    **What you receive:** The kafka_client wraps the command result with type (specific to command), request_id, command, status, output, execution_time_ms, and timestamp.
     
     Some commands also include a data field with structured information.
 
@@ -21,29 +16,22 @@ servers:
     description: Kafka request topic
 
 tags:
-  - name: Setup
-  - name: Wafer Handling
-  - name: Movement
-  - name: Positioning
-  - name: Probe Control
-  - name: Vision
-  - name: Alignment
-  - name: Status
-  - name: System
-  - name: Database
-  - name: Automation
-  - name: Kafka Messaging
-  - name: Events
+  - name: "1. USER LEVEL"
+    description: Basic operations for standard users - Initialize, Load/Unload wafer, Step to next die, Separation control, Probe alignment
+  - name: "2. EXPERT LEVEL"
+    description: Advanced operations - Movement control, Vision, Status queries, Database access, Automation, Kafka messaging
+  - name: "3. VERY EXPERT LEVEL"
+    description: System-level operations - Reset agent, Advanced movement (XY/Die), Contact control, Auto-focus, Wafer alignment
 
 paths:
 
   #########################
-  # Setup
+  # USER LEVEL
   #########################
 
-  /svt.wp-agent.request/Initialize:
+  /svt.wp-agent.request/WPAGInitialize:
     post:
-      tags: [Setup]
+      tags: ["1. USER LEVEL"]
       summary: Initialize connection to wafer prober
       description: |
         Three initialization modes:
@@ -188,37 +176,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  /svt.wp-agent.request/ShowProjectStatus:
-    get:
-      tags: [Status]
-      summary: Show current project and prober status
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Status returned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "ShowProjectStatusReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Connected to WPMIT01.cern.ch:35555, Machine WPMIT, Type sentio, Project NKF7_Test, State Idle"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
   /svt.wp-agent.request/OpenProject:
     post:
-      tags: [Setup]
+      tags: ["1. USER LEVEL"]
       summary: Open a project file
       requestBody:
         required: true
@@ -250,13 +210,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Wafer Handling
-  #########################
-
   /svt.wp-agent.request/Load:
     post:
-      tags: [Wafer Handling]
+      tags: ["1. USER LEVEL"]
       summary: Load wafer
       requestBody:
         required: false
@@ -284,7 +240,7 @@ paths:
 
   /svt.wp-agent.request/Unload:
     post:
-      tags: [Wafer Handling]
+      tags: ["1. USER LEVEL"]
       summary: Unload wafer
       requestBody:
         required: false
@@ -310,9 +266,125 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
+  /svt.wp-agent.request/StepNextDie:
+    post:
+      tags: ["1. USER LEVEL"]
+      summary: Step to next die
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Stepped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "StepNextDieReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Stepped to next die: (6, 10)"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/GoToSeparation:
+    post:
+      tags: ["1. USER LEVEL"]
+      summary: Move probes to separation position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: At separation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "GoToSeparationReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Probe station is in separation"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/RunPTPA:
+    post:
+      tags: ["1. USER LEVEL"]
+      summary: Run Probe Tip Position Alignment (PTPA)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: PTPA completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "RunPTPAReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "PTPA executed"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  #########################
+  # EXPERT LEVEL
+  #########################
+
+  /svt.wp-agent.request/ShowProjectStatus:
+    get:
+      tags: ["2. EXPERT LEVEL"]
+      summary: Show current project and prober status
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "ShowProjectStatusReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Connected to WPMIT01.cern.ch:35555, Machine WPMIT, Type sentio, Project NKF7_Test, State Idle"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
   /svt.wp-agent.request/Cleaning:
     post:
-      tags: [Wafer Handling]
+      tags: ["2. EXPERT LEVEL"]
       summary: Clean probe station
       requestBody:
         required: false
@@ -338,48 +410,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Movement
-  #########################
-
-  /svt.wp-agent.request/MoveChuckXY:
-    post:
-      tags: [Movement]
-      summary: Move chuck to XY coordinates
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              ValidMove:
-                value:
-                  type: "MoveChuckXY"
-                  params:
-                    x: 0.0
-                    y: 0.0
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "MoveChuckXYReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Moved chuck to x=155539.9, y=-238764.7"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
   /svt.wp-agent.request/MoveChuckZ:
     post:
-      tags: [Movement]
+      tags: ["2. EXPERT LEVEL"]
       summary: Move chuck to Z coordinate
       requestBody:
         required: true
@@ -411,72 +444,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  /svt.wp-agent.request/GoToDie:
-    post:
-      tags: [Movement]
-      summary: Move to specific die
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-            examples:
-              ValidDie:
-                value:
-                  type: "GoToDie"
-                  params:
-                    col: 0
-                    row: 0
-      responses:
-        '200':
-          description: Moved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "GoToDieReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Moved to die: (5, 10)"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  /svt.wp-agent.request/StepNextDie:
-    post:
-      tags: [Movement]
-      summary: Step to next die
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Stepped
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "StepNextDieReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Stepped to next die: (6, 10)"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
   /svt.wp-agent.request/GoToPreviousDie:
     post:
-      tags: [Movement]
+      tags: ["2. EXPERT LEVEL"]
       summary: Move to previous die
       requestBody:
         required: false
@@ -502,56 +472,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  /svt.wp-agent.request/MoveChuckHome:
-    post:
-      tags: [Movement]
-      summary: Move chuck to home position
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Moved home
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "MoveChuckHomeReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Chuck moved home"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-    get:
-      tags: [ Kafka Messaging ]
-      summary: Get MoveChuckHome status (query only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/MoveChuckHomeMessage'
-      responses:
-        '200':
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
   /svt.wp-agent.request/MoveChuckToWorkArea:
     post:
-      tags: [Movement]
+      tags: ["2. EXPERT LEVEL"]
       summary: Move chuck to work area
       requestBody:
         required: true
@@ -583,13 +506,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Positioning
-  #########################
-
   /svt.wp-agent.request/FindHome:
     post:
-      tags: [Positioning]
+      tags: ["2. EXPERT LEVEL"]
       summary: Find home position using vision
       requestBody:
         required: false
@@ -615,69 +534,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Probe Control
-  #########################
-
-  /svt.wp-agent.request/GoToContact:
-    post:
-      tags: [Probe Control]
-      summary: Move probes to contact position
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: At contact
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "GoToContactReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Probe station is in contact"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  /svt.wp-agent.request/GoToSeparation:
-    post:
-      tags: [Probe Control]
-      summary: Move probes to separation position
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: At separation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "GoToSeparationReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Probe station is in separation"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
   /svt.wp-agent.request/GetChuckPosition:
     get:
-      tags: [Status]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get current chuck position status
       requestBody:
         required: false
@@ -714,69 +573,9 @@ paths:
                     data:
                       position: "In Contact"
 
-  #########################
-  # Vision
-  #########################
-
-  /svt.wp-agent.request/AlignWafer:
-    post:
-      tags: [Vision]
-      summary: Perform wafer alignment
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Aligned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "AlignWaferReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  /svt.wp-agent.request/AutoFocus:
-    post:
-      tags: [Vision]
-      summary: Auto-focus active camera
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Focused
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "AutoFocusReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Auto-focus command successfully executed"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
   /svt.wp-agent.request/SwitchCamera:
     post:
-      tags: [Vision]
+      tags: ["2. EXPERT LEVEL"]
       summary: Switch active camera
       requestBody:
         required: true
@@ -808,45 +607,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Alignment
-  #########################
-
-  /svt.wp-agent.request/RunPTPA:
-    post:
-      tags: [Alignment]
-      summary: Run Probe Tip Position Alignment (PTPA)
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: PTPA completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "RunPTPAReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "PTPA executed"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  #########################
-  # Status
-  #########################
-
   /svt.wp-agent.request/GetInfo:
     get:
-      tags: [Status]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get current die information
       requestBody:
         required: false
@@ -874,7 +637,7 @@ paths:
 
   /svt.wp-agent.request/GetCurrentIndex:
     get:
-      tags: [Status]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get current die index
       requestBody:
         required: false
@@ -912,7 +675,7 @@ paths:
 
   /svt.wp-agent.request/GetDiesNumber:
     get:
-      tags: [Status]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get total number of dies
       requestBody:
         required: false
@@ -950,7 +713,7 @@ paths:
 
   /svt.wp-agent.request/GetAgentState:
     get:
-      tags: [System]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get agent state machine status
       requestBody:
         required: false
@@ -978,7 +741,7 @@ paths:
 
   /svt.wp-agent.request/ListAvailableCommands:
     get:
-      tags: [Status]
+      tags: ["2. EXPERT LEVEL"]
       summary: List all available commands
       requestBody:
         required: false
@@ -1004,101 +767,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # System
-  #########################
-
-  /svt.wp-agent.request/ResetAgent:
-    post:
-      tags: [System]
-      summary: Reset agent state machine
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Reset
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "ResetAgentReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Agent state reset from 'Failed' to 'Idle'"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  /svt.wp-agent.request/LocalMode:
-    post:
-      tags: [System]
-      summary: Set prober to local mode
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Local mode set
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "LocalModeReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "Local mode"
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  /svt.wp-agent.request/Help:
-    get:
-      tags: [System]
-      summary: Get help information
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandRequest'
-      responses:
-        '200':
-          description: Help displayed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandReply'
-              examples:
-                Success:
-                  value:
-                    type: "HelpReply"
-                    request_id: "string"
-                    command: "string"
-                    status: "success"
-                    output: "WPAgent - Available Commands..."
-                    execution_time_ms: 0.0
-                    timestamp: 0.0
-
-  #########################
-  # Database
-  #########################
-
   /svt.wp-agent.request/ListProbers:
     get:
-      tags: [Database]
+      tags: ["2. EXPERT LEVEL"]
       summary: List all available probe stations from database
       requestBody:
         required: false
@@ -1126,7 +797,7 @@ paths:
 
   /svt.wp-agent.request/ListChipTypes:
     get:
-      tags: [Database]
+      tags: ["2. EXPERT LEVEL"]
       summary: List chip types from database
       requestBody:
         required: false
@@ -1154,7 +825,7 @@ paths:
 
   /svt.wp-agent.request/ListOrientations:
     get:
-      tags: [Database]
+      tags: ["2. EXPERT LEVEL"]
       summary: List wafer orientations from database
       requestBody:
         required: false
@@ -1182,7 +853,7 @@ paths:
 
   /svt.wp-agent.request/RunSequencer:
     post:
-      tags: [Automation]
+      tags: ["2. EXPERT LEVEL"]
       summary: Execute a command sequence from file
       requestBody:
         required: true
@@ -1214,13 +885,9 @@ paths:
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
-  #########################
-  # Kafka Messaging Interface
-  #########################
-
   /svt.wp-agent.request/GetLoadStatus:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get LoadWafer status (query only, no execution)
       requestBody:
         required: true
@@ -1266,7 +933,7 @@ paths:
 
   /svt.wp-agent.request/GetUnloadedWaferStatus:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get UnloadWafer status (query only, no execution)
       requestBody:
         required: true
@@ -1310,7 +977,7 @@ paths:
 
   /svt.wp-agent.request/GetWpMachineState:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get current machine state
       requestBody:
         required: true
@@ -1356,7 +1023,7 @@ paths:
 
   /svt.wp-agent.request/GetChuckDieStatus:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get MoveChuckDie status (query only)
       requestBody:
         required: true
@@ -1376,10 +1043,9 @@ paths:
                   - $ref: '#/components/schemas/ReplyMessage'
                   - $ref: '#/components/schemas/MoveChuckDieReplyMessage'
 
-
   /svt.wp-agent.request/SetChuckZPositionState:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get SetChuckZPositionState status (query only)
       requestBody:
         required: true
@@ -1401,7 +1067,7 @@ paths:
 
   /svt.wp-agent.request/GetMoveChuckAsicStatus:
     get:
-      tags: [Kafka Messaging]
+      tags: ["2. EXPERT LEVEL"]
       summary: Get MoveChuckAsic status (query only)
       requestBody:
         required: true
@@ -1423,7 +1089,7 @@ paths:
 
   /svt.wp-agent.event/WpMachineStateChanged:
     post:
-      tags: [Events]
+      tags: ["2. EXPERT LEVEL"]
       summary: Wafer Probe Machine State Event
       responses:
         '200':
@@ -1434,6 +1100,296 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/EventMessage'
                   - $ref: '#/components/schemas/WpMachineStateChangedMessage'
+
+  #########################
+  # VERY EXPERT LEVEL
+  #########################
+
+  /svt.wp-agent.request/ResetAgent:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Reset agent state machine
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "ResetAgentReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Agent state reset from 'Failed' to 'Idle'"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/LocalMode:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Set prober to local mode
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Local mode set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "LocalModeReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Local mode"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/Help:
+    get:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Get help information
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Help displayed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "HelpReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "WPAgent - Available Commands..."
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/MoveChuckXY:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Move chuck to XY coordinates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidMove:
+                value:
+                  type: "MoveChuckXY"
+                  params:
+                    x: 0.0
+                    y: 0.0
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "MoveChuckXYReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Moved chuck to x=155539.9, y=-238764.7"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/GoToDie:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Move to specific die
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              ValidDie:
+                value:
+                  type: "GoToDie"
+                  params:
+                    col: 0
+                    row: 0
+      responses:
+        '200':
+          description: Moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "GoToDieReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Moved to die: (5, 10)"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/MoveChuckHome:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Move chuck to home position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Moved home
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "MoveChuckHomeReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Chuck moved home"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+    get:
+      tags: ["2. EXPERT LEVEL"]
+      summary: Get MoveChuckHome status (query only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckHomeMessage'
+      responses:
+        '200':
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
+
+  /svt.wp-agent.request/GoToContact:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Move probes to contact position
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: At contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "GoToContactReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Probe station is in contact"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/AutoFocus:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Auto-focus active camera
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Focused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "AutoFocusReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Auto-focus command successfully executed"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
+
+  /svt.wp-agent.request/AlignWafer:
+    post:
+      tags: ["3. VERY EXPERT LEVEL"]
+      summary: Perform wafer alignment
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Aligned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandReply'
+              examples:
+                Success:
+                  value:
+                    type: "AlignWaferReply"
+                    request_id: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
+                    execution_time_ms: 0.0
+                    timestamp: 0.0
 
 components:
   schemas:
