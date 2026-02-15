@@ -1,0 +1,2483 @@
+openapi: 3.0.3
+info:
+  title: SVT Wafer Prober Agent API (Kafka Command Contract)
+  version: 2.2.0
+  description: |
+    The Kafka communication layer definitions for `SVT Wafer Prober Agent Service`.
+
+    ### Naming Conventions
+    - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - The reply message topic name is defined as `*.reply`, e.g:
+      - request message topic `svt.wp-agent.request` => reply topic name `svt.wp-agent.request.reply`
+    - Key naming: camelCase (first letter lowercase)
+
+    ### Message Structure
+    **Request Message:**
+    ```
+    {
+      type: string,        // Command type
+      data: object        // Command parameters (OPTIONAL)
+    }
+    ```
+    
+    **Reply Message:**
+    ```
+    {
+      status: string,      // Success | Error | 
+      type: string,        // Reply type
+      data: object,       // Result data (OPTIONAL)
+      error: {            // Error details (OPTIONAL)
+        code: number,
+        message: string | string[]
+      }
+    }
+    ```
+
+
+    ### Request/Reply Messages
+    - Request messages are sent to `svt.wp-agent.request` topic
+    - Reply messages are emitted to `svt.wp-agent.request.reply` topic
+    - Request body describes Kafka Message structure. Mandatory fields: user, waferAgentName
+
+    ### Useful Links
+    - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
+
+servers:
+  - url: kafka://localhost:9096/svt.wp-agent.request
+  - url: kafka://localhost:9096/svt.wp-agent.request.reply
+
+tags:
+  - name: "1. USER LEVEL"
+    description: Basic operations for standard users - Initialize, Load/Unload wafer, Step to next die, Separation control, Probe alignment
+  - name: "2. EXPERT LEVEL"
+    description: Advanced operations - Movement control, Vision, Status queries, Database access, Automation, Kafka messaging
+  - name: "3. DEVELOPER LEVEL"
+    description: System-level operations - Reset agent, Advanced movement (XY/Die), Contact control, Auto-focus, Wafer alignment
+
+paths:
+
+  #########################
+  # USER LEVEL
+  #########################
+
+  /svt.wp-agent.request/OpenProject:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `UserLogged `       
+       
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/OpenProjectMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/OpenProjectReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+
+
+  /svt.wp-agent.request/InitProbing:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: To run after loading a wafer, before testing - sequence of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'
+      description: |
+        ### State availability
+        **Required state:** `OpenedProject`  or `ChuckSafePosition`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SetInitialTestPositionMessage'
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SetInitialTestPositionReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckLoadedWafer:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Load same wafer - sequence including Load + MoveChuckOffAxis
+      description: |
+        ### State availability
+        **Required state:** `ChuckUnloaded` 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckLoadedWaferMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckLoadedWaferReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/LoadWafer:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Load wafer - sequence including Load + MoveChuckOffAxis with DB update 
+      description: |
+        ### State availability
+        **Required state:** `Unloaded` 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/LoadWaferMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/LoadWaferReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckUnloadWafer:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Unload wafer without DB update
+      description: |
+        ### State availability
+        **Required state:** `UserLogged` or `OpenedProject` or `Aligned`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckUnloadWaferMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckUnloadWaferReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/UnloadWafer:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Unload wafer with DB update
+      description: |
+        ### State availability
+        **Required state:** `UserLogged` or `OpenedProject` or `Aligned`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UnloadWaferMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UnloadWaferReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckAsic:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Move to specific die by asic serial number - Sequence including 'MoveChuckOffAxis', 'MoveChuckRowColumn', 'AutoFocus', 'RunPTPA', 'MoveChuckWide'
+      description: |
+        ### State availability
+        **Required state:** `Aligned` or `OnDie_Wide_withPTPA` or `OnDie_OffAxis_withoutPTPA` or `OnDie_OffAxis_withPTPA` or `OnDie_Wide_withoutPTPA` 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckAsicMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckAsicReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  /svt.wp-agent.request/MoveChuckSeparation:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Move probes to separation position
+      description: |
+        ### State availability
+        **Required state:** `AtContact`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckSeparationMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckSeparationReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckSafePosition:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Move to a safe position - Sequence MoveChuckOffAxis MoveChuckXY MoveChuckZ
+      description: |
+        ### State availability
+        **Required state:** `OpenedProject` or `Aligned`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckSavePositionMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckSavePositionReplyMessage'
+
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage' 
+
+  /svt.wp-agent.request/MoveChuckContact:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Move probes to contact position
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide_withoutPTPA` or `OnDie_Wide`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckContactMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckContactReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage' 
+
+  /svt.wp-agent.request/ShowStatus:
+    get:
+      tags: [ "1. USER LEVEL" ]
+      summary: Show overall Status
+      description: |
+        ### State availability
+        **Required state:** `All of the states`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/ShowStatusMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/ShowStatusReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckOffAxis:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: Move probes to Off Axis Area
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckToOffAxisAreaMessage'
+      responses:
+        '200':
+          description:  Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckToOffAxisAreaReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'       
+
+  /svt.wp-agent.request/TestingLock:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `AtContact`  WE NEED TO DISCUSS
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/TestingLockMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/TestingLockReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'                           
+
+  /svt.wp-agent.request/TestingUnLock:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `AtContact_Locked`  WE NEED TO DISCUSS
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/TestingUnLockMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/TestingUnLockReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage' 
+
+  /svt.wp-agent.request/UserLogIn:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `Any`  
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UserLogInMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UserLogInReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'    
+
+  /svt.wp-agent.request/UserLogOut:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `Any`  
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/UserLogOutMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/UserLogOutReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+  
+  /svt.wp-agent.request/TakeScreenshot:
+    post:
+      tags: [ "1. USER LEVEL" ]
+      summary: 
+      description: |
+        ### State availability
+        **Required state:** `Any`  
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/TakeScreenshotMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/TakeScreenshotReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'                                
+
+  #########################
+  # EXPERT LEVEL
+  #########################
+ 
+  /svt.wp-agent.request/MoveChuckWide:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Move chuck to Wide Area
+      description: |
+        ### State availability
+        **Required state:** `OnDie_OffAxis_withPTPA` or `OnDie_OffAxis_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckWideMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckWideReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage' 
+
+
+  /svt.wp-agent.request/MoveChuckNextDie:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Step to next die 
+      description: |
+        ### State availability
+        **Required state:** `Aligned` or `OnDie_OffAxis_withoutPTPA` or `OnDie_OffAxis_withPTPA`  or `OnDie_Wide_withoutPTPA` or `OnDie_Wide` or `OnDie_Wide_withPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckNextDieMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckNextDieReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  /svt.wp-agent.request/RunPTPA:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Run Probe Tip Position Alignment (PTPA)
+      description: |
+        ### State availability
+        **Required state:** `OnDie_OffAxis_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunPTPAMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/RunPTPAReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/SetPTPA:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Enable or disable Probe Tip Position Alignment (PTPA) on On Axis 
+      description: |
+        ### State availability
+        **Required state:** `OnDie_OffAxis_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SetPTPAMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SetPTPAReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'              
+
+
+  /svt.wp-agent.request/MoveChuckPreviousDie:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Step to previous die
+      description: |
+        ### State availability
+        **Required state:** `Aligned` or `OnDie_OffAxis_withoutPTPA` or `OnDie_OffAxis_withPTPA`  or `OnDie_Wide_withoutPTPA` or `OnDie_Wide` or `OnDie_Wide_withPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckPreviousDieMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckPreviousDieReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+  
+
+
+  /svt.wp-agent.request/SetChuckOvertravel:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Sets overtravel gap for all chuck sites.
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SetOverdriveMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SetOverdriveReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/DisableOvertravel:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Disable overtravel gap for all chuck sites.
+      description: |
+        ### State availability
+        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/DisableOverdriveMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/DisableOverdriveReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'              
+
+  /svt.wp-agent.request/SwitchCamera:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Switch active camera
+      description: |
+        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SwitchCameraMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SwitchCameraReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+  
+
+  /svt.wp-agent.request/AutoFocus:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Auto-focus active camera
+      description: |
+        ### State availability
+        **Required state:** `OnDie_OffAxis_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/RequestMessage'
+              - $ref: '#/components/schemas/AutoFocusMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ReplyMessage'
+                - $ref: '#/components/schemas/AutoFocusReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckRowColumn:
+    post:
+      tags: [ "2. EXPERT LEVEL" ]
+      summary: Move to specific die
+      description: |
+        ### State availability
+        **Required state:** `Aligned` or `OnDie_OffAxis_withoutPTPA` or `OnDie_OffAxis_withPTPA`  or `OnDie_Wide_withoutPTPA` or `OnDie_Wide` or `OnDie_Wide_withPTPA`
+        Auto-detects input type:
+        - Global coordinates: col + row (e.g., col=5, row=3)
+        - SVT label: label="babyMOSAIX-1_1_ER2-W1" or "MOSAIX-1_ER2-W1"
+        - ITS3 label: label="BAM00" or "SEG0"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckRowColumnMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckRowColumnReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  #########################
+  # DEVELOPER  LEVEL
+  #########################
+  /svt.wp-agent.request/MoveChuckTopLeft:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck relatively to top-left corner
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckTopLeftMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckTopLeftReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckTopRight:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck relatively to top-right corner
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckTopRightMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckTopRightReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckBottomLeft:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck relatively to bottom-left corner
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckBottomLeftMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckBottomLeftReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckBottomRight:
+    post:
+      tags: ["3. DEVELOPER LEVEL" ]
+      summary: Move chuck relatively to bottom-right corner
+      description: |
+        ### State availability
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckBottomRightMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckBottomRightReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+  /svt.wp-agent.request/StressOpenProject:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Alternate between two projects for N iterations to stress-test project switching
+      description: |
+        ### State availability
+        **Required state:** `OpenedProject`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/StressOpenProjectMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/StressOpenProjectReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+  /svt.wp-agent.request/ListProbers:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: List all available probe stations from database
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "ListProbersReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Found 3 wafer probe machine(s)"
+
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                DatabaseError:
+                  value:
+                    type: "ListProbersReply"
+                    requestId: "string"
+                    status: "error"
+                    output: "Failed to query database"
+
+
+  /svt.wp-agent.request/ListChipTypes:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: List chip types from database
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "ListChipTypesReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Available chip types (3): NKF7, MOSS, MOSAIX"
+
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                DatabaseError:
+                  value:
+                    type: "ListChipTypesReply"
+                    requestId: "string"
+                    status: "error"
+                    output: "Failed to query database"
+
+
+  /svt.wp-agent.request/ListOrientations:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: List wafer orientations from database
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "ListOrientationsReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Available wafer orientations (4): East, West, North, South"
+
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                DatabaseError:
+                  value:
+                    type: "ListOrientationsReply"
+                    requestId: "string"
+                    status: "error"
+                    output: "Failed to query database"
+
+
+  /svt.wp-agent.request/RunSequencer:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Execute a command sequence from file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunSequencerMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/RunSequencerReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckToWorkArea:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck to work area
+      description: 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckToWorkAreaMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckToWorkAreaReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/FindHome:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Find home position using vision
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FindHomeMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FindHomeReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                HomeFindFailed:
+                  value:
+                    type: "FindHomeReply"
+                    requestId: "string"
+                    status: "error"
+                    output: "Failed to find home position"
+  /svt.wp-agent.request/MoveChuckZ:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck to Z coordinate
+      description: 
+        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckZMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckZReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  /svt.wp-agent.request/WPAGInitializeManual:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Initialize connection to wafer prober
+      description: |
+        **Manual Mode** - Direct connection with explicit parameters
+          - Required: address, machineType
+          - Optional: projectName, alignmentDie, homeDie, force
+          - Use when you know exact prober address and settings
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitializeRequest'
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/InitializeAsicSerialNumberReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  /svt.wp-agent.request/ResetAgent:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Reset agent state machine
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/ResetAgentMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/ResetAgentReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/LocalMode:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Set prober to local mode
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/LocalModeMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/LocalModeReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/Help:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Get help information
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/HelpMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/HelpReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckXY:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck to XY coordinates
+      description: 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckXYMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckXYReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  /svt.wp-agent.request/MoveChuckHome:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck to home position
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckHomeMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckHomeReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/AlignWafer:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Perform wafer alignment
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/RequestMessage'
+              - $ref: '#/components/schemas/AlignWaferMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ReplyMessage'
+                - $ref: '#/components/schemas/AlignWaferReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/MoveChuckCenter:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: MoveChuckCenter
+      description: 
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/RequestMessage'
+              - $ref: '#/components/schemas/MoveChuckCenterMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ReplyMessage'
+                - $ref: '#/components/schemas/MoveChuckCenterReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage' 
+  
+components:
+    schemas:
+      RunSequencerMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunSequencer'
+          data:
+            type: object
+            required: [ filePath ]
+            properties:
+              filePath:
+                type: string
+
+      RunSequencerReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunSequencerReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckRowColumnMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckDie'
+          data:
+            type: object
+            required: [ user, waferAgentName,row,col ] 
+            properties:              
+              row:
+                type: number
+              col:
+                type: number
+              label:
+                type: string  
+
+      MoveChuckRowColumnReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckRowColumnReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+            
+      StressOpenProjectMessage:
+        properties:
+          type:
+            type: string
+            default: 'StressOpenProject'
+          data:
+            type: object
+            required: [ projectNameFirst, projectNameSecond, iterations ]
+            properties:
+              projectNameFirst:
+                type: string
+              projectNameSecond:
+                type: string
+              iterations:
+                type: integer
+                minimum: 1
+              delay:
+                type: number
+                default: 0.0
+                description: Delay in seconds between iterations
+
+      StressOpenProjectReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'StressOpenProjectReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckTopLeftMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckTopLeft'
+
+      MoveChuckTopLeftReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckTopLeftReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckTopRightMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckTopRight'
+
+      MoveChuckTopRightReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckTopRightReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckBottomLeftMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckBottomLeft'
+
+      MoveChuckBottomLeftReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckBottomLeftReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckBottomRightMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckBottomRight'
+
+      MoveChuckBottomRightReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckBottomRightReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckXYMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckXY'
+          data:
+            type: object
+            required: [ x,y ]
+            properties:
+              x:
+                type: number
+              y:
+                type: number
+
+      MoveChuckXYReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckXYReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      SwitchCameraMessage:
+        properties:
+          type:
+            type: string
+            default: 'SwitchCamera'
+          data:
+            type: object
+            required: [ mountPoint ]
+            properties:
+              mountPoint:
+                type: string
+
+      SwitchCameraReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'SwitchCameraReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      SetOverdriveMessage:
+        properties:
+          type:
+            type: string
+            default: 'SetChuckOvertravel'
+          data:
+            type: object
+            required: [ overdrive ]
+            properties:
+              overdrive:
+                type: number
+
+      SetOverdriveReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'SetChuckOvertravelReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      DisableOverdriveMessage:
+        properties:
+          type:
+            type: string
+            default: 'DisableOverdrive'
+          
+
+      DisableOverdriveReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'DisableOverdriveReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'      
+
+
+      OpenProjectMessage:
+        properties:
+          type:
+            type: string
+            default: 'OpenProject'
+          data:
+            type: object
+            required: [ projectName ]
+            properties:
+              projectName:
+                type: string
+
+      OpenProjectReplyMessage:
+        type: object
+        properties:
+          type:
+            type: string
+            default: 'OpenProjectReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'      
+
+      SetInitialTestPositionMessage:
+        properties:
+          type:
+            type: string
+            default: 'InitProbing'
+          data:
+            type: object
+            required: [  ]
+            
+
+      SetInitialTestPositionReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'InitProbingReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+
+
+      MoveChuckNextDieMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckNextDie'
+
+      MoveChuckNextDieReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckNextDieReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+      ShowStatusMessage:
+        properties:
+          type:
+            type: string
+            default: 'ShowStatus'
+
+      ShowStatusReplyMessage:
+        type: object
+        properties:
+          type:
+            type: string
+            default: 'ShowStatusReply'
+          data:
+           $ref: '#/components/schemas/WpMachineStateDto'
+
+
+
+
+      MoveChuckSeparationMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckSeparation'
+
+      MoveChuckSeparationReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckSeparationReply'
+          data:            
+              $ref: '#/components/schemas/WpMachineStateDto'
+            
+
+      MoveChuckContactMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckContact'
+
+      MoveChuckWideReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckWideReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckWideMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckWide'      
+
+      MoveChuckContactReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckContactReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckToOffAxisAreaMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckOffAxis'
+
+      TestingLockReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'TestingLockReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      TestingLockMessage:
+        properties:
+          type:
+            type: string
+            default: 'TestingLock'
+          data:
+            properties:  
+              reason:
+                type: string   
+              testSequanceId:
+                type: number  
+      
+
+      UserLogInReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'UserLogInReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      UserLogInMessage:
+        properties:
+          type:
+            type: string
+            default: 'UserLogIn'       
+
+      UserLogOutReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'UserLogOutReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+     
+
+      TestingUnLockReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'TestingUnLockReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      TestingUnLockMessage:
+        properties:
+          type:
+            type: string
+            default: 'TestingUnLock'         
+
+      UserLogOutMessage:
+        properties:
+          type:
+            type: string
+            default: 'UserLogOut'      
+
+      MoveChuckToOffAxisAreaReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckOffAxisReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'      
+
+
+
+      MoveChuckSavePositionMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckSavePosition'
+
+      MoveChuckSavePositionReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckSavePositionReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'   
+
+      MoveChuckLoadedWaferMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckLoadedWafer'
+          data:
+            type: object
+            required: [ waferId ]
+            properties:
+              waferId:
+                type: number 
+
+      MoveChuckLoadedWaferReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckLoadedWaferReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      RunPTPAMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunPTPA'
+
+      SetPTPAMessage:
+        properties:
+          type:
+            type: string
+            default: 'SetPTPA'
+          data:
+            type: object
+            required: [ enable ]
+            properties:
+              enable:
+                type: boolean 
+
+      SetPTPAReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'SetPTPAReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      TakeScreenshotMessage:
+        properties:
+          type:
+            type: string
+            default: 'TakeScreenshot'
+          data:
+            type: object
+            required: [ filePath ]
+            properties:
+              filePath:
+                type: string
+ 
+
+      TakeScreenshotReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'TakeScreenshotReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'                   
+
+      RunPTPAReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunPTPAReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckZMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckZ'
+          data:
+            type: object
+            required: [ z ]
+            properties:  
+              z:
+                type: number   
+
+      MoveChuckZReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckZReply'
+          data:
+            type: object
+            properties:
+              waferId:
+                type: number
+              chuckZposition:
+                type: number
+              waferMachineStatus:
+                $ref: "#/components/schemas/WPAG_State"
+              waferMapDiePosition:
+                $ref: "#/components/schemas/WaferMapDiePosition"
+              chuckZPositionState:
+                type: string
+
+      MoveChuckToWorkAreaMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckToWorkArea'
+          data:
+            type: object
+            required: [ workArea ]
+            properties:
+              workArea:
+                type: string
+
+      MoveChuckToWorkAreaReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckToWorkAreaReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckPreviousDieMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckPreviousDie'
+
+      MoveChuckPreviousDieReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckPreviousDieReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+      LoadWaferMessage:
+        properties:
+          type:
+            type: string
+            default: 'LoadWafer'
+          data:
+            type: object
+            required: [ waferId ]
+            properties:
+              waferId:
+                type: string
+              orientation:
+                type: string
+
+      LoadWaferReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'LoadedWaferReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckUnloadWaferMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckUnloadWafer'
+
+      MoveChuckUnloadWaferReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckunloadWaferReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckCenterMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckCenter'
+
+      MoveChuckCenterReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckCenterReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      AlignWaferMessage:
+        properties:
+          type:
+            type: string
+            default: 'AlignWafer'
+
+      AlignWaferReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'AlignWaferReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+
+      FindHomeMessage:
+        properties:
+          type:
+            type: string
+            default: 'FindHome'
+
+      FindHomeReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'FindHomeReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'  
+
+      AutoFocusMessage:
+        properties:
+          type:
+            type: string
+            default: 'AutoFocus'
+
+      AutoFocusReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'AutoFocusReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'  
+
+      MoveChuckHomeMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckHome'
+
+      MoveChuckHomeReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckHomeReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'  
+
+      ResetAgentMessage:
+        properties:
+          type:
+            type: string
+            default: 'ResetAgent'
+
+      ResetAgentReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'ResetAgentReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'  
+
+      LocalModeMessage:
+        properties:
+          type:
+            type: string
+            default: 'LocalMode'
+
+      LocalModeReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'LocalModeReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'  
+
+
+
+      HelpMessage:
+        properties:
+          type:
+            type: string
+            default: 'Help'
+
+      HelpReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'HelpReply'
+          data:
+            type: object
+            properties:
+              helpInfo:
+                type: string
+
+      UnloadWaferMessage:
+        properties:
+          type:
+            type: string
+            default: 'UnloadWafer'
+          
+      UnloadWaferReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'UnloadedWaferReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      InitializeRequest:
+        type: object
+        required: [ type ]
+        properties:
+          type:
+            type: string
+            enum: [ Initialize ]
+          data:
+            type: object
+            properties:
+              serialNumber:
+                type: string
+              address:
+                type: string
+              machineType:
+                type: string
+                enum: [ "sentio", "summit" ]
+              projectName:
+                type: string
+              alignmentDie:
+                type: string
+              homeDie:
+                type: string
+              force:
+                type: boolean
+              withDB:
+                type: boolean
+
+
+      RequestMessage:
+        type: object
+        required: [ type ]
+        properties:
+          type:
+            type: string
+          data:
+            type: object
+            properties:
+             user:
+              type: string
+             waferAgentName:
+              type: string   
+
+      ReplyMessage:
+        type: object
+        required: [ status, type ]
+        properties:
+          status:
+            $ref: "#/components/schemas/ReplyStatus"
+          type:
+            type: string
+          data:
+            type: object
+          error:
+            type: object
+            properties:
+              code:
+                type: number
+              message:
+                type: string
+
+      ReplyStatus:
+        type: string
+        enum:
+          - Success
+          - BadRequest
+          - Error
+          - UnexpectedError
+
+
+      ConnectProbeMachineMessage:
+        properties:
+          type:
+            type: string
+            default: 'ConnectProbeMachine'
+          data:
+            type: object
+            required: [ wpMachineId ]
+            properties:
+              wpMachineId:
+                type: number
+              projectId:
+                type: string
+
+      ConnectProbeMachineReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'ConnectProbeMachineReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+      InitializeAsicSerialNumberMessage:
+        properties:
+          type:
+            type: string
+            default: 'Initialize'
+          data:
+            type: object
+            required: [ user, waferAgentName, asicSerialNumber ]
+            properties:              
+              asicSerialNumber:
+                type: string
+
+      InitializeAsicSerialNumberReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'InitializeReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+      MoveChuckAsicReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckAsicReply'
+          data:
+            $ref: "#/components/schemas/WpMachineStateDto"
+
+      MoveChuckAsicMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckAsic'
+          data:
+            type: object
+            required: [ asicId ]
+            properties:
+              asicId:
+                type: string
+
+      WpMachineStateDto:
+        type: object
+        required: [ user, waferAgentName, WPAG_State ]
+        properties:
+          user:
+            type: string
+          asicSerialNumber:
+            type: number
+          wpMachineId:
+            type: number
+          WPAG_State:
+            $ref: "#/components/schemas/WPAG_State"
+          loadedWafer:
+            type: object
+            nullable: true
+            properties:
+              waferId:
+                type: number
+              orientation:
+                type: string
+          instaledprobeCard:
+            type: object 
+            properties:
+              probeCardId: 
+                type: number
+              orientation:
+                type: string        
+          openedProjectId:
+            type: number
+            nullable: true
+          projectName:
+            type: string
+          overdrive: 
+            type: number
+          cameraMountPoint:
+            type: string    
+          currentWorkingArea:
+            type: string  
+          waferMapDiePosition:
+            $ref: "#/components/schemas/WaferMapDiePosition"
+          chuckZPositionState:
+            type: 
+              string
+          totalDiesNumber:
+            type: number  
+
+      WaferMapDiePosition:
+        required: [ colIndex, rowIndex ]
+        properties:
+          colIndex:
+            type: number
+          rowIndex:
+            type: number
+          subsiteIndex:
+            type: number
+            nullable: true
+
+
+      WPAG_State:
+        type: string
+        enum:
+          - ServiceOn
+          - OpenedProject
+          - Aligned
+          - ChuckSafePosition
+          - ChuckUnloaded
+          - Unloaded
+          - OnDie_Wide_withPTPA
+          - OnDie_OffAxis_withoutPTPA
+          - OnDie_OffAxis_withPTPA
+          - OnDie_Wide_withoutPTPA
+          - AtContact
+          - AtContact_Locked
+          - OnDie_Wide
+          - Error
+          - UsedByDeveloper
+          - UserLogged
