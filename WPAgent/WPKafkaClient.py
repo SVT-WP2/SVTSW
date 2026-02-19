@@ -59,13 +59,13 @@ class KafkaClient:
         else:
             print(f"[✅ Topic Exists] {topic_name}")
 
-    def send(self, command, params=None, repeat=1, delay=0, wait_for_reply=True, timeout=30.0):
+    def send(self, command, data=None, repeat=1, delay=0, wait_for_reply=True, timeout=30.0):
         """
         Send a Kafka command message and optionally wait for reply.
 
         Args:
             command: Command name to execute
-            params: Command parameters (dict or string)
+            data: Command parameters (dict or string)
             repeat: Number of times to repeat the command
             delay: Delay between repeats in seconds
             wait_for_reply: Whether to wait for response (default: True)
@@ -76,21 +76,21 @@ class KafkaClient:
                   None (if wait_for_reply=False)
         """
         # --- normalize params ---
-        if isinstance(params, str):
-            if command == "RunSequencer" and params.endswith(".json"):
-                params = {"filepath": params}
-            elif "=" in params:
-                k, v = params.split("=", 1)
-                params = {k: v}
+        if isinstance(data, str):
+            if command == "RunSequencer" and data.endswith(".json"):
+                data = {"filepath": data}
+            elif "=" in data:
+                k, v = data.split("=", 1)
+                data = {k: v}
             else:
-                params = {}
-        elif params is None:
-            params = {}
-        elif not isinstance(params, dict):
+                data = {}
+        elif data is None:
+            data = {}
+        elif not isinstance(data, dict):
             try:
-                params = dict(params)
+                data = dict(data)
             except Exception:
-                params = {}
+                data = {}
 
         results = []
 
@@ -103,9 +103,8 @@ class KafkaClient:
 
             payload = {
                 "type": command,
-                "params": params,
+                "data": data,
                 "request_id": request_id,
-                "sent_at": time.time(),
                 "reply_to": self.reply_topic if wait_for_reply else None
             }
 
@@ -113,7 +112,7 @@ class KafkaClient:
                 messageOut=f"Sending command: {command} (request_id: {request_id[:8]}...)",
                 severityLevel=Severity.INFO,
                 command=command,
-                params=params,
+                data=data,
                 result=None,
             )
 
@@ -205,7 +204,7 @@ class KafkaClient:
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
             severityLevel=Severity.INFO,
             command="KAFKA_LISTEN",
-            params={"poll_timeout": poll_timeout},
+            data={"poll_timeout": poll_timeout},
             result=None
         )
 
@@ -270,13 +269,12 @@ class KafkaClient:
                     payload = json.loads(msg.value().decode("utf-8"))
 
                     command = payload.get("type")
-                    params = payload.get("params", {})
+                    data = payload.get("data", {})
                     request_id = payload.get("request_id")
                     reply_to = payload.get("reply_to")
-                    sent_at = payload.get("sent_at")
 
                     if hasattr(self, "_convert_param_types"):
-                        params = self._convert_param_types(params)
+                        data = self._convert_param_types(data)
 
                     print(f"\n[📥 Received] {command}")
                     if request_id:
@@ -286,21 +284,17 @@ class KafkaClient:
                         messageOut=f"Received command: {command}",
                         severityLevel=Severity.INFO,
                         command=command,
-                        params=params,
+                        data=data,
                         result=None
                     )
 
-                    if params:
-                        print(f"   Params: {params}")
+                    if data:
+                        print(f"   Params: {data}")
 
-                    # Calculate Kafka latency
-                    if sent_at:
-                        kafka_delay = (receive_time - sent_at) * 1000
-                        print(f"   Kafka latency: {kafka_delay:.1f}ms")
 
                     # Execute command
                     exec_start = time.time()
-                    result = execute_command(command, params)
+                    result = execute_command(command, data)
                     exec_end = time.time()
                     exec_time = (exec_end - exec_start) * 1000
 
@@ -366,9 +360,9 @@ class KafkaClient:
             if self.reply_consumer:
                 self.reply_consumer.close()
 
-    def _convert_param_types(self, params):
+    def _convert_param_types(self, data):
         converted = {}
-        for k, v in params.items():
+        for k, v in data.items():
             try:
                 converted[k] = ast.literal_eval(v)
             except:
