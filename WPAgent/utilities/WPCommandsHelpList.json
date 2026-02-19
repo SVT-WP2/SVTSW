@@ -8,22 +8,22 @@
       "type": "string",
       "description": "Prober network address (REQUIRED for manual mode, format: 'host:port')"
     },
-    "machine_type": {
+    "machineType": {
       "required": "conditional",
       "type": "string",
       "description": "Type of prober (REQUIRED for manual mode, value: 'sentio')"
     },
-    "project_name": {
+    "projectName": {
       "required": false,
       "type": "string",
       "description": "Project name to open (optional, auto-opens .prj file)"
     },
-    "alignment_die": {
+    "alignmentDie": {
       "required": false,
       "type": "string or tuple",
       "description": "Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified."
     },
-    "home_die": {
+    "homeDie": {
       "required": false,
       "type": "string or tuple",
       "description": "Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified."
@@ -33,18 +33,18 @@
       "type": "boolean",
       "description": "Force re-initialization (default: false)"
     },
-    "with_db": {
+    "withDB": {
       "required": false,
       "type": "boolean",
       "description": "Use database mode for interactive initialization"
     }
   },
-  "example": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\"}'",
-  "example_with_project": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\",\"project_name\":\"NKF7_Test\"}'",
-  "example_with_dies": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machine_type\":\"sentio\",\"alignment_die\":\"2,2,0\",\"home_die\":\"5,2,0\"}'",
-  "example_db": "python main.py send Initialize with_db=true",
+  "example": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\"}'",
+  "example_with_project": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\",\"projectName\":\"NKF7_Test\"}'",
+  "example_with_dies": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\",\"alignmentDie\":\"2,2,0\",\"homeDie\":\"5,2,0\"}'",
+  "example_db": "python main.py send Initialize withDB=true",
   "execution_time": "5-15 seconds (manual) or 30-90 seconds (database)",
-  "notes": "MANUAL MODE: Provide address and machine_type. DATABASE MODE: Interactive flow selects prober/ASIC/orientation/project. Die positions stored for AlignWafer and FindHome commands."
+  "notes": "MANUAL MODE: Provide address and machineType. DATABASE MODE: Interactive flow selects prober/ASIC/orientation/project. Die positions stored for AlignWafer and FindHome commands."
 },
 
   "Load": {
@@ -67,12 +67,12 @@
     "description": "Find the home position of the chuck. Uses home die from initialization if not specified.",
     "category": "Positioning",
     "data": {
-      "home_die_col": {
+      "homeDie_col": {
         "required": false,
         "type": "int",
         "description": "Home die column (optional if set during initialization)"
       },
-      "home_die_row": {
+      "homeDie_row": {
         "required": false,
         "type": "int",
         "description": "Home die row (optional if set during initialization)"
@@ -84,9 +84,9 @@
       }
     },
     "example": "python main.py send FindHome",
-    "example_with_params": "python main.py send FindHome --data='{\"home_die_col\":1,\"home_die_row\":1}'",
+    "example_with_params": "python main.py send FindHome --data='{\"homeDie_col\":1,\"homeDie_row\":1}'",
     "execution_time": "10-20 seconds",
-    "notes": "If home_die was set during initialization, it will automatically use that position. Otherwise performs default FindHome."
+    "notes": "If homeDie was set during initialization, it will automatically use that position. Otherwise performs default FindHome."
   },
 
   "AutoFocus": {
@@ -120,7 +120,7 @@
     "example": "python main.py send AlignWafer",
     "example_with_params": "python main.py send AlignWafer --data='{\"align_die_col\":5,\"align_die_row\":10}'",
     "execution_time": "20-60 seconds",
-    "notes": "If alignment_die was set during initialization, it will automatically use that position. Otherwise requires home_die_col and home_die_row parameters."
+    "notes": "If alignmentDie was set during initialization, it will automatically use that position. Otherwise requires homeDie_col and homeDie_row parameters."
   },
 
   "RunPTPA": {
@@ -247,13 +247,13 @@
     "description": "Switch between available cameras",
     "category": "Vision",
     "data": {
-      "mount_point": {
+      "mountPoint": {
         "required": true,
         "type": "string",
         "description": "Camera position to switch to. Available for MPI Probe Station: Vce, OffAxis, Scope, Chuck"
       }
     },
-    "example": "python main.py send SwitchCamera --data='{\"mount_point\":\"OffAxis\"}'",
+    "example": "python main.py send SwitchCamera --data='{\"mountPoint\":\"OffAxis\"}'",
     "execution_time": "1-2 seconds"
   },
 
@@ -275,7 +275,7 @@
         "description": "Path to project file"
       }
     },
-    "example": "python main.py send OpenProject --data='{\"project_name\":\"project_name\"}'",
+    "example": "python main.py send OpenProject --data='{\"projectName\":\"projectName\"}'",
     "execution_time": "2-5 seconds"
   },
 

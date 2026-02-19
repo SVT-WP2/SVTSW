@@ -34,9 +34,9 @@ class SentioProberImpl(AbstractProber):
     def go_to_die(self, col: int, row: int):
         return self.prober.map.step_die(col, row)
 
-    def switch_camera(self, mount_point: str):
+    def switch_camera(self, mountPoint: str):
         from sentio_prober_control.Sentio.Enumerations import CameraMountPoint
-        cam_enum = getattr(CameraMountPoint, mount_point)
+        cam_enum = getattr(CameraMountPoint, mountPoint)
         self.prober.vision.switch_camera(cam_enum)
 
     def move_chuck_home(self):

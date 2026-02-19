@@ -22,18 +22,18 @@ class ProberFactory:
             cls._instance = cls()
         return cls._instance
 
-    def get_prober(self, machine_type: str, address: str):
+    def get_prober(self, machineType: str, address: str):
         """
         Get or create a prober instance. Returns the same instance if config matches.
 
         Args:
-            machine_type: Type of prober machine (e.g., 'sentio')
+            machineType: Type of prober machine (e.g., 'sentio')
             address: Network address of the prober
 
         Returns:
             Configured prober instance
         """
-        config = (machine_type.lower(), address)
+        config = (machineType.lower(), address)
 
         # Return existing prober if configuration matches and it's initialized
         if self._initialized and self._current_config == config and self._prober is not None:
@@ -41,14 +41,14 @@ class ProberFactory:
 
         # Create new prober instance
         try:
-            prober_class = prober_classes[machine_type.lower()]
+            prober_class = prober_classes[machineType.lower()]
             self._prober = prober_class(address)
             self._current_config = config
             self._initialized = True
-            print(f"✅ Prober initialized: {machine_type} at {address}")
+            print(f"✅ Prober initialized: {machineType} at {address}")
             return self._prober
         except KeyError:
-            raise ValueError(f"Unsupported machine type: {machine_type}")
+            raise ValueError(f"Unsupported machine type: {machineType}")
 
     def is_initialized(self):
         """Check if prober is initialized"""
@@ -63,16 +63,16 @@ class ProberFactory:
 
 
 # Convenience function to maintain backward compatibility
-def get_prober(machine_type: str, address: str):
+def get_prober(machineType: str, address: str):
     """
     Get a prober instance. Now uses singleton factory.
 
     Args:
-        machine_type: Type of prober machine
+        machineType: Type of prober machine
         address: Network address of the prober
 
     Returns:
         Configured prober instance (singleton)
     """
     factory = ProberFactory.get_instance()
-    return factory.get_prober(machine_type, address)
+    return factory.get_prober(machineType, address)

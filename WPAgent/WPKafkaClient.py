@@ -99,17 +99,17 @@ class KafkaClient:
             self._ensure_reply_consumer_ready()
 
         for i in range(repeat):
-            request_id = str(uuid.uuid4())
+            requestId = str(uuid.uuid4())
 
             payload = {
                 "type": command,
                 "data": data,
-                "request_id": request_id,
+                "requestId": requestId,
                 "reply_to": self.reply_topic if wait_for_reply else None
             }
 
             logger.log_command(
-                messageOut=f"Sending command: {command} (request_id: {request_id[:8]}...)",
+                messageOut=f"Sending command: {command} (requestId: {requestId[:8]}...)",
                 severityLevel=Severity.INFO,
                 command=command,
                 data=data,
@@ -129,7 +129,7 @@ class KafkaClient:
                 print(f"⏳ Waiting for response (timeout: {timeout}s)...")
 
                 # Wait for reply
-                response = self._wait_for_reply(request_id, timeout)
+                response = self._wait_for_reply(requestId, timeout)
 
                 if response:
                     results.append(response)
@@ -149,7 +149,7 @@ class KafkaClient:
                     error_response = {
                         "status": "error",
                         "output": f"Timeout: No response received within {timeout}s. Listener may be down.",
-                        "request_id": request_id
+                        "requestId": requestId
                     }
                     print(f"⏱️  TIMEOUT: No response within {timeout}s")
                     print(f"   Check if listener is running: python main.py check_listener_health")
@@ -162,8 +162,8 @@ class KafkaClient:
 
         return results if repeat > 1 else (results[0] if results else None)
 
-    def _wait_for_reply(self, request_id: str, timeout: float) -> Optional[Dict]:
-        """Wait for a reply message with matching request_id"""
+    def _wait_for_reply(self, requestId: str, timeout: float) -> Optional[Dict]:
+        """Wait for a reply message with matching requestId"""
 
         # Consumer should already be initialized by send()
         if self.reply_consumer is None:
@@ -184,7 +184,7 @@ class KafkaClient:
             try:
                 reply = json.loads(msg.value().decode("utf-8"))
 
-                if reply.get("request_id") == request_id:
+                if reply.get("requestId") == requestId:
                     return reply
 
             except Exception as e:
@@ -270,15 +270,15 @@ class KafkaClient:
 
                     command = payload.get("type")
                     data = payload.get("data", {})
-                    request_id = payload.get("request_id")
+                    requestId = payload.get("requestId")
                     reply_to = payload.get("reply_to")
 
                     if hasattr(self, "_convert_param_types"):
                         data = self._convert_param_types(data)
 
                     print(f"\n[📥 Received] {command}")
-                    if request_id:
-                        print(f"   Request ID: {request_id[:8]}...")
+                    if requestId:
+                        print(f"   Request ID: {requestId[:8]}...")
 
                     logger.log_command(
                         messageOut=f"Received command: {command}",
@@ -310,10 +310,10 @@ class KafkaClient:
                         print(f"   ❌ ERROR: {output}")
 
                     # Send reply if requested
-                    if reply_to and request_id:
+                    if reply_to and requestId:
                         reply = {
                             "type": "CommandReply",
-                            "request_id": request_id,
+                            "requestId": requestId,
                             "command": command,
                             "status": status,
                             "output": output,
@@ -338,10 +338,10 @@ class KafkaClient:
                     print(f"[❌ Exception] {e}")
 
                     # Send error reply if possible
-                    if 'reply_to' in locals() and reply_to and 'request_id' in locals() and request_id:
+                    if 'reply_to' in locals() and reply_to and 'requestId' in locals() and requestId:
                         error_reply = {
                             "type": "CommandReply",
-                            "request_id": request_id,
+                            "requestId": requestId,
                             "command": command if 'command' in locals() else "UNKNOWN",
                             "status": "error",
                             "output": f"Exception: {str(e)}",
@@ -424,11 +424,11 @@ class KafkaClient:
             reply_type: str,
             timeout: float = 10.0,
             match_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
-            add_request_id: bool = True,
+            add_requestId: bool = True,
     ) -> Optional[Dict[str, Any]]:
         """Generic request-reply for other services (like DB agent)"""
         req_id = None
-        if add_request_id:
+        if add_requestId:
             req_id = str(uuid.uuid4())
             payload = dict(payload)
             payload["requestId"] = req_id
@@ -472,7 +472,7 @@ class KafkaClient:
                 continue
             if value.get("type") != reply_type:
                 continue
-            if add_request_id and value.get("requestId") and value["requestId"] != req_id:
+            if add_requestId and value.get("requestId") and value["requestId"] != req_id:
                 continue
             if match_fn and not match_fn(value):
                 continue

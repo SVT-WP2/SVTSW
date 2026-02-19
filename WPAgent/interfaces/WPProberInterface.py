@@ -26,7 +26,7 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
-    def switch_camera(self, mount_point: str):
+    def switch_camera(self, mountPoint: str):
         pass
 
     @abstractmethod
