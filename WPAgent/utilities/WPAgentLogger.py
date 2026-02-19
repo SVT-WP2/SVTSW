@@ -51,7 +51,7 @@ class WPAgentLogger:
             stream_handler.setFormatter(formatter)
             self.logger.addHandler(stream_handler)
 
-    def log_command(self, messageOut, severityLevel=Severity.INFO, command=None, params=None, result=None):
+    def log_command(self, messageOut, severityLevel=Severity.INFO, command=None, data=None, result=None):
         # Log to local logger
         log_method = {
             Severity.DEBUG: self.logger.debug,
@@ -68,7 +68,7 @@ class WPAgentLogger:
             "command": command,
             "messageOut": messageOut,
             "severityLevel": severityLevel,
-            "params": params,
+            "data": data,
             "result": result
         }
 
