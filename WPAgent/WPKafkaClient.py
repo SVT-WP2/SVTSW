@@ -206,14 +206,14 @@ class KafkaClient:
                 k, v = params.split("=", 1)
                 params = {k: v}
             else:
-                params = {}
-        elif params is None:
-            params = {}
-        elif not isinstance(params, dict):
+                data = {}
+        elif data is None:
+            data = {}
+        elif not isinstance(data, dict):
             try:
-                params = dict(params)
+                data = dict(data)
             except Exception:
-                params = {}
+                data = {}
 
         results = []
 
@@ -377,7 +377,7 @@ class KafkaClient:
                     )
 
                     exec_start = time.time()
-                    result = execute_command(command, params)
+                    result = execute_command(command, data)
                     exec_end = time.time()
                     exec_time_ms = (exec_end - exec_start) * 1000
 
