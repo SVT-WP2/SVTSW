@@ -3,8 +3,8 @@
     "command": "Initialize",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio",
-      "project_name": "nkf7_arrow_e_test_21_07"
+      "machineType": "sentio",
+      "projectName": "nkf7_arrow_e_test_21_07"
     }
   },
   {
