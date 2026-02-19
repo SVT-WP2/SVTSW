@@ -39,8 +39,8 @@ COMMAND_ROUTER = {
     "GetChuckPosition": testing_actions.get_chuck_position,
 
     #  Sequencer
-    "RunSequencer": lambda **params: sequencer_actions.run_sequence(
-        filepath=get_filepath_param(params if params else None),
+    "RunSequencer": lambda **data: sequencer_actions.run_sequence(
+        filepath=get_filepath_param(data if data else None),
         executor=_exec_in_sequence
     ),
 
@@ -66,14 +66,14 @@ logger = WPAgentLogger(
 health_check = ListenerHealthCheck(bootstrap_servers='localhost:9095')
 
 
-def _exec_in_sequence(message_type, params=None):
+def _exec_in_sequence(message_type, data=None):
     # if the agent is busy, nudge it to a ready/idle state
     if not agentStateMachine.isReadyToExecute():
         try:
             agentStateMachine.updateState(SvtWpAgentEvent.Success)
         except Exception:
             pass
-    return execute_command(message_type, params)
+    return execute_command(message_type, data)
 
 
 def _try_local_mode():
@@ -92,15 +92,15 @@ def _try_local_mode():
         pass
 
 
-def get_filepath_param(params):
-    # If params is already a string (CLI/kafka sent just a path)
-    if isinstance(params, str) and params.endswith(".json"):
-        return params
-    # If params is a dict
-    if isinstance(params, dict):
-        if "filepath" in params:
-            return params["filepath"]
-        for k in params:
+def get_filepath_param(data):
+    # If data is already a string (CLI/kafka sent just a path)
+    if isinstance(data, str) and data.endswith(".json"):
+        return data
+    # If data is a dict
+    if isinstance(data, dict):
+        if "filepath" in data:
+            return data["filepath"]
+        for k in data:
             if isinstance(k, str) and k.endswith(".json"):
                 return k
     return None
@@ -120,30 +120,30 @@ def _normalize_boolean_param(value):
     return False
 
 
-def execute_command(message_type, params=None):
-    # Normalize params
-    if isinstance(params, str):
-        if message_type == "RunSequencer" and params.endswith(".json"):
-            params = {"filepath": params}
-        elif "=" in params:
-            k, v = params.split("=", 1)
-            params = {k: v}
+def execute_command(message_type, data=None):
+    # Normalize data
+    if isinstance(data, str):
+        if message_type == "RunSequencer" and data.endswith(".json"):
+            data = {"filepath": data}
+        elif "=" in data:
+            k, v = data.split("=", 1)
+            data = {k: v}
         else:
-            params = {}
-    elif params is None:
-        params = {}
-    elif not isinstance(params, dict):
+            data = {}
+    elif data is None:
+        data = {}
+    elif not isinstance(data, dict):
         try:
-            params = dict(params)
+            data = dict(data)
         except Exception:
-            params = {}
+            data = {}
 
     # Commands that bypass state check
     BYPASS_STATE_CHECK = ["ResetAgent", "GetAgentState"]
 
     if message_type not in COMMAND_ROUTER:
         result = {"status": "error", "output": f"Unknown command: {message_type}"}
-        logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, params, result)
+        logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, data, result)
         return result
 
     # Check if agent can execute (unless bypass command)
@@ -154,7 +154,7 @@ def execute_command(message_type, params=None):
                 "status": "error",
                 "output": reason
             }
-            logger.log_command(reason, Severity.WARNING, message_type, params, result)
+            logger.log_command(reason, Severity.WARNING, message_type, data, result)
             return result
 
     try:
@@ -164,7 +164,7 @@ def execute_command(message_type, params=None):
             agentStateMachine.updateState(SvtWpAgentEvent.Start)
 
         action = COMMAND_ROUTER[message_type]
-        result = action(**params)
+        result = action(**data)
 
         # Update state based on result (unless bypass)
         if message_type not in BYPASS_STATE_CHECK:
@@ -193,5 +193,5 @@ def execute_command(message_type, params=None):
         severity = Severity.ERROR
         _try_local_mode()  # Go to local mode on exception
 
-    logger.log_command(result.get("output", ""), severity, message_type, params, result)
+    logger.log_command(result.get("output", ""), severity, message_type, data, result)
     return result
