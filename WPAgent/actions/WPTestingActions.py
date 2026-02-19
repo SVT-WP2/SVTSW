@@ -19,158 +19,158 @@ def _ensure_initialized():
     return None
 
 
-def move_chuck_xy(x, y, address=None, machine_type=None):
+def move_chuck_xy(x, y, address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.move_chuck_xy(x, y)
     prober.local_mode()
     return {"status": "success", "output": f"Moved chuck to x={x}, y={y}"}
 
 
-def move_chuck_z(z, address=None, machine_type=None):
+def move_chuck_z(z, address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.move_chuck_z(z)
     prober.local_mode()
     return {"status": "success", "output": f"Moved chuck to z={z}"}
 
 
-def run_ptpa(address=None, machine_type=None):
+def run_ptpa(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.run_ptpa()
 
     prober.local_mode()
     return {"status": "success", "output": "PTPA executed"}
 
 
-def step_next_die(address=None, machine_type=None):
+def step_next_die(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     result = prober.step_next_die()
     prober.local_mode()
     return {"status": "success", "output": f"Stepped to next die: {result}"}
 
 
-def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
+def go_to_die(col: int, row: int, subsite: int = 0, address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     result = prober.go_to_die(col, row)
     prober.local_mode()
     return {"status": "success", "output": f"Moved to die: {result}"}
 
 
-def switch_camera(mount_point, address=None, machine_type=None):
+def switch_camera(mountPoint, address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
-    prober.switch_camera(mount_point)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
+    prober.switch_camera(mountPoint)
     prober.local_mode()
-    return {"status": "success", "output": f"Switched camera to {mount_point}"}
+    return {"status": "success", "output": f"Switched camera to {mountPoint}"}
 
 
-def move_chuck_home(address=None, machine_type=None):
+def move_chuck_home(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.move_chuck_home()
     prober.local_mode()
     return {"status": "success", "output": "Chuck moved home"}
 
 
-def unload_wafer(address=None, machine_type=None):
+def unload_wafer(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.unload_wafer()
     prober.local_mode()
     return {"status": "success", "output": "Wafer unloaded"}
 
 
-def clean_probe_station(address=None, machine_type=None, **kwargs):
+def clean_probe_station(address=None, machineType=None, **kwargs):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.clean_probe_station(**kwargs)
     prober.local_mode()
     return {"status": "success", "output": "Cleaning completed"}
 
 
-def open_project(project_name: str, address=None, machine_type=None):
+def open_project(projectName: str, address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     # To be updated in the future by this
     project_path = os.path.join(
         "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
-        project_name
+        projectName
     )
-    prober.open_project(project_name)
+    prober.open_project(projectName)
     prober.local_mode()
     return {"status": "success", "output": f"Opened project: {project_path}"}
 
 
-def load_wafer(address=None, machine_type=None):
+def load_wafer(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.load_wafer()
     prober.local_mode()
     return {"status": "success", "output": "Wafer has been loaded to center"}
 
 
-def find_home(address=None, machine_type=None):
+def find_home(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.find_home()
     prober.local_mode()
     return {"status": "success", "output": f"Found home position"}
 
 
 def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
-                address=None, machine_type=None):
+                address=None, machineType=None):
     """
     Perform wafer alignment.
 
@@ -181,7 +181,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         align_die_row: Row index (optional if set during initialization)
         subsite: Subsite index (optional, default: 0)
         address: Prober address (optional)
-        machine_type: Machine type (optional)
+        machineType: Machine type (optional)
 
     Returns:
         dict: Status and output message
@@ -204,25 +204,25 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         return error
 
     # Get prober
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
 
     # Get die position from initialization if not provided
     if align_die_col is None or align_die_row is None:
         globals_ = SvtWPAagentGlobalParameters.getInstance()
-        alignment_die = globals_.get_alignment_die()
+        alignmentDie = globals_.get_alignmentDie()
 
-        if alignment_die:
-            align_die_col = alignment_die["col"]
-            align_die_row = alignment_die["row"]
-            subsite = subsite if subsite is not None else alignment_die["subsite"]
+        if alignmentDie:
+            align_die_col = alignmentDie["col"]
+            align_die_row = alignmentDie["row"]
+            subsite = subsite if subsite is not None else alignmentDie["subsite"]
             print(
                 f"   📍 Using alignment die from initialization: Col {align_die_col}, Row {align_die_row}, Subsite {subsite}")
         else:
             return {
                 "status": "error",
                 "output": "Alignment die not specified. Please provide align_die_col and align_die_row parameters, "
-                          "or set alignment_die during initialization."
+                          "or set alignmentDie during initialization."
             }
 
     # Set default subsite if still None
@@ -245,43 +245,43 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         }
 
 
-def go_to_contact(address=None, machine_type=None):
+def go_to_contact(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.go_to_contact()
     prober.local_mode()
     return {"status": "success", "output": f"Probe station is in contact"}
 
 
-def go_to_separation(address=None, machine_type=None):
+def go_to_separation(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.go_to_separation()
     prober.local_mode()
     return {"status": "success", "output": f"Probe station is in separation"}
 
 
-def auto_focus(address=None, machine_type=None):
+def auto_focus(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.auto_focus()
     prober.local_mode()
     return {"status": "success", "output": f"Auto-focus command successfully executed"}
 
 
-def move_chuck_work_area(work_area=0, address=None, machine_type=None):
+def move_chuck_work_area(work_area=0, address=None, machineType=None):
     """
     Move chuck to specified work area.
 
@@ -299,42 +299,42 @@ def move_chuck_work_area(work_area=0, address=None, machine_type=None):
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.move_chuck_work_area(work_area)
     prober.local_mode()
     return {"status": "success", "output": f"Moved to {work_area} workarea"}
 
 
-def local_state(address=None, machine_type=None):
+def local_state(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.local_mode()
     return {"status": "success", "output": f"Local mode"}
 
 
-def go_to_previous_die(address=None, machine_type=None):
+def go_to_previous_die(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
     prober.step_prev_die()
     return {"status": "success", "output": f" Moved to previous die"}
 
 
-def get_chuck_position(address=None, machine_type=None):
+def get_chuck_position(address=None, machineType=None):
     error = _ensure_initialized()
     if error:
         return error
 
-    address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-    prober = get_prober(machine_type, address)
+    address, _, machineType = resolve_project_parameters(address, None, machineType)
+    prober = get_prober(machineType, address)
 
     try:
         position = prober.get_chuck_position()

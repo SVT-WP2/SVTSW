@@ -26,7 +26,7 @@ class WaferProberAgent:
             dict: Response from listener with status and output
         """
         # ========================================================================
-        # SPECIAL HANDLING: Initialize with with_db parameter
+        # SPECIAL HANDLING: Initialize with withDB parameter
         # ========================================================================
 
         if command == "Initialize" and data:
@@ -40,10 +40,10 @@ class WaferProberAgent:
                         param_dict[k] = v
                 data = param_dict
 
-            # Check for with_db parameter
+            # Check for withDB parameter
             if isinstance(data, dict):
-                with_db_value = str(data.get('with_db', '')).lower()
-                if with_db_value in ['true', '1', 'yes']:
+                withDB_value = str(data.get('withDB', '')).lower()
+                if withDB_value in ['true', '1', 'yes']:
                     # Database initialization requested - handle producer-side
                     print("🔍 Database initialization requested - handling producer-side...")
 
@@ -53,7 +53,7 @@ class WaferProberAgent:
                         init_service = WPInitializationService(self)
 
                         # Extract other parameters
-                        project_name = data.get('project_name')
+                        projectName = data.get('projectName')
                         force_value = str(data.get('force', '')).lower()
                         force = force_value in ['true', '1', 'yes']
                         db_timeout = float(params.get('db_timeout', 15.0))

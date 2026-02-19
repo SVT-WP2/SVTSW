@@ -9,18 +9,18 @@ import os
 # Database initialization removed - now handled by services/WPInitializationService.py on producer side
 # This keeps the listener non-interactive
 
-def _initialize_manual(address=None, machine_type=None, project_name=None, force=False, machine_id=None,
-                       machine_name=None, initialization_mode=None):
+def _initialize_manual(address=None, machineType=None, projectName=None, force=False, machineId=None,
+                       machineName=None, initialization_mode=None):
     """
     Initialize prober with manually provided parameters (original behavior).
 
     Args:
         address: Prober network address
-        machine_type: Type of prober machine
-        project_name: Optional project name
+        machineType: Type of prober machine
+        projectName: Optional project name
         force: Force re-initialization
-        machine_id: Optional database machine ID (for tracking)
-        machine_name: Optional database machine name (for tracking)
+        machineId: Optional database machine ID (for tracking)
+        machineName: Optional database machine name (for tracking)
         initialization_mode: Optional initialization mode ("manual" or "database")
 
     Returns:
@@ -49,16 +49,16 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
             }
 
         # Ensure prober is initialized
-        result = ensure_prober_initialized(address, machine_type, project_name)
+        result = ensure_prober_initialized(address, machineType, projectName)
 
         if result["status"] == "success":
             globals_.set_prober_status("initialized")
 
             # Store database metadata if provided (from producer-side selection)
-            if machine_id:
-                globals_.machine_id = machine_id
-            if machine_name:
-                globals_.machine_name = machine_name
+            if machineId:
+                globals_.machineId = machineId
+            if machineName:
+                globals_.machineName = machineName
             if initialization_mode:
                 globals_.initialization_mode = initialization_mode
             else:
@@ -68,23 +68,23 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
             info = globals_.get_info()
 
             # Build output message
-            if machine_name:
-                output_msg = f"Initialized {machine_name} at {info.get('address')}"
+            if machineName:
+                output_msg = f"Initialized {machineName} at {info.get('address')}"
             else:
                 output_msg = f"Initialized WP at {info.get('address')}"
 
-            if project_name:
-                output_msg += f" with project '{project_name}'"
+            if projectName:
+                output_msg += f" with project '{projectName}'"
 
             return {
                 "status": "success",
                 "output": output_msg,
                 "data": {
                     "address": address,
-                    "machine_type": machine_type,
-                    "project_name": project_name,
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
+                    "machineType": machineType,
+                    "projectName": projectName,
+                    "machineId": machineId,
+                    "machineName": machineName,
                     "initialization_mode": initialization_mode or "manual"
                 }
             }
@@ -102,25 +102,25 @@ def _initialize_manual(address=None, machine_type=None, project_name=None, force
 
 # Updated svt_initialise_wp Function
 
-def svt_initialise_wp(address=None, machine_type=None, project_name=None,
-                      alignment_die=None, home_die=None, force=False,
-                      machine_id=None, machine_name=None,
-                      project_id=None, asic_family=None, orientation=None,
+def svt_initialise_wp(address=None, machineType=None, projectName=None,
+                      alignmentDie=None, homeDie=None, force=False,
+                      machineId=None, machineName=None,
+                      projectId=None, asicFamily=None, orientation=None,
                       initialization_mode=None):
     """
     Initialize the WP agent with prober connection.
 
     Args:
         address: Prober network address (REQUIRED for manual mode)
-        machine_type: Type of prober machine (REQUIRED for manual mode, e.g., "sentio")
-        project_name: Name of the project (optional)
-        alignment_die: Alignment die position as "col,row,subsite" (optional)
-        home_die: Home die position as "col,row,subsite" (optional)
+        machineType: Type of prober machine (REQUIRED for manual mode, e.g., "sentio")
+        projectName: Name of the project (optional)
+        alignmentDie: Alignment die position as "col,row,subsite" (optional)
+        homeDie: Home die position as "col,row,subsite" (optional)
         force: Force re-initialization even if already initialized (default: False)
-        machine_id: Database machine ID (optional, for metadata)
-        machine_name: Database machine name (optional, for metadata)
-        project_id: Database project ID (optional, for metadata)
-        asic_family: ASIC family type (optional, for metadata)
+        machineId: Database machine ID (optional, for metadata)
+        machineName: Database machine name (optional, for metadata)
+        projectId: Database project ID (optional, for metadata)
+        asicFamily: ASIC family type (optional, for metadata)
         orientation: Wafer orientation (optional, for metadata)
         initialization_mode: "manual" or "database" (optional, for tracking)
 
@@ -129,28 +129,28 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
 
     Examples:
         # Manual initialization (basic)
-        Initialize(address="wpmit01.cern.ch:35555", machine_type="sentio")
+        Initialize(address="wpmit01.cern.ch:35555", machineType="sentio")
 
         # Manual initialization (with project and die positions)
         Initialize(
             address="wpmit01.cern.ch:35555",
-            machine_type="sentio",
-            project_name="RD53B_Test",
-            alignment_die="5,10,0",
-            home_die="1,1,0"
+            machineType="sentio",
+            projectName="RD53B_Test",
+            alignmentDie="5,10,0",
+            homeDie="1,1,0"
         )
 
         # Database initialization (called by WPInitializationService)
         Initialize(
             address="wpmit01.cern.ch:35555",
-            machine_type="sentio",
-            project_name="RD53B_Wafer_Test_v1",
-            alignment_die="5,10,0",
-            home_die="1,1,0",
-            machine_id=1,
-            machine_name="SENTIO Prober 1",
-            project_id=15,
-            asic_family="RD53B",
+            machineType="sentio",
+            projectName="RD53B_Wafer_Test_v1",
+            alignmentDie="5,10,0",
+            homeDie="1,1,0",
+            machineId=1,
+            machineName="SENTIO Prober 1",
+            projectId=15,
+            asicFamily="RD53B",
             orientation="0",
             initialization_mode="database"
         )
@@ -167,16 +167,16 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
             "output": f"Already initialized at {globals_.address}. Use force=True to reinitialize.",
             "data": {
                 "already_initialized": True,
-                "current_address": globals_.address,
-                "current_machine_type": globals_.machine_type
+                "currentAddress": globals_.address,
+                "currentMachineType": globals_.machineType
             }
         }
 
     # Validate required parameters
-    if not address or not machine_type:
+    if not address or not machineType:
         return {
             "status": "error",
-            "output": "Initialization requires 'address' and 'machine_type' parameters."
+            "output": "Initialization requires 'address' and 'machineType' parameters."
         }
 
     # Reset if forcing re-initialization
@@ -185,22 +185,22 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
 
     try:
         # Initialize prober
-        result = ensure_prober_initialized(address, machine_type, project_name)
+        result = ensure_prober_initialized(address, machineType, projectName)
 
         if result["status"] == "success":
             globals_.set_prober_status("initialized")
 
             # Store basic info
             globals_.set_address(address)
-            globals_.set_machine_type(machine_type)
-            if project_name:
-                globals_.set_project_name(project_name)
+            globals_.set_machineType(machineType)
+            if projectName:
+                globals_.set_projectName(projectName)
 
                 try:
-                    prober = get_prober(machine_type, address)
+                    prober = get_prober(machineType, address)
                     project_path = os.path.join(
                         "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
-                        project_name
+                        projectName
                     )
 
                     prober.open_project(project_path)
@@ -208,39 +208,39 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
                     print(f"   ⚠️  Warning: Could not open project: {str(e)}")
 
             # Store machine metadata (from database)
-            if machine_id:
-                globals_.machine_id = machine_id
-            if machine_name:
-                globals_.machine_name = machine_name
+            if machineId:
+                globals_.machineId = machineId
+            if machineName:
+                globals_.machineName = machineName
             if initialization_mode:
                 globals_.initialization_mode = initialization_mode
 
             # Parse and store die positions
-            if alignment_die:
-                parsed_alignment = _parse_die_position(alignment_die)
+            if alignmentDie:
+                parsed_alignment = _parse_die_position(alignmentDie)
                 if parsed_alignment:
-                    globals_.set_alignment_die(parsed_alignment)
+                    globals_.set_alignmentDie(parsed_alignment)
                     print(
                         f"   📍 Alignment die: Col {parsed_alignment['col']}, Row {parsed_alignment['row']}, Subsite {parsed_alignment['subsite']}")
                 else:
-                    print(f"   ⚠️  Invalid alignment die format: '{alignment_die}'")
+                    print(f"   ⚠️  Invalid alignment die format: '{alignmentDie}'")
 
-            if home_die:
-                parsed_home = _parse_die_position(home_die)
+            if homeDie:
+                parsed_home = _parse_die_position(homeDie)
                 if parsed_home:
-                    globals_.set_home_die(parsed_home)
+                    globals_.set_homeDie(parsed_home)
                     print(
                         f"   🏠 Home die: Col {parsed_home['col']}, Row {parsed_home['row']}, Subsite {parsed_home['subsite']}")
                 else:
-                    print(f"   ⚠️  Invalid home die format: '{home_die}'")
+                    print(f"   ⚠️  Invalid home die format: '{homeDie}'")
 
             # Store project metadata (from database)
-            if project_id or asic_family or orientation:
+            if projectId or asicFamily or orientation:
                 metadata = {}
-                if project_id:
-                    metadata['project_id'] = project_id
-                if asic_family:
-                    metadata['asic_family'] = asic_family
+                if projectId:
+                    metadata['projectId'] = projectId
+                if asicFamily:
+                    metadata['asicFamily'] = asicFamily
                 if orientation:
                     metadata['orientation'] = orientation
 
@@ -248,22 +248,22 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
 
             # Build output message
             output_msg = f"Initialized WP at {address}"
-            if project_name:
-                output_msg += f" with project '{project_name}'"
+            if projectName:
+                output_msg += f" with project '{projectName}'"
 
             return {
                 "status": "success",
                 "output": output_msg,
                 "data": {
                     "address": address,
-                    "machine_type": machine_type,
-                    "project_name": project_name,
-                    "alignment_die": alignment_die,
-                    "home_die": home_die,
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
-                    "project_id": project_id,
-                    "asic_family": asic_family,
+                    "machineType": machineType,
+                    "projectName": projectName,
+                    "alignmentDie": alignmentDie,
+                    "homeDie": homeDie,
+                    "machineId": machineId,
+                    "machineName": machineName,
+                    "projectId": projectId,
+                    "asicFamily": asicFamily,
                     "orientation": orientation,
                     "initialization_mode": initialization_mode
                 }
@@ -345,10 +345,10 @@ def get_project_status():
     }
 
     # Add machine ID and name if available (from database initialization)
-    if hasattr(globals_, 'machine_id'):
-        status_info["machine_id"] = globals_.machine_id
-    if hasattr(globals_, 'machine_name'):
-        status_info["machine_name"] = globals_.machine_name
+    if hasattr(globals_, 'machineId'):
+        status_info["machineId"] = globals_.machineId
+    if hasattr(globals_, 'machineName'):
+        status_info["machineName"] = globals_.machineName
 
     # Get agent state
     try:
@@ -362,7 +362,7 @@ def get_project_status():
     die_info = None
     if factory.is_initialized():
         try:
-            prober = factory.get_prober(globals_.machine_type, globals_.address)
+            prober = factory.get_prober(globals_.machineType, globals_.address)
 
             # Get die information using your new method
             try:
@@ -401,14 +401,14 @@ def get_project_status():
     # Machine connection info
     output_lines.append(f"Connected to: {info.get('address', 'N/A')}")
 
-    if status_info.get("machine_name"):
-        output_lines.append(f"Machine: {status_info['machine_name']}")
+    if status_info.get("machineName"):
+        output_lines.append(f"Machine: {status_info['machineName']}")
 
-    output_lines.append(f"Machine Type: {info.get('machine_type', 'N/A')}")
+    output_lines.append(f"Machine Type: {info.get('machineType', 'N/A')}")
 
     # Project info
-    if info.get('project_name'):
-        output_lines.append(f"Project: {info.get('project_name')}")
+    if info.get('projectName'):
+        output_lines.append(f"Project: {info.get('projectName')}")
 
     # Agent state
     output_lines.append(f"Agent State: {status_info.get('agent_state', 'Unknown')}")
@@ -436,7 +436,7 @@ def get_project_status():
 def get_info():
     factory = ProberFactory.get_instance()
     globals_ = SvtWPAagentGlobalParameters.getInstance()
-    prober = factory.get_prober(globals_.machine_type, globals_.address)
+    prober = factory.get_prober(globals_.machineType, globals_.address)
 
     # This returns a string like "2,3,0"
     current_index = prober.get_current_index()

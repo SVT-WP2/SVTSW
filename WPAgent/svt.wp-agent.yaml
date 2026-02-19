@@ -5,9 +5,9 @@ info:
   description: |
     This OpenAPI document describes the message contract for the SVT Wafer Prober Agent. The agent consumes Kafka messages on topic `svt.wp-agent.request` and replies on `svt.wp-agent.reply`.
     
-    **What you send:** Only type and params fields. The kafka_client automatically adds request_id, sent_at, and reply_to.
+    **What you send:** Only type and params fields. The kafka_client automatically adds requestId, sent_at, and reply_to.
     
-    **What you receive:** The kafka_client wraps the command result with type (specific to command), request_id, command, status, output, execution_time_ms, and timestamp.
+    **What you receive:** The kafka_client wraps the command result with type (specific to command), requestId, command, status, output, execution_time_ms, and timestamp.
     
     Some commands also include a data field with structured information.
 
@@ -37,12 +37,12 @@ paths:
         Three initialization modes:
         
         **1. Manual Mode** - Direct connection with explicit parameters
-          - Required: address, machine_type
-          - Optional: project_name, alignment_die, home_die, force
+          - Required: address, machineType
+          - Optional: projectName, alignmentDie, homeDie, force
           - Use when you know exact prober address and settings
         
         **2. Database Interactive Mode** - User-guided selection
-          - Required: with_db=true
+          - Required: withDB=true
           - Optional: force
           - Agent prompts user interactively to select machine and project from database
           - Best for exploration or manual configuration
@@ -72,17 +72,17 @@ paths:
                   type: "Initialize"
                   params:
                     address: "string"
-                    machine_type: "string"
-                    project_name: "string"
-                    alignment_die: "string"
-                    home_die: "string"
+                    machineType: "string"
+                    projectName: "string"
+                    alignmentDie: "string"
+                    homeDie: "string"
 
               DatabaseMode:
                 summary: Interactive database selection
                 value:
                   type: "Initialize"
                   params:
-                    with_db: true
+                    withDB: true
 
               SerialNumberMode:
                 summary: Auto-resolve everything by chip serial (NEW! ⭐)
@@ -102,7 +102,7 @@ paths:
                 ManualModeSuccess:
                   value:
                     type: "InitializeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Initialized WP at WPMIT01.cern.ch:35555"
@@ -112,7 +112,7 @@ paths:
                 SerialNumberModeSuccess:
                   value:
                     type: "InitializeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: |
@@ -144,10 +144,10 @@ paths:
                       wafer_id: 0
                       family_type: "string"
                       orientation: "North"
-                      machine_name: "string"
+                      machineName: "string"
                       machine_address: "string"
-                      project_name: "string"
-                      project_id: 0
+                      projectName: "string"
+                      projectId: 0
                       location: "string"
         '400':
           description: Bad request
@@ -159,17 +159,17 @@ paths:
                 MissingParams:
                   value:
                     type: "InitializeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "error"
-                    output: "Initialization requires 'address' and 'machine_type' parameters, OR 'with_db=true', OR 'serialNumber'"
+                    output: "Initialization requires 'address' and 'machineType' parameters, OR 'withDB=true', OR 'serialNumber'"
                     execution_time_ms: 0.0
                     timestamp: 0.0
 
                 AsicNotFound:
                   value:
                     type: "InitializeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "error"
                     output: "Step 1/3: Finding chip... ❌ ASIC 'INVALID_123' not found in database"
@@ -191,7 +191,7 @@ paths:
                 value:
                   type: "OpenProject"
                   params:
-                    project_name: "string"
+                    projectName: "string"
       responses:
         '200':
           description: Project opened
@@ -203,7 +203,7 @@ paths:
                 Success:
                   value:
                     type: "OpenProjectReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Opened project: C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\NKF7_Test.prj"
@@ -231,7 +231,7 @@ paths:
                 Success:
                   value:
                     type: "LoadReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Wafer has been loaded to center"
@@ -259,7 +259,7 @@ paths:
                 Success:
                   value:
                     type: "UnloadReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Wafer unloaded"
@@ -287,7 +287,7 @@ paths:
                 Success:
                   value:
                     type: "StepNextDieReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Stepped to next die: (6, 10)"
@@ -315,7 +315,7 @@ paths:
                 Success:
                   value:
                     type: "GoToSeparationReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Probe station is in separation"
@@ -343,7 +343,7 @@ paths:
                 Success:
                   value:
                     type: "RunPTPAReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "PTPA executed"
@@ -375,7 +375,7 @@ paths:
                 Success:
                   value:
                     type: "ShowProjectStatusReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Connected to WPMIT01.cern.ch:35555, Machine WPMIT, Type sentio, Project NKF7_Test, State Idle"
@@ -403,7 +403,7 @@ paths:
                 Success:
                   value:
                     type: "CleaningReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Cleaning completed"
@@ -437,7 +437,7 @@ paths:
                 Success:
                   value:
                     type: "MoveChuckZReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Moved chuck to z=10500.9"
@@ -465,7 +465,7 @@ paths:
                 Success:
                   value:
                     type: "GoToPreviousDieReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Moved to previous die"
@@ -499,7 +499,7 @@ paths:
                 Success:
                   value:
                     type: "MoveChuckToWorkAreaReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Moved to 0 workarea"
@@ -527,7 +527,7 @@ paths:
                 Success:
                   value:
                     type: "FindHomeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Found home position"
@@ -564,7 +564,7 @@ paths:
                 Contact:
                   value:
                     type: "GetChuckPositionReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Chuck is In Contact"
@@ -588,7 +588,7 @@ paths:
                 value:
                   type: "SwitchCamera"
                   params:
-                    mount_point: "Chuck"
+                    mountPoint: "Chuck"
       responses:
         '200':
           description: Switched
@@ -600,7 +600,7 @@ paths:
                 Success:
                   value:
                     type: "SwitchCameraReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Switched camera to Chuck"
@@ -628,7 +628,7 @@ paths:
                 Success:
                   value:
                     type: "GetInfoReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Current die: Count of selected dies 1234, Number 45, Row 10, Column 5"
@@ -664,7 +664,7 @@ paths:
                 Success:
                   value:
                     type: "GetCurrentIndexReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Current die index: 5,3,0"
@@ -702,7 +702,7 @@ paths:
                 Success:
                   value:
                     type: "GetDiesNumberReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Total dies: 150"
@@ -732,7 +732,7 @@ paths:
                 Idle:
                   value:
                     type: "GetAgentStateReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Agent state: Idle"
@@ -760,7 +760,7 @@ paths:
                 Success:
                   value:
                     type: "ListAvailableCommandsReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "42 commands available"
@@ -788,7 +788,7 @@ paths:
                 Success:
                   value:
                     type: "ListProbersReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Found 3 wafer probe machine(s)"
@@ -816,7 +816,7 @@ paths:
                 Success:
                   value:
                     type: "ListChipTypesReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Available chip types (3): NKF7, MOSS, MOSAIX"
@@ -844,7 +844,7 @@ paths:
                 Success:
                   value:
                     type: "ListOrientationsReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Available wafer orientations (4): East, West, North, South"
@@ -878,7 +878,7 @@ paths:
                 Success:
                   value:
                     type: "RunSequencerReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Sequence executed successfully"
@@ -1126,7 +1126,7 @@ paths:
                 Success:
                   value:
                     type: "ResetAgentReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Agent state reset from 'Failed' to 'Idle'"
@@ -1154,7 +1154,7 @@ paths:
                 Success:
                   value:
                     type: "LocalModeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Local mode"
@@ -1182,7 +1182,7 @@ paths:
                 Success:
                   value:
                     type: "HelpReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "WPAgent - Available Commands..."
@@ -1217,7 +1217,7 @@ paths:
                 Success:
                   value:
                     type: "MoveChuckXYReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Moved chuck to x=155539.9, y=-238764.7"
@@ -1252,7 +1252,7 @@ paths:
                 Success:
                   value:
                     type: "GoToDieReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Moved to die: (5, 10)"
@@ -1280,7 +1280,7 @@ paths:
                 Success:
                   value:
                     type: "MoveChuckHomeReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Chuck moved home"
@@ -1328,7 +1328,7 @@ paths:
                 Success:
                   value:
                     type: "GoToContactReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Probe station is in contact"
@@ -1356,7 +1356,7 @@ paths:
                 Success:
                   value:
                     type: "AutoFocusReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Auto-focus command successfully executed"
@@ -1384,7 +1384,7 @@ paths:
                 Success:
                   value:
                     type: "AlignWaferReply"
-                    request_id: "string"
+                    requestId: "string"
                     command: "string"
                     status: "success"
                     output: "Wafer aligned using die at Col 2, Row 2, Subsite 0"
@@ -1417,28 +1417,28 @@ components:
               type: string
             address:
               type: string
-            machine_type:
+            machineType:
               type: string
               enum: ["sentio", "summit"]
-            project_name:
+            projectName:
               type: string
-            alignment_die:
+            alignmentDie:
               type: string
-            home_die:
+            homeDie:
               type: string
             force:
               type: boolean
-            with_db:
+            withDB:
               type: boolean
 
     CommandReply:
       type: object
-      required: [type, request_id, command, status, output, execution_time_ms, timestamp]
+      required: [type, requestId, command, status, output, execution_time_ms, timestamp]
       properties:
         type:
           type: string
           description: Specific reply type for each command (e.g. "InitializeReply", "LoadReply")
-        request_id:
+        requestId:
           type: string
         command:
           type: string

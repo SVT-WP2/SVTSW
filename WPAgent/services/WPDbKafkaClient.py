@@ -115,7 +115,7 @@ class DBKafkaClient:
             data: Dict[str, Any],
             reply_type: str,
             timeout: float = 10.0,
-            use_request_id: bool = True
+            use_requestId: bool = True
     ) -> Optional[Dict[str, Any]]:
         """
         Send request and wait for reply with optional request ID matching
@@ -125,12 +125,12 @@ class DBKafkaClient:
             data: Data payload
             reply_type: Expected reply type
             timeout: Timeout in seconds
-            use_request_id: Whether to use request ID for matching (recommended)
+            use_requestId: Whether to use request ID for matching (recommended)
 
         Returns:
             Reply dict or None if timeout
         """
-        request_id = str(uuid.uuid4()) if use_request_id else None
+        requestId = str(uuid.uuid4()) if use_requestId else None
 
         # Build payload according to Swagger spec
         payload = {
@@ -138,8 +138,8 @@ class DBKafkaClient:
             "data": data
         }
 
-        if use_request_id:
-            payload["requestId"] = request_id
+        if use_requestId:
+            payload["requestId"] = requestId
 
         # Send request
         try:
@@ -149,8 +149,8 @@ class DBKafkaClient:
             )
             self.producer.flush()
 
-            if use_request_id:
-                print(f"📤 Sent DB request: {message_type} (ID: {request_id[:8]}...)")
+            if use_requestId:
+                print(f"📤 Sent DB request: {message_type} (ID: {requestId[:8]}...)")
             else:
                 print(f"📤 Sent DB request: {message_type}")
             print(f"   Waiting for reply type: {reply_type} (timeout: {timeout}s)")
@@ -185,11 +185,11 @@ class DBKafkaClient:
                 # Match by reply type
                 if received_type == reply_type:
                     # If using request ID, verify it matches
-                    if use_request_id:
-                        reply_request_id = value.get("requestId")
+                    if use_requestId:
+                        reply_requestId = value.get("requestId")
 
-                        if reply_request_id and reply_request_id != request_id:
-                            print(f"   ℹ️ Ignoring reply with different requestId ({reply_request_id[:8]}...)")
+                        if reply_requestId and reply_requestId != requestId:
+                            print(f"   ℹ️ Ignoring reply with different requestId ({reply_requestId[:8]}...)")
                             continue
 
                     status = value.get("status")
