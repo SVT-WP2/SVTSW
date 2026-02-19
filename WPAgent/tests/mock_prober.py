@@ -66,12 +66,12 @@ class MockProberImpl(AbstractProber):
         print(f"✅ At die ({col}, {row}, subsite {subsite})")
         return self.current_die
 
-    def switch_camera(self, mount_point: str):
+    def switch_camera(self, mountPoint: str):
         """Simulate camera switch"""
-        print(f"📷 Switching camera from {self.camera_position} to {mount_point}")
+        print(f"📷 Switching camera from {self.camera_position} to {mountPoint}")
         time.sleep(0.8)
-        self.camera_position = mount_point
-        print(f"✅ Camera switched to {mount_point}")
+        self.camera_position = mountPoint
+        print(f"✅ Camera switched to {mountPoint}")
 
     def move_chuck_home(self):
         """Simulate moving chuck to home position"""

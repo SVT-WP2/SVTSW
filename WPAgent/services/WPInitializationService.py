@@ -98,15 +98,15 @@ class WPInitializationService:
             print("📡 Step 2/4: Specify ASIC Family")
             print("=" * 70)
 
-            asic_family = input("\nEnter ASIC family type (e.g., NKF7, MOSS): ").strip()
+            asicFamily = input("\nEnter ASIC family type (e.g., NKF7, MOSS): ").strip()
 
-            if not asic_family:
+            if not asicFamily:
                 return {
                     "status": "error",
                     "output": "ASIC family is required"
                 }
 
-            print(f"✅ ASIC family: {asic_family}")
+            print(f"✅ ASIC family: {asicFamily}")
 
             # ================================================================
             # STEP 3: Get orientation
@@ -144,15 +144,15 @@ class WPInitializationService:
 
             # Filter by selected prober, ASIC family, and orientation
             filtered_projects = []
-            selected_machine_id = selected_machine.get('id')
+            selected_machineId = selected_machine.get('id')
 
             for project in all_projects:
                 # Check if project matches selected prober
-                if project.get("wpMachineId") != selected_machine_id:
+                if project.get("wpMachineId") != selected_machineId:
                     continue
 
                 # Check if ASIC family matches (case-insensitive)
-                if project.get("asicFamilyType", "").lower() != asic_family.lower():
+                if project.get("asicFamilyType", "").lower() != asicFamily.lower():
                     continue
 
                 # Check if orientation matches
@@ -162,11 +162,11 @@ class WPInitializationService:
                 filtered_projects.append(project)
 
             # Show filtering statistics
-            machine_projects = [p for p in all_projects if p.get('wpMachineId') == selected_machine_id]
-            family_projects = [p for p in all_projects if p.get('asicFamilyType', '').lower() == asic_family.lower()]
+            machine_projects = [p for p in all_projects if p.get('wpMachineId') == selected_machineId]
+            family_projects = [p for p in all_projects if p.get('asicFamilyType', '').lower() == asicFamily.lower()]
 
-            print(f"🔽 Filtered by prober ID {selected_machine_id}: {len(machine_projects)} projects")
-            print(f"🔽 Filtered by ASIC family '{asic_family}': {len(family_projects)} projects")
+            print(f"🔽 Filtered by prober ID {selected_machineId}: {len(machine_projects)} projects")
+            print(f"🔽 Filtered by ASIC family '{asicFamily}': {len(family_projects)} projects")
             print(f"🔽 Filtered by orientation '{orientation}°': {len(filtered_projects)} projects")
 
             if not filtered_projects:
@@ -174,7 +174,7 @@ class WPInitializationService:
                     "status": "error",
                     "output": f"No projects found matching:\n"
                               f"  - Prober: {selected_machine.get('name')}\n"
-                              f"  - ASIC Family: {asic_family}\n"
+                              f"  - ASIC Family: {asicFamily}\n"
                               f"  - Orientation: {orientation}°"
                 }
 
@@ -197,27 +197,27 @@ class WPInitializationService:
             print("=" * 70)
 
             # Extract machine parameters
-            machine_type = selected_machine.get('software', '').lower()
+            machineType = selected_machine.get('software', '').lower()
             host_name = selected_machine.get('hostName', '')
             connection_port = selected_machine.get('connectionPort', '')
-            machine_id = selected_machine.get('id', '')
-            machine_name = selected_machine.get('name', '')
+            machineId = selected_machine.get('id', '')
+            machineName = selected_machine.get('name', '')
 
-            if not machine_type or not host_name:
+            if not machineType or not host_name:
                 return {
                     "status": "error",
-                    "output": f"Missing required machine parameters (type: {machine_type}, host: {host_name})"
+                    "output": f"Missing required machine parameters (type: {machineType}, host: {host_name})"
                 }
 
             # Build address
             if connection_port:
-                address = f"{machine_name}01.{host_name}:{connection_port}"
+                address = f"{machineName}01.{host_name}:{connection_port}"
             else:
                 address = host_name
 
             # Format die positions (around line 195)
-            alignment_die_str = self._format_die_position(selected_project.get("alignmentDie"))
-            home_die_str = self._format_die_position(selected_project.get("homeDie"))
+            alignmentDie_str = self._format_die_position(selected_project.get("alignmentDie"))
+            homeDie_str = self._format_die_position(selected_project.get("homeDie"))
 
 
             # Send Initialize command with all parameters
@@ -225,16 +225,16 @@ class WPInitializationService:
                 command="Initialize",
                 params={
                     "address": address,
-                    "machine_type": machine_type,
-                    "project_name": selected_project.get("name"),
-                    "alignment_die": alignment_die_str,
-                    "home_die": home_die_str,
+                    "machineType": machineType,
+                    "projectName": selected_project.get("name"),
+                    "alignmentDie": alignmentDie_str,
+                    "homeDie": homeDie_str,
                     "force": force,
                     # Metadata
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
-                    "project_id": selected_project.get("id"),
-                    "asic_family": selected_project.get("asicFamilyType"),
+                    "machineId": machineId,
+                    "machineName": machineName,
+                    "projectId": selected_project.get("id"),
+                    "asicFamily": selected_project.get("asicFamilyType"),
                     "orientation": selected_project.get("orientation"),
                     "initialization_mode": "database"
                 },
@@ -252,19 +252,19 @@ class WPInitializationService:
                 print("\n" + "=" * 70)
                 print("✅ Initialization Complete!")
                 print("=" * 70)
-                print(f"Prober: {machine_name}")
+                print(f"Prober: {machineName}")
                 print(f"Address: {address}")
                 print(f"Project: {selected_project.get('name')}")
                 print(f"ASIC Family: {selected_project.get('asicFamilyType')}")
                 print(f"Orientation: {selected_project.get('orientation')}")
 
-                alignment_die = selected_project.get('alignmentDie')
-                home_die = selected_project.get('homeDie')
+                alignmentDie = selected_project.get('alignmentDie')
+                homeDie = selected_project.get('homeDie')
 
-                if alignment_die:
-                    print(f"Alignment Die: {alignment_die}")
-                if home_die:
-                    print(f"Home Die: {home_die}")
+                if alignmentDie:
+                    print(f"Alignment Die: {alignmentDie}")
+                if homeDie:
+                    print(f"Home Die: {homeDie}")
 
                 print("=" * 70 + "\n")
 
@@ -272,13 +272,13 @@ class WPInitializationService:
                 if "data" not in result:
                     result["data"] = {}
                 result["data"].update({
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
-                    "project_id": selected_project.get("id"),
-                    "asic_family": selected_project.get("asicFamilyType"),
+                    "machineId": machineId,
+                    "machineName": machineName,
+                    "projectId": selected_project.get("id"),
+                    "asicFamily": selected_project.get("asicFamilyType"),
                     "orientation": selected_project.get("orientation"),
-                    "alignment_die": alignment_die_str,
-                    "home_die": home_die_str,
+                    "alignmentDie": alignmentDie_str,
+                    "homeDie": homeDie_str,
                     "initialization_mode": "database"
                 })
             try:
@@ -301,17 +301,17 @@ class WPInitializationService:
                 "output": f"Database initialization failed: {str(e)}"
             }
 
-    def initialize_manual(self, address, machine_type, project_name=None,
-                          alignment_die=None, home_die=None, force=False):
+    def initialize_manual(self, address, machineType, projectName=None,
+                          alignmentDie=None, homeDie=None, force=False):
         """
         Initialize prober with manual parameters (wrapper for convenience).
 
         Args:
             address: Prober network address
-            machine_type: Type of prober machine
-            project_name: Optional project name
-            alignment_die: Optional alignment die "col,row,subsite"
-            home_die: Optional home die "col,row,subsite"
+            machineType: Type of prober machine
+            projectName: Optional project name
+            alignmentDie: Optional alignment die "col,row,subsite"
+            homeDie: Optional home die "col,row,subsite"
             force: Force re-initialization
 
         Returns:
@@ -321,10 +321,10 @@ class WPInitializationService:
             command="Initialize",
             params={
                 "address": address,
-                "machine_type": machine_type,
-                "project_name": project_name,
-                "alignment_die": alignment_die,
-                "home_die": home_die,
+                "machineType": machineType,
+                "projectName": projectName,
+                "alignmentDie": alignmentDie,
+                "homeDie": homeDie,
                 "force": force,
                 "initialization_mode": "manual"
             },
@@ -357,12 +357,12 @@ class WPInitializationService:
             print(f"❌ Error listing machines: {e}")
             return []
 
-    def list_available_projects(self, asic_family=None, orientation=None, timeout=15.0):
+    def list_available_projects(self, asicFamily=None, orientation=None, timeout=15.0):
         """
         List available projects from database, optionally filtered.
 
         Args:
-            asic_family: Filter by ASIC family (optional)
+            asicFamily: Filter by ASIC family (optional)
             orientation: Filter by orientation (optional)
             timeout: Database query timeout
 
@@ -380,16 +380,16 @@ class WPInitializationService:
             # Apply filters if provided
             filtered_projects = all_projects
 
-            if asic_family:
+            if asicFamily:
                 filtered_projects = [p for p in filtered_projects
-                                     if p.get("asicFamilyType", "").lower() == asic_family.lower()]
+                                     if p.get("asicFamilyType", "").lower() == asicFamily.lower()]
 
             if orientation:
                 filtered_projects = [p for p in filtered_projects
                                      if str(p.get("orientation", "")).lower() == str(orientation).lower()]
 
             print(f"\n✅ Found {len(filtered_projects)} project(s)")
-            if asic_family or orientation:
+            if asicFamily or orientation:
                 print(f"   (filtered from {len(all_projects)} total projects)")
 
             self._display_projects(filtered_projects)
@@ -400,13 +400,13 @@ class WPInitializationService:
             print(f"❌ Error listing projects: {e}")
             return []
 
-    def initialize_by_id(self, machine_id, project_name=None, force=False, timeout=15.0):
+    def initialize_by_id(self, machineId, projectName=None, force=False, timeout=15.0):
         """
         Initialize by machine ID (useful for automation).
 
         Args:
-            machine_id: Database ID of the machine
-            project_name: Optional project name
+            machineId: Database ID of the machine
+            projectName: Optional project name
             force: Force re-initialization
             timeout: Database query timeout
 
@@ -421,39 +421,39 @@ class WPInitializationService:
             # Find machine by ID
             selected = None
             for machine in machines:
-                if str(machine.get('id')) == str(machine_id):
+                if str(machine.get('id')) == str(machineId):
                     selected = machine
                     break
 
             if not selected:
                 return {
                     "status": "error",
-                    "output": f"Machine with ID '{machine_id}' not found in database"
+                    "output": f"Machine with ID '{machineId}' not found in database"
                 }
 
             # Extract parameters
-            machine_type = selected.get('software', '').lower()
+            machineType = selected.get('software', '').lower()
             host_name = selected.get('hostName', '')
             connection_port = selected.get('connectionPort', '')
-            machine_name = selected.get('name', '')
+            machineName = selected.get('name', '')
 
             if connection_port:
-                address = f"{machine_name}01.{host_name}:{connection_port}"
+                address = f"{machineName}01.{host_name}:{connection_port}"
             else:
                 address = host_name
 
-            print(f"🔧 Initializing {machine_name} (ID: {machine_id}) at {address}...")
+            print(f"🔧 Initializing {machineName} (ID: {machineId}) at {address}...")
 
             # Send Initialize command
             return self.agent.send(
                 command="Initialize",
                 params={
                     "address": address,
-                    "machine_type": machine_type,
-                    "project_name": project_name,
+                    "machineType": machineType,
+                    "projectName": projectName,
                     "force": force,
-                    "machine_id": machine_id,
-                    "machine_name": machine_name,
+                    "machineId": machineId,
+                    "machineName": machineName,
                     "initialization_mode": "database"
                 },
                 timeout=30.0
@@ -564,10 +564,10 @@ class WPInitializationService:
             print(f"   ASIC Family: {project.get('asicFamilyType', 'N/A')}")
             print(f"   Orientation: {project.get('orientation', 'N/A')}")
 
-            alignment_die = project.get('alignmentDie')
-            home_die = project.get('homeDie')
+            alignmentDie = project.get('alignmentDie')
+            homeDie = project.get('homeDie')
 
-            if alignment_die:
-                print(f"   Alignment Die: {alignment_die}")
-            if home_die:
-                print(f"   Home Die: {home_die}")
+            if alignmentDie:
+                print(f"   Alignment Die: {alignmentDie}")
+            if homeDie:
+                print(f"   Home Die: {homeDie}")

@@ -3,30 +3,30 @@
     "command": "WP_SENTIO_SVT_INITIALISE",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio",
-      "project_name": "MOSAIX_FlatPad"
+      "machineType": "sentio",
+      "projectName": "MOSAIX_FlatPad"
     }
   },
   {
     "command": "WP_SENTIO_INITIALISE_TESTING_PROJECT",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio",
-      "project_name": "MOSAIX_FlatPad"
+      "machineType": "sentio",
+      "projectName": "MOSAIX_FlatPad"
     }
   },
   {
     "command": "WP_LOAD_WAFER",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio"
+      "machineType": "sentio"
     }
   },
   {
     "command": "WP_CURRENT_STABILITY_MULTIPLE_TOUCHES",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio",
+      "machineType": "sentio",
       "channel": 2,
       "voltage": 1.4,
       "current_limit": 0.045,
@@ -37,7 +37,7 @@
     "command": "WP_SIGNAL_TEST",
     "params": {
       "address": "wpmit01.cern.ch:35555",
-      "machine_type": "sentio",
+      "machineType": "sentio",
       "channel": 2,
       "voltage": 1.5,
       "current_limit": 0.05,

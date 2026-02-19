@@ -8,18 +8,18 @@ class SvtWPAagentGlobalParameters:
     def __init__(self):
         # Core parameters
         self.address = None
-        self.machine_type = None
+        self.machineType = None
         self.chip_name = None
         self.orientation = None
-        self.project_name = None
+        self.projectName = None
         self.prober_status = "available"
-        self._alignment_die = None
-        self._home_die = None
+        self._alignmentDie = None
+        self._homeDie = None
         self._project_metadata = {}
 
         # Database-related parameters
-        self.machine_id = None  # Database ID of the prober
-        self.machine_name = None  # Human-readable name from database
+        self.machineId = None  # Database ID of the prober
+        self.machineName = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
 
     @classmethod
@@ -28,24 +28,24 @@ class SvtWPAagentGlobalParameters:
             cls._instance = cls()
         return cls._instance
 
-    def set_alignment_die(self, die_position):
+    def set_alignmentDie(self, die_position):
         """Set alignment die position"""
-        self._alignment_die = die_position
+        self._alignmentDie = die_position
 
-    def get_alignment_die(self):
+    def get_alignmentDie(self):
         """Get alignment die position"""
-        return self._alignment_die
+        return self._alignmentDie
 
-    def set_home_die(self, die_position):
+    def set_homeDie(self, die_position):
         """Set home die position"""
-        self._home_die = die_position
+        self._homeDie = die_position
 
-    def get_home_die(self):
+    def get_homeDie(self):
         """Get home die position"""
-        return self._home_die
+        return self._homeDie
 
     def set_project_metadata(self, metadata):
-        """Store project metadata (project_id, asic_family, orientation, etc.)"""
+        """Store project metadata (projectId, asicFamily, orientation, etc.)"""
         self._project_metadata = metadata
 
     def get_project_metadata(self):
@@ -55,8 +55,8 @@ class SvtWPAagentGlobalParameters:
     def set_address(self, address):
         self.address = address
 
-    def set_machine_type(self, machine_type):
-        self.machine_type = machine_type
+    def set_machineType(self, machineType):
+        self.machineType = machineType
 
     def set_chip_name(self, chip_name):
         self.chip_name = chip_name
@@ -64,19 +64,19 @@ class SvtWPAagentGlobalParameters:
     def set_orientation(self, orientation):
         self.orientation = orientation
 
-    def set_project_name(self, project_name):
-        self.project_name = project_name
+    def set_projectName(self, projectName):
+        self.projectName = projectName
 
     def set_prober_status(self, prober_status):
         self.prober_status = prober_status
 
-    def set_machine_id(self, machine_id):
+    def set_machineId(self, machineId):
         """Set the database ID of the prober"""
-        self.machine_id = machine_id
+        self.machineId = machineId
 
-    def set_machine_name(self, machine_name):
+    def set_machineName(self, machineName):
         """Set the human-readable name of the prober from database"""
-        self.machine_name = machine_name
+        self.machineName = machineName
 
     def set_initialization_mode(self, mode):
         """Set how the prober was initialized: 'manual' or 'database'"""
@@ -88,26 +88,26 @@ class SvtWPAagentGlobalParameters:
         """Get all current parameter values as a dictionary"""
         info = {
             "address": self.address,
-            "machine_type": self.machine_type,
+            "machineType": self.machineType,
             "chip_name": self.chip_name,
             "orientation": self.orientation,
-            "project_name": self.project_name,
+            "projectName": self.projectName,
             "prober_status": self.prober_status,
             "initialization_mode": self.initialization_mode
         }
 
         # Add database-specific info if available
-        if self.machine_id is not None:
-            info["machine_id"] = self.machine_id
-        if self.machine_name is not None:
-            info["machine_name"] = self.machine_name
+        if self.machineId is not None:
+            info["machineId"] = self.machineId
+        if self.machineName is not None:
+            info["machineName"] = self.machineName
 
         return info
 
     def get_log_context(self):
         """Get a formatted string for logging context"""
-        machine_info = self.machine_name or self.address or "N/A"
-        project_info = self.project_name or "N/A"
+        machine_info = self.machineName or self.address or "N/A"
+        project_info = self.projectName or "N/A"
         return f"[{machine_info} | {project_info} | {self.prober_status}]"
 
     def load_from_dict(self, config: dict):
@@ -129,30 +129,30 @@ class SvtWPAagentGlobalParameters:
             data: Dictionary with parameter values
         """
         self.address = data.get("address")
-        self.machine_type = data.get("machine_type", "sentio")
+        self.machineType = data.get("machineType", "sentio")
         self.chip_name = data.get("chip_name")
         self.orientation = data.get("orientation")
-        self.project_name = data.get("project_name")
+        self.projectName = data.get("projectName")
         self.prober_status = data.get("status", data.get("prober_status", "idle"))
 
         # Database-specific fields
-        if "machine_id" in data:
-            self.machine_id = data["machine_id"]
-        if "machine_name" in data:
-            self.machine_name = data["machine_name"]
+        if "machineId" in data:
+            self.machineId = data["machineId"]
+        if "machineName" in data:
+            self.machineName = data["machineName"]
         if "initialization_mode" in data:
             self.initialization_mode = data["initialization_mode"]
 
     def reset(self):
         """Reset all parameters to default values"""
         self.address = None
-        self.machine_type = None
+        self.machineType = None
         self.chip_name = None
         self.orientation = None
-        self.project_name = None
+        self.projectName = None
         self.prober_status = "available"
-        self.machine_id = None
-        self.machine_name = None
+        self.machineId = None
+        self.machineName = None
         self.initialization_mode = None
         print("🔄 Global parameters reset")
 
@@ -160,5 +160,5 @@ class SvtWPAagentGlobalParameters:
         """Check if core parameters are set"""
         return (
                 self.address is not None and
-                self.machine_type is not None
+                self.machineType is not None
         )

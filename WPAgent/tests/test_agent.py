@@ -84,8 +84,8 @@ class TestRunner:
         print("\n1. Initializing WP Agent...")
         result = svt_initialise_wp(
             address="mock://localhost:35555",
-            machine_type="sentio",
-            project_name="test_project"
+            machineType="sentio",
+            projectName="test_project"
         )
 
         print(f"Result: {result}")
@@ -164,7 +164,7 @@ class TestRunner:
         test_cases = [
             ("MoveChuckXY", {"x": 50, "y": 100}),
             ("GoToDie", {"col": 5, "row": 3, "subsite": 0}),
-            ("SwitchCamera", {"mount_point": "OffAxis"}),
+            ("SwitchCamera", {"mountPoint": "OffAxis"}),
         ]
 
         for cmd, params in test_cases:
@@ -217,7 +217,7 @@ class TestRunner:
         print("\n7a. Re-initializing without force...")
         result1 = svt_initialise_wp(
             address="mock://localhost:35555",
-            machine_type="sentio"
+            machineType="sentio"
         )
         print(f"Result: {result1}")
         self.assert_contains(result1["output"], "Already initialized", "Should skip re-init")
@@ -225,7 +225,7 @@ class TestRunner:
         print("\n7b. Re-initializing with force=True...")
         result2 = svt_initialise_wp(
             address="mock://localhost:35555",
-            machine_type="sentio",
+            machineType="sentio",
             force=True
         )
         print(f"Result: {result2}")
@@ -246,8 +246,8 @@ class TestRunner:
 
         data = result["data"]
         print(f"\n   Address: {data.get('address')}")
-        print(f"   Machine Type: {data.get('machine_type')}")
-        print(f"   Project: {data.get('project_name')}")
+        print(f"   Machine Type: {data.get('machineType')}")
+        print(f"   Project: {data.get('projectName')}")
         print(f"   Initialized: {data.get('prober_initialized')}")
         print(f"   Ready: {data.get('ready_for_commands')}")
 

@@ -60,7 +60,7 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 - ✅ **Command Validation**: Type checking and parameter validation
 - ✅ **Error Handling**: Comprehensive error reporting and recovery
 - ✅ **Unique Consumer Groups**: Fast message delivery without rebalancing delays
-- ✅ **Die Position Tracking**: Stores alignment_die and home_die for automated operations
+- ✅ **Die Position Tracking**: Stores alignmentDie and homeDie for automated operations
 
 ### Command Categories
 
@@ -259,10 +259,10 @@ In another terminal, send commands to the listener:
 python3.12 main.py send Help
 
 # Initialize from database (interactive)
-python3.12 main.py send Initialize with_db=true
+python3.12 main.py send Initialize withDB=true
 
 # Initialize manually
-python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machine_type":"sentio"}'
+python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machineType":"sentio"}'
 
 # Check status
 python3.12 main.py send ShowProjectStatus
@@ -291,10 +291,10 @@ result = init_service.initialize_from_database()
 # Or initialize manually
 result = agent.send("Initialize", {
     "address": "WPMIT01.cern.ch:35555",
-    "machine_type": "sentio",
-    "project_name": "MyProject",
-    "alignment_die": "2,2,0",
-    "home_die": "5,2,0"
+    "machineType": "sentio",
+    "projectName": "MyProject",
+    "alignmentDie": "2,2,0",
+    "homeDie": "5,2,0"
 })
 
 # Move chuck
@@ -333,9 +333,9 @@ python3.12 main.py listen
 python3.12 main.py send Help
 
 # Initialize prober (database)
-python3.12 main.py send Initialize with_db=true
+python3.12 main.py send Initialize withDB=true
 # Initialize prober (manual)
-python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machine_type":"sentio"}'
+python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machineType":"sentio"}'
 
 # Movement commands
 python3.12 main.py send FindHome
@@ -356,7 +356,7 @@ python3.12 main.py send AlignWafer
 python3.12 main.py send Unload
 
 # Vision commands
-python3.12 main.py send SwitchCamera mount_point=scope
+python3.12 main.py send SwitchCamera mountPoint=scope
 python3.12 main.py send GetCameraStatus
 
 # Status commands
@@ -393,7 +393,7 @@ try:
     # Initialize
     result = agent.send("Initialize", {
         "address": "WPMIT01.cern.ch:35555",
-        "machine_type": "sentio"
+        "machineType": "sentio"
     })
 
     if result["status"] != "success":
@@ -430,10 +430,10 @@ init_service = WPInitializationService(agent)
 result = init_service.initialize_from_database()
 
 # Automated by machine ID
-result = init_service.initialize_by_id(machine_id="123")
+result = init_service.initialize_by_id(machineId="123")
 
 # Automated by machine name
-result = init_service.initialize_by_name(machine_name="WPMIT01")
+result = init_service.initialize_by_name(machineName="WPMIT01")
 ```
 
 ---
@@ -444,21 +444,21 @@ result = init_service.initialize_by_name(machine_name="WPMIT01")
 
 | Command | Parameters | Description |
 |---------|-----------|-------------|
-| `Initialize` | `address`, `machine_type`, `with_db`, `project_name`, `alignment_die`, `home_die` | Initialize prober connection |
-| `OpenProject` | `path`, `alignment_die`, `home_die` | Open a SENTIO project file |
+| `Initialize` | `address`, `machineType`, `withDB`, `projectName`, `alignmentDie`, `homeDie` | Initialize prober connection |
+| `OpenProject` | `path`, `alignmentDie`, `homeDie` | Open a SENTIO project file |
 | `ShowProjectStatus` | - | Show current connection and project status |
 | `Help` | - | Display all available commands with parameters |
 
 **Example:**
 ```bash
 # Database-driven (interactive - prompts for prober/ASIC/orientation/project)
-python main.py send Initialize with_db=true
+python main.py send Initialize withDB=true
 
 # Manual with project and die positions
-python main.py send Initialize address=WPMIT01.cern.ch:35555 machine_type=sentio project_name=NKF7_Test alignment_die=2,2,0 home_die=5,2,0
+python main.py send Initialize address=WPMIT01.cern.ch:35555 machineType=sentio projectName=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
 
 # Open project with die positions
-python main.py send OpenProject path=NKF7_Test alignment_die=2,2,0 home_die=5,2,0
+python main.py send OpenProject path=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
 ```
 
 ### Wafer Handling
@@ -472,7 +472,7 @@ python main.py send OpenProject path=NKF7_Test alignment_die=2,2,0 home_die=5,2,
 
 | Command | Parameters | Description |
 |---------|-----------|-------------|
-| `FindHome` | - | Move chuck to stored home_die position |
+| `FindHome` | - | Move chuck to stored homeDie position |
 | `MoveChuckXY` | `x`, `y` | Move chuck to coordinates (µm) |
 | `MoveChuckZ` | `z` | Move chuck Z-axis (µm) |
 | `MoveChuckContact` | - | Move chuck to contact position |
@@ -482,7 +482,7 @@ python main.py send OpenProject path=NKF7_Test alignment_die=2,2,0 home_die=5,2,
 ```bash
 python3.12 main.py send MoveChuckXY x=1000 y=2000
 python3.12 main.py send MoveChuckZ z=50
-python3.12 main.py send FindHome  # Uses stored home_die position
+python3.12 main.py send FindHome  # Uses stored homeDie position
 ```
 
 ### Positioning Commands
@@ -503,12 +503,12 @@ python3.12 main.py send StepNextDie
 
 | Command | Parameters | Description |
 |---------|-----------|-------------|
-| `SwitchCamera` | `mount_point` | Switch active camera (scope/chuck/aux) |
+| `SwitchCamera` | `mountPoint` | Switch active camera (scope/chuck/aux) |
 | `GetCameraStatus` | - | Get current camera information and vision properties |
 
 **Example:**
 ```bash
-python3.12 main.py send SwitchCamera mount_point=scope
+python3.12 main.py send SwitchCamera mountPoint=scope
 python3.12 main.py send GetCameraStatus
 ```
 
@@ -517,13 +517,13 @@ python3.12 main.py send GetCameraStatus
 | Command | Parameters | Description |
 |---------|-----------|-------------|
 | `RunPTPA` | - | Run Pattern to Pad Alignment |
-| `AlignWafer` | - | Run wafer alignment using stored alignment_die |
+| `AlignWafer` | - | Run wafer alignment using stored alignmentDie |
 
 **Example:**
 ```bash
 python3.12 main.py send Load
 python3.12 main.py send RunPTPA
-python3.12 main.py send AlignWafer  # Uses stored alignment_die position
+python3.12 main.py send AlignWafer  # Uses stored alignmentDie position
 ```
 
 ### Database Commands
@@ -614,7 +614,7 @@ HEARTBEAT_INTERVAL = 5
 ```
 
 The `kafka_client` automatically adds:
-- `request_id`: Unique UUID for tracking
+- `requestId`: Unique UUID for tracking
 - `sent_at`: Timestamp
 - `reply_to`: Reply topic
 
@@ -623,7 +623,7 @@ The `kafka_client` automatically adds:
 ```json
 {
   "type": "CommandReply",
-  "request_id": "abc-123-uuid",
+  "requestId": "abc-123-uuid",
   "command": "CommandName",
   "status": "success",
   "output": "Human readable message",
@@ -666,7 +666,7 @@ See `swagger_FINAL_CLEAN.yaml` for the complete API specification.
 
 ```python
 # actions/WPTestingActions.py
-def my_new_command(param1: str, param2: int, address=None, machine_type=None):
+def my_new_command(param1: str, param2: int, address=None, machineType=None):
     """
     My new command description.
     
@@ -674,7 +674,7 @@ def my_new_command(param1: str, param2: int, address=None, machine_type=None):
         param1: First parameter
         param2: Second parameter
         address: Prober address (auto-injected)
-        machine_type: Machine type (auto-injected)
+        machineType: Machine type (auto-injected)
         
     Returns:
         dict: {"status": "success|error", "output": "message"}
@@ -727,7 +727,7 @@ python main.py send MyNewCommand param1=value1 param2=42
 
 ```bash
 # Test initialization
-python main.py send Initialize address=test:35555 machine_type=sentio
+python main.py send Initialize address=test:35555 machineType=sentio
 
 # Test movement
 python main.py send MoveChuckXY x=0 y=0
@@ -783,7 +783,7 @@ python main.py listen
 - Check consumer group conflicts
 - Use manual initialization as fallback:
   ```bash
-  python main.py send Initialize address=WPMIT01.cern.ch:35555 machine_type=sentio
+  python main.py send Initialize address=WPMIT01.cern.ch:35555 machineType=sentio
   ```
 
 #### 4. Slow Response Times / Timeouts
@@ -823,7 +823,7 @@ TypeError: unsupported operand type(s) for |
 - Verify prober address and port: `ping WPMIT01.cern.ch`
 - Check SENTIO software is running on prober
 - Check network connectivity and firewall rules
-- Verify machine_type is correct (`sentio`)
+- Verify machineType is correct (`sentio`)
 - Try with force flag: `force=true`
 
 #### 7. Die Position Not Found
@@ -837,11 +837,11 @@ TypeError: unsupported operand type(s) for |
 **Solutions:**
 - Initialize with die positions:
   ```bash
-  python main.py send Initialize address=... alignment_die=2,2,0 home_die=5,2,0
+  python main.py send Initialize address=... alignmentDie=2,2,0 homeDie=5,2,0
   ```
 - Or open project with die positions:
   ```bash
-  python main.py send OpenProject path=NKF7_Test alignment_die=2,2,0 home_die=5,2,0
+  python main.py send OpenProject path=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
   ```
 
 ### Debug Mode

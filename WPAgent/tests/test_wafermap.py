@@ -25,7 +25,7 @@ from sentio_prober_control.Sentio.Enumerations import Module, AxisOrient, ColorS
 # ============================================================================
 
 PROBER_ADDRESS = "wpmit01.cern.ch:35555"
-PROJECT_NAME = "TestProject_NKF7_Auto"
+projectName = "TestProject_NKF7_Auto"
 
 
 # Test Functions
@@ -39,8 +39,8 @@ def test_create_project():
     prober = SentioProber(CommunicatorTcpIp.create(PROBER_ADDRESS))
     prober.select_module(Module.Wafermap)
 
-    print(f"Creating project: {PROJECT_NAME}")
-    response = prober.send_cmd(f"create_project {PROJECT_NAME}")
+    print(f"Creating project: {projectName}")
+    response = prober.send_cmd(f"create_project {projectName}")
     response_str = response.message()
 
     print(f"Response: {response_str}")
@@ -126,19 +126,19 @@ def test_setup_wafermap(prober):
     print(f"   Removed: {removed} dies")
 
     # NOW set home die - AFTER we know the die exists
-    home_die = (4, 2)
-    print(f"Setting home die: {home_die}")
+    homeDie = (4, 2)
+    print(f"Setting home die: {homeDie}")
 
     # Check if home die is in our routable list
-    if home_die in routable_dies:
+    if homeDie in routable_dies:
         try:
-            map_obj.set_home_die(home_die[0], home_die[1])
+            map_obj.set_homeDie(homeDie[0], homeDie[1])
             print(f"✅ Home die set successfully")
         except Exception as e:
             print(f"⚠️  Warning: Could not set home die: {e}")
             print(f"   This is OK - home die can be set manually in SENTIO")
     else:
-        print(f"⚠️  Warning: Home die {home_die} is not in routable dies list!")
+        print(f"⚠️  Warning: Home die {homeDie} is not in routable dies list!")
         print(f"   Skipping home die setup")
 
     print(f"✅ Map configured: {len(routable_dies)} routable dies")
@@ -178,7 +178,7 @@ def run_all_tests():
     print("🧪 WAFERMAP SETUP - FULL TEST SUITE")
     print("=" * 60)
     print(f"Prober: {PROBER_ADDRESS}")
-    print(f"Project: {PROJECT_NAME}")
+    print(f"Project: {projectName}")
 
     try:
         # Test 1: Create project
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         PROBER_ADDRESS = sys.argv[1]
     if len(sys.argv) > 2:
-        PROJECT_NAME = sys.argv[2]
+        projectName = sys.argv[2]
 
     success = run_all_tests()
     sys.exit(0 if success else 1)

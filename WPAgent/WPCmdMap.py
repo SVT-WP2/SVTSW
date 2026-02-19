@@ -85,7 +85,7 @@ def _try_local_mode():
         factory = ProberFactory.get_instance()
         if factory.is_initialized():
             globals_ = SvtWPAagentGlobalParameters.getInstance()
-            prober = factory.get_prober(globals_.machine_type, globals_.address)
+            prober = factory.get_prober(globals_.machineType, globals_.address)
             prober.local_mode()
             print("   🔓 Switched to local mode after an error")
     except:
