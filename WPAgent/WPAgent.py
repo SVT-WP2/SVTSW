@@ -9,13 +9,13 @@ class WaferProberAgent:
         self.kafka = KafkaClient()
         self.health_check = ListenerHealthCheck()
 
-    def send(self, command, params=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
+    def send(self, command, data=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
         """
         Send a command via Kafka and wait for response.
 
         Args:
             command: Command name to execute
-            params: Command parameters (dict or string)
+            data: Command parameters (dict or string)
             repeat: Number of times to repeat the command (default: 1)
             delay: Delay between repeats in seconds (default: 0)
             check_health: Whether to check listener health before sending (default: True)
@@ -29,20 +29,20 @@ class WaferProberAgent:
         # SPECIAL HANDLING: Initialize with with_db parameter
         # ========================================================================
 
-        if command == "Initialize" and params:
+        if command == "Initialize" and data:
             # Normalize params to dict if needed
-            if isinstance(params, str):
+            if isinstance(data, str):
                 # Parse "key=value" or "key1=value1 key2=value2" format
                 param_dict = {}
-                for item in params.split():
+                for item in data.split():
                     if '=' in item:
                         k, v = item.split('=', 1)
                         param_dict[k] = v
-                params = param_dict
+                data = param_dict
 
             # Check for with_db parameter
-            if isinstance(params, dict):
-                with_db_value = str(params.get('with_db', '')).lower()
+            if isinstance(data, dict):
+                with_db_value = str(data.get('with_db', '')).lower()
                 if with_db_value in ['true', '1', 'yes']:
                     # Database initialization requested - handle producer-side
                     print("🔍 Database initialization requested - handling producer-side...")
@@ -53,8 +53,8 @@ class WaferProberAgent:
                         init_service = WPInitializationService(self)
 
                         # Extract other parameters
-                        project_name = params.get('project_name')
-                        force_value = str(params.get('force', '')).lower()
+                        project_name = data.get('project_name')
+                        force_value = str(data.get('force', '')).lower()
                         force = force_value in ['true', '1', 'yes']
                         db_timeout = float(params.get('db_timeout', 15.0))
 
@@ -113,7 +113,7 @@ class WaferProberAgent:
         # Send command and wait for reply
         response = self.kafka.send(
             command=command,
-            params=params,
+            data=data,
             repeat=repeat,
             delay=delay,
             wait_for_reply=wait_for_reply,
@@ -121,21 +121,21 @@ class WaferProberAgent:
         )
         return response
 
-    def send_async(self, command, params=None, repeat=1, delay=0):
+    def send_async(self, command, data=None, repeat=1, delay=0):
         """
         Send a command without waiting for reply (fire and forget).
         Useful for non-critical commands or batch operations.
 
         Args:
             command: Command name to execute
-            params: Command parameters (dict or string)
+            data: Command parameters (dict or string)
             repeat: Number of times to repeat the command
             delay: Delay between repeats in seconds
         """
         print(f"📤 Sending '{command}' (async - no reply expected)")
         return self.kafka.send(
             command=command,
-            params=params,
+            data=data,
             repeat=repeat,
             delay=delay,
             wait_for_reply=False
@@ -178,14 +178,14 @@ class WaferProberAgent:
         """
         return self.health_check.wait_for_listener(max_wait=max_wait)
 
-    def send_force(self, command, params=None, repeat=1, delay=0, timeout=30.0):
+    def send_force(self, command, data=None, repeat=1, delay=0, timeout=30.0):
         """
         Force send a command without checking listener health.
         Still waits for reply.
 
         Args:
             command: Command name to execute
-            params: Command parameters (dict or string)
+            data: Command parameters (dict or string)
             repeat: Number of times to repeat the command
             delay: Delay between repeats in seconds
             timeout: How long to wait for reply (seconds)
@@ -193,7 +193,7 @@ class WaferProberAgent:
         print(f"⚠️  Sending '{command}' WITHOUT health check (forced)")
         return self.kafka.send(
             command=command,
-            params=params,
+            data=data,
             repeat=repeat,
             delay=delay,
             wait_for_reply=True,
