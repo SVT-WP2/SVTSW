@@ -224,23 +224,25 @@ Table main.SvtTestConfiguration {
   note text
 }
 
-Table main.MOSAIXTestList {
+Table main.SvtTestType {
   id integer [primary key, increment]
-  name varchar()
+  name varchar(100)
 }
 
-Table main.MOSAIXConfigList {
-  id integer [primary key, increment]
-  name varchar(100) [unique, not null]
+Table main.SvtTestTypeList {
+  asicFamilyType main.asicFamilyType [not null]
+  testTypeId integer [ref:> main.SvtTestType.id, not null]
+  testConfigVersion integer [ref: > main.SvtTestConfiguration.versionId]
 }
 
-Table main.MOSAIXTestConfiguration {
-  configId integer [ref:> main.MOSAIXConfigList.id]
-  version integer
-  baseVersion integer
-  configJSON JSON
-  date date [default: `CURRENDATE`]
-  note text
+Table main.SvtTestConfiguration {
+  testTypeId integer [ref:> main.SvtTestType.id, not null]
+  name varchar(100)
+  versionId integer [unique, not null]
+  baseVersionId integer [ref:> versionId, not null]
+  body JSON [not null]
+  date date [default: `CURRENT_DATE`]
+  Note text
 }
 
 Enum main.engineeringRun {
