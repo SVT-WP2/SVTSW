@@ -578,9 +578,9 @@ def help_command(command=None):
         output_lines.append(f"Execution Time: {cmd_info['execution_time']}")
         output_lines.append("")
 
-        if cmd_info['parameters']:
+        if cmd_info['data']:
             output_lines.append("Parameters:")
-            for param_name, param_info in cmd_info['parameters'].items():
+            for param_name, param_info in cmd_info['data'].items():
                 req = "REQUIRED" if param_info['required'] == True else (
                     "CONDITIONAL" if param_info['required'] == "conditional" else "optional")
                 output_lines.append(f"  • {param_name} ({param_info['type']}, {req})")

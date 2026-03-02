@@ -56,7 +56,7 @@ class WaferProberAgent:
                         projectName = data.get('projectName')
                         force_value = str(data.get('force', '')).lower()
                         force = force_value in ['true', '1', 'yes']
-                        db_timeout = float(params.get('db_timeout', 15.0))
+                        db_timeout = float(data.get('db_timeout', 15.0))
 
                         # Do producer-side database initialization
                         # This will show prompts to user and send final command to listener
