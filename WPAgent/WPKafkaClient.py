@@ -104,22 +104,22 @@ class KafkaClient:
             dict: Response from listener (if wait_for_reply=True)
                   None (if wait_for_reply=False)
         """
-        # --- normalize params ---
-        if isinstance(data, str):
-            if command == "RunSequencer" and data.endswith(".json"):
-                data = {"filepath": data}
-            elif "=" in data:
-                k, v = data.split("=", 1)
-                data = {k: v}
+        # --- normalize params  ---
+        if isinstance(params, str):
+            if command == "RunSequencer" and params.endswith(".json"):
+                params = {"filepath": params}
+            elif "=" in params:
+                k, v = params.split("=", 1)
+                params = {k: v}
             else:
-                data = {}
-        elif data is None:
-            data = {}
-        elif not isinstance(data, dict):
+                params = {}
+        elif params is None:
+            params = {}
+        elif not isinstance(params, dict):
             try:
-                data = dict(data)
+                params = dict(params)
             except Exception:
-                data = {}
+                params = {}
 
         results = []
 
@@ -128,20 +128,28 @@ class KafkaClient:
             self._ensure_reply_consumer_ready()
 
         for i in range(repeat):
-            requestId = str(uuid.uuid4())
+            correlation_id = str(uuid.uuid4())
 
+            # Convention request body
             payload = {
                 "type": command,
-                "data": data,
-                "requestId": requestId,
-                "reply_to": self.reply_topic if wait_for_reply else None
+                "data": params
             }
 
+            # Convention headers
+            headers = [
+                (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
+            ]
+
+            if wait_for_reply:
+                headers.append((KAFKA_HEADER__REPLY_TOPIC, self.reply_topic.encode("utf-8")))
+                headers.append((KAFKA_HEADER__REPLY_PARTITION, b"0"))
+
             logger.log_command(
-                messageOut=f"Sending command: {command} (requestId: {requestId[:8]}...)",
+                messageOut=f"Sending command: {command} (correlation: {correlation_id[:8]}...)",
                 severityLevel=Severity.INFO,
                 command=command,
-                data=data,
+                data=params,
                 result=None,
             )
 
@@ -149,6 +157,7 @@ class KafkaClient:
             self.producer.produce(
                 self.request_topic,
                 value=json.dumps(payload).encode("utf-8"),
+                headers=headers,
                 callback=self._delivery_report,
             )
             self.producer.flush()
@@ -157,28 +166,25 @@ class KafkaClient:
                 print(f"📤 Command sent: {command}")
                 print(f"⏳ Waiting for response (timeout: {timeout}s)...")
 
-                # Wait for reply
-                response = self._wait_for_reply(requestId, timeout)
+                response = self._wait_for_reply(correlation_id, timeout)
 
                 if response:
                     results.append(response)
 
-                    # Display result
                     status = response.get("status", "unknown")
-                    output = response.get("output", "No output")
-                    exec_time = response.get("execution_time_ms", 0)
+                    rtype = response.get("type", "UnknownReply")
 
-                    if status == "success":
-                        print(f"✅ SUCCESS ({exec_time:.1f}ms): {output}")
+                    if status == SvtMessageStatus.Success:
+                        print(f"✅ {status}: {rtype}")
                     else:
-                        print(f"❌ ERROR ({exec_time:.1f}ms): {output}")
+                        print(f"❌ {status}: {rtype} | {response.get('error', {}).get('message', '')}")
 
-                    return response  # Return immediately for single command
+                    return response
                 else:
                     error_response = {
-                        "status": "error",
-                        "output": f"Timeout: No response received within {timeout}s. Listener may be down.",
-                        "requestId": requestId
+                        "status": SvtMessageStatus.UnexpectedError,
+                        "type": f"{command}Reply",
+                        "error": {"message": f"Timeout: No response received within {timeout}s. Listener may be down."}
                     }
                     print(f"⏱️  TIMEOUT: No response within {timeout}s")
                     print(f"   Check if listener is running: python main.py check_listener_health")
@@ -191,49 +197,17 @@ class KafkaClient:
 
         return results if repeat > 1 else (results[0] if results else None)
 
-    def _wait_for_reply(self, requestId: str, timeout: float) -> Optional[Dict]:
-        """Wait for a reply message with matching requestId"""
-
-        # Consumer should already be initialized by send()
-        if self.reply_consumer is None:
-            print(f"⚠️  Reply consumer not initialized!")
-            return None
-
-        start_time = time.time()
-
-        while time.time() - start_time < timeout:
-            msg = self.reply_consumer.poll(0.5)
-
-            if msg is None:
-                continue
-
-            if msg.error():
-                continue
-
-            try:
-                reply = json.loads(msg.value().decode("utf-8"))
-
-                if reply.get("requestId") == requestId:
-                    return reply
-
-            except Exception as e:
-                continue
-
-        return None
-
+    # -----------------------------------------
+    # LISTEN (server mode)
+    # -----------------------------------------
     def listen(self, poll_timeout=0.1):
         """
-        Listen for and process Kafka messages (LISTENER MODE).
-
-        Args:
-            poll_timeout: Timeout in seconds for each poll (default: 0.1s = 100ms)
+        Listen for and process Kafka messages (LISTENER MODE) using SVT convention.
         """
-
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
             severityLevel=Severity.INFO,
             command="KAFKA_LISTEN",
-            data={"poll_timeout": poll_timeout},
             result=None
         )
 
@@ -253,10 +227,7 @@ class KafkaClient:
         ready = False
 
         while time.time() - start < max_wait:
-            # Poll to join consumer group and get partition assignment
             self.request_consumer.poll(0.1)
-
-            # Check if assigned
             assignment = self.request_consumer.assignment()
             if assignment:
                 elapsed = time.time() - start
@@ -264,7 +235,6 @@ class KafkaClient:
                 print(f"   Partitions: {assignment}\n")
                 ready = True
                 break
-
             time.sleep(0.1)
 
         if not ready:
@@ -294,70 +264,94 @@ class KafkaClient:
 
                 receive_time = time.time()
 
+                # Parse request body
                 try:
                     payload = json.loads(msg.value().decode("utf-8"))
 
                     command = payload.get("type")
-                    data = payload.get("data", {})
-                    requestId = payload.get("requestId")
-                    reply_to = payload.get("reply_to")
+                    params = payload.get("data", {}) or {}  # ✅ convention: data
 
+                    # Convert param types if needed
                     if hasattr(self, "_convert_param_types"):
-                        data = self._convert_param_types(data)
+                        params = self._convert_param_types(params)
+
+                    # Parse headers
+                    hdr = _headers_to_dict(msg.headers())
+                    corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
+                    reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
+                    reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
+
+                    correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
+                    reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
+                    reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
 
                     print(f"\n[📥 Received] {command}")
-                    if requestId:
-                        print(f"   Request ID: {requestId[:8]}...")
+                    if correlation_id:
+                        print(f"   Correlation ID: {correlation_id[:8]}...")
 
                     logger.log_command(
                         messageOut=f"Received command: {command}",
                         severityLevel=Severity.INFO,
                         command=command,
-                        data=data,
+                        data=params,
                         result=None
                     )
 
-                    if data:
-                        print(f"   Params: {data}")
-
+                    if params:
+                        print(f"   Params: {params}")
 
                     # Execute command
                     exec_start = time.time()
-                    result = execute_command(command, data)
+                    result = execute_command(command, params)  # <-- keep your WPCmdMap
                     exec_end = time.time()
-                    exec_time = (exec_end - exec_start) * 1000
+                    exec_time_ms = (exec_end - exec_start) * 1000
 
-                    # Log execution
-                    status = result.get("status", "unknown")
-                    output = result.get("output", "No output")
+                    raw_status = (result or {}).get("status", "error")
+                    output = (result or {}).get("output", "No output")
 
-                    print(f"   Execution time: {exec_time:.1f}ms")
-
-                    if status == "success":
+                    print(f"   Execution time: {exec_time_ms:.1f}ms")
+                    if raw_status == "success":
                         print(f"   ✅ SUCCESS: {output}")
                     else:
                         print(f"   ❌ ERROR: {output}")
 
-                    # Send reply if requested
-                    if reply_to and requestId:
-                        reply = {
-                            "type": "CommandReply",
-                            "requestId": requestId,
-                            "command": command,
-                            "status": status,
-                            "output": output,
-                            "execution_time_ms": exec_time,
-                            "timestamp": time.time()
+                    # Build SVT convention reply body
+                    if raw_status == "success":
+                        reply_body = {
+                            "status": SvtMessageStatus.Success,
+                            "type": f"{command}Reply",
+                            "data": {
+                                "output": output,
+                                "executionTimeMs": exec_time_ms
+                            }
                         }
+                    else:
+                        reply_body = {
+                            "status": SvtMessageStatus.UnexpectedError,
+                            "type": f"{command}Reply",
+                            "error": {
+                                "message": output
+                            }
+                        }
+
+                    # Send reply if requested via headers
+                    if reply_to and correlation_id:
+                        reply_headers = [
+                            (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
+                            (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
+                        ]
 
                         self.producer.produce(
                             reply_to,
-                            value=json.dumps(reply).encode("utf-8")
+                            value=json.dumps(reply_body).encode("utf-8"),
+                            headers=reply_headers,
+                            partition=reply_partition
                         )
                         self.producer.flush()
                         print(f"   📤 Reply sent")
 
                 except Exception as e:
+                    # Note: if parsing failed early, command might not be defined
                     logger.log_command(
                         messageOut=f"Exception during command execution: {str(e)}",
                         severityLevel=Severity.ERROR,
@@ -366,20 +360,36 @@ class KafkaClient:
                     )
                     print(f"[❌ Exception] {e}")
 
-                    # Send error reply if possible
-                    if 'reply_to' in locals() and reply_to and 'requestId' in locals() and requestId:
-                        error_reply = {
-                            "type": "CommandReply",
-                            "requestId": requestId,
-                            "command": command if 'command' in locals() else "UNKNOWN",
-                            "status": "error",
-                            "output": f"Exception: {str(e)}",
-                            "execution_time_ms": 0,
-                            "timestamp": time.time()
-                        }
+                    # Try sending error reply if headers are present
+                    try:
+                        hdr = _headers_to_dict(msg.headers())
+                        corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
+                        reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
+                        reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
 
-                        self.producer.produce(reply_to, value=json.dumps(error_reply).encode("utf-8"))
-                        self.producer.flush()
+                        correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
+                        reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
+                        reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
+
+                        if reply_to and correlation_id:
+                            error_reply = {
+                                "status": SvtMessageStatus.UnexpectedError,
+                                "type": f"{command if 'command' in locals() and command else 'Unknown'}Reply",
+                                "error": {"message": f"Exception: {str(e)}"}
+                            }
+                            reply_headers = [
+                                (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
+                                (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
+                            ]
+                            self.producer.produce(
+                                reply_to,
+                                value=json.dumps(error_reply).encode("utf-8"),
+                                headers=reply_headers,
+                                partition=reply_partition
+                            )
+                            self.producer.flush()
+                    except Exception:
+                        pass
 
         except KeyboardInterrupt:
             print("\n[🛑 Listener stopped]")
@@ -872,19 +882,15 @@ class KafkaClient:
                     result={"error": str(msg.error())}
                 )
                 continue
+            if corr.decode("utf-8", errors="ignore") != correlation_id:
+                continue
+
             try:
-                value = json.loads(msg.value().decode("utf-8"))
-            except Exception as e:
-                logger.log_command(
-                    messageOut=f"[KafkaClient] JSON parse error: {e}",
-                    severityLevel=Severity.ERROR,
-                    command="KAFKA_REQUEST_REPLY",
-                    result={"error": str(e)}
-                )
+                reply = json.loads(msg.value().decode("utf-8"))
+            except Exception:
                 continue
-            if value.get("type") != reply_type:
-                continue
-            if add_requestId and value.get("requestId") and value["requestId"] != req_id:
+
+            if match_fn and not match_fn(reply):
                 continue
             if match_fn and not match_fn(value):
                 continue
