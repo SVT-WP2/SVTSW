@@ -202,8 +202,10 @@ class KafkaClient:
     # -----------------------------------------
     def listen(self, poll_timeout=0.1):
         """
-        Listen for and process Kafka messages (LISTENER MODE) using SVT convention.
+        Listen for and process Kafka messages (LISTENER MODE).
+        Silent mode: no command prints, only errors are logged.
         """
+
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
             severityLevel=Severity.INFO,
@@ -214,37 +216,6 @@ class KafkaClient:
         # Start heartbeat monitoring
         self.heartbeat_monitor.start()
 
-        print(f"📡 Listener started")
-        print(f"   Request topic: {self.request_topic}")
-        print(f"   Reply topic: {self.reply_topic}")
-        print(f"   Consumer group: {self.group_id}")
-        print(f"   Offset: latest (only new messages)")
-        print(f"   Heartbeat: enabled\n")
-
-        print(f"⏳ Waiting for consumer to be ready...")
-        max_wait = 30.0
-        start = time.time()
-        ready = False
-
-        while time.time() - start < max_wait:
-            self.request_consumer.poll(0.1)
-            assignment = self.request_consumer.assignment()
-            if assignment:
-                elapsed = time.time() - start
-                print(f"✅ Consumer ready in {elapsed:.1f}s")
-                print(f"   Partitions: {assignment}\n")
-                ready = True
-                break
-            time.sleep(0.1)
-
-        if not ready:
-            print(f"⚠️  Consumer not ready after {max_wait}s\n")
-
-        print("=" * 70)
-        print("🎯 LISTENER IS READY - YOU CAN NOW SEND COMMANDS!")
-        print("=" * 70)
-        print()
-
         try:
             while True:
                 msg = self.request_consumer.poll(poll_timeout)
@@ -253,7 +224,6 @@ class KafkaClient:
                     continue
 
                 if msg.error():
-                    print(f"[❌ Kafka error] {msg.error()}")
                     logger.log_command(
                         messageOut=f"Kafka error: {msg.error()}",
                         severityLevel=Severity.ERROR,
@@ -262,20 +232,15 @@ class KafkaClient:
                     )
                     continue
 
-                receive_time = time.time()
-
-                # Parse request body
                 try:
                     payload = json.loads(msg.value().decode("utf-8"))
 
                     command = payload.get("type")
-                    params = payload.get("data", {}) or {}  # ✅ convention: data
+                    params = payload.get("data", {}) or {}
 
-                    # Convert param types if needed
                     if hasattr(self, "_convert_param_types"):
                         params = self._convert_param_types(params)
 
-                    # Parse headers
                     hdr = _headers_to_dict(msg.headers())
                     corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
                     reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
@@ -285,10 +250,6 @@ class KafkaClient:
                     reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
                     reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
 
-                    print(f"\n[📥 Received] {command}")
-                    if correlation_id:
-                        print(f"   Correlation ID: {correlation_id[:8]}...")
-
                     logger.log_command(
                         messageOut=f"Received command: {command}",
                         severityLevel=Severity.INFO,
@@ -297,25 +258,14 @@ class KafkaClient:
                         result=None
                     )
 
-                    if params:
-                        print(f"   Params: {params}")
-
-                    # Execute command
                     exec_start = time.time()
-                    result = execute_command(command, params)  # <-- keep your WPCmdMap
+                    result = execute_command(command, params)
                     exec_end = time.time()
                     exec_time_ms = (exec_end - exec_start) * 1000
 
                     raw_status = (result or {}).get("status", "error")
                     output = (result or {}).get("output", "No output")
 
-                    print(f"   Execution time: {exec_time_ms:.1f}ms")
-                    if raw_status == "success":
-                        print(f"   ✅ SUCCESS: {output}")
-                    else:
-                        print(f"   ❌ ERROR: {output}")
-
-                    # Build SVT convention reply body
                     if raw_status == "success":
                         reply_body = {
                             "status": SvtMessageStatus.Success,
@@ -334,7 +284,6 @@ class KafkaClient:
                             }
                         }
 
-                    # Send reply if requested via headers
                     if reply_to and correlation_id:
                         reply_headers = [
                             (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
@@ -348,19 +297,15 @@ class KafkaClient:
                             partition=reply_partition
                         )
                         self.producer.flush()
-                        print(f"   📤 Reply sent")
 
                 except Exception as e:
-                    # Note: if parsing failed early, command might not be defined
                     logger.log_command(
                         messageOut=f"Exception during command execution: {str(e)}",
                         severityLevel=Severity.ERROR,
                         command=command if 'command' in locals() else "UNKNOWN",
                         result={"error": str(e)}
                     )
-                    print(f"[❌ Exception] {e}")
 
-                    # Try sending error reply if headers are present
                     try:
                         hdr = _headers_to_dict(msg.headers())
                         corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
@@ -369,7 +314,8 @@ class KafkaClient:
 
                         correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
                         reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
-                        reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
+                        reply_partition = int(
+                            reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
 
                         if reply_to and correlation_id:
                             error_reply = {
@@ -377,10 +323,12 @@ class KafkaClient:
                                 "type": f"{command if 'command' in locals() and command else 'Unknown'}Reply",
                                 "error": {"message": f"Exception: {str(e)}"}
                             }
+
                             reply_headers = [
                                 (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
                                 (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
                             ]
+
                             self.producer.produce(
                                 reply_to,
                                 value=json.dumps(error_reply).encode("utf-8"),
@@ -388,11 +336,12 @@ class KafkaClient:
                                 partition=reply_partition
                             )
                             self.producer.flush()
+
                     except Exception:
                         pass
 
         except KeyboardInterrupt:
-            print("\n[🛑 Listener stopped]")
+            pass
         finally:
             self.heartbeat_monitor.stop()
             self.request_consumer.close()
