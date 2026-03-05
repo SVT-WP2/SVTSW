@@ -2813,18 +2813,28 @@ components:
       type: object
       required:
         - name
-        - defaultConfigId
         - generalLocation
+        - basConfigId
+        - bodyConfig
+        - date
+        - note
       properties:
-        setupId:
-          type: number
         name:
           type: string
-        defaultConfigId:
-          type: integer
-          nullable: true
         generalLocation:
           type: string
+        baseConfigId:
+          type: integer
+          nullable: true
+        bodyConfig:
+          type: string
+        date:
+          type: string
+          description: Date only in format `2025-06-03`
+          nullable: true
+        note:
+          type: string
+          nullable: true
     SvtTestSetupUpdateDefaultConfigDto:
       type: object
       required:
