@@ -8,19 +8,59 @@ class SvtWPAagentGlobalParameters:
     def __init__(self):
         # Core parameters
         self.address = None
-        self.machineType = None
+        self.machine_type = None
         self.chip_name = None
-        self.orientation = None
-        self.projectName = None
+        self.orientation = None  # Project orientation
+        self.project_name = None
         self.prober_status = "available"
-        self._alignmentDie = None
-        self._homeDie = None
+        self._alignment_die = None
+        self._home_die = None
         self._project_metadata = {}
 
         # Database-related parameters
-        self.machineId = None  # Database ID of the prober
-        self.machineName = None  # Human-readable name from database
+        self.machine_id = None  # Database ID of the prober
+        self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
+
+
+        # User info
+        self.user = "default_user"
+
+        # ASIC info
+        self.asic_serial_number = 0
+
+        # Machine ID for response (alias to machine_id for compatibility)
+        self.wp_machine_id = 0
+
+        # Agent FSM State
+        self.wpag_state = "ServiceOff"  # ServiceOn, WP_Idle, WP_Testing, WP_Error, etc.
+
+        # Loaded wafer
+        self.loaded_wafer_id = None  # None = no wafer, or wafer ID
+        self.wafer_orientation = None  # "North", "East", "South", "West" - WAFER orientation
+
+        # Installed probe card
+        self.probe_card_id = None  # None = no probe card, or probe card ID
+        self.probe_card_orientation = None  # "North", "East", "South", "West"
+
+        # Project (add ID to complement existing project_name)
+        self.opened_project_id = 0
+
+        # Configuration
+        self.overdrive = 0
+        self.camera_mount_point = ""  # "Top", "Bottom", "Side", etc.
+        self.current_working_area = ""  # "LoadPosition", "TestArea", etc.
+
+        # Die position
+        self.current_die_col = 0
+        self.current_die_row = 0
+        self.current_die_subsite = 0
+
+        # Chuck Z position
+        self.chuck_z_position_state = "Unknown"  # "Contact", "Separation", "Unknown"
+
+        # Total dies in wafer
+        self.total_dies_number = 0
 
     @classmethod
     def getInstance(cls):
@@ -28,24 +68,24 @@ class SvtWPAagentGlobalParameters:
             cls._instance = cls()
         return cls._instance
 
-    def set_alignmentDie(self, die_position):
+    def set_alignment_die(self, die_position):
         """Set alignment die position"""
-        self._alignmentDie = die_position
+        self._alignment_die = die_position
 
-    def get_alignmentDie(self):
+    def get_alignment_die(self):
         """Get alignment die position"""
-        return self._alignmentDie
+        return self._alignment_die
 
-    def set_homeDie(self, die_position):
+    def set_home_die(self, die_position):
         """Set home die position"""
-        self._homeDie = die_position
+        self._home_die = die_position
 
-    def get_homeDie(self):
+    def get_home_die(self):
         """Get home die position"""
-        return self._homeDie
+        return self._home_die
 
     def set_project_metadata(self, metadata):
-        """Store project metadata (projectId, asicFamily, orientation, etc.)"""
+        """Store project metadata (project_id, asic_family, orientation, etc.)"""
         self._project_metadata = metadata
 
     def get_project_metadata(self):
@@ -55,28 +95,30 @@ class SvtWPAagentGlobalParameters:
     def set_address(self, address):
         self.address = address
 
-    def set_machineType(self, machineType):
-        self.machineType = machineType
+    def set_machine_type(self, machine_type):
+        self.machine_type = machine_type
 
     def set_chip_name(self, chip_name):
         self.chip_name = chip_name
 
     def set_orientation(self, orientation):
+        """Set project orientation"""
         self.orientation = orientation
 
-    def set_projectName(self, projectName):
-        self.projectName = projectName
+    def set_project_name(self, project_name):
+        self.project_name = project_name
 
     def set_prober_status(self, prober_status):
         self.prober_status = prober_status
 
-    def set_machineId(self, machineId):
+    def set_machine_id(self, machine_id):
         """Set the database ID of the prober"""
-        self.machineId = machineId
+        self.machine_id = machine_id
+        self.wp_machine_id = machine_id  # Also set wp_machine_id for response payload
 
-    def set_machineName(self, machineName):
+    def set_machine_name(self, machine_name):
         """Set the human-readable name of the prober from database"""
-        self.machineName = machineName
+        self.machine_name = machine_name
 
     def set_initialization_mode(self, mode):
         """Set how the prober was initialized: 'manual' or 'database'"""
@@ -88,26 +130,26 @@ class SvtWPAagentGlobalParameters:
         """Get all current parameter values as a dictionary"""
         info = {
             "address": self.address,
-            "machineType": self.machineType,
+            "machine_type": self.machine_type,
             "chip_name": self.chip_name,
             "orientation": self.orientation,
-            "projectName": self.projectName,
+            "project_name": self.project_name,
             "prober_status": self.prober_status,
             "initialization_mode": self.initialization_mode
         }
 
         # Add database-specific info if available
-        if self.machineId is not None:
-            info["machineId"] = self.machineId
-        if self.machineName is not None:
-            info["machineName"] = self.machineName
+        if self.machine_id is not None:
+            info["machine_id"] = self.machine_id
+        if self.machine_name is not None:
+            info["machine_name"] = self.machine_name
 
         return info
 
     def get_log_context(self):
         """Get a formatted string for logging context"""
-        machine_info = self.machineName or self.address or "N/A"
-        project_info = self.projectName or "N/A"
+        machine_info = self.machine_name or self.address or "N/A"
+        project_info = self.project_name or "N/A"
         return f"[{machine_info} | {project_info} | {self.prober_status}]"
 
     def load_from_dict(self, config: dict):
@@ -120,7 +162,6 @@ class SvtWPAagentGlobalParameters:
         self._apply_data(config)
         self.initialization_mode = config.get("initialization_mode", "manual")
 
-
     def _apply_data(self, data: dict):
         """
         Internal method to apply data from a dictionary to instance variables.
@@ -129,36 +170,135 @@ class SvtWPAagentGlobalParameters:
             data: Dictionary with parameter values
         """
         self.address = data.get("address")
-        self.machineType = data.get("machineType", "sentio")
+        self.machine_type = data.get("machine_type", "sentio")
         self.chip_name = data.get("chip_name")
         self.orientation = data.get("orientation")
-        self.projectName = data.get("projectName")
+        self.project_name = data.get("project_name")
         self.prober_status = data.get("status", data.get("prober_status", "idle"))
 
         # Database-specific fields
-        if "machineId" in data:
-            self.machineId = data["machineId"]
-        if "machineName" in data:
-            self.machineName = data["machineName"]
+        if "machine_id" in data:
+            self.set_machine_id(data["machine_id"])
+        if "machine_name" in data:
+            self.machine_name = data["machine_name"]
         if "initialization_mode" in data:
             self.initialization_mode = data["initialization_mode"]
 
     def reset(self):
         """Reset all parameters to default values"""
         self.address = None
-        self.machineType = None
+        self.machine_type = None
         self.chip_name = None
         self.orientation = None
-        self.projectName = None
+        self.project_name = None
         self.prober_status = "available"
-        self.machineId = None
-        self.machineName = None
+        self.machine_id = None
+        self.machine_name = None
         self.initialization_mode = None
-        print("🔄 Global parameters reset")
+
+        self.user = "default_user"
+        self.asic_serial_number = 0
+        self.wp_machine_id = 0
+        self.wpag_state = "ServiceOff"
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+        self.probe_card_id = None
+        self.probe_card_orientation = None
+        self.opened_project_id = 0
+        self.overdrive = 0
+        self.camera_mount_point = ""
+        self.current_working_area = ""
+        self.current_die_col = 0
+        self.current_die_row = 0
+        self.current_die_subsite = 0
+        self.chuck_z_position_state = "Unknown"
+        self.total_dies_number = 0
+
 
     def is_initialized(self):
         """Check if core parameters are set"""
         return (
                 self.address is not None and
-                self.machineType is not None
+                self.machine_type is not None
         )
+
+    # ===  HELPER METHODS  ===
+
+    def set_wafer_loaded(self, wafer_id, orientation):
+        """
+        Set wafer as loaded.
+
+        Args:
+            wafer_id: Wafer database ID
+            orientation: Wafer orientation ("North", "East", "South", "West")
+        """
+        self.loaded_wafer_id = wafer_id
+        self.wafer_orientation = orientation
+
+    def clear_wafer(self):
+        """Clear loaded wafer and reset related fields"""
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+        self.current_die_col = 0
+        self.current_die_row = 0
+        self.current_die_subsite = 0
+        self.total_dies_number = 0
+
+    def set_probe_card(self, probe_card_id, orientation):
+        """
+        Set installed probe card.
+
+        Args:
+            probe_card_id: Probe card database ID
+            orientation: Probe card orientation ("North", "East", "South", "West")
+        """
+        self.probe_card_id = probe_card_id
+        self.probe_card_orientation = orientation
+
+    def set_current_die(self, col, row, subsite=0):
+        """
+        Set current die position.
+
+        Args:
+            col: Column index
+            row: Row index
+            subsite: Subsite index (default: 0)
+        """
+        self.current_die_col = col
+        self.current_die_row = row
+        self.current_die_subsite = subsite
+
+    def set_project(self, project_id, project_name):
+        """
+        Set opened project.
+
+        Args:
+            project_id: Project database ID
+            project_name: Project name
+        """
+        self.opened_project_id = project_id
+        self.project_name = project_name
+
+    def set_user(self, username):
+        """Set current user"""
+        self.user = username
+
+    def set_wpag_state(self, state):
+        """
+        Set WP Agent state.
+
+        Args:
+            state: Agent state (e.g., "ServiceOn", "WP_Idle", "WP_Testing", "WP_Error")
+        """
+        self.wpag_state = state
+
+    def set_chuck_position(self, position):
+        """
+        Set chuck Z position state.
+
+        Args:
+            position: Chuck position ("Contact", "Separation", "Unknown")
+        """
+        if position not in ["Contact", "Separation", "Unknown"]:
+            print(f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'")
+        self.chuck_z_position_state = position
