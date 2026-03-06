@@ -1,22 +1,30 @@
-# actions/WPSequencerActions.py
-import time
-import json
-from utilities.WPAgentLogger import WPAgentLogger, Severity
+from utilities.WPResponseBuilder import ResponseBuilder
 from sequencer.WPSequencer import WPSequencer
 
 
 def run_sequence(filepath=None, executor=None):
+    """Run a command sequence from JSON file"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
     if not filepath:
-        return {"status": "error", "output": "Missing 'filepath' for sequence."}
+        return ResponseBuilder.error("RunSequencerReply", "Missing 'filepath' for sequence", 400)
+
     if executor is None:
-        return {"status": "error", "output": "Missing executor function for sequence execution."}
+        return ResponseBuilder.error("RunSequencerReply", "Missing executor function for sequence execution", 400)
 
-    from WPCmdMap import execute_command  # optional; can be removed now since executor is passed in
-    sequencer = WPSequencer(executor=executor)
-    sequencer.load_sequence(filepath)
-    sequencer.run_sequence()
+    g = SvtWPAagentGlobalParameters.getInstance()
 
-    return {
-        "status": "success",
-        "output": f"Sequence from {filepath} executed successfully."
-    }
+    try:
+        from WPCmdMap import execute_command
+        sequencer = WPSequencer(executor=executor)
+        sequencer.load_sequence(filepath)
+        sequencer.run_sequence()
+
+        # Update state after sequence
+        g.wpag_state = "WP_Idle"
+
+        return ResponseBuilder.success("RunSequencerReply", f"Sequence from {filepath} executed successfully")
+
+    except Exception as e:
+        g.wpag_state = "WP_Error"
+        return ResponseBuilder.error("RunSequencerReply", str(e), 500)
