@@ -47,7 +47,6 @@ class DBKafkaClient:
         })
 
         # Create consumer with stable group ID
-        # ⚠️ CRITICAL: Using 'earliest' instead of 'latest' to avoid missing messages
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_BROKER,
             'group.id': 'wp-agent-db-consumer',

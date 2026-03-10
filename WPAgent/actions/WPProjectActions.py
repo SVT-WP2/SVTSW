@@ -1,4 +1,3 @@
-
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
 from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)

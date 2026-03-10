@@ -107,12 +107,12 @@ class MockProberImpl(AbstractProber):
         # Format: "total,good,bad"
         return "144,144,0"
 
-    def switch_camera(self, mountPoint: str):
+    def switch_camera(self, mount_point: str):
         """Simulate camera switch"""
-        print(f"📷 Switching camera from {self.camera_position} to {mountPoint}")
+        print(f"📷 Switching camera from {self.camera_position} to {mount_point}")
         time.sleep(0.8)
-        self.camera_position = mountPoint
-        print(f"✅ Camera switched to {mountPoint}")
+        self.camera_position = mount_point
+        print(f"✅ Camera switched to {mount_point}")
 
     def move_chuck_home(self):
         """Simulate moving chuck to home position"""
