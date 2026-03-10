@@ -1,0 +1,5 @@
+{
+    "Developer": ["user1", "user2"],
+    "Expert":    ["user3", "user4"],
+    "User":      ["user5", "user6"]
+}
