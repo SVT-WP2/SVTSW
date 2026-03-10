@@ -270,7 +270,7 @@ def open_project(project_name: str, address=None, machine_type=None):
         prober.local_mode()
 
         # Update project name (ID would need to come from DB)
-        g.project_name = project_name
+        g.projectName = project_name
         # g.opened_project_id = project_id  # TODO: Get from DB
 
         return ResponseBuilder.success("OpenProjectReply", f"Opened project: {project_path}")

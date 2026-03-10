@@ -135,7 +135,7 @@ class TestResponseBuilder:
         # Test set_project
         g.set_project(789, "TestProject")
         self.assert_equal(g.opened_project_id, 789, "set_project sets ID")
-        self.assert_equal(g.project_name, "TestProject", "set_project sets name")
+        self.assert_equal(g.projectName, "TestProject", "set_project sets name")
 
         # Test set_chuck_position
         g.set_chuck_position("Contact")

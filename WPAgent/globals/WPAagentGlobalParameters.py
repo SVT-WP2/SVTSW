@@ -8,10 +8,10 @@ class SvtWPAagentGlobalParameters:
     def __init__(self):
         # Core parameters
         self.address = None
-        self.machine_type = None
+        self.machineType = None
         self.chip_name = None
         self.orientation = None  # Project orientation
-        self.project_name = None
+        self.projectName = None
         self.prober_status = "available"
         self._alignment_die = None
         self._home_die = None
@@ -96,7 +96,7 @@ class SvtWPAagentGlobalParameters:
         self.address = address
 
     def set_machine_type(self, machine_type):
-        self.machine_type = machine_type
+        self.machineType = machine_type
 
     def set_chip_name(self, chip_name):
         self.chip_name = chip_name
@@ -106,7 +106,7 @@ class SvtWPAagentGlobalParameters:
         self.orientation = orientation
 
     def set_project_name(self, project_name):
-        self.project_name = project_name
+        self.projectName = project_name
 
     def set_prober_status(self, prober_status):
         self.prober_status = prober_status
@@ -130,10 +130,10 @@ class SvtWPAagentGlobalParameters:
         """Get all current parameter values as a dictionary"""
         info = {
             "address": self.address,
-            "machine_type": self.machine_type,
+            "machine_type": self.machineType,
             "chip_name": self.chip_name,
             "orientation": self.orientation,
-            "project_name": self.project_name,
+            "project_name": self.projectName,
             "prober_status": self.prober_status,
             "initialization_mode": self.initialization_mode
         }
@@ -149,7 +149,7 @@ class SvtWPAagentGlobalParameters:
     def get_log_context(self):
         """Get a formatted string for logging context"""
         machine_info = self.machine_name or self.address or "N/A"
-        project_info = self.project_name or "N/A"
+        project_info = self.projectName or "N/A"
         return f"[{machine_info} | {project_info} | {self.prober_status}]"
 
     def load_from_dict(self, config: dict):
@@ -170,10 +170,10 @@ class SvtWPAagentGlobalParameters:
             data: Dictionary with parameter values
         """
         self.address = data.get("address")
-        self.machine_type = data.get("machine_type", "sentio")
+        self.machineType = data.get("machine_type", "sentio")
         self.chip_name = data.get("chip_name")
         self.orientation = data.get("orientation")
-        self.project_name = data.get("project_name")
+        self.projectName = data.get("project_name")
         self.prober_status = data.get("status", data.get("prober_status", "idle"))
 
         # Database-specific fields
@@ -187,10 +187,10 @@ class SvtWPAagentGlobalParameters:
     def reset(self):
         """Reset all parameters to default values"""
         self.address = None
-        self.machine_type = None
+        self.machineType = None
         self.chip_name = None
         self.orientation = None
-        self.project_name = None
+        self.projectName = None
         self.prober_status = "available"
         self.machine_id = None
         self.machine_name = None
@@ -219,7 +219,7 @@ class SvtWPAagentGlobalParameters:
         """Check if core parameters are set"""
         return (
                 self.address is not None and
-                self.machine_type is not None
+                self.machineType is not None
         )
 
     # ===  HELPER METHODS  ===
@@ -277,7 +277,7 @@ class SvtWPAagentGlobalParameters:
             project_name: Project name
         """
         self.opened_project_id = project_id
-        self.project_name = project_name
+        self.projectName = project_name
 
     def set_user(self, username):
         """Set current user"""
@@ -302,3 +302,17 @@ class SvtWPAagentGlobalParameters:
         if position not in ["Contact", "Separation", "Unknown"]:
             print(f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'")
         self.chuck_z_position_state = position
+
+    def clear_probe_card(self):
+        """Clear probe card when removed"""
+        self.probe_card_id = None
+        self.probe_card_orientation = None
+
+    def clear_wafer(self):
+        """Clear wafer when unloaded"""
+        self.loaded_wafer_id = None
+        self.wafer_orientation = None
+        self.total_dies_number = 0
+        self.current_die_col = 0
+        self.current_die_row = 0
+        self.current_die_subsite = 0

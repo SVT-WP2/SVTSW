@@ -1,4 +1,3 @@
-
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
 from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
@@ -167,13 +166,13 @@ def get_project_status():
             return ResponseBuilder.error("ShowProjectStatusReply", "Not initialized", 400)
 
         # Get prober info
-        prober = factory.get_prober(globals_.machine_type, globals_.address)
+        prober = factory.get_prober(globals_.machineType, globals_.address)
 
         # Build status message
         status_info = {
             "address": globals_.address,
-            "machine_type": globals_.machine_type,
-            "project_name": globals_.project_name,
+            "machine_type": globals_.machineType,
+            "project_name": globals_.projectName,
             "prober_status": globals_.prober_status,
             "machine_id": globals_.machine_id,
             "machine_name": globals_.machine_name,
@@ -235,7 +234,7 @@ def get_info():
         if not factory.is_initialized():
             return ResponseBuilder.error("GetInfoReply", "Not initialized", 400)
 
-        prober = factory.get_prober(globals_.machine_type, globals_.address)
+        prober = factory.get_prober(globals_.machineType, globals_.address)
 
         # Get current index from prober (format: "number,col,row")
         current_index = prober.get_current_index()
@@ -295,9 +294,21 @@ def get_agent_state():
 
 
 def help_command(command=None):
-    """Display help information for commands"""
+    """
+    Display help information for commands.
 
-    # Load help data from JSON file
+    Usage:
+        python main.py send help              # List all commands
+        python main.py send help MoveChuckXY  # Help for specific command
+
+    Args:
+        command (optional): Specific command name
+
+    Returns:
+        Standardized response with help information
+    """
+
+    # Load help data from JSON
     try:
         possible_paths = [
             "utilities/WPCommandsHelpList.json",
@@ -316,48 +327,52 @@ def help_command(command=None):
         if COMMAND_HELP is None:
             return ResponseBuilder.error(
                 "HelpReply",
-                "Help file not found. Expected location: utilities/WPCommandsHelpList.json",
+                "Help file not found. Expected: utilities/WPCommandsHelpList.json",
                 404
             )
 
     except Exception as e:
-        return ResponseBuilder.error("HelpReply", f"Failed to load help data: {str(e)}", 500)
+        return ResponseBuilder.error(
+            "HelpReply",
+            f"Failed to load help data: {str(e)}",
+            500
+        )
 
-    # If specific command requested
+    # Specific command help
     if command:
         if command not in COMMAND_HELP:
             return ResponseBuilder.error(
                 "HelpReply",
-                f"Command '{command}' not found. Use 'Help' without parameters to see all commands.",
+                f"Command '{command}' not found. Use 'help' to see all commands.",
                 404
             )
 
         cmd_info = COMMAND_HELP[command]
 
-        # Format detailed help for specific command
         output_lines = []
         output_lines.append("=" * 70)
         output_lines.append(f"Command: {command}")
         output_lines.append("=" * 70)
         output_lines.append("")
-        output_lines.append(f"Description: {cmd_info['description']}")
-        output_lines.append(f"Category: {cmd_info['category']}")
-        output_lines.append(f"Execution Time: {cmd_info['execution_time']}")
+        output_lines.append(f"Description: {cmd_info.get('description', 'No description')}")
+        output_lines.append(f"Category: {cmd_info.get('category', 'Unknown')}")
+        output_lines.append(f"Execution Time: {cmd_info.get('execution_time', 'Unknown')}")
         output_lines.append("")
 
-        if cmd_info['parameters']:
+        # Check if parameters exist (some commands might not have this key)
+        if 'parameters' in cmd_info and cmd_info['parameters']:
             output_lines.append("Parameters:")
             for param_name, param_info in cmd_info['parameters'].items():
-                req = "REQUIRED" if param_info['required'] == True else (
-                    "CONDITIONAL" if param_info['required'] == "conditional" else "optional")
-                output_lines.append(f"  • {param_name} ({param_info['type']}, {req})")
-                output_lines.append(f"    {param_info['description']}")
+                req = "REQUIRED" if param_info.get('required') == True else (
+                    "CONDITIONAL" if param_info.get('required') == "conditional" else "optional")
+                output_lines.append(f"  • {param_name} ({param_info.get('type', 'unknown')}, {req})")
+                output_lines.append(f"    {param_info.get('description', '')}")
         else:
             output_lines.append("Parameters: None")
 
         output_lines.append("")
         output_lines.append("Example:")
-        output_lines.append(f"  {cmd_info['example']}")
+        output_lines.append(f"  {cmd_info.get('example', 'No example')}")
 
         for key, value in cmd_info.items():
             if key.startswith('example_') and key != 'example':
@@ -366,20 +381,26 @@ def help_command(command=None):
         output_lines.append("")
         output_lines.append("=" * 70)
 
-        return ResponseBuilder.success("HelpReply", "\n".join(output_lines))
+        # Build message
+        help_message = "\n".join(output_lines)
 
-    # Show all commands as simple list
+        response = ResponseBuilder.success("HelpReply", help_message)
+        response["data"]["commandInfo"] = cmd_info
+
+        return response
+
+    # Show all commands
     output_lines = []
     output_lines.append("=" * 70)
     output_lines.append("WPAgent - Available Commands")
     output_lines.append("=" * 70)
     output_lines.append("")
     output_lines.append("Usage:")
-    output_lines.append("  python main.py send <Command> [--data='{\"key\":\"value\"}']")
+    output_lines.append("  python main.py send <Command> [param1=value1] [param2=value2]")
     output_lines.append("")
     output_lines.append("Get help for specific command:")
-    output_lines.append("  python main.py send Help <CommandName>")
-    output_lines.append("  Example: python main.py send Help MoveChuckXY")
+    output_lines.append("  python main.py send help <CommandName>")
+    output_lines.append("  Example: python main.py send help MoveChuckXY")
     output_lines.append("")
     output_lines.append("=" * 70)
     output_lines.append("")
@@ -387,7 +408,7 @@ def help_command(command=None):
     # Group by category
     categories = {}
     for cmd_name, cmd_info in COMMAND_HELP.items():
-        category = cmd_info['category']
+        category = cmd_info.get('category', 'Other')
         if category not in categories:
             categories[category] = []
         categories[category].append((cmd_name, cmd_info))
@@ -397,11 +418,18 @@ def help_command(command=None):
         output_lines.append("-" * 70)
         for cmd_name, cmd_info in sorted(categories[category], key=lambda x: x[0]):
             output_lines.append(f"• {cmd_name}")
-            output_lines.append(f"  {cmd_info['example']}")
+            output_lines.append(f"  {cmd_info.get('example', 'No example')}")
             output_lines.append("")
 
     output_lines.append("=" * 70)
-    output_lines.append("For detailed help: python main.py send Help <CommandName>")
+    output_lines.append("For detailed help: python main.py send help <CommandName>")
     output_lines.append("=" * 70)
 
-    return ResponseBuilder.success("HelpReply", "\n".join(output_lines))
+    # Build the message
+    help_message = "\n".join(output_lines)
+
+    response = ResponseBuilder.success("HelpReply", help_message)
+    response["data"]["totalCommands"] = len(COMMAND_HELP)
+    response["data"]["categories"] = {cat: [cmd[0] for cmd in cmds] for cat, cmds in categories.items()}
+
+    return response

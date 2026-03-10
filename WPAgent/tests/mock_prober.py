@@ -1,3 +1,4 @@
+
 import time
 import random
 from interfaces.WPProberInterface import AbstractProber
@@ -13,11 +14,12 @@ class MockProberImpl(AbstractProber):
         """Initialize mock prober"""
         self.address = address
         self.is_initialized = False
-        self.current_position = {"x": 0, "y": 0}
+        self.current_position = {"x": 0, "y": 0, "z": 0}
         self.current_die = {"col": 0, "row": 0, "subsite": 0}
         self.camera_position = "OffAxis"
         self.wafer_loaded = False
         self.at_contact = False
+        self.current_project = None
 
         print(f"🔧 Mock Prober created for {address}")
         time.sleep(0.5)  # Simulate connection delay
@@ -33,16 +35,35 @@ class MockProberImpl(AbstractProber):
         """Simulate opening a project"""
         print(f"📁 Opening project: {path}")
         time.sleep(0.8)
+        self.current_project = path
         print("✅ Project opened")
 
     def move_chuck_xy(self, x: float, y: float):
-        """Simulate chuck movement"""
+        """Simulate chuck XY movement"""
         old_pos = self.current_position.copy()
         print(f"🎯 Moving chuck from ({old_pos['x']}, {old_pos['y']}) to ({x}, {y})")
         time.sleep(1.5)  # Simulate movement time
-        self.current_position = {"x": x, "y": y}
+        self.current_position["x"] = x
+        self.current_position["y"] = y
         print(f"✅ Chuck moved to ({x}, {y})")
         return True
+
+    def move_chuck_z(self, z: float):
+        """Simulate chuck Z movement"""
+        print(f"🎯 Moving chuck Z from {self.current_position['z']} to {z}")
+        time.sleep(1.0)
+        self.current_position["z"] = z
+        print(f"✅ Chuck Z moved to {z}")
+        return True
+
+    def get_chuck_position(self):
+        """Get current chuck position"""
+        print(
+            f"📍 Getting chuck position: ({self.current_position['x']}, {self.current_position['y']}, {self.current_position['z']})")
+        if self.at_contact:
+            return "Contact"
+        else:
+            return "Separation"
 
     def run_ptpa(self):
         """Simulate PTPA (Probe Tip Position Alignment)"""
@@ -56,7 +77,16 @@ class MockProberImpl(AbstractProber):
         time.sleep(0.5)
         self.current_die['col'] += 1
         print(f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})")
-        return self.current_die
+        return f"{self.current_die['col']},{self.current_die['row']},{self.current_die['subsite']}"
+
+    def step_prev_die(self):
+        """Simulate stepping to previous die"""
+        print(f"⬅️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})")
+        time.sleep(0.5)
+        if self.current_die['col'] > 0:
+            self.current_die['col'] -= 1
+        print(f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})")
+        return f"{self.current_die['col']},{self.current_die['row']},{self.current_die['subsite']}"
 
     def go_to_die(self, col, row, subsite=0):
         """Simulate going to specific die"""
@@ -64,20 +94,31 @@ class MockProberImpl(AbstractProber):
         time.sleep(1)
         self.current_die = {"col": col, "row": row, "subsite": subsite}
         print(f"✅ At die ({col}, {row}, subsite {subsite})")
-        return self.current_die
+        return f"{col},{row},{subsite}"
 
-    def switch_camera(self, mountPoint: str):
+    def get_current_index(self):
+        """Get current die index"""
+        # Format: "number,col,row"
+        number = self.current_die['col'] * 10 + self.current_die['row']  # Mock calculation
+        return f"{number},{self.current_die['col']},{self.current_die['row']}"
+
+    def get_dies_number(self):
+        """Get total number of dies"""
+        # Format: "total,good,bad"
+        return "144,144,0"
+
+    def switch_camera(self, mount_point: str):
         """Simulate camera switch"""
-        print(f"📷 Switching camera from {self.camera_position} to {mountPoint}")
+        print(f"📷 Switching camera from {self.camera_position} to {mount_point}")
         time.sleep(0.8)
-        self.camera_position = mountPoint
-        print(f"✅ Camera switched to {mountPoint}")
+        self.camera_position = mount_point
+        print(f"✅ Camera switched to {mount_point}")
 
     def move_chuck_home(self):
         """Simulate moving chuck to home position"""
         print("🏠 Moving chuck to home position...")
         time.sleep(2)
-        self.current_position = {"x": 0, "y": 0}
+        self.current_position = {"x": 0, "y": 0, "z": 0}
         print("✅ Chuck at home position")
 
     def unload_wafer(self):
@@ -113,7 +154,7 @@ class MockProberImpl(AbstractProber):
 
     def align_wafer(self, align_die_col, align_die_row, subsite=None):
         """Simulate wafer alignment"""
-        print(f"📐 Aligning wafer at  die ({align_die_col}, {align_die_row})")
+        print(f"📐 Aligning wafer at die ({align_die_col}, {align_die_row})")
         time.sleep(3)
         self.current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite or 0}
         print("✅ Wafer aligned")
@@ -142,7 +183,13 @@ class MockProberImpl(AbstractProber):
         """Simulate moving to work area"""
         print(f"🎯 Moving to work area: {work_area}")
         time.sleep(1.5)
-        print(f"✅ Moved to {work_area} work area")
+        print(f"✅ Moved to work area {work_area}")
+
+    def clean_probe_station(self, **kwargs):
+        """Simulate cleaning probe station"""
+        print("🧹 Cleaning probe station...")
+        time.sleep(3)
+        print("✅ Cleaning completed")
 
 
 class SlowMockProberImpl(MockProberImpl):
@@ -159,7 +206,8 @@ class SlowMockProberImpl(MockProberImpl):
         """Extra slow movement"""
         print(f"🐌 SLOW: Moving chuck to ({x}, {y})... (5 seconds)")
         time.sleep(5)
-        self.current_position = {"x": x, "y": y}
+        self.current_position["x"] = x
+        self.current_position["y"] = y
         print(f"✅ Chuck moved to ({x}, {y})")
         return True
 
@@ -167,7 +215,7 @@ class SlowMockProberImpl(MockProberImpl):
         """Extra slow home movement"""
         print("🐌 SLOW: Moving chuck to home... (5 seconds)")
         time.sleep(5)
-        self.current_position = {"x": 0, "y": 0}
+        self.current_position = {"x": 0, "y": 0, "z": 0}
         print("✅ Chuck at home position")
 
     def auto_focus(self):

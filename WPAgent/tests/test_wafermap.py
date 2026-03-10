@@ -1,14 +1,4 @@
-"""
-Simple Wafermap Test for WPAgent/tests folder
 
-This script tests:
-1. Creating a new project
-2. Setting up NKF7 wafermap
-3. Saving the project
-
-Place in: WPAgent/tests/test_wafermap.py
-Run: python tests/test_wafermap.py
-"""
 
 import sys
 import os
