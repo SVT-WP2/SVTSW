@@ -1,6 +1,8 @@
 """
 Kafka client specifically for DB Agent communication
-Atention it connects to "localhost:9095"
+Connects to "localhost:9095"
+
+FIXED: Sends proper SVT Kafka headers (correlationId, replyTopic, replyPartition)
 """
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -47,9 +49,9 @@ class DBKafkaClient:
         # Create consumer with stable group ID
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_BROKER,
-            'group.id': 'wp-agent-db-consumer',  # Stable group ID
-            'auto.offset.reset': 'latest',  # Read from latest
-            'enable.auto.commit': False,  # Manual offset management
+            'group.id': 'wp-agent-db-consumer',
+            'auto.offset.reset': 'latest',
+            'enable.auto.commit': False,
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,
             'max.poll.interval.ms': 30000
@@ -58,14 +60,13 @@ class DBKafkaClient:
         # Subscribe to reply topic
         self.consumer.subscribe([self.DB_REPLY_TOPIC])
 
-        # Warm up consumer (ensure subscription is active)
+        # Warm up consumer
         print(f"   Warming up consumer...")
-        for _ in range(3):  # Poll a few times to ensure subscription
+        for _ in range(3):
             self.consumer.poll(0.1)
 
         print(f"✅ DB Kafka Client initialized successfully")
 
-        # Mark singleton as created
         DBKafkaClient._instance = self
 
     def _ensure_topics_exist(self):
@@ -84,7 +85,6 @@ class DBKafkaClient:
                     num_partitions=1,
                     replication_factor=1
                 ))
-                print(f"   Creating topic: {self.DB_REQUEST_TOPIC}")
 
             if self.DB_REPLY_TOPIC not in existing_topics:
                 topics_to_create.append(NewTopic(
@@ -92,7 +92,6 @@ class DBKafkaClient:
                     num_partitions=1,
                     replication_factor=1
                 ))
-                print(f"   Creating topic: {self.DB_REPLY_TOPIC}")
 
             if topics_to_create:
                 fs = admin.create_topics(topics_to_create)
@@ -114,45 +113,49 @@ class DBKafkaClient:
             data: Dict[str, Any],
             reply_type: str,
             timeout: float = 10.0,
-            use_requestId: bool = True
+            use_requestId: bool = False
     ) -> Optional[Dict[str, Any]]:
         """
-        Send request and wait for reply with optional request ID matching
+        Send request and wait for reply using SVT Kafka conventions
+
+        FIXED: Uses kafka_correlationId header (NOT requestId in body)
 
         Args:
             message_type: Type of message (e.g., "GetAllWaferProbeMachines")
             data: Data payload
-            reply_type: Expected reply type
+            reply_type: Expected reply type (can be empty string)
             timeout: Timeout in seconds
-            use_requestId: Whether to use request ID for matching (recommended)
+            use_requestId: IGNORED - we always use correlationId in headers
 
         Returns:
             Reply dict or None if timeout
         """
-        requestId = str(uuid.uuid4()) if use_requestId else None
+        # Generate correlation ID for SVT convention
+        correlation_id = str(uuid.uuid4())
 
-        # Build payload according to Swagger spec
+        # Build payload (NO requestId in body - DB Agent doesn't want it!)
         payload = {
             "type": message_type,
             "data": data
         }
 
-        if use_requestId:
-            payload["requestId"] = requestId
+        # SVT Kafka headers (REQUIRED by DB Agent)
+        headers = [
+            ("kafka_correlationId", correlation_id.encode("utf-8")),
+            ("kafka_replyTopic", self.DB_REPLY_TOPIC.encode("utf-8")),
+            ("kafka_replyPartition", b"0")
+        ]
 
         # Send request
         try:
             self.producer.produce(
                 self.DB_REQUEST_TOPIC,
-                value=json.dumps(payload).encode("utf-8")
+                value=json.dumps(payload).encode("utf-8"),
+                headers=headers
             )
             self.producer.flush()
 
-            if use_requestId:
-                print(f"📤 Sent DB request: {message_type} (ID: {requestId[:8]}...)")
-            else:
-                print(f"📤 Sent DB request: {message_type}")
-            print(f"   Waiting for reply type: {reply_type} (timeout: {timeout}s)")
+            print(f"📤 Sent DB request: {message_type} (correlation: {correlation_id[:8]}...)")
 
         except Exception as e:
             print(f"❌ Failed to send request: {e}")
@@ -166,9 +169,6 @@ class DBKafkaClient:
             msg = self.consumer.poll(1.0)
 
             if msg is None:
-                elapsed = time.time() - start
-                if elapsed > 3 and messages_seen == 0:
-                    print(f"   ⏳ Still waiting... ({elapsed:.0f}s elapsed, no messages yet)")
                 continue
 
             if msg.error():
@@ -178,43 +178,36 @@ class DBKafkaClient:
             messages_seen += 1
 
             try:
+                # Check correlation ID in headers
+                msg_headers = {k: v for k, v in (msg.headers() or [])}
+                msg_corr_id = msg_headers.get("kafka_correlationId")
+
+                if not msg_corr_id:
+                    continue
+
+                msg_corr_str = msg_corr_id.decode("utf-8")
+
+                # Check if this is our message
+                if msg_corr_str != correlation_id:
+                    continue
+
+                # Parse response
                 value = json.loads(msg.value().decode("utf-8"))
-                received_type = value.get("type")
 
-                # Match by reply type
-                if received_type == reply_type:
-                    # If using request ID, verify it matches
-                    if use_requestId:
-                        reply_requestId = value.get("requestId")
+                status = value.get("status")
+                received_type = value.get("type", "")
 
-                        if reply_requestId and reply_requestId != requestId:
-                            print(f"   ℹ️  Ignoring reply with different requestId ({reply_requestId[:8]}...)")
-                            continue
+                print(f"✅ Received reply (status: {status}, type: '{received_type}')")
 
-                    status = value.get("status")
-                    print(f"✅ Received reply (status: {status})")
+                # Return the full response
+                return value
 
-                    # Return the full response (don't filter by status here)
-                    return value
-                else:
-                    print(f"   ℹ️  Ignoring message type: {received_type}")
-
-            except json.JSONDecodeError as e:
-                print(f"   ⚠️  Failed to parse message: {e}")
-                continue
             except Exception as e:
                 print(f"   ⚠️  Error processing message: {e}")
                 continue
 
-        elapsed = time.time() - start
-        print(f"⏱️  Timeout waiting for DB reply ({elapsed:.1f}s)")
+        print(f"⏱️  Timeout waiting for DB reply ({timeout}s)")
         print(f"   Messages seen: {messages_seen}")
-        print(f"   Expected reply type: {reply_type}")
-        print(f"\n💡 Troubleshooting:")
-        print(f"   1. Check if DB Agent is running")
-        print(f"   2. Verify DB Agent uses broker: {self.DB_BROKER}")
-        print(f"   3. Check topic: {self.DB_REPLY_TOPIC}")
-
         return None
 
     def get_all_wafer_probe_machines(self, timeout: float = 15.0):
@@ -278,9 +271,9 @@ class DBKafkaClient:
         print(f"🔍 Testing DB Agent connection...")
 
         result = self.request_reply(
-            message_type="GetAllEnums",
-            data={"enumsNames": ["waferMapOrientation"]},
-            reply_type="GetAllEnumsReply",
+            message_type="GetAllWaferProbeMachines",
+            data={"filter": {"ids": []}},
+            reply_type="GetAllWaferProbeMachinesReply",
             timeout=timeout
         )
 

@@ -112,25 +112,17 @@ def get_project_id_by_name(project_name, timeout: float = 15.0):
 
     Args:
         project_name: Name of the project
-        timeout: Request timeout in seconds
-
-    Returns:
-        Standardized response with project ID
     """
     try:
         db_client = _get_db_client()
 
-        print(f"\n🔍 Searching for project '{project_name}'...")
 
         # Get all projects
         projects = db_client.get_all_wafer_probe_projects(timeout=timeout)
 
         if not projects:
-            return ResponseBuilder.error(
-                "GetProjectIdReply",
-                "No projects found or database agent not responding",
-                404
-            )
+            print("No projects found or database agent not responding")
+
 
         # Find project by name (case-insensitive)
         matching_project = None
@@ -140,35 +132,14 @@ def get_project_id_by_name(project_name, timeout: float = 15.0):
                 break
 
         if not matching_project:
-            return ResponseBuilder.error(
-                "GetProjectIdReply",
-                f"Project '{project_name}' not found",
-                404
-            )
+            print('No project')
 
         project_id = matching_project.get('id')
 
-        # Build response
-        response = ResponseBuilder.success(
-            "GetProjectIdReply",
-            f"Found project '{project_name}' with ID {project_id}"
-        )
-
-        # Add project info to data
-        response["data"]["projectId"] = project_id
-        response["data"]["project"] = matching_project
-
-        print(f"✓ Project '{project_name}' found: ID={project_id}")
-
-        return response
+        return project_id
 
     except Exception as e:
         print(f"✗ Error: {str(e)}")
-        return ResponseBuilder.error(
-            "GetProjectIdReply",
-            f"Failed to get project ID: {str(e)}",
-            500
-        )
 
 
 def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0):
@@ -524,3 +495,115 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
             f"Error updating probe card: {str(e)}",
             500
         )
+
+
+def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0):
+    """
+    Get loaded wafer ID and orientation from machine record
+
+    Args:
+        wp_machine_id: Machine ID (uses global if not provided)
+        timeout: Request timeout
+
+    Returns:
+        Tuple of (wafer_id, orientation) or (None, None) if no wafer loaded
+    """
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        if wp_machine_id is None:
+            wp_machine_id = g.wp_machine_id
+
+        if wp_machine_id == 0:
+            print("⚠️  WP Machine ID not set")
+            return (None, None)
+
+        from services.WPDbKafkaClient import DBKafkaClient
+        db_client = DBKafkaClient.get_instance()
+
+        print(f"\n🔍 Getting loaded wafer for machine {wp_machine_id}...")
+
+        # Get all machines
+        machines = db_client.get_all_wafer_probe_machines(timeout=timeout)
+
+        # Find our machine
+        our_machine = None
+        for machine in machines:
+            if machine.get('id') == wp_machine_id:
+                our_machine = machine
+                break
+
+        if not our_machine:
+            print(f"❌ Machine {wp_machine_id} not found")
+            return (None, None)
+
+        # Extract wafer info directly from machine record
+        wafer_id = our_machine.get('loadedWaferId')
+        orientation = our_machine.get('loadedWaferOrientation')
+
+        if wafer_id:
+            print(f"✓ Wafer loaded: ID={wafer_id}, orientation={orientation}")
+            return (wafer_id, orientation)
+        else:
+            print("ℹ️  No wafer loaded")
+            return (None, None)
+
+    except Exception as e:
+        print(f"✗ Error: {str(e)}")
+        return (None, None)
+
+
+def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0):
+    """
+    Get installed probe card ID and orientation from machine record
+
+    Args:
+        wp_machine_id: Machine ID (uses global if not provided)
+        timeout: Request timeout
+
+    Returns:
+        Tuple of (probe_card_id, orientation) or (None, None) if no card installed
+    """
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        if wp_machine_id is None:
+            wp_machine_id = g.wp_machine_id
+
+        if wp_machine_id == 0:
+            print("⚠️  WP Machine ID not set")
+            return (None, None)
+
+        from services.WPDbKafkaClient import DBKafkaClient
+        db_client = DBKafkaClient.get_instance()
+
+        print(f"\n🔍 Getting installed probe card for machine {wp_machine_id}...")
+
+        # Get all machines
+        machines = db_client.get_all_wafer_probe_machines(timeout=timeout)
+
+        # Find our machine
+        our_machine = None
+        for machine in machines:
+            if machine.get('id') == wp_machine_id:
+                our_machine = machine
+                break
+
+        if not our_machine:
+            print(f"❌ Machine {wp_machine_id} not found")
+            return (None, None)
+
+        # Extract probe card info directly from machine record
+        probe_card_id = our_machine.get('installedProbeCardId')
+        orientation = our_machine.get('installedProbeCardOrientation')
+
+        if probe_card_id:
+            print(f"✓ Probe card installed: ID={probe_card_id}, orientation={orientation}")
+            return (probe_card_id, orientation)
+        else:
+            print("ℹ️  No probe card installed")
+            return (None, None)
+
+    except Exception as e:
+        print(f"✗ Error: {str(e)}")
+        return (None, None)
