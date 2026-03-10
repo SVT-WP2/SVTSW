@@ -174,10 +174,34 @@ class KafkaClient:
                     status = response.get("status", "unknown")
                     rtype = response.get("type", "UnknownReply")
 
+                    # ====== FIXED: Extract message for display (handles both formats) ======
+                    display_output = None
+
+                    # Try ResponseBuilder format first (data.message)
+                    if "data" in response and isinstance(response["data"], dict):
+                        if "message" in response["data"]:
+                            display_output = response["data"]["message"]
+
+                    # Fall back to old format (output key at root level)
+                    if display_output is None and "output" in response:
+                        display_output = response["output"]
+
+                    # Fall back to error message
+                    if display_output is None:
+                        error_info = response.get("error", {})
+                        if isinstance(error_info, dict):
+                            display_output = error_info.get("message", "")
+
+                    # Display based on status
                     if status == SvtMessageStatus.Success:
                         print(f"✅ {status}: {rtype}")
+                        if display_output:
+                            print(display_output)
                     else:
-                        print(f"❌ {status}: {rtype} | {response.get('error', {}).get('message', '')}")
+                        print(f"❌ {status}: {rtype}")
+                        if display_output:
+                            print(f"   {display_output}")
+                    # ====== END FIX ======
 
                     return response
                 else:
@@ -263,26 +287,36 @@ class KafkaClient:
                     exec_end = time.time()
                     exec_time_ms = (exec_end - exec_start) * 1000
 
-                    raw_status = (result or {}).get("status", "error")
-                    output = (result or {}).get("output", "No output")
-
-                    if raw_status == "success":
-                        reply_body = {
-                            "status": SvtMessageStatus.Success,
-                            "type": f"{command}Reply",
-                            "data": {
-                                "output": output,
-                                "executionTimeMs": exec_time_ms
-                            }
-                        }
+                    # ====== FIXED: Handle both ResponseBuilder and old format ======
+                    # Check if result is already in ResponseBuilder format
+                    if result and "type" in result and "data" in result:
+                        # Already ResponseBuilder format - use as-is but add execution time
+                        reply_body = result
+                        if "data" in reply_body and isinstance(reply_body["data"], dict):
+                            reply_body["data"]["executionTimeMs"] = exec_time_ms
                     else:
-                        reply_body = {
-                            "status": SvtMessageStatus.UnexpectedError,
-                            "type": f"{command}Reply",
-                            "error": {
-                                "message": output
+                        # Old format - convert to SVT convention
+                        raw_status = (result or {}).get("status", "error")
+                        output = (result or {}).get("output", "No output")
+
+                        if raw_status == "success":
+                            reply_body = {
+                                "status": SvtMessageStatus.Success,
+                                "type": f"{command}Reply",
+                                "data": {
+                                    "output": output,
+                                    "executionTimeMs": exec_time_ms
+                                }
                             }
-                        }
+                        else:
+                            reply_body = {
+                                "status": SvtMessageStatus.UnexpectedError,
+                                "type": f"{command}Reply",
+                                "error": {
+                                    "message": output
+                                }
+                            }
+                    # ====== END FIX ======
 
                     if reply_to and correlation_id:
                         reply_headers = [
