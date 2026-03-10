@@ -1,15 +1,3 @@
-"""
-End-to-end test for get_project_id_by_name
-
-Tests the complete flow:
-1. DBKafkaClient with proper headers
-2. WPKafkaDbService wrapper
-3. WPDataBaseActions.get_project_id_by_name()
-
-Usage:
-    cd /data/akostina/SVTSW/WPAgent
-    python3.12 test_final.py
-"""
 
 import sys
 import os
