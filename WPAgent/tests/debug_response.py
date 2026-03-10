@@ -1,7 +1,3 @@
-"""
-Debug script to inspect SENTIO Response object structure
-Run this to see what attributes the Response object has
-"""
 
 from sentio_prober_control.Communication.CommunicatorTcpIp import CommunicatorTcpIp
 from sentio_prober_control.Sentio.ProberSentio import SentioProber

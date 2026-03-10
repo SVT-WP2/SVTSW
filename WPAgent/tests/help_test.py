@@ -1,16 +1,3 @@
-"""
-Direct test of help_command - works from tests/ directory
-
-Usage:
-    cd /data/akostina/SVTSW/WPAgent/tests
-    python3.12 test_help_fixed.py
-
-    OR
-
-    cd /data/akostina/SVTSW/WPAgent
-    python3.12 tests/test_help_fixed.py
-"""
-
 import sys
 import os
 
