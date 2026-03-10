@@ -439,7 +439,6 @@ def help_command(command=None):
         output_lines.append("")
         output_lines.append(f"Description: {cmd_info.get('description', 'No description')}")
         output_lines.append(f"Category: {cmd_info.get('category', 'Unknown')}")
-        output_lines.append(f"Execution Time: {cmd_info.get('execution_time', 'Unknown')}")
         output_lines.append("")
 
         # Check if parameters exist (some commands might not have this key)
