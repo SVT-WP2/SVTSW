@@ -1,12 +1,17 @@
 from drivers.WPSentioProber import SentioProberImpl
+from tests.mock_prober import MockProberImpl
 
 # Add any other machine used for WP testing
+# prober_classes = {
+#     "sentio": SentioProberImpl
+# }
+
 prober_classes = {
-    "sentio": SentioProberImpl
+    "sentio": MockProberImpl
 }
 
-
 # Mock probers will be added dynamically by test scripts
+
 
 
 class ProberFactory:

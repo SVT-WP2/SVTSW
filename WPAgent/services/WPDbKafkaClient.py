@@ -1,6 +1,6 @@
 """
-Singleton Kafka client specifically for DB Agent communication
-Fixes: Consumer offset issues, request ID matching, and connection stability
+Kafka client specifically for DB Agent communication
+Atention it connects to "localhost:9095"
 """
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -45,11 +45,10 @@ class DBKafkaClient:
         })
 
         # Create consumer with stable group ID
-        # ⚠️ CRITICAL: Using 'earliest' instead of 'latest' to avoid missing messages
         self.consumer = KafkaConsumer({
             'bootstrap.servers': self.DB_BROKER,
             'group.id': 'wp-agent-db-consumer',  # Stable group ID
-            'auto.offset.reset': 'latest',  # Read from beginning if no offset
+            'auto.offset.reset': 'latest',  # Read from latest
             'enable.auto.commit': False,  # Manual offset management
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,
@@ -102,12 +101,12 @@ class DBKafkaClient:
                         future.result()
                         print(f"   ✅ Topic created: {topic}")
                     except Exception as e:
-                        print(f"   ⚠️ Topic creation error for {topic}: {e}")
+                        print(f"   ⚠️  Topic creation error for {topic}: {e}")
             else:
                 print(f"   ✅ All topics already exist")
 
         except Exception as e:
-            print(f"   ⚠️ Error checking topics: {e}")
+            print(f"   ⚠️  Error checking topics: {e}")
 
     def request_reply(
             self,
@@ -173,7 +172,7 @@ class DBKafkaClient:
                 continue
 
             if msg.error():
-                print(f"   ⚠️ Consumer error: {msg.error()}")
+                print(f"   ⚠️  Consumer error: {msg.error()}")
                 continue
 
             messages_seen += 1
@@ -189,32 +188,26 @@ class DBKafkaClient:
                         reply_requestId = value.get("requestId")
 
                         if reply_requestId and reply_requestId != requestId:
-                            print(f"   ℹ️ Ignoring reply with different requestId ({reply_requestId[:8]}...)")
+                            print(f"   ℹ️  Ignoring reply with different requestId ({reply_requestId[:8]}...)")
                             continue
 
                     status = value.get("status")
                     print(f"✅ Received reply (status: {status})")
 
-                    # Check status
-                    if status != "Success":
-                        error = value.get("error", {})
-                        error_msg = error.get("message", "Unknown error")
-                        print(f"❌ DB Agent returned error: {error_msg}")
-                        return None
-
+                    # Return the full response (don't filter by status here)
                     return value
                 else:
-                    print(f"   ℹ️ Ignoring message type: {received_type}")
+                    print(f"   ℹ️  Ignoring message type: {received_type}")
 
             except json.JSONDecodeError as e:
-                print(f"   ⚠️ Failed to parse message: {e}")
+                print(f"   ⚠️  Failed to parse message: {e}")
                 continue
             except Exception as e:
-                print(f"   ⚠️ Error processing message: {e}")
+                print(f"   ⚠️  Error processing message: {e}")
                 continue
 
         elapsed = time.time() - start
-        print(f"⏱️ Timeout waiting for DB reply ({elapsed:.1f}s)")
+        print(f"⏱️  Timeout waiting for DB reply ({elapsed:.1f}s)")
         print(f"   Messages seen: {messages_seen}")
         print(f"   Expected reply type: {reply_type}")
         print(f"\n💡 Troubleshooting:")
@@ -224,19 +217,66 @@ class DBKafkaClient:
 
         return None
 
+    def get_all_wafer_probe_machines(self, timeout: float = 15.0):
+        """Get all wafer probe machines from database"""
+        result = self.request_reply(
+            message_type="GetAllWaferProbeMachines",
+            data={"filter": {"ids": []}},
+            reply_type="GetAllWaferProbeMachinesReply",
+            timeout=timeout
+        )
+
+        if result and result.get("status") == "Success":
+            return result.get("data", {}).get("items", [])
+        return []
+
+    def get_all_wafer_probe_projects(self, timeout: float = 15.0):
+        """Get all wafer probe projects from database"""
+        result = self.request_reply(
+            message_type="GetAllWaferProbeProjects",
+            data={"filter": {"ids": []}},
+            reply_type="GetAllWaferProbeProjectsReply",
+            timeout=timeout
+        )
+
+        if result and result.get("status") == "Success":
+            return result.get("data", {}).get("items", [])
+        return []
+
+    def update_machine_loaded_wafer(self, wp_machine_id: int, wafer_id, orientation, timeout: float = 15.0):
+        """Update loaded wafer on machine"""
+        result = self.request_reply(
+            message_type="UpdateWpMachineLoadedWafer",
+            data={
+                "wpMachineId": wp_machine_id,
+                "loadedWaferId": wafer_id,
+                "orientation": orientation
+            },
+            reply_type="UpdateWpMachineLoadedWaferReply",
+            timeout=timeout
+        )
+
+        return result and result.get("status") == "Success"
+
+    def update_machine_installed_probe_card(self, wp_machine_id: int, probe_card_id, orientation, timeout: float = 15.0):
+        """Update installed probe card on machine"""
+        result = self.request_reply(
+            message_type="UpdateWpMachineInstalledProbeCard",
+            data={
+                "wpMachineId": wp_machine_id,
+                "installedProbeCardId": probe_card_id,
+                "orientation": orientation
+            },
+            reply_type="UpdateWpMachineInstalledProbeCardReply",
+            timeout=timeout
+        )
+
+        return result and result.get("status") == "Success"
+
     def test_connection(self, timeout: float = 5.0) -> bool:
-        """
-        Test if DB Agent is reachable
-
-        Args:
-            timeout: Test timeout in seconds
-
-        Returns:
-            True if DB Agent responds, False otherwise
-        """
+        """Test if DB Agent is reachable"""
         print(f"🔍 Testing DB Agent connection...")
 
-        # Try a simple enum request
         result = self.request_reply(
             message_type="GetAllEnums",
             data={"enumsNames": ["waferMapOrientation"]},
