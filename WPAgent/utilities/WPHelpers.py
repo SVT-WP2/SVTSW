@@ -26,9 +26,9 @@ def resolve_project_parameters(address=None, projectName=None, machineType=None)
     if address:
         globals_.set_address(address)
     if projectName:
-        globals_.set_projectName(projectName)
+        globals_.set_project_name(projectName)
     if machineType:
-        globals_.set_machineType(machineType)
+        globals_.set_machine_type(machineType)
 
     return address, projectName, machineType
 

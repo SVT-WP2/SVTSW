@@ -31,6 +31,7 @@ COMMAND_ROUTER = {
     "LocalMode": testing_actions.local_state,
     "GoToPreviousDie": testing_actions.go_to_previous_die,
 
+
     #  Project Init
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
