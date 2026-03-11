@@ -20,7 +20,8 @@ class ResponseBuilder:
 
         #response paylod
         data = {
-            "user": getattr(g, 'user', 'default_user'),
+            "userLogged": getattr(g, 'userLogged'),
+            "userLoggedHierarchy": getattr(g, 'userLoggedHierarchy'),
             "asicSerialNumber": getattr(g, 'asic_serial_number', 0),
             "wpMachineId": getattr(g, 'wp_machine_id', 0),
             "WPAG_State": getattr(g, 'wpag_state', 'ServiceOff'),

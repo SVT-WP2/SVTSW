@@ -22,9 +22,9 @@ class SvtWPAagentGlobalParameters:
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
 
-
         # User info
-        self.user = "default_user"
+        self.userLogged = None
+        self.userLoggedHierarchy = None
 
         # ASIC info
         self.asic_serial_number = 0
@@ -201,7 +201,8 @@ class SvtWPAagentGlobalParameters:
         self.machine_name = None
         self.initialization_mode = None
 
-        self.user = "default_user"
+        self.userLogged = None
+        self.userLoggedHierarchy = None
         self.asic_serial_number = 0
         self.wp_machine_id = 0
         self.wpag_state = "ServiceOff"
@@ -284,9 +285,10 @@ class SvtWPAagentGlobalParameters:
         self.opened_project_id = project_id
         self.projectName = project_name
 
-    def set_user(self, username):
+    def set_user(self, username=None, hierarchy=None):
         """Set current user"""
-        self.user = username
+        self.userLogged = username
+        self.userLoggedHierarchy = hierarchy
 
     def set_wpag_state(self, state):
         """
