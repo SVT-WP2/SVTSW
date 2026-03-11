@@ -1,4 +1,3 @@
-
 from drivers.WPFactory import get_prober
 from utilities.WPHelpers import resolve_project_parameters
 from utilities.WPResponseBuilder import ResponseBuilder
@@ -555,3 +554,53 @@ def get_chuck_position(address=None, machine_type=None):
         except:
             pass
         return ResponseBuilder.error("GetChuckPositionReply", str(e), 500)
+
+
+def set_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
+    """Set overtravel that includes seting actual gap and enable overtravel"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("SetOvertravelReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.set_overtravel(overtravelGap)
+        prober.enable_overtravel(overtravel=True)
+
+        g.set_overdrive(overtravelGap)
+
+        g.wpag_state = "WP_Idle"
+
+        return ResponseBuilder.success("SetOvertravelReply", "SetOvertravel command successfully executed")
+    except Exception as e:
+        return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
+
+
+def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
+    """Disaable overtravel, set to 0"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("DisableOvertravelReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.set_overtravel(overtravelGap=0)
+        prober.enable_overtravel(overtravel=True)
+
+        g.set_overdrive(overtravelGap)
+
+        g.wpag_state = "WP_Idle"
+
+        return ResponseBuilder.success("DisableOvertravelReply", "DisableOvertravel command successfully executed")
+    except Exception as e:
+        return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
