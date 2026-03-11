@@ -208,17 +208,21 @@ Table main.SvtTestType {
   name varchar(100)
 }
 
-Table main.SvtTestTypeList {
+Table main.SvtTestTypeAsicFamilyList {
+  setupId integer [ref:> main.SvtTestType.id, not null]
+  asicFamilyType main.asicFamilyType [not null]
+}
+
+Table main.SvtTestList {
   asicFamilyType main.asicFamilyType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testConfigVersion integer [ref: > main.SvtTestConfiguration.versionId]
+  testConfigVerId integer [ref: > main.SvtTestConfiguration.versionId]
 }
 
 Table main.SvtTestConfiguration {
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100)
   versionId integer [unique, not null]
-  baseVersionId integer [ref:> versionId, not null]
+  baseVerId integer [ref:> versionId, not null]
   body JSON [not null]
   date date [default: `CURRENT_DATE`]
   note text
