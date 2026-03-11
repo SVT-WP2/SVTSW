@@ -105,6 +105,10 @@ class SvtWPAagentGlobalParameters:
         """Set project orientation"""
         self.orientation = orientation
 
+    def set_overdrive(self, overdriveGap):
+        """Set project overdrive gap"""
+        self.overdrive = overdriveGap
+
     def set_project_name(self, project_name):
         self.projectName = project_name
 

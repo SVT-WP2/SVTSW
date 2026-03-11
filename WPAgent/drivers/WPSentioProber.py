@@ -70,7 +70,7 @@ class SentioProberImpl(AbstractProber):
         self.prober.move_chuck_separation()
 
     def auto_focus(self):
-        resp= self.prober.vision.auto_focus()
+        resp = self.prober.vision.auto_focus()
         self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_work_area(self, work_area):
@@ -112,6 +112,14 @@ class SentioProberImpl(AbstractProber):
     def get_camera_status(self):
         resp = "doesnt exist"
         return resp
+
+    def set_overtravel(self,overtravelGap: float):
+        "Sets overtravel gap for all chuck sites in μm"
+        self.prober.send_cmd("set_chuck_overtravel_gap")
+
+    def enable_overtravel(self, overtravel: bool):
+        "overtravel (bool): True to enable, False to disable."
+        self.prober.enable_chuck_overtravel(overtravel)
 
     def get_chuck_position(self):
         """

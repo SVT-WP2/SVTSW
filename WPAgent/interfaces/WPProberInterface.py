@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class AbstractProber(ABC):
     @abstractmethod
     def initialize(self):
@@ -22,7 +23,7 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
-    def go_to_die(self,col: int, row: int):
+    def go_to_die(self, col: int, row: int):
         pass
 
     @abstractmethod
@@ -50,3 +51,10 @@ class AbstractProber(ABC):
         """Get current chuck position (In Contact/In Separation)"""
         pass
 
+    @abstractmethod
+    def set_overtravel(self, overtravelGap: float):
+        pass
+
+    @abstractmethod
+    def enable_overtravel(self, overtravel: bool):
+        pass

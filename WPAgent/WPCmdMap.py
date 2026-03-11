@@ -30,7 +30,8 @@ COMMAND_ROUTER = {
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
     "LocalMode": testing_actions.local_state,
     "GoToPreviousDie": testing_actions.go_to_previous_die,
-
+    "SetOvertravel": testing_actions.set_chuck_overtravel,
+    "DisableOvertravel": testing_actions.disable_chuck_overtravel,
 
     #  Project Init
     "Initialize": project_actions.svt_initialise_wp,
