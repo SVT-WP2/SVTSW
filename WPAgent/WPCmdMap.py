@@ -6,6 +6,7 @@ from stateMachine.WpAgentStateMachine import SvtWpAgentEvent
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
+import actions.WPLoginActions as login_actions
 
 from services.WPListenerHeartbeat import ListenerHealthCheck
 
@@ -49,6 +50,10 @@ COMMAND_ROUTER = {
     #  Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
+
+    #  Login Actions
+    "UserLogIn": login_actions.UserLogIn,
+    "UserLogOut": login_actions.UserLogOut,
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
