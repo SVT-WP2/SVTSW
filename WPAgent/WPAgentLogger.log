@@ -1,0 +1,3595 @@
+2025-10-21 17:11:13,760 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-10-22 09:57:23,655 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-10-22 10:17:38,784 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-10-22 10:17:50,933 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-10-22 10:18:42,736 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-10-22 10:19:00,816 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 10:19:00,975 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 10:19:18,842 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-10-22 10:52:56,350 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 15:29:35,767 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-10-22 15:29:55,343 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 16:48:40,015 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-10-22 16:48:40,087 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 16:49:23,943 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-10-22 16:49:24,007 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 16:49:41,576 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-10-22 16:51:19,055 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 16:51:19,109 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 16:51:36,470 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-10-22 16:52:20,556 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 16:52:20,610 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 16:52:38,102 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-10-22 16:52:48,609 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-10-22 16:52:48,662 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-22 16:53:06,690 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-10-23 09:23:51,285 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-10-23 09:24:09,064 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-11-10 16:13:55,103 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-10 16:14:13,490 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-11-10 16:56:38,618 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-10 16:56:56,534 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-11-10 16:56:56,535 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-10 16:57:14,543 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-11-10 17:01:36,648 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-11-10 17:01:36,648 - INFO - WPAgent - Initialize - Initialised WP at wpmit01.cern.ch:35555 with project nkf7_12_02_2025_arrow_E
+2025-11-12 11:51:53,677 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 11:52:36,623 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 11:52:36,679 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 11:52:36,680 - INFO - WPAgent - WP_LIST_AVAILABLE_COMMANDS - Available commands listed
+2025-11-12 11:52:36,680 - INFO - WPAgent - ListAvailableCommands - 
+2025-11-12 11:52:36,680 - ERROR - WPAgent - ListAvailableCommands - Exception during command execution: 'output'
+2025-11-12 13:40:59,323 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:42:02,498 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:43:19,860 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:43:30,281 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:49:35,281 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:49:43,370 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:51:37,194 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:51:43,100 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:51:43,153 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:51:43,154 - ERROR - WPAgent - ListAvailableCommands - module 'actions.WPCommandActions' has no attribute 'list_available_commands'
+2025-11-12 13:52:49,070 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:52:56,899 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:52:56,952 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:52:56,953 - ERROR - WPAgent - ListAvailableCommands - name 'COMMAND_ROUTER' is not defined
+2025-11-12 13:54:50,152 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:54:50,205 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:54:50,206 - ERROR - WPAgent - ListAvailableCommands - name 'COMMAND_ROUTER' is not defined
+2025-11-12 13:55:12,024 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:55:12,076 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:55:12,077 - ERROR - WPAgent - ListAvailableCommands - name 'COMMAND_ROUTER' is not defined
+2025-11-12 13:56:26,874 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:56:26,980 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:56:26,980 - ERROR - WPAgent - ListAvailableCommands - name 'COMMAND_ROUTER' is not defined
+2025-11-12 13:58:21,681 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:58:21,735 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:58:29,593 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:58:33,796 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:58:47,321 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:59:00,185 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 13:59:06,968 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 13:59:32,385 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:59:32,385 - INFO - WPAgent - ListAvailableCommands - 
+2025-11-12 13:59:32,386 - ERROR - WPAgent - ListAvailableCommands - Exception during command execution: 'output'
+2025-11-12 13:59:32,386 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:59:32,386 - INFO - WPAgent - ListAvailableCommands - 
+2025-11-12 13:59:32,387 - ERROR - WPAgent - ListAvailableCommands - Exception during command execution: 'output'
+2025-11-12 13:59:32,387 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 13:59:32,387 - INFO - WPAgent - ListAvailableCommands - 
+2025-11-12 13:59:32,387 - ERROR - WPAgent - ListAvailableCommands - Exception during command execution: 'output'
+2025-11-12 14:04:49,133 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-12 14:05:00,701 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands
+2025-11-12 14:05:00,754 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-12 14:05:00,754 - INFO - WPAgent - ListAvailableCommands - 21 commands available
+2025-11-13 14:02:39,403 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus
+2025-11-13 14:17:09,436 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent'
+2025-11-13 14:18:34,084 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-13 14:18:52,581 - INFO - WPAgent - AutoFocus - Auto-focus command succesfully executed
+2025-11-14 11:47:51,131 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 11:48:26,410 - INFO - WPAgent - ListCommands - Sending command: ListCommands (request_id: fbf81510...)
+2025-11-14 11:48:26,416 - INFO - WPAgent - ListCommands - Received command: ListCommands
+2025-11-14 11:48:26,416 - ERROR - WPAgent - ListCommands - Unknown command: ListCommands
+2025-11-14 11:49:02,616 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus (request_id: c8e6eaa0...)
+2025-11-14 11:49:02,621 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-14 11:49:02,622 - ERROR - WPAgent - AutoFocus - Prober not initialized. Please run 'Initialize' command first.
+2025-11-14 11:49:55,000 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 5c9a59e9...)
+2025-11-14 11:49:55,004 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 11:49:55,004 - INFO - WPAgent - ListAvailableCommands - 21 commands available
+2025-11-14 11:51:43,244 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 3257e216...)
+2025-11-14 11:51:43,249 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-11-14 11:51:44,110 - INFO - WPAgent - Initialize - Initialized WP at wpmit01.cern.ch:35555 with project 'nkf7_12_02_2025_arrow_E'
+2025-11-14 11:51:59,174 - INFO - WPAgent - AutoFocus - Sending command: AutoFocus (request_id: a7864e42...)
+2025-11-14 11:51:59,179 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-14 11:52:16,865 - INFO - WPAgent - AutoFocus - Auto-focus command successfully executed
+2025-11-14 11:57:20,835 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 992fdce8...)
+2025-11-14 11:57:20,841 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 11:57:20,841 - INFO - WPAgent - ListAvailableCommands - 21 commands available
+2025-11-14 12:01:19,547 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:01:30,322 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 418ad301...)
+2025-11-14 12:01:30,327 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:01:30,327 - INFO - WPAgent - ListAvailableCommands - {'status': 'success', 'available_commands': ['MoveChuckXY', 'RunPTPA', 'StepNextDie', 'GoToDie', 'OpenProject', 'FindHome', 'SwitchCamera', 'MoveChuckHome', 'Unload', 'Cleaning', 'AlignWafer', 'GoToContact', 'GoToSeparation', 'AutoFocus', 'Load', 'MoveChuckToWorkArea', 'InitializeTestingProject', 'Initialize', 'ShowProjectStatus', 'RunSequencer', 'ListAvailableCommands'], 'output': '21 commands available'}
+2025-11-14 12:17:05,581 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:17:11,892 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 8bfba9f2...)
+2025-11-14 12:17:11,896 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:17:11,897 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 12:27:43,485 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:28:16,027 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: d670d98b...)
+2025-11-14 12:28:16,031 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:28:16,032 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 12:30:33,660 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:30:38,529 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 0c60645c...)
+2025-11-14 12:30:38,533 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:30:38,533 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 12:33:53,680 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:34:16,494 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: ce59b3c8...)
+2025-11-14 12:34:16,498 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:34:16,499 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 12:42:59,705 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:43:07,074 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 4387025a...)
+2025-11-14 12:43:07,078 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:43:07,079 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 12:46:55,374 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 12:47:07,748 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: a0a0a237...)
+2025-11-14 12:47:07,752 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 12:47:07,752 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListAvailableCommands"
+    ],
+    "output": "21 commands available"
+}
+2025-11-14 14:02:25,752 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 14:02:31,683 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 746eef21...)
+2025-11-14 14:02:31,687 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-14 14:02:31,687 - INFO - WPAgent - ListAvailableCommands - status: success
+available_commands:
+  - MoveChuckXY
+  - RunPTPA
+  - StepNextDie
+  - GoToDie
+  - OpenProject
+  - FindHome
+  - SwitchCamera
+  - MoveChuckHome
+  - Unload
+  - Cleaning
+  - AlignWafer
+  - GoToContact
+  - GoToSeparation
+  - AutoFocus
+  - Load
+  - MoveChuckToWorkArea
+  - InitializeTestingProject
+  - Initialize
+  - ShowProjectStatus
+  - RunSequencer
+  - ListAvailableCommands
+output: 21 commands available
+2025-11-14 14:41:38,925 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 14:41:54,785 - INFO - WPAgent - list_probers - Sending command: list_probers (request_id: cc0bc369...)
+2025-11-14 14:41:54,790 - INFO - WPAgent - list_probers - Received command: list_probers
+2025-11-14 14:41:54,791 - ERROR - WPAgent - list_probers - Unknown command: list_probers
+2025-11-14 14:43:02,682 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 14:43:19,563 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 14168f20...)
+2025-11-14 14:43:19,569 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 14:43:29,610 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:00:38,820 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 2b92dc97...)
+2025-11-14 15:00:38,826 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:00:48,873 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:06:30,369 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:06:40,042 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 1bf36889...)
+2025-11-14 15:06:40,048 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:06:50,145 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:07:24,918 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 5be5e3e3...)
+2025-11-14 15:07:24,923 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:07:34,964 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:09:16,170 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:09:21,957 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: bd15b79f...)
+2025-11-14 15:09:21,962 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:09:32,007 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:19:28,646 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:19:34,524 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 255767b0...)
+2025-11-14 15:20:42,844 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:20:48,638 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 417e5491...)
+2025-11-14 15:20:48,644 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:20:58,691 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:25:26,750 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:25:36,798 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 15:33:49,312 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:33:55,417 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 2ee1341b...)
+2025-11-14 15:44:14,145 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 1053825d...)
+2025-11-14 15:44:46,885 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:44:54,916 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 3a84d879...)
+2025-11-14 15:53:07,948 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:53:15,785 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 967ba86f...)
+2025-11-14 15:57:18,174 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:57:24,993 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: e01cf62c...)
+2025-11-14 15:57:24,998 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:57:25,086 - ERROR - WPAgent - ListProbers - Failed to retrieve wafer probe machines: name 'payload_json' is not defined
+2025-11-14 15:58:54,966 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 15:58:59,771 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: 97fef112...)
+2025-11-14 15:58:59,777 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 15:59:09,823 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 16:04:47,894 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 16:04:57,993 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-14 16:16:19,415 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-14 16:16:27,159 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: f148f1b5...)
+2025-11-14 16:16:27,165 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-14 16:16:37,213 - ERROR - WPAgent - ListProbers - No wafer probe machines found or database agent not responding
+2025-11-25 09:54:50,661 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-25 09:56:17,816 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 09:56:17,817 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 09:56:35,099 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 09:56:35,100 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 09:59:20,693 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 2515e97d...)
+2025-11-25 09:59:20,696 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 09:59:20,697 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 10:03:33,061 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 10:03:33,062 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 10:04:30,234 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 693d3929...)
+2025-11-25 10:04:30,238 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 10:04:30,238 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 10:05:01,159 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-11-25 10:05:01,370 - INFO - WPAgent - Initialize - Initialized WP at wpmit01.cern.ch:35555
+2025-11-25 10:06:14,506 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-11-25 10:06:31,775 - INFO - WPAgent - AutoFocus - Auto-focus command successfully executed
+2025-11-25 10:09:38,838 - INFO - WPAgent - GetAgentState - Received command: GetAgentState
+2025-11-25 10:09:38,839 - INFO - WPAgent - GetAgentState - Agent state: Idle
+2025-11-25 10:11:03,445 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2025-11-25 10:11:03,445 - INFO - WPAgent - ShowProjectStatus - {'address': 'wpmit01.cern.ch:35555', 'machine_type': 'sentio', 'chip_name': 'nkf7', 'orientation': 'E', 'project_name': 'nkf7_12_02_2025_arrow_E', 'prober_status': 'initialized', 'initialization_mode': 'manual', 'prober_initialized': True, 'ready_for_commands': True, 'ready_message': 'Prober ready', 'machine_id': None, 'machine_name': None}
+2025-11-25 10:12:40,958 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2025-11-25 10:12:40,959 - INFO - WPAgent - ShowProjectStatus - {'address': 'wpmit01.cern.ch:35555', 'machine_type': 'sentio', 'chip_name': 'nkf7', 'orientation': 'E', 'project_name': 'nkf7_12_02_2025_arrow_E', 'prober_status': 'initialized', 'initialization_mode': 'manual', 'prober_initialized': True, 'ready_for_commands': True, 'ready_message': 'Prober ready', 'machine_id': None, 'machine_name': None}
+2025-11-25 10:16:05,597 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:16:05,599 - ERROR - WPAgent - MoveChuckXY - move_chuck_xy() missing 1 required positional argument: 'y'
+2025-11-25 10:17:02,985 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:17:02,986 - ERROR - WPAgent - MoveChuckXY - move_chuck_xy() missing 1 required positional argument: 'y'
+2025-11-25 10:17:25,025 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:17:25,026 - ERROR - WPAgent - MoveChuckXY - move_chuck_xy() missing 1 required positional argument: 'y'
+2025-11-25 10:18:54,735 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:18:54,736 - ERROR - WPAgent - MoveChuckXY - move_chuck_xy() missing 1 required positional argument: 'y'
+2025-11-25 10:19:33,735 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:19:33,736 - WARNING - WPAgent - MoveChuckXY - Agent is in 'Failed' state. Cannot execute commands.
+2025-11-25 10:22:51,878 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2025-11-25 10:22:51,878 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Failed' to 'Idle'
+2025-11-25 10:23:06,416 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:23:06,448 - ERROR - WPAgent - MoveChuckXY - 'str' object has no attribute 'to_string'
+2025-11-25 10:25:03,963 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:25:03,965 - ERROR - WPAgent - MoveChuckXY - move_chuck_xy() got an unexpected keyword argument 'z'
+2025-11-25 10:25:14,464 - INFO - WPAgent - MoveChuckZ - Received command: MoveChuckZ
+2025-11-25 10:25:14,471 - ERROR - WPAgent - MoveChuckZ - 'str' object has no attribute 'to_string'
+2025-11-25 10:27:10,222 - INFO - WPAgent - StepNextDie - Received command: StepNextDie
+2025-11-25 10:27:10,366 - ERROR - WPAgent - StepNextDie - End of route
+2025-11-25 10:32:24,682 - INFO - WPAgent - StepNextDie - Received command: StepNextDie
+2025-11-25 10:32:24,682 - WARNING - WPAgent - StepNextDie - Agent is in 'Failed' state. Cannot execute commands.
+2025-11-25 10:32:44,307 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2025-11-25 10:32:44,307 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Failed' to 'Idle'
+2025-11-25 10:33:25,286 - INFO - WPAgent - StepNextDie - Received command: StepNextDie
+2025-11-25 10:33:29,160 - INFO - WPAgent - StepNextDie - Stepped to next die: (2, 2, 0)
+2025-11-25 10:35:42,354 - INFO - WPAgent - StepNextDie - Received command: StepNextDie
+2025-11-25 10:35:46,346 - INFO - WPAgent - StepNextDie - Stepped to next die: (3, 2, 0)
+2025-11-25 10:38:17,188 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-11-25 10:38:17,189 - ERROR - WPAgent - GoToDie - go_to_die() missing 2 required positional arguments: 'col' and 'row'
+2025-11-25 10:38:40,668 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-11-25 10:38:40,669 - ERROR - WPAgent - GoToDie - go_to_die() missing 2 required positional arguments: 'col' and 'row'
+2025-11-25 10:39:18,980 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-11-25 10:39:18,981 - ERROR - WPAgent - GoToDie - go_to_die() missing 2 required positional arguments: 'col' and 'row'
+2025-11-25 10:47:43,812 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-11-25 10:47:43,821 - ERROR - WPAgent - MoveChuckXY - 'str' object has no attribute 'to_string'
+2025-11-25 10:48:49,403 - INFO - WPAgent - FindHome - Received command: FindHome
+2025-11-25 10:48:49,403 - WARNING - WPAgent - FindHome - Agent is in 'Failed' state. Cannot execute commands.
+2025-11-25 10:50:02,226 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2025-11-25 10:50:02,227 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Failed' to 'Idle'
+2025-11-25 10:50:53,251 - INFO - WPAgent - FindHome - Received command: FindHome
+2025-11-25 10:51:44,758 - ERROR - WPAgent - FindHome - Auto search aborted
+2025-11-25 11:15:59,796 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-11-25 11:15:59,797 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2025-11-25 11:16:29,934 - INFO - WPAgent - FindHome - Received command: FindHome
+2025-11-25 11:16:39,457 - INFO - WPAgent - FindHome - Found home position
+2025-11-25 11:19:59,556 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:19:59,557 - ERROR - WPAgent - SwitchCamera - switch_camera() missing 1 required positional argument: 'mount_point'
+2025-11-25 11:21:48,171 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:21:48,172 - ERROR - WPAgent - SwitchCamera - switch_camera() missing 1 required positional argument: 'mount_point'
+2025-11-25 11:22:36,196 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:22:36,198 - ERROR - WPAgent - SwitchCamera - switch_camera() missing 1 required positional argument: 'mount_point'
+2025-11-25 11:22:37,651 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:22:37,652 - ERROR - WPAgent - SwitchCamera - switch_camera() missing 1 required positional argument: 'mount_point'
+2025-11-25 11:23:55,317 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:23:55,317 - WARNING - WPAgent - SwitchCamera - Agent is in 'Failed' state. Cannot execute commands.
+2025-11-25 11:24:55,126 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2025-11-25 11:24:55,126 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Failed' to 'Idle'
+2025-11-25 11:25:01,787 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:25:01,789 - ERROR - WPAgent - SwitchCamera - attribute name must be string, not 'int'
+2025-11-25 11:25:15,068 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:25:15,069 - INFO - WPAgent - SwitchCamera - Switched camera to Vce
+2025-11-25 11:27:06,331 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:27:06,332 - INFO - WPAgent - SwitchCamera - Switched camera to Vce2
+2025-11-25 11:27:52,697 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2025-11-25 11:27:52,697 - INFO - WPAgent - SwitchCamera - Switched camera to OffAxis
+2025-11-25 11:29:14,087 - INFO - WPAgent - MoveChuckZ - Received command: MoveChuckZ
+2025-11-25 11:29:14,094 - ERROR - WPAgent - MoveChuckZ - 'str' object has no attribute 'to_string'
+2025-11-25 11:30:09,422 - INFO - WPAgent - MoveChuckZ - Received command: MoveChuckZ
+2025-11-25 11:30:09,429 - ERROR - WPAgent - MoveChuckZ - 'str' object has no attribute 'to_string'
+2025-11-25 11:31:19,555 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2025-11-25 11:31:19,557 - ERROR - WPAgent - MoveChuckHome - could not convert string to float: 'OK'
+2025-11-25 11:33:48,528 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-11-25 11:33:48,530 - ERROR - WPAgent - GoToDie - go_to_die() missing 2 required positional arguments: 'col' and 'row'
+2025-11-25 11:34:17,414 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2025-11-25 11:34:17,414 - WARNING - WPAgent - AlignWafer - Agent is in 'Failed' state. Cannot execute commands.
+2025-11-25 11:34:31,912 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2025-11-25 11:34:31,912 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Failed' to 'Idle'
+2025-11-25 11:34:39,550 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2025-11-25 11:34:39,551 - ERROR - WPAgent - AlignWafer - align_wafer() missing 2 required positional arguments: 'home_die_col' and 'home_die_row'
+2025-11-25 11:37:02,775 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-11-25 11:37:02,777 - ERROR - WPAgent - MoveChuckToWorkArea - attribute name must be string, not 'int'
+2025-11-25 11:37:56,461 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-11-25 11:37:56,463 - ERROR - WPAgent - MoveChuckToWorkArea - VCE02 does not exist
+2025-11-25 11:38:50,335 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-11-25 11:38:50,336 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2025-11-25 11:39:24,894 - INFO - WPAgent - LocalMode - Received command: LocalMode
+2025-11-25 11:39:24,895 - INFO - WPAgent - LocalMode - Auto-focus command successfully executed
+2025-11-25 11:40:15,340 - INFO - WPAgent - RunSequencer - Received command: RunSequencer
+2025-11-25 11:40:15,341 - INFO - WPAgent - WP_RUN_SEQUENCE - Running a sequence of commands: Initialize, AutoFocus
+2025-11-25 11:40:15,342 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2025-11-25 11:40:15,876 - ERROR - WPAgent - AutoFocus - '-441046.6'
+2025-11-25 11:40:15,876 - ERROR - WPAgent - AutoFocus - Step 2 'AutoFocus' failed: '-441046.6'
+2025-11-25 11:40:15,876 - INFO - WPAgent - RunSequencer - Sequence from sequencer/TestSequance.json executed successfully.
+2025-11-25 11:41:53,525 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2025-11-25 11:41:53,855 - INFO - WPAgent - ListProbers - 
+Found 3 wafer probe machine(s):
+
+
+1. WPMIT01
+   ID: 1
+   Type: N/A
+   Host name: WPMIT01
+   Connection Port: 2002
+   Location: CERN_186_R_E10
+
+2. WPTest
+   ID: 2
+   Type: N/A
+   Host name: test
+   Connection Port: 1010
+   Location: Prague
+
+3. WPMIT
+   ID: 4
+   Type: N/A
+   Host name: cern.ch
+   Connection Port: 35555
+   Location: CERN
+2025-11-25 11:42:56,699 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-11-25 11:42:56,702 - ERROR - WPAgent - RunPTPA - could not convert string to float: 'OK'
+2025-11-25 11:43:58,026 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-11-25 11:43:58,028 - ERROR - WPAgent - RunPTPA - could not convert string to float: 'OK'
+2025-11-25 11:48:59,348 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 77c4b020...)
+2025-11-25 11:48:59,352 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-25 11:48:59,353 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "InitializeTestingProject",
+        "Initialize",
+        "ShowProjectStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "28 commands available"
+}
+2025-11-25 11:51:52,301 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-11-25 11:51:52,321 - ERROR - WPAgent - RunPTPA - 'str' object has no attribute 'to_string'
+2025-11-25 11:53:08,078 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-11-25 11:53:08,101 - ERROR - WPAgent - RunPTPA - could not convert string to float: 'OK'
+2025-11-25 11:54:46,413 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-11-25 11:54:46,431 - ERROR - WPAgent - RunPTPA - Operation was aborted on user request!
+2025-11-26 15:08:17,548 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-26 15:09:05,584 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-26 15:09:05,585 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetCameraStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "31 commands available"
+}
+2025-11-26 15:10:38,007 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-11-26 15:10:41,444 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-11-26 15:10:41,444 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetCameraStatus",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ListOrientations",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "31 commands available"
+}
+2025-12-03 14:04:36,218 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-03 14:07:15,035 - INFO - WPAgent - help - Received command: help
+2025-12-03 14:07:15,036 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2025-12-03 14:08:27,504 - INFO - WPAgent - help - Received command: help
+2025-12-03 14:08:27,505 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2025-12-03 14:12:18,654 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-03 14:12:25,759 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'NKF7_TestProject_20251021_ArrowE'
+2025-12-03 14:14:40,270 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-12-03 14:14:44,633 - INFO - WPAgent - GoToDie - Moved to die: (2, 2, 0)
+2025-12-03 14:15:00,236 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-12-03 14:15:00,408 - INFO - WPAgent - RunPTPA - PTPA executed
+2025-12-03 14:28:05,476 - INFO - WPAgent - StepNextDie - Received command: StepNextDie
+2025-12-03 14:28:06,770 - INFO - WPAgent - StepNextDie - Stepped to next die: (5, 2, 0)
+2025-12-03 14:28:47,896 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-12-03 14:28:48,102 - INFO - WPAgent - RunPTPA - PTPA executed
+2025-12-03 14:35:14,488 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-03 14:45:55,779 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-03 14:47:51,410 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-12-03 14:47:51,411 - ERROR - WPAgent - RunPTPA - Prober not initialized. Please run 'Initialize' command first.
+2025-12-03 14:49:58,948 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-03 14:50:05,188 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'NKF7_TestProject_20251021_ArrowE'
+2025-12-03 14:50:16,656 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-12-03 14:51:33,883 - ERROR - WPAgent - RunPTPA - Ptpa Pad X offset is exceed to tolerance,TipOffset( x,y,z): 0.000,0.000,0.000,PadOffset( x,y,z): -123.870,1113.460,0.000
+2025-12-03 14:52:28,858 - INFO - WPAgent - RunPTPA - Received command: RunPTPA
+2025-12-03 14:53:42,775 - ERROR - WPAgent - RunPTPA - Ptpa Pad X offset is exceed to tolerance,TipOffset( x,y,z): 0.000,0.000,0.000,PadOffset( x,y,z): -123.640,1113.030,0.000
+2025-12-03 15:01:31,324 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-12-03 15:01:48,160 - INFO - WPAgent - AutoFocus - Auto-focus command successfully executed
+2025-12-03 15:01:58,065 - INFO - WPAgent - AutoFocus - Received command: AutoFocus
+2025-12-03 15:02:14,898 - INFO - WPAgent - AutoFocus - Auto-focus command successfully executed
+2025-12-03 15:03:02,301 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-12-03 15:03:05,916 - INFO - WPAgent - GoToDie - Moved to die: (-1, 2, 0)
+2025-12-03 15:03:23,207 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-12-03 15:03:23,353 - ERROR - WPAgent - GoToDie - Invalid Parameter
+2025-12-03 16:30:35,396 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-03 16:30:35,398 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2025-12-03 16:31:45,665 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2025-12-03 16:31:45,666 - ERROR - WPAgent - AlignWafer - Wafer alignment failed: invalid literal for int() with base 10: ''
+2025-12-03 16:32:01,301 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2025-12-03 16:32:01,302 - ERROR - WPAgent - AlignWafer - Wafer alignment failed: [Errno 32] Broken pipe
+2025-12-03 16:32:40,669 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-12-03 16:32:40,703 - ERROR - WPAgent - GoToDie - [Errno 32] Broken pipe
+2025-12-03 16:33:02,045 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-03 16:35:32,149 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-03 16:35:39,377 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'NKF7_TestProject_20251021_ArrowE'
+2025-12-03 16:35:39,688 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2025-12-03 16:35:41,430 - INFO - WPAgent - GoToDie - Moved to die: (2, 2, 0)
+2025-12-03 16:36:01,136 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2025-12-03 16:36:35,012 - INFO - WPAgent - AlignWafer - Wafer aligned using die at Col 2, Row 2, Subsite 0
+2025-12-03 18:11:59,281 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-03 18:12:07,073 - INFO - WPAgent - help - Received command: help
+2025-12-03 18:12:07,073 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2025-12-03 18:14:56,072 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-03 18:15:02,236 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'NKF7_TestProject_20251021_ArrowE'
+2025-12-03 18:16:26,871 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:16:26,875 - ERROR - WPAgent - MoveChuckToWorkArea - Invalid work area 'Scope'. Valid options are: ['Probing', 'Offaxis']
+2025-12-03 18:16:39,581 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:16:45,127 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Probing workarea
+2025-12-03 18:18:02,116 - INFO - WPAgent - help - Received command: help
+2025-12-03 18:18:02,117 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2025-12-03 18:18:27,381 - INFO - WPAgent - GoToContact - Received command: GoToContact
+2025-12-03 18:18:27,801 - INFO - WPAgent - GoToContact - Probe station is in contact
+2025-12-03 18:18:55,548 - INFO - WPAgent - GoToSeparation - Received command: GoToSeparation
+2025-12-03 18:18:56,023 - INFO - WPAgent - GoToSeparation - Probe station is in separation
+2025-12-03 18:19:15,824 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:19:15,826 - ERROR - WPAgent - MoveChuckToWorkArea - Invalid work area 'OffAxis'. Valid options are: ['Probing', 'Offaxis']
+2025-12-03 18:19:24,626 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:19:35,523 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2025-12-03 18:21:35,487 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-12-03 18:21:35,508 - ERROR - WPAgent - MoveChuckXY - name 'ChuckXYReference' is not defined
+2025-12-03 18:22:04,489 - INFO - WPAgent - help - Received command: help
+2025-12-03 18:22:04,490 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2025-12-03 18:25:01,241 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-12-03 18:25:01,262 - ERROR - WPAgent - MoveChuckXY - name 'ChuckXYReference' is not defined
+2025-12-03 18:26:19,027 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:26:24,572 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Probing workarea
+2025-12-03 18:26:35,994 - INFO - WPAgent - GoToContact - Received command: GoToContact
+2025-12-03 18:26:36,409 - INFO - WPAgent - GoToContact - Probe station is in contact
+2025-12-03 18:26:54,534 - INFO - WPAgent - GoToSeparation - Received command: GoToSeparation
+2025-12-03 18:26:54,927 - INFO - WPAgent - GoToSeparation - Probe station is in separation
+2025-12-03 18:27:05,267 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2025-12-03 18:27:16,098 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2025-12-04 11:07:12,465 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-04 11:08:38,008 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-04 11:08:53,595 - INFO - WPAgent - Initialize - Received command: Initialize
+2025-12-04 11:09:05,324 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'NKF7_TestProject_20251021_ArrowE'
+2025-12-04 11:09:36,985 - INFO - WPAgent - MoveChuckXY - Received command: MoveChuckXY
+2025-12-04 11:09:36,995 - ERROR - WPAgent - MoveChuckXY - name 'ChuckXYReference' is not defined
+2025-12-09 14:40:15,468 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2025-12-09 14:40:54,623 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 96e9f765...)
+2025-12-09 14:40:54,626 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2025-12-09 14:40:54,626 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "29 commands available"
+}
+2025-12-09 14:41:38,610 - INFO - WPAgent - help - Sending command: help (request_id: 481699f1...)
+2025-12-09 14:41:38,614 - INFO - WPAgent - help - Received command: help
+2025-12-09 14:41:38,616 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2026-01-30 15:50:03,203 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-01-30 16:17:37,625 - INFO - WPAgent - Help - Sending command: Help (request_id: 8f508504...)
+2026-01-30 16:17:37,632 - INFO - WPAgent - Help - Received command: Help
+2026-01-30 16:17:37,634 - ERROR - WPAgent - Help - Unknown command: Help
+2026-01-30 16:20:49,908 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 2a212d52...)
+2026-01-30 16:20:49,914 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-01-30 16:20:50,093 - INFO - WPAgent - Initialize - Initialized WP at wpmit01.cern.ch:35555
+2026-01-30 16:21:15,445 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 43fc1c78...)
+2026-01-30 16:21:15,450 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-01-30 16:21:15,483 - INFO - WPAgent - ShowProjectStatus - Connected to: wpmit01.cern.ch:35555
+Machine Type: sentio
+Agent State: Running
+Current Die: Number 0, Column 0, Row 0
+Total Dies: 5
+Status: Prober ready
+2026-01-30 16:21:23,228 - INFO - WPAgent - Help - Sending command: Help (request_id: 5e295788...)
+2026-01-30 16:21:23,233 - INFO - WPAgent - Help - Received command: Help
+2026-01-30 16:21:23,234 - ERROR - WPAgent - Help - Unknown command: Help
+2026-01-30 16:22:24,864 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 4e8ebfa3...)
+2026-01-30 16:23:49,931 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-01-30 16:23:49,931 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2026-01-30 16:24:07,459 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 14fab599...)
+2026-01-30 16:24:07,462 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-01-30 16:24:07,463 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2026-01-30 16:25:15,021 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 311e041f...)
+2026-01-30 16:25:15,025 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-01-30 16:25:15,026 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2026-01-30 16:25:48,501 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: f5db3094...)
+2026-01-30 16:25:48,506 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:25:48,554 - ERROR - WPAgent - GoToDie - Invalid Parameter
+2026-01-30 16:26:01,533 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: b5af2e9f...)
+2026-01-30 16:26:01,537 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:26:01,648 - ERROR - WPAgent - GoToDie - The die at grid position 0,1 is not present in the wafermap.
+2026-01-30 16:26:07,563 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: d48e9d67...)
+2026-01-30 16:26:07,568 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:26:07,902 - INFO - WPAgent - GoToDie - Moved to die: (0, 0, 0)
+2026-01-30 16:26:18,784 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 0260ca5e...)
+2026-01-30 16:26:18,789 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:26:18,926 - ERROR - WPAgent - GoToDie - The die at grid position 1,0 is not present in the wafermap.
+2026-01-30 16:26:31,621 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: eb205982...)
+2026-01-30 16:26:31,626 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:26:31,761 - ERROR - WPAgent - GoToDie - The die at grid position 0,1 is not present in the wafermap.
+2026-01-30 16:28:14,319 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 5284071e...)
+2026-01-30 16:28:14,323 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-01-30 16:28:14,323 - INFO - WPAgent - Initialize - Already initialized at wpmit01.cern.ch:35555. Use force=True to reinitialize.
+2026-01-30 16:28:31,310 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 40b14811...)
+2026-01-30 16:28:31,315 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:28:31,449 - ERROR - WPAgent - GoToDie - The die at grid position 0,1 is not present in the wafermap.
+2026-01-30 16:28:55,178 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: e9c0109a...)
+2026-01-30 16:28:55,182 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-01-30 16:28:56,012 - INFO - WPAgent - GoToDie - Moved to die: (0, -1, 0)
+2026-01-30 16:29:13,063 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 1c6bc8c3...)
+2026-01-30 16:29:13,067 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-01-30 16:29:13,177 - INFO - WPAgent - ShowProjectStatus - Connected to: wpmit01.cern.ch:35555
+Machine Type: sentio
+Agent State: Running
+Current Die: Number 1, Column 0, Row -1
+Total Dies: 5
+Status: Prober ready
+2026-01-30 16:30:38,148 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: b2dcde3a...)
+2026-01-30 16:30:38,154 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-01-30 16:30:38,154 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-01-30 16:31:11,729 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 570aae22...)
+2026-01-30 16:31:11,733 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-01-30 16:31:11,735 - ERROR - WPAgent - OpenProject - open_project() missing 1 required positional argument: 'project_name'
+2026-01-30 16:31:24,866 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 0c9edfc1...)
+2026-01-30 16:31:24,871 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-01-30 16:31:24,872 - ERROR - WPAgent - OpenProject - open_project() missing 1 required positional argument: 'project_name'
+2026-01-30 16:33:13,347 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: e67122f1...)
+2026-01-30 16:33:13,351 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-01-30 16:33:13,353 - ERROR - WPAgent - OpenProject - open_project() missing 1 required positional argument: 'project_name'
+2026-01-30 16:34:06,643 - INFO - WPAgent - Help - Sending command: Help (request_id: 39b2b5d7...)
+2026-01-30 16:34:06,647 - INFO - WPAgent - Help - Received command: Help
+2026-01-30 16:34:06,648 - ERROR - WPAgent - Help - Unknown command: Help
+2026-02-02 09:25:51,561 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-02-02 09:27:19,295 - INFO - WPAgent - Help - Sending command: Help (request_id: f61f6f81...)
+2026-02-02 09:27:19,300 - INFO - WPAgent - Help - Received command: Help
+2026-02-02 09:27:19,301 - ERROR - WPAgent - Help - Unknown command: Help
+2026-02-02 09:28:08,563 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 8164d9ca...)
+2026-02-02 09:28:08,567 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:28:08,568 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:28:18,555 - INFO - WPAgent - Help - Sending command: Help (request_id: 9a60685e...)
+2026-02-02 09:28:18,559 - INFO - WPAgent - Help - Received command: Help
+2026-02-02 09:28:18,560 - ERROR - WPAgent - Help - Unknown command: Help
+2026-02-02 09:28:38,854 - INFO - WPAgent - GetAgentState - Sending command: GetAgentState (request_id: 7f375ef5...)
+2026-02-02 09:28:38,858 - INFO - WPAgent - GetAgentState - Received command: GetAgentState
+2026-02-02 09:28:38,858 - INFO - WPAgent - GetAgentState - Agent state: Idle
+2026-02-02 09:28:59,219 - INFO - WPAgent - ResetAgent - Sending command: ResetAgent (request_id: cf0af292...)
+2026-02-02 09:28:59,224 - INFO - WPAgent - ResetAgent - Received command: ResetAgent
+2026-02-02 09:28:59,224 - INFO - WPAgent - ResetAgent - ✅ Agent state reset from 'Idle' to 'Idle'
+2026-02-02 09:29:08,429 - INFO - WPAgent - GetAgentState - Sending command: GetAgentState (request_id: 5b3ad8b0...)
+2026-02-02 09:29:08,433 - INFO - WPAgent - GetAgentState - Received command: GetAgentState
+2026-02-02 09:29:08,433 - INFO - WPAgent - GetAgentState - Agent state: Idle
+2026-02-02 09:29:14,101 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: ef69b311...)
+2026-02-02 09:29:14,106 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:29:14,107 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:29:28,313 - INFO - WPAgent - ListChipTypes - Sending command: ListChipTypes (request_id: 252d31ca...)
+2026-02-02 09:29:28,318 - INFO - WPAgent - ListChipTypes - Received command: ListChipTypes
+2026-02-02 09:29:28,707 - ERROR - WPAgent - ListChipTypes - No chip types found or database agent not responding
+2026-02-02 09:29:43,367 - INFO - WPAgent - ListProbers - Sending command: ListProbers (request_id: cf300639...)
+2026-02-02 09:29:43,371 - INFO - WPAgent - ListProbers - Received command: ListProbers
+2026-02-02 09:29:43,385 - INFO - WPAgent - ListProbers - 
+Found 3 wafer probe machine(s):
+
+
+1. WPMIT01
+   ID: 1
+   Type: N/A
+   Host name: WPMIT01
+   Connection Port: 2002
+   Location: CERN_186_R_E10
+
+2. WPTest
+   ID: 2
+   Type: N/A
+   Host name: test
+   Connection Port: 1010
+   Location: Prague
+
+3. WPMIT
+   ID: 4
+   Type: N/A
+   Host name: cern.ch
+   Connection Port: 35555
+   Location: CERN
+2026-02-02 09:31:44,418 - INFO - WPAgent - help - Sending command: help (request_id: 27f61a1a...)
+2026-02-02 09:31:44,423 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:31:44,424 - INFO - WPAgent - help - ======================================================================
+WPAgent - Available Commands
+======================================================================
+
+Usage:
+  python main.py send <Command> [--params='{"key":"value"}']
+
+Get help for specific command:
+  python main.py send Help <CommandName>
+  Example: python main.py send Help MoveChuckXY
+
+======================================================================
+
+Alignment:
+----------------------------------------------------------------------
+• RunPTPA
+  python main.py send RunPTPA
+
+Automation:
+----------------------------------------------------------------------
+• RunSequencer
+  python main.py send RunSequencer --params='{"filepath":"/sequencer/TestSequence.json"}'
+
+Database:
+----------------------------------------------------------------------
+• ListChipTypes
+  python main.py send ListChipTypes
+
+• ListOrientations
+  python main.py send ListOrientations
+
+• ListProbers
+  python main.py send ListProbers
+
+Movement:
+----------------------------------------------------------------------
+• GoToDie
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+• GoToPreviousDie
+  python main.py send GoToPreviousDie
+
+• MoveChuckHome
+  python main.py send MoveChuckHome
+
+• MoveChuckToWorkArea
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+• MoveChuckXY
+  python main.py send MoveChuckXY --params='{"x":155539.9,"y":-238764.7}'
+
+• MoveChuckZ
+  python main.py send MoveChuckZ --params='{"z":10500.9}'
+
+• StepNextDie
+  python main.py send StepNextDie
+
+Positioning:
+----------------------------------------------------------------------
+• FindHome
+  python main.py send FindHome
+
+Probe Control:
+----------------------------------------------------------------------
+• GoToContact
+  python main.py send GoToContact
+
+• GoToSeparation
+  python main.py send GoToSeparation
+
+Project:
+----------------------------------------------------------------------
+• OpenProject
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+Setup:
+----------------------------------------------------------------------
+• Initialize
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+
+Status:
+----------------------------------------------------------------------
+• GetAgentState
+  python main.py send GetAgentState
+
+• GetChuckPosition
+  python main.py send GetChuckPosition
+
+• GetInfo
+  python main.py send GetInfo
+
+• ListAvailableCommands
+  python main.py send ListAvailableCommands
+
+• ShowProjectStatus
+  python main.py send ShowProjectStatus
+
+System:
+----------------------------------------------------------------------
+• Help
+  python main.py send Help
+
+• LocalMode
+  python main.py send LocalMode
+
+• ResetAgent
+  python main.py send ResetAgent
+
+Vision:
+----------------------------------------------------------------------
+• AlignWafer
+  python main.py send AlignWafer
+
+• AutoFocus
+  python main.py send AutoFocus
+
+• GetCameraStatus
+  python main.py send GetCameraStatus
+
+• SwitchCamera
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+Wafer Handling:
+----------------------------------------------------------------------
+• Cleaning
+  python main.py send Cleaning
+
+• Load
+  python main.py send Load
+
+• Unload
+  python main.py send Unload
+
+======================================================================
+For detailed help: python main.py send Help <CommandName>
+======================================================================
+2026-02-02 09:32:19,410 - INFO - WPAgent - help - Sending command: help (request_id: 3b355a5d...)
+2026-02-02 09:32:19,415 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:32:19,416 - INFO - WPAgent - help - ======================================================================
+Command: ListChipTypes
+======================================================================
+
+Description: List all available chip types from database
+Category: Database
+Execution Time: 1-3 seconds
+
+Parameters: None
+
+Example:
+  python main.py send ListChipTypes
+
+======================================================================
+2026-02-02 09:32:41,273 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 6d364efa...)
+2026-02-02 09:32:41,278 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:32:41,279 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:32:53,996 - INFO - WPAgent - GetChuckPosition - Sending command: GetChuckPosition (request_id: f33e29ee...)
+2026-02-02 09:32:54,001 - INFO - WPAgent - GetChuckPosition - Received command: GetChuckPosition
+2026-02-02 09:32:54,001 - ERROR - WPAgent - GetChuckPosition - Prober not initialized. Please run 'Initialize' command first.
+2026-02-02 09:33:18,244 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 526b9ca9...)
+2026-02-02 09:33:18,249 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-02 09:33:18,252 - ERROR - WPAgent - GetInfo - 'NoneType' object has no attribute 'lower'
+2026-02-02 09:33:29,066 - INFO - WPAgent - help - Sending command: help (request_id: 05e9738f...)
+2026-02-02 09:33:29,070 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:33:29,071 - INFO - WPAgent - help - ======================================================================
+Command: GetInfo
+======================================================================
+
+Description: Display current die position and wafer map information
+Category: Status
+Execution Time: < 1 second
+
+Parameters: None
+
+Example:
+  python main.py send GetInfo
+
+======================================================================
+2026-02-02 09:33:40,686 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 4be7fc34...)
+2026-02-02 09:33:40,690 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:33:40,691 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:33:58,185 - INFO - WPAgent - help - Sending command: help (request_id: 94629734...)
+2026-02-02 09:34:34,041 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:34:34,042 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-02 09:41:33,039 - INFO - WPAgent - help - Sending command: help (request_id: 64377701...)
+2026-02-02 09:41:33,044 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:41:33,045 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-02 09:42:08,627 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: fc865c7e...)
+2026-02-02 09:42:08,631 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:42:08,632 - ERROR - WPAgent - Initialize - Initialization requires 'address' and 'machine_type' parameters.
+2026-02-02 09:42:18,824 - INFO - WPAgent - help - Sending command: help (request_id: b3764eef...)
+2026-02-02 09:42:18,829 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:42:18,830 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-02 09:42:31,434 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 5daf7ed4...)
+2026-02-02 09:43:07,361 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:43:07,361 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:43:32,676 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 0f39eaa5...)
+2026-02-02 09:43:32,681 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:43:32,682 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:43:52,539 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 8d0d3ee8...)
+2026-02-02 09:44:26,740 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: bb968808...)
+2026-02-02 09:45:04,448 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:45:04,449 - ERROR - WPAgent - Initialize - Initialization requires 'address' and 'machine_type' parameters.
+2026-02-02 09:45:04,451 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:45:04,451 - ERROR - WPAgent - Initialize - Initialization requires 'address' and 'machine_type' parameters.
+2026-02-02 09:45:18,995 - INFO - WPAgent - help - Sending command: help (request_id: bc6bbaa9...)
+2026-02-02 09:45:19,000 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:45:19,001 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-02 09:46:23,563 - INFO - WPAgent - help - Sending command: help (request_id: e93db372...)
+2026-02-02 09:46:25,507 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:46:25,508 - ERROR - WPAgent - help - Command 'Initializewith_db' not found. Use 'Help' without parameters to see all commands.
+2026-02-02 09:46:30,695 - INFO - WPAgent - help - Sending command: help (request_id: 740922b2...)
+2026-02-02 09:46:30,700 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:46:30,701 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-02 09:47:31,499 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: df22f74c...)
+2026-02-02 09:49:17,225 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 272331ed...)
+2026-02-02 09:50:55,665 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:50:57,080 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'ER2_MOSAIX_Vertical_West'
+2026-02-02 09:50:57,083 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:50:57,083 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-02 09:51:34,787 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: e895fbe2...)
+2026-02-02 09:51:34,792 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:51:34,792 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-02 09:51:56,587 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: c5b9fb61...)
+2026-02-02 09:53:34,777 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:53:34,777 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-02 09:53:50,390 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 11355f24...)
+2026-02-02 09:54:25,158 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 867ef7e4...)
+2026-02-02 09:54:41,407 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: cacd1d6f...)
+2026-02-02 09:55:15,178 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 786760d5...)
+2026-02-02 09:55:17,088 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:55:17,089 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-02 09:55:17,091 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-02 09:55:17,091 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-02 09:55:17,093 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:55:17,093 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:55:17,095 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 09:55:17,095 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 09:55:30,313 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 0d3cac8d...)
+2026-02-02 09:55:30,318 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-02 09:55:30,328 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 5, Number 0, Row 0, Column 0
+2026-02-02 09:55:59,663 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 190093c6...)
+2026-02-02 09:55:59,667 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-02 09:55:59,705 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 0, Column 0, Row 0
+Total Dies: 5
+Status: Prober ready
+2026-02-02 09:56:28,013 - INFO - WPAgent - help - Sending command: help (request_id: 27dc1d4d...)
+2026-02-02 09:56:28,018 - INFO - WPAgent - help - Received command: help
+2026-02-02 09:56:28,019 - INFO - WPAgent - help - ======================================================================
+Command: OpenProject
+======================================================================
+
+Description: Open a project file
+Category: Project
+Execution Time: 2-5 seconds
+
+Parameters:
+  • project_path (string, REQUIRED)
+    Path to project file
+
+Example:
+  python main.py send OpenProject --params='{"project_name":"project_name"}'
+
+======================================================================
+2026-02-02 09:57:02,517 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 5f2cb471...)
+2026-02-02 09:57:02,521 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 09:57:02,522 - ERROR - WPAgent - OpenProject - open_project() missing 1 required positional argument: 'project_name'
+2026-02-02 09:58:19,581 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 1d76e157...)
+2026-02-02 09:58:19,586 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 09:58:20,137 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/ER2_BabyMOSAIX_Vertical_West
+2026-02-02 09:59:32,916 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 7d7201b7...)
+2026-02-02 09:59:32,920 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 09:59:33,391 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-02 09:59:52,224 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 5ab55379...)
+2026-02-02 09:59:52,228 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 09:59:53,320 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_MOSAIX_Vertical_West
+2026-02-02 10:00:20,306 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 1139ad1e...)
+2026-02-02 10:00:20,310 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 10:00:20,311 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 10:00:54,354 - INFO - WPAgent - help - Sending command: help (request_id: 5ecfaac4...)
+2026-02-02 10:00:54,359 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:00:54,360 - INFO - WPAgent - help - ======================================================================
+Command: GoToDie
+======================================================================
+
+Description: Move to a specific die on the wafer
+Category: Movement
+Execution Time: 2-5 seconds
+
+Parameters:
+  • col (int, REQUIRED)
+    Die column index
+  • row (int, REQUIRED)
+    Die row index
+  • subsite (int, optional)
+    Subsite index (default: 0)
+
+Example:
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+======================================================================
+2026-02-02 10:01:16,083 - INFO - WPAgent - help - Sending command: help (request_id: 2a84e287...)
+2026-02-02 10:01:16,088 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:01:16,089 - INFO - WPAgent - help - ======================================================================
+Command: MoveChuckHome
+======================================================================
+
+Description: Move chuck to home position
+Category: Movement
+Execution Time: 2-5 seconds
+
+Parameters: None
+
+Example:
+  python main.py send MoveChuckHome
+
+======================================================================
+2026-02-02 10:01:22,600 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: ecbe936f...)
+2026-02-02 10:01:59,276 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-02 10:02:02,708 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-02 10:05:31,803 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: d399e26f...)
+2026-02-02 10:05:31,807 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-02 10:05:31,883 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 0, Column 0, Row 0
+Total Dies: 5
+Status: Prober ready
+2026-02-02 10:06:17,742 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 30ef3dad...)
+2026-02-02 10:06:17,747 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-02 10:06:17,771 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 5, Number 0, Row 0, Column 0
+2026-02-02 10:06:59,036 - INFO - WPAgent - ehlp - Sending command: ehlp (request_id: 3702d87d...)
+2026-02-02 10:06:59,040 - INFO - WPAgent - ehlp - Received command: ehlp
+2026-02-02 10:06:59,041 - ERROR - WPAgent - ehlp - Unknown command: ehlp
+2026-02-02 10:07:05,142 - INFO - WPAgent - help - Sending command: help (request_id: d54677e2...)
+2026-02-02 10:07:40,843 - INFO - WPAgent - help - Sending command: help (request_id: 3fd016c5...)
+2026-02-02 10:08:17,426 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:08:17,427 - INFO - WPAgent - help - ======================================================================
+Command: FindHome
+======================================================================
+
+Description: Find the home position of the chuck. Uses home die from initialization if not specified.
+Category: Positioning
+Execution Time: 10-20 seconds
+
+Parameters:
+  • home_die_col (int, optional)
+    Home die column (optional if set during initialization)
+  • home_die_row (int, optional)
+    Home die row (optional if set during initialization)
+  • subsite (int, optional)
+    Subsite index (default: 0)
+
+Example:
+  python main.py send FindHome
+  python main.py send FindHome --params='{"home_die_col":1,"home_die_row":1}'
+
+======================================================================
+2026-02-02 10:08:17,429 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:08:17,430 - INFO - WPAgent - help - ======================================================================
+Command: FindHome
+======================================================================
+
+Description: Find the home position of the chuck. Uses home die from initialization if not specified.
+Category: Positioning
+Execution Time: 10-20 seconds
+
+Parameters:
+  • home_die_col (int, optional)
+    Home die column (optional if set during initialization)
+  • home_die_row (int, optional)
+    Home die row (optional if set during initialization)
+  • subsite (int, optional)
+    Subsite index (default: 0)
+
+Example:
+  python main.py send FindHome
+  python main.py send FindHome --params='{"home_die_col":1,"home_die_row":1}'
+
+======================================================================
+2026-02-02 10:08:52,982 - INFO - WPAgent - help - Sending command: help (request_id: 0326df3d...)
+2026-02-02 10:08:52,987 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:08:52,988 - INFO - WPAgent - help - ======================================================================
+Command: FindHome
+======================================================================
+
+Description: Find the home position of the chuck. Uses home die from initialization if not specified.
+Category: Positioning
+Execution Time: 10-20 seconds
+
+Parameters:
+  • home_die_col (int, optional)
+    Home die column (optional if set during initialization)
+  • home_die_row (int, optional)
+    Home die row (optional if set during initialization)
+  • subsite (int, optional)
+    Subsite index (default: 0)
+
+Example:
+  python main.py send FindHome
+  python main.py send FindHome --params='{"home_die_col":1,"home_die_row":1}'
+
+======================================================================
+2026-02-02 10:09:12,698 - INFO - WPAgent - FindHome - Sending command: FindHome (request_id: a91d815e...)
+2026-02-02 10:09:12,703 - INFO - WPAgent - FindHome - Received command: FindHome
+2026-02-02 10:09:13,537 - ERROR - WPAgent - FindHome - Home pattern is not trained!
+2026-02-02 10:10:13,459 - INFO - WPAgent - help - Sending command: help (request_id: 6e673332...)
+2026-02-02 10:10:13,465 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:10:13,466 - INFO - WPAgent - help - ======================================================================
+Command: GoToDie
+======================================================================
+
+Description: Move to a specific die on the wafer
+Category: Movement
+Execution Time: 2-5 seconds
+
+Parameters:
+  • col (int, REQUIRED)
+    Die column index
+  • row (int, REQUIRED)
+    Die row index
+  • subsite (int, optional)
+    Subsite index (default: 0)
+
+Example:
+  python main.py send GoToDie --params='{"col":5,"row":10}'
+
+======================================================================
+2026-02-02 10:11:05,226 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: d4c9d454...)
+2026-02-02 10:11:05,230 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:11:06,041 - INFO - WPAgent - GoToDie - Moved to die: (0, -1, 0)
+2026-02-02 10:11:11,822 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 9f1d78aa...)
+2026-02-02 10:11:47,505 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:11:48,175 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: ec64ff82...)
+2026-02-02 10:11:48,298 - INFO - WPAgent - GoToDie - Moved to die: (0, -2, 0)
+2026-02-02 10:11:48,300 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:11:48,899 - INFO - WPAgent - GoToDie - Moved to die: (0, -2, 0)
+2026-02-02 10:11:56,612 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: b0455f7f...)
+2026-02-02 10:12:32,527 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:12:33,368 - INFO - WPAgent - GoToDie - Moved to die: (0, -3, 0)
+2026-02-02 10:12:38,667 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 81808a7e...)
+2026-02-02 10:13:14,546 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:13:15,406 - INFO - WPAgent - GoToDie - Moved to die: (0, -4, 0)
+2026-02-02 10:13:18,587 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 1959618d...)
+2026-02-02 10:13:18,591 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:13:18,688 - ERROR - WPAgent - GoToDie - The die at grid position 0,-5 is not present in the wafermap.
+2026-02-02 10:13:24,920 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: c867bd4d...)
+2026-02-02 10:13:26,552 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:13:26,714 - ERROR - WPAgent - GoToDie - The die at grid position 0,1 is not present in the wafermap.
+2026-02-02 10:13:31,261 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 08e5fcda...)
+2026-02-02 10:13:31,265 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:13:33,240 - INFO - WPAgent - GoToDie - Moved to die: (0, 0, 0)
+2026-02-02 10:13:51,424 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: f1bfa893...)
+2026-02-02 10:13:51,429 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 10:13:51,928 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-02 10:14:09,148 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 61ae1e5c...)
+2026-02-02 10:14:09,152 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 10:14:09,153 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 10:14:24,546 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: d614d919...)
+2026-02-02 10:14:24,550 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-02 10:14:26,056 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-02 10:14:58,774 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 3e92e8a2...)
+2026-02-02 10:14:58,779 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:14:59,110 - INFO - WPAgent - GoToDie - Moved to die: (0, 0, 0)
+2026-02-02 10:15:19,367 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 4dc55d6d...)
+2026-02-02 10:15:19,372 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:15:20,299 - INFO - WPAgent - GoToDie - Moved to die: (0, 1, 0)
+2026-02-02 10:15:33,429 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 66fc0996...)
+2026-02-02 10:15:33,434 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:15:35,750 - INFO - WPAgent - GoToDie - Moved to die: (0, 5, 0)
+2026-02-02 10:15:40,759 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: b034cdb8...)
+2026-02-02 10:15:40,763 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:15:42,185 - INFO - WPAgent - GoToDie - Moved to die: (0, 7, 0)
+2026-02-02 10:15:49,020 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 2d1b400c...)
+2026-02-02 10:15:49,024 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:15:49,925 - INFO - WPAgent - GoToDie - Moved to die: (0, 8, 0)
+2026-02-02 10:15:54,640 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: ba0bda6f...)
+2026-02-02 10:16:32,630 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:16:33,547 - INFO - WPAgent - GoToDie - Moved to die: (0, 9, 0)
+2026-02-02 10:17:08,839 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: b5d3fe4a...)
+2026-02-02 10:17:44,659 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:17:45,847 - INFO - WPAgent - GoToDie - Moved to die: (1, 9, 0)
+2026-02-02 10:18:10,978 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: d3ed55e0...)
+2026-02-02 10:18:10,983 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:18:16,077 - INFO - WPAgent - GoToDie - Moved to die: (1, -1, 0)
+2026-02-02 10:18:36,965 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: d6d93b25...)
+2026-02-02 10:18:36,970 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 10:18:37,938 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_MOSAIX_Vertical_West
+2026-02-02 10:18:54,640 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: 690450a6...)
+2026-02-02 10:18:54,644 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-02 10:18:56,772 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-02 10:20:36,286 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: e3430247...)
+2026-02-02 10:20:36,290 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 10:20:36,291 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 10:21:00,793 - INFO - WPAgent - help - Sending command: help (request_id: df8d6240...)
+2026-02-02 10:21:00,798 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:21:00,799 - INFO - WPAgent - help - ======================================================================
+Command: SwitchCamera
+======================================================================
+
+Description: Switch between available cameras
+Category: Vision
+Execution Time: 1-2 seconds
+
+Parameters:
+  • mount_point (string, REQUIRED)
+    Camera position to switch to. Available for MPI Probe Station: Vce, OffAxis, Scope, Chuck
+
+Example:
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+======================================================================
+2026-02-02 10:22:32,875 - INFO - WPAgent - SwitchCamera - Sending command: SwitchCamera (request_id: 7cc57bf8...)
+2026-02-02 10:23:08,778 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2026-02-02 10:23:09,000 - INFO - WPAgent - SwitchCamera - Switched camera to Scope
+2026-02-02 10:23:27,268 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 474d552d...)
+2026-02-02 10:23:27,273 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-02 10:23:27,273 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-02 10:23:46,978 - INFO - WPAgent - help - Sending command: help (request_id: f4c95032...)
+2026-02-02 10:23:46,983 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:23:46,984 - INFO - WPAgent - help - ======================================================================
+Command: MoveChuckToWorkArea
+======================================================================
+
+Description: Move chuck to the work area
+Category: Movement
+Execution Time: 2-5 seconds
+
+Parameters:
+  • work_area (string, REQUIRED)
+    Working position to switch to. Available for MPI Probe Station: Probing, OffAxis
+
+Example:
+  python main.py send MoveChuckToWorkArea --params='{"work_area":"OffAxis"}'
+
+======================================================================
+2026-02-02 10:24:19,440 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: 293bf596...)
+2026-02-02 10:24:19,445 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-02 10:24:19,446 - ERROR - WPAgent - MoveChuckToWorkArea - move_chuck_work_area() got an unexpected keyword argument 'mount_point'
+2026-02-02 10:24:43,777 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: b7aa142f...)
+2026-02-02 10:24:43,782 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-02 10:24:48,985 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Probing workarea
+2026-02-02 10:25:08,033 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: 21ab9a6d...)
+2026-02-02 10:25:08,037 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-02 10:25:08,039 - ERROR - WPAgent - MoveChuckToWorkArea - Invalid work area 'OffAxis'. Valid options are: ['Probing', 'Offaxis']
+2026-02-02 10:25:13,957 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: b02fdf50...)
+2026-02-02 10:25:50,845 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-02 10:25:59,846 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2026-02-02 10:26:04,179 - INFO - WPAgent - help - Sending command: help (request_id: 3b697e93...)
+2026-02-02 10:26:04,184 - INFO - WPAgent - help - Received command: help
+2026-02-02 10:26:04,185 - INFO - WPAgent - help - ======================================================================
+Command: SwitchCamera
+======================================================================
+
+Description: Switch between available cameras
+Category: Vision
+Execution Time: 1-2 seconds
+
+Parameters:
+  • mount_point (string, REQUIRED)
+    Camera position to switch to. Available for MPI Probe Station: Vce, OffAxis, Scope, Chuck
+
+Example:
+  python main.py send SwitchCamera --params='{"mount_point":"OffAxis"}'
+
+======================================================================
+2026-02-02 10:26:20,641 - INFO - WPAgent - SwitchCamera - Sending command: SwitchCamera (request_id: 857a3427...)
+2026-02-02 10:26:20,646 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2026-02-02 10:26:20,803 - INFO - WPAgent - SwitchCamera - Switched camera to OffAxis
+2026-02-02 10:27:51,660 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: c53a6ab9...)
+2026-02-02 10:27:51,665 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-02 10:27:52,186 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-02 10:28:04,309 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: dfe972bc...)
+2026-02-02 10:28:04,313 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-02 10:28:05,811 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-02 10:28:19,835 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 3159d474...)
+2026-02-02 10:28:19,839 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-02 10:28:24,503 - INFO - WPAgent - GoToDie - Moved to die: (0, 9, 0)
+2026-02-02 10:29:08,419 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 7ba2a26f...)
+2026-02-02 10:29:08,424 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-02 10:29:08,553 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 20, Number -1, Row 9, Column 0
+2026-02-03 09:38:18,952 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-02-03 09:38:33,504 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 8f099bc0...)
+2026-02-03 09:38:33,509 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-03 09:38:33,510 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-03 09:38:52,608 - INFO - WPAgent - help - Sending command: help (request_id: 1d6215d1...)
+2026-02-03 09:38:52,613 - INFO - WPAgent - help - Received command: help
+2026-02-03 09:38:52,614 - INFO - WPAgent - help - ======================================================================
+Command: Initialize
+======================================================================
+
+Description: Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)
+Category: Setup
+Execution Time: 5-15 seconds (manual) or 30-90 seconds (database)
+
+Parameters:
+  • address (string, CONDITIONAL)
+    Prober network address (REQUIRED for manual mode, format: 'host:port')
+  • machine_type (string, CONDITIONAL)
+    Type of prober (REQUIRED for manual mode, value: 'sentio')
+  • project_name (string, optional)
+    Project name to open (optional, auto-opens .prj file)
+  • alignment_die (string or tuple, optional)
+    Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified.
+  • home_die (string or tuple, optional)
+    Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified.
+  • force (boolean, optional)
+    Force re-initialization (default: false)
+  • with_db (boolean, optional)
+    Use database mode for interactive initialization
+
+Example:
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","project_name":"NKF7_Test"}'
+  python main.py send Initialize --params='{"address":"WPMIT01.cern.ch:35555","machine_type":"sentio","alignment_die":"2,2,0","home_die":"5,2,0"}'
+  python main.py send Initialize with_db=true
+
+======================================================================
+2026-02-03 09:39:31,054 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: a59a30b9...)
+2026-02-03 09:39:31,058 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-03 09:39:31,761 - INFO - WPAgent - Initialize - Initialized WP at WPMIT01.cern.ch:35555 with project 'ER2_MOSAIX_Vertical_West'
+2026-02-03 09:39:44,630 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: 5c3bcca0...)
+2026-02-03 09:39:44,635 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-03 09:39:44,873 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-03 09:40:24,793 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 0f52a2a3...)
+2026-02-03 09:40:24,798 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-03 09:40:24,799 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-03 09:40:45,022 - INFO - WPAgent - help - Sending command: help (request_id: 8322eddb...)
+2026-02-03 09:40:45,027 - INFO - WPAgent - help - Received command: help
+2026-02-03 09:40:45,028 - INFO - WPAgent - help - ======================================================================
+Command: Unload
+======================================================================
+
+Description: Unload the wafer from the chuck
+Category: Wafer Handling
+Execution Time: 30-60 seconds
+
+Parameters: None
+
+Example:
+  python main.py send Unload
+
+======================================================================
+2026-02-03 09:41:29,081 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: c4c63219...)
+2026-02-03 09:41:29,086 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-03 09:41:29,276 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 20, Number 9, Row 0, Column 0
+2026-02-03 09:41:49,978 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 187efeb0...)
+2026-02-03 09:41:49,983 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 09:41:50,010 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 09:42:10,208 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 83d85bb5...)
+2026-02-03 09:42:46,200 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-03 09:42:46,261 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 20, Number 9, Row 0, Column 0
+2026-02-03 09:43:24,911 - INFO - WPAgent - GetInfo - Sending command: GetInfo (request_id: 9899f9bb...)
+2026-02-03 09:43:24,915 - INFO - WPAgent - GetInfo - Received command: GetInfo
+2026-02-03 09:43:24,949 - INFO - WPAgent - GetInfo - Current die: Count of selected dies 20, Number 9, Row 0, Column 0
+2026-02-03 09:43:28,857 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 9d16abe7...)
+2026-02-03 09:43:28,861 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 09:43:28,887 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 09:45:07,078 - INFO - WPAgent - Unload - Sending command: Unload (request_id: bba0513e...)
+2026-02-03 09:45:07,082 - INFO - WPAgent - Unload - Received command: Unload
+2026-02-03 09:45:22,061 - INFO - WPAgent - Unload - Wafer unloaded
+2026-02-03 09:45:48,132 - INFO - WPAgent - Load - Sending command: Load (request_id: 82849df2...)
+2026-02-03 09:45:48,136 - INFO - WPAgent - Load - Received command: Load
+2026-02-03 09:46:00,089 - INFO - WPAgent - Load - Wafer has been loaded to center
+2026-02-03 09:46:15,848 - INFO - WPAgent - Unload - Sending command: Unload (request_id: 594f1b64...)
+2026-02-03 09:46:15,853 - INFO - WPAgent - Unload - Received command: Unload
+2026-02-03 09:46:21,826 - INFO - WPAgent - Unload - Wafer unloaded
+2026-02-03 09:49:18,651 - INFO - WPAgent - Load - Sending command: Load (request_id: 87ce2b53...)
+2026-02-03 09:49:18,656 - INFO - WPAgent - Load - Received command: Load
+2026-02-03 09:49:30,614 - INFO - WPAgent - Load - Wafer has been loaded to center
+2026-02-03 09:50:27,770 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: 76b3464a...)
+2026-02-03 09:50:27,774 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-03 09:50:36,776 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2026-02-03 09:50:53,005 - INFO - WPAgent - SwitchCamera - Sending command: SwitchCamera (request_id: 8ddbc783...)
+2026-02-03 09:50:53,010 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2026-02-03 09:50:53,113 - INFO - WPAgent - SwitchCamera - Switched camera to OffAxis
+2026-02-03 09:51:03,681 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: ef1bc4cb...)
+2026-02-03 09:51:03,686 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-03 09:51:03,686 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-03 09:51:45,233 - INFO - WPAgent - AlignWafer - Sending command: AlignWafer (request_id: fa97078d...)
+2026-02-03 09:51:45,238 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2026-02-03 09:52:25,203 - INFO - WPAgent - AlignWafer - Wafer aligned using die at Col 0, Row 0, Subsite 0
+2026-02-03 09:52:51,525 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 149047d2...)
+2026-02-03 09:52:51,530 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 09:52:56,237 - INFO - WPAgent - GoToDie - Moved to die: (0, 9, 0)
+2026-02-03 09:53:23,801 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: 7dec5c78...)
+2026-02-03 09:53:23,806 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 09:53:28,356 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-03 09:54:24,731 - INFO - WPAgent - ListAvailableCommands - Sending command: ListAvailableCommands (request_id: 3781845e...)
+2026-02-03 09:54:24,736 - INFO - WPAgent - ListAvailableCommands - Received command: ListAvailableCommands
+2026-02-03 09:54:24,736 - INFO - WPAgent - ListAvailableCommands - {
+    "status": "success",
+    "available_commands": [
+        "MoveChuckXY",
+        "MoveChuckZ",
+        "RunPTPA",
+        "StepNextDie",
+        "GoToDie",
+        "OpenProject",
+        "FindHome",
+        "SwitchCamera",
+        "MoveChuckHome",
+        "Unload",
+        "Cleaning",
+        "AlignWafer",
+        "GoToContact",
+        "GoToSeparation",
+        "AutoFocus",
+        "Load",
+        "MoveChuckToWorkArea",
+        "LocalMode",
+        "GoToPreviousDie",
+        "Initialize",
+        "ShowProjectStatus",
+        "GetInfo",
+        "help",
+        "GetChuckPosition",
+        "RunSequencer",
+        "ListProbers",
+        "ListChipTypes",
+        "ResetAgent",
+        "GetAgentState",
+        "ListAvailableCommands"
+    ],
+    "output": "30 commands available"
+}
+2026-02-03 09:54:54,814 - INFO - WPAgent - GetChuckPosition - Sending command: GetChuckPosition (request_id: a876d351...)
+2026-02-03 09:54:54,818 - INFO - WPAgent - GetChuckPosition - Received command: GetChuckPosition
+2026-02-03 09:54:54,950 - INFO - WPAgent - GetChuckPosition - Chuck is In Default
+2026-02-03 09:55:08,981 - INFO - WPAgent - help - Sending command: help (request_id: b6f56f85...)
+2026-02-03 09:55:08,986 - INFO - WPAgent - help - Received command: help
+2026-02-03 09:55:08,987 - INFO - WPAgent - help - ======================================================================
+Command: GetChuckPosition
+======================================================================
+
+Description: Get current chuck position status (In Contact or In Separation)
+Category: Status
+Execution Time: < 1 second
+
+Parameters: None
+
+Example:
+  python main.py send GetChuckPosition
+
+======================================================================
+2026-02-03 09:55:29,470 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 7043a764...)
+2026-02-03 09:55:29,476 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 09:55:29,633 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 09:55:41,195 - INFO - WPAgent - help - Sending command: help (request_id: 878db104...)
+2026-02-03 09:55:41,199 - INFO - WPAgent - help - Received command: help
+2026-02-03 09:55:41,200 - INFO - WPAgent - help - ======================================================================
+Command: ShowProjectStatus
+======================================================================
+
+Description: Display current project status, connection info, die position, and wafer information
+Category: Status
+Execution Time: < 1 second
+
+Parameters: None
+
+Example:
+  python main.py send ShowProjectStatus
+
+======================================================================
+2026-02-03 10:32:24,489 - INFO - WPAgent - Unload - Sending command: Unload (request_id: ff156e9c...)
+2026-02-03 10:33:00,270 - INFO - WPAgent - Unload - Received command: Unload
+2026-02-03 10:33:11,030 - INFO - WPAgent - Unload - Wafer unloaded
+2026-02-03 10:33:41,088 - INFO - WPAgent - Unload - Sending command: Unload (request_id: 632bc804...)
+2026-02-03 10:33:41,092 - INFO - WPAgent - Unload - Received command: Unload
+2026-02-03 10:33:41,228 - INFO - WPAgent - Unload - Wafer unloaded
+2026-02-03 10:33:58,562 - INFO - WPAgent - help - Sending command: help (request_id: 814a50a2...)
+2026-02-03 10:33:58,566 - INFO - WPAgent - help - Received command: help
+2026-02-03 10:33:58,568 - INFO - WPAgent - help - ======================================================================
+Command: ShowProjectStatus
+======================================================================
+
+Description: Display current project status, connection info, die position, and wafer information
+Category: Status
+Execution Time: < 1 second
+
+Parameters: None
+
+Example:
+  python main.py send ShowProjectStatus
+
+======================================================================
+2026-02-03 10:34:16,266 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: e12e16fd...)
+2026-02-03 10:34:16,271 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 10:34:16,495 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 10:52:12,587 - INFO - WPAgent - Initialize - Sending command: Initialize (request_id: 240bca5d...)
+2026-02-03 10:52:12,592 - INFO - WPAgent - Initialize - Received command: Initialize
+2026-02-03 10:52:12,592 - INFO - WPAgent - Initialize - Already initialized at WPMIT01.cern.ch:35555. Use force=True to reinitialize.
+2026-02-03 10:57:45,485 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: f52b1b84...)
+2026-02-03 10:57:45,490 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 10:57:46,008 - ERROR - WPAgent - GoToDie - Stepping failed: Stepping to cell coordinates -3,-5 failed!
+2026-02-03 10:57:58,212 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: 55f96415...)
+2026-02-03 10:57:58,217 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 10:57:58,345 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 10:58:23,922 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: f038fa2a...)
+2026-02-03 10:58:23,927 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-03 10:58:24,174 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-03 10:58:29,982 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 802f3d3a...)
+2026-02-03 10:58:30,870 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 10:58:31,614 - ERROR - WPAgent - GoToDie - Stepping failed: Stepping to cell coordinates -3,-5 failed!
+2026-02-03 10:58:44,917 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 3c42373d...)
+2026-02-03 10:58:44,921 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 10:58:45,083 - ERROR - WPAgent - GoToDie - Invalid Parameter
+2026-02-03 10:58:53,658 - INFO - WPAgent - ShowProjectStatus - Sending command: ShowProjectStatus (request_id: f2a4edff...)
+2026-02-03 10:58:53,663 - INFO - WPAgent - ShowProjectStatus - Received command: ShowProjectStatus
+2026-02-03 10:58:53,804 - INFO - WPAgent - ShowProjectStatus - Connected to: WPMIT01.cern.ch:35555
+Machine: WPMIT
+Machine Type: sentio
+Project: ER2_MOSAIX_Vertical_West
+Agent State: Running
+Current Die: Number 9, Column 0, Row 0
+Total Dies: 20
+Status: Prober ready
+2026-02-03 10:59:03,796 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: ffc05d59...)
+2026-02-03 10:59:03,883 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 10:59:04,293 - ERROR - WPAgent - MoveChuckHome - Please load a wafer before proceeding.
+2026-02-03 10:59:37,197 - INFO - WPAgent - Load - Sending command: Load (request_id: ddf5f0f8...)
+2026-02-03 10:59:37,201 - INFO - WPAgent - Load - Received command: Load
+2026-02-03 10:59:49,179 - INFO - WPAgent - Load - Wafer has been loaded to center
+2026-02-03 10:59:54,446 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: f1e0458c...)
+2026-02-03 10:59:54,451 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 10:59:56,680 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-03 11:00:02,919 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: eeb32305...)
+2026-02-03 11:00:03,909 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 11:00:04,261 - ERROR - WPAgent - GoToDie - Stepping failed: Stepping failed: Contact height is not set!
+2026-02-03 11:00:22,415 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: f8d41a9e...)
+2026-02-03 11:00:57,933 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-03 11:00:59,248 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-03 11:01:06,771 - INFO - WPAgent - OpenProject - Sending command: OpenProject (request_id: c7e4e21e...)
+2026-02-03 11:01:06,776 - INFO - WPAgent - OpenProject - Received command: OpenProject
+2026-02-03 11:01:07,737 - INFO - WPAgent - OpenProject - Opened project: C:\ProgramData\MPI Corporation\SENTIO\projects\/C:\ProgramData\MPI Corporation\SENTIO\projects\ER2\/ER2_BabyMOSAIX_Vertical_West
+2026-02-03 11:01:13,742 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: 86e19cef...)
+2026-02-03 11:01:15,940 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 11:01:16,253 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-03 11:01:24,470 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 8035de88...)
+2026-02-03 11:01:24,475 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 11:01:24,612 - ERROR - WPAgent - GoToDie - Stepping failed: Stepping failed: Contact height is not set!
+2026-02-03 11:02:07,072 - INFO - WPAgent - SwitchCamera - Sending command: SwitchCamera (request_id: 92bd2fa8...)
+2026-02-03 11:02:42,980 - INFO - WPAgent - SwitchCamera - Received command: SwitchCamera
+2026-02-03 11:02:43,165 - INFO - WPAgent - SwitchCamera - Switched camera to OffAxis
+2026-02-03 11:02:58,616 - INFO - WPAgent - MoveChuckToWorkArea - Sending command: MoveChuckToWorkArea (request_id: 16970ac4...)
+2026-02-03 11:02:58,621 - INFO - WPAgent - MoveChuckToWorkArea - Received command: MoveChuckToWorkArea
+2026-02-03 11:03:07,629 - INFO - WPAgent - MoveChuckToWorkArea - Moved to Offaxis workarea
+2026-02-03 11:03:16,542 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: 35ec87d2...)
+2026-02-03 11:03:16,546 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 11:03:16,763 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-03 11:03:32,845 - INFO - WPAgent - AlignWafer - Sending command: AlignWafer (request_id: af2fab3b...)
+2026-02-03 11:03:32,849 - INFO - WPAgent - AlignWafer - Received command: AlignWafer
+2026-02-03 11:04:10,819 - INFO - WPAgent - AlignWafer - Wafer aligned using die at Col 0, Row 0, Subsite 0
+2026-02-03 11:04:18,906 - INFO - WPAgent - MoveChuckHome - Sending command: MoveChuckHome (request_id: 83a685a2...)
+2026-02-03 11:04:18,911 - INFO - WPAgent - MoveChuckHome - Received command: MoveChuckHome
+2026-02-03 11:04:19,102 - INFO - WPAgent - MoveChuckHome - Chuck moved home
+2026-02-03 11:04:27,662 - INFO - WPAgent - GoToDie - Sending command: GoToDie (request_id: 0a30850d...)
+2026-02-03 11:04:27,666 - INFO - WPAgent - GoToDie - Received command: GoToDie
+2026-02-03 11:04:32,331 - INFO - WPAgent - GoToDie - Moved to die: (0, 9, 0)
+2026-03-10 18:17:38,015 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:18:25,378 - INFO - WPAgent - UserLogin - Sending command: UserLogin (correlation: cba70238...)
+2026-03-10 18:18:25,383 - INFO - WPAgent - UserLogin - Received command: UserLogin
+2026-03-10 18:18:25,383 - ERROR - WPAgent - UserLogin - Unknown command: UserLogin
+2026-03-10 18:18:49,880 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: efea06fd...)
+2026-03-10 18:18:49,884 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:18:49,886 - ERROR - WPAgent - UserLogIn - UserLogIn() missing 2 required positional arguments: 'user' and 'waferAgentName'
+2026-03-10 18:19:15,983 - INFO - WPAgent - help - Sending command: help (correlation: 63206921...)
+2026-03-10 18:19:15,988 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:19:15,989 - ERROR - WPAgent - help - 
+2026-03-10 18:20:34,525 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 6e985d1d...)
+2026-03-10 18:20:34,530 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:20:34,531 - ERROR - WPAgent - UserLogIn - UserLogIn() missing 2 required positional arguments: 'user' and 'waferAgentName'
+2026-03-10 18:20:52,121 - INFO - WPAgent - listAvailableCommands - Sending command: listAvailableCommands (correlation: 35b489d8...)
+2026-03-10 18:20:52,126 - INFO - WPAgent - listAvailableCommands - Received command: listAvailableCommands
+2026-03-10 18:20:52,126 - ERROR - WPAgent - listAvailableCommands - Unknown command: listAvailableCommands
+2026-03-10 18:22:45,899 - INFO - WPAgent - help - Sending command: help (correlation: ddb8a493...)
+2026-03-10 18:22:45,904 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:22:45,905 - ERROR - WPAgent - help - 
+2026-03-10 18:22:55,164 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:23:02,424 - INFO - WPAgent - help - Sending command: help (correlation: b4ed4e1e...)
+2026-03-10 18:23:02,429 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:23:02,430 - ERROR - WPAgent - help - 
+2026-03-10 18:24:29,793 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:24:43,645 - INFO - WPAgent - help - Sending command: help (correlation: 123c6d23...)
+2026-03-10 18:24:55,899 - INFO - WPAgent - help - Sending command: help (correlation: 74720b6f...)
+2026-03-10 18:25:27,185 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:25:32,808 - INFO - WPAgent - help - Sending command: help (correlation: 6107b407...)
+2026-03-10 18:25:32,813 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:25:32,814 - ERROR - WPAgent - help - 
+2026-03-10 18:27:41,788 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:27:48,316 - INFO - WPAgent - help - Sending command: help (correlation: 5655ed0e...)
+2026-03-10 18:27:59,143 - INFO - WPAgent - help - Sending command: help (correlation: 7b098f18...)
+2026-03-10 18:28:36,055 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:28:36,056 - ERROR - WPAgent - help - 
+2026-03-10 18:28:36,059 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:28:36,060 - ERROR - WPAgent - help - 
+2026-03-10 18:33:49,611 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:33:54,897 - INFO - WPAgent - help - Sending command: help (correlation: 196ae501...)
+2026-03-10 18:33:54,902 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:33:54,903 - ERROR - WPAgent - help - 
+2026-03-10 18:35:16,910 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:35:21,965 - INFO - WPAgent - help - Sending command: help (correlation: 94833895...)
+2026-03-10 18:35:21,971 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:35:21,972 - ERROR - WPAgent - help - 
+2026-03-10 18:36:02,936 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:36:07,949 - INFO - WPAgent - help - Sending command: help (correlation: 1a78e012...)
+2026-03-10 18:36:07,954 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:36:07,959 - ERROR - WPAgent - help - 'SvtWPAagentGlobalParameters' object has no attribute 'user'
+2026-03-10 18:37:01,949 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:37:07,478 - INFO - WPAgent - help - Sending command: help (correlation: 3885b861...)
+2026-03-10 18:37:07,483 - INFO - WPAgent - help - Received command: help
+2026-03-10 18:37:07,484 - ERROR - WPAgent - help - 
+2026-03-10 18:40:49,596 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 81bac152...)
+2026-03-10 18:40:49,601 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:40:49,603 - ERROR - WPAgent - UserLogIn - UserLogIn() missing 2 required positional arguments: 'user' and 'waferAgentName'
+2026-03-10 18:41:58,150 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 8f48a926...)
+2026-03-10 18:41:58,155 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:41:58,156 - ERROR - WPAgent - UserLogIn - UserLogIn() got an unexpected keyword argument '{user'
+2026-03-10 18:43:49,878 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: b0d4eaff...)
+2026-03-10 18:43:49,883 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:43:49,884 - ERROR - WPAgent - UserLogIn - UserLogIn() missing 1 required positional argument: 'user'
+2026-03-10 18:44:56,541 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: fc9da024...)
+2026-03-10 18:45:21,296 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: ca077163...)
+2026-03-10 18:45:33,767 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:45:33,818 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:45:33,820 - ERROR - WPAgent - UserLogIn - UserLogIn() got an unexpected keyword argument '("user"'
+2026-03-10 18:45:33,824 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:45:33,825 - ERROR - WPAgent - UserLogIn - UserLogIn() got an unexpected keyword argument '("user"'
+2026-03-10 18:45:49,932 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:45:57,665 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: b87e5530...)
+2026-03-10 18:45:57,670 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:45:57,672 - ERROR - WPAgent - UserLogIn - UserLogIn() got an unexpected keyword argument '("user"'
+2026-03-10 18:46:26,115 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: f6b0253c...)
+2026-03-10 18:46:26,121 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:46:26,123 - ERROR - WPAgent - UserLogIn - UserLogIn() got an unexpected keyword argument '{"user"'
+2026-03-10 18:46:54,512 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 4c20f159...)
+2026-03-10 18:46:54,517 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:46:54,527 - ERROR - WPAgent - UserLogIn - name 'resolve_project_parameters' is not defined
+2026-03-10 18:47:58,831 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: e55a2a5f...)
+2026-03-10 18:47:58,837 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:47:58,843 - ERROR - WPAgent - UserLogIn - name 'resolve_project_parameters' is not defined
+2026-03-10 18:48:06,217 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:48:13,203 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 12a64b35...)
+2026-03-10 18:48:13,209 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:48:13,218 - ERROR - WPAgent - UserLogIn - name 'get_prober' is not defined
+2026-03-10 18:49:08,380 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-10 18:49:12,735 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 4ec785da...)
+2026-03-10 18:49:12,740 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-10 18:49:12,743 - ERROR - WPAgent - UserLogIn - 'NoneType' object has no attribute 'lower'
+2026-03-11 09:42:35,109 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:42:54,021 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 75a70e9e...)
+2026-03-11 09:42:54,027 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:42:54,030 - ERROR - WPAgent - UserLogIn - [Errno 2] No such file or directory: '../configs/WPUserHierarchy.json'
+2026-03-11 09:43:56,740 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: a2ffd627...)
+2026-03-11 09:44:09,750 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:44:09,798 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:44:09,801 - ERROR - WPAgent - UserLogIn - [Errno 2] No such file or directory: '/configs/WPUserHierarchy.json'
+2026-03-11 09:44:16,806 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:44:22,539 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 3250e24f...)
+2026-03-11 09:44:22,545 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:44:22,547 - ERROR - WPAgent - UserLogIn - [Errno 2] No such file or directory: '/configs/WPUserHierarchy.json'
+2026-03-11 09:46:08,942 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:46:13,858 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 6e89c0d2...)
+2026-03-11 09:46:13,863 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:46:13,864 - INFO - WPAgent - UserLogIn - User 'user5' Logged in Successfully.
+2026-03-11 09:46:24,353 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: ca1c2b11...)
+2026-03-11 09:46:24,360 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:46:24,360 - INFO - WPAgent - UserLogIn - User 'user5' Logged in Successfully.
+2026-03-11 09:46:35,616 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 306d968c...)
+2026-03-11 09:46:35,622 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:46:35,622 - INFO - WPAgent - UserLogIn - User 'user2' Logged in Successfully.
+2026-03-11 09:47:01,571 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: d95ff1aa...)
+2026-03-11 09:47:01,577 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:47:01,577 - INFO - WPAgent - UserLogIn - User 'user2' Logged in Successfully.
+2026-03-11 09:47:13,485 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: e10543e6...)
+2026-03-11 09:47:13,489 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:47:13,490 - INFO - WPAgent - UserLogIn - User 'user4' Logged in Successfully.
+2026-03-11 09:47:56,765 - INFO - WPAgent - help - Sending command: help (correlation: a6987bbd...)
+2026-03-11 09:47:56,770 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:47:56,772 - ERROR - WPAgent - help - 
+2026-03-11 09:51:55,030 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:52:00,472 - INFO - WPAgent - help - Sending command: help (correlation: 14177360...)
+2026-03-11 09:52:00,477 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:52:00,478 - ERROR - WPAgent - help - 
+2026-03-11 09:52:16,364 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 34b8d67a...)
+2026-03-11 09:52:37,964 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 162fbc2b...)
+2026-03-11 09:52:40,076 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:52:40,077 - INFO - WPAgent - UserLogIn - User 'user4' Logged in Successfully.
+2026-03-11 09:52:40,079 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:52:40,079 - INFO - WPAgent - UserLogIn - User 'user4' Logged in Successfully.
+2026-03-11 09:52:48,494 - INFO - WPAgent - help - Sending command: help (correlation: f3e5007b...)
+2026-03-11 09:52:48,499 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:52:48,500 - ERROR - WPAgent - help - 
+2026-03-11 09:58:09,264 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 09:58:18,200 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 9a1db64a...)
+2026-03-11 09:58:18,205 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:58:18,206 - INFO - WPAgent - UserLogIn - User 'user4' Logged in Successfully.
+2026-03-11 09:58:22,076 - INFO - WPAgent - help - Sending command: help (correlation: c3b2df90...)
+2026-03-11 09:58:24,280 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:58:24,282 - ERROR - WPAgent - help - 
+2026-03-11 09:58:46,210 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: aa6f70ad...)
+2026-03-11 09:58:46,216 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:58:46,216 - ERROR - WPAgent - UserLogIn - Another User is currently Logged: user4.
+2026-03-11 09:59:00,882 - INFO - WPAgent - help - Sending command: help (correlation: 2f6b5676...)
+2026-03-11 09:59:00,887 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:59:00,889 - ERROR - WPAgent - help - 
+2026-03-11 09:59:14,856 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 5ef127bf...)
+2026-03-11 09:59:14,861 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:59:14,862 - INFO - WPAgent - UserLogIn - User 'user1' Logged in Successfully.
+2026-03-11 09:59:19,487 - INFO - WPAgent - help - Sending command: help (correlation: fd95f4e6...)
+2026-03-11 09:59:37,853 - INFO - WPAgent - help - Sending command: help (correlation: 4683ea9c...)
+2026-03-11 09:59:39,650 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:59:39,652 - ERROR - WPAgent - help - 
+2026-03-11 09:59:39,653 - INFO - WPAgent - help - Received command: help
+2026-03-11 09:59:39,654 - ERROR - WPAgent - help - 
+2026-03-11 09:59:53,286 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 4499525c...)
+2026-03-11 09:59:53,291 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 09:59:53,291 - ERROR - WPAgent - UserLogIn - Cannot take control: Developer 'user1' is currently logged in.
+2026-03-11 10:00:01,379 - INFO - WPAgent - help - Sending command: help (correlation: 90ca831b...)
+2026-03-11 10:00:01,385 - INFO - WPAgent - help - Received command: help
+2026-03-11 10:00:01,386 - ERROR - WPAgent - help - 
+2026-03-11 10:00:39,780 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 65e51bbf...)
+2026-03-11 10:00:39,786 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 10:00:39,786 - WARNING - WPAgent - UserLogIn - Agent is in 'Failed' state. Cannot execute commands.
+2026-03-11 10:01:14,021 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 10:01:22,454 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 2333617c...)
+2026-03-11 10:01:22,459 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 10:01:22,460 - ERROR - WPAgent - UserLogIn - User 'stef' is not recognized. Access denied.
+2026-03-11 10:01:36,736 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 28d2aa56...)
+2026-03-11 10:01:36,742 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 10:01:36,742 - INFO - WPAgent - UserLogIn - User 'user1' Logged in Successfully.
+2026-03-11 10:01:48,400 - INFO - WPAgent - UserLogOut - Sending command: UserLogOut (correlation: 554e44ee...)
+2026-03-11 10:01:48,405 - INFO - WPAgent - UserLogOut - Received command: UserLogOut
+2026-03-11 10:01:48,408 - ERROR - WPAgent - UserLogOut - name 'g' is not defined
+2026-03-11 10:02:16,960 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 10:02:22,638 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 2a897769...)
+2026-03-11 10:02:22,643 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 10:02:22,644 - INFO - WPAgent - UserLogIn - User 'user1' Logged in Successfully.
+2026-03-11 10:02:26,508 - INFO - WPAgent - UserLogOut - Sending command: UserLogOut (correlation: 94bdd0fd...)
+2026-03-11 10:02:41,031 - INFO - WPAgent - UserLogOut - Received command: UserLogOut
+2026-03-11 10:02:41,031 - INFO - WPAgent - UserLogOut - User 'user1' Logged out Successfully.
+2026-03-11 10:02:41,490 - INFO - WPAgent - help - Sending command: help (correlation: f451e9a6...)
+2026-03-11 10:02:41,496 - INFO - WPAgent - help - Received command: help
+2026-03-11 10:02:41,497 - ERROR - WPAgent - help - 
+2026-03-11 10:02:52,740 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 62fb215f...)
+2026-03-11 10:02:52,745 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 10:02:52,746 - INFO - WPAgent - UserLogIn - User 'user1' Logged in Successfully.
+2026-03-11 10:02:57,812 - INFO - WPAgent - help - Sending command: help (correlation: 877f8da9...)
+2026-03-11 10:03:07,995 - INFO - WPAgent - help - Sending command: help (correlation: 5163870d...)
+2026-03-11 10:03:09,042 - INFO - WPAgent - help - Received command: help
+2026-03-11 10:03:09,044 - ERROR - WPAgent - help - 
+2026-03-11 10:03:09,045 - INFO - WPAgent - help - Received command: help
+2026-03-11 10:03:09,046 - ERROR - WPAgent - help - 
+2026-03-11 10:03:25,981 - INFO - WPAgent - UserLogOut - Sending command: UserLogOut (correlation: e4ad9b01...)
+2026-03-11 10:03:25,987 - INFO - WPAgent - UserLogOut - Received command: UserLogOut
+2026-03-11 10:03:25,987 - ERROR - WPAgent - UserLogOut - Cannot LogOut: another User is currently Logged: user1.
+2026-03-11 10:03:37,516 - INFO - WPAgent - UserLogOut - Sending command: UserLogOut (correlation: 9005e0fa...)
+2026-03-11 10:03:37,524 - INFO - WPAgent - UserLogOut - Received command: UserLogOut
+2026-03-11 10:03:37,525 - INFO - WPAgent - UserLogOut - User 'user1' Logged out Successfully.
+2026-03-11 10:03:42,872 - INFO - WPAgent - help - Sending command: help (correlation: 7248c477...)
+2026-03-11 10:03:44,587 - INFO - WPAgent - help - Received command: help
+2026-03-11 10:03:44,588 - ERROR - WPAgent - help - 
+2026-03-11 13:37:37,483 - INFO - WPAgent - KAFKA_LISTEN - Kafka listener started on topic 'svt.wp-agent.request'
+2026-03-11 13:37:50,125 - INFO - WPAgent - help - Sending command: help (correlation: ebb3af6d...)
+2026-03-11 13:38:01,555 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:38:01,557 - ERROR - WPAgent - help - 
+2026-03-11 13:38:03,307 - INFO - WPAgent - help - Sending command: help (correlation: 168f0621...)
+2026-03-11 13:38:03,312 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:38:03,313 - ERROR - WPAgent - help - 
+2026-03-11 13:38:23,386 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 99c7ff4d...)
+2026-03-11 13:38:23,390 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 13:38:23,391 - INFO - WPAgent - UserLogIn - User 'user3' Logged in Successfully.
+2026-03-11 13:38:27,588 - INFO - WPAgent - help - Sending command: help (correlation: b0b0936c...)
+2026-03-11 13:38:27,592 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:38:27,594 - ERROR - WPAgent - help - 
+2026-03-11 13:38:40,138 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: e3f1fbc4...)
+2026-03-11 13:38:40,143 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 13:38:40,144 - ERROR - WPAgent - UserLogIn - Another User is currently Logged: user3.
+2026-03-11 13:38:44,934 - INFO - WPAgent - help - Sending command: help (correlation: 2bd7259a...)
+2026-03-11 13:38:44,940 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:38:44,941 - ERROR - WPAgent - help - 
+2026-03-11 13:39:01,999 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 02ed45b5...)
+2026-03-11 13:39:02,003 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 13:39:02,003 - INFO - WPAgent - UserLogIn - User 'user1' Logged in Successfully.
+2026-03-11 13:39:06,406 - INFO - WPAgent - help - Sending command: help (correlation: a7a61d11...)
+2026-03-11 13:39:06,411 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:39:06,412 - ERROR - WPAgent - help - 
+2026-03-11 13:39:18,162 - INFO - WPAgent - UserLogIn - Sending command: UserLogIn (correlation: 7675980f...)
+2026-03-11 13:39:18,166 - INFO - WPAgent - UserLogIn - Received command: UserLogIn
+2026-03-11 13:39:18,167 - ERROR - WPAgent - UserLogIn - Cannot take control: Developer 'user1' is currently logged in.
+2026-03-11 13:39:23,428 - INFO - WPAgent - help - Sending command: help (correlation: 5c6de11a...)
+2026-03-11 13:39:25,674 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:39:25,675 - ERROR - WPAgent - help - 
+2026-03-11 13:39:42,115 - INFO - WPAgent - UserLogOut - Sending command: UserLogOut (correlation: e14aae77...)
+2026-03-11 13:39:42,120 - INFO - WPAgent - UserLogOut - Received command: UserLogOut
+2026-03-11 13:39:42,120 - INFO - WPAgent - UserLogOut - User 'user1' Logged out Successfully.
+2026-03-11 13:39:45,853 - INFO - WPAgent - help - Sending command: help (correlation: 7b4a6037...)
+2026-03-11 13:39:45,858 - INFO - WPAgent - help - Received command: help
+2026-03-11 13:39:45,859 - ERROR - WPAgent - help - 
