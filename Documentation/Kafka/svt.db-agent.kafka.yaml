@@ -1,4 +1,4 @@
-openapi: '3.0.1'
+openapi: "3.0.1"
 info:
   title: SVT DB Agent
   description: |
@@ -33,19 +33,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllWaferTypesMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllWaferTypesMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllWaferTypesReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllWaferTypesReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -64,19 +64,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateWaferTypeMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateWaferTypeMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateWaferTypeReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateWaferTypeReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -95,19 +95,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetWaferTypeMapMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetWaferTypeMapMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetWaferTypeMapReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetWaferTypeMapReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -126,19 +126,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllWafersMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllWafersMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllWafersReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllWafersReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -157,19 +157,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateWaferMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateWaferMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateWaferReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateWaferReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -188,19 +188,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateWaferMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateWaferMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateWaferReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateWaferReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -219,19 +219,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateWaferLocationMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateWaferLocationMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateWaferLocationReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateWaferLocationReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -250,19 +250,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetWaferLocationHistoryMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetWaferLocationHistoryMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetWaferLocationHistoryReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetWaferLocationHistoryReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -281,19 +281,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllAsicsMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllAsicsMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllAsicsReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllAsicsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -312,19 +312,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateAsicMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateAsicMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateAsicReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateAsicReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -343,25 +343,25 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllChipsMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllChipsMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllChipsReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllChipsReplyMessage"
         default:
           description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplyMessage'
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/CreateChip:
     post:
       tags:
@@ -374,25 +374,25 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateChipMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateChipMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateChipReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateChipReplyMessage"
         default:
           description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplyMessage'
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/CreateManyChips:
     post:
       tags:
@@ -405,25 +405,25 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateManyChipsMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateManyChipsMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateManyChipsReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateManyChipsReplyMessage"
         default:
           description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplyMessage'
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/UpdateChipLocation:
     post:
       tags:
@@ -440,21 +440,21 @@ paths:
                 - $ref: "#/components/schemas/UpdateChipLocationMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateChipLocationReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateChipLocationReplyMessage"
         default:
           description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplyMessage'
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/GetChipLocationHistory:
     post:
       tags:
@@ -467,19 +467,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetChipLocationHistoryMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetChipLocationHistoryMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetChipLocationHistoryReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetChipLocationHistoryReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -498,19 +498,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllWaferProbeMachinesMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllWaferProbeMachinesMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllWaferProbeMachinesReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllWaferProbeMachinesReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -529,19 +529,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateWaferProbeMachineMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateWaferProbeMachineMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateWaferProbeMachineReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateWaferProbeMachineReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -560,19 +560,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateWaferProbeMachineMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateWaferProbeMachineMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateWaferProbeMachineReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateWaferProbeMachineReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -591,19 +591,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateWpMachineLoadedWaferMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateWpMachineLoadedWaferMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateWpMachineLoadedWaferReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateWpMachineLoadedWaferReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -622,19 +622,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateWpMachineInstalledProbeCardMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateWpMachineInstalledProbeCardMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateWpMachineInstalledProbeCardReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateWpMachineInstalledProbeCardReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -653,19 +653,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllWaferProbeProjectsMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllWaferProbeProjectsMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllWaferProbeProjectsReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllWaferProbeProjectsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -684,19 +684,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateWaferProbeProjectMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateWaferProbeProjectMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateWaferProbeProjectReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateWaferProbeProjectReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -715,19 +715,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllProbeCardsMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllProbeCardsMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllProbeCardsReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllProbeCardsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -746,19 +746,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllEquipmentTypesMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllEquipmentTypesMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllEquipmentTypesReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllEquipmentTypesReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -777,19 +777,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateEquipmentTypeMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateEquipmentTypeMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateEquipmentTypeReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateEquipmentTypeReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -808,19 +808,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllEquipmentMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllEquipmentMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllEquipmentReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllEquipmentReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -839,19 +839,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateEquipmentMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateEquipmentMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateEquipmentReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateEquipmentReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -870,19 +870,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateEquipmentLocationMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateEquipmentLocationMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateEquipmentLocationReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateEquipmentLocationReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -901,19 +901,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetEquipmentLocationHistoryMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetEquipmentLocationHistoryMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetEquipmentLocationHistoryReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetEquipmentLocationHistoryReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -932,19 +932,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllSvtTestSetupMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllSvtTestSetupReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -963,19 +963,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateSvtTestSetupMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestSetupMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateSvtTestSetupReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestSetupReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -994,19 +994,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/UpdateSvtTestSetupDefaultConfigMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/UpdateSvtTestSetupDefaultConfigReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1025,19 +1025,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetEquipmentListForTestSetupMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetEquipmentListForTestSetupMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetEquipmentListForTestSetupReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetEquipmentListForTestSetupReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1056,19 +1056,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllSvtTestSetupConfigMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupConfigMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllSvtTestSetupConfigReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupConfigReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1087,25 +1087,121 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/CreateSvtTestSetupConfigMessage'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestSetupConfigMessage"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/CreateSvtTestSetupConfigReplyMessage'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestSetupConfigReplyMessage"
         default:
           description: Unexpected error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetAllSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary: Get all test type
+      description: Returns test type list in the reply message. Optional filter by typeId or asicFamilyType can be applied to return exact set of test type list.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary: Create SvtTestType
+      description: Returns the newly created test type in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary:
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  #
+  # ENUMS
+  #
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -1118,19 +1214,19 @@ paths:
             schema:
               type: object
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/GetAllEnumsRequest'
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllEnumsRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Reply Message
           content:
             application/json:
               schema:
                 type: object
                 allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/GetAllEnumsReply'
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllEnumsReply"
         default:
           description: Unexpected error
           content:
@@ -1181,19 +1277,19 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllEnums'
+          default: "GetAllEnums"
         data:
           type: object
           properties:
             enumsNames:
               type: array
               items:
-                $ref: '#/components/schemas/SvtEnumName'
+                $ref: "#/components/schemas/SvtEnumName"
     GetAllEnumsReply:
       properties:
         type:
           type: string
-          default: 'GetAllEnumsReply'
+          default: "GetAllEnumsReply"
         data:
           type: object
           properties:
@@ -1248,7 +1344,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferTypes'
+          default: "GetAllWaferTypes"
         data:
           type: object
           properties:
@@ -1264,19 +1360,19 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferTypesReply'
+          default: "GetAllWaferTypesReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferTypeDto'
+                $ref: "#/components/schemas/WaferTypeDto"
     GetWaferTypeMapMessage:
       properties:
         type:
           type: string
-          default: 'GetWaferTypeMap'
+          default: "GetWaferTypeMap"
         data:
           type: object
           required:
@@ -1289,12 +1385,12 @@ components:
       properties:
         type:
           type: string
-          default: 'GetWaferTypeMapReply'
+          default: "GetWaferTypeMapReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferTypeMapDto'
+              $ref: "#/components/schemas/WaferTypeMapDto"
     #
     # WAFER TYPES :: CREATE
     #
@@ -1302,7 +1398,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferType'
+          default: "CreateWaferType"
         data:
           type: object
           properties:
@@ -1312,12 +1408,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferTypeReply'
+          default: "CreateWaferTypeReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferTypeDto'
+              $ref: "#/components/schemas/WaferTypeDto"
     #
     # WAFERS :: LIST
     #
@@ -1325,7 +1421,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWafers'
+          default: "GetAllWafers"
         data:
           type: object
           properties:
@@ -1341,14 +1437,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWafersReply'
+          default: "GetAllWafersReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferDto'
+                $ref: "#/components/schemas/WaferDto"
     #
     # WAFERS :: CREATE
     #
@@ -1356,7 +1452,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWafer'
+          default: "CreateWafer"
         data:
           type: object
           properties:
@@ -1366,12 +1462,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferReply'
+          default: "CreateWaferReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferDto'
+              $ref: "#/components/schemas/WaferDto"
     #
     # WAFERS :: UPDATE
     #
@@ -1379,7 +1475,7 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWafer'
+          default: "UpdateWafer"
         data:
           type: object
           required:
@@ -1395,12 +1491,12 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWaferReply'
+          default: "UpdateWaferReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferDto'
+              $ref: "#/components/schemas/WaferDto"
     #
     # WAFERS :: UPDATE LOCATION
     #
@@ -1408,19 +1504,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWaferLocation'
+          default: "UpdateWaferLocation"
         data:
           $ref: "#/components/schemas/WaferUpdateLocationDto"
     UpdateWaferLocationReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateWaferLocationReply'
+          default: "UpdateWaferLocationReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferDto'
+              $ref: "#/components/schemas/WaferDto"
     #
     # WAFER LOCATION RECORDS
     #
@@ -1428,7 +1524,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetWaferLocationHistory'
+          default: "GetWaferLocationHistory"
         data:
           type: object
           required:
@@ -1441,14 +1537,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetWaferLocationHistoryReply'
+          default: "GetWaferLocationHistoryReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferLocationHistoryRecordDto'
+                $ref: "#/components/schemas/WaferLocationHistoryRecordDto"
     #
     # ASICS :: LIST
     #
@@ -1456,7 +1552,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllAsics'
+          default: "GetAllAsics"
         data:
           type: object
           properties:
@@ -1491,14 +1587,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllAsicsReply'
+          default: "GetAllAsicsReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/AsicDto'
+                $ref: "#/components/schemas/AsicDto"
             totalCount:
               type: number
     #
@@ -1508,7 +1604,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateAsic'
+          default: "CreateAsic"
         data:
           type: object
           properties:
@@ -1518,12 +1614,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateAsicReply'
+          default: "CreateAsicReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/AsicDto'
+              $ref: "#/components/schemas/AsicDto"
     #
     # CHIPS :: LIST
     #
@@ -1531,7 +1627,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllChip'
+          default: "GetAllChip"
         data:
           type: object
           properties:
@@ -1551,14 +1647,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllChipsReply'
+          default: "GetAllChipsReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/ChipDto'
+                $ref: "#/components/schemas/ChipDto"
     #
     # CHIPS :: CREATE
     #
@@ -1566,22 +1662,22 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateChip'
+          default: "CreateChip"
         data:
           type: object
           properties:
             create:
-              $ref: '#/components/schemas/ChipCreateDto'
+              $ref: "#/components/schemas/ChipCreateDto"
     CreateChipReplyMessage:
       properties:
         type:
           type: string
-          default: 'CreateChipReply'
+          default: "CreateChipReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/ChipDto'
+              $ref: "#/components/schemas/ChipDto"
     #
     # CHIPS :: CREATE MANY
     #
@@ -1589,7 +1685,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateManyChips'
+          default: "CreateManyChips"
         data:
           type: object
           properties:
@@ -1604,19 +1700,19 @@ components:
                 items:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ManyChipsCreateDto'
+                    $ref: "#/components/schemas/ManyChipsCreateDto"
     CreateManyChipsReplyMessage:
       properties:
         type:
           type: string
-          default: 'CreateManyChipsReply'
+          default: "CreateManyChipsReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/ChipDto'
+                $ref: "#/components/schemas/ChipDto"
     #
     # CHIPS :: UPDATE LOCAION
     #
@@ -1624,19 +1720,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateChipLocation'
+          default: "UpdateChipLocation"
         data:
-          $ref: '#/components/schemas/ChipUpdateLocationDto'
+          $ref: "#/components/schemas/ChipUpdateLocationDto"
     UpdateChipLocationReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateChipLocationReply'
+          default: "UpdateChipLocationReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/ChipDto'
+              $ref: "#/components/schemas/ChipDto"
     #
     # CHIP LOCATION RECORDS
     #
@@ -1644,7 +1740,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetChipLocationHistory'
+          default: "GetChipLocationHistory"
         data:
           type: object
           required:
@@ -1657,14 +1753,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetChipLocationHistoryReply'
+          default: "GetChipLocationHistoryReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/ChipLocationHistoryRecordDto'
+                $ref: "#/components/schemas/ChipLocationHistoryRecordDto"
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -1672,7 +1768,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferProbeMachines'
+          default: "GetAllWaferProbeMachines"
         data:
           type: object
           properties:
@@ -1688,14 +1784,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferProbeMachinesReply'
+          default: "GetAllWaferProbeMachinesReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferProbeMachineDto'
+                $ref: "#/components/schemas/WaferProbeMachineDto"
     #
     # WAFER PROBE MACHINES :: CREATE
     #
@@ -1703,7 +1799,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferProbeMachine'
+          default: "CreateWaferProbeMachine"
         data:
           type: object
           properties:
@@ -1713,12 +1809,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferProbeMachineReply'
+          default: "CreateWaferProbeMachineReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto'
+              $ref: "#/components/schemas/WaferProbeMachineDto"
     #
     # WAFER PROBE MACHINES :: UPDATE
     #
@@ -1726,7 +1822,7 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWaferProbeMachine'
+          default: "UpdateWaferProbeMachine"
         data:
           type: object
           required:
@@ -1742,12 +1838,12 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWaferProbeMachineReply'
+          default: "UpdateWaferProbeMachineReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto'
+              $ref: "#/components/schemas/WaferProbeMachineDto"
     #
     # WAFER PROBE MACHINES :: UPDATE :: LOADED WAFER
     #
@@ -1755,19 +1851,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWpMachineLoadedWafer'
+          default: "UpdateWpMachineLoadedWafer"
         data:
           $ref: "#/components/schemas/WpMachineLoadedWaferUpdateDto"
     UpdateWpMachineLoadedWaferReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateWpMachineLoadedWaferReply'
+          default: "UpdateWpMachineLoadedWaferReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto'
+              $ref: "#/components/schemas/WaferProbeMachineDto"
     #
     # WAFER PROBE MACHINES :: UPDATE :: INSTALLED PROBE CARD
     #
@@ -1775,19 +1871,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateWpMachineInstalledProbeCard'
+          default: "UpdateWpMachineInstalledProbeCard"
         data:
           $ref: "#/components/schemas/WpMachineInstalledProbeCardUpdateDto"
     UpdateWpMachineInstalledProbeCardReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateWpMachineInstalledProbeCardReply'
+          default: "UpdateWpMachineInstalledProbeCardReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeMachineDto'
+              $ref: "#/components/schemas/WaferProbeMachineDto"
     #
     # WAFER PROBE PROJECTS :: LIST
     #
@@ -1795,7 +1891,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferProbeProjects'
+          default: "GetAllWaferProbeProjects"
         data:
           type: object
           properties:
@@ -1811,14 +1907,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllWaferProbeProjectsReply'
+          default: "GetAllWaferProbeProjectsReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/WaferProbeProjectDto'
+                $ref: "#/components/schemas/WaferProbeProjectDto"
     #
     # WAFER PROBE PROJECTS :: CREATE
     #
@@ -1826,7 +1922,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferProbeProject'
+          default: "CreateWaferProbeProject"
         data:
           type: object
           properties:
@@ -1836,12 +1932,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateWaferProbeProjectReply'
+          default: "CreateWaferProbeProjectReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/WaferProbeProjectDto'
+              $ref: "#/components/schemas/WaferProbeProjectDto"
     #
     # WAFER PROBE CARDS :: LIST
     #
@@ -1849,7 +1945,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllProbeCards'
+          default: "GetAllProbeCards"
         data:
           type: object
           properties:
@@ -1865,14 +1961,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllProbeCardsReply'
+          default: "GetAllProbeCardsReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/ProbeCardDto'
+                $ref: "#/components/schemas/ProbeCardDto"
     #
     # EQUIPMENT TYPES :: LIST
     #
@@ -1880,7 +1976,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllEquipmentTypes'
+          default: "GetAllEquipmentTypes"
         data:
           type: object
           properties:
@@ -1896,14 +1992,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllEquipmentTypesReply'
+          default: "GetAllEquipmentTypesReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/EquipmentTypeDto'
+                $ref: "#/components/schemas/EquipmentTypeDto"
     #
     # EQUIPMENT TYPES :: CREATE
     #
@@ -1911,7 +2007,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateEquipmentType'
+          default: "CreateEquipmentType"
         data:
           type: object
           properties:
@@ -1921,12 +2017,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateEquipmentTypeReply'
+          default: "CreateEquipmentTypeReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/EquipmentTypeDto'
+              $ref: "#/components/schemas/EquipmentTypeDto"
     #
     # EQUIPMENT :: LIST
     #
@@ -1934,7 +2030,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllEquipment'
+          default: "GetAllEquipment"
         data:
           type: object
           properties:
@@ -1950,14 +2046,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllEquipmentReply'
+          default: "GetAllEquipmentReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/EquipmentDto'
+                $ref: "#/components/schemas/EquipmentDto"
     #
     # EQUIPMENT :: CREATE
     #
@@ -1965,7 +2061,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateEquipment'
+          default: "CreateEquipment"
         data:
           type: object
           properties:
@@ -1975,12 +2071,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateEquipmentReply'
+          default: "CreateEquipmentReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/EquipmentDto'
+              $ref: "#/components/schemas/EquipmentDto"
     #
     # EQUIPMENTS :: UPDATE LOCATION
     #
@@ -1988,19 +2084,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateEquipmentLocation'
+          default: "UpdateEquipmentLocation"
         data:
           $ref: "#/components/schemas/EquipmentUpdateLocationDto"
     UpdateEquipmentLocationReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateEquipmentLocationReply'
+          default: "UpdateEquipmentLocationReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/EquipmentDto'
+              $ref: "#/components/schemas/EquipmentDto"
     #
     # EQUIPMENT LOCATION RECORDS
     #
@@ -2008,7 +2104,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetEquipmentLocationHistory'
+          default: "GetEquipmentLocationHistory"
         data:
           type: object
           required:
@@ -2021,14 +2117,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetEquipmentLocationHistoryReply'
+          default: "GetEquipmentLocationHistoryReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/EquipmentLocationHistoryRecordDto'
+                $ref: "#/components/schemas/EquipmentLocationHistoryRecordDto"
     #
     # TEST_SETUP :: LIST
     #
@@ -2036,7 +2132,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllSvtTestSetup'
+          default: "GetAllSvtTestSetup"
         data:
           type: object
           properties:
@@ -2052,14 +2148,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllSvtTestSetupReply'
+          default: "GetAllSvtTestSetupReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/SvtTestSetupDto'
+                $ref: "#/components/schemas/SvtTestSetupDto"
     #
     # TEST_SETUP :: CREATE
     #
@@ -2067,7 +2163,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateSvtTestSetup'
+          default: "CreateSvtTestSetup"
         data:
           type: object
           properties:
@@ -2077,12 +2173,12 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateSvtTestSetupReply'
+          default: "CreateSvtTestSetupReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/SvtTestSetupDto'
+              $ref: "#/components/schemas/SvtTestSetupDto"
     #
     # TEST_SETUP :: UPDATE DEFAULT CONFIGURATION
     #
@@ -2090,19 +2186,19 @@ components:
       properties:
         type:
           type: string
-          default: 'UpdateSvtTestSetupDefaultConfig'
+          default: "UpdateSvtTestSetupDefaultConfig"
         data:
           $ref: "#/components/schemas/SvtTestSetupUpdateDefaultConfigDto"
     UpdateSvtTestSetupDefaultConfigReplyMessage:
       properties:
         type:
           type: string
-          default: 'UpdateSvtTestSetupDefaultConfigReply'
+          default: "UpdateSvtTestSetupDefaultConfigReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/SvtTestSetupDto'
+              $ref: "#/components/schemas/SvtTestSetupDto"
     #
     # TEST_SETUP :: GET EQUIPMENT LIST FOR A TEST SETUP
     #
@@ -2110,7 +2206,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetEquipmentLitsForTestSetup'
+          default: "GetEquipmentLitsForTestSetup"
         data:
           type: object
           properties:
@@ -2120,14 +2216,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetEquipmentLitsForTestSetupReply'
+          default: "GetEquipmentLitsForTestSetupReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/EquipmentDto'
+                $ref: "#/components/schemas/EquipmentDto"
     #
     # TEST_SETUP_CONFIG :: LIST
     #
@@ -2135,7 +2231,7 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllSvtTestSetupConfig'
+          default: "GetAllSvtTestSetupConfig"
         data:
           type: object
           properties:
@@ -2154,14 +2250,14 @@ components:
       properties:
         type:
           type: string
-          default: 'GetAllSvtTestSetupConfigReply'
+          default: "GetAllSvtTestSetupConfigReply"
         data:
           type: object
           properties:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/SvtTestSetupConfigDto'
+                $ref: "#/components/schemas/SvtTestSetupConfigDto"
     #
     # TEST_SETUP_CONFIG :: CREATE
     #
@@ -2169,7 +2265,7 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateSvtTestSetupConfig'
+          default: "CreateSvtTestSetupConfig"
         data:
           type: object
           properties:
@@ -2179,16 +2275,95 @@ components:
       properties:
         type:
           type: string
-          default: 'CreateSvtTestSetupConfigReply'
+          default: "CreateSvtTestSetupConfigReply"
         data:
           type: object
           properties:
             entity:
-              $ref: '#/components/schemas/SvtTestSetupConfigDto'
+              $ref: "#/components/schemas/SvtTestSetupConfigDto"
+    #
+    # TEST_TYPE :: LIST
+    #
+    GetAllSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestType"
+        data:
+          type: object
+          properties:
+            filters:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestType ids array. If array is empty / undefined => all test type list will be returned.
+                  items:
+                    type: integer
+                asicFamilyType:
+                  type: string
+                  description: asicFamilyType.
+    GetAllSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestTypeDto"
+    #
+    # TEST_TYPE :: CREATE
+    #
+    CreateSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestType"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTypeCreateDto"
+    CreateSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeDto"
+    #
+    # TEST_TYPE :: UPDATE
+    #
+    UpdateSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestType"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTypeUpdateDto"
+    UpdateSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeDto"
     #
     # DTOs
     #
-
     WaferTypeDto:
       type: object
       required:
@@ -2814,24 +2989,15 @@ components:
       required:
         - name
         - generalLocation
-        - basConfigId
         - bodyConfig
-        - date
         - note
       properties:
         name:
           type: string
         generalLocation:
           type: string
-        baseConfigId:
-          type: integer
-          nullable: true
         bodyConfig:
           type: string
-        date:
-          type: string
-          description: Date only in format `2025-06-03`
-          nullable: true
         note:
           type: string
           nullable: true
@@ -2876,13 +3042,120 @@ components:
         - baseId
         - setupId
         - body
-        - date
         - note
       properties:
         baseId:
           type: integer
         setupId:
           type: integer
+        body:
+          type: string
+        note:
+          type: string
+          nullable: true
+    SvtTestTypeDto:
+      type: object
+      required:
+        - id
+        - name
+        - asicFamilTypes
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+    SvtTestTypeCreateDto:
+      type: object
+      required:
+        - name
+        - asicFamilyTypes
+      properties:
+        name:
+          type: string
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+    SvtTestTypeUpdateDto:
+      type: object
+      required:
+        - testTypeId
+        - asicFamilyType
+      properties:
+        testTypeId:
+          type: integer
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+    SvtTestTypeListDto:
+      type: object
+      required:
+        - asicFamilyType
+        - testTypeId
+        - testConfigVerId
+      properties:
+        asicFamilType:
+          type: string
+        testTypeId:
+          type: integer
+        testConfigVerId:
+          type: integer
+    SvtTestTypeListCreateDto:
+      type: object
+      required:
+        - asicFamilyType
+        - testTypeId
+        - testConfigVerId
+      properties:
+        asicFamilType:
+          type: string
+        testTypeId:
+          type: integer
+        testConfigVerId:
+          type: integer
+    SvtTestConfigurationDto:
+      required:
+        - testTypeId
+        - versionId
+        - baseVerId
+        - body
+        - date
+        - note
+      properties:
+        testTypeId:
+          type: integer
+        versionId:
+          type: integer
+        baseVerId:
+          type: integer
+          nullable: true
+        body:
+          type: string
+        date:
+          type: string
+          description: Date only in format `2025-06-03`
+          nullable: true
+        note:
+          type: string
+          nullable: true
+    SvtTestConfigurationCreateDto:
+      required:
+        - testTypeId
+        - baseVerId
+        - body
+        - date
+        - note
+      properties:
+        testTypeId:
+          type: integer
+        baseVerId:
+          type: integer
+          nullable: true
         body:
           type: string
         date:
