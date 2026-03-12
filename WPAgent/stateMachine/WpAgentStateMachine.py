@@ -42,75 +42,106 @@ class WPAgentStateMachine:
 
             # From OpenedProject
             WPAgentState.OpenedProject: {
-                'Alignment': WPAgentState.Aligned,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
+                'AlignWafer': WPAgentState.Aligned,
+                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
                 'Error': WPAgentState.Error,
             },
 
             # From Aligned
             WPAgentState.Aligned: {
-                'Load': WPAgentState.ChuckUnloaded,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
+                'Unload': WPAgentState.Unloaded,
+                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
+                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
                 'Error': WPAgentState.Error,
             },
 
             # From ChuckSafePosition
             WPAgentState.ChuckSafePosition: {
-                'MoveChuckContact': WPAgentState.AtContact,
-                'Alignment': WPAgentState.Aligned,
+                'InitProbing': WPAgentState.Aligned,
+                'Unload': WPAgentState.Unloaded,
+                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
                 'Error': WPAgentState.Error,
             },
 
             # From ChuckUnloaded
             WPAgentState.ChuckUnloaded: {
-                'Unload': WPAgentState.Unloaded,
-                'MoveChuckContact': WPAgentState.AtContact,
-                'StepNextDie': WPAgentState.OnDie_Wide,
+                'MoveChuckLoaded': WPAgentState.UserLogged,
                 'Error': WPAgentState.Error,
             },
 
             # From Unloaded
             WPAgentState.Unloaded: {
-                'Load': WPAgentState.ChuckUnloaded,
+                'Load': WPAgentState.UserLogged,
                 'Error': WPAgentState.Error,
             },
 
             # From OnDie_Wide
             WPAgentState.OnDie_Wide: {
                 'MoveChuckContact': WPAgentState.AtContact,
-                'AutoFocus': WPAgentState.OnDie_Wide_withPTPA,
-                'StepNextDie': WPAgentState.OnDie_Wide,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
                 'Error': WPAgentState.Error,
             },
 
-            # From OnDie_Wide_withPTPA
-            WPAgentState.OnDie_Wide_withPTPA: {
-                'MoveChuckContact': WPAgentState.AtContact,
-                'StepNextDie': WPAgentState.OnDie_Wide,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
-                'Error': WPAgentState.Error,
-            },
+
 
             # From AtContact
             WPAgentState.AtContact: {
-                'Lock': WPAgentState.AtContact_Locked,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
-                'StepNextDie': WPAgentState.OnDie_Wide,
+                'TestingLock': WPAgentState.AtContact_Locked,
+                'MoveChuckSeparation': WPAgentState.OnDie_Wide,
                 'Error': WPAgentState.Error,
             },
 
             # From AtContact_Locked
             WPAgentState.AtContact_Locked: {
-                'Unlock': WPAgentState.AtContact,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
+                'TestingUnlock': WPAgentState.AtContact,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_OffAxis_withoutPTPA
+            WPAgentState.OnDie_OffAxis_withoutPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'RunPTPA': WPAgentState.OnDie_OffAxis_withPTPA,
+                'MoveChuckWide': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'AutoFocus': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_Wide_withPTPA
+            WPAgentState.OnDie_Wide_withPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'SetOverdrive': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckContact': WPAgentState.AtContact,
+                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_Wide_withoutPTPA
+            WPAgentState.OnDie_Wide_withoutPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'SetOverdrive': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckContact': WPAgentState.AtContact,
+                'MoveChuckOffAxis': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
                 'Error': WPAgentState.Error,
             },
 
             # From Error
             WPAgentState.Error: {
-                'Reset': WPAgentState.ServiceOn,
-                'MoveChuckSafe': WPAgentState.ChuckSafePosition,
+                'ResetAgent': WPAgentState.UserLogged,
             },
         }
 
