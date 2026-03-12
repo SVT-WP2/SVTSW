@@ -213,7 +213,7 @@ Table main.SvtTestTypeAsicFamilyList {
   asicFamilyType main.asicFamilyType [not null]
 }
 
-Table main.SvtTestConfiguration {
+Table main.SvtTestTypeConfig {
   id integer [primary key, increment]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   name varchar(100) [not null]
@@ -226,7 +226,7 @@ Table main.SvtTestTemplate {
   id integer [primary key, increment]
   asicFamilyType main.asicFamilyType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testTypeConfigId integer [ref: > main.SvtTestConfiguration.id]
+  testTypeConfigId integer [ref: > main.SvtTestTypeConfig.id]
   enable bool [default: TRUE]
 }
 
