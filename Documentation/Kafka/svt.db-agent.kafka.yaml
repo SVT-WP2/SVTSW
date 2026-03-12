@@ -920,6 +920,195 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  # TEST_SETUP
+  /svt.db-agent.request/GetAllSvtTestSetup:
+    post:
+      tags:
+        - SvtTestSetup
+      summary: Get All SvtTestSetup
+      description: Returns test setup list in the reply message. Optional filter by setpIds can be applied to return exact set of test setup.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestSetup:
+    post:
+      tags:
+        - SvtTestSetup
+      summary: Create SvtTestSetup
+      description: Returns the newly created test setup in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestSetupMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestSetupReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestSetupDefaultConfig:
+    post:
+      tags:
+        - SvtTestSetup
+      summary: Update test setup default configuration
+      description: Returns updated test setup in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetEquipmentLitsForTestSetup:
+    post:
+      tags:
+        - SvtTestSetup
+      summary: Get equipment list belongs to a test setup
+      description: Returns equipment list for a test setup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetEquipmentListForTestSetupMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetEquipmentListForTestSetupReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # TEST_SETUP_CONFIGURATION
+  /svt.db-agent.request/GetAllSvtTestSetupConfig:
+    post:
+      tags:
+        - SvtTestSetupConfig
+      summary: Get All SvtTestSetup configuration
+      description: Returns test setup configuration list in the reply message. Optional filter by setpIds can be applied to return exact set of test setup configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupConfigMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupConfigReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestSetupConfig:
+    post:
+      tags:
+        - SvtTestSetupConfig
+      summary: Create SvtTestSetup configuration
+      description: Returns the newly created test setup configuration in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestSetupConfigMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestSetupConfigReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # ENUMS           
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -1844,9 +2033,164 @@ components:
               items:
                 $ref: "#/components/schemas/EquipmentLocationHistoryRecordDto"
     #
+    # TEST_SETUP :: LIST
+    #
+    GetAllSvtTestSetupMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestSetup"
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestSetup ids array. If array is empty / undefined => all test setup will be returned.
+                  items:
+                    type: number
+    GetAllSvtTestSetupReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestSetupReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestSetupDto"
+    #
+    # TEST_SETUP :: CREATE
+    #
+    CreateSvtTestSetupMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestSetup"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestSetupCreateDto"
+    CreateSvtTestSetupReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestSetupReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestSetupDto"
+    #
+    # TEST_SETUP :: UPDATE DEFAULT CONFIGURATION
+    #
+    UpdateSvtTestSetupDefaultConfigMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestSetupDefaultConfig"
+        data:
+          $ref: "#/components/schemas/SvtTestSetupUpdateDefaultConfigDto"
+    UpdateSvtTestSetupDefaultConfigReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestSetupDefaultConfigReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestSetupDto"
+    #
+    # TEST_SETUP :: GET EQUIPMENT LIST FOR A TEST SETUP
+    #
+    GetEquipmentListForTestSetupMessage:
+      properties:
+        type:
+          type: string
+          default: "GetEquipmentLitsForTestSetup"
+        data:
+          type: object
+          properties:
+            setupId:
+              type: number
+    GetEquipmentListForTestSetupReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetEquipmentLitsForTestSetupReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/EquipmentDto"
+    #
+    # TEST_SETUP_CONFIG :: LIST
+    #
+    GetAllSvtTestSetupConfigMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestSetupConfig"
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestSetupConfig ids array. If array is empty / undefined => all test setup configuration list will be returned.
+                  items:
+                    type: integer
+                setupId:
+                  type: integer
+                  description: SvtTestSetup id.
+    GetAllSvtTestSetupConfigReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestSetupConfigReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestSetupConfigDto"
+    #
+    # TEST_SETUP_CONFIG :: CREATE
+    #
+    CreateSvtTestSetupConfigMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestSetupConfig"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestSetupConfigCreateDto"
+    CreateSvtTestSetupConfigReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestSetupConfigReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestSetupConfigDto"
+    #
     # DTOs
     #
-
     WaferTypeDto:
       type: object
       required:
@@ -2450,6 +2794,96 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
+    # TEST_SETUP :: DTO
+    SvtTestSetupDto:
+      type: object
+      required:
+        - id
+        - name
+        - defaultConfigId
+        - generalLocation
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        defaultConfigId:
+          type: integer
+        generalLocation:
+          type: string
+    SvtTestSetupCreateDto:
+      type: object
+      required:
+        - name
+        - generalLocation
+        - configName
+        - bodyConfig
+        - note
+      properties:
+        name:
+          type: string
+        generalLocation:
+          type: string
+        configName:
+          type: string
+        bodyConfig:
+          type: string
+        note:
+          type: string
+          nullable: true
+    SvtTestSetupUpdateDefaultConfigDto:
+      type: object
+      required:
+        - setupId
+        - defaultConfigId
+      properties:
+        setupId:
+          type: integer
+        defaultConfigId:
+          type: integer
+    # TEST_SETUP_CONFIG :: DTO
+    SvtTestSetupConfigDto:
+      type: object
+      required:
+        - id
+        - setupId
+        - name
+        - note
+        - configBody
+        - createdAt
+      properties:
+        id:
+          type: integer
+        setupId:
+          type: integer
+        name:
+          type: string
+        note:
+          type: string
+          nullable: true
+        configBody:
+          type: string
+        createdAt:
+          type: string
+          description: Date only in format `2025-06-03`
+    SvtTestSetupConfigCreateDto:
+      type: object
+      required:
+        - setupId
+        - name
+        - configBody
+        - note
+      properties:
+        setupId:
+          type: integer
+        name:
+          type: string
+        configBody:
+          type: string
+        note:
+          type: string
+          nullable: true
+    # ENUM :: DTO
     SvtEnumName:
       type: string
       enum:
