@@ -1108,6 +1108,257 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  # TEST_TYPE
+  /svt.db-agent.request/GetAllSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary: Get all test type
+      description: Returns test type list in the reply message. Optional filter by typeId or asicFamilyType can be applied to return exact set of test type list.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary: Create SvtTestType
+      description: Returns the newly created test type in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestType:
+    post:
+      tags:
+        - SvtTestType
+      summary:
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestTypeMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestTypeReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # TEST_TYPE_CONFIG
+  /svt.db-agent.request/GetAllSvtTestTypeConfig:
+    post:
+      tags:
+        - SvtTestTypeConfig
+      summary: Get all SvtTestTypeConfig
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTypeConfigMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTypeConfigReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestTypeConfig:
+    post:
+      tags:
+        - SvtTestTypeConfig
+      summary: Create SvtTestTypeConfig
+      description: Returns the newly created test type configuration in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestTypeConfigMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestTypeConfigReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # TEST_TEMPLATE
+  /svt.db-agent.request/GetAllSvtTestTemplate:
+    post:
+      tags:
+        - SvtTestTemplate
+      summary: Get all SvtTestTemplate
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTemplateMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTemplateReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestTemplate:
+    post:
+      tags:
+        - SvtTestTemplate
+      summary: Create an entry to the SvtTestTemplate
+      description: Returns the newly created entry to the SvtTestSvtTestTemplate in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestTemplateMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestTemplateReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestTemplate:
+    post:
+      tags:
+        - SvtTestTemplate
+      summary: Update entry to the SvtTestTemplate
+      description: Returns the updated entry to the SvtTestTemplate in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestTemplateMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestTemplateReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   # ENUMS           
   /svt.db-agent.request/GetAllEnums:
     post:
@@ -2189,6 +2440,218 @@ components:
             entity:
               $ref: "#/components/schemas/SvtTestSetupConfigDto"
     #
+    # TEST_TYPE :: LIST
+    #
+    GetAllSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestType"
+        data:
+          type: object
+          properties:
+            filters:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestType ids array. If array is empty / undefined => all test type list will be returned.
+                  items:
+                    type: integer
+                asicFamilyType:
+                  type: string
+                  description: asicFamilyType.
+    GetAllSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestTypeDto"
+    #
+    # TEST_TYPE :: CREATE
+    #
+    CreateSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestType"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTypeCreateDto"
+    CreateSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeDto"
+    #
+    # TEST_TYPE :: UPDATE
+    #
+    UpdateSvtTestTypeMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestType"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTypeUpdateDto"
+    UpdateSvtTestTypeReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestTypeReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeDto"
+    #
+    # TEST_TYPE_CONFIG :: LIST
+    #
+    GetAllSvtTestTypeConfigMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTypeConfig"
+        data:
+          type: object
+          properties:
+            filters:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestTypeConfig ids array. If array is empty / undefined => all test type list will be returned.
+                  items:
+                    type: integer
+                testTypeId:
+                  type: integer
+                  description: SvtTestType id.
+    GetAllSvtTestTypeConfigReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTypeConfigReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestTypeConfigDto"
+    #
+    # TEST_TYPE_CONFIG :: CREATE
+    #
+    CreateSvtTestTypeConfigMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTypeConfig"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTypeConfigCreateDto"
+    CreateSvtTestTypeConfigReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTypeConfigReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeConfigDto"    
+    #
+    # TEST_TEMPLATE :: LIST
+    #
+    GetAllSvtTestTemplateMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTemplate"
+        data:
+          type: object
+          properties:
+            filters:
+              type: object
+              properties:
+                asicFamilType:
+                  type: string
+                  description: Asic family type.
+    GetAllSvtTestTemplateReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestTemplateReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestTemplateDto"
+    #
+    # TEST_TEMPLATE :: Create
+    #
+    CreateSvtTestTemplateMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTemplate"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTemplateCreateDto"
+    CreateSvtTestTemplateReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestTemplateReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTemplateDto"
+    #
+    # TEST_TEMPLATE :: Update
+    #
+    UpdateSvtTestTemplateMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestTemplate"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestTemplateUpdateDto"
+    UpdateSvtTestTemplateReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestTemplateReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTemplateDto"
+    #
     # DTOs
     #
     WaferTypeDto:
@@ -2883,6 +3346,141 @@ components:
         note:
           type: string
           nullable: true
+    # TEST_TYPE :: DTO
+    SvtTestTypeDto:
+      type: object
+      required:
+        - id
+        - name
+        - asicFamilTypes
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+    SvtTestTypeCreateDto:
+      type: object
+      required:
+        - name
+        - asicFamilyTypes
+        - configName
+        - bodyConfig
+        - note
+      properties:
+        name:
+          type: string
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+        configName:
+          type: string
+        bodyConfig:
+          type: string
+        note:
+          type: string
+          nullable: true
+    SvtTestTypeUpdateDto:
+      type: object
+      required:
+        - testTypeId
+        - asicFamilyType
+      properties:
+        testTypeId:
+          type: integer
+        asicFamilTypes:
+          type: array
+          items:
+            type: string
+    # TEST_TYPE_CONFIG :: DTO
+    SvtTestTypeConfigDto:
+      type: object
+      required:
+        - id
+        - testTypeId
+        - name
+        - note
+        - configBody
+        - createdAt
+      properties:
+        id:
+          type: integer
+        testTypeId:
+          type: integer
+        name:
+          type: string
+        note:
+          type: string
+          nullable: true
+        configBody:
+          type: string
+        createdAt:
+          type: string
+          description: Date only in format `2025-06-03`
+    SvtTestTypeConfigCreateDto:
+      type: object
+      required:
+        - testTypeId
+        - name
+        - configBody
+        - note
+      properties:
+        testTypeId:
+          type: integer
+        name:
+          type: string
+        configBody:
+          type: string
+        note:
+          type: string
+          nullable: true
+    # TEST_TEMPLATE :: DTO
+    SvtTestTemplateDto:
+      required:
+        - id
+        - asicFamilType
+        - testTypeId
+        - testConfigId
+        - enable
+      properties:
+        id:
+          type: integer
+        asicFamilType:
+          type: string
+        testTypeId:
+          type: integer
+        testConfigId:
+          type: integer
+        enable:
+          type: boolean
+    SvtTestTemplateCreateDto:
+      required:
+        - asicFamilyType
+        - testTypeId
+        - testConfigId
+        - enable
+      properties:
+        asicFamilType:
+          type: string
+        testTypeId:
+          type: integer
+        testConfigId:
+          type: integer
+        enable:
+          type: boolean
+    SvtTestTemplateUpdateDto:
+      required:
+        - testTemplateId
+        - enable
+      properties:
+        testTemplateId:
+          type: integer
+        enable:
+          type: boolean
     # ENUM :: DTO
     SvtEnumName:
       type: string
