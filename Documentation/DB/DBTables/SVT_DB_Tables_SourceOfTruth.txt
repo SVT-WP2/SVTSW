@@ -190,17 +190,17 @@ Table main.SvtTestSetup {
 }
 
 Table main.SvtTestSetupEquipList{
-  setup_id integer [ref: > main.SvtTestSetup.id]
-  equip_id integer [ref: > main.Equipment.id]
+  setupId integer [ref: > main.SvtTestSetup.id]
+  equipId integer [ref: > main.Equipment.id]
 }
 
 Table main.SvtTestSetupConfig {
   id integer [primary key, increment]
-  baseId integer [ref:> id, not null]
   setupId integer [ref:> main.SvtTestSetup.id, not null]
-  body JSON [not null]
-  date date [default: `CURRENT_DATE`]
+  name varchar(100) [not null]
   note text
+  configBody JSON [not null]
+  createdAt date [default: `CURRENT_DATE`]
 }
 
 Table main.SvtTestType {
@@ -208,42 +208,35 @@ Table main.SvtTestType {
   name varchar(100)
 }
 
-Table main.SvtTestTypeList {
-  asicFamilyType main.asicFamilyType [not null]
+Table main.SvtTestTypeAsicFamilyList {
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testConfigVersion integer [ref: > main.SvtTestConfiguration.versionId]
+  asicFamilyType main.asicFamilyType [not null]
 }
 
 Table main.SvtTestConfiguration {
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100)
-  versionId integer [unique, not null]
-  baseVersionId integer [ref:> versionId, not null]
-  body JSON [not null]
-  date date [default: `CURRENT_DATE`]
-  note text
-}
-
-Table main.SvtTestType {
   id integer [primary key, increment]
-  name varchar(100)
+  testTypeId integer [ref:> main.SvtTestType.id, not null]
+  name varchar(100) [not null]
+  note text
+  configBody JSON [not null]
+  createdAt date [default: `CURRENT_DATE`]
 }
 
-Table main.SvtTestTypeList {
+Table main.SvtTestTemplate {
+  id integer [primary key, increment]
   asicFamilyType main.asicFamilyType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testConfigVersion integer [ref: > main.SvtTestConfiguration.versionId]
+  testTypeConfigId integer [ref: > main.SvtTestConfiguration.id]
+  enable bool [default: TRUE]
 }
 
-Table main.SvtTestConfiguration {
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100)
-  versionId integer [unique, not null]
-  baseVersionId integer [ref:> versionId, not null]
-  body JSON [not null]
-  date date [default: `CURRENT_DATE`]
-  Note text
-}
+// Table main.SvtTestList {
+//   id integer
+//   chipId
+//   Testid
+//   test_result
+//   general_status
+// }
 
 Enum main.engineeringRun {
   ER1
