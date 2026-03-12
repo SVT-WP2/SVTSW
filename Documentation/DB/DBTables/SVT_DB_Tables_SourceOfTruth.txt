@@ -213,12 +213,6 @@ Table main.SvtTestTypeAsicFamilyList {
   asicFamilyType main.asicFamilyType [not null]
 }
 
-Table main.SvtTestList {
-  asicFamilyType main.asicFamilyType [not null]
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testConfigVerId integer [ref: > main.SvtTestConfiguration.versionId]
-}
-
 Table main.SvtTestConfiguration {
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   versionId integer [unique, not null]
@@ -228,25 +222,12 @@ Table main.SvtTestConfiguration {
   note text
 }
 
-Table main.SvtTestType {
+Table main.SvtTestList {
   id integer [primary key, increment]
-  name varchar(100)
-}
-
-Table main.SvtTestTypeList {
   asicFamilyType main.asicFamilyType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testConfigVersion integer [ref: > main.SvtTestConfiguration.versionId]
-}
-
-Table main.SvtTestConfiguration {
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100)
-  versionId integer [unique, not null]
-  baseVersionId integer [ref:> versionId, not null]
-  body JSON [not null]
-  date date [default: `CURRENT_DATE`]
-  Note text
+  testConfigVerId integer [ref: > main.SvtTestConfiguration.versionId]
+  enable bool [default: TRUE]
 }
 
 Enum main.engineeringRun {
