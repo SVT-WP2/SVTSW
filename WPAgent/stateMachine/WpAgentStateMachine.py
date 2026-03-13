@@ -145,6 +145,12 @@ class WPAgentStateMachine:
             },
         }
 
+    def _sync_to_global_params(self):
+        """Auto-sync current state to global parameters to not to write same thing a few times """
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        g = SvtWPAagentGlobalParameters.getInstance()
+        g.wpag_state = self.current_state.name
+
     def get_state(self):
         """Get current state"""
         return self.current_state
@@ -178,19 +184,21 @@ class WPAgentStateMachine:
         self.previous_state = self.current_state
         self.current_state = new_state
 
+        self._sync_to_global_params()
         print(f"✓State transition: {self.previous_state.name} --[{command}]--> {self.current_state.name}")
 
         return True
 
     def force_state(self, state: WPAgentState):
         """
-        Force a specific state (use with caution!)
+        Force a specific state (use with caution!) mainly for UsedByDeveloper
 
         Args:
             state: Target state
         """
         self.previous_state = self.current_state
         self.current_state = state
+        self._sync_to_global_params()
         print(f"⚠Forced state change: {self.previous_state.name} --> {self.current_state.name}")
 
     def is_in_state(self, state: WPAgentState) -> bool:
@@ -219,12 +227,14 @@ class WPAgentStateMachine:
         self.previous_state = self.current_state
         self.current_state = WPAgentState.ServiceOn
         self.current_command = None
+        self._sync_to_global_params()
         print(f" State machine reset to {self.current_state.name}")
 
     def enter_error_state(self, error_message: str = None):
         """Enter error state"""
         self.previous_state = self.current_state
         self.current_state = WPAgentState.Error
+        self._sync_to_global_params()
         if error_message:
             print(f"  error state: {error_message}")
         else:
