@@ -11,6 +11,7 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
+#include "SvtUtilities.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
@@ -66,14 +67,14 @@ void SvtDbAgent::SvtDbWaferDto::createEntry(
   SvtDbEntry waferEntry;
   if (!createEntryWithLocation(msg, waferEntry))
   {
-    getLogger()->logError("Failed wafer and location creation in DB.");
+    logError("Failed wafer and location creation in DB.");
     return;
   }
 
-  getLogger()->logInfo("Creating all Asics in DB");
+  logInfo("Creating all Asics in DB");
   createAllAsics(waferEntry);
 
-  getLogger()->logInfo("Creating reply SvtKafkaMessage");
+  logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(waferEntry, replyMsg);
 }
 
@@ -84,7 +85,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const SvtDbEntry &wafer)
   int waferTypeId = wafer.getValue("waferTypeId").get<int>();
   std::string waferSN = wafer.getValue("serialNumber").get<std::string>();
 
-  const auto waferTypeMap = Singleton<SvtDbWaferTypeDto>::instance()->getWaferTypeMap(waferTypeId);
+  const auto waferTypeMap = SvtUtils::Singleton<SvtDbWaferTypeDto>::instance()->getWaferTypeMap(waferTypeId);
   nlohmann::json waferTypeMap_j = nlohmann::json::parse(waferTypeMap);
 
   createAllAsics(waferId, waferSN, waferTypeMap_j);
@@ -135,7 +136,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const int waferId, const std::str
         std::ostringstream ss;
         ss << "Error creating Asic. MapGroups: " << g_row_item.second
            << ", group col: " << mapG_col_index;
-        getLogger()->logError(ss.str());
+        logError(ss.str());
         THROW_RUNTIME_ERROR("Wrong array found");
       }
       //! create asics from existingAsics
@@ -165,7 +166,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const int waferId, const std::str
           std::ostringstream ss;
           ss << "Error creating Asic. MapGroups: " << g_row_item.second
              << ", group col: " << mapG_col_index;
-          getLogger()->logError(ss.str());
+          logError(ss.str());
           ss.str("");
           ss.clear();
           ss << "Wrong Asic quality property for asic  " << asic_index;
@@ -181,7 +182,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const int waferId, const std::str
           std::ostringstream ss;
           ss << "Error creating Asic. MapGroups: " << g_row_item.second
              << ", group col: " << mapG_col_index << std::endl;
-          getLogger()->logError(ss.str());
+          logError(ss.str());
           THROW_RUNTIME_ERROR("invalid familyType");
         }
 
@@ -218,7 +219,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllAsics(const int waferId, const std::str
         }
         else
         {
-          Singleton<SvtDbAsicDto>::instance()->createEntryInDB(asic);
+          SvtUtils::Singleton<SvtDbAsicDto>::instance()->createEntryInDB(asic);
         }
         ++asic_col;
       }

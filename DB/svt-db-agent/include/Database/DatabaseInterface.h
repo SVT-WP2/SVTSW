@@ -1,8 +1,6 @@
 #pragma once
 
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
-
+#include <nlohmann/json.hpp>
 #include <pqxx/pqxx>
 
 #include <mutex>
@@ -10,8 +8,6 @@
 
 using row_t = std::vector<nlohmann::basic_json<>>;
 using rows_t = std::vector<row_t>;
-using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
 
 class DatabaseInterface
 {
@@ -55,8 +51,6 @@ class DatabaseInterface
 
   bool reconnect();
   bool close();
-
-  SvtLogger *logger = Singleton<SvtLogger>::instance();
 
   std::recursive_mutex mMutex;
 };

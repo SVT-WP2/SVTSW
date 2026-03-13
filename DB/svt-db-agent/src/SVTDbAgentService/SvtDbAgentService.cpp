@@ -71,7 +71,7 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
   switch (message.err())
   {
   case RdKafka::ERR__TIMED_OUT:
-    mLogger->logError("KafkaError: ERR__TIMED_OUT");
+    logError("KafkaError: ERR__TIMED_OUT");
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
@@ -79,10 +79,10 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
     try
     {
       /* Real message */
-      mLogger->logInfo("Read msg at offset " + std::to_string(message.offset()));
+      logInfo("Read msg at offset " + std::to_string(message.offset()));
       if (message.key())
       {
-        mLogger->logInfo("Key: " + *message.key());
+        logInfo("Key: " + *message.key());
       }
       headers = message.headers();
       if (headers)
@@ -132,21 +132,21 @@ void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
 
   case RdKafka::ERR__PARTITION_EOF:
     /* Last message */
-    mLogger->logError("KafkaError: ERR__PARTITION_EOF");
+    logError("KafkaError: ERR__PARTITION_EOF");
     *(static_cast<bool *>(opaque)) = false;
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
   case RdKafka::ERR__UNKNOWN_TOPIC:
   case RdKafka::ERR__UNKNOWN_PARTITION:
-    mLogger->logError("KafkaError: Consume failed, " + message.errstr());
+    logError("KafkaError: Consume failed, " + message.errstr());
     *(static_cast<bool *>(opaque)) = false;
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
     break;
 
   default:
     /* Errors */
-    mLogger->logError("KafkaError: Consume failed, " + message.errstr());
+    logError("KafkaError: Consume failed, " + message.errstr());
     *(static_cast<bool *>(opaque)) = false;
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
   }
@@ -186,15 +186,15 @@ void SvtDbAgentService::parseMsg(
     replyMsg.setStatus(SvtKafka::msgStatus[status]);
     replyMsg.setData(nlohmann::ordered_json());
     replyMsg.setError(-1, msgError);
-    mLogger->logError(msgError);
+    logError(msgError);
   }
   else
   {
     auto type = msg.getPayload()["type"].get<std::string>();
-    mLogger->logInfo("Received message with request type: " + type);
+    logInfo("Received message with request type: " + type);
     if (type.empty())
     {
-      mLogger->logError("Request have not type information. Skipping");
+      logError("Request have not type information. Skipping");
       replyMsg.setType("");
       replyMsg.setStatus(
           SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::BadRequest]);
@@ -210,7 +210,7 @@ void SvtDbAgentService::parseMsg(
         {
           std::ostringstream ss;
           ss << "Error: Request " << type << " not Found";
-          mLogger->logError(ss.str());
+          logError(ss.str());
           replyMsg.setData(nlohmann::ordered_json());
           replyMsg.setStatus(SvtKafka::msgStatus
                                  [SvtKafka::SvtKafkaMsgStatus::BadRequest]);
@@ -219,8 +219,8 @@ void SvtDbAgentService::parseMsg(
       }
       catch (const std::exception &e)
       {
-        mLogger->logError("Error: requesting " + type + ". " +
-                          std::string(e.what()));
+        logError("Error: requesting " + type + ". " +
+                 std::string(e.what()));
         replyMsg.setData(nlohmann::ordered_json());
         replyMsg.setStatus(
             SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::BadRequest]);
@@ -232,12 +232,12 @@ void SvtDbAgentService::parseMsg(
 
   if (log_messages)
   {
-    mLogger->logInfo("Request messages: \n" + std::string("Header = ") +
-                     msg.getHeaders().dump() + std::string("\nPayload = ") +
-                     msg.getPayload().dump());
-    mLogger->logInfo("Reply messages: \n" + std::string("Header = ") +
-                     replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
-                     replyMsg.getPayload().dump());
+    logInfo("Request messages: \n" + std::string("Header = ") +
+            msg.getHeaders().dump() + std::string("\nPayload = ") +
+            msg.getPayload().dump());
+    logInfo("Reply messages: \n" + std::string("Header = ") +
+            replyMsg.getHeaders().dump() + std::string("\nPayload = ") +
+            replyMsg.getPayload().dump());
   }
 
   mProducer->send(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);

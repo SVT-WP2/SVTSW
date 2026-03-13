@@ -9,9 +9,7 @@
 
 #include "SvtConfig.h"
 #include "SvtDbConfig.h"
-
-using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
+#include "SvtLogger.h"
 
 class SvtDbAgentSetupConfig : public SvtConfig
 {
@@ -22,8 +20,8 @@ class SvtDbAgentSetupConfig : public SvtConfig
   };
   std::shared_ptr<SvtDbConfig> mDbConfig;
   std::string mLogFilePath;
-  SvtLogger::Mode mTermVerbosity = SvtLogger::PRODUCTION;
-  SvtLogger::Mode mFileVerbosity = SvtLogger::ALL;
+  SvtUtils::SvtLogger::Mode mTermVerbosity = SvtUtils::SvtLogger::PRODUCTION;
+  SvtUtils::SvtLogger::Mode mFileVerbosity = SvtUtils::SvtLogger::ALL;
   std::string mKafkaServer;
   std::string mKaflaPort;
 
@@ -38,8 +36,8 @@ class SvtDbAgentSetupConfig : public SvtConfig
 
   std::shared_ptr<SvtDbConfig> getDbConfig() { return mDbConfig; }
   std::string getLogFilePath() { return mLogFilePath; }
-  SvtLogger::Mode getTermVerbosity() { return mTermVerbosity; }
-  SvtLogger::Mode getFileVebosity() { return mFileVerbosity; }
+  SvtUtils::SvtLogger::Mode getTermVerbosity() { return mTermVerbosity; }
+  SvtUtils::SvtLogger::Mode getFileVebosity() { return mFileVerbosity; }
   std::string getKafkaServer() { return mKafkaServer; }
   std::string getKafkaPort() { return mKaflaPort; }
 };

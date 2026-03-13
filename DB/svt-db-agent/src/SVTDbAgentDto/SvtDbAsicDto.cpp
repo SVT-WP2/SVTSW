@@ -57,7 +57,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   if (getAllEntriesFromDB(entries, filters))
   {
-    getLogger()->logInfo("Number of asics: " + std::to_string(entries.size()));
+    logInfo("Number of asics: " + std::to_string(entries.size()));
   }
 
   if (!msgData.contains("pager"))
@@ -99,8 +99,8 @@ void SvtDbAgent::SvtDbAsicDto::createReplyMsg(
     const std::vector<SvtDbEntry> &entries, SvtKafkaReplyMsg &msgReply,
     int totalCount)
 {
-  getLogger()->logInfo("Creating message with " +
-                       std::to_string(entries.size()) + " out of " +
-                       std::to_string(totalCount));
+  logInfo("Creating message with " +
+          std::to_string(entries.size()) + " out of " +
+          std::to_string(totalCount));
   this->SvtDbBaseDto::createReplyMsg(entries, msgReply, totalCount);
 }

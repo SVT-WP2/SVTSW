@@ -12,8 +12,6 @@
 #include <string>
 #include <vector>
 
-#include "nlohmann/json.hpp"
-
 #include "Database/DatabaseInterface.h"
 
 extern std::atomic<int> queryTime;

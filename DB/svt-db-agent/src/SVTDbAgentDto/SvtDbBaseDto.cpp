@@ -151,8 +151,8 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     }
     else
     {
-      getLogger()->logError("Wrong filter: column with name " + filter.first +
-                            " does not exists in table " + getTableName());
+      logError("Wrong filter: column with name " + filter.first +
+               " does not exists in table " + getTableName());
       return false;
     }
   }
@@ -195,7 +195,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   }
   catch (const std::exception &e)
   {
-    getLogger()->logError(e.what());
+    logError(e.what());
     entries.clear();
     return false;
   }
@@ -408,7 +408,7 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
   }
   else
   {
-    getLogger()->logError("Request " + std::string(reqName) +
-                          " already exist in request list.");
+    logError("Request " + std::string(reqName) +
+             " already exist in request list.");
   }
 }

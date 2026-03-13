@@ -13,6 +13,7 @@
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbChipDto.h"
 #include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
@@ -78,7 +79,7 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, Svt
   //! Update Asic chipId
   SvtDbEntry asicEntry;
   asicEntry.addValue("chipId", chipEntry.getValue("id"));
-  Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
+  SvtUtils::Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
   return true;
 };
@@ -101,7 +102,7 @@ void SvtDbAgent::SvtDbChipDto::createEntry(
     return;
   }
 
-  getLogger()->logInfo("Creating reply SvtKafkaMessage");
+  logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(chipEntry, replyMsg);
 }
 

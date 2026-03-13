@@ -62,8 +62,6 @@ namespace SvtDbAgent
     std::string &getBrokerName() { return mBrokerName; }
 
    private:
-    SvtUtils::SvtLogger *mLogger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
-
     void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
                   const SvtKafka::SvtKafkaMsgStatus &status);
 

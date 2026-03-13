@@ -60,11 +60,11 @@ bool SvtKafkaProducer::createProducer()
       {
       case 0:
         dump = mGlobalConf->dump();
-        mLogger->logInfo("# Global config");
+        logInfo("# Global config");
         break;
       case 1:
         dump = mTopicConf->dump();
-        mLogger->logInfo("# Topic config");
+        logInfo("# Topic config");
         break;
       }
 
@@ -78,7 +78,7 @@ bool SvtKafkaProducer::createProducer()
         it++;
       }
       ss << std::endl;
-      mLogger->logInfo(ss.str());
+      logInfo(ss.str());
     }
   }
 
@@ -94,11 +94,11 @@ bool SvtKafkaProducer::createProducer()
       RdKafka::Producer::create(mGlobalConf.get(), mErrStr));
   if (!mProducer)
   {
-    mLogger->logError("Failed to create producer: " + mErrStr);
+    logError("Failed to create producer: " + mErrStr);
     return false;
   }
 
-  mLogger->logInfo("% Created producer " + mProducer->name());
+  logInfo("% Created producer " + mProducer->name());
 
   return true;
 }
@@ -106,7 +106,7 @@ bool SvtKafkaProducer::createProducer()
 //========================================================================+
 bool SvtKafkaProducer::start()
 {
-  mLogger->logInfo("Starting Producer " + mProducer->name());
+  logInfo("Starting Producer " + mProducer->name());
   mThread.setName(mProducer->name());
   mThread.start(std::bind(static_cast<void (SvtKafkaProducer::*)()>(&SvtKafkaProducer::push), this));
   return true;
@@ -138,7 +138,7 @@ bool SvtKafkaProducer::send(const std::string_view &topic,
   std::lock_guard<std::mutex> lk(mMutex);
   if (!mThread.getIsRunning())
   {
-    mLogger->logWarning("Producer " + ((mProducer) ? mProducer->name() : "") + " is not running. Message will not be sent.");
+    logWarning("Producer " + ((mProducer) ? mProducer->name() : "") + " is not running. Message will not be sent.");
     return false;
   }
   RdKafka::Headers *headers = RdKafka::Headers::create();
@@ -175,13 +175,13 @@ bool SvtKafkaProducer::send(const std::string_view &topic,
     }
     else if (resp != RdKafka::ERR_NO_ERROR)
     {
-      mLogger->logError("% Produce failed: " + RdKafka::err2str(resp));
+      logError("% Produce failed: " + RdKafka::err2str(resp));
       delete headers;
     }
     else
     {
-      mLogger->logInfo("% Produced message (" + std::to_string(payload_size) +
-                       " bytes)");
+      logInfo("% Produced message (" + std::to_string(payload_size) +
+              " bytes)");
       mProducer->poll(100);
     }
     break;

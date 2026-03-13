@@ -65,11 +65,11 @@ bool SvtKafkaConsumer::createConsumer()
       {
       case 0:
         dump = mGlobalConf->dump();
-        mLogger->logDebug("# Global config");
+        logDebug("# Global config");
         break;
       case 1:
         dump = mTopicConf->dump();
-        mLogger->logDebug("# Topic config");
+        logDebug("# Topic config");
         break;
       }
 
@@ -83,7 +83,7 @@ bool SvtKafkaConsumer::createConsumer()
         it++;
       }
       ss << std::endl;
-      mLogger->logDebug(ss.str());
+      logDebug(ss.str());
     }
   }
   //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
@@ -97,11 +97,11 @@ bool SvtKafkaConsumer::createConsumer()
       RdKafka::Consumer::create(mGlobalConf.get(), mErrStr));
   if (!mConsumer)
   {
-    mLogger->logError("Failed to create consumer: " + mErrStr);
+    logError("Failed to create consumer: " + mErrStr);
     return false;
   }
 
-  mLogger->logInfo("% Created consumer " + mConsumer->name());
+  logInfo("% Created consumer " + mConsumer->name());
 
   /*
    * Create topic handle.
@@ -111,7 +111,7 @@ bool SvtKafkaConsumer::createConsumer()
       mConsumer.get(), mTopicName, mTopicConf.get(), mErrStr));
   if (!mTopic)
   {
-    mLogger->logError("Failed to create topic: " + mErrStr);
+    logError("Failed to create topic: " + mErrStr);
     return false;
   }
 
@@ -122,7 +122,7 @@ bool SvtKafkaConsumer::createConsumer()
       mConsumer->start(mTopic.get(), mPartition, RdKafka::Topic::OFFSET_END);
   if (resp != RdKafka::ERR_NO_ERROR)
   {
-    mLogger->logError("Failed to start consumer: " + RdKafka::err2str(resp));
+    logError("Failed to start consumer: " + RdKafka::err2str(resp));
     return false;
   }
   return true;
@@ -131,8 +131,8 @@ bool SvtKafkaConsumer::createConsumer()
 //========================================================================+
 bool SvtKafkaConsumer::start()
 {
-  mLogger->logInfo("Starting Consumer " + mConsumer->name() +
-                   " in topic " + mTopic->name());
+  logInfo("Starting Consumer " + mConsumer->name() +
+          " in topic " + mTopic->name());
   mThread.setName(mConsumer->name());
   mThread.start(std::bind(&SvtKafkaConsumer::pull, this));
   return true;

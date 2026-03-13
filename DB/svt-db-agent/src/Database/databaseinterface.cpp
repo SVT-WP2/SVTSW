@@ -1,4 +1,5 @@
 #include "Database/DatabaseInterface.h"
+#include "SvtLogger.h"
 
 #include <cstring>
 #include <iostream>
@@ -46,7 +47,7 @@ bool DatabaseInterface::close()
     }
     catch (pqxx::sql_error const &e)
     {
-      logger->logError(std::string("DB::close SQL error: ") + e.what());
+      logError(std::string("DB::close SQL error: ") + e.what());
     }
   }
 
@@ -70,7 +71,7 @@ bool DatabaseInterface::connect()
   }
   catch (pqxx::sql_error const &e)
   {
-    logger->logError(std::string("DB::connect SQL error: ") + e.what());
+    logError(std::string("DB::connect SQL error: ") + e.what());
 
     close();
 
@@ -78,8 +79,8 @@ bool DatabaseInterface::connect()
   }
   catch (std::exception const &e)
   {
-    logger->logError(std::string("Error: ") +
-                     e.what());
+    logError(std::string("Error: ") +
+             e.what());
     close();
 
     return false;
@@ -91,40 +92,40 @@ bool DatabaseInterface::connect()
 bool DatabaseInterface::reconnect()
 {
   std::string errMessage;
-  logger->logWarning("DatabaseInterface::reconnect: trying to reconnect");
+  logWarning("DatabaseInterface::reconnect: trying to reconnect");
 
   // if (!DatabaseInterface::instance)
   // {
-  //   logger.logError("DatabaseInterface::reconnect: myInstance = nullptr");
+  //   logError("DatabaseInterface::reconnect: myInstance = nullptr");
   //   return false;
   // }
 
   if (!this->mDBConnection)
   {
-    logger->logError("DatabaseInterface::reconnect: mDBConnection = nullptr");
+    logError("DatabaseInterface::reconnect: mDBConnection = nullptr");
     return false;
   }
 
   if (mDBConnection->is_open())
   {
-    logger->logWarning(
+    logWarning(
         "DatabaseInterface::reconnect: trying to terminate connection");
     this->close();
   }
   try
   {
-    logger->logWarning(
+    logWarning(
         "DatabaseInterface::reconnect: trying to create connection");
     this->connect();
   }
   catch (pqxx::sql_error const &e)
   {
-    logger->logError(std::string("DB::reconnect SQL error: ") + e.what());
+    logError(std::string("DB::reconnect SQL error: ") + e.what());
     close();
     return false;
   }
 
-  logger->logWarning("DatabaseInterface::reconnect: connect done");
+  logWarning("DatabaseInterface::reconnect: connect done");
   return (mDBConnection != nullptr && mDBWork != nullptr);
 }
 
@@ -186,7 +187,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     }
 
     //! prepare statement
-    // logger->logInfo(query);
+    // logInfo(query);
     mDBConnection->prepare(query_name, query);
     pqxx::prepped prepare_name{query_name};
     pqxx::result res{mDBWork->exec(prepare_name)};
@@ -230,7 +231,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     message = std::string("SQL error: ") + e.what() +
               std::string("Query was: ") + e.query() +
               std::string(" with statement: ") + query;
-    logger->logError(message);
+    logError(message);
     message = e.what();
 
     mDBWork->exec("DEALLOCATE PREPARE " + query_name);

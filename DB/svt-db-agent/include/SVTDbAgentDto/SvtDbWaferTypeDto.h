@@ -13,6 +13,7 @@
 #include "nlohmann/json_fwd.hpp"
 
 #include "SvtDbBaseDto.h"
+#include "SvtUtilities.h"
 
 namespace SvtDbAgent
 {
@@ -57,8 +58,8 @@ namespace SvtDbAgent
     friend class SvtDbWaferDto;
 
    private:
-    SvtDbWaferTypeMapDto *waferTypeMapDto = Singleton<SvtDbWaferTypeMapDto>::instance();
-    SvtDbWaferTypeImageDto *waferTypeimageDto = Singleton<SvtDbWaferTypeImageDto>::instance();
+    SvtDbWaferTypeMapDto *waferTypeMapDto = SvtUtils::Singleton<SvtDbWaferTypeMapDto>::instance();
+    SvtDbWaferTypeImageDto *waferTypeimageDto = SvtUtils::Singleton<SvtDbWaferTypeImageDto>::instance();
 
     virtual void createAllRequest() final;
     // virtual void parseJsonData(const nlohmann::json &j_data,

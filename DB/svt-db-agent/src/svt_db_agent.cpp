@@ -25,15 +25,13 @@ using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
 std::string version = std::string(VERSION);
 
-SvtUtils::SvtLogger *logger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
-
 bool run = true;
 //========================================================================+
 void sigterm_handler(int sig)
 {
   std::ostringstream ss;
   ss << "Caught signal " << sig << ", initiating shutdown...";
-  logger->logWarning(ss.str());
+  logWarning(ss.str());
   run = false;
 }
 
@@ -44,7 +42,7 @@ createSbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
   auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
   {
-    logger->logError("Unable to create test config");
+    logError("Unable to create test config");
     return nullptr;
   }
   return setupConfig.value();
@@ -61,12 +59,12 @@ bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const 
 
   if (dbInterface->connect())
   {
-    logger->logInfo("Successfully connected to " + dbName + ".");
+    logInfo("Successfully connected to " + dbName + ".");
     return true;
   }
   else
   {
-    logger->logError("Cannot connet to " + dbName + "!");
+    logError("Cannot connet to " + dbName + "!");
   }
 
   return false;
@@ -81,7 +79,7 @@ int main(int argc, const char *argv[])
 
   if (argc < 2)
   {
-    logger->logError("Usage svt-db-agent <setup config file>");
+    logError("Usage svt-db-agent <setup config file>");
     exit(-1);
   }
 
@@ -90,10 +88,10 @@ int main(int argc, const char *argv[])
   const auto setupConfig = createSbAgentSetupeConfig(setupConfigFile);
   const auto dbConfig = setupConfig->getDbConfig();
 
-  logger->configure(setupConfig->getLogFilePath(),
-                    setupConfig->getTermVerbosity(),
-                    setupConfig->getFileVebosity());
-  logger->logInfo("********************** Svt Db Agent, version:" + version);
+  configureLogger(setupConfig->getLogFilePath(),
+                  setupConfig->getTermVerbosity(),
+                  setupConfig->getFileVebosity());
+  logInfo("********************** Svt Db Agent, version:" + version);
 
   DatabaseInterface *dbInterface = DatabaseIF::instance();
 
@@ -112,20 +110,20 @@ int main(int argc, const char *argv[])
     if (!connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
                      psqlport, psqlDbName, psqlDbSchema))
     {
-      logger->logError("Cannot connect to DB");
+      logError("Cannot connect to DB");
       return EXIT_FAILURE;
     }
     else
     {
-      logger->logInfo("Databaseinterface is connected");
-      logger->logInfo("Using Scheme: " + psqlDbSchema);
+      logInfo("Databaseinterface is connected");
+      logInfo("Using Scheme: " + psqlDbSchema);
     }
   }
   try
   {
     std::string kafka_broker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
     SvtDbAgent::SvtDbAgentService *_dbAgent =
-        Singleton<SvtDbAgent::SvtDbAgentService>::instance();
+        SvtUtils::Singleton<SvtDbAgent::SvtDbAgentService>::instance();
     _dbAgent->setBrokerName(kafka_broker);
     // _dbAgent->setLogMessages(true);
     if (!_dbAgent->configureService(false))
@@ -141,7 +139,7 @@ int main(int argc, const char *argv[])
   }
   catch (const std::exception &e)
   {
-    logger->logError("\n### Caught exception in the main thread ###\n");
+    logError("\n### Caught exception in the main thread ###\n");
     std::cout << e.what() << std::endl;
     return EXIT_FAILURE;
   }
