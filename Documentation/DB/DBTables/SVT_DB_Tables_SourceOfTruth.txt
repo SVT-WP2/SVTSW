@@ -225,8 +225,7 @@ Table main.SvtTestTypeConfig {
 Table main.SvtTestTemplate {
   id integer [primary key, increment]
   asicFamilyType main.asicFamilyType [not null]
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
-  testTypeConfigId integer [ref: > main.SvtTestTypeConfig.id]
+  testTypeConfigId integer [ref: > main.SvtTestTypeConfig.id, not null]
   isEnabled bool [default: TRUE]
 }
 
