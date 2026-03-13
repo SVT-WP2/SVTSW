@@ -1,5 +1,8 @@
 from utilities.WPResponseBuilder import ResponseBuilder
 from sequencer.WPSequencer import WPSequencer
+from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+
+from stateMachine.WpAgentStateMachine import WPAgentState
 
 
 def run_sequence(filepath=None, executor=None):
@@ -21,10 +24,10 @@ def run_sequence(filepath=None, executor=None):
         sequencer.run_sequence()
 
         # Update state after sequence
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("RunSequencerReply", f"Sequence from {filepath} executed successfully")
 
     except Exception as e:
-        g.wpag_state = "WP_Error"
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("RunSequencerReply", str(e), 500)
