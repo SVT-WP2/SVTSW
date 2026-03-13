@@ -1,0 +1,17 @@
+{
+  "Developer": [
+    "developer",
+    "dev1",
+    "admin"
+  ],
+  "Expert": [
+    "expert1",
+    "expert2",
+    "alice"
+  ],
+  "User": [
+    "user1",
+    "user2",
+    "bob"
+  ]
+}
