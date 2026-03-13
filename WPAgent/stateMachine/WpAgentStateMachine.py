@@ -17,14 +17,14 @@ class WPAgentState(Enum):
     AtContact = auto()
     AtContact_Locked = auto()
     Error = auto()
-    UsedByDeveloper = auto()
+    UsedByDeveloper = auto() # ← Developer mode - ALL commands have to be allowed
     UserLogged = auto()
 
 
 class WPAgentStateMachine:
     """
 
-    state transitions according to our diagram.
+    state transitions according to our diagram with developer Bypass
     """
 
     def __init__(self):
@@ -143,6 +143,11 @@ class WPAgentStateMachine:
             WPAgentState.Error: {
                 'ResetAgent': WPAgentState.UserLogged,
             },
+
+            WPAgentState.UsedByDeveloper: {
+                # NOTE: In can_execute(),  allow ALL commands
+                'Error': WPAgentState.Error,
+            },
         }
 
     def _sync_to_global_params(self):
@@ -154,6 +159,10 @@ class WPAgentStateMachine:
     def get_state(self):
         """Get current state"""
         return self.current_state
+
+    def is_developer_mode(self) -> bool:
+        """Check if in developer mode (bypass all restrictions)"""
+        return self.current_state == WPAgentState.UsedByDeveloper
 
     def get_state_name(self):
         """Get current state name as string"""
@@ -170,6 +179,11 @@ class WPAgentStateMachine:
             True if transition successful, False if invalid
         """
         self.current_command = command
+        # DEVELOPER BYPASS
+        if self.is_developer_mode():
+            # State stays UsedByDeveloper
+            self._sync_to_global_params()
+            return True
 
         # Check if transition is valid
         valid_transitions = self.transitions.get(self.current_state, {})
@@ -185,7 +199,6 @@ class WPAgentStateMachine:
         self.current_state = new_state
 
         self._sync_to_global_params()
-        print(f"✓State transition: {self.previous_state.name} --[{command}]--> {self.current_state.name}")
 
         return True
 
@@ -199,7 +212,6 @@ class WPAgentStateMachine:
         self.previous_state = self.current_state
         self.current_state = state
         self._sync_to_global_params()
-        print(f"⚠Forced state change: {self.previous_state.name} --> {self.current_state.name}")
 
     def is_in_state(self, state: WPAgentState) -> bool:
         """Check if currently in specified state"""
@@ -215,11 +227,16 @@ class WPAgentStateMachine:
         Returns:
             True if command is valid for current state
         """
+        # DEVELOPER BYPASS:
+        if self.is_developer_mode():
+            return True
         valid_transitions = self.transitions.get(self.current_state, {})
         return command in valid_transitions
 
     def get_available_commands(self):
         """Get list of commands available in current state"""
+        if self.is_developer_mode():
+            return ["ALL COMMANDS ALLOWED (Developer Mode)"]
         return list(self.transitions.get(self.current_state, {}).keys())
 
     def reset(self):
