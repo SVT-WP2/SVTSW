@@ -3455,7 +3455,7 @@ components:
         - id
         - asicFamilType
         - testTypeId
-        - testConfigId
+        - testTypeConfigId
         - isEnabled
       properties:
         id:
@@ -3464,22 +3464,19 @@ components:
           type: string
         testTypeId:
           type: number
-        testConfigId:
+        testTypeConfigId:
           type: number
         isEnabled:
           type: boolean
     SvtTestTemplateCreateDto:
       required:
         - asicFamilyType
-        - testTypeId
-        - testConfigId
+        - testTypeConfigId
         - isEnabled
       properties:
         asicFamilType:
           type: string
-        testTypeId:
-          type: number
-        testConfigId:
+        testTypeConfigId:
           type: number
         isEnabled:
           type: boolean
