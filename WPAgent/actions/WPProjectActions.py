@@ -348,8 +348,7 @@ def reset_agent_state():
 
     old_state = agentStateMachine.getState().name
 
-    # Reset the state machine
-    agentStateMachine.reset()
+    agentStateMachine.transition('ResetAgent')
 
     new_state = agentStateMachine.getState().name
 

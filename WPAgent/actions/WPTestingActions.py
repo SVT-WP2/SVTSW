@@ -2,6 +2,8 @@ from drivers.WPFactory import get_prober
 from utilities.WPHelpers import resolve_project_parameters
 from utilities.WPResponseBuilder import ResponseBuilder
 import os
+from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+from stateMachine.WpAgentStateMachine import WPAgentState
 
 
 def _ensure_initialized():
@@ -35,12 +37,10 @@ def move_chuck_xy(x, y, address=None, machine_type=None):
         prober = get_prober(machine_type, address)
         prober.move_chuck_xy(x, y)
         prober.local_mode()
-
-        g.wpag_state = "WP_Idle"
-
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
         return ResponseBuilder.success("MoveChuckXYReply", f"Moved chuck to x={x}, y={y}")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
 
 
@@ -60,11 +60,12 @@ def move_chuck_z(z, address=None, machine_type=None):
         prober.move_chuck_z(z)
         prober.local_mode()
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("MoveChuckZReply", f"Moved chuck to z={z}")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
 
 
@@ -84,11 +85,12 @@ def run_ptpa(address=None, machine_type=None):
         prober.run_ptpa()
         prober.local_mode()
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('RunPTPA')
 
         return ResponseBuilder.success("RunPTPAReply", "PTPA executed")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("RunPTPAReply", str(e), 500)
 
 
@@ -109,12 +111,11 @@ def step_next_die(address=None, machine_type=None):
         prober.local_mode()
 
         # TODO: Update die position if result contains die coordinates
-        # g.set_current_die(col, row, subsite)
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('MoveChuckNextDie')
 
         return ResponseBuilder.success("StepNextDieReply", f"Stepped to next die: {result}")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("StepNextDieReply", str(e), 500)
 
 
@@ -136,12 +137,14 @@ def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=N
 
         # Update die position
         g.set_current_die(col, row, subsite)
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('MoveChuckRowCol')
+
         g.chuck_z_position_state = "Separation"
 
         return ResponseBuilder.success("GoToDieReply", f"Moved to die {col},{row}")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("GoToDieReply", str(e), 500)
 
 
@@ -164,8 +167,11 @@ def switch_camera(mount_point, address=None, machine_type=None):
         # Update camera
         g.camera_mount_point = mount_point
 
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
+
         return ResponseBuilder.success("SwitchCameraReply", f"Switched camera to {mount_point}")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("SwitchCameraReply", str(e), 500)
 
 
@@ -184,12 +190,12 @@ def move_chuck_home(address=None, machine_type=None):
         prober = get_prober(machine_type, address)
         prober.move_chuck_home()
         prober.local_mode()
-
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("MoveChuckHomeReply", "Chuck moved home")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckHomeReply", str(e), 500)
 
 
@@ -214,13 +220,15 @@ def unload_wafer(address=None, machine_type=None):
 
         # Clear wafer
         g.clear_wafer()
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('Unload')
+
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "LoadPosition"
 
         return ResponseBuilder.success("UnloadWaferReply", "Wafer unloaded")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
 
 
@@ -244,7 +252,8 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
 
         return ResponseBuilder.success("CleaningReply", "Cleaning completed")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("CleaningReply", str(e), 500)
 
 
@@ -272,8 +281,11 @@ def open_project(project_name: str, address=None, machine_type=None):
         g.projectName = project_name
         # g.opened_project_id = project_id  # TODO: Get from DB
 
+        success = agentStateMachine.transition('OpenProject')
+
         return ResponseBuilder.success("OpenProjectReply", f"Opened project: {project_path}")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)
 
 
@@ -304,13 +316,15 @@ def load_wafer(address=None, machine_type=None):
         # For now, set placeholder values
         # g.set_wafer_loaded(wafer_id, orientation)
         # g.total_dies_number = total_dies
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('Load')
+
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "TestArea"
 
         return ResponseBuilder.success("LoadWaferReply", "Wafer has been loaded to center")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("LoadWaferReply", str(e), 500)
 
 
@@ -330,11 +344,12 @@ def find_home(address=None, machine_type=None):
         prober.find_home()
         prober.local_mode()
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("FindHomeReply", "Found home position")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("FindHomeReply", str(e), 500)
 
 
@@ -377,6 +392,8 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         prober.align_wafer(align_die_col, align_die_row, subsite)
         prober.local_mode()
 
+        agentStateMachine.transition('AlignWafer')
+
         g.wpag_state = "WP_Idle"
 
         return ResponseBuilder.success(
@@ -384,7 +401,8 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
             f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}"
         )
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("AlignWaferReply", str(e), 500)
 
 
@@ -406,11 +424,11 @@ def go_to_contact(address=None, machine_type=None):
 
         # Update Z position
         g.chuck_z_position_state = "Contact"
-        g.wpag_state = "WP_Testing"
+        agentStateMachine.transition('MoveChuckContact')
 
         return ResponseBuilder.success("GoToContactReply", "Probe station is in contact")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("GoToContactReply", str(e), 500)
 
 
@@ -432,11 +450,11 @@ def go_to_separation(address=None, machine_type=None):
 
         # Update Z position
         g.chuck_z_position_state = "Separation"
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('MoveChuckSeparation')
 
         return ResponseBuilder.success("GoToSeparationReply", "Probe station is in separation")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("GoToSeparationReply", str(e), 500)
 
 
@@ -456,10 +474,11 @@ def auto_focus(address=None, machine_type=None):
         prober.auto_focus()
         prober.local_mode()
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('AutoFocus')
 
         return ResponseBuilder.success("AutoFocusReply", "Auto-focus command successfully executed")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("AutoFocusReply", str(e), 500)
 
 
@@ -482,11 +501,13 @@ def move_chuck_work_area(work_area=0, address=None, machine_type=None):
         # Update working area
         area_names = {0: "Probing", 1: "Offaxis"}
         g.current_working_area = area_names.get(work_area, f"Area{work_area}")
-        g.wpag_state = "WP_Idle"
+
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("MoveChuckToWorkAreaReply", f"Moved to {work_area} workarea")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckToWorkAreaReply", str(e), 500)
 
 
@@ -504,9 +525,11 @@ def local_state(address=None, machine_type=None):
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
         prober.local_mode()
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("LocalModeReply", "Local mode")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("LocalModeReply", str(e), 500)
 
 
@@ -527,11 +550,12 @@ def go_to_previous_die(address=None, machine_type=None):
 
         # TODO: Update die position if result contains coordinates
         # g.set_current_die(col, row, subsite)
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('MoveChuckPreviousDie')
 
         return ResponseBuilder.success("GoToPreviousDieReply", "Moved to previous die")
     except Exception as e:
-        g.wpag_state = "WP_Error"
+
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("GoToPreviousDieReply", str(e), 500)
 
 
@@ -549,6 +573,7 @@ def get_chuck_position(address=None, machine_type=None):
 
         return ResponseBuilder.success("GetChuckPositionReply", f"Chuck is {position}")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         try:
             prober.local_mode()
         except:
@@ -574,10 +599,11 @@ def set_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
 
         g.set_overdrive(overtravelGap)
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.transition('SetOverdrive')
 
         return ResponseBuilder.success("SetOvertravelReply", "SetOvertravel command successfully executed")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
 
 
@@ -599,8 +625,9 @@ def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None
 
         g.set_overdrive(overtravelGap)
 
-        g.wpag_state = "WP_Idle"
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("DisableOvertravelReply", "DisableOvertravel command successfully executed")
     except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)

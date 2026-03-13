@@ -1,92 +1,281 @@
+
 from enum import Enum, auto
 
 
-class SvtWpAgentState(Enum):
-    Idle = auto()
-    Running = auto()
-    Retrying = auto()
-    Failed = auto()
-    Aborted = auto()
-
-
-class SvtWpAgentEvent(Enum):
-    Start = auto()
-    Success = auto()
+class WPAgentState(Enum):
+    ServiceOn = auto()
+    OpenedProject = auto()
+    Aligned = auto()
+    ChuckSafePosition = auto()
+    ChuckUnloaded = auto()
+    Unloaded = auto()
+    OnDie_Wide_withPTPA = auto()
+    OnDie_OffAxis_withoutPTPA = auto()
+    OnDie_OffAxis_withPTPA = auto()
+    OnDie_Wide_withoutPTPA = auto()
+    OnDie_Wide = auto()
+    AtContact = auto()
+    AtContact_Locked = auto()
     Error = auto()
-    Abort = auto()
+    UsedByDeveloper = auto() # ← Developer mode - ALL commands have to be allowed
+    UserLogged = auto()
 
 
-class SvtWpAgentStateMachine:
-    def __init__(self, maxRetries=3):
-        self.state = SvtWpAgentState.Idle
-        self.retryCount = 0
-        self.maxRetries = maxRetries
-        self.current_command = None  # Track what's currently executing
+class WPAgentStateMachine:
+    """
 
-    def updateState(self, event: SvtWpAgentEvent):
-        if self.state in [SvtWpAgentState.Idle, SvtWpAgentState.Retrying] and event == SvtWpAgentEvent.Start:
-            self.state = SvtWpAgentState.Running
+    state transitions according to our diagram with developer Bypass
+    """
 
-        elif self.state == SvtWpAgentState.Running:
-            if event == SvtWpAgentEvent.Success:
-                self._reset()
-            elif event == SvtWpAgentEvent.Error:
-                self.retryCount += 1
-                self.state = SvtWpAgentState.Retrying if self.retryCount <= self.maxRetries else SvtWpAgentState.Failed
-
-        elif self.state == SvtWpAgentState.Retrying:
-            if event == SvtWpAgentEvent.Success:
-                self._reset()
-            elif event == SvtWpAgentEvent.Error:
-                self.retryCount += 1
-                self.state = SvtWpAgentState.Retrying if self.retryCount <= self.maxRetries else SvtWpAgentState.Failed
-
-        elif self.state == SvtWpAgentState.Failed and event == SvtWpAgentEvent.Abort:
-            self.state = SvtWpAgentState.Aborted
-
-    def _reset(self):
-        self.state = SvtWpAgentState.Idle
-        self.retryCount = 0
+    def __init__(self):
+        self.current_state = WPAgentState.ServiceOn
+        self.previous_state = None
         self.current_command = None
 
-    def abort(self):
-        self.updateState(SvtWpAgentEvent.Abort)
+        #  transitions
+        self.transitions = {
+            # From ServiceOn
+            WPAgentState.ServiceOn: {
+                'OpenProject': WPAgentState.OpenedProject,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OpenedProject
+            WPAgentState.OpenedProject: {
+                'AlignWafer': WPAgentState.Aligned,
+                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
+                'Error': WPAgentState.Error,
+            },
+
+            # From Aligned
+            WPAgentState.Aligned: {
+                'Unload': WPAgentState.Unloaded,
+                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
+                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From ChuckSafePosition
+            WPAgentState.ChuckSafePosition: {
+                'InitProbing': WPAgentState.Aligned,
+                'Unload': WPAgentState.Unloaded,
+                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
+                'Error': WPAgentState.Error,
+            },
+
+            # From ChuckUnloaded
+            WPAgentState.ChuckUnloaded: {
+                'MoveChuckLoaded': WPAgentState.UserLogged,
+                'Error': WPAgentState.Error,
+            },
+
+            # From Unloaded
+            WPAgentState.Unloaded: {
+                'Load': WPAgentState.UserLogged,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_Wide
+            WPAgentState.OnDie_Wide: {
+                'MoveChuckContact': WPAgentState.AtContact,
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+
+
+            # From AtContact
+            WPAgentState.AtContact: {
+                'TestingLock': WPAgentState.AtContact_Locked,
+                'MoveChuckSeparation': WPAgentState.OnDie_Wide,
+                'Error': WPAgentState.Error,
+            },
+
+            # From AtContact_Locked
+            WPAgentState.AtContact_Locked: {
+                'TestingUnlock': WPAgentState.AtContact,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_OffAxis_withoutPTPA
+            WPAgentState.OnDie_OffAxis_withoutPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'RunPTPA': WPAgentState.OnDie_OffAxis_withPTPA,
+                'MoveChuckWide': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'AutoFocus': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_Wide_withPTPA
+            WPAgentState.OnDie_Wide_withPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'SetOverdrive': WPAgentState.OnDie_Wide_withPTPA,
+                'MoveChuckContact': WPAgentState.AtContact,
+                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From OnDie_Wide_withoutPTPA
+            WPAgentState.OnDie_Wide_withoutPTPA: {
+                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
+                'SetOverdrive': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckContact': WPAgentState.AtContact,
+                'MoveChuckOffAxis': WPAgentState.OnDie_OffAxis_withoutPTPA,
+                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
+                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
+                'Error': WPAgentState.Error,
+            },
+
+            # From Error
+            WPAgentState.Error: {
+                'ResetAgent': WPAgentState.UserLogged,
+            },
+
+            WPAgentState.UsedByDeveloper: {
+                # NOTE: In can_execute(),  allow ALL commands
+                'Error': WPAgentState.Error,
+            },
+        }
+
+    def _sync_to_global_params(self):
+        """Auto-sync current state to global parameters to not to write same thing a few times """
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        g = SvtWPAagentGlobalParameters.getInstance()
+        g.wpag_state = self.current_state.name
+
+    def get_state(self):
+        """Get current state"""
+        return self.current_state
+
+    def is_developer_mode(self) -> bool:
+        """Check if in developer mode (bypass all restrictions)"""
+        return self.current_state == WPAgentState.UsedByDeveloper
+
+    def get_state_name(self):
+        """Get current state name as string"""
+        return self.current_state.name
+
+    def transition(self, command: str) -> bool:
+        """
+        Attempt state transition based on command
+
+        Args:
+            command: Command name triggering the transition
+
+        Returns:
+            True if transition successful, False if invalid
+        """
+        self.current_command = command
+        # DEVELOPER BYPASS
+        if self.is_developer_mode():
+            # State stays UsedByDeveloper
+            self._sync_to_global_params()
+            return True
+
+        # Check if transition is valid
+        valid_transitions = self.transitions.get(self.current_state, {})
+
+        if command not in valid_transitions:
+            print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
+            print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
+            return False
+
+        # run transition
+        new_state = valid_transitions[command]
+        self.previous_state = self.current_state
+        self.current_state = new_state
+
+        self._sync_to_global_params()
+
+        return True
+
+    def force_state(self, state: WPAgentState):
+        """
+        Force a specific state (use with caution!) mainly for UsedByDeveloper
+
+        Args:
+            state: Target state
+        """
+        self.previous_state = self.current_state
+        self.current_state = state
+        self._sync_to_global_params()
+
+    def is_in_state(self, state: WPAgentState) -> bool:
+        """Check if currently in specified state"""
+        return self.current_state == state
+
+    def can_execute(self, command: str) -> bool:
+        """
+        Check if command can be executed in current state
+
+        Args:
+            command: Command to check
+
+        Returns:
+            True if command is valid for current state
+        """
+        # DEVELOPER BYPASS:
+        if self.is_developer_mode():
+            return True
+        valid_transitions = self.transitions.get(self.current_state, {})
+        return command in valid_transitions
+
+    def get_available_commands(self):
+        """Get list of commands available in current state"""
+        if self.is_developer_mode():
+            return ["ALL COMMANDS ALLOWED (Developer Mode)"]
+        return list(self.transitions.get(self.current_state, {}).keys())
 
     def reset(self):
-        self._reset()
+        """Reset to initial state"""
+        self.previous_state = self.current_state
+        self.current_state = WPAgentState.ServiceOn
+        self.current_command = None
+        self._sync_to_global_params()
+        print(f" State machine reset to {self.current_state.name}")
 
-    def getState(self):
-        return self.state
+    def enter_error_state(self, error_message: str = None):
+        """Enter error state"""
+        self.previous_state = self.current_state
+        self.current_state = WPAgentState.Error
+        self._sync_to_global_params()
+        if error_message:
+            print(f"  error state: {error_message}")
+        else:
+            print(f"  error state from {self.previous_state.name}")
 
-    def isReadyToExecute(self):
-        """Check if agent is ready to accept new commands"""
-        return self.state in [SvtWpAgentState.Idle, SvtWpAgentState.Retrying]
-
-    def isBusy(self):
-        """Check if agent is currently processing a command"""
-        return self.state == SvtWpAgentState.Running
-
-    def isInProcess(self):
-        """Alias for isBusy() - check if command is in process"""
-        return self.isBusy()
-
-    def setCurrentCommand(self, command_name: str):
-        """Set the currently executing command name"""
-        self.current_command = command_name
-
-    def getCurrentCommand(self):
-        """Get the currently executing command name"""
+    def get_current_command(self):
+        """Get the command that led to current state"""
         return self.current_command
 
-    def canExecute(self, command_name: str = None):
-        """
-        Check if a command can be executed.
-        Returns (can_execute: bool, reason: str)
-        """
-        if self.isBusy():
-            return False, f"Agent is busy executing '{self.current_command}'. Please wait."
 
-        if not self.isReadyToExecute():
-            return False, f"Agent is in '{self.state.name}' state. Cannot execute commands."
+# Singleton instance
+_state_machine_instance = None
 
-        return True, "Ready"
+
+def get_state_machine() -> WPAgentStateMachine:
+    """Get the global state machine instance"""
+    global _state_machine_instance
+    if _state_machine_instance is None:
+        _state_machine_instance = WPAgentStateMachine()
+    return _state_machine_instance
+
+
+def reset_state_machine():
+    """Reset the global state machine"""
+    global _state_machine_instance
+    if _state_machine_instance is not None:
+        _state_machine_instance.reset()
