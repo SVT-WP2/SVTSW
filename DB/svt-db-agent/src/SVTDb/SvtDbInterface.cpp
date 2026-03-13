@@ -7,12 +7,13 @@
 
 #include "SVTDb/SvtDbInterface.h"
 #include "Database/DatabaseInterface.h"
+
+#include "SvtLogger.h"
 #include "SvtUtilities.h"
 
 using std::string;
 using std::vector;
 using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
 using DatabaseIF = Singleton<DatabaseInterface>;
 
 std::atomic<int> queryTime;
@@ -108,7 +109,7 @@ void SvtDbInterface::doGenericQuery(string queryString, rows_t &rows)
       connected = DatabaseIF::instance()->isConnected();
       if (!connected)
       {
-        Singleton<SvtLogger>::instance()->logError("reconnect failed");
+        logError("reconnect failed");
       }
     }
   }

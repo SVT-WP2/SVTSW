@@ -18,9 +18,11 @@
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
 #include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
 #include "SVTDbAgentService/SvtDbAgentRequest.h"
+#include "SvtUtilities.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
+using SvtUtils::Singleton;
 using namespace SvtDbAgent;
 //========================================================================+
 SvtDbAgentRequest::SvtDbAgentRequest() { createAllDtos(); }

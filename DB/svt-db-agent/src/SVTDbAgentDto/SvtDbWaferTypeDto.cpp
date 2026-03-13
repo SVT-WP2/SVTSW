@@ -10,6 +10,7 @@
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "SvtKafkaMessage.h"
 #include "SvtLogger.h"
+#include "SvtUtilities.h"
 #include "nlohmann/json_fwd.hpp"
 
 #include <algorithm>
@@ -103,8 +104,8 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, 
   {
     if (entries.size() != 1)
     {
-      getLogger()->logWarning("More than one wafer type map found for wafertypeId: " + std::to_string(waferTypeId));
-      getLogger()->logWarning("Returning the first only");
+      logWarning("More than one wafer type map found for wafertypeId: " + std::to_string(waferTypeId));
+      logWarning("Returning the first only");
     }
     entry = entries.at(0);
   }
@@ -200,7 +201,7 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(
   //! check Groups
   //! get all defined asic family types
   std::vector<std::string> enum_familyTypes =
-      Singleton<SvtDbEnumDto>::instance()->getEnumValues("asicFamilyType");
+      SvtUtils::Singleton<SvtDbEnumDto>::instance()->getEnumValues("asicFamilyType");
   if (enum_familyTypes.empty())
   {
     err_msg = "No ASIC FamilyType found.";
@@ -282,7 +283,7 @@ bool SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(
            (mecDamagedAsics.size() + coveredAsics.size() +
             mecIntegerAsics.size())))
       {
-        Singleton<SvtLogger>::instance()->logError(
+        logError(
             "Total number of asics in the group: " + std::to_string(g_size) +
             ", existing asics: " + std::to_string(existingAsics.size()) +
             ", damaged asics: " + std::to_string(mecDamagedAsics.size()) +

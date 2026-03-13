@@ -10,11 +10,8 @@
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
 #include "SvtJsonUtils.h"
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 using json = nlohmann::json;
-using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
 
 SvtDbAgentSetupConfig::SvtDbAgentSetupConfig(_dbagent_setupconfig_ctor_tag) {}
 
@@ -30,7 +27,7 @@ SvtDbAgentSetupConfig::factory(const std::string &path)
   }
   else
   {
-    Singleton<SvtLogger>::instance()->logError(
+    logError(
         "Unable to read config file or incomplete information");
     ptr->setInitialized(false);
     return std::nullopt;
@@ -56,7 +53,7 @@ bool SvtDbAgentSetupConfig::decodeJson(json &config)
     {
       mDbConfig = SvtDbConfig::factory(it.value());
       if (!mDbConfig->isInitialized())
-        logger->logWarning("Error in reading of board config");
+        logWarning("Error in reading of board config");
     }
   }
   return mDbConfig->isInitialized();

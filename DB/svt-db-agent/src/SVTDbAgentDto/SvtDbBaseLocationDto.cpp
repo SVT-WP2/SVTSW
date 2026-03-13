@@ -38,7 +38,7 @@ bool SvtDbAgent::SvtDbBaseLocationDto::createEntryWithLocation(
   {
     std::ostringstream ss;
     ss << "unexpected new entry id: " << newEntryId << ", previous id: " << currMaxEntryId;
-    getLogger()->logWarning(ss.str());
+    logWarning(ss.str());
   }
   getEntryWithId(entry, newEntryId);
 
@@ -76,7 +76,7 @@ void SvtDbAgent::SvtDbBaseLocationDto::createEntry(
 {
   SvtDbEntry entry;
   createEntryWithLocation(msg, entry);
-  getLogger()->logInfo("Creating reply SvtKafkaMessage");
+  logInfo("Creating reply SvtKafkaMessage");
   createReplyMsg(entry, replyMsg);
 }
 

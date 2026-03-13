@@ -5,33 +5,119 @@
  * @brief Logger implementation
  */
 
-#include <stdarg.h>
-#include <bitset>
-#include <ctime>
-#include <iomanip>
-#include <mutex>
-#include <sstream>
-
 #include "SvtLogger.h"
 
+#include <stdarg.h>
+#include <bitset>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
 using SvtUtils::SvtLogger;
+
+void logInfo(const std::string &msg, uint32_t severity)
+{
+  LogInstance.logInfo(msg, severity);
+}
+
+void logError(const std::string &msg, uint32_t severity)
+{
+  LogInstance.logError(msg, severity);
+}
+
+void logWarning(const std::string &msg, uint32_t severity)
+{
+  LogInstance.logWarning(msg, severity);
+}
+
+void logDebug(const std::string &msg, uint32_t severity)
+{
+  LogInstance.logDebug(msg, severity);
+}
+
+void logSummary(const std::string &msg, uint32_t severity)
+{
+  LogInstance.logSummary(msg, severity);
+}
+
+void logLive(const std::string &msg, bool isEnd, uint32_t severity)
+{
+  LogInstance.logLive(msg, isEnd, severity);
+}
+
+void setLogVerbosity(SvtLogger::Mode termVerbosity, SvtLogger::Mode fileVerbosity)
+{
+  LogInstance.setVerbosity(termVerbosity, fileVerbosity);
+}
+
+void setLogFile(const std::string &filename)
+{
+  LogInstance.setFile(filename);
+}
+
+void configureLogger(const std::string &filename, SvtLogger::Mode termVerbosity, SvtLogger::Mode fileVerbosity)
+{
+  LogInstance.configure(filename, termVerbosity, fileVerbosity);
+}
+
+void closeLogFile()
+{
+  LogInstance.closeFile();
+}
+
+uint64_t getTimestamp()
+{
+  return LogInstance.getTimestamp();
+}
+
+std::string getTime(SvtLogger::TimestampFormat format)
+{
+  return LogInstance.getTime(format);
+}
+
 //========================================================================+
 SvtLogger::SvtLogger() = default;
 
 //========================================================================+
-SvtLogger::~SvtLogger() { closeFile(); }
+uint64_t SvtLogger::getTimestamp() const
+{
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+          .count());
+}
 
 //========================================================================+
-std::string SvtLogger::getTime()
+std::string SvtLogger::getTime(TimestampFormat format) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::time_t timer =
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  struct tm timeinfo;
-  localtime_r(&timer, &timeinfo);
-  std::stringstream ss;
-  ss << std::put_time(&timeinfo, "%d-%m-%Y %X");
-  return ss.str();
+  uint64_t msSinceEpoch = getTimestamp();
+
+  // Split into seconds and milliseconds
+  std::time_t secondsPart = msSinceEpoch / 1000;
+  uint64_t millisPart = msSinceEpoch % 1000;
+
+  std::tm *tmTime = std::localtime(&secondsPart);
+
+  std::ostringstream oss;
+  switch (format)
+  {
+  case TimestampFormat::DATE_TIME:
+    oss << std::put_time(tmTime, "%Y-%m-%d %H:%M:%S");
+    break;
+  case TimestampFormat::DATE_TIME_MILLIS:
+    oss << std::put_time(tmTime, "%Y-%m-%d %H:%M:%S");
+    oss << '.' << std::setw(3) << std::setfill('0') << millisPart;
+    break;
+  case TimestampFormat::TIME:
+    oss << std::put_time(tmTime, "%H:%M:%S");
+    break;
+  case TimestampFormat::TIME_MILLIS:
+    oss << std::put_time(tmTime, "%H:%M:%S");
+    oss << '.' << std::setw(3) << std::setfill('0') << millisPart;
+    break;
+  }
+
+  return oss.str();
 }
 
 //========================================================================+
@@ -100,8 +186,6 @@ void SvtLogger::logLive(const std::string &msg, bool isEnd, uint32_t severity)
 void SvtLogger::log(const std::string &type, const std::string &msg,
                     uint32_t severity)
 {
-  std::lock_guard lock(mutex_);
-
   std::string fullMessage = stripAnsi(type) + msg;
 
   if (severity <= mTermVerbosity)
@@ -120,7 +204,6 @@ void SvtLogger::log(const std::string &type, const std::string &msg,
 //========================================================================+
 void SvtLogger::closeFile()
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   if (mLogfile.is_open())
   {
     mLogfile.close();
@@ -131,7 +214,6 @@ void SvtLogger::closeFile()
 void SvtLogger::setVerbosity(SvtLogger::Mode termVerbosity,
                              SvtLogger::Mode fileVerbosity)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   mTermVerbosity = termVerbosity;
   mFileVerbosity = fileVerbosity;
 }
@@ -143,8 +225,7 @@ void SvtLogger::setFile(const std::string &filename)
   std::string date = time.substr(0, time.find(' '));
 
   std::string _filename = filename + "-" + date + ".log";
-
-  std::lock_guard<std::mutex> lock(mutex_);
+  logInfo(_filename);
 
   if (mLogfile.is_open())
   {
@@ -166,8 +247,7 @@ void SvtLogger::configure(const std::string &filename,
   if (filename == "none")
   {
     logWarning(
-        "No logFileName provided, log informations will not be saved to "
-        "any file");
+        "No logFileName provided, log informations will not be saved to any file");
   }
   else
   {
@@ -184,11 +264,6 @@ std::string SvtLogger::to_hex(uint64_t inValue, int width)
   return ss.str();
 }
 
-/*
- * @param inValue: the value to convert to binary
- * @param width: the width of the binary string
- * @return: the binary string
- */
 //========================================================================+
 std::string SvtLogger::to_bin(uint32_t inValue, int width)
 {
@@ -198,11 +273,6 @@ std::string SvtLogger::to_bin(uint32_t inValue, int width)
   return ss.str();
 }
 
-/*
- * @param inValue: the value to convert to binary
- * @param width: the width of the binary string
- * @return: the binary string
- */
 //========================================================================+
 std::string SvtLogger::to_bin(uint64_t inValue, int width)
 {
@@ -210,6 +280,20 @@ std::string SvtLogger::to_bin(uint64_t inValue, int width)
   ss << "0b" << std::uppercase << std::setfill('0') << std::setw(width);
   ss << std::bitset<64>(inValue).to_string().substr(64 - width);
   return ss.str();
+}
+
+//========================================================================+
+std::string SvtLogger::to_bool(bool inValue)
+{
+  return inValue ? "true" : "false";
+}
+
+//========================================================================+
+std::string SvtLogger::to_scientific(double value, int precision)
+{
+  std::ostringstream oss;
+  oss << std::scientific << std::setprecision(precision) << value;
+  return oss.str();
 }
 
 //========================================================================+

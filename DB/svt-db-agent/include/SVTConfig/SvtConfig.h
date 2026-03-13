@@ -9,12 +9,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
-
-using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
-
 class SvtConfig
 {
  protected:
@@ -29,8 +23,6 @@ class SvtConfig
  public:
   SvtConfig() = default;
   virtual ~SvtConfig() = default;
-
-  SvtLogger *logger = Singleton<SvtLogger>::instance();
 
   bool isInitialized() { return mInitialized; }
   void setInitialized(bool initialized) { mInitialized = initialized; }

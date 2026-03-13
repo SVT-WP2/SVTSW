@@ -10,6 +10,7 @@
 
 #include "SvtDbBaseDto.h"
 #include "SvtKafkaMessage.h"
+#include "SvtUtilities.h"
 
 namespace SvtDbAgent
 {
@@ -68,9 +69,9 @@ namespace SvtDbAgent
     void createAllRequest() final;
 
     SvtDbWaferLoadedInMachineDto *waferLoaded =
-        Singleton<SvtDbWaferLoadedInMachineDto>::instance();
+        SvtUtils::Singleton<SvtDbWaferLoadedInMachineDto>::instance();
     SvtDbProbeCardInstalledInMachineDto *pcInstalled =
-        Singleton<SvtDbProbeCardInstalledInMachineDto>::instance();
+        SvtUtils::Singleton<SvtDbProbeCardInstalledInMachineDto>::instance();
   };
 };  // namespace SvtDbAgent
 #endif  //! SVT_DB_WAFER_DTO_H

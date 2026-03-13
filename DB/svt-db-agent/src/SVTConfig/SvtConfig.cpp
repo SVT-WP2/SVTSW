@@ -19,13 +19,13 @@ bool SvtConfig::readFile(const std::string &path, json &config)
   std::ifstream input(path);
   if (!(input.is_open()))
   {
-    logger->logError("Cannot open config file " + path + " for reading");
+    logError("Cannot open config file " + path + " for reading");
     return false;
   }
 
   if (input.peek() == std::ifstream::traits_type::eof())
   {
-    logger->logError("File is empty " + path);
+    logError("File is empty " + path);
     input.close();
     return false;
   }
@@ -36,8 +36,8 @@ bool SvtConfig::readFile(const std::string &path, json &config)
   }
   catch (const json::parse_error &e)
   {
-    logger->logError("Error when parsing file " + path);
-    logger->logError("message: " + std::string(e.what()) +
+    logError("Error when parsing file " + path);
+    logError("message: " + std::string(e.what()) +
                      ", exception id: " + std::to_string(e.id) +
                      "byte position of error: " + std::to_string(e.byte));
     input.close();

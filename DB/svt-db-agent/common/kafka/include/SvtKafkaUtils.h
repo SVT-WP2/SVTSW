@@ -14,19 +14,12 @@
 #include <string>
 
 #include "SvtKafkaConsumer.h"
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 namespace SvtKafka
 {
-  using SvtUtils::Singleton;
-  using SvtUtils::SvtLogger;
-
   void setConfig(RdKafka::Conf *conf, const std::string &name, const std::string &value);
   void setConfig(RdKafka::Conf *conf, const std::string &name, RdKafka::EventCb *event_cb);
   void setConfig(RdKafka::Conf *conf, const std::string &name, RdKafka::DeliveryReportCb *dr_cb);
-
-  static SvtLogger *logger = Singleton<SvtLogger>::instance();
 
   class SvtKafkaEventCb : public RdKafka::EventCb
   {
@@ -37,7 +30,7 @@ namespace SvtKafka
     }
     void event_cb(RdKafka::Event &event)
     {
-      logger->logInfo("SvtKafkaEventCb called.");
+      logInfo("SvtKafkaEventCb called.");
       std::ostringstream msg;
       switch (event.type())
       {
@@ -54,24 +47,24 @@ namespace SvtKafka
           }
         }
         msg << "ERROR (" << RdKafka::err2str(event.err()) << "): " << event.str();
-        logger->logError(msg.str());
+        logError(msg.str());
         break;
 
       case RdKafka::Event::EVENT_STATS:
-        logger->logWarning("\"STATS\": " + event.str());
+        logWarning("\"STATS\": " + event.str());
         break;
 
       case RdKafka::Event::EVENT_LOG:
         msg.clear();
         msg << "LOG-" << event.severity() << "-" << event.fac() << ": "
             << event.str();
-        logger->logWarning(msg.str());
+        logWarning(msg.str());
         break;
 
       default:
         msg << "EVENT " << event.type() << " (" << RdKafka::err2str(event.err())
             << "): " << event.str();
-        logger->logInfo(msg.str());
+        logInfo(msg.str());
         break;
       }
     }
@@ -119,11 +112,11 @@ namespace SvtKafka
         status_name = "Unknown?";
         break;
       }
-      logger->logInfo(
+      logInfo(
           "Message delivery for (" + std::to_string(message.len()) +
           " bytes): " + status_name + ": " + message.errstr());
       if (message.key())
-        logger->logInfo("Key: " + *(message.key()));
+        logInfo("Key: " + *(message.key()));
     }
   };
 
@@ -133,7 +126,7 @@ namespace SvtKafka
     std::string err_str;
     if (conf->set(name, value, err_str) != RdKafka::Conf::CONF_OK)
     {
-      logger->logError("Failed to set " + name + ": " + err_str);
+      logError("Failed to set " + name + ": " + err_str);
     }
   }
   inline void setConfig(RdKafka::Conf *conf, const std::string &name, RdKafka::EventCb *event_cb)
@@ -141,7 +134,7 @@ namespace SvtKafka
     std::string err_str;
     if (conf->set(name, event_cb, err_str) != RdKafka::Conf::CONF_OK)
     {
-      logger->logError("Failed to set " + name + ": " + err_str);
+      logError("Failed to set " + name + ": " + err_str);
     }
   }
   inline void setConfig(RdKafka::Conf *conf, const std::string &name, RdKafka::DeliveryReportCb *dr_cb)
@@ -149,7 +142,7 @@ namespace SvtKafka
     std::string err_str;
     if (conf->set(name, dr_cb, err_str) != RdKafka::Conf::CONF_OK)
     {
-      logger->logError("Failed to set " + name + ": " + err_str);
+      logError("Failed to set " + name + ": " + err_str);
     }
   }
 }  // namespace SvtKafka

@@ -9,7 +9,6 @@
 
 #include "SvtKafkaMessage.h"
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 #include <nlohmann/json.hpp>
 
@@ -22,9 +21,6 @@
 
 namespace SvtDbAgent
 {
-  using SvtUtils::Singleton;
-  using SvtUtils::SvtLogger;
-
   using Map = std::map<std::string, bool>;
 
   struct SvtDbEntry
@@ -107,8 +103,6 @@ namespace SvtDbAgent
 
     const Map &getColNames() { return mColNames; }
 
-    SvtLogger *getLogger() { return logger; }
-
     bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
                            SvtKafka::SvtKafkaReplyMsg &);
 
@@ -147,8 +141,6 @@ namespace SvtDbAgent
     std::map<std::string_view,
              std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>
         request_map;
-
-    SvtLogger *logger = Singleton<SvtLogger>::instance();
   };
 
 };  // namespace SvtDbAgent

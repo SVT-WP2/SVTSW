@@ -23,7 +23,7 @@ void SvtDbAgent::SvtDbEnumDto::init()
     return;
   }
 
-  getLogger()->logInfo("Initialize enum type list");
+  logInfo("Initialize enum type list");
   std::vector<std::string> enum_types;
 
   if (!getAllEnumTypesInDB(DatabaseInterface::getDbSchema(), enum_types))
@@ -191,14 +191,13 @@ SvtDbAgent::SvtDbEnumDto::getEnumValues(const std::string &enum_type)
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::print()
 {
-  SvtLogger *logger = Singleton<SvtLogger>::instance();
-  logger->logInfo("Db Agent Enums");
+  logInfo("Db Agent Enums");
   for (const auto &[enum_type, values] : enum_type_value_map)
   {
-    logger->logInfo("type " + enum_type);
+    logInfo("type " + enum_type);
     for (const auto &value : values)
     {
-      logger->logInfo("\t " + value);
+      logInfo("\t " + value);
     }
   }
 }

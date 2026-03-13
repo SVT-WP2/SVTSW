@@ -17,8 +17,6 @@
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
-SvtUtils::SvtLogger *logger = SvtUtils::Singleton<SvtUtils::SvtLogger>::instance();
-
 //========================================================================+
 std::shared_ptr<SvtDbAgentSetupConfig>
 createSbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
@@ -26,7 +24,7 @@ createSbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
   auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
   {
-    logger->logError("Unable to create test config");
+    logError("Unable to create test config");
     return nullptr;
   }
   return setupConfig.value();
@@ -43,12 +41,12 @@ bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const 
 
   if (dbInterface->connect())
   {
-    logger->logInfo("Successfully connected to " + dbName + ".");
+    logInfo("Successfully connected to " + dbName + ".");
     return true;
   }
   else
   {
-    logger->logError("Cannot connet to " + dbName + "!");
+    logError("Cannot connet to " + dbName + "!");
   }
 
   return false;
@@ -59,7 +57,7 @@ int main(int argc, const char *argv[])
 {
   if (argc < 2)
   {
-    logger->logError("Usage test-er2-waferMap <setup config file>");
+    logError("Usage test-er2-waferMap <setup config file>");
     exit(-1);
   }
 
@@ -68,9 +66,9 @@ int main(int argc, const char *argv[])
   const auto setupConfig = createSbAgentSetupeConfig(setupConfigFile);
   const auto dbConfig = setupConfig->getDbConfig();
 
-  logger->configure(setupConfig->getLogFilePath(),
-                    setupConfig->getTermVerbosity(),
-                    setupConfig->getFileVebosity());
+  configureLogger(setupConfig->getLogFilePath(),
+                  setupConfig->getTermVerbosity(),
+                  setupConfig->getFileVebosity());
 
   DatabaseInterface *dbInterface = DatabaseIF::instance();
 
@@ -89,13 +87,14 @@ int main(int argc, const char *argv[])
     if (!connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
                      psqlport, psqlDbName, psqlDbSchema))
     {
-      logger->logError("Cannot connect to DB");
+      logError("Cannot connect to DB");
+      closeLogFile();
       return EXIT_FAILURE;
     }
     else
     {
-      logger->logInfo("Databaseinterface is connected");
-      logger->logInfo("Using Scheme: " + psqlDbSchema);
+      logInfo("Databaseinterface is connected");
+      logInfo("Using Scheme: " + psqlDbSchema);
     }
   }
   try
@@ -115,16 +114,18 @@ int main(int argc, const char *argv[])
       auto isWaferMap = SvtDbAgent::SvtDbWaferTypeDto::checkWaferTypeMap(waferTypeMap_j.dump(), errorMsg);
       if (!isWaferMap)
       {
-        logger->logError(errorMsg);
+        logError(errorMsg);
       }
     }
-    Singleton<SvtDbAgent::SvtDbWaferDto>::instance()->createAllAsics(0, "WaferSN", waferTypeMap_j, true);
+    SvtUtils::Singleton<SvtDbAgent::SvtDbWaferDto>::instance()->createAllAsics(0, "WaferSN", waferTypeMap_j, true);
   }
   catch (const std::exception &e)
   {
-    logger->logError("\n### Caught exception in the main thread ###\n");
+    logError("\n### Caught exception in the main thread ###\n");
     std::cout << e.what() << std::endl;
+    closeLogFile();
     return EXIT_FAILURE;
   }
+  closeLogFile();
   return EXIT_SUCCESS;
 }

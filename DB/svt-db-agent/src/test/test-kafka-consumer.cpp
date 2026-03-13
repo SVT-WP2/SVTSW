@@ -1,3 +1,5 @@
+#include "SvtLogger.h"
+
 #include <iostream>
 #include <string>
 #include <thread>  // For std::this_thread::sleep_for
@@ -143,6 +145,8 @@ int main()
   delete consumer;
   delete conf;
   delete tconf;
+
+  closeLogFile();
 
   return 0;
 }

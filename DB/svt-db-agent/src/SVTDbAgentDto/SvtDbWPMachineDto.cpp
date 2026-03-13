@@ -105,7 +105,7 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
     }
     if (!oldLoadedWaferId.is_null())
     {
-      getLogger()->logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWaferId.get<int>()));
+      logWarning("WARN! Create entry for unloaded action waferId: " + std::to_string(oldLoadedWaferId.get<int>()));
       loadedWaferEntry.addValue("status", "Unloaded");
       loadedWaferEntry.addValue("waferId", oldLoadedWaferId);
     }

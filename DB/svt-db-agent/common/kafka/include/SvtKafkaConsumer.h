@@ -13,8 +13,6 @@
 #include <librdkafka/rdkafkacpp.h>
 
 #include "SvtKafkaThread.h"
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 namespace
 {
@@ -30,9 +28,6 @@ namespace RdKafka
 namespace SvtKafka
 {
   class SvtKafkaConsumeCb;
-
-  using SvtUtils::Singleton;
-  using SvtUtils::SvtLogger;
 
   class SvtKafkaConsumer
   {
@@ -53,7 +48,6 @@ namespace SvtKafka
     bool getIsRunning() { return mThread.getIsRunning(); }
 
    private:
-    SvtLogger *mLogger = Singleton<SvtLogger>::instance();
     void pull();
 
     std::shared_ptr<RdKafka::Consumer> mConsumer;

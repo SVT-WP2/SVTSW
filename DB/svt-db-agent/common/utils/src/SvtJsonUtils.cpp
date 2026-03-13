@@ -7,15 +7,6 @@
 
 #include "SvtJsonUtils.h"
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
-
-using SvtUtils::Singleton;
-using SvtUtils::SvtLogger;
-
-namespace
-{
-  auto logger = Singleton<SvtLogger>::instance();
-}
 
 //========================================================================+
 bool SvtUtils::recursive_erase_key(json &j, const std::string_view &key)
@@ -60,7 +51,7 @@ bool SvtUtils::readStringVariable(const json &config, const std::string &key,
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
 }
@@ -77,14 +68,14 @@ bool SvtUtils::readIntegerVariable(const json &config, const std::string &key,
     }
     catch (const json::type_error &e)
     {
-      logger->logError("Type error when accessing key " + key + ": " +
-                       std::string(e.what()));
+      logError("Type error when accessing key " + key + ": " +
+               std::string(e.what()));
       return false;
     }
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
   return true;
@@ -102,14 +93,14 @@ bool SvtUtils::readDoubleVariable(const json &config, const std::string &key,
     }
     catch (const json::type_error &e)
     {
-      logger->logError("Type error when accessing key " + key + ": " +
-                       std::string(e.what()));
+      logError("Type error when accessing key " + key + ": " +
+               std::string(e.what()));
       return false;
     }
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
   return true;
@@ -121,7 +112,7 @@ bool SvtUtils::readBooleanVariable(const json &config, const std::string &key,
 {
   if (!config.contains(key))
   {
-    logger->logWarning("No entry '" + key + "' found");
+    logWarning("No entry '" + key + "' found");
     return false;
   }
 
@@ -149,7 +140,7 @@ bool SvtUtils::readBooleanVariable(const json &config, const std::string &key,
     }
   }
 
-  logger->logWarning("No entry " + key + " found");
+  logWarning("No entry " + key + " found");
   return false;
 }
 
@@ -168,14 +159,14 @@ bool SvtUtils::readIntegerVector(const json &config, const std::string &key,
     }
     catch (const json::type_error &e)
     {
-      logger->logError("Type error when accessing key " + key + ": " +
-                       std::string(e.what()));
+      logError("Type error when accessing key " + key + ": " +
+               std::string(e.what()));
       return false;
     }
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
   return true;
@@ -196,14 +187,14 @@ bool SvtUtils::readDoubleVector(const json &config, const std::string &key,
     }
     catch (const json::type_error &e)
     {
-      logger->logError("Type error when accessing key " + key + ": " +
-                       std::string(e.what()));
+      logError("Type error when accessing key " + key + ": " +
+               std::string(e.what()));
       return false;
     }
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
   return true;
@@ -225,14 +216,14 @@ bool SvtUtils::readStringVector(const json &config, const std::string &key,
     }
     catch (const json::type_error &e)
     {
-      logger->logError("Type error when accessing key " + key + ": " +
-                       std::string(e.what()));
+      logError("Type error when accessing key " + key + ": " +
+               std::string(e.what()));
       return false;
     }
   }
   else
   {
-    logger->logWarning("No entry " + key + " found");
+    logWarning("No entry " + key + " found");
     return false;
   }
   return true;

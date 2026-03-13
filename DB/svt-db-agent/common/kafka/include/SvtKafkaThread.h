@@ -1,16 +1,14 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <string>
 #include <thread>
 
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 namespace SvtKafka
 {
-  using SvtUtils::Singleton;
-  using SvtUtils::SvtLogger;
   class SvtKafkaThread
   {
    public:
@@ -41,7 +39,7 @@ namespace SvtKafka
         }
         else
         {
-          mLogger->logError("Error, start requested for already running thread");
+          logError("Error, start requested for already running thread");
           return false;  // start thread only once
         }
       }
@@ -61,11 +59,11 @@ namespace SvtKafka
     {
       if (suspended)
       {
-        mLogger->logWarning("Suspended thread " + this->name());
+        logWarning("Suspended thread " + this->name());
         setSuspended(true);
         return true;
       }
-      mLogger->logWarning("Stopping thread " + this->name());
+      logWarning("Stopping thread " + this->name());
       setIsRunning(false);
       if (mThread.joinable())
       {
@@ -77,7 +75,6 @@ namespace SvtKafka
     std::string& name() { return mName; }
 
    private:
-    SvtLogger* mLogger = Singleton<SvtLogger>::instance();
     std::thread mThread;
 
     std::atomic<bool> mRunning = false;

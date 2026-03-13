@@ -8,21 +8,17 @@
  */
 
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include <librdkafka/rdkafkacpp.h>
 
 #include "SvtKafkaThread.h"
 #include "SvtKafkaUtils.h"
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 namespace SvtKafka
 {
   class SvtKafkaMessage;
-
-  using SvtUtils::Singleton;
-  using SvtUtils::SvtLogger;
 
   class SvtKafkaProducer
   {
@@ -41,7 +37,6 @@ namespace SvtKafka
     bool send(const std::string_view &topic, const SvtKafkaMessage &message);
 
    private:
-    SvtLogger *mLogger = Singleton<SvtLogger>::instance();
     void push();
 
     std::shared_ptr<RdKafka::Producer> mProducer;
