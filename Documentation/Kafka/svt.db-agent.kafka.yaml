@@ -2346,7 +2346,16 @@ components:
           type: string
           default: "UpdateSvtTestSetupDefaultConfig"
         data:
-          $ref: "#/components/schemas/SvtTestSetupUpdateDefaultConfigDto"
+          type: object
+          required:
+            - setupId
+            - update
+          properties:
+            setupId:
+              type: number
+              description: Test Setup Id
+            update:
+              $ref: "#/components/schemas/SvtTestSetupUpdateDefaultConfigDto"
     UpdateSvtTestSetupDefaultConfigReplyMessage:
       properties:
         type:
@@ -2400,9 +2409,9 @@ components:
                   type: array
                   description: SvtTestSetupConfig ids array. If array is empty / undefined => all test setup configuration list will be returned.
                   items:
-                    type: integer
+                    type: number
                 setupId:
-                  type: integer
+                  type: number
                   description: SvtTestSetup id.
     GetAllSvtTestSetupConfigReplyMessage:
       properties:
@@ -2457,7 +2466,7 @@ components:
                   type: array
                   description: SvtTestType ids array. If array is empty / undefined => all test type list will be returned.
                   items:
-                    type: integer
+                    type: number
                 asicFamilyType:
                   type: string
                   description: asicFamilyType.
@@ -2505,10 +2514,7 @@ components:
           type: string
           default: "UpdateSvtTestType"
         data:
-          type: object
-          properties:
-            create:
-              $ref: "#/components/schemas/SvtTestTypeUpdateDto"
+          $ref: "#/components/schemas/SvtTestTypeUpdateDto"
     UpdateSvtTestTypeReplyMessage:
       properties:
         type:
@@ -2537,9 +2543,9 @@ components:
                   type: array
                   description: SvtTestTypeConfig ids array. If array is empty / undefined => all test type list will be returned.
                   items:
-                    type: integer
+                    type: number
                 testTypeId:
-                  type: integer
+                  type: number
                   description: SvtTestType id.
     GetAllSvtTestTypeConfigReplyMessage:
       properties:
@@ -2591,8 +2597,10 @@ components:
               type: object
               properties:
                 asicFamilType:
-                  type: string
-                  description: Asic family type.
+                  type: array
+                  items:
+                    type: string
+                    description: Asic family type.
     GetAllSvtTestTemplateReplyMessage:
       properties:
         type:
@@ -2638,8 +2646,14 @@ components:
           default: "UpdateSvtTestTemplate"
         data:
           type: object
+          required:
+            - id
+            - update
           properties:
-            create:
+            id:
+              type: number
+              description: Test template id.
+            update:
               $ref: "#/components/schemas/SvtTestTemplateUpdateDto"
     UpdateSvtTestTemplateReplyMessage:
       properties:
@@ -3267,11 +3281,11 @@ components:
         - generalLocation
       properties:
         id:
-          type: integer
+          type: number
         name:
           type: string
         defaultConfigId:
-          type: integer
+          type: number
         generalLocation:
           type: string
     SvtTestSetupCreateDto:
@@ -3297,13 +3311,10 @@ components:
     SvtTestSetupUpdateDefaultConfigDto:
       type: object
       required:
-        - setupId
         - defaultConfigId
       properties:
-        setupId:
-          type: integer
         defaultConfigId:
-          type: integer
+          type: number
     # TEST_SETUP_CONFIG :: DTO
     SvtTestSetupConfigDto:
       type: object
@@ -3316,9 +3327,9 @@ components:
         - createdAt
       properties:
         id:
-          type: integer
+          type: number
         setupId:
-          type: integer
+          type: number
         name:
           type: string
         note:
@@ -3338,7 +3349,7 @@ components:
         - note
       properties:
         setupId:
-          type: integer
+          type: number
         name:
           type: string
         configBody:
@@ -3355,7 +3366,7 @@ components:
         - asicFamilTypes
       properties:
         id:
-          type: integer
+          type: number
         name:
           type: string
         asicFamilTypes:
@@ -3391,7 +3402,7 @@ components:
         - asicFamilyType
       properties:
         testTypeId:
-          type: integer
+          type: number
         asicFamilTypes:
           type: array
           items:
@@ -3408,9 +3419,9 @@ components:
         - createdAt
       properties:
         id:
-          type: integer
+          type: number
         testTypeId:
-          type: integer
+          type: number
         name:
           type: string
         note:
@@ -3430,7 +3441,7 @@ components:
         - note
       properties:
         testTypeId:
-          type: integer
+          type: number
         name:
           type: string
         configBody:
@@ -3445,41 +3456,38 @@ components:
         - asicFamilType
         - testTypeId
         - testConfigId
-        - enable
+        - isEnabled
       properties:
         id:
-          type: integer
+          type: number
         asicFamilType:
           type: string
         testTypeId:
-          type: integer
+          type: number
         testConfigId:
-          type: integer
-        enable:
+          type: number
+        isEnabled:
           type: boolean
     SvtTestTemplateCreateDto:
       required:
         - asicFamilyType
         - testTypeId
         - testConfigId
-        - enable
+        - isEnabled
       properties:
         asicFamilType:
           type: string
         testTypeId:
-          type: integer
+          type: number
         testConfigId:
-          type: integer
-        enable:
+          type: number
+        isEnabled:
           type: boolean
     SvtTestTemplateUpdateDto:
       required:
-        - testTemplateId
-        - enable
+        - isEnabled
       properties:
-        testTemplateId:
-          type: integer
-        enable:
+        isEnabled:
           type: boolean
     # ENUM :: DTO
     SvtEnumName:
