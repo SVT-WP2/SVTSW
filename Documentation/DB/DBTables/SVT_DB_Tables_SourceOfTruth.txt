@@ -227,7 +227,7 @@ Table main.SvtTestTemplate {
   asicFamilyType main.asicFamilyType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   testTypeConfigId integer [ref: > main.SvtTestTypeConfig.id]
-  enable bool [default: TRUE]
+  isEnabled bool [default: TRUE]
 }
 
 // Table main.SvtTestList {
