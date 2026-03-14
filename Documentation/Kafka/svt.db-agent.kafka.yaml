@@ -1014,7 +1014,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/GetEquipmentLitsForTestSetup:
+  /svt.db-agent.request/GetEquipmentListForTestSetup:
     post:
       tags:
         - SvtTestSetup
@@ -1359,7 +1359,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  # ENUMS           
+  # ENUMS
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -2348,10 +2348,10 @@ components:
         data:
           type: object
           required:
-            - setupId
+            - id
             - update
           properties:
-            setupId:
+            id:
               type: number
               description: Test Setup Id
             update:
@@ -2373,7 +2373,7 @@ components:
       properties:
         type:
           type: string
-          default: "GetEquipmentLitsForTestSetup"
+          default: "GetEquipmentListForTestSetup"
         data:
           type: object
           properties:
@@ -2383,7 +2383,7 @@ components:
       properties:
         type:
           type: string
-          default: "GetEquipmentLitsForTestSetupReply"
+          default: "GetEquipmentListForTestSetupReply"
         data:
           type: object
           properties:
@@ -2581,7 +2581,7 @@ components:
           type: object
           properties:
             entity:
-              $ref: "#/components/schemas/SvtTestTypeConfigDto"    
+              $ref: "#/components/schemas/SvtTestTypeConfigDto"
     #
     # TEST_TEMPLATE :: LIST
     #
