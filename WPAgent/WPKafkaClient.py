@@ -103,7 +103,7 @@ class KafkaClient:
         self.reply_consumer = KafkaConsumer({
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': consumer_group,
-            'auto.offset.reset': 'earliest',
+            'auto.offset.reset': 'latest',
             'enable.auto.commit': False,
             'session.timeout.ms': 60000,
             'max.poll.interval.ms': 120000
@@ -410,7 +410,6 @@ class KafkaClient:
                                     "message": output
                                 }
                             }
-                    # ====== END FIX ======
 
                     if reply_to and correlation_id:
                         reply_headers = [
@@ -471,6 +470,7 @@ class KafkaClient:
         except KeyboardInterrupt:
             pass
         finally:
+            self.producer.flush(timeout=5.0)
             self.heartbeat_monitor.stop()
             self.request_consumer.close()
             if self.reply_consumer:
@@ -509,6 +509,7 @@ class KafkaClient:
 
         if self.reply_consumer is None:
             self._ensure_reply_consumer_ready()
+            time.sleep(0.2)
         # Make sure we are subscribed to that service's reply topic too
         self.subscribe_if_needed([reply_topic])
 
