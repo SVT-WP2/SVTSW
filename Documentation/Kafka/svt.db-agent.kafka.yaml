@@ -2451,7 +2451,7 @@ components:
     #
     # TEST_TYPE :: LIST
     #
-    GetAllSvtTestTypeMessage:
+    GetAllSvtTestTypesMessage:
       properties:
         type:
           type: string
@@ -2470,7 +2470,7 @@ components:
                 asicFamilyType:
                   type: string
                   description: asicFamilyType.
-    GetAllSvtTestTypeReplyMessage:
+    GetAllSvtTestTypesReplyMessage:
       properties:
         type:
           type: string
@@ -3301,13 +3301,14 @@ components:
           type: string
         defaultConfig:
           type: object
+          required:
+            - name
+            - configBody
           properties:
             name:
               type: string
-              required: true
             configBody:
               type: string
-              required: true
               description: Stringified JSON with default configuration for the test setup, in the correct format.
             note:
               type: string
