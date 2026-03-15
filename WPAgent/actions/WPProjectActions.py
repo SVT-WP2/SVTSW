@@ -30,11 +30,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
     """
     Initialize the WP agent with prober connection and DB sync
 
-    This function:
-    1. Initializes physical prober connection
-    2. Syncs with database to get machine info
-    3. Updates global parameters with DB data
-    4. Optionally loads project
+    Works with both real probers (sentio) and mock probers (mock)
     """
     from drivers.WPFactory import ProberFactory
 
@@ -61,176 +57,206 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
         factory.reset()
 
     try:
-        # Initialize prober
-        result = ensure_prober_initialized(address, machine_type, project_name)
+        # Detect mock mode
+        is_mock = (machine_type.lower() == "mock")
+        if is_mock:
+            print(f"🎭 Mock mode detected - simulated prober")
 
-        if result["status"] == "success":
+        # ============================================================
+        # INITIALIZE PROBER DIRECTLY VIA FACTORY
+        # (Bypass ensure_prober_initialized helper)
+        # ============================================================
+        try:
+            # Create prober via factory
+            prober = factory.get_prober(machine_type, address)
+            print(f"✅ Prober created successfully: {type(prober).__name__}")
+
+            # Mark as initialized
             globals_.set_prober_status("initialized")
 
-            # Store basic info
-            globals_.set_address(address)
-            globals_.set_machine_type(machine_type)
+        except Exception as e:
+            error_msg = f"Failed to create prober: {str(e)}"
+            print(f"❌ {error_msg}")
+            return ResponseBuilder.error("InitializeReply", error_msg, 500)
+        # ============================================================
 
-            # UPDATE ALL PAYLOAD FIELDS
-            if machine_id:
-                globals_.set_machine_id(machine_id)
-                globals_.wp_machine_id = machine_id
+        # Store basic info
+        globals_.set_address(address)
+        globals_.set_machine_type(machine_type)
 
-            if machine_name:
-                globals_.machine_name = machine_name
+        # Update all payload fields
+        if machine_id is not None:
+            globals_.set_machine_id(machine_id)
+            globals_.wp_machine_id = machine_id
 
-            if initialization_mode:
-                globals_.initialization_mode = initialization_mode
+        if machine_name:
+            globals_.machine_name = machine_name
 
-            # Set user (from environment or default)
-            import getpass
+        if initialization_mode:
+            globals_.initialization_mode = initialization_mode
+
+        # Set user
+        import getpass
+        try:
+            globals_.user = getpass.getuser()
+        except:
+            globals_.user = "default_user"
+
+        # Set ASIC serial number if provided
+        if serialNumber:
+            globals_.asic_serial_number = serialNumber
+
+        # Set agent state
+        globals_.wpag_state = "ServiceOn"
+
+        # ============================================================
+        # DB INTEGRATION: Sync wafer and probe card from database
+        # Skip for mock TODO: will be very good to reuse it and initialize with machineId from DB
+        # ============================================================
+        if machine_id and machine_id != 0 and is_mock == False:
             try:
-                globals_.user = getpass.getuser()
-            except:
-                globals_.user = "default_user"
+                print(f"\n🔄 Syncing with database for machine ID {machine_id}...")
 
-            # Set ASIC serial number if provided
-            if serialNumber:
-                globals_.asic_serial_number = serialNumber
+                db_client = DBKafkaClient.get_instance()
+                machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
 
-            # Set agent state
-            globals_.wpag_state = "WP_Idle"  # Changed from ServiceOn
+                # Find our machine
+                our_machine = None
+                for machine in machines:
+                    if machine.get('id') == machine_id:
+                        our_machine = machine
+                        break
 
-            # ============================================================
-            # DB INTEGRATION: Sync wafer and probe card from database
-            # ============================================================
-            if machine_id:
-                try:
-                    print(f"\n🔄 Syncing with database for machine ID {machine_id}...")
+                if our_machine:
+                    # Sync loaded wafer
+                    wafer_id = our_machine.get('loadedWaferId')
+                    wafer_orientation = our_machine.get('loadedWaferOrientation')
 
-                    db_client = DBKafkaClient.get_instance()
-                    machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
-
-                    # Find our machine
-                    our_machine = None
-                    for machine in machines:
-                        if machine.get('id') == machine_id:
-                            our_machine = machine
-                            break
-
-                    if our_machine:
-                        # Sync loaded wafer
-                        wafer_id = our_machine.get('loadedWaferId')
-                        wafer_orientation = our_machine.get('loadedWaferOrientation')
-
-                        if wafer_id:
-                            globals_.loaded_wafer_id = wafer_id
-                            globals_.wafer_orientation = wafer_orientation
-                            print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={wafer_orientation}")
-                        else:
-                            globals_.loaded_wafer_id = None
-                            globals_.wafer_orientation = None
-                            print(f"ℹ️  No wafer loaded in DB")
-
-                        # Sync installed probe card
-                        card_id = our_machine.get('installedProbeCardId')
-                        card_orientation = our_machine.get('installedProbeCardOrientation')
-
-                        if card_id:
-                            globals_.probe_card_id = card_id
-                            globals_.probe_card_orientation = card_orientation
-                            print(f"✓ Synced probe card: ID={card_id}, orientation={card_orientation}")
-                        else:
-                            globals_.probe_card_id = None
-                            globals_.probe_card_orientation = None
-                            print(f"ℹ️  No probe card installed in DB")
+                    if wafer_id:
+                        globals_.loaded_wafer_id = wafer_id
+                        globals_.wafer_orientation = wafer_orientation
+                        print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={wafer_orientation}")
                     else:
-                        print(f"⚠️  Machine ID {machine_id} not found in database")
+                        globals_.loaded_wafer_id = None
+                        globals_.wafer_orientation = None
+                        print(f"ℹ️  No wafer loaded in DB")
 
-                except Exception as e:
-                    print(f"⚠️  Warning: Could not sync with database: {str(e)}")
-            # ============================================================
+                    # Sync installed probe card
+                    card_id = our_machine.get('installedProbeCardId')
+                    card_orientation = our_machine.get('installedProbeCardOrientation')
 
-            # Set project
-            if project_name:
-                globals_.set_project_name(project_name)
-
-                # Get project ID from DB if not provided
-                if project_id:
-                    globals_.opened_project_id = project_id
-                elif machine_id:
-                    # Try to get project ID from database by name
-                    try:
-                        result = actions.WPDataBaseActions.get_project_id_by_name(project_name, timeout=15.0)
-                        if result and result.get('status') == 'Success':
-                            proj_id = result.get('data', {}).get('projectId')
-                            if proj_id:
-                                globals_.opened_project_id = proj_id
-                                print(f"✓ Got project ID from DB: {proj_id}")
-                        else:
-                            globals_.opened_project_id = 0
-                    except:
-                        globals_.opened_project_id = 0
+                    if card_id:
+                        globals_.probe_card_id = card_id
+                        globals_.probe_card_orientation = card_orientation
+                        print(f"✓ Synced probe card: ID={card_id}, orientation={card_orientation}")
+                    else:
+                        globals_.probe_card_id = None
+                        globals_.probe_card_orientation = None
+                        print(f"ℹ️  No probe card installed in DB")
                 else:
-                    globals_.opened_project_id = 0
+                    print(f"⚠️  Machine ID {machine_id} not found in database")
 
-                # Open project on prober
+            except Exception as e:
+                print(f"⚠️  Warning: Could not sync with database: {str(e)}")
+        elif machine_id == 0:
+            print(f"ℹ️  Mock mode - skipping DB sync")
+        # ============================================================
+
+        # Set project
+        if project_name:
+            globals_.set_project_name(project_name)
+
+            # Get project ID from DB if not provided
+            if project_id:
+                globals_.opened_project_id = project_id
+            elif machine_id and machine_id != 0:
+                # Try to get project ID from database by name
                 try:
-                    prober = get_prober(machine_type, address)
+                    result = actions.WPDataBaseActions.get_project_id_by_name(project_name, timeout=15.0)
+                    if result and result.get('status') == 'Success':
+                        proj_id = result.get('data', {}).get('projectId')
+                        if proj_id:
+                            globals_.opened_project_id = proj_id
+                            print(f"✓ Got project ID from DB: {proj_id}")
+                    else:
+                        globals_.opened_project_id = 0
+                except:
+                    globals_.opened_project_id = 0
+            else:
+                globals_.opened_project_id = 0
+
+            # Open project on prober
+            try:
+                if is_mock:
+                    # Mock prober - just use project name
+                    prober.open_project(project_name)
+                    print(f"MOCK: Opened project '{project_name}'")
+                else:
+                    # Real prober - use full Windows path
                     project_path = os.path.join(
                         "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
                         project_name
                     )
                     prober.open_project(project_path)
-                except Exception as e:
-                    print(f"   ⚠️  Warning: Could not open project: {str(e)}")
+                    print(f" Opened project '{project_name}'")
 
-            # Parse and store die positions
-            if alignment_die:
-                parsed_alignment = _parse_die_position(alignment_die)
-                if parsed_alignment:
-                    globals_.set_alignment_die(parsed_alignment)
+            except Exception as e:
+                print(f"    Warning: Could not open project: {str(e)}")
 
-            if home_die:
-                parsed_home = _parse_die_position(home_die)
-                if parsed_home:
-                    globals_.set_home_die(parsed_home)
+        # Parse and store die positions
+        if alignment_die:
+            parsed_alignment = _parse_die_position(alignment_die)
+            if parsed_alignment:
+                globals_.set_alignment_die(parsed_alignment)
 
-            # Store project metadata
-            metadata = {}
-            if project_id:
-                metadata["project_id"] = project_id
-            if asic_family:
-                metadata["asic_family"] = asic_family
-            if orientation:
-                metadata["orientation"] = orientation
-            if metadata:
-                globals_.set_project_metadata(metadata)
+        if home_die:
+            parsed_home = _parse_die_position(home_die)
+            if parsed_home:
+                globals_.set_home_die(parsed_home)
 
-            # Set initial physical state
-            globals_.chuck_z_position_state = "Unknown"
-            globals_.current_working_area = "LoadPosition"
-            globals_.camera_mount_point = "Top"
+        # Store project metadata
+        metadata = {}
+        if project_id:
+            metadata["project_id"] = project_id
+        if asic_family:
+            metadata["asic_family"] = asic_family
+        if orientation:
+            metadata["orientation"] = orientation
+        if metadata:
+            globals_.set_project_metadata(metadata)
 
-            # Build output message
-            if machine_name:
-                output_msg = f"Initialized {machine_name} at {address}"
-            else:
-                output_msg = f"Initialized WP at {address}"
+        # Set initial physical state
+        globals_.chuck_z_position_state = "Unknown"
+        globals_.current_working_area = "LoadPosition"
+        globals_.camera_mount_point = "Top"
 
-            if project_name:
-                output_msg += f" with project '{project_name}'"
-
-            # Add DB sync info to message
-            if machine_id and globals_.loaded_wafer_id:
-                output_msg += f"\n✓ Loaded wafer ID {globals_.loaded_wafer_id} ({globals_.wafer_orientation})"
-            if machine_id and globals_.probe_card_id:
-                output_msg += f"\n✓ Probe card ID {globals_.probe_card_id} ({globals_.probe_card_orientation})"
-
-            return ResponseBuilder.success("InitializeReply", output_msg)
+        # Build output message
+        if machine_name:
+            output_msg = f"Initialized {machine_name} at {address}"
         else:
-            return ResponseBuilder.error("InitializeReply", result.get("output", "Initialization failed"), 500)
+            output_msg = f"Initialized WP at {address}"
+
+        if is_mock:
+            output_msg += " (MOCK)"
+
+        if project_name:
+            output_msg += f" with project '{project_name}'"
+
+        # Add DB sync info to message
+        if machine_id and machine_id != 0 and globals_.loaded_wafer_id:
+            output_msg += f"\n✓ Loaded wafer ID {globals_.loaded_wafer_id} ({globals_.wafer_orientation})"
+        if machine_id and machine_id != 0 and globals_.probe_card_id:
+            output_msg += f"\n✓ Probe card ID {globals_.probe_card_id} ({globals_.probe_card_orientation})"
+
+        return ResponseBuilder.success("InitializeReply", output_msg)
 
     except Exception as e:
         import traceback
         traceback.print_exc()
         globals_.wpag_state = "WP_Error"
-        return ResponseBuilder.error("InitializeReply", f"Initialization failed: {str(e)}", 500)
+        error_msg = f"Initialization failed: {str(e)}"
+        print(f"❌ {error_msg}")
+        return ResponseBuilder.error("InitializeReply", error_msg, 500)
 
 
 def get_project_status():
@@ -375,8 +401,7 @@ def get_agent_state():
 
 
 def help_command(command=None):
-    """
-    Display help information for commands.
+    """Displ   Display help information for commands.
 
     Usage:
         python main.py send help              # List all commands

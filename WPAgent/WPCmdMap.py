@@ -33,7 +33,7 @@ COMMAND_ROUTER = {
     "SetOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
-    "MoveChuckCenter":testing_actions.move_chuck_center(),
+    "MoveChuckCenter": testing_actions.move_chuck_center(),
 
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
@@ -202,7 +202,7 @@ def execute_command(message_type, data=None):
         result = action(**data)
 
         # Determine severity based on result
-        if result.get("status") == "success":
+        if result.get("status", "").lower() == "success":
             severity = Severity.INFO
         else:
             # Check if it's a parameter error (less severe)

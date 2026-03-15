@@ -1,29 +1,29 @@
+"""
+Wafer Prober Agent - With Auto-Initialization on Listen
+
+When starting with: python main.py listen CERN
+- Loads config from WPProbesConfigs.json
+- Auto-initializes prober connection
+- Sets all global parameters
+- Ready to receive commands immediately
+"""
+
 from WPKafkaClient import KafkaClient
 from services.WPListenerHeartbeat import ListenerHealthCheck
-import threading
-import time
+import json
+import os
 
 
 class WaferProberAgent:
     def __init__(self):
         self.kafka = KafkaClient()
         self.health_check = ListenerHealthCheck()
+        self.wp_agent_name = None
 
     def send(self, command, data=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
         """
         Send a command via Kafka and wait for response.
-
-        Args:
-            command: Command name to execute
-            data: Command parameters (dict or string)
-            repeat: Number of times to repeat the command (default: 1)
-            delay: Delay between repeats in seconds (default: 0)
-            check_health: Whether to check listener health before sending (default: True)
-            wait_for_reply: Whether to wait for response from listener (default: True)
-            timeout: How long to wait for reply in seconds (default: 30.0)
-
-        Returns:
-            dict: Response from listener with status and output
+        (Same as before - no changes)
         """
         # ========================================================================
         # SPECIAL HANDLING: Initialize with withDB parameter
@@ -32,7 +32,6 @@ class WaferProberAgent:
         if command == "Initialize" and data:
             # Normalize params to dict if needed
             if isinstance(data, str):
-                # Parse "key=value" or "key1=value1 key2=value2" format
                 param_dict = {}
                 for item in data.split():
                     if '=' in item:
@@ -44,22 +43,17 @@ class WaferProberAgent:
             if isinstance(data, dict):
                 withDB_value = str(data.get('withDB', '')).lower()
                 if withDB_value in ['true', '1', 'yes']:
-                    # Database initialization requested - handle producer-side
                     print("🔍 Database initialization requested - handling producer-side...")
 
                     try:
                         from services.WPInitializationService import WPInitializationService
 
                         init_service = WPInitializationService(self)
-
-                        # Extract other parameters
                         projectName = data.get('projectName')
                         force_value = str(data.get('force', '')).lower()
                         force = force_value in ['true', '1', 'yes']
                         db_timeout = float(data.get('db_timeout', 15.0))
 
-                        # Do producer-side database initialization
-                        # This will show prompts to user and send final command to listener
                         return init_service.initialize_from_database(
                             force=force,
                             db_timeout=db_timeout
@@ -67,7 +61,7 @@ class WaferProberAgent:
                     except ImportError as e:
                         return {
                             "status": "error",
-                            "output": f"initialization_service.py not found. Please install it for database initialization. Error: {e}"
+                            "output": f"initialization_service.py not found. Error: {e}"
                         }
                     except Exception as e:
                         import traceback
@@ -77,11 +71,7 @@ class WaferProberAgent:
                             "output": f"Database initialization failed: {str(e)}"
                         }
 
-        # ========================================================================
-        # Normal command flow continues here
-        # ========================================================================
-
-        # Check if listener is alive before sending
+        # Check listener health before sending
         if check_health:
             is_alive, age = self.health_check.is_listener_alive(timeout=2.0)
 
@@ -95,7 +85,7 @@ class WaferProberAgent:
 
                 print(f"\n❌ The command '{command}' may not execute.")
                 print(f"   Options:")
-                print(f"   1. Start the listener: python main.py listen")
+                print(f"   1. Start the listener: python main.py listen <CONFIG_NAME>")
                 print(f"   2. Send anyway (may timeout): Continue")
                 print(f"   3. Cancel: Ctrl+C")
 
@@ -110,7 +100,7 @@ class WaferProberAgent:
 
                 print("📤 Sending command anyway...")
 
-        # Send command and wait for reply
+        # Send command
         response = self.kafka.send(
             command=command,
             data=data,
@@ -122,16 +112,7 @@ class WaferProberAgent:
         return response
 
     def send_async(self, command, data=None, repeat=1, delay=0):
-        """
-        Send a command without waiting for reply (fire and forget).
-        Useful for non-critical commands or batch operations.
-
-        Args:
-            command: Command name to execute
-            data: Command parameters (dict or string)
-            repeat: Number of times to repeat the command
-            delay: Delay between repeats in seconds
-        """
+        """Send command without waiting for reply"""
         print(f"📤 Sending '{command}' (async - no reply expected)")
         return self.kafka.send(
             command=command,
@@ -141,8 +122,180 @@ class WaferProberAgent:
             wait_for_reply=False
         )
 
-    def listen(self):
-        """Start the listener service"""
+    def _load_probe_config(self, config_name):
+        """
+        Load probe station config from WPProbesConfigs.json
+
+        Args:
+            config_name: Name of config (e.g., "CERN", "MOCK")
+
+        Returns:
+            dict: Config with machineId, address, port, machineType
+        """
+        config_path = "configs/WPProbesConfigs.json"
+
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(
+                f"Config file not found: {config_path}\n"
+                f"Please create configs/WPProbesConfigs.json"
+            )
+
+        with open(config_path, 'r') as f:
+            all_configs = json.load(f)
+
+        if config_name not in all_configs:
+            available = ', '.join(all_configs.keys())
+            raise KeyError(
+                f"Config '{config_name}' not found in {config_path}\n"
+                f"Available configs: {available}"
+            )
+
+        return all_configs[config_name]
+
+    def _auto_initialize_prober(self, config_name, config):
+        """
+        Auto-initialize prober connection when listener starts
+
+        This calls svt_initialise_wp() directly to set up the prober
+        without needing a separate Initialize command
+
+        Args:
+            config_name: Name of the config (e.g., "CERN", "MOCK")
+            config: Config dict from JSON
+        """
+        try:
+            print(f"\n🔌 Auto-initializing prober connection...")
+
+            # Import the initialization function
+            from actions.WPProjectActions import svt_initialise_wp
+
+            # Build address
+            port = config.get('port', 35555)
+            address_host = config.get('address', 'localhost')
+            full_address = f"{address_host}:{port}"
+
+            # Prepare initialization parameters
+            init_params = {
+                'address': full_address,
+                'machine_type': config.get('machineType', 'sentio'),
+                'machine_id': config.get('machineId', 0),
+                'machine_name': config.get('description', config_name),
+                'initialization_mode': 'config',  # Mark as config-driven
+                'force': True  # Force init on startup
+            }
+
+            # Add optional project if specified in config
+            if 'projectName' in config:
+                init_params['project_name'] = config['projectName']
+
+            print(f"   Address: {full_address}")
+            print(f"   Type: {init_params['machine_type']}")
+            print(f"   Machine ID: {init_params['machine_id']}")
+
+            # Call the initialization function directly
+            result = svt_initialise_wp(**init_params)
+
+            if result.get('status', '').lower() == 'success':
+                msg = result.get('data', {}).get('message', 'Initialized successfully')
+                print(f"✅ {msg}")
+                return True
+            else:
+                # ENHANCED ERROR LOGGING
+                print(f"❌ Initialization failed:")
+
+                # Get error details
+                error_obj = result.get('error', {})
+                error_msg = error_obj.get('message', 'Unknown error')
+                error_code = error_obj.get('code', 'N/A')
+
+                print(f"   Error code: {error_code}")
+                print(f"   Error message: {error_msg}")
+
+                # Show full result for debugging
+                print(f"\n   Full result:")
+                import json
+                print(json.dumps(result, indent=2))
+
+                return False
+
+        except Exception as e:
+            print(f"❌ Auto-initialization error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def listen(self, config_name=None):
+        """
+        Start the listener service with optional auto-initialization
+
+        Args:
+            config_name: Optional probe station config name (e.g., "CERN", "MOCK")
+                        If provided, loads config and auto-initializes prober
+
+        Usage:
+            python main.py listen            # Start without auto-init
+            python main.py listen CERN       # Auto-init with CERN config
+            python main.py listen MOCK       # Auto-init with mock prober
+        """
+        if config_name:
+            print(f"\n{'=' * 70}")
+            print(f"  Starting WP Agent: {config_name}")
+            print(f"{'=' * 70}\n")
+
+            try:
+                # Load config
+                config = self._load_probe_config(config_name)
+                self.wp_agent_name = config_name
+
+                print(f"📋 Loaded config for '{config_name}':")
+                print(f"   Machine ID: {config.get('machineId')}")
+                print(f"   Address: {config.get('address')}:{config.get('port', 35555)}")
+                print(f"   Type: {config.get('machineType', 'sentio')}")
+                if 'description' in config:
+                    print(f"   Description: {config['description']}")
+                print()
+
+                # Set wpAgentName in global parameters first
+                try:
+                    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+                    g = SvtWPAagentGlobalParameters.getInstance()
+                    g.wpAgentName = config_name
+                    print(f"✓ Set wpAgentName: {config_name}\n")
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not set wpAgentName: {e}\n")
+
+                # Auto-initialize prober connection
+                init_success = self._auto_initialize_prober(config_name, config)
+
+                if not init_success:
+                    print(f"\n⚠️  Warning: Auto-initialization failed")
+                    print(f"   You may need to run Initialize command manually")
+                    print(f"   Continuing to start listener anyway...\n")
+
+            except (FileNotFoundError, KeyError) as e:
+                print(f"❌ Error loading config: {e}")
+                print(f"\n💡 Available options:")
+                print(f"   1. Create configs/WPProbesConfigs.json")
+                print(f"   2. Run without config: python main.py listen")
+                return
+            except Exception as e:
+                print(f"❌ Unexpected error: {e}")
+                import traceback
+                traceback.print_exc()
+                return
+        else:
+            print(f"\n{'=' * 70}")
+            print(f"  Starting WP Agent (no auto-config)")
+            print(f"{'=' * 70}\n")
+            print(f"💡 Tip: Start with a config for auto-initialization:")
+            print(f"   python main.py listen CERN")
+            print(f"   python main.py listen MOCK\n")
+            print(f"   You will need to run Initialize command manually.\n")
+
+        # Start Kafka listener
+        print(f"{'=' * 70}")
+        print(f"  Starting Kafka Listener")
+        print(f"{'=' * 70}\n")
         self.kafka.listen()
 
     def check_listener_health(self):
@@ -162,34 +315,16 @@ class WaferProberAgent:
                 print(f"   Timeout threshold: {self.health_check.HEARTBEAT_TIMEOUT}s")
 
             print(f"\n💡 To start the listener, run:")
-            print(f"   python main.py listen")
+            print(f"   python main.py listen <CONFIG_NAME>")
 
         return is_alive
 
     def wait_for_listener(self, max_wait=30.0):
-        """
-        Wait until listener comes online
-
-        Args:
-            max_wait: Maximum time to wait in seconds (default: 30.0)
-
-        Returns:
-            bool: True if listener came online, False if timeout
-        """
+        """Wait until listener comes online"""
         return self.health_check.wait_for_listener(max_wait=max_wait)
 
     def send_force(self, command, data=None, repeat=1, delay=0, timeout=30.0):
-        """
-        Force send a command without checking listener health.
-        Still waits for reply.
-
-        Args:
-            command: Command name to execute
-            data: Command parameters (dict or string)
-            repeat: Number of times to repeat the command
-            delay: Delay between repeats in seconds
-            timeout: How long to wait for reply (seconds)
-        """
+        """Force send a command without checking listener health"""
         print(f"⚠️  Sending '{command}' WITHOUT health check (forced)")
         return self.kafka.send(
             command=command,
