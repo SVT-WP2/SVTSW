@@ -18,7 +18,7 @@ SvtKafkaConsumer::SvtKafkaConsumer(const std::string &broker, const std::string 
   , mTopicName(topic_name)
   , mStopEof(stop_eof)
 {
-  mKafkaComsumeCb = std::shared_ptr<SvtKafkaConsumeCb>(new SvtKafkaConsumeCb());
+  mKafkaComsumeCb = std::make_shared<SvtKafkaConsumeCb>();
   createConsumer();
 }
 
@@ -37,9 +37,9 @@ bool SvtKafkaConsumer::createConsumer()
   /*
    * Set configuration properties
    */
-  std::shared_ptr<RdKafka::Conf> mGlobalConf = std::shared_ptr<RdKafka::Conf>(
+  auto mGlobalConf = std::shared_ptr<RdKafka::Conf>(
       RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
-  std::shared_ptr<RdKafka::Conf> mTopicConf = std::shared_ptr<RdKafka::Conf>(
+  auto mTopicConf = std::shared_ptr<RdKafka::Conf>(
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
   SvtKafka::setConfig(mGlobalConf.get(), "metadata.broker.list", mBroker);

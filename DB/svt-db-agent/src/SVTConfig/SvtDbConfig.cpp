@@ -15,7 +15,7 @@ SvtDbConfig::SvtDbConfig(_svtdbconfig_ctor_tag)
 
 std::shared_ptr<SvtDbConfig> SvtDbConfig::factory(json &config)
 {
-  std::shared_ptr<SvtDbConfig> ptr =
+  auto ptr =
       std::make_shared<SvtDbConfig>(_svtdbconfig_ctor_tag{});
   ptr->decodeJson(config);
   return ptr;

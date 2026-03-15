@@ -17,7 +17,7 @@ SvtDbAgent::SvtDbBaseLocationDto::SvtDbBaseLocationDto(const std::string &table_
   : mLocTableName(table_name)
   , mLocIdName(id_name)
 {
-  locDto = std::shared_ptr<SvtDbLocationDto>(new SvtDbLocationDto(table_name, id_name));
+  locDto = std::make_shared<SvtDbLocationDto>(table_name, id_name);
 }
 
 //========================================================================+

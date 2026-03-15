@@ -21,7 +21,7 @@ using namespace SvtKafka;
 SvtKafkaProducer::SvtKafkaProducer(const std::string &broker)
   : mBroker(broker)
 {
-  mDrReportCb = std::shared_ptr<SvtKafkaDeliveryReportCb>(new SvtKafkaDeliveryReportCb());
+  mDrReportCb = std::make_shared<SvtKafkaDeliveryReportCb>();
   createProducer();
 }
 
@@ -34,9 +34,9 @@ bool SvtKafkaProducer::createProducer()
   /*
    * Set configuration properties
    */
-  std::shared_ptr<RdKafka::Conf> mGlobalConf = std::shared_ptr<RdKafka::Conf>(
+  auto mGlobalConf = std::shared_ptr<RdKafka::Conf>(
       RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
-  std::shared_ptr<RdKafka::Conf> mTopicConf = std::shared_ptr<RdKafka::Conf>(
+  auto mTopicConf = std::shared_ptr<RdKafka::Conf>(
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
   SvtKafka::setConfig(mGlobalConf.get(), "metadata.broker.list", mBroker);
