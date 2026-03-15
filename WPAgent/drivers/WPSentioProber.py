@@ -86,6 +86,13 @@ class SentioProberImpl(AbstractProber):
             raise ValueError(f"Invalid work area '{work_area}'. Valid options are: {valid_areas}")
         self.prober.move_chuck_work_area(work_area_enum)
 
+    def move_chuck_offaxis_area(self):
+        self.prober.move_chuck_work_area(WorkArea.Offaxis)
+
+    def move_chuck_wide(self):
+        "Moving to probing area"
+        self.prober.move_chuck_work_area(WorkArea.Probing)
+
     def get_current_index(self):
         resp = self.prober.send_cmd("map:die:get_current_index")
 
@@ -117,7 +124,7 @@ class SentioProberImpl(AbstractProber):
         resp = "doesnt exist"
         return resp
 
-    def set_overtravel(self,overtravelGap: float):
+    def set_overtravel(self, overtravelGap: float):
         "Sets overtravel gap for all chuck sites in μm"
         self.prober.send_cmd("set_chuck_overtravel_gap")
 
