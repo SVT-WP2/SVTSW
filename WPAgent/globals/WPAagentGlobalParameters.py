@@ -21,6 +21,7 @@ class SvtWPAagentGlobalParameters:
         self.machine_id = None  # Database ID of the prober
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
+        self.wpAgentName = None
 
         # User info
         self.userLogged = None
