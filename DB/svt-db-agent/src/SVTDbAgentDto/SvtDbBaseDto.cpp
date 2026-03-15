@@ -128,13 +128,19 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     const std::string &orderBy, const bool orderDec)
 {
   entries.clear();
+  std::vector<std::string> colNames;
+  colNames.reserve(getColNames().size());
+  for (const auto &col : getColNames())
+  {
+    colNames.push_back(col.first);
+  }
   SvtDbInterface::SimpleQuery query;
 
   query.setTableName(getTableName());
 
-  for (const auto &colName : getColNames())
+  for (const auto &colName : colNames)
   {
-    query.addColumn(colName.first);
+    query.addColumn(colName);
   }
 
   if (!filters.ids.empty())
@@ -166,10 +172,11 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   {
     rows_t rows;
     query.doQuery(rows);
+    entries.reserve(rows.size());
 
     for (const auto &row : rows)
     {
-      if (row.size() != getColNames().size())
+      if (row.size() != colNames.size())
       {
         throw std::range_error("return row size unmatches query list size");
       }
@@ -177,7 +184,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
       int valId = 0;
       for (const auto &colValue : row)
       {
-        const std::string &colName = std::next(getColNames().begin(), valId)->first;
+        const std::string &colName = colNames[valId];
         rowEntry.addValue(colName, colValue);
         ++valId;
       }
@@ -283,60 +290,48 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     const std::vector<SvtDbEntry> &entries, SvtKafkaReplyMsg &msgReply,
     int totalCount)
 {
-  try
+  nlohmann::ordered_json data;
+  nlohmann::ordered_json items = nlohmann::ordered_json::array();
+  if (auto *itemsPtr = items.get_ptr<nlohmann::ordered_json::array_t *>())
   {
-    nlohmann::ordered_json data;
-    nlohmann::ordered_json items = nlohmann::json::array();
-    for (const auto &entry : entries)
-    {
-      nlohmann::ordered_json entry_j;
-      for (const auto &item : entry.getValues())
-      {
-        entry_j[item.first] = item.second;
-      }
-      items.push_back(entry_j);
-    }
-    data["items"] = items;
-    if (totalCount >= 0)
-    {
-      data["totalCount"] = totalCount;
-    }
-    msgReply.setData(data);
-    msgReply.setStatus(
-        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
-    msgReply.setError(0, "");
+    itemsPtr->reserve(entries.size());
   }
-  catch (const std::exception &e)
+  for (const auto &entry : entries)
   {
-    throw e;
-    return;
+    nlohmann::ordered_json entry_j;
+    for (const auto &item : entry.getValues())
+    {
+      entry_j[item.first] = item.second;
+    }
+    items.push_back(entry_j);
   }
+  data["items"] = items;
+  if (totalCount >= 0)
+  {
+    data["totalCount"] = totalCount;
+  }
+  msgReply.setData(data);
+  msgReply.setStatus(
+      SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
+  msgReply.setError(0, "");
 }
 
 //========================================================================+
 void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     const SvtDbEntry &entry, SvtKafkaReplyMsg &msgReply)
 {
-  try
+  nlohmann::ordered_json data;
+  nlohmann::ordered_json entry_j;
+  for (const auto &item : entry.getValues())
   {
-    nlohmann::ordered_json data;
-    nlohmann::ordered_json entry_j;
-    for (const auto &item : entry.getValues())
-    {
-      entry_j[item.first] = item.second;
-    }
+    entry_j[item.first] = item.second;
+  }
 
-    data["entity"] = entry_j;
-    msgReply.setData(data);
-    msgReply.setStatus(
-        SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
-    msgReply.setError(0, "");
-  }
-  catch (const std::exception &e)
-  {
-    throw e;
-    return;
-  }
+  data["entity"] = entry_j;
+  msgReply.setData(data);
+  msgReply.setStatus(
+      SvtKafka::msgStatus[SvtKafka::SvtKafkaMsgStatus::Success]);
+  msgReply.setError(0, "");
 }
 
 //========================================================================+
