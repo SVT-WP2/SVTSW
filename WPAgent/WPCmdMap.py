@@ -14,22 +14,21 @@ COMMAND_ROUTER = {
     "MoveChuckXY": testing_actions.move_chuck_xy,
     "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
-    "StepNextDie": testing_actions.step_next_die,
-    "GoToDie": testing_actions.go_to_die,
+    "MoveChuckNextDie": testing_actions.step_next_die,
+    "MoveChuckRowCol": testing_actions.go_to_die,
     "OpenProject": testing_actions.open_project,
     "FindHome": testing_actions.find_home,
     "SwitchCamera": testing_actions.switch_camera,
     "MoveChuckHome": testing_actions.move_chuck_home,
     "Unload": testing_actions.unload_wafer,
-    "Cleaning": testing_actions.clean_probe_station,
     "AlignWafer": testing_actions.align_wafer,
-    "GoToContact": testing_actions.go_to_contact,
-    "GoToSeparation": testing_actions.go_to_separation,
+    "MoveChuckContact": testing_actions.go_to_contact,
+    "MoveChuckSeparation": testing_actions.go_to_separation,
     "AutoFocus": testing_actions.auto_focus,
     "Load": testing_actions.load_wafer,
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
     "LocalMode": testing_actions.local_state,
-    "GoToPreviousDie": testing_actions.go_to_previous_die,
+    "MoveChuckPreviousDie": testing_actions.go_to_previous_die,
     "SetOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
@@ -37,9 +36,9 @@ COMMAND_ROUTER = {
 
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
-    "ShowProjectStatus": project_actions.get_project_status,
-    "GetInfo": project_actions.get_info,
-    "help": project_actions.help_command,
+    "ShowStatus": project_actions.get_project_status,
+    "GetInfo": project_actions.get_info,# !! irrelevant
+    "Help": project_actions.help_command,
 
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequence(
@@ -57,7 +56,19 @@ COMMAND_ROUTER = {
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
-    "GetAgentState": project_actions.get_agent_state,
+    "GetAgentState": project_actions.get_agent_state, # !! irrelevant
+
+    # TODO: commands are not implemented
+    "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer(),
+    "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer(),
+    "MoveChuckAsic": testing_actions.move_chuck_asic(),
+    "MoveChuckSafePosition": testing_actions.move_chuck_safe_position(),
+    "MoveChuckWide": testing_actions.move_chuck_wide(),
+    "TestingLock": testing_actions.testing_lock(),
+    "TestingUnLock": testing_actions.testing_unlock(),
+    "ChangeProject": project_actions.change_project(),
+    "ConnectProbeMachine": project_actions.connect_probe_machine(),
+
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(
