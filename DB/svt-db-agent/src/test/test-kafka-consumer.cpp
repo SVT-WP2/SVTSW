@@ -1,80 +1,120 @@
-#include "SvtLogger.h"
 
+#include <atomic>
+#include <csignal>
+#include <cstdlib>
+
+#include <getopt.h>
+
+#include <chrono>
 #include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <thread>  // For std::this_thread::sleep_for
-#include <vector>
 
 #include <librdkafka/rdkafkacpp.h>
 
-class MyEventCb : public RdKafka::EventCb
-{
- public:
-  void event_cb(RdKafka::Event &event) override
-  {
-    switch (event.type())
-    {
-    case RdKafka::Event::EVENT_ERROR:
-      std::cerr << "ERROR (" << RdKafka::err2str(event.err())
-                << "): " << event.str() << std::endl;
-      break;
-    case RdKafka::Event::EVENT_STATS:
-      std::cerr << "STATS: " << event.str() << std::endl;
-      break;
-    case RdKafka::Event::EVENT_LOG:
-      std::cerr << "LOG-" << event.severity() << "-" << event.fac() << ": "
-                << event.str() << std::endl;
-      break;
-    // case RdKafka::Event::EVENT_THROTTLED:
-    //   std::cerr << "THROTTLED: " << event.throttle_time() << "ms by "
-    //             << event.broker_name() << " id " << (int) event.broker_id()
-    //             << std::endl;
-    //   break;
-    default:
-      std::cerr << "EVENT: " << event.str() << std::endl;
-      break;
-    }
-  }
-};
+#include "SvtKafkaUtils.h"
+#include "SvtLogger.h"
 
-int main()
+static volatile std::atomic<bool> run = true;
+//========================================================================+
+void sigterm_handler(int sig)
 {
+  std::ostringstream ss;
+  ss << "Caught signal " << sig << ", initiating shutdown...";
+  logWarning(ss.str());
+  run = false;
+}
+
+int main(int argc, char **argv)
+{
+  // Register signal handlers for graceful shutdown
+  std::signal(SIGINT, sigterm_handler);   // Ctrl+C
+  std::signal(SIGTERM, sigterm_handler);  // kill command
+
   // Kafka broker address
   std::string brokers = "localhost:9095";
   // Consumer group ID
   std::string group_id = "test-db-agent";
   // Topic to subscribe to
-  const std::string topic_name = "svt.db-agent.request";
+  std::string topic_name = "svt.db-agent.request";
+  bool verbose = false;
+
+  int opt;
+  while ((opt = getopt(argc, argv, ":b:g:t:v")) != -1)
+  {
+    switch (opt)
+    {
+    case 'v':
+      verbose = true;
+      break;
+    case 'b':
+      brokers = optarg;
+      break;
+    case 't':
+      topic_name = optarg;
+      break;
+    case 'g':
+      group_id = optarg;
+      break;
+    case ':':
+    {
+      std::ostringstream ss;
+      ss << "Option -" << char(optopt) << " requires an operand";
+      logError(ss.str());
+      return EXIT_FAILURE;
+      break;
+    }
+    case '?':
+    {
+      std::ostringstream ss;
+      ss << "Unrecognized option: -" << char(optopt);
+      logError(ss.str());
+      return EXIT_FAILURE;
+      break;
+    }
+    default:
+      return EXIT_FAILURE;
+      break;
+    }
+  }
 
   // Create configuration object
-  RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+  std::unique_ptr<RdKafka::Conf> conf(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
+  std::unique_ptr<RdKafka::Conf> tconf(RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
 
   // Set global configuration properties
   std::string errstr;
-  if (conf->set("bootstrap.servers", brokers, errstr) !=
+  if (conf->set("metadata.broker.list", brokers, errstr) !=
       RdKafka::Conf::CONF_OK)
   {
     std::cerr << "Failed to set bootstrap.servers: " << errstr << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
+  // Set event callback
+  SvtKafka::SvtKafkaEventCb ex_event_cb(NULL);
+  if (conf->set("event_cb", &ex_event_cb, errstr) != RdKafka::Conf::CONF_OK)
+  {
+    std::cerr << "Failed to set event_cb: " << errstr << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Before create consumer check cluster status
+  if (!SvtKafka::checkKafkaConnection(conf.get(), verbose))
+  {
+    logError("Failed to connect to broker: " + brokers);
+    return EXIT_FAILURE;
+  }
+
   if (conf->set("group.id", group_id, errstr) != RdKafka::Conf::CONF_OK)
   {
     std::cerr << "Failed to set group.id: " << errstr << std::endl;
     return 1;
   }
 
-  // Set event callback
-  MyEventCb ex_event_cb;
-  if (conf->set("event_cb", &ex_event_cb, errstr) != RdKafka::Conf::CONF_OK)
-  {
-    std::cerr << "Failed to set event_cb: " << errstr << std::endl;
-    return 1;
-  }
-
   // Create KafkaConsumer instance
-  RdKafka::KafkaConsumer *consumer =
-      RdKafka::KafkaConsumer::create(conf, errstr);
+  std::unique_ptr<RdKafka::KafkaConsumer> consumer(RdKafka::KafkaConsumer::create(conf.get(), errstr));
   if (!consumer)
   {
     std::cerr << "Failed to create consumer: " << errstr << std::endl;
@@ -97,11 +137,11 @@ int main()
   //     return 1;
   // }
 
-  std::cout << "Consumer subscribed to topic " << topic_name << " in group "
-            << group_id << std::endl;
-
   // Start consuming messages
-  while (true)
+  logInfo("Consumer subscribed to topic " + topic_name + " in group " + group_id);
+  logInfo("press Ctrl+C to stop.");
+
+  while (run)
   {
     RdKafka::Message *msg =
         consumer->consume(1000);  // Poll for messages with a timeout of 1000ms
@@ -111,8 +151,8 @@ int main()
       std::cout << "Message from topic " << msg->topic_name() << " ["
                 << msg->partition() << "] at offset " << msg->offset()
                 << std::endl;
-      std::cout << "Message Payload: "
-                << static_cast<const char *>(msg->payload()) << std::endl;
+      std::string bufferPayload(static_cast<const char *>(msg->payload()), msg->len());
+      std::cout << "Message Payload: " << bufferPayload << std::endl;
     }
     else if (msg->err() == RdKafka::ERR__PARTITION_EOF)
     {
@@ -128,25 +168,10 @@ int main()
     delete msg;  // Free the message object
   }
 
-  // if (msg->err())
-  // {
-  //   else
-  //   {
-  //     std::cerr << "Consume error: " << msg->errstr() << std::endl;
-  //   }
-  // }
-  // else
-  // {
-  //   // Message received
-  // }
-
   // Close and clean up
   consumer->close();
-  delete consumer;
-  delete conf;
-  delete tconf;
 
   closeLogFile();
 
-  return 0;
+  return EXIT_SUCCESS;
 }

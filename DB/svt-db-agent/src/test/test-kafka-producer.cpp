@@ -12,24 +12,19 @@
 #include "SvtKafkaProducer.h"
 #include "SvtLogger.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
   // Kafka broker address
   std::string brokers = "localhost:9095";
   // Topic to subscribe to
   const std::string topic_name = "svt.db-agent.request";
 
-  std::string json_script_name = "/Users/ycorrales/Work/EIC/SVT/json_scripts/create_wafer.json";
-  if (argc > 2)
+  if (argc != 2)
   {
-    logError("Error: only one argument allowed. entered " + std::to_string(argc));
-    closeLogFile();
+    logError("Error: only one argument allowed. entered " + std::to_string(argc - 1));
     return EXIT_FAILURE;
   }
-  else if (argc == 2)
-  {
-    json_script_name = std::string(argv[1]);
-  }
+  std::string json_script_name = std::string(argv[1]);
   logInfo("Using json file: " + json_script_name);
   std::ifstream json_script(json_script_name);
   const auto data_j = nlohmann::json::parse(json_script);
