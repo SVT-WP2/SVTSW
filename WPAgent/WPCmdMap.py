@@ -33,6 +33,7 @@ COMMAND_ROUTER = {
     "SetOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
+    "MoveChuckCenter":testing_actions.move_chuck_center(),
 
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
