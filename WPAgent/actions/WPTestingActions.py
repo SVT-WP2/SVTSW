@@ -22,26 +22,27 @@ def _ensure_initialized():
     return None
 
 
-def move_chuck_xy(x, y, address=None, machine_type=None):
-    """Move chuck to XY position"""
+def move_chuck_center(address=None, machine_type=None):
+    """Move chuck to Center"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckXYReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckCenterReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        prober.move_chuck_xy(x, y)
+        prober.move_chuck_center()
         prober.local_mode()
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
-        return ResponseBuilder.success("MoveChuckXYReply", f"Moved chuck to x={x}, y={y}")
+        return ResponseBuilder.success("MoveChuckCenterReply", f"Moved chuck to Center")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckCenterReply", str(e), 500)
+
 
 
 def move_chuck_z(z, address=None, machine_type=None):

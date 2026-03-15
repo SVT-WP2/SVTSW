@@ -15,6 +15,10 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
+    def move_chuck_center(self):
+        pass
+
+    @abstractmethod
     def run_ptpa(self):
         pass
 
