@@ -921,7 +921,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # TEST_SETUP
-  /svt.db-agent.request/GetAllSvtTestSetup:
+  /svt.db-agent.request/GetAllSvtTestSetups:
     post:
       tags:
         - SvtTestSetup
@@ -934,7 +934,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllSvtTestSetupMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupsMessage"
         required: true
       responses:
         "200":
@@ -945,7 +945,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllSvtTestSetupReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -983,7 +983,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/UpdateSvtTestSetupDefaultConfig:
+  /svt.db-agent.request/UpdateSvtTestSetup:
     post:
       tags:
         - SvtTestSetup
@@ -996,7 +996,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestSetupMessage"
         required: true
       responses:
         "200":
@@ -1007,7 +1007,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/UpdateSvtTestSetupDefaultConfigReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestSetupReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1046,7 +1046,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # TEST_SETUP_CONFIGURATION
-  /svt.db-agent.request/GetAllSvtTestSetupConfig:
+  /svt.db-agent.request/GetAllSvtTestSetupConfigs:
     post:
       tags:
         - SvtTestSetupConfig
@@ -1059,7 +1059,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllSvtTestSetupConfigMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestSetupConfigsMessage"
         required: true
       responses:
         "200":
@@ -1070,7 +1070,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllSvtTestSetupConfigReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestSetupConfigsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1109,7 +1109,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # TEST_TYPE
-  /svt.db-agent.request/GetAllSvtTestType:
+  /svt.db-agent.request/GetAllSvtTestTypes:
     post:
       tags:
         - SvtTestType
@@ -1122,7 +1122,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllSvtTestTypeMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTypesMessage"
         required: true
       responses:
         "200":
@@ -1133,7 +1133,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllSvtTestTypeReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTypesReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1203,7 +1203,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # TEST_TYPE_CONFIG
-  /svt.db-agent.request/GetAllSvtTestTypeConfig:
+  /svt.db-agent.request/GetAllSvtTestTypeConfigs:
     post:
       tags:
         - SvtTestTypeConfig
@@ -1216,7 +1216,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllSvtTestTypeConfigMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTypeConfigsMessage"
         required: true
       responses:
         "200":
@@ -1227,7 +1227,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllSvtTestTypeConfigReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTypeConfigsReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -1266,7 +1266,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # TEST_TEMPLATE
-  /svt.db-agent.request/GetAllSvtTestTemplate:
+  /svt.db-agent.request/GetAllSvtTestTemplates:
     post:
       tags:
         - SvtTestTemplate
@@ -1279,7 +1279,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllSvtTestTemplateMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestTemplatesMessage"
         required: true
       responses:
         "200":
@@ -1290,7 +1290,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllSvtTestTemplateReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestTemplatesReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -2286,11 +2286,11 @@ components:
     #
     # TEST_SETUP :: LIST
     #
-    GetAllSvtTestSetupMessage:
+    GetAllSvtTestSetupsMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestSetup"
+          default: "GetAllSvtTestSetups"
         data:
           type: object
           properties:
@@ -2302,11 +2302,11 @@ components:
                   description: SvtTestSetup ids array. If array is empty / undefined => all test setup will be returned.
                   items:
                     type: number
-    GetAllSvtTestSetupReplyMessage:
+    GetAllSvtTestSetupsReplyMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestSetupReply"
+          default: "GetAllSvtTestSetupsReply"
         data:
           type: object
           properties:
@@ -2340,11 +2340,11 @@ components:
     #
     # TEST_SETUP :: UPDATE DEFAULT CONFIGURATION
     #
-    UpdateSvtTestSetupDefaultConfigMessage:
+    UpdateSvtTestSetupMessage:
       properties:
         type:
           type: string
-          default: "UpdateSvtTestSetupDefaultConfig"
+          default: "UpdateSvtTestSetup"
         data:
           type: object
           required:
@@ -2356,11 +2356,11 @@ components:
               description: Test Setup Id
             update:
               $ref: "#/components/schemas/SvtTestSetupUpdateDefaultConfigDto"
-    UpdateSvtTestSetupDefaultConfigReplyMessage:
+    UpdateSvtTestSetupReplyMessage:
       properties:
         type:
           type: string
-          default: "UpdateSvtTestSetupDefaultConfigReply"
+          default: "UpdateSvtTestSetupReply"
         data:
           type: object
           properties:
@@ -2394,11 +2394,11 @@ components:
     #
     # TEST_SETUP_CONFIG :: LIST
     #
-    GetAllSvtTestSetupConfigMessage:
+    GetAllSvtTestSetupConfigsMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestSetupConfig"
+          default: "GetAllSvtTestSetupConfigs"
         data:
           type: object
           properties:
@@ -2413,11 +2413,11 @@ components:
                 setupId:
                   type: number
                   description: SvtTestSetup id.
-    GetAllSvtTestSetupConfigReplyMessage:
+    GetAllSvtTestSetupConfigsReplyMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestSetupConfigReply"
+          default: "GetAllSvtTestSetupConfigsReply"
         data:
           type: object
           properties:
@@ -2528,11 +2528,11 @@ components:
     #
     # TEST_TYPE_CONFIG :: LIST
     #
-    GetAllSvtTestTypeConfigMessage:
+    GetAllSvtTestTypeConfigsMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestTypeConfig"
+          default: "GetAllSvtTestTypeConfigs"
         data:
           type: object
           properties:
@@ -2547,11 +2547,11 @@ components:
                 testTypeId:
                   type: number
                   description: SvtTestType id.
-    GetAllSvtTestTypeConfigReplyMessage:
+    GetAllSvtTestTypeConfigsReplyMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestTypeConfigReply"
+          default: "GetAllSvtTestTypeConfigsReply"
         data:
           type: object
           properties:
@@ -2585,11 +2585,11 @@ components:
     #
     # TEST_TEMPLATE :: LIST
     #
-    GetAllSvtTestTemplateMessage:
+    GetAllSvtTestTemplatesMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestTemplate"
+          default: "GetAllSvtTestTemplates"
         data:
           type: object
           properties:
@@ -2601,11 +2601,11 @@ components:
                   items:
                     type: string
                     description: Asic family type.
-    GetAllSvtTestTemplateReplyMessage:
+    GetAllSvtTestTemplatesReplyMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestTemplateReply"
+          default: "GetAllSvtTestTemplatesReply"
         data:
           type: object
           properties:
@@ -3293,21 +3293,25 @@ components:
       required:
         - name
         - generalLocation
-        - configName
-        - bodyConfig
-        - note
+        - defaultConfig
       properties:
         name:
           type: string
         generalLocation:
           type: string
-        configName:
-          type: string
-        bodyConfig:
-          type: string
-        note:
-          type: string
-          nullable: true
+        defaultConfig:
+          type: object
+          properties:
+            name:
+              type: string
+              required: true
+            configBody:
+              type: string
+              required: true
+              description: Stringified JSON with default configuration for the test setup, in the correct format.
+            note:
+              type: string
+              nullable: true
     SvtTestSetupUpdateDefaultConfigDto:
       type: object
       required:
@@ -3379,7 +3383,7 @@ components:
         - name
         - asicFamilyTypes
         - configName
-        - bodyConfig
+        - configBody
         - note
       properties:
         name:
@@ -3390,7 +3394,7 @@ components:
             type: string
         configName:
           type: string
-        bodyConfig:
+        configBody:
           type: string
         note:
           type: string
