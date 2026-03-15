@@ -266,7 +266,7 @@ def get_project_status():
         globals_ = SvtWPAagentGlobalParameters.getInstance()
 
         if not factory.is_initialized():
-            return ResponseBuilder.error("ShowProjectStatusReply", "Not initialized", 400)
+            return ResponseBuilder.error("ShowStatusReply", "Not initialized", 400)
 
         # Get prober info
         prober = factory.get_prober(globals_.machineType, globals_.address)
@@ -327,10 +327,10 @@ def get_project_status():
 
         output_message = "\n".join(output_lines)
 
-        return ResponseBuilder.success("ShowProjectStatusReply", output_message)
+        return ResponseBuilder.success("ShowStatusReply", output_message)
 
     except Exception as e:
-        return ResponseBuilder.error("ShowProjectStatusReply", str(e), 500)
+        return ResponseBuilder.error("ShowStatusReply", str(e), 500)
 
 
 def get_info():
@@ -538,3 +538,9 @@ def help_command(command=None):
     response["data"]["categories"] = {cat: [cmd[0] for cmd in cmds] for cat, cmds in categories.items()}
 
     return response
+
+def change_project():
+    pass
+
+def connect_probe_machine():
+    pass

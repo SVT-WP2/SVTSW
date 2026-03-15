@@ -150,7 +150,7 @@ def step_next_die(address=None, machine_type=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("StepNextDieReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckNextDieReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -163,10 +163,10 @@ def step_next_die(address=None, machine_type=None):
         # TODO: Update die position if result contains die coordinates
         agentStateMachine.transition('MoveChuckNextDie')
 
-        return ResponseBuilder.success("StepNextDieReply", f"Stepped to next die: {result}")
+        return ResponseBuilder.success("MoveChuckNextDieReply", f"Stepped to next die: {result}")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("StepNextDieReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckNextDieReply", str(e), 500)
 
 
 def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
@@ -175,7 +175,7 @@ def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=N
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("GoToDieReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckRowColReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -191,11 +191,11 @@ def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=N
 
         g.chuck_z_position_state = "Separation"
 
-        return ResponseBuilder.success("GoToDieReply", f"Moved to die {col},{row}")
+        return ResponseBuilder.success("MoveChuckRowColReply", f"Moved to die {col},{row}")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("GoToDieReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckRowColReply", str(e), 500)
 
 
 def switch_camera(mount_point, address=None, machine_type=None):
@@ -464,7 +464,7 @@ def go_to_contact(address=None, machine_type=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("GoToContactReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckContactReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -478,10 +478,10 @@ def go_to_contact(address=None, machine_type=None):
         g.chuck_z_position_state = "Contact"
         agentStateMachine.transition('MoveChuckContact')
 
-        return ResponseBuilder.success("GoToContactReply", "Probe station is in contact")
+        return ResponseBuilder.success("MoveChuckContactReply", "Probe station is in contact")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("GoToContactReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckContactReply", str(e), 500)
 
 
 def go_to_separation(address=None, machine_type=None):
@@ -490,7 +490,7 @@ def go_to_separation(address=None, machine_type=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("GoToSeparationReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckSeparationReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -504,10 +504,10 @@ def go_to_separation(address=None, machine_type=None):
         g.chuck_z_position_state = "Separation"
         agentStateMachine.transition('MoveChuckSeparation')
 
-        return ResponseBuilder.success("GoToSeparationReply", "Probe station is in separation")
+        return ResponseBuilder.success("MoveChuckSeparationReply", "Probe station is in separation")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("GoToSeparationReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
 
 
 def auto_focus(address=None, machine_type=None):
@@ -591,7 +591,7 @@ def go_to_previous_die(address=None, machine_type=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("GoToPreviousDieReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckPreviousDieReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -604,11 +604,11 @@ def go_to_previous_die(address=None, machine_type=None):
         # g.set_current_die(col, row, subsite)
         agentStateMachine.transition('MoveChuckPreviousDie')
 
-        return ResponseBuilder.success("GoToPreviousDieReply", "Moved to previous die")
+        return ResponseBuilder.success("MoveChuckPreviousDieReply", "Moved to previous die")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("GoToPreviousDieReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckPreviousDieReply", str(e), 500)
 
 
 def get_chuck_position(address=None, machine_type=None):
@@ -683,3 +683,28 @@ def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
+
+
+def move_chuck_loaded_wafer():
+    pass
+
+def move_chuck_unloaded_wafer():
+    pass
+
+def move_chuck_asic():
+    pass
+
+def move_chuck_safe_position():
+    pass
+
+def move_chuck_offaxis():
+    pass
+
+def move_chuck_wide():
+    pass
+
+def testing_lock():
+    pass
+
+def testing_unlock():
+    pass
