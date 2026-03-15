@@ -2,16 +2,15 @@ import actions.WPProjectActions as project_actions
 import actions.WPSequencerActions as sequencer_actions
 import actions.WPDataBaseActions as database_actions
 from utilities.WPAgentLogger import WPAgentLogger, Severity
-from stateMachine.WpAgentStateMachine import SvtWpAgentEvent
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
-import actions.WPLoginActions as login_actions
+import actions.WPLoginActions as user_actions
 
 from services.WPListenerHeartbeat import ListenerHealthCheck
 
 COMMAND_ROUTER = {
-
+    # Testing/Movement Commands
     "MoveChuckXY": testing_actions.move_chuck_xy,
     "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
@@ -33,35 +32,36 @@ COMMAND_ROUTER = {
     "GoToPreviousDie": testing_actions.go_to_previous_die,
     "SetOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
+    "GetChuckPosition": testing_actions.get_chuck_position,
 
-    #  Project Init
+    # Project Init
     "Initialize": project_actions.svt_initialise_wp,
     "ShowProjectStatus": project_actions.get_project_status,
     "GetInfo": project_actions.get_info,
     "help": project_actions.help_command,
-    "GetChuckPosition": testing_actions.get_chuck_position,
 
-    #  Sequencer
+    # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequence(
         filepath=get_filepath_param(data if data else None),
         executor=_exec_in_sequence
     ),
 
-    #  Database Actions
+    # Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
 
-    #  Login Actions
-    "UserLogIn": login_actions.UserLogIn,
-    "UserLogOut": login_actions.UserLogOut,
+    # User Login/Logout Actions
+    "UserLogIn": user_actions.UserLogIn,
+    "UserLogOut": user_actions.UserLogOut,
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
     "GetAgentState": project_actions.get_agent_state,
 }
 
-COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER,
-                                                                                                   **kwargs)
+COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(
+    COMMAND_ROUTER, **kwargs
+)
 
 # Instantiation of logger
 logger = WPAgentLogger(
@@ -74,12 +74,10 @@ health_check = ListenerHealthCheck(bootstrap_servers='localhost:9095')
 
 
 def _exec_in_sequence(message_type, data=None):
-    # if the agent is busy, nudge it to a ready/idle state
-    if not agentStateMachine.isReadyToExecute():
-        try:
-            agentStateMachine.updateState(SvtWpAgentEvent.Success)
-        except Exception:
-            pass
+    """
+    Execute command in sequence (for sequencer)
+    No state management here - handled by individual commands
+    """
     return execute_command(message_type, data)
 
 
@@ -94,12 +92,13 @@ def _try_local_mode():
             globals_ = SvtWPAagentGlobalParameters.getInstance()
             prober = factory.get_prober(globals_.machineType, globals_.address)
             prober.local_mode()
-            print("   🔓 Switched to local mode after an error")
+            print("   🔓 Switched to local mode after error")
     except:
         pass
 
 
 def get_filepath_param(data):
+    """Extract filepath from data"""
     # If data is already a string (CLI/kafka sent just a path)
     if isinstance(data, str) and data.endswith(".json"):
         return data
@@ -128,6 +127,10 @@ def _normalize_boolean_param(value):
 
 
 def execute_command(message_type, data=None):
+    """
+    Execute command via router
+
+    """
     # Normalize data
     if isinstance(data, str):
         if message_type == "RunSequencer" and data.endswith(".json"):
@@ -145,60 +148,90 @@ def execute_command(message_type, data=None):
         except Exception:
             data = {}
 
-    # Commands that bypass state check
-    BYPASS_STATE_CHECK = ["ResetAgent", "GetAgentState"]
+    # Commands that bypass state check completely
+    BYPASS_STATE_CHECK = [
+        "ResetAgent",
+        "GetAgentState",
+        "UserLogIn",  # Login must work from any state
+        "UserLogOut",  # Logout must work from any state
+        "GetInfo",  # Info queries don't change state
+        "ShowProjectStatus",
+        "ListProbers",
+        "ListChipTypes",
+        "ListAvailableCommands",
+        "help"
+    ]
 
+    # Check if command exists
     if message_type not in COMMAND_ROUTER:
         result = {"status": "error", "output": f"Unknown command: {message_type}"}
-        logger.log_command(f"Unknown command: {message_type}", Severity.ERROR, message_type, data, result)
+        logger.log_command(
+            f"Unknown command: {message_type}",
+            Severity.ERROR,
+            message_type,
+            data,
+            result
+        )
         return result
 
-    # Check if agent can execute (unless bypass command)
+    # Check if command can be executed (unless bypass)
     if message_type not in BYPASS_STATE_CHECK:
-        can_execute, reason = agentStateMachine.canExecute(message_type)
-        if not can_execute:
+        # NEW: Use can_execute() from new state machine
+        if not agentStateMachine.can_execute(message_type):
+            available = agentStateMachine.get_available_commands()
+            current_state = agentStateMachine.get_state_name()
+
             result = {
                 "status": "error",
-                "output": reason
+                "output": f"Command '{message_type}' not allowed in state '{current_state}'. Available: {', '.join(available)}"
             }
-            logger.log_command(reason, Severity.WARNING, message_type, data, result)
+            logger.log_command(
+                result["output"],
+                Severity.WARNING,
+                message_type,
+                data,
+                result
+            )
             return result
 
     try:
-        # Set current command and start execution (unless bypass)
-        if message_type not in BYPASS_STATE_CHECK:
-            agentStateMachine.setCurrentCommand(message_type)
-            agentStateMachine.updateState(SvtWpAgentEvent.Start)
-
+        # Execute the command
+        # NOTE: State transitions are now handled INSIDE each command function
         action = COMMAND_ROUTER[message_type]
         result = action(**data)
 
-        # Update state based on result (unless bypass)
-        if message_type not in BYPASS_STATE_CHECK:
-            if result.get("status") == "success":
-                agentStateMachine.updateState(SvtWpAgentEvent.Success)
-                severity = Severity.INFO
-            else:
-                # Check if parameter error (don't fail agent)
-                error_msg = result.get("output", "").lower()
-                if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
-                    agentStateMachine._reset()  # Reset without failing
-                    severity = Severity.WARNING
-                else:
-                    agentStateMachine.updateState(SvtWpAgentEvent.Error)
-                    severity = Severity.ERROR
-                    _try_local_mode()  # Go to local mode on error
-        else:
+        # Determine severity based on result
+        if result.get("status") == "success":
             severity = Severity.INFO
+        else:
+            # Check if it's a parameter error (less severe)
+            error_msg = result.get("output", "").lower()
+            if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
+                severity = Severity.WARNING
+            else:
+                severity = Severity.ERROR
+                _try_local_mode()  # Try to recover by going to local mode
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        result = {"status": "error", "output": str(e)}
-        if message_type not in BYPASS_STATE_CHECK:
-            agentStateMachine.updateState(SvtWpAgentEvent.Error)
-        severity = Severity.ERROR
-        _try_local_mode()  # Go to local mode on exception
 
-    logger.log_command(result.get("output", ""), severity, message_type, data, result)
+        result = {"status": "error", "output": str(e)}
+        severity = Severity.ERROR
+
+        # If command threw exception, put state machine in error state
+        if message_type not in BYPASS_STATE_CHECK:
+            agentStateMachine.enter_error_state(str(e))
+
+        _try_local_mode()  # Try to recover
+
+    # Log the command execution
+    logger.log_command(
+        result.get("output", ""),
+        severity,
+        message_type,
+        data,
+        result
+    )
+
     return result
