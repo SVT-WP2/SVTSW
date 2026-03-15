@@ -37,7 +37,7 @@ void sigterm_handler(int sig)
 
 //========================================================================+
 std::shared_ptr<SvtDbAgentSetupConfig>
-createSbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
+createDbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
 {
   auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
@@ -85,7 +85,7 @@ int main(int argc, const char *argv[])
 
   std::string setupConfigFile = argv[1];
 
-  const auto setupConfig = createSbAgentSetupeConfig(setupConfigFile);
+  const auto setupConfig = createDbAgentSetupeConfig(setupConfigFile);
   const auto dbConfig = setupConfig->getDbConfig();
 
   configureLogger(setupConfig->getLogFilePath(),
@@ -111,6 +111,7 @@ int main(int argc, const char *argv[])
                      psqlport, psqlDbName, psqlDbSchema))
     {
       logError("Cannot connect to DB");
+      closeLogFile();
       return EXIT_FAILURE;
     }
     else
