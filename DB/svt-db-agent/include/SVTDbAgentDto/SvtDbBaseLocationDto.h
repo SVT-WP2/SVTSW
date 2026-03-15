@@ -45,7 +45,7 @@ namespace SvtDbAgent
     SvtDbBaseLocationDto(const std::string &table_name, const std::string &id_name);
     ~SvtDbBaseLocationDto() = default;
 
-    std::shared_ptr<SvtDbLocationDto> &getLocDto() { return locDto; }
+    auto &getLocDto() { return locDto; }
 
     virtual bool createEntryWithLocation(const nlohmann::json &, SvtDbEntry &);
     virtual bool createEntryWithLocation(

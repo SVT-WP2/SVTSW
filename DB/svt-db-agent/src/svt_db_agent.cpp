@@ -42,7 +42,7 @@ createDbAgentSetupConfig(const std::string &dbAgentSetupConfigFile)
   auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
   {
-    logError("Unable to create test config");
+    logError("Unable to create setup config");
     return nullptr;
   }
   return setupConfig.value();
@@ -50,7 +50,8 @@ createDbAgentSetupConfig(const std::string &dbAgentSetupConfigFile)
 
 //========================================================================+
 bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const std::string &pass,
-                 std::string &host, const std::string &port, const std::string &dbName, const std::string &dbSchema)
+                 const std::string &host, const std::string &port, const std::string &dbName,
+                 const std::string &dbSchema)
 {
   if (!dbInterface->Init(user, pass, host, port, dbName, dbSchema))
   {
@@ -83,6 +84,10 @@ int main(int argc, const char *argv[])
   std::string setupConfigFile = argv[1];
 
   const auto setupConfig = createDbAgentSetupConfig(setupConfigFile);
+  if (!setupConfig)
+  {
+    return EXIT_FAILURE;
+  }
   const auto dbConfig = setupConfig->getDbConfig();
 
   configureLogger(setupConfig->getLogFilePath(),
@@ -95,35 +100,35 @@ int main(int argc, const char *argv[])
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
   // problems
-  std::string psqlhost = dbConfig->getHost();
-  std::string psqlport = dbConfig->getPort();
-  std::string psqluser = dbConfig->getUser();
-  std::string psqlpass = dbConfig->getPass();
+  std::string psqlHost = dbConfig->getHost();
+  std::string psqlPort = dbConfig->getPort();
+  std::string psqlUser = dbConfig->getUser();
+  std::string psqlPass = dbConfig->getPass();
   std::string psqlDbName = dbConfig->getDbName();
   std::string psqlDbSchema = dbConfig->getDbSchema();
 
   if (!dbInterface->isConnected() &&
-      !connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
-                   psqlport, psqlDbName, psqlDbSchema))
+      !connectToDB(dbInterface, psqlUser, psqlPass, psqlHost,
+                   psqlPort, psqlDbName, psqlDbSchema))
   {
     logError("Cannot connect to DB");
     closeLogFile();
     return EXIT_FAILURE;
   }
-  logInfo("Databaseinterface is connected");
-  logInfo("Using Scheme: " + psqlDbSchema);
+  logInfo("DatabaseInterface is connected");
+  logInfo("Using Schema: " + psqlDbSchema);
   try
   {
-    std::string kafka_broker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
-    SvtDbAgent::SvtDbAgentService *_dbAgent =
+    std::string kafkaBroker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
+    SvtDbAgent::SvtDbAgentService *dbAgent =
         SvtUtils::Singleton<SvtDbAgent::SvtDbAgentService>::instance();
-    _dbAgent->setBrokerName(kafka_broker);
-    // _dbAgent->setLogMessages(true);
-    if (!_dbAgent->configureService(false))
+    dbAgent->setBrokerName(kafkaBroker);
+    // dbAgent->setLogMessages(true);
+    if (!dbAgent->configureService(false))
     {
       return EXIT_FAILURE;
     }
-    while (_dbAgent->getIsConsRunnning() && run)
+    while (dbAgent->getIsConsRunnning() && run)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       // int time = gTimer.getTicksInSeconds();
