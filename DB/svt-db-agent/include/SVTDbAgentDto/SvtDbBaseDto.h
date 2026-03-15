@@ -21,7 +21,9 @@
 
 namespace SvtDbAgent
 {
-  using Map = std::map<std::string, bool>;
+  using jsonMap = std::map<std::string, nlohmann::basic_json<>>;
+  using colMap = std::map<std::string, bool>;
+  using reqMap = std::map<std::string_view, std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>;
 
   struct SvtDbEntry
   {
@@ -31,14 +33,7 @@ namespace SvtDbAgent
 
     void addValue(const std::string &_key, const nlohmann::basic_json<> &_val)
     {
-      if (mValues.find(_key) != mValues.end())
-      {
-        mValues[_key] = _val;
-      }
-      else
-      {
-        mValues.insert({_key, _val});
-      }
+      mValues[_key] = _val;
     }
 
     nlohmann::basic_json<> getValue(const std::string &_key) const
@@ -54,11 +49,11 @@ namespace SvtDbAgent
       }
     }
 
-    const std::map<std::string, nlohmann::basic_json<>> getValues() const { return mValues; }
+    const jsonMap &getValues() const { return mValues; }
 
    private:
     std::string mName;
-    std::map<std::string, nlohmann::basic_json<>> mValues;
+    jsonMap mValues;
   };
 
   struct SvtDbFilters
@@ -101,7 +96,7 @@ namespace SvtDbAgent
     //! Getters
     const std::string &getTableName() { return mTableName; }
 
-    const Map &getColNames() { return mColNames; }
+    const colMap &getColNames() { return mColNames; }
 
     bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
                            SvtKafka::SvtKafkaReplyMsg &);
@@ -135,12 +130,10 @@ namespace SvtDbAgent
       mColNames.clear();
     }
 
-    Map mColNames;
+    colMap mColNames;
     std::string mTableName;
 
-    std::map<std::string_view,
-             std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>
-        request_map;
+    reqMap request_map;
   };
 
 };  // namespace SvtDbAgent

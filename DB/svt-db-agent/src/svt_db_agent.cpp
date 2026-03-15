@@ -23,7 +23,7 @@
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
-std::string version = std::string(VERSION);
+const std::string version = std::string(VERSION);
 
 bool run = true;
 //========================================================================+
@@ -37,7 +37,7 @@ void sigterm_handler(int sig)
 
 //========================================================================+
 std::shared_ptr<SvtDbAgentSetupConfig>
-createDbAgentSetupeConfig(const std::string &dbAgentSetupConfigFile)
+createDbAgentSetupConfig(const std::string &dbAgentSetupConfigFile)
 {
   auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
@@ -62,10 +62,7 @@ bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const 
     logInfo("Successfully connected to " + dbName + ".");
     return true;
   }
-  else
-  {
-    logError("Cannot connet to " + dbName + "!");
-  }
+  logError("Cannot connect to " + dbName + "!");
 
   return false;
 }
@@ -85,7 +82,7 @@ int main(int argc, const char *argv[])
 
   std::string setupConfigFile = argv[1];
 
-  const auto setupConfig = createDbAgentSetupeConfig(setupConfigFile);
+  const auto setupConfig = createDbAgentSetupConfig(setupConfigFile);
   const auto dbConfig = setupConfig->getDbConfig();
 
   configureLogger(setupConfig->getLogFilePath(),
@@ -105,21 +102,16 @@ int main(int argc, const char *argv[])
   std::string psqlDbName = dbConfig->getDbName();
   std::string psqlDbSchema = dbConfig->getDbSchema();
 
-  if (!dbInterface->isConnected())
+  if (!dbInterface->isConnected() &&
+      !connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
+                   psqlport, psqlDbName, psqlDbSchema))
   {
-    if (!connectToDB(dbInterface, psqluser, psqlpass, psqlhost,
-                     psqlport, psqlDbName, psqlDbSchema))
-    {
-      logError("Cannot connect to DB");
-      closeLogFile();
-      return EXIT_FAILURE;
-    }
-    else
-    {
-      logInfo("Databaseinterface is connected");
-      logInfo("Using Scheme: " + psqlDbSchema);
-    }
+    logError("Cannot connect to DB");
+    closeLogFile();
+    return EXIT_FAILURE;
   }
+  logInfo("Databaseinterface is connected");
+  logInfo("Using Scheme: " + psqlDbSchema);
   try
   {
     std::string kafka_broker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();

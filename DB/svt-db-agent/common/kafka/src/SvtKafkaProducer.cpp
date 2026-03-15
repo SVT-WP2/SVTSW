@@ -135,6 +135,9 @@ bool SvtKafkaProducer::stop(const bool suspended)
 bool SvtKafkaProducer::send(const std::string_view &topic,
                             const SvtKafka::SvtKafkaMessage &message)
 {
+  const std::string payload = message.getPayload().dump();
+  const size_t payload_size = payload.size();
+  const std::string topicName(topic);
   std::lock_guard<std::mutex> lk(mMutex);
   if (!mThread.getIsRunning())
   {
@@ -149,16 +152,15 @@ bool SvtKafkaProducer::send(const std::string_view &topic,
   /*
    * Produce message
    */
-  const size_t payload_size = message.getPayload().dump().size();
   while (true)
   {
     RdKafka::ErrorCode resp = mProducer->produce(
         // std::string(topicNames[SvtKafkaTopicEnum::RequestReply]),
         // m_partition,
-        std::string(topic), mPartition,
+        topicName, mPartition,
         RdKafka::Producer::RK_MSG_COPY /*Copy payload*/,
         /* Value */
-        const_cast<char *>(message.getPayload().dump().c_str()), payload_size,
+        const_cast<char *>(payload.c_str()), payload_size,
         /* Key */
         NULL, 0,
         /* Timestamp (defaults to now) */
