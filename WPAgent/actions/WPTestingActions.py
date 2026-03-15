@@ -22,6 +22,37 @@ def _ensure_initialized():
     return None
 
 
+def init_probing(address=None, machine_type=None):
+    """Sequance of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("InitProbingReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        # Sequance
+        prober.move_chuck_offaxis_area()
+        prober.move_chuck_center()
+        prober.auto_focus()
+
+        # TODO: we need to get col and row for aligment from project that stored in DB
+        prober.align_wafer(alig_die_col=1, alig_die_row=1)
+        prober.find_home()
+        prober.local_mode()
+
+        agentStateMachine.transition('InitProbing')
+        return ResponseBuilder.success("InitProbingReply", f"Moved chuck to Center")
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("InitProbingReply", str(e), 500)
+
+
 def move_chuck_center(address=None, machine_type=None):
     """Move chuck to Center"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -42,7 +73,6 @@ def move_chuck_center(address=None, machine_type=None):
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckCenterReply", str(e), 500)
-
 
 
 def move_chuck_z(z, address=None, machine_type=None):
