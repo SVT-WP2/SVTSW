@@ -22,6 +22,25 @@ def _ensure_initialized():
     return None
 
 
+def move_chuck_xy(x, y, address=None, machine_type=None):
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    error = _ensure_initialized()
+    if error:
+        return error
+    g = SvtWPAagentGlobalParameters.getInstance()
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.move_chuck_xy(x, y)
+        prober.local_mode()
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
+        return ResponseBuilder.success("MoveChuckXYReply", f"Moved chuck to Center")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
+
+
 def init_probing(address=None, machine_type=None):
     """Sequance of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -310,6 +329,8 @@ def open_project(project_name: str, address=None, machine_type=None):
 
         # Update project name (ID would need to come from DB)
         g.projectName = project_name
+        g.set_project_name(project_name)
+
         # g.opened_project_id = project_id  # TODO: Get from DB
 
         success = agentStateMachine.transition('OpenProject')

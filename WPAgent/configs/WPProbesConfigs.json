@@ -1,0 +1,16 @@
+{
+  "CERN": {
+    "machineId": 4,
+    "address": "WPMIT01.cern.ch:35555",
+    "port": 35555,
+    "machineType": "sentio",
+    "description": "CERN DSF Probe Station"
+  },
+  "MOCK": {
+    "machineId": 167,
+    "address": "mock-prober",
+    "port": 35555,
+    "machineType": "mock",
+    "description": "Mock Probe Station for Testing"
+  }
+}

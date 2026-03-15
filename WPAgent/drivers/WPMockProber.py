@@ -27,11 +27,7 @@ class MockProberImpl:
         self.overdrive = 0
         self.overdrive_enabled = False
 
-        print(f"🎭 MockProber initialized at {address}")
 
-    # ========================================================================
-    # PROJECT COMMANDS
-    # ========================================================================
 
     def open_project(self, project_name):
         """Simulate opening a project"""
@@ -39,9 +35,6 @@ class MockProberImpl:
         self.current_project = project_name
         return f"Project {project_name} opened (mock)"
 
-    # ========================================================================
-    # WAFER ACTIONS
-    # ========================================================================
 
     def load_wafer(self):
         """Simulate loading wafer"""
@@ -64,9 +57,6 @@ class MockProberImpl:
         self.current_die = {"col": col, "row": row, "subsite": subsite}
         return f"Wafer aligned at die {col},{row},{subsite} (mock)"
 
-    # ========================================================================
-    # CHUCK MOVEMENT
-    # ========================================================================
 
     def move_chuck_xy(self, x, y):
         """Simulate XY movement"""
@@ -99,9 +89,6 @@ class MockProberImpl:
         self.chuck_position["z"] = 50.0  # Separation position
         return "Probes in separation (mock)"
 
-    # ========================================================================
-    #  STEPPING
-    # ========================================================================
 
     def step_next_die(self):
         """Simulate stepping to next die"""
@@ -132,9 +119,6 @@ class MockProberImpl:
         self.current_die["row"] = row
         return f"Moved to die {col},{row} (mock)"
 
-    # ========================================================================
-    # ALIGNMENT
-    # ========================================================================
 
     def switch_camera(self, mount_point):
         """
@@ -157,9 +141,6 @@ class MockProberImpl:
         time.sleep(1.0)
         return "PTPA alignment successful (mock)"
 
-    # ========================================================================
-    # UTILITIES
-    # ========================================================================
 
     def find_home(self):
         """Simulate finding home"""
@@ -187,9 +168,6 @@ class MockProberImpl:
         area_name = area_names.get(area, f"Area{area}")
         return f"Moved to work area {area_name} (mock)"
 
-    # ========================================================================
-    # OVERDRIVE
-    # ========================================================================
 
     def set_overtravel(self, value):
         """
@@ -212,9 +190,6 @@ class MockProberImpl:
         status = "enabled" if overtravel else "disabled"
         return f"Overtravel {status} (mock)"
 
-    # ========================================================================
-    # STATUS
-    # ========================================================================
 
     def get_chuck_position(self):
         """Get current chuck position"""
