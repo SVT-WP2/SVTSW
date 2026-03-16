@@ -20,7 +20,7 @@ def _get_db_client():
     return _db_client
 
 
-def list_probers(timeout: float = 15.0,user= None, waferAgentName = None):
+def list_probers(timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get all wafer probe machines from database.
 
@@ -62,7 +62,7 @@ def list_probers(timeout: float = 15.0,user= None, waferAgentName = None):
         )
 
 
-def list_chip_types(timeout: float = 15.0,user= None, waferAgentName = None):
+def list_chip_types(timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get all ASIC family types from database.
 
@@ -84,7 +84,7 @@ def list_chip_types(timeout: float = 15.0,user= None, waferAgentName = None):
         )
 
 
-def list_orientations(timeout: float = 15.0,user= None, waferAgentName = None):
+def list_orientations(timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get all wafer orientations from database.
 
@@ -106,7 +106,7 @@ def list_orientations(timeout: float = 15.0,user= None, waferAgentName = None):
         )
 
 
-def get_project_id_by_name(project_name, timeout: float = 15.0,user= None, waferAgentName = None):
+def get_project_id_by_name(project_name, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get project ID by project name.
 
@@ -116,13 +116,11 @@ def get_project_id_by_name(project_name, timeout: float = 15.0,user= None, wafer
     try:
         db_client = _get_db_client()
 
-
         # Get all projects
         projects = db_client.get_all_wafer_probe_projects(timeout=timeout)
 
         if not projects:
             print("No projects found or database agent not responding")
-
 
         # Find project by name (case-insensitive)
         matching_project = None
@@ -142,7 +140,7 @@ def get_project_id_by_name(project_name, timeout: float = 15.0,user= None, wafer
         print(f"✗ Error: {str(e)}")
 
 
-def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0,user= None, waferAgentName = None):
+def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get currently loaded wafer information from database.
 
@@ -244,7 +242,7 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0,user= Non
         )
 
 
-def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0,user= None, waferAgentName = None):
+def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get currently installed probe card information from database.
 
@@ -346,7 +344,8 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0,u
         )
 
 
-def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, orientation=None, timeout: float = 15.0,user= None, waferAgentName = None):
+def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, orientation=None, timeout: float = 15.0,
+                                   user=None, waferAgentName=None):
     """
     Update loaded wafer in database.
 
@@ -378,11 +377,6 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
 
         db_client = _get_db_client()
 
-        print(f"\n💾 Updating loaded wafer in DB...")
-        print(f"   Machine ID: {wp_machine_id}")
-        print(f"   Wafer ID: {loaded_wafer_id}")
-        print(f"   Orientation: {orientation}")
-
         # Update via DB client
         result = db_client.update_machine_loaded_wafer(
             wp_machine_id=wp_machine_id,
@@ -401,10 +395,8 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
         # Update local globals
         if loaded_wafer_id is not None:
             g.set_wafer_loaded(loaded_wafer_id, orientation or "Unknown")
-            print(f"✓ Wafer {loaded_wafer_id} loaded ({orientation})")
         else:
             g.clear_wafer()
-            print("✓ Wafer unloaded")
 
         # Success
         return ResponseBuilder.success(
@@ -422,7 +414,7 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
 
 
 def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_card_id=None, orientation=None,
-                                           timeout: float = 15.0,user= None, waferAgentName = None):
+                                           timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Update installed probe card in database.
 
@@ -497,7 +489,7 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
         )
 
 
-def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0,user= None, waferAgentName = None):
+def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get loaded wafer ID and orientation from machine record
 
@@ -553,7 +545,7 @@ def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0,user= None, 
         return (None, None)
 
 
-def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0,user= None, waferAgentName = None):
+def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get installed probe card ID and orientation from machine record
 

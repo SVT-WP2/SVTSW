@@ -375,9 +375,10 @@ def change_project(project_name: str, address=None, machine_type=None, user=None
         return ResponseBuilder.error("ChangeProjectReply", str(e), 500)
 
 
-def load_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
+def load_wafer(waferId: float, orientation: str, address=None, machine_type=None, user=None, waferAgentName=None):
     """Load wafer onto chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from WPDataBaseActions import update_wp_machine_loaded_wafer
 
     error = _ensure_initialized()
     if error:
@@ -392,20 +393,15 @@ def load_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
         prober.load_wafer()
+        prober.move_chuck_offaxis_area()
         prober.local_mode()
 
-        # TODO: Get wafer info from DB
-        # wafer_id = get_wafer_id_from_db()
-        # orientation = get_wafer_orientation_from_db()
-        # total_dies = get_total_dies_from_wafer_map()
+        update_wp_machine_loaded_wafer(loaded_wafer_id=waferId, orientation=orientation)
 
-        # For now, set placeholder values
-        # g.set_wafer_loaded(wafer_id, orientation)
-        # g.total_dies_number = total_dies
         agentStateMachine.transition('Load')
 
         g.chuck_z_position_state = "Separation"
-        g.current_working_area = "TestArea"
+        g.current_working_area = "OffAxis"
 
         return ResponseBuilder.success("LoadWaferReply", "Wafer has been loaded to center")
     except Exception as e:
@@ -722,6 +718,7 @@ def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None
 def move_chuck_loaded_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
     """Load same wafer Load + MoveChuckOffAxis """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from WPDataBaseActions import get_loaded_wafer_from_db
 
     error = _ensure_initialized()
     if error:
@@ -740,14 +737,8 @@ def move_chuck_loaded_wafer(address=None, machine_type=None, user=None, waferAge
         prober.move_chuck_offaxis_area()
         prober.local_mode()
 
-        # TODO: Get wafer info from DB
-        # wafer_id = get_wafer_id_from_db()
-        # orientation = get_wafer_orientation_from_db()
-        # total_dies = get_total_dies_from_wafer_map()
+        get_loaded_wafer_from_db(g.wp_machine_id)
 
-        # For now, set placeholder values
-        # g.set_wafer_loaded(wafer_id, orientation)
-        # g.total_dies_number = total_dies
         agentStateMachine.transition('MoveChuckLoadedWafer')
 
         g.chuck_z_position_state = "Separation"
