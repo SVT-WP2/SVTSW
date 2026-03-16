@@ -5,7 +5,7 @@ from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 
 
-def run_sequence(filepath=None, executor=None):
+def run_sequence(filepath=None, executor=None,user= None, waferAgentName = None):
     """Run a command sequence from JSON file"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 

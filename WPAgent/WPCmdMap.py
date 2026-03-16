@@ -66,7 +66,7 @@ COMMAND_ROUTER = {
     "MoveChuckWide": testing_actions.move_chuck_wide(),
     "TestingLock": testing_actions.testing_lock(),
     "TestingUnLock": testing_actions.testing_unlock(),
-    "ChangeProject": testing_actions.change_project, # +
+    "ChangeProject": testing_actions.change_project,  # +
     "ConnectProbeMachine": project_actions.connect_probe_machine(),
 
 }

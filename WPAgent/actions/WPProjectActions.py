@@ -26,7 +26,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
                       alignment_die=None, home_die=None, force=False,
                       machine_id=None, machine_name=None,
                       project_id=None, asic_family=None, orientation=None,
-                      initialization_mode=None, serialNumber=None):
+                      initialization_mode=None, serialNumber=None, user=None, waferAgentName=None):
     """
     Initialize the WP agent with prober connection and DB sync
 
@@ -368,7 +368,7 @@ def get_info():
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 
 
-def reset_agent_state():
+def reset_agent_state(user=None, waferAgentName=None):
     """Reset the agent state machine to Idle"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
@@ -400,7 +400,7 @@ def get_agent_state():
     return ResponseBuilder.success("GetAgentStateReply", message)
 
 
-def help_command(command=None):
+def help_command(command=None, user=None, waferAgentName=None):
     """Displ   Display help information for commands.
 
     Usage:
