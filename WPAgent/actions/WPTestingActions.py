@@ -765,11 +765,32 @@ def move_chuck_safe_position(address=None, machine_type=None, user=None, waferAg
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckSafePositionReply", str(e), 500)
 
-    pass
 
+def move_chuck_offaxis(address=None, machine_type=None, user=None, waferAgentName=None):
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
-def move_chuck_offaxis():
-    pass
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("MoveChuckOffAxisReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        prober.move_chuck_offaxis_area()
+
+        prober.local_mode()
+
+        # Update Z position
+        g.chuck_z_position_state = "Separation"
+        agentStateMachine.transition('MoveChuckOffAxis')
+
+        return ResponseBuilder.success("MoveChuckOffAxisReply", "Probe station is in safe position")
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckOffAxisReply", str(e), 500)
 
 
 def move_chuck_wide():
