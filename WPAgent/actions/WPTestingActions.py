@@ -22,7 +22,7 @@ def _ensure_initialized():
     return None
 
 
-def move_chuck_xy(x, y, address=None, machine_type=None):
+def move_chuck_xy(x, y, address=None, machine_type=None, user=None, waferAgentName = None):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     error = _ensure_initialized()
     if error:
@@ -72,7 +72,7 @@ def init_probing(address=None, machine_type=None):
         return ResponseBuilder.error("InitProbingReply", str(e), 500)
 
 
-def move_chuck_center(address=None, machine_type=None):
+def move_chuck_center(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move chuck to Center"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -94,7 +94,7 @@ def move_chuck_center(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckCenterReply", str(e), 500)
 
 
-def move_chuck_z(z, address=None, machine_type=None):
+def move_chuck_z(z, address=None, machine_type=None, user=None, waferAgentName=None):
     """Move chuck to Z position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -119,7 +119,7 @@ def move_chuck_z(z, address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
 
 
-def run_ptpa(address=None, machine_type=None):
+def run_ptpa(address=None, machine_type=None, user=None, waferAgentName=None):
     """Run PTPA alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -144,7 +144,7 @@ def run_ptpa(address=None, machine_type=None):
         return ResponseBuilder.error("RunPTPAReply", str(e), 500)
 
 
-def step_next_die(address=None, machine_type=None):
+def step_next_die(address=None, machine_type=None, user=None, waferAgentName=None):
     """Step to next die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -169,7 +169,7 @@ def step_next_die(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckNextDieReply", str(e), 500)
 
 
-def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None):
+def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None, waferAgentName=None):
     """Move to specific die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -198,7 +198,7 @@ def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=N
         return ResponseBuilder.error("MoveChuckRowColReply", str(e), 500)
 
 
-def switch_camera(mount_point, address=None, machine_type=None):
+def switch_camera(mount_point, address=None, machine_type=None, user=None, waferAgentName=None):
     """Switch camera mount point"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -225,7 +225,7 @@ def switch_camera(mount_point, address=None, machine_type=None):
         return ResponseBuilder.error("SwitchCameraReply", str(e), 500)
 
 
-def move_chuck_home(address=None, machine_type=None):
+def move_chuck_home(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move chuck to home position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -249,7 +249,7 @@ def move_chuck_home(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckHomeReply", str(e), 500)
 
 
-def unload_wafer(address=None, machine_type=None):
+def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
     """Unload wafer from chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -282,7 +282,7 @@ def unload_wafer(address=None, machine_type=None):
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
 
 
-def clean_probe_station(address=None, machine_type=None, **kwargs):
+def clean_probe_station(address=None, machine_type=None, user=None, waferAgentName=None, **kwargs):
     """Clean probe station"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -307,7 +307,7 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
         return ResponseBuilder.error("CleaningReply", str(e), 500)
 
 
-def open_project(project_name: str, address=None, machine_type=None):
+def open_project(project_name: str, address=None, machine_type=None, user=None, waferAgentName=None):
     """Open project"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from WPDataBaseActions import get_project_id_by_name
@@ -341,7 +341,7 @@ def open_project(project_name: str, address=None, machine_type=None):
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)
 
 
-def change_project(project_name: str, address=None, machine_type=None):
+def change_project(project_name: str, address=None, machine_type=None, user=None, waferAgentName=None):
     """Change project"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from WPDataBaseActions import get_project_id_by_name
@@ -375,7 +375,7 @@ def change_project(project_name: str, address=None, machine_type=None):
         return ResponseBuilder.error("ChangeProjectReply", str(e), 500)
 
 
-def load_wafer(address=None, machine_type=None):
+def load_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
     """Load wafer onto chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -414,7 +414,7 @@ def load_wafer(address=None, machine_type=None):
         return ResponseBuilder.error("LoadWaferReply", str(e), 500)
 
 
-def find_home(address=None, machine_type=None):
+def find_home(address=None, machine_type=None, user=None, waferAgentName=None):
     """Find home position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -440,7 +440,7 @@ def find_home(address=None, machine_type=None):
 
 
 def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
-                address=None, machine_type=None):
+                address=None, machine_type=None, user=None, waferAgentName=None):
     """Perform wafer alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -492,7 +492,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         return ResponseBuilder.error("AlignWaferReply", str(e), 500)
 
 
-def go_to_contact(address=None, machine_type=None):
+def go_to_contact(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move probes to contact position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -518,7 +518,7 @@ def go_to_contact(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckContactReply", str(e), 500)
 
 
-def go_to_separation(address=None, machine_type=None):
+def go_to_separation(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move probes to separation position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -544,7 +544,7 @@ def go_to_separation(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
 
 
-def auto_focus(address=None, machine_type=None):
+def auto_focus(address=None, machine_type=None, user=None, waferAgentName=None):
     """Execute auto-focus"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -568,7 +568,7 @@ def auto_focus(address=None, machine_type=None):
         return ResponseBuilder.error("AutoFocusReply", str(e), 500)
 
 
-def move_chuck_work_area(work_area=0, address=None, machine_type=None):
+def move_chuck_work_area(work_area=0, address=None, machine_type=None, user=None, waferAgentName=None):
     """Move chuck to specified work area"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -597,7 +597,7 @@ def move_chuck_work_area(work_area=0, address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckToWorkAreaReply", str(e), 500)
 
 
-def local_state(address=None, machine_type=None):
+def local_state(address=None, machine_type=None, user=None, waferAgentName=None):
     """Set prober to local mode"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -619,7 +619,7 @@ def local_state(address=None, machine_type=None):
         return ResponseBuilder.error("LocalModeReply", str(e), 500)
 
 
-def go_to_previous_die(address=None, machine_type=None):
+def go_to_previous_die(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move to previous die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -645,7 +645,7 @@ def go_to_previous_die(address=None, machine_type=None):
         return ResponseBuilder.error("MoveChuckPreviousDieReply", str(e), 500)
 
 
-def get_chuck_position(address=None, machine_type=None):
+def get_chuck_position(address=None, machine_type=None, user=None, waferAgentName=None):
     """Get current chuck position"""
     error = _ensure_initialized()
     if error:
@@ -667,7 +667,7 @@ def get_chuck_position(address=None, machine_type=None):
         return ResponseBuilder.error("GetChuckPositionReply", str(e), 500)
 
 
-def set_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
+def set_chuck_overtravel(address=None, machine_type=None, overtravelGap=None, user=None, waferAgentName=None):
     """Set overtravel that includes seting actual gap and enable overtravel"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -693,7 +693,7 @@ def set_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
         return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
 
 
-def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None):
+def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None, user=None, waferAgentName=None):
     """Disaable overtravel, set to 0"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
