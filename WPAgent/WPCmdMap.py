@@ -59,11 +59,11 @@ COMMAND_ROUTER = {
     "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
 
     # TODO: commands are not implemented
-    "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer(),
-    "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer(),
+    "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer(),# +
+    "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer(),# +
     "MoveChuckAsic": testing_actions.move_chuck_asic(),
-    "MoveChuckSafePosition": testing_actions.move_chuck_safe_position(),
-    "MoveChuckWide": testing_actions.move_chuck_wide(),
+    "MoveChuckSafePosition": testing_actions.move_chuck_safe_position(),# +
+    "MoveChuckWide": testing_actions.move_chuck_wide(),# +
     "TestingLock": testing_actions.testing_lock(),
     "TestingUnLock": testing_actions.testing_unlock(),
     "ChangeProject": testing_actions.change_project,  # +

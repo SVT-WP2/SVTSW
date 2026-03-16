@@ -260,74 +260,31 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
 
 
 def get_project_status():
-    """Get current project status including DB-synced info"""
+    """Get current project status"""
     try:
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        from drivers.WPFactory import ProberFactory
+
         factory = ProberFactory.get_instance()
-        globals_ = SvtWPAagentGlobalParameters.getInstance()
+        g = SvtWPAagentGlobalParameters.getInstance()
 
         if not factory.is_initialized():
             return ResponseBuilder.error("ShowStatusReply", "Not initialized", 400)
 
-        # Get prober info
-        prober = factory.get_prober(globals_.machineType, globals_.address)
+        # Build readable summary
+        parts = [
+            f"Agent: {g.wpAgentName or 'Unknown'}",
+            f"State: {g.wpag_state}",
+            f"User: {g.user or 'None'}",
+            f"Project: {g.projectName or 'None'}"
+        ]
 
-        # Build status message
-        output_lines = []
-        output_lines.append("=" * 70)
-        output_lines.append("WP Agent Status")
-        output_lines.append("=" * 70)
-        output_lines.append("")
+        if g.loaded_wafer_id:
+            parts.append(f"Wafer: {g.loaded_wafer_id}")
 
-        # Machine info
-        if globals_.machine_name:
-            output_lines.append(f"Machine: {globals_.machine_name} (ID: {globals_.wp_machine_id})")
-        else:
-            output_lines.append(f"Machine ID: {globals_.wp_machine_id}")
+        message = " | ".join(parts)
 
-        output_lines.append(f"Address: {globals_.address}")
-        output_lines.append(f"Type: {globals_.machineType}")
-        output_lines.append(f"Status: {globals_.prober_status}")
-        output_lines.append(f"State: {globals_.wpag_state}")
-        output_lines.append("")
-
-        # Project info
-        output_lines.append(f"Project: {globals_.projectName or 'None'}")
-        if globals_.opened_project_id:
-            output_lines.append(f"Project ID: {globals_.opened_project_id}")
-        output_lines.append("")
-
-        # Die positions
-        alignment_die = globals_.get_alignment_die()
-        if alignment_die:
-            output_lines.append(
-                f"Alignment Die: Col {alignment_die['col']}, Row {alignment_die['row']}, Subsite {alignment_die['subsite']}")
-
-        home_die = globals_.get_home_die()
-        if home_die:
-            output_lines.append(
-                f"Home Die: Col {home_die['col']}, Row {home_die['row']}, Subsite {home_die['subsite']}")
-
-        if alignment_die or home_die:
-            output_lines.append("")
-
-        # Wafer info (from DB sync)
-        if globals_.loaded_wafer_id:
-            output_lines.append(f"Loaded Wafer: ID {globals_.loaded_wafer_id} ({globals_.wafer_orientation})")
-        else:
-            output_lines.append("Loaded Wafer: None")
-
-        # Probe card info (from DB sync)
-        if globals_.probe_card_id:
-            output_lines.append(f"Probe Card: ID {globals_.probe_card_id} ({globals_.probe_card_orientation})")
-        else:
-            output_lines.append("Probe Card: None")
-
-        output_lines.append("")
-        output_lines.append("=" * 70)
-
-        output_message = "\n".join(output_lines)
-
-        return ResponseBuilder.success("ShowStatusReply", output_message)
+        return ResponseBuilder.success("ShowStatusReply", message)
 
     except Exception as e:
         return ResponseBuilder.error("ShowStatusReply", str(e), 500)
