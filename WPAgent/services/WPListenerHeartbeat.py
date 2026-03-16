@@ -173,7 +173,7 @@ class ListenerHealthMonitor:
                 except Exception as e:
                     print(f"⚠️ Heartbeat error: {e}")
 
-        self._thread = threading.Thread(target=heartbeat_loop, daemon=True)
+        self._thread = threading.Thread(target=heartbeat_loop, daemon=False)
         self._thread.start()
 
     def stop(self):
@@ -181,4 +181,5 @@ class ListenerHealthMonitor:
         self.running = False
         if self._thread:
             self._thread.join(timeout=1.0)
+        self.health_check.producer.flush(timeout=2.0)
         print("💔 Heartbeat monitor stopped")
