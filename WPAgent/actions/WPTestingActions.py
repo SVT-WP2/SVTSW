@@ -22,7 +22,7 @@ def _ensure_initialized():
     return None
 
 
-def move_chuck_xy(x, y, address=None, machine_type=None, user=None, waferAgentName = None):
+def move_chuck_xy(x, y, address=None, machine_type=None, user=None, waferAgentName=None):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     error = _ensure_initialized()
     if error:
@@ -731,7 +731,40 @@ def move_chuck_asic():
     pass
 
 
-def move_chuck_safe_position():
+def move_chuck_safe_position(address=None, machine_type=None, user=None, waferAgentName=None):
+    "Sequence MoveChuckOffAxis MoveChuckXY MoveChuckZ"
+    # TODO: Do we need to control angle as well ? for absolute  0.0025. Check if ChuckXYReference.Zero is correlated to absolute coordinates
+    #
+    absolute_x = 183672.8
+    absolute_y = -33439.9
+    absolute_z = 10377.7
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("MoveChuckSafePositionReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        prober.move_chuck_offaxis_area()
+        prober.move_chuck_xy(x=absolute_x, y=absolute_y)
+        prober.move_chuck_z(z=absolute_z)
+
+        prober.local_mode()
+
+        # Update Z position
+        g.chuck_z_position_state = "Separation"
+        agentStateMachine.transition('MoveChuckSafePosition')
+
+        return ResponseBuilder.success("MoveChuckSafePositionReply", "Probe station is in safe position")
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckSafePositionReply", str(e), 500)
+
     pass
 
 
