@@ -53,7 +53,7 @@ SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
 void SvtDbAgent::SvtDbTestSetupDto::createAllRequest()
 {
   //! SvtDbTestSetupDto::GetAllSvtTestSetup
-  addRequest("GetAllSvtTestSetup",
+  addRequest("GetAllSvtTestSetups",
              std::bind(static_cast<bind_type>(&SvtDbTestSetupDto::getAllEntries), this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbTestSetupDto::CreateSvtTestSetup
