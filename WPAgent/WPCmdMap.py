@@ -32,12 +32,12 @@ COMMAND_ROUTER = {
     "SetOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
-    "MoveChuckCenter": testing_actions.move_chuck_center(),
+    "MoveChuckCenter": testing_actions.move_chuck_center,
 
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
     "ShowStatus": project_actions.get_project_status,
-    "GetInfo": project_actions.get_info,# !! irrelevant
+    "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help_command,
 
     # Sequencer
@@ -56,7 +56,7 @@ COMMAND_ROUTER = {
 
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
-    "GetAgentState": project_actions.get_agent_state, # !! irrelevant
+    "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
 
     # TODO: commands are not implemented
     "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer(),
@@ -66,7 +66,7 @@ COMMAND_ROUTER = {
     "MoveChuckWide": testing_actions.move_chuck_wide(),
     "TestingLock": testing_actions.testing_lock(),
     "TestingUnLock": testing_actions.testing_unlock(),
-    "ChangeProject": project_actions.change_project(),
+    "ChangeProject": testing_actions.change_project, # +
     "ConnectProbeMachine": project_actions.connect_probe_machine(),
 
 }

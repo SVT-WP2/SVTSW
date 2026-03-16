@@ -310,6 +310,7 @@ def clean_probe_station(address=None, machine_type=None, **kwargs):
 def open_project(project_name: str, address=None, machine_type=None):
     """Open project"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from WPDataBaseActions import get_project_id_by_name
 
     error = _ensure_initialized()
     if error:
@@ -320,10 +321,9 @@ def open_project(project_name: str, address=None, machine_type=None):
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        project_path = os.path.join(
-            "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
-            project_name
-        )
+        project_path = os.path.join(str(g.projects_base_path),
+                                    project_name
+                                    )
         prober.open_project(project_name)
         prober.local_mode()
 
@@ -331,14 +331,48 @@ def open_project(project_name: str, address=None, machine_type=None):
         g.projectName = project_name
         g.set_project_name(project_name)
 
-        # g.opened_project_id = project_id  # TODO: Get from DB
+        g.opened_project_id = get_project_id_by_name(project_name)
 
-        success = agentStateMachine.transition('OpenProject')
+        agentStateMachine.transition('OpenProject')
 
         return ResponseBuilder.success("OpenProjectReply", f"Opened project: {project_path}")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)
+
+
+def change_project(project_name: str, address=None, machine_type=None):
+    """Change project"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from WPDataBaseActions import get_project_id_by_name
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("ChangeProjectReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        project_path = os.path.join(str(g.projects_base_path),
+                                    project_name
+                                    )
+        prober.open_project(project_name)
+        prober.local_mode()
+
+        # Update project name (ID would need to come from DB)
+        g.projectName = project_name
+        g.set_project_name(project_name)
+
+        g.opened_project_id = get_project_id_by_name(project_name)
+
+        agentStateMachine.transition('ChangeProject')
+
+        return ResponseBuilder.success("ChangeProjectReply", f"Opened project: {project_path}")
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("ChangeProjectReply", str(e), 500)
 
 
 def load_wafer(address=None, machine_type=None):
@@ -688,23 +722,30 @@ def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None
 def move_chuck_loaded_wafer():
     pass
 
+
 def move_chuck_unloaded_wafer():
     pass
+
 
 def move_chuck_asic():
     pass
 
+
 def move_chuck_safe_position():
     pass
+
 
 def move_chuck_offaxis():
     pass
 
+
 def move_chuck_wide():
     pass
 
+
 def testing_lock():
     pass
+
 
 def testing_unlock():
     pass

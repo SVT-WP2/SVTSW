@@ -63,6 +63,10 @@ class SvtWPAagentGlobalParameters:
         # Total dies in wafer
         self.total_dies_number = 0
 
+        # Project paths for now its only Sentio machine
+        self.sentio_projects_base_path = "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+        self.projects_base_path = self.sentio_projects_base_path
+
     @classmethod
     def getInstance(cls):
         if cls._instance is None:
