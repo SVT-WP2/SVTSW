@@ -38,8 +38,8 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
   parseJsonFilters(data_j, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
-  bool result = getColNames().find("id") != getColNames().end() ? getAllEntriesFromDB(entries, filters, "id", false)
-                                                                : getAllEntriesFromDB(entries, filters);
+  bool result = mainTable.getColNames().find("id") != mainTable.getColNames().end() ? getAllEntriesFromDB(entries, filters, "id", false)
+                                                                                    : getAllEntriesFromDB(entries, filters);
 
   if (result)
   {
@@ -69,11 +69,11 @@ void SvtDbAgent::SvtDbBaseDto::createEntryAndReply(const nlohmann::json &data_j,
   //! create entry in DB
   if (!createEntryInDB(entry))
   {
-    THROW_RUNTIME_ERROR("Entry was not created in " + getTableName());
+    THROW_RUNTIME_ERROR("Entry was not created in " + mainTable.getTableName());
     return;
   }
 
-  const auto newEntryId = SvtDbInterface::getMaxId(getTableName());
+  const auto newEntryId = SvtDbInterface::getMaxId(mainTable.getTableName());
   getEntryWithId(entry, newEntryId);
   createReplyMsg(entry, replyMsg);
 }
@@ -105,7 +105,7 @@ void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann:
     entry.addValue(key, value);
   }
 
-  if (!SvtDbInterface::checkIdExist(getTableName(), id))
+  if (!SvtDbInterface::checkIdExist(mainTable.getTableName(), id))
   {
     std::ostringstream ss("");
     ss << "Object with id " << id << " does not found.";
@@ -128,14 +128,14 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 {
   entries.clear();
   std::vector<std::string> colNames;
-  colNames.reserve(getColNames().size());
-  for (const auto &col : getColNames())
+  colNames.reserve(mainTable.getColNames().size());
+  for (const auto &col : mainTable.getColNames())
   {
     colNames.push_back(col.first);
   }
   SvtDbInterface::SimpleQuery query;
 
-  query.setTableName(getTableName());
+  query.setTableName(mainTable.getTableName());
 
   for (const auto &colName : colNames)
   {
@@ -149,15 +149,15 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   for (const auto &filter : filters.mFilters.getValues())
   {
-    if (getColNames().find(filter.first) !=
-        getColNames().end())
+    if (mainTable.getColNames().find(filter.first) !=
+        mainTable.getColNames().end())
     {
       query.addWhereEquals(filter.first, filter.second);
     }
     else
     {
       logError("Wrong filter: column with name " + filter.first +
-               " does not exists in table " + getTableName());
+               " does not exists in table " + mainTable.getTableName());
       return false;
     }
   }
@@ -229,7 +229,7 @@ bool SvtDbAgent::SvtDbBaseDto::createEntryInDB(const SvtDbEntry &entry)
 {
   SvtDbInterface::SimpleInsert insert;
 
-  insert.setTableName(getTableName());
+  insert.setTableName(mainTable.getTableName());
 
   //! checkinput values and Add columns & values
   for (const auto &item : entry.getValues())
@@ -252,7 +252,7 @@ bool SvtDbAgent::SvtDbBaseDto::updateEntryInDB(const int id,
 {
   SvtDbInterface::SimpleUpdate update;
 
-  update.setTableName(getTableName());
+  update.setTableName(mainTable.getTableName());
 
   update.addWhereEquals("id", id);
 
@@ -338,9 +338,9 @@ bool SvtDbAgent::SvtDbBaseDto::findRequestAndRun(std::string_view reqName,
                                                  const SvtKafkaMessage &msg,
                                                  SvtKafkaReplyMsg &replyMsg)
 {
-  if (request_map.find(reqName) != request_map.end())
+  if (requestMap.find(reqName) != requestMap.end())
   {
-    request_map[reqName](msg, replyMsg);
+    requestMap[reqName](msg, replyMsg);
     return true;
   }
   return false;
@@ -351,7 +351,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
                                              SvtDbEntry &entry)
 {
   //! remove id record
-  size_t count_required = std::count_if(getColNames().cbegin(), getColNames().cend(), [](const auto &p)
+  size_t count_required = std::count_if(mainTable.getColNames().cbegin(), mainTable.getColNames().cend(), [](const auto &p)
                                         { return ((p.first != "id") && (p.second)); });
   if (j_data.size() < count_required)
   {
@@ -379,7 +379,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
       {
         filters.ids = it->get<std::vector<int>>();
       }
-      else if (getColNames().find(it.key()) != getColNames().end())
+      else if (mainTable.getColNames().find(it.key()) != mainTable.getColNames().end())
       {
         filters.mFilters.addValue(it.key(), it.value());
       }
@@ -396,9 +396,9 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
     std::string_view reqName,
     std::function<void(const SvtKafkaMessage &, SvtKafkaReplyMsg &)> fun)
 {
-  if (request_map.find(reqName) == request_map.end())
+  if (requestMap.find(reqName) == requestMap.end())
   {
-    request_map[reqName] = fun;
+    requestMap[reqName] = fun;
   }
   else
   {
@@ -406,3 +406,26 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
              " already exist in request list.");
   }
 }
+
+//========================================================================+
+// void SvtDbAgent::SvtDbBaseDto::getEntityList(const int id, SvtDbEntry &entry)
+// {
+// SvtDbFilters filters;
+// filters.mFilters.addValue("setupId", id);
+// std::vector<SvtDbEntry> entries;
+// getAllEntriesFromDB(entries, filters);
+// nlohmann::json items = nlohmann::json::array();
+// items.get_ptr<nlohmann::json::array_t *>()->reserve(entries.size());
+// for (auto entry : entries)
+// {
+//   if (entry.getValue("id") != id)
+//   {
+//     std::ostringstream ss;
+//     ss << "Failed getting asicFamilyType list for teset Setup: " << id;
+//     THROW_RUNTIME_ERROR(ss.str());
+//     return;
+//   }
+//   items.push_back(entry.getValue("asicFamilyType"));
+// }
+// entry.addValue("asicFamilyTypes", items);
+// }
