@@ -9,9 +9,12 @@ from typing import Callable, Optional, Dict, Any, List
 
 from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
+from utilities.WPAgentCache import WPAgentCache
 from services.WPListenerHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
+from services.WPCacheHeartbeat import CacheHealthCheck, CacheHealthMonitor
 
 logger = WPAgentLogger()
+cache = WPAgentCache()
 
 # =========================
 # SVT Kafka Conventions
@@ -66,6 +69,9 @@ class KafkaClient:
         # Initialize heartbeat monitoring
         self.health_check = ListenerHealthCheck(bootstrap_servers=self.bootstrap_servers)
         self.heartbeat_monitor = ListenerHealthMonitor(self.health_check)
+
+        self.cache_health_check = CacheHealthCheck(bootstrap_servers=self.bootstrap_servers)
+        self.cache_heartbeat    = CacheHealthMonitor(self.cache_health_check, on_heartbeat=cache.cache_command)
 
     def _ensure_topic_exists(self, topic_name, num_partitions=1, replication_factor=1):
         admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
@@ -334,6 +340,8 @@ class KafkaClient:
         # Start heartbeat monitoring
         self.heartbeat_monitor.start()
 
+        self.cache_heartbeat.start()
+
         try:
             while True:
                 msg = self.request_consumer.poll(poll_timeout)
@@ -472,6 +480,7 @@ class KafkaClient:
         finally:
             self.producer.flush(timeout=5.0)
             self.heartbeat_monitor.stop()
+            self.cache_heartbeat.stop()
             self.request_consumer.close()
             if self.reply_consumer:
                 self.reply_consumer.close()
