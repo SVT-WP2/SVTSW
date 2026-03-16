@@ -92,7 +92,7 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
     }
     else
     {
-      THROW_RUNTIME_ERROR("WARN! No Wafer loaded.");
+      THROW_RUNTIME_ERROR("WARN! No Wafer was loaded in the machine. Ignoring action.");
       return;
     }
   }
@@ -100,7 +100,7 @@ void SvtDbAgent::SvtDbWPMachineDto::updateWaferLoadedInMachine(
   {
     if (loadedWaferOrientation_j.is_null())
     {
-      THROW_RUNTIME_ERROR("ERROR: Mising orientation for loaded wafer");
+      THROW_RUNTIME_ERROR("ERROR: Mising orientation for the loaded wafer");
       return;
     }
     if (!oldLoadedWaferId.is_null())
