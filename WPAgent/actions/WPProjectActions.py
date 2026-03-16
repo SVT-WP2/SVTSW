@@ -192,11 +192,11 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
                     prober.open_project(project_name)
                     print(f"MOCK: Opened project '{project_name}'")
                 else:
-                    # Real prober - use full Windows path
-                    project_path = os.path.join(
-                        "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\",
-                        project_name
-                    )
+
+                    project_path = os.path.join(str(globals_.projects_base_path)
+                                                ,
+                                                project_name
+                                                )
                     prober.open_project(project_path)
                     print(f" Opened project '{project_name}'")
 
@@ -539,8 +539,6 @@ def help_command(command=None):
 
     return response
 
-def change_project():
-    pass
 
 def connect_probe_machine():
     pass
