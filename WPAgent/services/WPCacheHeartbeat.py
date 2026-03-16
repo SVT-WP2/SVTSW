@@ -169,7 +169,7 @@ class CacheHealthMonitor:
                 except Exception as e:
                     print(f"⚠️ Cache Heartbeat error: {e}")
 
-        self._thread = threading.Thread(target=heartbeat_loop, daemon=True)
+        self._thread = threading.Thread(target=heartbeat_loop, daemon=False)
         self._thread.start()
 
 
@@ -178,4 +178,5 @@ class CacheHealthMonitor:
         self.running = False
         if self._thread:
             self._thread.join(timeout=1.0)
+        self.cache_check.producer.flush(timeout=2.0)
         print("💔 Cache Heartbeat monitor stopped")

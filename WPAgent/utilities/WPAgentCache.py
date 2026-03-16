@@ -3,6 +3,7 @@ import logging
 import json
 from confluent_kafka import Producer as KafkaProducer
 from datetime import datetime
+from utilities.WPResponseBuilder import ResponseBuilder
 
     
 class WPAgentCache:
@@ -23,8 +24,12 @@ class WPAgentCache:
         kafka_topic='svt.wp-agent.cache',
     ):
 
-        self.cache = logging.getLogger(name)
+        self.cache_file = cache_file
+        self.cache = logging.getLogger(f"{name}.cache")
+
+        self.cache = logging.getLogger(f"{name}.cache")
         self.cache.setLevel(logging.DEBUG)
+        self.cache.propagate = False
 
         self.kafka_enabled = kafka_enabled
         self.kafka_topic = kafka_topic
@@ -34,29 +39,30 @@ class WPAgentCache:
         else:
             self.kafka_producer = None
 
-        if not self.cache.handlers:
-            file_handler = logging.FileHandler(cache_file)
-            self.cache.addHandler(file_handler)
 
-    def cache_command(self):
-        # Build structured Cache
-        log_entry = {
-            "time": datetime.now().isoformat()
-        }
-        # Write to file (always)
-        self.cache.info(json.dumps(log_entry))
-        
-        # Send to Kafka if enabled and severity is above threshold
-        if self.kafka_enabled :
+
+    def cache_command(self, TITLE=None):
+
+        cache_entry = ResponseBuilder._build_data()
+        cache_entry["lastUpdated"] = datetime.now().isoformat()
+
+        # Rewrite the entire file each time
+        with open(self.cache_file, 'w') as f:
+            json.dump(cache_entry, f, indent=2)
+        # Kafka publish if enabled
+        if self.kafka_enabled:
             try:
                 self.kafka_producer.produce(
                     self.kafka_topic,
-                    value=json.dumps(log_entry).encode('utf-8'),
-                    callback=self._delivery_report
+                    value=json.dumps(cache_entry).encode('utf-8'),
+                    callback=self.delivery_report
                 )
                 self.kafka_producer.poll(0)
             except Exception as e:
                 self.cache.error(f"Kafka log delivery failed: {e}")
+                
+    def initialize_cache(self):
+        self.cache_command()
 
     def _delivery_report(self, err, msg):
         if err is not None:

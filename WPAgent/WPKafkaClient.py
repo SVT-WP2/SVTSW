@@ -15,6 +15,7 @@ from services.WPCacheHeartbeat import CacheHealthCheck, CacheHealthMonitor
 
 logger = WPAgentLogger()
 cache = WPAgentCache()
+cache.initialize_cache()
 
 # =========================
 # SVT Kafka Conventions
@@ -478,10 +479,10 @@ class KafkaClient:
         except KeyboardInterrupt:
             pass
         finally:
-            self.producer.flush(timeout=5.0)
+            self.request_consumer.close()
             self.heartbeat_monitor.stop()
             self.cache_heartbeat.stop()
-            self.request_consumer.close()
+            self.producer.flush(timeout=5.0)
             if self.reply_consumer:
                 self.reply_consumer.close()
 
