@@ -268,8 +268,8 @@ def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None
         prober = get_prober(machine_type, address)
         prober.unload_wafer()
         prober.local_mode()
-
-        update_wp_machine_loaded_wafer(loaded_wafer_id=g.loaded_wafer_id, orientation=g.wafer_orientation)
+        # TODO: We need to set empty probe machine
+        update_wp_machine_loaded_wafer(loaded_wafer_id=0, orientation=None)
 
         g.clear_wafer()
         agentStateMachine.transition('UnloadWafer')
