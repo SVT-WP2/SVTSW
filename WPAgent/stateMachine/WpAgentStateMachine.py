@@ -69,7 +69,7 @@ class WPAgentStateMachine:
 
             # From ChuckUnloaded
             WPAgentState.ChuckUnloaded: {
-                'MoveChuckLoaded': WPAgentState.UserLogged,
+                'MoveChuckLoadedWafer': WPAgentState.UserLogged,
                 'Error': WPAgentState.Error,
             },
 

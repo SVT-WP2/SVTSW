@@ -719,8 +719,45 @@ def disable_chuck_overtravel(address=None, machine_type=None, overtravelGap=None
         return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
 
 
-def move_chuck_loaded_wafer():
-    pass
+def move_chuck_loaded_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
+    """Load same wafer Load + MoveChuckOffAxis """
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("MoveChuckLoadedWaferReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    if g.loaded_wafer_id is not None:
+        return ResponseBuilder.error("MoveChuckLoadedWaferReply", "Wafer loaded", 400)
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+
+        prober.load_wafer()
+        prober.move_chuck_offaxis_area()
+        prober.local_mode()
+
+        # TODO: Get wafer info from DB
+        # wafer_id = get_wafer_id_from_db()
+        # orientation = get_wafer_orientation_from_db()
+        # total_dies = get_total_dies_from_wafer_map()
+
+        # For now, set placeholder values
+        # g.set_wafer_loaded(wafer_id, orientation)
+        # g.total_dies_number = total_dies
+        agentStateMachine.transition('MoveChuckLoadedWafer')
+
+        g.chuck_z_position_state = "Separation"
+        g.current_working_area = "OffAxis"
+
+        return ResponseBuilder.success("MoveChuckLoadedWaferReply", "Wafer has been loaded to center")
+    except Exception as e:
+
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckLoadedWaferReply", str(e), 500)
 
 
 def move_chuck_unloaded_wafer():
