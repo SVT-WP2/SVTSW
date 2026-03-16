@@ -252,6 +252,7 @@ def move_chuck_home(address=None, machine_type=None, user=None, waferAgentName=N
 def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
     """Unload wafer from chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from WPDataBaseActions import update_wp_machine_loaded_wafer
 
     error = _ensure_initialized()
     if error:
@@ -268,9 +269,10 @@ def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None
         prober.unload_wafer()
         prober.local_mode()
 
-        # Clear wafer
+        update_wp_machine_loaded_wafer(loaded_wafer_id=g.loaded_wafer_id, orientation=g.wafer_orientation)
+
         g.clear_wafer()
-        agentStateMachine.transition('Unload')
+        agentStateMachine.transition('UnloadWafer')
 
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "LoadPosition"
@@ -398,7 +400,7 @@ def load_wafer(waferId: float, orientation: str, address=None, machine_type=None
 
         update_wp_machine_loaded_wafer(loaded_wafer_id=waferId, orientation=orientation)
 
-        agentStateMachine.transition('Load')
+        agentStateMachine.transition('LoadWafer')
 
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "OffAxis"
@@ -751,8 +753,35 @@ def move_chuck_loaded_wafer(address=None, machine_type=None, user=None, waferAge
         return ResponseBuilder.error("MoveChuckLoadedWaferReply", str(e), 500)
 
 
-def move_chuck_unloaded_wafer():
-    pass
+def move_chuck_unloaded_wafer(address=None, machine_type=None, user=None, waferAgentName=None):
+    """Unload wafer from chuck"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("MoveChuckUnloadWaferReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    if g.loaded_wafer_id is None:
+        return ResponseBuilder.error("MoveChuckUnloadWaferReply", "No wafer loaded", 400)
+
+    try:
+        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
+        prober = get_prober(machine_type, address)
+        prober.unload_wafer()
+        prober.local_mode()
+
+        agentStateMachine.transition('MoveChuckUnloadWafer')
+
+        g.chuck_z_position_state = "Separation"
+        g.current_working_area = "LoadPosition"
+
+        return ResponseBuilder.success("MoveChuckUnloadWaferReply", "Wafer unloaded")
+    except Exception as e:
+
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckUnloadWaferReply", str(e), 500)
 
 
 def move_chuck_asic():

@@ -49,7 +49,7 @@ class WPAgentStateMachine:
 
             # From Aligned
             WPAgentState.Aligned: {
-                'Unload': WPAgentState.Unloaded,
+                'UnloadWafer': WPAgentState.Unloaded,
                 'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
                 'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
                 'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
@@ -62,8 +62,8 @@ class WPAgentStateMachine:
             # From ChuckSafePosition
             WPAgentState.ChuckSafePosition: {
                 'InitProbing': WPAgentState.Aligned,
-                'Unload': WPAgentState.Unloaded,
-                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
+                'UnloadWafer': WPAgentState.Unloaded,
+                'MoveChuckUnloadWafer': WPAgentState.ChuckUnloaded,
                 'Error': WPAgentState.Error,
             },
 
@@ -75,7 +75,7 @@ class WPAgentStateMachine:
 
             # From Unloaded
             WPAgentState.Unloaded: {
-                'Load': WPAgentState.UserLogged,
+                'LoadWafer': WPAgentState.UserLogged,
                 'Error': WPAgentState.Error,
             },
 
