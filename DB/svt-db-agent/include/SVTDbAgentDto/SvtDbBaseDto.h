@@ -7,11 +7,6 @@
  * @brief Base DTO class
  */
 
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
-
-#include <nlohmann/json.hpp>
-
 #include <functional>
 #include <map>
 #include <stdexcept>
@@ -19,10 +14,15 @@
 #include <string_view>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
+#include "SvtDbTableDto.h"
+#include "SvtKafkaMessage.h"
+#include "SvtLogger.h"
+
 namespace SvtDbAgent
 {
   using jsonMap = std::map<std::string, nlohmann::basic_json<>>;
-  using colMap = std::map<std::string, bool>;
   using reqMap = std::map<std::string_view, std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>;
 
   struct SvtDbEntry
@@ -51,6 +51,15 @@ namespace SvtDbAgent
 
     const jsonMap &getValues() const { return mValues; }
 
+    void dump()
+    {
+      logInfo("Dumping entry");
+      for (auto &[key, value] : mValues)
+      {
+        logDebug("Key: " + key + ", value: " + value.dump());
+      }
+    }
+
    private:
     std::string mName;
     jsonMap mValues;
@@ -66,7 +75,7 @@ namespace SvtDbAgent
   {
    public:
     SvtDbBaseDto() = default;
-    virtual ~SvtDbBaseDto() { clear(); }
+    virtual ~SvtDbBaseDto() { mainTable.clear(); }
 
     //! request DTO funcions
     virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
@@ -75,6 +84,8 @@ namespace SvtDbAgent
                              SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
                              SvtKafka::SvtKafkaReplyMsg &replyMsg);
+
+    // virtual void getEntityList(const int id, SvtDbAgent::SvtDbEntry &entry);
 
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
@@ -93,21 +104,20 @@ namespace SvtDbAgent
     virtual void createReplyMsg(const SvtDbEntry &entry,
                                 SvtKafka::SvtKafkaReplyMsg &msgReply);
 
-    //! Getters
-    const std::string &getTableName() { return mTableName; }
-
-    const colMap &getColNames() { return mColNames; }
-
     bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
                            SvtKafka::SvtKafkaReplyMsg &);
 
-   protected:
-    void addColName(const std::string &name, const bool _req = true)
+    void addColName(const std::string &name, const bool _isReq = true)
     {
-      mColNames[name] = _req;
+      mainTable.addColName(name, _isReq);
     }
-    void setTableName(const std::string &tName) { mTableName = tName; }
+    void setTableName(const std::string &tName) { mainTable.setTableName(tName); }
 
+    //! Getters
+    const std::string &getTableName() { return mainTable.getTableName(); }
+    const colMap &getColNames() { return mainTable.getColNames(); }
+
+   protected:
     virtual void getAllEntries(const nlohmann::json &data_j,
                                SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void createEntryAndReply(const nlohmann::json &data_j,
@@ -125,15 +135,8 @@ namespace SvtDbAgent
     virtual void createAllRequest() = 0;
 
    private:
-    void clear()
-    {
-      mColNames.clear();
-    }
-
-    colMap mColNames;
-    std::string mTableName;
-
-    reqMap request_map;
+    SvtDbTableDto mainTable;
+    reqMap requestMap;
   };
 
 };  // namespace SvtDbAgent
