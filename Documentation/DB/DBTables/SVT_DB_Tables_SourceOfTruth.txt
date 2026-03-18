@@ -7,18 +7,18 @@ Table main.WaferType {
 }
 
 Table main.WaferTypeMap{
-  waferTypeId integer [ref: > main.WaferType.id, unique, not null]
+  waferTypeId integer [ref:> main.WaferType.id, unique, not null]
   waferMap JSON
 }
 
 Table main.WaferTypeImage{
-  waferTypeId integer [ref: > main.WaferType.id, unique, not null]
+  waferTypeId integer [ref:> main.WaferType.id, unique, not null]
   imageBase64String text
 }
 
 Table main.Wafer {
   id integer [primary key, increment]
-  waferTypeId integer [ref: > main.WaferType.id, not null]
+  waferTypeId integer [ref:> main.WaferType.id, not null]
   serialNumber varchar(50) [unique, not null]
   batchNumber integer [not null]
   thinningDate date
@@ -28,7 +28,7 @@ Table main.Wafer {
 }
 
 Table main.WaferLocation {
-  waferId integer [ref: > main.Wafer.id, not null]
+  waferId integer [ref:> main.Wafer.id, not null]
   generalLocation main.wpGeneralLocation [not null]
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -37,8 +37,8 @@ Table main.WaferLocation {
 
 Table main.Asic {
   id integer [primary key, increment]
-  waferId integer [ref: > main.Wafer.id, not null]
-  chipId integer [ref: > main.Chip.id]
+  waferId integer [ref:> main.Wafer.id, not null]
+  chipId integer [ref:> main.Chip.id]
   serialNumber varchar(50) [unique, not null]
   familyType main.asicFamilyType [not null]
   waferMapPosition varchar(50) [not null]
@@ -47,7 +47,7 @@ Table main.Asic {
 
 // Table main.AsicProbing {
 //   id integer [primary key, increment]
-//   asicId integer [ref: > main.Asic.id]
+//   asicId integer [ref:> main.Asic.id]
 //   numContacts integer
 //   mechanicalQuality main.contactMechanicalQuality
 //   arrivalDate date
@@ -55,7 +55,7 @@ Table main.Asic {
 
 // Table main.AsicConfiguration {
 //   id integer [primary key, increment]
-//   probeStationId integer [ref: > main.WaferProbeMachine.id]
+//   probeStationId integer [ref:> main.WaferProbeMachine.id]
 //   isTestingAllowed boolean
 // }
 
@@ -66,7 +66,7 @@ Table main.Chip{
 }
 
 Table main.ChipLocation {
-  chipId integer [ref: > main.Chip.id, not null]
+  chipId integer [ref:> main.Chip.id, not null]
   generalLocation main.wpGeneralLocation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -75,7 +75,7 @@ Table main.ChipLocation {
 
 Table main.SLDO{
   id integer [primary key, increment]
-  chipId integer [ref: > main.Chip.id]
+  chipId integer [ref:> main.Chip.id]
   serialNumber varchar(50)
 }
 
@@ -93,19 +93,19 @@ Table main.ProbeCard {
 }
 
 Table main.ProbeCardFamilyType {
-  probeCardId integer [ref: > main.ProbeCard.id, not null]
+  probeCardId integer [ref:> main.ProbeCard.id, not null]
   asicFamilyType main.asicFamilyType [not null]
 }
 
 // Table main.ProbeCardConfiguration {
 //   id integer [primary key, increment]
-//   probeCardId integer [ref: > main.ProbeCard.id]
+//   probeCardId integer [ref:> main.ProbeCard.id]
 //   cleaningInterval integer
 // }
 
 // Table main.ProbeCardMaintenance {
 //   id integer [primary key, increment]
-//   probeCardId integer [ref: > main.ProbeCard.id, not null]
+//   probeCardId integer [ref:> main.ProbeCard.id, not null]
 //   cleaningDate date
 //   totNumContacts integer
 //   numContactsSinceLastCleaning integer
@@ -124,15 +124,15 @@ Table main.WaferProbeMachine {
   software main.wpSwType [not null]
   swVersion varchar(50) [not null]
   vendor main.wpVendor [not null]
-  loadedWaferId integer [ref: > main.Wafer.id, default: null]
+  loadedWaferId integer [ref:> main.Wafer.id, default: null]
   loadedWaferOrientation main.waferMapOrientation [default: null]
-  installedProbeCardId integer [ref: > main.ProbeCard.id, default: null]
+  installedProbeCardId integer [ref:> main.ProbeCard.id, default: null]
   installedProbeCardOrientation main.waferMapOrientation [default: null]
 }
 
 Table main.WaferLoadedInMachine {
-  machineId integer [ref: > main.WaferProbeMachine.id]
-  waferId integer [ref: > main.Wafer.id]
+  machineId integer [ref:> main.WaferProbeMachine.id]
+  waferId integer [ref:> main.Wafer.id]
   orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -140,8 +140,8 @@ Table main.WaferLoadedInMachine {
 }
 
 Table main.ProbeCardInstalledInMachine {
-  machineId integer [ref: > main.WaferProbeMachine.id]
-  probeCardId integer [ref: > main.ProbeCard.id]
+  machineId integer [ref:> main.WaferProbeMachine.id]
+  probeCardId integer [ref:> main.ProbeCard.id]
   orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -149,8 +149,8 @@ Table main.ProbeCardInstalledInMachine {
 
 Table main.WaferProbeProject {
   id integer [primary key, increment]
-  wpMachineId integer [ref: > main.WaferProbeMachine.id, not null]
-  waferTypeId integer [ref: > main.WaferType.id, not null]
+  wpMachineId integer [ref:> main.WaferProbeMachine.id, not null]
+  waferTypeId integer [ref:> main.WaferType.id, not null]
   asicFamilyType main.asicFamilyType
   orientation main.waferMapOrientation
   name varchar(100) [unique, not null]
@@ -169,13 +169,13 @@ Table main.Equipment
 {
   id integer [primary key, increment]
   name varchar(50) [unique, not null]
-  equipmentTypeId integer [ ref: >  main.EquipmentType.id]
+  equipmentTypeId integer [ ref:>  main.EquipmentType.id]
   generalLocation main.wpGeneralLocation [not null]
   specification JSON
 }
 
 Table main.EquipmentLocation{
-  equipmentId integer [ref: > main.Equipment.id]
+  equipmentId integer [ref:> main.Equipment.id]
   generalLocation main.wpGeneralLocation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -189,9 +189,14 @@ Table main.SvtTestSetup {
   generalLocation main.wpGeneralLocation
 }
 
+Table main.SvtTestSetupAsicFamilyTypeList {
+  setupId integer [ref:> main.SvtTestSetup.id]
+  asicFamilyType main.asicFamilyType [not null]
+}
+
 Table main.SvtTestSetupEquipList{
-  setupId integer [ref: > main.SvtTestSetup.id]
-  equipId integer [ref: > main.Equipment.id]
+  setupId integer [ref:> main.SvtTestSetup.id]
+  equipId integer [ref:> main.Equipment.id]
 }
 
 Table main.SvtTestSetupConfig {
@@ -199,8 +204,12 @@ Table main.SvtTestSetupConfig {
   setupId integer [ref:> main.SvtTestSetup.id, not null]
   name varchar(100) [not null]
   note text
-  configBody JSON [not null]
   createdAt date [default: `CURRENT_DATE`]
+}
+
+Table main.SvtTestSetupConfigBody {
+  setupConfigId integer [ref:> main.SvtTestSetupConfig.id]
+  configBody JSON [not null]
 }
 
 Table main.SvtTestType {
@@ -208,7 +217,7 @@ Table main.SvtTestType {
   name varchar(100)
 }
 
-Table main.SvtTestTypeAsicFamilyList {
+Table main.SvtTestTypeAsicFamilyTypeList {
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   asicFamilyType main.asicFamilyType [not null]
 }
@@ -225,7 +234,7 @@ Table main.SvtTestTypeConfig {
 Table main.SvtTestTemplate {
   id integer [primary key, increment]
   asicFamilyType main.asicFamilyType [not null]
-  testTypeConfigId integer [ref: > main.SvtTestTypeConfig.id, not null]
+  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
   isEnabled bool [default: TRUE]
 }
 
