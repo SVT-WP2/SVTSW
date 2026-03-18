@@ -42,7 +42,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
 {
   //! SvtDbWaferTypeDto::GetAllWaferTypes
   addRequest("GetAllWaferTypes",
-             std::bind(static_cast<bind_type>(&SvtDbWaferTypeDto::getAllEntries), this,
+             std::bind(&SvtDbWaferTypeDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferTypeDto::CreateWaferType
   addRequest("CreateWaferType",

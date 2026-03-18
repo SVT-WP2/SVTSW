@@ -9,11 +9,16 @@
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
-#include "SvtKafkaMessage.h"
 
-using SvtKafka::SvtKafkaMessage;
-using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbTestSetupDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
+//========================================================================+
+SvtDbAgent::SvtDbEquipSvtTestSetupList::SvtDbEquipSvtTestSetupList()
+  : SvtDbBaseDto()
+{
+  setTableName("SvtTestSetupEquipList");
+
+  addColName("setupId");
+  addColName("equipId");
+}
 
 //========================================================================+
 SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
@@ -52,20 +57,20 @@ SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
 //========================================================================+
 void SvtDbAgent::SvtDbTestSetupDto::createAllRequest()
 {
-  //! SvtDbTestSetupDto::GetAllSvtTestSetup
+  // !SvtDbTestSetupDto::GetAllSvtTestSetup
   addRequest("GetAllSvtTestSetups",
-             std::bind(static_cast<bind_type>(&SvtDbTestSetupDto::getAllEntries), this,
+             std::bind(&SvtDbTestSetupDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbTestSetupDto::CreateSvtTestSetup
   addRequest("CreateSvtTestSetup",
              std::bind(&SvtDbTestSetupDto::createEntry, this, std::placeholders::_1,
                        std::placeholders::_2));
   //! SvtDbTestSetupDto::UpdateSvtTestSetupDefaultConfig
-  addRequest("UpdateSvtTestSetupDefaultConfig",
+  addRequest("UpdateSvtTestSetup",
              std::bind(&SvtDbTestSetupDto::updateEntry, this, std::placeholders::_1,
                        std::placeholders::_2));
-  //! SvtDbTestSetupDto::GetEquipmentListForTestSetup
-  // addRequest("GetEquipmentListForTestSetup",
-  //            std::bind(&SvtDbTestSetupDto::GetEquipList, this, std::placeholders::_1,
-  //                      std::placeholders::_2));
+  // !SvtDbTestSetupDto::GetEquipmentListForTestSetup
+  addRequest("GetEquipmentListForTestSetup",
+             std::bind(&SvtDbEquipSvtTestSetupList::getAllEntries, equipList.get(), std::placeholders::_1,
+                       std::placeholders::_2));
 }

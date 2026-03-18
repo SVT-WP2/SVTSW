@@ -27,12 +27,12 @@ using SvtKafka::SvtKafkaReplyMsg;
 void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtKafkaMessage &msg,
                                              SvtKafkaReplyMsg &replyMsg)
 {
-  getAllEntries(msg.getPayload()["data"], replyMsg);
+  getAllEntriesAndReply(msg.getPayload()["data"], replyMsg);
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::getAllEntries(const nlohmann::json &data_j,
-                                             SvtKafkaReplyMsg &replyMsg)
+void SvtDbAgent::SvtDbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_j,
+                                                     SvtKafkaReplyMsg &replyMsg)
 {
   SvtDbFilters filters;
   parseJsonFilters(data_j, filters);

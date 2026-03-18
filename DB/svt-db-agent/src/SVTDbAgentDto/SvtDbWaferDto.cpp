@@ -15,7 +15,7 @@
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbWaferDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
+
 //========================================================================+
 SvtDbAgent::SvtDbWaferDto::SvtDbWaferDto()
   : SvtDbBaseLocationDto("WaferLocation", "waferId")
@@ -39,7 +39,7 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
 {
   //! SvtDbWaferDto::GetAllWafers
   addRequest("GetAllWafers",
-             std::bind(static_cast<bind_type>(&SvtDbWaferDto::getAllEntries), this,
+             std::bind(&SvtDbWaferDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferDto::CreateWafer
   addRequest("CreateWafer",
@@ -51,11 +51,11 @@ void SvtDbAgent::SvtDbWaferDto::createAllRequest()
                        std::placeholders::_2));
   //! SvtDbWaferDto::UpdateWaferLocation
   addRequest("UpdateWaferLocation",
-             std::bind(static_cast<bind_type>(&SvtDbWaferDto::updateLocation), this,
+             std::bind(&SvtDbWaferDto::updateLocation, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWaferDto::GetWaferLocationHistory
   addRequest("GetWaferLocationHistory",
-             std::bind(static_cast<bind_type>(&SvtDbWaferDto::getLocationHistory), this,
+             std::bind(&SvtDbWaferDto::getLocationHistory, this,
                        std::placeholders::_1, std::placeholders::_2));
 }
 

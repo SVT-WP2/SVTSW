@@ -15,6 +15,7 @@ std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
+
 //========================================================================+
 void SvtDbAgent::SvtDbEnumDto::init()
 {

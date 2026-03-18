@@ -15,7 +15,6 @@
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
 
-using bind_type = void (SvtDbAgent::SvtDbAsicDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 {
@@ -41,7 +40,7 @@ void SvtDbAgent::SvtDbAsicDto::createAllRequest()
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbAsicDto::CreateAsic
   addRequest("CreateAsic",
-             std::bind(static_cast<bind_type>(&SvtDbAsicDto::createEntry), this, std::placeholders::_1,
+             std::bind(&SvtDbAsicDto::createEntry, this, std::placeholders::_1,
                        std::placeholders::_2));
 }
 

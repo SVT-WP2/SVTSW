@@ -17,7 +17,7 @@
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbChipDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
+
 //========================================================================+
 SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
   : SvtDbBaseLocationDto("ChipLocation", "chipId")
@@ -36,7 +36,7 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 {
   //! SvtDbChipDto::GetAllChips
   addRequest("GetAllChips",
-             std::bind(static_cast<bind_type>(&SvtDbChipDto::getAllEntries), this,
+             std::bind(&SvtDbChipDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbChipDto::CreateChip
   addRequest("CreateChip",
@@ -52,11 +52,11 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
                        std::placeholders::_2));
   //! SvtDbChipDto::UpdateChipLocation
   addRequest("UpdateChipLocation",
-             std::bind(static_cast<bind_type>(&SvtDbChipDto::updateLocation), this,
+             std::bind(&SvtDbChipDto::updateLocation, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbChipDto::GetChipLocationHistory
   addRequest("GetChipLocationHistory",
-             std::bind(static_cast<bind_type>(&SvtDbChipDto::getLocationHistory), this,
+             std::bind(&SvtDbChipDto::getLocationHistory, this,
                        std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -143,5 +143,5 @@ void SvtDbAgent::SvtDbChipDto::createManyEntries(
   }
   nlohmann::json data;
   data["filters"] = filters;
-  getAllEntries(filters, replyMsg);
+  getAllEntriesAndReply(filters, replyMsg);
 }

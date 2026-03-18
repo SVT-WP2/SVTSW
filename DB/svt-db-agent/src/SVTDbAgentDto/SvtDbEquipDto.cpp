@@ -8,11 +8,7 @@
 #include <string>
 
 #include "SVTDbAgentDto/SvtDbEquipDto.h"
-#include "SvtKafkaMessage.h"
 
-using SvtKafka::SvtKafkaMessage;
-using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbEquipDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbEquipDto::SvtDbEquipDto()
   : SvtDbBaseLocationDto("EquipmentLocation", "equipmentId")
@@ -33,7 +29,7 @@ void SvtDbAgent::SvtDbEquipDto::createAllRequest()
 {
   //! SvtDbEquipDto::GetAllEquipment
   addRequest("GetAllEquipment",
-             std::bind(static_cast<bind_type>(&SvtDbEquipDto::getAllEntries), this,
+             std::bind(&SvtDbEquipDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbEquipment::CreateEquipment
   addRequest("CreateEquipment",
@@ -45,10 +41,10 @@ void SvtDbAgent::SvtDbEquipDto::createAllRequest()
                        std::placeholders::_2));
   //! SvtDbEquipment::UpdateEquipmentLocation
   addRequest("UpdateEquipmentLocation",
-             std::bind(static_cast<bind_type>(&SvtDbEquipDto::updateLocation), this,
+             std::bind(&SvtDbEquipDto::updateLocation, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbEquipment::GetWaferLocationHistory
   addRequest("GetEquipmentLocationHistory",
-             std::bind(static_cast<bind_type>(&SvtDbEquipDto::getLocationHistory), this,
+             std::bind(&SvtDbEquipDto::getLocationHistory, this,
                        std::placeholders::_1, std::placeholders::_2));
 }

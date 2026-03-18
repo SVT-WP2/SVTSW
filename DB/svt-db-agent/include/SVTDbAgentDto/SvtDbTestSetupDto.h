@@ -7,11 +7,19 @@
  * @brief Svt Test Setup Dto
  */
 
+#include <memory>
 #include "SvtDbBaseDto.h"
 // #include "SvtKafkaMessage.h"
 
 namespace SvtDbAgent
 {
+  class SvtDbEquipSvtTestSetupList : public SvtDbBaseDto
+  {
+   public:
+    SvtDbEquipSvtTestSetupList();
+    ~SvtDbEquipSvtTestSetupList() = default;
+  };
+
   class SvtDbTestSetupDto : public SvtDbBaseDto
   {
    public:
@@ -19,14 +27,10 @@ namespace SvtDbAgent
     ~SvtDbTestSetupDto() = default;
 
    private:
-    // virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &,
-    //                            SvtKafka::SvtKafkaReplyMsg &);
-    // virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
-    //                          SvtKafka::SvtKafkaReplyMsg &) {};
-    // virtual void updateEntry(const SvtKafka::SvtKafkaMessage &,
-    //                          SvtKafka::SvtKafkaReplyMsg &) {};
-    // virtual void GetEquipList(const SvtKafka::SvtKafkaMessage &,
-    //                           SvtKafka::SvtKafkaReplyMsg &) {};
+    std::shared_ptr<SvtDbEquipSvtTestSetupList> equipList = std::shared_ptr<SvtDbEquipSvtTestSetupList>();
+
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
+                             SvtKafka::SvtKafkaReplyMsg &) {};
     virtual void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
