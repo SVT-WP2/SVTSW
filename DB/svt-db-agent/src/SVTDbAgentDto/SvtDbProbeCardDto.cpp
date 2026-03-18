@@ -6,11 +6,7 @@
  */
 
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
-#include "SvtKafkaMessage.h"
 
-using SvtKafka::SvtKafkaMessage;
-using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbProbeCardDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbProbeCardDto::SvtDbProbeCardDto()
 {
@@ -35,10 +31,10 @@ void SvtDbAgent::SvtDbProbeCardDto::createAllRequest()
 {
   //! SvtDbProbeCardDto::GetAllProbeCards
   addRequest("GetAllProbeCards",
-             std::bind(static_cast<bind_type>(&SvtDbProbeCardDto::getAllEntries), this,
+             std::bind(&SvtDbProbeCardDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbProbeCardDto::CreateProbeCard
   addRequest("CreateProbeCard",
-             std::bind(static_cast<bind_type>(&SvtDbProbeCardDto::createEntry), this,
+             std::bind(&SvtDbProbeCardDto::createEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
 }

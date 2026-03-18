@@ -14,7 +14,7 @@
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbWPMachineDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
+
 //========================================================================+
 SvtDbAgent::SvtDbWPMachineDto::SvtDbWPMachineDto()
 {
@@ -43,15 +43,15 @@ void SvtDbAgent::SvtDbWPMachineDto::createAllRequest()
 {
   //! SvtDbWPMachineDto::GetAllWaferProbeMachines
   addRequest("GetAllWaferProbeMachines",
-             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::getAllEntries), this,
+             std::bind(&SvtDbWPMachineDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::CreateWaferProbeMachine
   addRequest("CreateWaferProbeMachine",
-             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::createEntry), this,
+             std::bind(&SvtDbWPMachineDto::createEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::UpdateWaferProbeMachine
   addRequest("UpdateWaferProbeMachine",
-             std::bind(static_cast<bind_type>(&SvtDbWPMachineDto::updateEntry), this,
+             std::bind(&SvtDbWPMachineDto::updateEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPMachineDto::UpdateWaferProbeMachine
   addRequest("UpdateWpMachineLoadedWafer",

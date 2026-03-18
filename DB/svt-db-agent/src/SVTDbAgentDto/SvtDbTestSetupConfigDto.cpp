@@ -9,11 +9,6 @@
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
-#include "SvtKafkaMessage.h"
-
-using SvtKafka::SvtKafkaMessage;
-using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbTestSetupConfigDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 
 //========================================================================+
 SvtDbAgent::SvtDbTestSetupConfigDto::SvtDbTestSetupConfigDto()
@@ -36,7 +31,7 @@ void SvtDbAgent::SvtDbTestSetupConfigDto::createAllRequest()
 {
   //! SvtDbTestSetupConfigDto::GetAllSvtTestSetup
   addRequest("GetAllSvtTestSetupConfigs",
-             std::bind(static_cast<bind_type>(&SvtDbTestSetupConfigDto::getAllEntries), this,
+             std::bind(&SvtDbTestSetupConfigDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbTestSetupConfigDto::CreateSvtTestSetup
   addRequest("CreateSvtTestSetupConfig",

@@ -7,9 +7,6 @@
 
 #include "SVTDbAgentDto/SvtDbWPProjectDto.h"
 
-using SvtKafka::SvtKafkaMessage;
-using SvtKafka::SvtKafkaReplyMsg;
-using bind_type = void (SvtDbAgent::SvtDbWPProjectDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
 //========================================================================+
 SvtDbAgent::SvtDbWPProjectDto::SvtDbWPProjectDto()
 {
@@ -33,10 +30,10 @@ void SvtDbAgent::SvtDbWPProjectDto::createAllRequest()
 {
   //! SvtDbWPProjectDto::GetAllWPProjects
   addRequest("GetAllWaferProbeProjects",
-             std::bind(static_cast<bind_type>(&SvtDbWPProjectDto::getAllEntries), this,
+             std::bind(&SvtDbWPProjectDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
   //! SvtDbWPProjectDto::CreateWPProject
   addRequest("CreateWaferProbeProject",
-             std::bind(static_cast<bind_type>(&SvtDbWPProjectDto::createEntry), this,
+             std::bind(&SvtDbWPProjectDto::createEntry, this,
                        std::placeholders::_1, std::placeholders::_2));
 }
