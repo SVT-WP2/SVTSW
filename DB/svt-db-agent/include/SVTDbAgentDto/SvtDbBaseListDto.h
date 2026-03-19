@@ -10,6 +10,7 @@
 #include <string>
 
 #include "SvtDbBaseDto.h"
+#include "SvtLogger.h"
 
 namespace SvtDbAgent
 {
@@ -41,13 +42,17 @@ namespace SvtDbAgent
 
       this->SvtDbBaseDto::getAllEntriesAndReply(msgData, replyMsg);
     }
-    virtual void addEntry(const nlohmann::json &idVal, const nlohmann::json &colVal)
+
+    virtual void addEntries(const nlohmann::json &idVal, const nlohmann::json &colVal)
     {
-      SvtDbEntry entry;
-      std::string json_s = (colVal.is_object()) ? colVal.dump() : colVal.get<std::string>();
-      entry.addValue(idName, idVal);
-      entry.addValue(colName, json_s);
-      createEntryInDB(entry);
+      for (auto it = colVal.begin(); it != colVal.end(); ++it)
+      {
+        SvtDbEntry entry;
+        std::string json_s = (colVal.is_object()) ? colVal.dump() : colVal.get<std::string>();
+        entry.addValue(idName, idVal);
+        entry.addValue(colName, json_s);
+        createEntryInDB(entry);
+      }
     }
 
    private:

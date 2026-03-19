@@ -9,17 +9,10 @@
 
 #include <memory>
 #include "SvtDbBaseDto.h"
-// #include "SvtKafkaMessage.h"
+#include "SvtDbBaseListDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbEquipSvtTestSetupList : public SvtDbBaseDto
-  {
-   public:
-    SvtDbEquipSvtTestSetupList();
-    ~SvtDbEquipSvtTestSetupList() = default;
-  };
-
   class SvtDbTestSetupDto : public SvtDbBaseDto
   {
    public:
@@ -27,10 +20,12 @@ namespace SvtDbAgent
     ~SvtDbTestSetupDto() = default;
 
    private:
-    std::shared_ptr<SvtDbEquipSvtTestSetupList> equipList = std::shared_ptr<SvtDbEquipSvtTestSetupList>();
+    std::shared_ptr<SvtDbBaseListDto> equipList;
 
     virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
-                             SvtKafka::SvtKafkaReplyMsg &) {};
+                             SvtKafka::SvtKafkaReplyMsg &);
+    virtual void getAllEquipments(const SvtKafka::SvtKafkaMessage &,
+                                  SvtKafka::SvtKafkaReplyMsg &);
     virtual void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
