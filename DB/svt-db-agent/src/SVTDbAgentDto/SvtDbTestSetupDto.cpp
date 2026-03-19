@@ -8,17 +8,12 @@
 #include <string>
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SVTDbAgentDto/SvtDbBaseListDto.h"
+#include "SVTDbAgentDto/SvtDbTestSetupConfigCreateDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
-
-//========================================================================+
-SvtDbAgent::SvtDbEquipSvtTestSetupList::SvtDbEquipSvtTestSetupList()
-  : SvtDbBaseDto()
-{
-  setTableName("SvtTestSetupEquipList");
-
-  addColName("setupId");
-  addColName("equipId");
-}
+#include "SvtJsonUtils.h"
+#include "SvtLogger.h"
+#include "SvtUtilities.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
@@ -28,10 +23,51 @@ SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
 
   addColName("id");
   addColName("name");
-  addColName("defaultConfigId");
+  addColName("defaultConfigId", false);
   addColName("generalLocation");
 
+  equipList = std::make_shared<SvtDbBaseListDto>("SvtTestSetupEquipList", "setupId", "equipId");
+
   createAllRequest();
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbTestSetupDto::getAllEquipments(const SvtKafka::SvtKafkaMessage &msg,
+                                                     SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  equipList->getAllEntries(msg, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbTestSetupDto::createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                                                SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  // Check create object exist
+  auto msgCreate_j = msg.getPayload()["data"]["create"];
+  if (msgCreate_j.is_null())
+  {
+    THROW_RUNTIME_ERROR("Wrong request message format");
+    return;
+  }
+  // extract setup config from the message
+  auto key = "defaultConfig";
+  auto defaultConfig_j = msgCreate_j[key];
+  // remove config setting from json message
+  SvtUtils::recursive_erase_key(msgCreate_j, key);
+
+  // Create entry in the test setup table and get id from the returned entry
+  SvtDbEntry setupEntry;
+  createAndReturnNewEntry(msgCreate_j, setupEntry);
+  int setupId = setupEntry.getValue("id");
+  // create test setup config with correct setupId
+  defaultConfig_j["setupId"] = setupId;
+  SvtDbEntry setupConfigEntry;
+  SvtUtils::Singleton<SvtDbTestSetupConfigCreateDto>::instance()->createAndReturnNewEntry(defaultConfig_j, setupConfigEntry);
+  // get created config id
+  auto setupConfigId = setupConfigEntry.getValue("id");
+  setupEntry.addValue("defaultConfigId", setupConfigId);
+  updateEntryInDB(setupId, setupEntry);
+  createReplyMsg(setupEntry, replyMsg);
 }
 
 //========================================================================+
@@ -51,6 +87,6 @@ void SvtDbAgent::SvtDbTestSetupDto::createAllRequest()
                        std::placeholders::_2));
   // !SvtDbTestSetupDto::GetEquipmentListForTestSetup
   addRequest("GetEquipmentListForTestSetup",
-             std::bind(&SvtDbEquipSvtTestSetupList::getAllEntries, equipList.get(), std::placeholders::_1,
+             std::bind(&SvtDbTestSetupDto::getAllEquipments, this, std::placeholders::_1,
                        std::placeholders::_2));
 }

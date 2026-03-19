@@ -103,6 +103,7 @@ namespace SvtDbAgent
                                 int totalCount = -1);
     virtual void createReplyMsg(const SvtDbEntry &entry,
                                 SvtKafka::SvtKafkaReplyMsg &msgReply);
+    virtual bool createAndReturnNewEntry(const nlohmann::json &data_j, SvtDbEntry &entry);
 
     bool findRequestAndRun(std::string_view, const SvtKafka::SvtKafkaMessage &,
                            SvtKafka::SvtKafkaReplyMsg &);
@@ -118,7 +119,6 @@ namespace SvtDbAgent
     const colMap &getColNames() { return mainTable.getColNames(); }
 
    protected:
-    virtual bool createAndReturnNewEntry(const nlohmann::json &data_j, SvtDbEntry &entry);
     virtual void getAllEntriesAndReply(const nlohmann::json &data_j,
                                        SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void createEntryAndReply(const nlohmann::json &data_j,
