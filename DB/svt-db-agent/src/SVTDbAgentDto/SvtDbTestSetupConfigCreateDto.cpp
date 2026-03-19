@@ -21,31 +21,9 @@ SvtDbAgent::SvtDbTestSetupConfigCreateDto::SvtDbTestSetupConfigCreateDto()
   addColName("configBody");
   addColName("createdAt", false);
 
-  // configBody = std::make_shared<SvtDbBaseListDto>("SvtTestSetupConfigBody", "setupConfigId", "configBody");
-
+  addColNameInJson("configBody");
   createAllRequest();
 }
-
-// //========================================================================+
-// void SvtDbAgent::SvtDbTestSetupConfigCreateDto::createEntry(const SvtKafka::SvtKafkaMessage &msg,
-//                                                             SvtKafka::SvtKafkaReplyMsg &replyMsg)
-// {
-//   auto key = "configBody";
-//   auto msgData = msg.getPayload()["data"]["create"];
-//   if (!msgData.contains(key))
-//   {
-//     THROW_RUNTIME_ERROR("Missing field " + key);
-//   }
-//   const auto configBodyJson = msgData[key];
-//   SvtUtils::recursive_erase_key(msgData, key);
-//   SvtDbEntry entry;
-//   if (!createAndReturnNewEntry(msgData, entry))
-//   {
-//     return;
-//   }
-//   configBody->addEntry(entry.getValue("id"), configBodyJson);
-//   createReplyMsg(entry, replyMsg);
-// }
 
 //========================================================================+
 void SvtDbAgent::SvtDbTestSetupConfigCreateDto::createAllRequest()
