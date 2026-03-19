@@ -118,6 +118,7 @@ namespace SvtDbAgent
     const colMap &getColNames() { return mainTable.getColNames(); }
 
    protected:
+    virtual bool createAndReturnNewEntry(const nlohmann::json &data_j, SvtDbEntry &entry);
     virtual void getAllEntriesAndReply(const nlohmann::json &data_j,
                                        SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void createEntryAndReply(const nlohmann::json &data_j,

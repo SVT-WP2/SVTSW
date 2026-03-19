@@ -5,10 +5,8 @@
  * @brief Svt Test Setup
  */
 
-#include <string>
-
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbTestSetupConfigDto::SvtDbTestSetupConfigDto()
@@ -20,7 +18,6 @@ SvtDbAgent::SvtDbTestSetupConfigDto::SvtDbTestSetupConfigDto()
   addColName("setupId");
   addColName("name");
   addColName("note");
-  addColName("configBody");
   addColName("createdAt", false);
 
   createAllRequest();
@@ -33,8 +30,4 @@ void SvtDbAgent::SvtDbTestSetupConfigDto::createAllRequest()
   addRequest("GetAllSvtTestSetupConfigs",
              std::bind(&SvtDbTestSetupConfigDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
-  //! SvtDbTestSetupConfigDto::CreateSvtTestSetup
-  addRequest("CreateSvtTestSetupConfig",
-             std::bind(&SvtDbTestSetupConfigDto::createEntry, this, std::placeholders::_1,
-                       std::placeholders::_2));
 }

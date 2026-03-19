@@ -34,15 +34,18 @@ int main(int argc, char **argv)
   producer->start();
 
   // Send Message
-  SvtKafka::SvtKafkaMessage msg;
-  msg.setPayload(data_j);
-  msg.AddHeader("kafka_replyPartition", "0");
-  msg.AddHeader("kafka_correlationId", "ebac231a9f3ab10fb41b8");
-  msg.AddHeader("kafka_replyTopic", "svt.db-agent.request.reply");
+  for (auto it = data_j.begin(); it != data_j.end(); ++it)
+  {
+    SvtKafka::SvtKafkaMessage msg;
+    msg.setPayload(it.value());
+    msg.AddHeader("kafka_replyPartition", "0");
+    msg.AddHeader("kafka_correlationId", "ebac231a9f3ab10fb41b8");
+    msg.AddHeader("kafka_replyTopic", "svt.db-agent.request.reply");
 
-  producer->send(topic_name, msg);
+    producer->send(topic_name, msg);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  }
 
   closeLogFile();
   return EXIT_SUCCESS;

@@ -34,26 +34,6 @@ SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
   createAllRequest();
 }
 
-// //========================================================================+
-// void SvtDbAgent::SvtDbTestSetupDto::getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
-//                                                   SvtKafka::SvtKafkaReplyMsg &replyMsg)
-// {
-//   SvtDbFilters filters;
-//   parseJsonFilters(msg.getPayload()["data"], filters);
-//
-//   std::vector<SvtDbAgent::SvtDbEntry> entries;
-//   bool result = getAllEntriesFromDB(entries, filters, "id", false);
-//
-//   if (result)
-//   {
-//     for (auto &entry : entries)
-//     {
-//       SvtUtils::Singleton<SvtDbAgent::SvtTestSetupAsicFamilyRelationDto>::instance()->getEntityEntries(entry.getValue("id"), entry);
-//     }
-//     createReplyMsg(entries, replyMsg);
-//   }
-// }
-
 //========================================================================+
 void SvtDbAgent::SvtDbTestSetupDto::createAllRequest()
 {

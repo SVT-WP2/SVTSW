@@ -204,12 +204,8 @@ Table main.SvtTestSetupConfig {
   setupId integer [ref:> main.SvtTestSetup.id, not null]
   name varchar(100) [not null]
   note text
-  createdAt date [default: `CURRENT_DATE`]
-}
-
-Table main.SvtTestSetupConfigBody {
-  setupConfigId integer [ref:> main.SvtTestSetupConfig.id]
   configBody JSON [not null]
+  createdAt date [default: `CURRENT_DATE`]
 }
 
 Table main.SvtTestType {

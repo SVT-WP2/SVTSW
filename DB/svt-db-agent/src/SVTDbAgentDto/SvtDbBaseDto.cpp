@@ -60,21 +60,28 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtKafkaMessage &msg,
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbBaseDto::createEntryAndReply(const nlohmann::json &data_j,
-                                                   SvtKafkaReplyMsg &replyMsg)
+bool SvtDbAgent::SvtDbBaseDto::createAndReturnNewEntry(const nlohmann::json &data_j, SvtDbEntry &entry)
 {
-  SvtDbEntry entry;
   parseJsonData(data_j, entry);
 
   //! create entry in DB
   if (!createEntryInDB(entry))
   {
     THROW_RUNTIME_ERROR("Entry was not created in " + mainTable.getTableName());
-    return;
+    return false;
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(mainTable.getTableName());
   getEntryWithId(entry, newEntryId);
+  return true;
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::createEntryAndReply(const nlohmann::json &data_j,
+                                                   SvtKafkaReplyMsg &replyMsg)
+{
+  SvtDbEntry entry;
+  createAndReturnNewEntry(data_j, entry);
   createReplyMsg(entry, replyMsg);
 }
 
@@ -362,7 +369,7 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
   }
   for (auto it = j_data.begin(); it != j_data.end(); ++it)
   {
-    entry.addValue(it.key(), it.value());
+    entry.addValue(it.key(), (it->is_object()) ? static_cast<nlohmann::json>(it->dump()) : it.value());
   }
 }
 
