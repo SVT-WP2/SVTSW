@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <sstream>
 // #include <stdexcept>
 #include <string>
@@ -33,6 +34,9 @@ SvtDbAgent::SvtDbWaferTypeDto::SvtDbWaferTypeDto()
   addColName("engineeringRun");
   addColName("foundry");
   addColName("technology");
+
+  waferTypeMapDto = std::make_shared<SvtDbBaseListDto>("WaferTypeMap", "waferTypeId", "waferMap");
+  waferTypeMapDto->addColNameInJson("waferMap");
 
   createAllRequest();
 }
@@ -55,9 +59,8 @@ void SvtDbAgent::SvtDbWaferTypeDto::createAllRequest()
 //========================================================================+
 void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
 {
-  std::string_view waferMap_field = "waferMap";
-  auto newMsg = msg;
-  const auto &msgData = newMsg.getPayload()["data"];
+  const auto waferMap_field = "waferMap";
+  const auto &msgData = msg.getPayload()["data"];
   if (!msgData.contains("create"))
   {
     THROW_RUNTIME_ERROR("Object item create was not found");
@@ -81,6 +84,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtK
   }
 
   //! Creating waferType Dto
+  auto newMsg = msg;
   newMsg.eraseFromPayload("waferMap");
   this->SvtDbBaseDto::createEntry(newMsg, replyMsg);
 
@@ -145,7 +149,7 @@ const std::string SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMap(const int wafer
   return waferMap.getValue("waferMap");
 }
 
-//========================================================================+
+// //========================================================================+
 bool SvtDbAgent::SvtDbWaferTypeDto::createWaferTypeMap(const int waferTypeId, const std::string &waferMap_s)
 {
   SvtDbEntry waferMap;

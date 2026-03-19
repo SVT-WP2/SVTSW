@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -112,6 +113,12 @@ namespace SvtDbAgent
     {
       mainTable.addColName(name, _isReq);
     }
+
+    void addColNameInJson(const std::string &name)
+    {
+      colNameInJson.insert(name);
+    }
+
     void setTableName(const std::string &tName) { mainTable.setTableName(tName); }
 
     //! Getters
@@ -137,6 +144,7 @@ namespace SvtDbAgent
 
    private:
     SvtDbTableDto mainTable;
+    std::set<std::string> colNameInJson;
     reqMap requestMap;
   };
 

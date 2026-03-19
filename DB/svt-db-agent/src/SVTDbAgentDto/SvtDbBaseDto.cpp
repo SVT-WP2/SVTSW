@@ -367,9 +367,18 @@ void SvtDbAgent::SvtDbBaseDto::parseJsonData(const nlohmann::json &j_data,
     ss << count_required << " and entry size is: " << j_data.size();
     throw std::invalid_argument(ss.str());
   }
+  nlohmann::json val;
   for (auto it = j_data.begin(); it != j_data.end(); ++it)
   {
-    entry.addValue(it.key(), (it->is_object()) ? static_cast<nlohmann::json>(it->dump()) : it.value());
+    if (it->is_object() && colNameInJson.count(it.key()))
+    {
+      val = static_cast<nlohmann::json>(it->dump(1));
+    }
+    else
+    {
+      val = it.value();
+    }
+    entry.addValue(it.key(), val);
   }
 }
 
@@ -413,26 +422,3 @@ void SvtDbAgent::SvtDbBaseDto::addRequest(
              " already exist in request list.");
   }
 }
-
-//========================================================================+
-// void SvtDbAgent::SvtDbBaseDto::getEntityList(const int id, SvtDbEntry &entry)
-// {
-// SvtDbFilters filters;
-// filters.mFilters.addValue("setupId", id);
-// std::vector<SvtDbEntry> entries;
-// getAllEntriesFromDB(entries, filters);
-// nlohmann::json items = nlohmann::json::array();
-// items.get_ptr<nlohmann::json::array_t *>()->reserve(entries.size());
-// for (auto entry : entries)
-// {
-//   if (entry.getValue("id") != id)
-//   {
-//     std::ostringstream ss;
-//     ss << "Failed getting asicFamilyType list for teset Setup: " << id;
-//     THROW_RUNTIME_ERROR(ss.str());
-//     return;
-//   }
-//   items.push_back(entry.getValue("asicFamilyType"));
-// }
-// entry.addValue("asicFamilyTypes", items);
-// }

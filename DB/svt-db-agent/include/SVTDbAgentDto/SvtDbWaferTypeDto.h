@@ -8,47 +8,16 @@
  * @brief Svt Db Wafer type DTO
  * */
 
+#include <memory>
 #include <string_view>
 
 #include "nlohmann/json_fwd.hpp"
 
 #include "SvtDbBaseDto.h"
-#include "SvtUtilities.h"
+#include "SvtDbBaseListDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbWaferTypeMapDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbWaferTypeMapDto()
-    {
-      setTableName("WaferTypeMap");
-
-      addColName("waferTypeId");
-      addColName("waferMap");
-    }
-    ~SvtDbWaferTypeMapDto() = default;
-
-   private:
-    void createAllRequest() final {}
-  };
-
-  class SvtDbWaferTypeImageDto : public SvtDbBaseDto
-  {
-   public:
-    SvtDbWaferTypeImageDto()
-    {
-      setTableName("WaferTypeImage");
-
-      addColName("waferTypeId");
-      addColName("imageBase64String");
-    }
-    ~SvtDbWaferTypeImageDto() = default;
-
-   private:
-    void createAllRequest() final {}
-  };
-
   class SvtDbWaferTypeDto : public SvtDbBaseDto
   {
    public:
@@ -58,8 +27,10 @@ namespace SvtDbAgent
     friend class SvtDbWaferDto;
 
    private:
-    SvtDbWaferTypeMapDto *waferTypeMapDto = SvtUtils::Singleton<SvtDbWaferTypeMapDto>::instance();
-    SvtDbWaferTypeImageDto *waferTypeimageDto = SvtUtils::Singleton<SvtDbWaferTypeImageDto>::instance();
+    std::shared_ptr<SvtDbBaseListDto> waferTypeMapDto;
+    std::shared_ptr<SvtDbBaseListDto> waferTypeImageDto;
+    // SvtDbWaferTypeMapDto *waferTypeMapDto = SvtUtils::Singleton<SvtDbWaferTypeMapDto>::instance();
+    // SvtDbWaferTypeImageDto *waferTypeimageDto = SvtUtils::Singleton<SvtDbWaferTypeImageDto>::instance();
 
     virtual void createAllRequest() final;
     // virtual void parseJsonData(const nlohmann::json &j_data,
