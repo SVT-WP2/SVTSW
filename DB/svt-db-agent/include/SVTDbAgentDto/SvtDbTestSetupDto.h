@@ -24,8 +24,10 @@ namespace SvtDbAgent
 
     virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
                              SvtKafka::SvtKafkaReplyMsg &);
+
     virtual void getAllEquipments(const SvtKafka::SvtKafkaMessage &,
                                   SvtKafka::SvtKafkaReplyMsg &);
+
     virtual void createAllRequest() final;
   };
 };  // namespace SvtDbAgent

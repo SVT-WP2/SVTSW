@@ -52,7 +52,7 @@ namespace SvtDbAgent
 
     const jsonMap &getValues() const { return mValues; }
 
-    void dump()
+    void dump() const
     {
       logInfo("Dumping entry");
       for (auto &[key, value] : mValues)
@@ -119,6 +119,11 @@ namespace SvtDbAgent
       colNameInJson.insert(name);
     }
 
+    void addItemToExclude(const std::string &name)
+    {
+      excludeItemInReply.insert(name);
+    }
+
     void setTableName(const std::string &tName) { mainTable.setTableName(tName); }
 
     //! Getters
@@ -145,6 +150,7 @@ namespace SvtDbAgent
    private:
     SvtDbTableDto mainTable;
     std::set<std::string> colNameInJson;
+    std::set<std::string> excludeItemInReply;
     reqMap requestMap;
   };
 

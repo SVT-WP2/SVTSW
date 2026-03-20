@@ -1,21 +1,21 @@
 #pragma once
 
 /*!
- * @file SvtDbTestSetupConfigDto.h
+ * @file SvtDbTestTypeConfigDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Mar-2026
- * @brief SvtDbTestSetupConfigDto
+ * @brief SvtDbTestTypeConfigDto
  */
 
 #include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
-  class SvtDbTestSetupConfigBodyDto : public SvtDbBaseDto
+  class SvtDbTestTypeConfigBodyDto : public SvtDbBaseDto
   {
    public:
-    SvtDbTestSetupConfigBodyDto();
-    ~SvtDbTestSetupConfigBodyDto() = default;
+    SvtDbTestTypeConfigBodyDto();
+    ~SvtDbTestTypeConfigBodyDto() = default;
 
     void getConfigBody(const SvtKafka::SvtKafkaMessage &,
                        SvtKafka::SvtKafkaReplyMsg &);
@@ -24,14 +24,14 @@ namespace SvtDbAgent
     virtual void createAllRequest() final {};
   };
 
-  class SvtDbTestSetupConfigDto : public SvtDbBaseDto
+  class SvtDbTestTypeConfigDto : public SvtDbBaseDto
   {
    public:
-    SvtDbTestSetupConfigDto();
-    ~SvtDbTestSetupConfigDto() = default;
+    SvtDbTestTypeConfigDto();
+    ~SvtDbTestTypeConfigDto() = default;
 
    private:
-    std::shared_ptr<SvtDbTestSetupConfigBodyDto> testSetupConfigBody;
+    std::shared_ptr<SvtDbTestTypeConfigBodyDto> testTypeConfigBody;
 
     virtual void createAllRequest() final;
   };
