@@ -26,6 +26,8 @@ namespace SvtDbAgent
   using jsonMap = std::map<std::string, nlohmann::basic_json<>>;
   using reqMap = std::map<std::string_view, std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>;
 
+  class SvtDbBaseListDto;
+
   struct SvtDbEntry
   {
    public:
@@ -85,8 +87,9 @@ namespace SvtDbAgent
                              SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void updateEntry(const SvtKafka::SvtKafkaMessage &msg,
                              SvtKafka::SvtKafkaReplyMsg &replyMsg);
-
-    // virtual void getEntityList(const int id, SvtDbAgent::SvtDbEntry &entry);
+    virtual void updateEntryInRelationTable(SvtDbBaseListDto *relationDto,
+                                            const SvtKafka::SvtKafkaMessage &msg,
+                                            SvtKafka::SvtKafkaReplyMsg &replyMsg);
 
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
@@ -121,7 +124,12 @@ namespace SvtDbAgent
 
     void addItemToExclude(const std::string &name)
     {
-      excludeItemInReply.insert(name);
+      excludeItemsInReply.insert(name);
+    }
+
+    void addRelationDto(SvtDbBaseListDto *dto)
+    {
+      relationDtos.push_back(dto);
     }
 
     void setTableName(const std::string &tName) { mainTable.setTableName(tName); }
@@ -138,6 +146,8 @@ namespace SvtDbAgent
     virtual void updateEntryAndReply(const int id, const nlohmann::json &data_j,
                                      SvtKafka::SvtKafkaReplyMsg &replyMsg, bool allowNull = false);
 
+    virtual void addItemFromRelationDto(SvtDbEntry &entry);
+
     virtual void parseJsonData(const nlohmann::json &j_data, SvtDbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
                                   SvtDbFilters &filters);
@@ -150,7 +160,9 @@ namespace SvtDbAgent
    private:
     SvtDbTableDto mainTable;
     std::set<std::string> colNameInJson;
-    std::set<std::string> excludeItemInReply;
+    std::set<std::string> excludeItemsInReply;
+
+    std::vector<SvtDbBaseListDto *> relationDtos;
     reqMap requestMap;
   };
 

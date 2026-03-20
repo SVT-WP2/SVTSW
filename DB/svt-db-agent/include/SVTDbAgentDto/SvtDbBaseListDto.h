@@ -9,6 +9,7 @@
 
 #include <string>
 
+#include "SVTDb/SvtDbInterface.h"
 #include "SvtDbBaseDto.h"
 #include "SvtLogger.h"
 
@@ -43,17 +44,39 @@ namespace SvtDbAgent
       this->SvtDbBaseDto::getAllEntriesAndReply(msgData, replyMsg);
     }
 
+    virtual bool updateRelationEntryInDB(const int id, const nlohmann::json &val) final
+    {
+      SvtDbInterface::SimpleUpdate update;
+
+      update.setTableName(getTableName());
+
+      update.addWhereEquals(idName, id);
+
+      update.addColumnAndValue(colName, val);
+
+      if (!update.doUpdate())
+      {
+        SvtDbInterface::rollbackUpdate();
+        return false;
+      }
+      SvtDbInterface::commitUpdate();
+
+      return true;
+    }
+
     virtual void addEntries(const nlohmann::json &idVal, const nlohmann::json &colVal)
     {
       for (auto it = colVal.begin(); it != colVal.end(); ++it)
       {
         SvtDbEntry entry;
-        std::string json_s = (colVal.is_object()) ? colVal.dump() : colVal.get<std::string>();
         entry.addValue(idName, idVal);
-        entry.addValue(colName, json_s);
+        entry.addValue(colName, colVal);
         createEntryInDB(entry);
       }
     }
+
+    const std::string &getIdName() { return idName; }
+    const std::string &getColName() { return colName; }
 
    private:
     std::string idName;

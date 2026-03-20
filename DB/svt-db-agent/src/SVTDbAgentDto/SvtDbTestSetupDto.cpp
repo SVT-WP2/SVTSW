@@ -23,10 +23,12 @@ SvtDbAgent::SvtDbTestSetupDto::SvtDbTestSetupDto()
 
   addColName("id");
   addColName("name");
-  addColName("defaultConfigId", false);
   addColName("generalLocation");
 
   equipList = std::make_shared<SvtDbBaseListDto>("SvtTestSetupEquipList", "setupId", "equipId");
+  setupDefaultConfigId = std::make_shared<SvtDbBaseListDto>("SvtTestSetupDefaultConfig", "setupId", "defaultConfigId");
+
+  addRelationDto(setupDefaultConfigId.get());
 
   createAllRequest();
 }
@@ -36,6 +38,13 @@ void SvtDbAgent::SvtDbTestSetupDto::getAllEquipments(const SvtKafka::SvtKafkaMes
                                                      SvtKafka::SvtKafkaReplyMsg &replyMsg)
 {
   equipList->getAllEntries(msg, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbTestSetupDto::updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                                                SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  updateEntryInRelationTable(setupDefaultConfigId.get(), msg, replyMsg);
 }
 
 //========================================================================+
@@ -65,8 +74,8 @@ void SvtDbAgent::SvtDbTestSetupDto::createEntry(const SvtKafka::SvtKafkaMessage 
   SvtUtils::Singleton<SvtDbTestSetupConfigDto>::instance()->createAndReturnNewEntry(defaultConfig_j, setupConfigEntry);
   // get created config id
   auto setupConfigId = setupConfigEntry.getValue("id");
-  setupEntry.addValue("defaultConfigId", setupConfigId);
-  updateEntryInDB(setupId, setupEntry);
+  setupDefaultConfigId->addEntries(setupId, setupConfigId);
+  getEntryWithId(setupEntry, setupId);
   createReplyMsg(setupEntry, replyMsg);
 }
 

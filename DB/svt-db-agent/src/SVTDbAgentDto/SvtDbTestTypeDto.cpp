@@ -20,6 +20,7 @@ SvtDbAgent::SvtDbTestTypeDto::SvtDbTestTypeDto()
   addColName("name");
 
   asicFamilyTypeList = std::make_shared<SvtDbBaseListDto>("SvtTestTypeAsicFamilyTypeList", "testTypeId", "asicFamilyType");
+  addRelationDto(asicFamilyTypeList.get());
 
   createAllRequest();
 }
@@ -29,7 +30,11 @@ void SvtDbAgent::SvtDbTestTypeDto::getAllEntries(const SvtKafka::SvtKafkaMessage
                                                  SvtKafka::SvtKafkaReplyMsg &replyMsg)
 {
   auto data_j = msg.getPayload()["data"];
-  if (data_j["filter"].contains("asicFamilyType"))
+  if (!data_j["filter"].contains("asicFamilyType"))
+  {
+    this->SvtDbBaseDto::getAllEntries(msg, replyMsg);
+  }
+  else
   {
     const auto asicFamilyType = data_j["filter"]["asicFamilyType"];
 
@@ -57,37 +62,6 @@ void SvtDbAgent::SvtDbTestTypeDto::getAllEntries(const SvtKafka::SvtKafkaMessage
     else
     {
       createReplyMsg(asicFamilyTypeEntries, replyMsg);
-    }
-  }
-  else
-  {
-    SvtDbFilters filters;
-    parseJsonFilters(data_j, filters);
-
-    std::vector<SvtDbAgent::SvtDbEntry> entries;
-    bool result = getAllEntriesFromDB(entries, filters, "id", false);
-
-    for (auto &entry : entries)
-    {
-      nlohmann::json asicFamilytype_array = nlohmann::json::array();
-
-      SvtDbFilters asicFamilyTypeFilter;
-      asicFamilyTypeFilter.mFilters.addValue("testTypeId", entry.getValue("id"));
-
-      std::vector<SvtDbAgent::SvtDbEntry> asicFamilyTypeEntries;
-      asicFamilyTypeList->getAllEntriesFromDB(asicFamilyTypeEntries, asicFamilyTypeFilter);
-
-      for (auto &asicFamilyTypeEntry : asicFamilyTypeEntries)
-      {
-        asicFamilytype_array.push_back(asicFamilyTypeEntry.getValue("asicFamilyType"));
-      }
-
-      entry.addValue("asicFamilyTypes", asicFamilytype_array);
-    }
-
-    if (result)
-    {
-      createReplyMsg(entries, replyMsg);
     }
   }
 }

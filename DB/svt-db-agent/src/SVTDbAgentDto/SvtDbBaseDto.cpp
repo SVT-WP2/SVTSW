@@ -17,6 +17,7 @@
 
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SVTDbAgentDto/SvtDbBaseListDto.h"
 #include "SvtKafkaMessage.h"
 #include "SvtLogger.h"
 
@@ -31,6 +32,41 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntries(const SvtKafkaMessage &msg,
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbBaseDto::addItemFromRelationDto(SvtDbAgent::SvtDbEntry &entry)
+{
+  if (relationDtos.size())
+  {
+    for (const auto &rel : relationDtos)
+    {
+      SvtDbFilters relFilter;
+      relFilter.mFilters.addValue(rel->getIdName(), entry.getValue("id"));
+
+      std::vector<SvtDbAgent::SvtDbEntry> relEntries;
+      rel->getAllEntriesFromDB(relEntries, relFilter);
+      const auto &colName = rel->getColName();
+      if (relEntries.size())
+      {
+        if (relEntries.size() > 1)
+        {
+          nlohmann::json relEntries_array = nlohmann::json::array();
+
+          for (const auto &relEntry : relEntries)
+          {
+            relEntries_array.push_back(relEntry.getValue(colName));
+          }
+          std::string colNameArray = colName + "s";
+          entry.addValue(colNameArray, relEntries_array);
+        }
+        else
+        {
+          entry.addValue(colName, relEntries.at(0).getValue(colName));
+        }
+      }
+    }
+  }
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_j,
                                                      SvtKafkaReplyMsg &replyMsg)
 {
@@ -40,6 +76,14 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_
   std::vector<SvtDbAgent::SvtDbEntry> entries;
   bool result = mainTable.getColNames().find("id") != mainTable.getColNames().end() ? getAllEntriesFromDB(entries, filters, "id", false)
                                                                                     : getAllEntriesFromDB(entries, filters);
+
+  if (relationDtos.size())
+  {
+    for (auto &entry : entries)
+    {
+      addItemFromRelationDto(entry);
+    }
+  }
 
   if (result)
   {
@@ -62,7 +106,18 @@ void SvtDbAgent::SvtDbBaseDto::createEntry(const SvtKafkaMessage &msg,
 //========================================================================+
 bool SvtDbAgent::SvtDbBaseDto::createAndReturnNewEntry(const nlohmann::json &data_j, SvtDbEntry &entry)
 {
-  parseJsonData(data_j, entry);
+  auto modifiedData_j = data_j;
+  if (relationDtos.size())
+  {
+    for (const auto &rel : relationDtos)
+    {
+      if (modifiedData_j.contains(rel->getColName()))
+      {
+        SvtUtils::recursive_erase_key(modifiedData_j, rel->getColName());
+      }
+    }
+  }
+  parseJsonData(modifiedData_j, entry);
 
   //! create entry in DB
   if (!createEntryInDB(entry))
@@ -72,6 +127,17 @@ bool SvtDbAgent::SvtDbBaseDto::createAndReturnNewEntry(const nlohmann::json &dat
   }
 
   const auto newEntryId = SvtDbInterface::getMaxId(mainTable.getTableName());
+  if (relationDtos.size())
+  {
+    for (const auto &rel : relationDtos)
+    {
+      if (data_j.contains(rel->getColName()))
+      {
+        rel->addEntries(newEntryId, data_j[rel->getColName()]);
+      }
+    }
+  }
+
   getEntryWithId(entry, newEntryId);
   return true;
 }
@@ -124,6 +190,32 @@ void SvtDbAgent::SvtDbBaseDto::updateEntryAndReply(const int id, const nlohmann:
     THROW_RUNTIME_ERROR("Entry was not updated");
   }
 
+  getEntryWithId(entry, id);
+  createReplyMsg(entry, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbBaseDto::updateEntryInRelationTable(SvtDbAgent::SvtDbBaseListDto *relationDto,
+                                                          const SvtKafkaMessage &msg,
+                                                          SvtKafkaReplyMsg &replyMsg)
+{
+  const auto &msgData = msg.getPayload()["data"];
+  if (!msgData.contains("id"))
+  {
+    THROW_RUNTIME_ERROR("Object item id was found");
+  }
+  if (!msgData.contains("update"))
+  {
+    THROW_RUNTIME_ERROR("Object item update was found");
+  }
+
+  int id = msgData["id"];
+  if (!relationDto->updateRelationEntryInDB(id, msgData["update"][relationDto->getColName()]))
+  {
+    THROW_RUNTIME_ERROR("");
+    return;
+  }
+  SvtDbEntry entry;
   getEntryWithId(entry, id);
   createReplyMsg(entry, replyMsg);
 }
@@ -228,6 +320,8 @@ bool SvtDbAgent::SvtDbBaseDto::getEntryWithId(SvtDbEntry &entry, int id)
     return false;
   }
   entry = std::move(entries.at(0));
+  addItemFromRelationDto(entry);
+
   return true;
 }
 
@@ -307,7 +401,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     nlohmann::ordered_json entry_j;
     for (const auto &item : entry.getValues())
     {
-      if (excludeItemInReply.count(item.first))
+      if (excludeItemsInReply.count(item.first))
         continue;
       entry_j[item.first] = item.second;
     }
@@ -332,7 +426,7 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
   nlohmann::ordered_json entry_j;
   for (const auto &item : entry.getValues())
   {
-    if (excludeItemInReply.count(item.first))
+    if (excludeItemsInReply.count(item.first))
       continue;
     entry_j[item.first] = item.second;
   }
