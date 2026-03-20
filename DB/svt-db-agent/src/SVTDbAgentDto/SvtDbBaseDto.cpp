@@ -307,6 +307,8 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
     nlohmann::ordered_json entry_j;
     for (const auto &item : entry.getValues())
     {
+      if (excludeItemInReply.count(item.first))
+        continue;
       entry_j[item.first] = item.second;
     }
     items.push_back(entry_j);
@@ -330,6 +332,8 @@ void SvtDbAgent::SvtDbBaseDto::createReplyMsg(
   nlohmann::ordered_json entry_j;
   for (const auto &item : entry.getValues())
   {
+    if (excludeItemInReply.count(item.first))
+      continue;
     entry_j[item.first] = item.second;
   }
 

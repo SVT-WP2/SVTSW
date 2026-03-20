@@ -13,10 +13,10 @@
 #include "SVTDbAgentDto/SvtDbEquipDto.h"
 #include "SVTDbAgentDto/SvtDbEquipTypeDto.h"
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
-#include "SVTDbAgentDto/SvtDbTestSetupConfigBodyDto.h"
-#include "SVTDbAgentDto/SvtDbTestSetupConfigCreateDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
+#include "SVTDbAgentDto/SvtDbTestTypeConfigDto.h"
+#include "SVTDbAgentDto/SvtDbTestTypeDto.h"
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
 #include "SVTDbAgentDto/SvtDbWPProjectDto.h"
 #include "SVTDbAgentDto/SvtDbWaferDto.h"
@@ -43,9 +43,8 @@ void SvtDbAgentRequest::createAllDtos()
   dtoList["SvtDbEquipDto"] = Singleton<SvtDbAgent::SvtDbEquipDto>::instance();
   dtoList["SvtDbTestSetupDto"] = Singleton<SvtDbAgent::SvtDbTestSetupDto>::instance();
   dtoList["SvtDbTestSetupConfigDto"] = Singleton<SvtDbAgent::SvtDbTestSetupConfigDto>::instance();
-  dtoList["SvtDbTestSetupConfigDto"] = Singleton<SvtDbAgent::SvtDbTestSetupConfigDto>::instance();
-  dtoList["SvtDbTestSetupConfigCreateDto"] = Singleton<SvtDbAgent::SvtDbTestSetupConfigCreateDto>::instance();
-  dtoList["SvtDbTestSetupConfigBodyDto"] = Singleton<SvtDbAgent::SvtDbTestSetupConfigBodyDto>::instance();
+  dtoList["SvtDbTestTypeDto"] = Singleton<SvtDbAgent::SvtDbTestTypeDto>::instance();
+  dtoList["SvtDbTestTypeConfigDto"] = Singleton<SvtDbAgent::SvtDbTestTypeConfigDto>::instance();
   dtoList["SvtDbProbeCardDto"] =
       Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
   dtoList["SvtDbWPMachineDto"] =

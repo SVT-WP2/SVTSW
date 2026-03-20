@@ -9,7 +9,7 @@
 
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbBaseListDto.h"
-#include "SVTDbAgentDto/SvtDbTestSetupConfigCreateDto.h"
+#include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
 #include "SvtJsonUtils.h"
 #include "SvtLogger.h"
@@ -62,7 +62,7 @@ void SvtDbAgent::SvtDbTestSetupDto::createEntry(const SvtKafka::SvtKafkaMessage 
   // create test setup config with correct setupId
   defaultConfig_j["setupId"] = setupId;
   SvtDbEntry setupConfigEntry;
-  SvtUtils::Singleton<SvtDbTestSetupConfigCreateDto>::instance()->createAndReturnNewEntry(defaultConfig_j, setupConfigEntry);
+  SvtUtils::Singleton<SvtDbTestSetupConfigDto>::instance()->createAndReturnNewEntry(defaultConfig_j, setupConfigEntry);
   // get created config id
   auto setupConfigId = setupConfigEntry.getValue("id");
   setupEntry.addValue("defaultConfigId", setupConfigId);
