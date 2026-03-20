@@ -21,8 +21,12 @@ namespace SvtDbAgent
 
    private:
     std::shared_ptr<SvtDbBaseListDto> equipList;
+    std::shared_ptr<SvtDbBaseListDto> setupDefaultConfigId;
 
     virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
+                             SvtKafka::SvtKafkaReplyMsg &);
+
+    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &,
                              SvtKafka::SvtKafkaReplyMsg &);
 
     virtual void getAllEquipments(const SvtKafka::SvtKafkaMessage &,

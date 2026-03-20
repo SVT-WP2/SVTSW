@@ -83,7 +83,7 @@ Table main.ProbeCard {
   id integer [primary key, increment]
   serialNumber varchar(50) [unique, not null]
   vendor main.pcVendor [not null]
-  name main.pcName [not null]
+  name main.pcName [unique, not null]
   model main.pcModel [not null]
   version integer [not null]
   arrivalDate date [not null]
@@ -185,8 +185,12 @@ Table main.EquipmentLocation{
 Table main.SvtTestSetup {
   id integer [primary key, increment]
   name varchar(100)
-  defaultConfigId integer [ref:> main.SvtTestSetupConfig.id, default: null]
   generalLocation main.wpGeneralLocation
+}
+
+Table main.SvtTestSetupDefaultConfig{
+  setupId integer [ref:> main.SvtTestSetup.id, unique, not null]
+  defaultConfigId integer [ref:> main.SvtTestSetupConfig.id, default: null]
 }
 
 Table main.SvtTestSetupAsicFamilyTypeList {
@@ -202,7 +206,7 @@ Table main.SvtTestSetupEquipList{
 Table main.SvtTestSetupConfig {
   id integer [primary key, increment]
   setupId integer [ref:> main.SvtTestSetup.id, not null]
-  name varchar(100) [not null]
+  name varchar(100) [unique, not null]
   note text
   configBody JSON [not null]
   createdAt date [default: `CURRENT_DATE`]
@@ -221,7 +225,7 @@ Table main.SvtTestTypeAsicFamilyTypeList {
 Table main.SvtTestTypeConfig {
   id integer [primary key, increment]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100) [not null]
+  name varchar(100) [unique, not null]
   note text
   configBody JSON [not null]
   createdAt date [default: `CURRENT_DATE`]
