@@ -3506,9 +3506,7 @@ components:
       required:
         - name
         - asicFamilyTypes
-        - configName
-        - configBody
-        - note
+        - testTypeConfig
       properties:
         name:
           type: string
@@ -3516,13 +3514,20 @@ components:
           type: array
           items:
             type: string
-        configName:
-          type: string
-        configBody:
-          type: string
-        note:
-          type: string
-          nullable: true
+        testTypeConfig:
+          type: object
+          required:
+            - name
+            - configBody
+            - note
+          properties:
+            name:
+              type: string
+            configBody:
+              type: string
+            note:
+              type: string
+              nullable: true
     SvtTestTypeUpdateDto:
       type: object
       required:
