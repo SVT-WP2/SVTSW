@@ -1265,6 +1265,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetSvtTestTypeConfigBody:
+    post:
+      tags:
+        - SvtTestTypeConfig
+      summary: Get SvtTestTypeConfig JSON
+      description: Returns configuration JSON in the reply message.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetSvtTestTypeConfigBodyMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetSvtTestTypeConfigBodyReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/CreateSvtTestTypeConfig:
     post:
       tags:
@@ -2618,6 +2649,32 @@ components:
               items:
                 $ref: "#/components/schemas/SvtTestTypeConfigDto"
     #
+    # TEST TYPE CONFIG BODY
+    #
+    GetSvtTestTypeConfigBodyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetSvtTestTypeConfigBody"
+        data:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: number
+              description: SvtTestTypeConfig id
+    GetSvtTestTypeConfigBodyReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetSvtTestTypeConfigBodyReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestTypeConfigBodyDto"
+    #
     # TEST_TYPE_CONFIG :: CREATE
     #
     CreateSvtTestTypeConfigMessage:
@@ -3486,7 +3543,6 @@ components:
         - testTypeId
         - name
         - note
-        - configBody
         - createdAt
       properties:
         id:
@@ -3498,11 +3554,20 @@ components:
         note:
           type: string
           nullable: true
-        configBody:
-          type: string
         createdAt:
           type: string
           description: Date only in format `2025-06-03`
+    # TEST TYPE CONFIG BODY :: DTO
+    SvtTestTypeConfigBodyDto:
+      type: object
+      required:
+        - id
+        - configBody
+      properties:
+        id:
+          type: number
+        configBody:
+          type: string
     SvtTestTypeConfigCreateDto:
       type: object
       required:
