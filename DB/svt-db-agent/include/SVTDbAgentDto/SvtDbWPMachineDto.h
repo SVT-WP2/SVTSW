@@ -1,5 +1,4 @@
-#ifndef SVT_DB_WAFERPROBEMACHINE_DTO_H
-#define SVT_DB_WAFERPROBEMACHINE_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbWPMachineDto.h
@@ -74,4 +73,3 @@ namespace SvtDbAgent
         SvtUtils::Singleton<SvtDbProbeCardInstalledInMachineDto>::instance();
   };
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_WAFER_DTO_H

@@ -7,12 +7,10 @@
 
 #include <string>
 
-#include "SVTDbAgentDto/SvtDbBaseLocationDto.h"
 #include "nlohmann/json_fwd.hpp"
 
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 #include "SVTDbAgentDto/SvtDbChipDto.h"
-#include "SvtLogger.h"
 #include "SvtUtilities.h"
 
 using SvtKafka::SvtKafkaMessage;

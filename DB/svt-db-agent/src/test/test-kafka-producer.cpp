@@ -2,11 +2,10 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <thread>
 
 #include <librdkafka/rdkafkacpp.h>
-
 #include <nlohmann/json.hpp>
-#include <thread>
 
 #include "SvtKafkaMessage.h"
 #include "SvtKafkaProducer.h"

@@ -1,5 +1,4 @@
-#ifndef SVT_DB_WAFER_PROBE_PROJECT_DTO_H
-#define SVT_DB_WAFER_PROBE_PROJECT_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbWPProject.h
@@ -8,9 +7,9 @@
  * @brief Svt Db Wafer Probe Project DTO
  * */
 
-#include "SvtDbBaseDto.h"
-
 #include <nlohmann/json.hpp>
+
+#include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
@@ -27,5 +26,3 @@ namespace SvtDbAgent
     void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
-
-#endif  //! SVT_DB_WAFER_PROBE_PROJECT_DTO_H

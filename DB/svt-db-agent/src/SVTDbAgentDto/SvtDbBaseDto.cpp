@@ -18,8 +18,6 @@
 #include "SVTDb/SvtDbInterface.h"
 #include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbBaseListDto.h"
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;

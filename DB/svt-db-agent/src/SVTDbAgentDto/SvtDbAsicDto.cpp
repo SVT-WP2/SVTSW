@@ -5,12 +5,9 @@
  * @brief SvtDbAsicDto
  */
 
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
-
 #include <sstream>
+
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;

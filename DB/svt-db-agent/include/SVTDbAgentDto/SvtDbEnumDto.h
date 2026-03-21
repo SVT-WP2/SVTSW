@@ -1,5 +1,4 @@
-#ifndef SVT_DB_ENUM_DTO_H
-#define SVT_DB_ENUM_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbEnumDto.h
@@ -8,11 +7,11 @@
  * @brief Svt Db enum DTO
  * */
 
-#include "SvtDbBaseDto.h"
-
 #include <map>
 #include <string>
 #include <vector>
+
+#include "SvtDbBaseDto.h"
 
 namespace SvtDbAgent
 {
@@ -56,5 +55,3 @@ namespace SvtDbAgent
   };
 
 };  // namespace SvtDbAgent
-
-#endif  //! SVT_DB_AGENT_ENUM_H

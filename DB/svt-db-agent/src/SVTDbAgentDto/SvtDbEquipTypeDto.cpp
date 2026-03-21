@@ -5,9 +5,6 @@
  * @brief Equipment type dto
  */
 
-#include <string>
-#include <string_view>
-
 #include "SVTDbAgentDto/SvtDbEquipTypeDto.h"
 
 //========================================================================+

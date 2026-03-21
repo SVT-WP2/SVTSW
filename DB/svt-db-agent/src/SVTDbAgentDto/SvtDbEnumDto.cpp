@@ -8,8 +8,6 @@
 #include "SVTDbAgentDto/SvtDbEnumDto.h"
 #include "Database/DatabaseInterface.h"
 #include "SVTDb/SvtDbInterface.h"
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
 
 std::map<std::string, std::vector<std::string>> SvtDbAgent::enum_type_value_map;
 

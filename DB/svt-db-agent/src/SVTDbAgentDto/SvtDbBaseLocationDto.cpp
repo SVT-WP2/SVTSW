@@ -5,11 +5,12 @@
  * @brief Base DTO class implementation
  */
 
-#include "SVTDbAgentDto/SvtDbBaseLocationDto.h"
 #include <memory>
 #include <sstream>
 #include <string>
+
 #include "SVTDb/SvtDbInterface.h"
+#include "SVTDbAgentDto/SvtDbBaseLocationDto.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbBaseLocationDto::SvtDbBaseLocationDto(const std::string &table_name,

@@ -5,11 +5,10 @@
  * @brief SVT config base class implementation
  */
 
-#include "SVTConfig/SvtConfig.h"
-
 #include <fstream>
 #include <sstream>
 
+#include "SVTConfig/SvtConfig.h"
 #include "SvtLogger.h"
 
 using json = nlohmann::json;
@@ -38,8 +37,8 @@ bool SvtConfig::readFile(const std::string &path, json &config)
   {
     logError("Error when parsing file " + path);
     logError("message: " + std::string(e.what()) +
-                     ", exception id: " + std::to_string(e.id) +
-                     "byte position of error: " + std::to_string(e.byte));
+             ", exception id: " + std::to_string(e.id) +
+             "byte position of error: " + std::to_string(e.byte));
     input.close();
     return false;
   }

@@ -5,14 +5,8 @@
  * @brief Svt Test Setup
  */
 
-#include <string>
-
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentDto/SvtDbBaseListDto.h"
-#include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
-#include "SvtJsonUtils.h"
-#include "SvtLogger.h"
+#include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
 #include "SvtUtilities.h"
 
 //========================================================================+

@@ -1,5 +1,4 @@
-#ifndef SVT_DB_PROBE_CARD_DTO_H
-#define SVT_DB_PROBE_CARD_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbProbeCard.h
@@ -25,5 +24,3 @@ namespace SvtDbAgent
     void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
-
-#endif  //! SVT_DB_PROBE_CARD_DTO_H

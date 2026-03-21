@@ -8,6 +8,7 @@
  */
 
 #include <memory>
+
 #include "SvtDbBaseDto.h"
 #include "SvtDbBaseListDto.h"
 

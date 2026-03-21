@@ -1,5 +1,4 @@
-#ifndef SVT_DB_ASIC_DTO_H
-#define SVT_DB_ASIC_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbAsicDto.h
@@ -29,4 +28,3 @@ namespace SvtDbAgent
                                 int totalCount = -1) final;
   };
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_WAFER_TYPE_DTO_H

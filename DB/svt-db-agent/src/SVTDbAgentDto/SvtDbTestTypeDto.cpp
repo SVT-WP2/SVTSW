@@ -5,12 +5,8 @@
  * @brief Svt Test Type
  */
 
-#include <string>
-
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SVTDbAgentDto/SvtDbTestTypeConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestTypeDto.h"
-#include "SvtJsonUtils.h"
+#include "SVTDbAgentDto/SvtDbTestTypeConfigDto.h"
 #include "SvtUtilities.h"
 
 //========================================================================+

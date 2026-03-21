@@ -7,10 +7,6 @@
  */
 
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
-#include <string>
-#include "SVTDbAgentDto/SvtDbBaseDto.h"
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;

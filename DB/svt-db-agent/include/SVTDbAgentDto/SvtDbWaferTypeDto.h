@@ -1,5 +1,4 @@
-#ifndef SVT_DB_WAFER_TYPE_DTO_H
-#define SVT_DB_WAFER_TYPE_DTO_H
+#pragma once
 
 /*!
  * @file SvtDbWaferTypeDto.h
@@ -49,4 +48,3 @@ namespace SvtDbAgent
   };
 
 };  // namespace SvtDbAgent
-#endif  //! SVT_DB_WAFER_TYPE_DTO_H
