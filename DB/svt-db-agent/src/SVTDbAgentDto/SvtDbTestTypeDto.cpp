@@ -7,8 +7,11 @@
 
 #include <string>
 
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
+#include "SVTDbAgentDto/SvtDbTestTypeConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestTypeDto.h"
 #include "SvtJsonUtils.h"
+#include "SvtUtilities.h"
 
 //========================================================================+
 SvtDbAgent::SvtDbTestTypeDto::SvtDbTestTypeDto()
@@ -67,22 +70,61 @@ void SvtDbAgent::SvtDbTestTypeDto::getAllEntries(const SvtKafka::SvtKafkaMessage
 }
 
 //========================================================================+
+void SvtDbAgent::SvtDbTestTypeDto::createEntry(const SvtKafka::SvtKafkaMessage &msg,
+                                               SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  // Check create object exist
+  auto msgCreate_j = msg.getPayload()["data"]["create"];
+  if (msgCreate_j.is_null())
+  {
+    THROW_RUNTIME_ERROR("Wrong request message format");
+    return;
+  }
+  // extract setup config from the message
+  auto key = "testTypeConfig";
+  auto testTypeConfig_j = msgCreate_j[key];
+  // remove config setting from json message
+  SvtUtils::recursive_erase_key(msgCreate_j, key);
+
+  // Create entry in the test setup table and get id from the returned entry
+  SvtDbEntry dummyEntry;
+  createAndReturnNewEntry(msgCreate_j, dummyEntry);
+  int testTypeId = dummyEntry.getValue("id");
+  auto asicFamilyTypes_j = msgCreate_j["asicFamilyTypes"];
+  asicFamilyTypeList->addEntries(testTypeId, asicFamilyTypes_j);
+  // create test type config with correct testTypeId
+  testTypeConfig_j["testTypeId"] = testTypeId;
+  SvtUtils::Singleton<SvtDbTestTypeConfigDto>::instance()->createAndReturnNewEntry(testTypeConfig_j, dummyEntry);
+  getEntryWithId(dummyEntry, testTypeId);
+  createReplyMsg(dummyEntry, replyMsg);
+}
+
+//========================================================================+
+void SvtDbAgent::SvtDbTestTypeDto::updateEntry(const SvtKafka::SvtKafkaMessage &msg,
+                                               SvtKafka::SvtKafkaReplyMsg &replyMsg)
+{
+  const auto &testTypeId = msg.getPayload()["data"]["testTypeId"];
+  const auto &asicFamilyTypes = msg.getPayload()["data"]["asicFamilyTypes"];
+
+  asicFamilyTypeList->addEntries(testTypeId, asicFamilyTypes);
+  SvtDbEntry entry;
+  getEntryWithId(entry, testTypeId);
+  createReplyMsg(entry, replyMsg);
+}
+
+//========================================================================+
 void SvtDbAgent::SvtDbTestTypeDto::createAllRequest()
 {
   // !SvtDbTestTypeDto::GetAllSvtTestType
   addRequest("GetAllSvtTestTypes",
              std::bind(&SvtDbTestTypeDto::getAllEntries, this,
                        std::placeholders::_1, std::placeholders::_2));
-  // //! SvtDbTestTypeDto::CreateSvtTestType
-  // addRequest("CreateSvtTestType",
-  //            std::bind(&SvtDbTestTypeDto::createEntry, this, std::placeholders::_1,
-  //                      std::placeholders::_2));
-  // //! SvtDbTestTypeDto::UpdateSvtTestTypeDefaultConfig
-  // addRequest("UpdateSvtTestType",
-  //            std::bind(&SvtDbTestTypeDto::updateEntry, this, std::placeholders::_1,
-  //                      std::placeholders::_2));
-  // // !SvtDbTestTypeDto::GetEquipmentListForTestType
-  // addRequest("GetEquipmentListForTestType",
-  //            std::bind(&SvtDbTestTypeDto::getAllEquipments, this, std::placeholders::_1,
-  //                      std::placeholders::_2));
+  //! SvtDbTestTypeDto::CreateSvtTestType
+  addRequest("CreateSvtTestType",
+             std::bind(&SvtDbTestTypeDto::createEntry, this, std::placeholders::_1,
+                       std::placeholders::_2));
+  //! SvtDbTestTypeDto::UpdateSvtTestType
+  addRequest("UpdateSvtTestType",
+             std::bind(&SvtDbTestTypeDto::updateEntry, this, std::placeholders::_1,
+                       std::placeholders::_2));
 }
