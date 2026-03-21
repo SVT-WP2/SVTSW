@@ -7,7 +7,6 @@
 
 #include "SVTDb/SvtDbInterface.h"
 #include "Database/DatabaseInterface.h"
-
 #include "SvtLogger.h"
 #include "SvtUtilities.h"
 

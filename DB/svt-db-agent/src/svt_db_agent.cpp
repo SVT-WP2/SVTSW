@@ -17,7 +17,6 @@
 #include "Database/DatabaseInterface.h"
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
 #include "SVTDbAgentService/SvtDbAgentService.h"
-
 #include "SvtLogger.h"
 #include "SvtUtilities.h"
 

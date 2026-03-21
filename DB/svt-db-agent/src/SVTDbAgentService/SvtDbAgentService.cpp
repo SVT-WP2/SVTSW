@@ -13,13 +13,13 @@
 #include <string>
 #include <vector>
 
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
 #include "librdkafka/rdkafkacpp.h"
 
 #include "SVTDbAgentService/SvtDbAgentService.h"
 #include "SvtKafkaConsumer.h"
+#include "SvtKafkaMessage.h"
 #include "SvtKafkaProducer.h"
+#include "SvtLogger.h"
 
 using namespace SvtDbAgent;
 using SvtKafka::SvtKafkaConsumer;

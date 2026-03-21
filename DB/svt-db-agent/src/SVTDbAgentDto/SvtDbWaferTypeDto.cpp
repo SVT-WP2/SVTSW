@@ -5,21 +5,11 @@
  * @brief SvtDbWaferTypeDto
  */
 
-#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
-#include "SVTDb/SvtDbInterface.h"
-#include "SVTDbAgentDto/SvtDbEnumDto.h"
-#include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
-#include "SvtUtilities.h"
 #include "nlohmann/json_fwd.hpp"
 
-#include <algorithm>
-#include <list>
-#include <memory>
-#include <sstream>
-// #include <stdexcept>
-#include <string>
-#include <string_view>
+#include "SVTDbAgentDto/SvtDbEnumDto.h"
+#include "SVTDbAgentDto/SvtDbWaferTypeDto.h"
+#include "SvtUtilities.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;

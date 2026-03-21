@@ -1,8 +1,15 @@
-#include "Database/DatabaseInterface.h"
-#include "SvtLogger.h"
+/*!
+ * @file databaseinterface.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Mar-2026
+ * @brief database interface
+ */
 
 #include <cstring>
 #include <iostream>
+
+#include "Database/DatabaseInterface.h"
+#include "SvtLogger.h"
 
 using std::string;
 using std::vector;

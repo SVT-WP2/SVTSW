@@ -16,7 +16,6 @@
 
 #include "SvtDbAgentRequest.h"
 #include "SvtKafkaMessage.h"
-#include "SvtLogger.h"
 
 enum SvtDbAgentTopicEnum : uint8_t
 {

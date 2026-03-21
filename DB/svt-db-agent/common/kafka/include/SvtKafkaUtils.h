@@ -9,9 +9,9 @@
 
 #include <functional>
 #include <sstream>
+#include <string>
 
 #include <librdkafka/rdkafkacpp.h>
-#include <string>
 
 #include "SvtKafkaConsumer.h"
 

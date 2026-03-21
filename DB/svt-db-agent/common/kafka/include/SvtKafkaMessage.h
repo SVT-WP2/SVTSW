@@ -3,7 +3,6 @@
 #include <string>
 
 #include <librdkafka/rdkafkacpp.h>
-
 #include <nlohmann/json.hpp>
 
 #include "SvtJsonUtils.h"

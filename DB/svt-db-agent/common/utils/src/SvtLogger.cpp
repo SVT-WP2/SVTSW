@@ -5,8 +5,6 @@
  * @brief Logger implementation
  */
 
-#include "SvtLogger.h"
-
 #include <stdarg.h>
 #include <bitset>
 #include <chrono>
@@ -14,6 +12,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "SvtLogger.h"
 using SvtUtils::SvtLogger;
 
 void logInfo(const std::string &msg, uint32_t severity)

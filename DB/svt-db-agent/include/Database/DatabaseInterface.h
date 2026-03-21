@@ -1,10 +1,10 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
-#include <pqxx/pqxx>
-
 #include <mutex>
 #include <string>
+
+#include <nlohmann/json.hpp>
+#include <pqxx/pqxx>
 
 using row_t = std::vector<nlohmann::basic_json<>>;
 using rows_t = std::vector<row_t>;

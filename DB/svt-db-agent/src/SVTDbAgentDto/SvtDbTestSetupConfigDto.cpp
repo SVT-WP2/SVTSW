@@ -6,7 +6,6 @@
  */
 
 #include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
-#include <memory>
 
 //========================================================================+
 SvtDbAgent::SvtDbTestSetupConfigBodyDto::SvtDbTestSetupConfigBodyDto()

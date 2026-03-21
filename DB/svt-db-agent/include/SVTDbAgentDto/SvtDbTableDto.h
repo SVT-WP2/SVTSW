@@ -1,3 +1,5 @@
+#pragma once
+
 /*!
  * @file SvtDbTableDto.h
  * @author Y. Corrales <ycorrale@cern.ch>

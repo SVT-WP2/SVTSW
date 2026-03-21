@@ -7,8 +7,9 @@
  * @brief Svt Db wafer DTO
  * */
 
-#include "SvtDbBaseLocationDto.h"
 #include "nlohmann/json_fwd.hpp"
+
+#include "SvtDbBaseLocationDto.h"
 
 namespace SvtDbAgent
 {
