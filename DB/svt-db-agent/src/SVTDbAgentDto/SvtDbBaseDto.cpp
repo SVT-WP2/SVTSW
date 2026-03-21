@@ -62,6 +62,10 @@ void SvtDbAgent::SvtDbBaseDto::addItemFromRelationDto(SvtDbAgent::SvtDbEntry &en
           entry.addValue(colName, relEntries.at(0).getValue(colName));
         }
       }
+      else
+      {
+        entry.addValue(colName, nlohmann::json::array());
+      }
     }
   }
 }

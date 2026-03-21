@@ -64,14 +64,43 @@ namespace SvtDbAgent
       return true;
     }
 
-    virtual void addEntries(const nlohmann::json &idVal, const nlohmann::json &colVal)
+    virtual bool getEntriesWithId(const int &id, std::vector<SvtDbEntry> &entries)
+    {
+      SvtDbFilters filters;
+      filters.mFilters.addValue(idName, id);
+
+      if (!getAllEntriesFromDB(entries, filters))
+      {
+        return false;
+      }
+      // addItemFromRelationDto(entry);
+
+      return true;
+    }
+
+    virtual void addEntries(const int &id, const nlohmann::json &colVal)
     {
       for (auto it = colVal.begin(); it != colVal.end(); ++it)
       {
-        SvtDbEntry entry;
-        entry.addValue(idName, idVal);
-        entry.addValue(colName, colVal);
-        createEntryInDB(entry);
+        std::vector<SvtDbEntry> entries;
+        getEntriesWithId(id, entries);
+        bool isFound = false;
+        for (auto &entry : entries)
+        {
+          if (entry.getValue(colName) == it.value())
+          {
+            isFound = true;
+            break;
+          }
+        }
+
+        if (!isFound)
+        {
+          SvtDbEntry entry;
+          entry.addValue(idName, id);
+          entry.addValue(colName, it.value());
+          createEntryInDB(entry);
+        }
       }
     }
 
