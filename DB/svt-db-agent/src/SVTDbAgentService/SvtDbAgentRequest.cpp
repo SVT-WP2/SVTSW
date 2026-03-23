@@ -15,6 +15,7 @@
 #include "SVTDbAgentDto/SvtDbProbeCardDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestSetupDto.h"
+#include "SVTDbAgentDto/SvtDbTestTemplateDto.h"
 #include "SVTDbAgentDto/SvtDbTestTypeConfigDto.h"
 #include "SVTDbAgentDto/SvtDbTestTypeDto.h"
 #include "SVTDbAgentDto/SvtDbWPMachineDto.h"
@@ -45,6 +46,7 @@ void SvtDbAgentRequest::createAllDtos()
   dtoList["SvtDbTestSetupConfigDto"] = Singleton<SvtDbAgent::SvtDbTestSetupConfigDto>::instance();
   dtoList["SvtDbTestTypeDto"] = Singleton<SvtDbAgent::SvtDbTestTypeDto>::instance();
   dtoList["SvtDbTestTypeConfigDto"] = Singleton<SvtDbAgent::SvtDbTestTypeConfigDto>::instance();
+  dtoList["SvtDbTestTemplateDto"] = Singleton<SvtDbAgent::SvtDbTestTemplateDto>::instance();
   dtoList["SvtDbProbeCardDto"] =
       Singleton<SvtDbAgent::SvtDbProbeCardDto>::instance();
   dtoList["SvtDbWPMachineDto"] =
