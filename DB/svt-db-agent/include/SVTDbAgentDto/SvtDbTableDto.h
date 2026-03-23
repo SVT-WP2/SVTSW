@@ -8,7 +8,7 @@
  */
 
 #include <map>
-#include <string>
+#include <string_view>
 
 namespace SvtDbAgent
 {
@@ -24,7 +24,7 @@ namespace SvtDbAgent
     {
       mColNames[name] = _isReq;
     }
-    void setTableName(const std::string &tName) { mTableName = tName; }
+    void setTableName(const std::string_view &tName) { mTableName = tName; }
 
     //! Getters
     const std::string &getTableName() { return mTableName; }

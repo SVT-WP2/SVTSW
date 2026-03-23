@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "Database/DatabaseInterface.h"
@@ -24,115 +25,113 @@ namespace SvtDbInterface
   Function signatures
   **************************************************************/
   // wrapper code for interfacing with mapi
-  std::string formatStr(const std::string &str);
+  std::string formatStr(const std::string_view &str);
 
-  void doGenericQuery(std::string queryString, rows_t &rows);
-  bool doGenericUpdate(std::string insertString);
+  void doGenericQuery(const std::string &queryString, rows_t &rows);
+  bool doGenericUpdate(const std::string &insertString);
   void commitUpdate();
   void rollbackUpdate();
-  void raiseError(std::string errorMessage);
+  void raiseError(const std::string &errorMessage);
   void finishQuery(rows_t rows);
 
-  class SimpleQuery
+  class GenericQuery
   {
    public:
-    void setTableName(std::string tableName)
+    void setTableName(const std::string_view &tableName)
     {
       mTableName = formatStr(tableName);
     }
-    void addColumn(std::string columnName)
+    void addColumn(const std::string_view &columnName)
     {
       mColumnNames.push_back(formatStr(columnName));
     }
-    void addWhereClause(std::string whereClause)
+    void addWhereClause(const std::string &whereClause)
     {
       mWhereClauses.push_back(whereClause);
     }
-    void doQuery(rows_t &rows);
 
     // overload addWhereEquals for different types
-    void addWhereEquals(std::string columnName,
+    void addWhereEquals(const std::string_view &columnName,
                         const nlohmann::basic_json<> &value);
-    void addWhereEquals(std::string columnName, std::string value)
+    void addWhereEquals(const std::string_view &columnName, const std::string &value)
     {
       mWhereClauses.push_back(formatStr(columnName) + " = '" + value + "'");
     }
-    void addWhereEquals(std::string columnName, int value)
+    void addWhereEquals(const std::string_view &columnName, int value)
     {
       mWhereClauses.push_back(formatStr(columnName) + " = " +
                               std::to_string(value));
     }
-    void addWhereEquals(std::string columnName, float value)
+    void addWhereEquals(const std::string_view &columnName, float value)
     {
       mWhereClauses.push_back(formatStr(columnName) + " = " +
                               std::to_string(value));
     }
-    void addWhereIn(std::string columnName, std::vector<int> values);
 
-    void setOrderById(const std::string &orderBy, const bool dec = false)
+    void addWhereIn(const std::string_view &columnName, std::vector<int> values);
+
+   protected:
+    std::string mTableName;
+    std::vector<std::string> mColumnNames;
+    std::vector<std::string> mWhereClauses;
+  };
+
+  class SimpleQuery : public GenericQuery
+  {
+   public:
+    virtual void doQuery(rows_t &rows, const std::string &query = "");
+
+    void setOrderById(const std::string_view &orderBy, const bool dec = false)
     {
       mOrderBy = orderBy;
       mOrderDec = dec;
     }
 
    protected:
-    std::string mTableName;
     std::string mOrderBy;
     bool mOrderDec = false;
-    std::vector<std::string> mColumnNames;
-    std::vector<std::string> mWhereClauses;
   };
 
-  class SimpleInsert
+  class SimpleInsert : public GenericQuery
   {
    public:
-    void setTableName(std::string tableName)
-    {
-      mTableName = formatStr(tableName);
-    }
     bool doInsert();
 
     // overload addColumnAndValue for different types
     // modify each as needed
-    void addColumnAndValue(std::string columnName,
+    void addColumnAndValue(const std::string_view &columnName,
                            const nlohmann::basic_json<> &value);
-    void addColumnAndValue(std::string columnName, std::string value)
+    void addColumnAndValue(const std::string_view &columnName, std::string value)
     {
       mColumnNames.push_back(formatStr(columnName));
       // strings have to have '' around the value
       mValues.push_back("'" + value + "'");
     }
-    void addColumnAndValue(std::string columnName, int value)
+    void addColumnAndValue(const std::string_view &columnName, int value)
     {
       mColumnNames.push_back(formatStr(columnName));
       mValues.push_back(std::to_string(value));
     }
-    void addColumnAndValue(std::string columnName, float value)
+    void addColumnAndValue(const std::string_view &columnName, float value)
     {
       mColumnNames.push_back(formatStr(columnName));
       mValues.push_back(std::to_string(value));
     }
 
    protected:
-    std::string mTableName;
-    std::vector<std::string> mColumnNames;
     std::vector<std::string> mValues;
   };
 
-  class SimpleUpdate
+  class SimpleUpdate : public SimpleInsert
   {
    public:
-    void setTableName(std::string tableName)
-    {
-      mTableName = formatStr(tableName);
-    }
     bool doUpdate();
 
     // overload addColumnAndValue for different types
     // modify each as needed
-    void addColumnAndValue(std::string columnName,
+    void addColumnAndValue(const std::string_view &columnName,
                            const nlohmann::basic_json<> &value);
-    void addColumnAndValue(std::string columnName, std::string value)
+    void addColumnAndValue(const std::string_view &columnName, std::string value)
     {
       if (value == "NULL")
       {
@@ -146,39 +145,19 @@ namespace SvtDbInterface
                                         "'");
       }
     }
-    void addColumnAndValue(std::string columnName, int value)
+    void addColumnAndValue(const std::string_view &columnName, int value)
     {
       mColumnNamesAndValues.push_back(formatStr(columnName) + " = " +
                                       std::to_string(value));
     }
-    void addColumnAndValue(std::string columnName, float value)
+    void addColumnAndValue(const std::string_view &columnName, float value)
     {
       mColumnNamesAndValues.push_back(formatStr(columnName) + " = " +
                                       std::to_string(value));
-    }
-
-    // overload addWhereEquals for different types
-    void addWhereEquals(std::string columnName,
-                        const nlohmann::basic_json<> &value);
-    void addWhereEquals(std::string columnName, std::string value)
-    {
-      mWhereClauses.push_back(formatStr(columnName) + " = '" + value + "'");
-    }
-    void addWhereEquals(std::string columnName, int value)
-    {
-      mWhereClauses.push_back(formatStr(columnName) + " = " +
-                              std::to_string(value));
-    }
-    void addWhereEquals(std::string columnName, float value)
-    {
-      mWhereClauses.push_back(formatStr(columnName) + " = " +
-                              std::to_string(value));
     }
 
    protected:
-    std::string mTableName;
     std::vector<std::string> mColumnNamesAndValues;
-    std::vector<std::string> mWhereClauses;
   };
 
   class VersionedQuery : public SimpleQuery
@@ -189,7 +168,7 @@ namespace SvtDbInterface
       mPrimaryKeys.push_back(primaryKey);
     }
     void setVersionId(int versionId) { mVersionId = versionId; }
-    void doQuery(rows_t &rows);
+    void doQuery(rows_t &rows, const std::string &);
 
    protected:
     std::vector<std::string> mPrimaryKeys;

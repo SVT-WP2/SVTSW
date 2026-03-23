@@ -5,8 +5,10 @@
  * @brief Database interface for SVT test
  */
 
-#include "SVTDb/SvtDbInterface.h"
+#include <string_view>
+
 #include "Database/DatabaseInterface.h"
+#include "SVTDb/SvtDbInterface.h"
 #include "SvtLogger.h"
 #include "SvtUtilities.h"
 
@@ -27,7 +29,7 @@ std::string DatabaseInterface::mDbSchema;
 
 //! helper function quate string
 //========================================================================+
-std::string SvtDbInterface::formatStr(const std::string &str) { return "\"" + str + "\""; }
+std::string SvtDbInterface::formatStr(const std::string_view &str) { return "\"" + std::string(str) + "\""; }
 
 //========================================================================+
 std::string addSchema(const std::string &str)
@@ -78,7 +80,7 @@ string stringJoinPrefix(vector<string> strings, string prefix,
  * Interfacing with MAPI
  */
 //========================================================================+
-void SvtDbInterface::doGenericQuery(string queryString, rows_t &rows)
+void SvtDbInterface::doGenericQuery(const string &queryString, rows_t &rows)
 {
   bool successful = false;
   int maxRetries = 1;
@@ -120,7 +122,7 @@ void SvtDbInterface::doGenericQuery(string queryString, rows_t &rows)
 }
 
 //========================================================================+
-bool SvtDbInterface::doGenericUpdate(string insertString)
+bool SvtDbInterface::doGenericUpdate(const string &insertString)
 {
   bool successful;
   string errorMessage;
@@ -143,7 +145,7 @@ void SvtDbInterface::commitUpdate() { DatabaseIF::instance()->commitUpdate(true)
 void SvtDbInterface::rollbackUpdate() { DatabaseIF::instance()->commitUpdate(false); }
 
 //========================================================================+
-void SvtDbInterface::raiseError(string errorMessage)
+void SvtDbInterface::raiseError(const string &errorMessage)
 {
   THROW_RUNTIME_ERROR(errorMessage);
 }
@@ -155,29 +157,8 @@ void SvtDbInterface::finishQuery(rows_t rows)
 }
 
 //========================================================================+
-void SvtDbInterface::SimpleQuery::doQuery(rows_t &rows)
-{
-  string queryString = "";
-  queryString += "SELECT " + stringJoin(mColumnNames, ", ");
-  queryString += " FROM " + addSchema(mTableName);
-  if (!mWhereClauses.empty())
-  {
-    queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
-  }
-  if (!mOrderBy.empty())
-  {
-    queryString += " ORDER BY ";
-    queryString += mOrderBy;
-    queryString += mOrderDec ? " DESC" : "";
-  }
-  doGenericQuery(queryString, rows);
-
-  return;
-}
-
-//========================================================================+
-void SvtDbInterface::SimpleQuery::addWhereEquals(string columnName,
-                                                 const nlohmann::basic_json<> &value)
+void SvtDbInterface::GenericQuery::addWhereEquals(const std::string_view &columnName,
+                                                  const nlohmann::basic_json<> &value)
 {
   if (!value.is_null())
   {
@@ -197,11 +178,11 @@ void SvtDbInterface::SimpleQuery::addWhereEquals(string columnName,
 }
 
 //========================================================================+
-void SvtDbInterface::SimpleQuery::addWhereIn(string columnName, vector<int> values)
+void SvtDbInterface::GenericQuery::addWhereIn(const std::string_view &columnName, vector<int> values)
 {
   if (values.size() == 0)
     return;
-  string clause = columnName + " IN (";
+  string clause = std::string(columnName) + " IN (";
   for (unsigned int i = 0; i < values.size(); i++)
   {
     clause += std::to_string(values.at(i));
@@ -210,6 +191,31 @@ void SvtDbInterface::SimpleQuery::addWhereIn(string columnName, vector<int> valu
   }
   clause += ")";
   mWhereClauses.push_back(clause);
+}
+
+//========================================================================+
+void SvtDbInterface::SimpleQuery::doQuery(rows_t &rows, const std::string &query)
+{
+  string queryString = query;
+  if (queryString.empty())
+  {
+    queryString += "SELECT " + stringJoin(mColumnNames, ", ");
+    queryString += " FROM " + addSchema(mTableName);
+  }
+
+  if (!mWhereClauses.empty())
+  {
+    queryString += " WHERE " + stringJoin(mWhereClauses, " AND ");
+  }
+  if (!mOrderBy.empty())
+  {
+    queryString += " ORDER BY ";
+    queryString += mOrderBy;
+    queryString += mOrderDec ? " DESC" : "";
+  }
+  doGenericQuery(queryString, rows);
+
+  return;
 }
 
 //========================================================================+
@@ -224,7 +230,7 @@ bool SvtDbInterface::SimpleInsert::doInsert()
 }
 
 //========================================================================+
-void SvtDbInterface::SimpleInsert::addColumnAndValue(string columnName,
+void SvtDbInterface::SimpleInsert::addColumnAndValue(const std::string_view &columnName,
                                                      const nlohmann::basic_json<> &value)
 {
   if (!value.is_null())
@@ -258,7 +264,7 @@ bool SvtDbInterface::SimpleUpdate::doUpdate()
 }
 
 //========================================================================+
-void SvtDbInterface::SimpleUpdate::addColumnAndValue(string columnName,
+void SvtDbInterface::SimpleUpdate::addColumnAndValue(const std::string_view &columnName,
                                                      const nlohmann::basic_json<> &value)
 {
   if (!value.is_null())
@@ -282,33 +288,12 @@ void SvtDbInterface::SimpleUpdate::addColumnAndValue(string columnName,
   }
 }
 
-//========================================================================+
-void SvtDbInterface::SimpleUpdate::addWhereEquals(string columnName,
-                                                  const nlohmann::basic_json<> &value)
-{
-  if (!value.is_null())
-  {
-    if (value.is_number_integer())
-    {
-      addWhereEquals(columnName, value.get<int>());
-    }
-    else if (value.is_string())
-    {
-      addWhereEquals(columnName, value.get<std::string>());
-    }
-    else if (value.is_number_float())
-    {
-      addWhereEquals(columnName, value.get<float>());
-    }
-  }
-}
-
 /*!
  * Versioning
  */
 
 //========================================================================+
-void SvtDbInterface::VersionedQuery::doQuery(rows_t &rows)
+void SvtDbInterface::VersionedQuery::doQuery(rows_t &rows, const string &)
 {
   // perhaps this should be folded into the main query?
   int baseVersionId = getBaseVersion(mVersionId);
@@ -354,7 +339,7 @@ bool SvtDbInterface::VersionedInsert::doInsert()
 
   rows_t rows;
   mQuery.doQuery(rows);
-  int rowCount = rows.at(0).at(0).get<int>();
+  int rowCount = rows.rows.at(0).at(0).get<int>();
   finishQuery(rows);
 
   bool insertSuccessful = true;
@@ -378,9 +363,9 @@ int SvtDbInterface::getBaseVersion(int versionId)
   SvtDbInterface::doGenericQuery(queryString, rows);
   int baseVersion = -1;
 
-  if (!rows.empty())
+  if (!rows.rows.empty())
   {
-    baseVersion = rows.at(0).at(0).get<int>();
+    baseVersion = rows.rows.at(0).at(0).get<int>();
   }
   else
   {
@@ -402,9 +387,9 @@ int SvtDbInterface::getMostRecentVersionId()
   doGenericQuery(queryString, rows);
   int maxVersionId = -1;
 
-  if (!rows.empty())
+  if (!rows.rows.empty())
   {
-    maxVersionId = rows.at(0).at(0).get<int>();
+    maxVersionId = rows.rows.at(0).at(0).get<int>();
   }
   else
   {
@@ -432,7 +417,7 @@ size_t SvtDbInterface::getAllVersions(
   rows_t rows;
   query.doQuery(rows);
 
-  for (const auto &row : rows)
+  for (const auto &row : rows.rows)
   {
     dbVersion version;
     version.id = row.at(0).get<int>();
@@ -476,9 +461,9 @@ size_t SvtDbInterface::getMaxId(const std::string &tableName)
   doGenericQuery(queryString, rows);
   int maxId = -1;
 
-  if (!rows.empty() && !rows.at(0).empty())
+  if (!rows.rows.empty() && !rows.rows.at(0).empty())
   {
-    const auto &row = rows.at(0).at(0);
+    const auto &row = rows.rows.at(0).at(0);
     if (!row.is_null())
     {
       maxId = row.get<int>();
@@ -508,5 +493,5 @@ bool SvtDbInterface::checkIdExist(const std::string &tableName, int id)
 
   rows_t rows;
   query.doQuery(rows);
-  return !rows.empty();
+  return !rows.rows.empty();
 }
