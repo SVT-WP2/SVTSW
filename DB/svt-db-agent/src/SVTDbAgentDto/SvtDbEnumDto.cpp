@@ -76,7 +76,7 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumTypesInDB(
   try
   {
     SvtDbInterface::doGenericQuery(query, rows);
-    for (auto &row : rows)
+    for (auto &row : rows.rows)
     {
       if (!schema.compare(row.at(0).get<std::string>()))
       {
@@ -104,7 +104,7 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumValuesInDB(
   try
   {
     SvtDbInterface::doGenericQuery(query, rows);
-    const auto str_res = rows[0][0].get<std::string>();
+    const auto str_res = rows.rows[0][0].get<std::string>();
     std::string_view res{str_res};
     SvtDbInterface::finishQuery(rows);
 

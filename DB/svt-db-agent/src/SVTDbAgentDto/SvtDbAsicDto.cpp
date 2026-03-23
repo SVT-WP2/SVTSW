@@ -51,7 +51,7 @@ void SvtDbAgent::SvtDbAsicDto::getAllEntries(
   parseJsonFilters(msgData, filters);
 
   std::vector<SvtDbAgent::SvtDbEntry> entries;
-  if (getAllEntriesFromDB(entries, filters))
+  if (getAllEntriesFromDB(entries, std::string(), filters))
   {
     logInfo("Number of asics: " + std::to_string(entries.size()));
   }

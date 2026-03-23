@@ -41,7 +41,7 @@ void SvtDbAgent::SvtDbTestTypeDto::getAllEntries(const SvtKafka::SvtKafkaMessage
     asicFamilyTypeFilter.mFilters.addValue("asicFamilyType", asicFamilyType);
 
     std::vector<SvtDbAgent::SvtDbEntry> asicFamilyTypeEntries;
-    asicFamilyTypeList->getAllEntriesFromDB(asicFamilyTypeEntries, asicFamilyTypeFilter);
+    asicFamilyTypeList->getAllEntriesFromDB(asicFamilyTypeEntries, std::string(), asicFamilyTypeFilter);
 
     if (asicFamilyTypeEntries.size())
     {

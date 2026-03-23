@@ -93,7 +93,8 @@ namespace SvtDbAgent
 
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
-                                     const SvtDbFilters &filters,
+                                     const std::string &queryString = "",
+                                     const SvtDbFilters &filters = SvtDbFilters(),
                                      const std::string &orderBy = "",
                                      const bool orderDec = false);
     virtual bool getEntryWithId(SvtDbEntry &entry, int id);

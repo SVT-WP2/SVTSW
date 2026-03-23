@@ -7,6 +7,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "Database/DatabaseInterface.h"
 #include "SvtLogger.h"
@@ -50,7 +51,7 @@ bool DatabaseInterface::close()
     try
     {
       mDBConnection->close();
-      std::cout << "Disconnected from the database" << std::endl;
+      logInfo("Disconnected from the database");
     }
     catch (pqxx::sql_error const &e)
     {
@@ -68,12 +69,12 @@ bool DatabaseInterface::connect()
 {
   try
   {
-    std::string connstring = "host=" + this->mHost + " port=" + this->mPort +
+    std::string connString = "host=" + this->mHost + " port=" + this->mPort +
                              " dbname=" + this->mDbName +
                              " user=" + this->mUser +
                              " password=" + this->mPassword;
 
-    mDBConnection = new pqxx::connection(connstring);
+    mDBConnection = new pqxx::connection(connString);
     mDBWork = new pqxx::nontransaction(*mDBConnection);
   }
   catch (pqxx::sql_error const &e)
@@ -86,7 +87,7 @@ bool DatabaseInterface::connect()
   }
   catch (std::exception const &e)
   {
-    logError(std::string("Error: ") +
+    logError(std::string("DB::connect Error: ") +
              e.what());
     close();
 
@@ -185,8 +186,8 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
 
     if (!isConnected(message))
     {
-      std::cout << "Database timeout reached, trying to reconnect!"
-                << std::endl;
+      logError("DB::executeQuery Error: Database timeout reached, trying to reconnect!");
+
       if (!reconnect())
       {
         close();
@@ -204,6 +205,10 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
       for (uint8_t i{0}; i < row.size(); ++i)
       {
         const auto &data_field = row[i];
+        if (row == res.begin())
+        {
+          rows.rowNames.push_back(row[i].name());
+        }
         if (data_field.is_null())
         {
           rowResult.push_back(nullptr);
@@ -212,6 +217,8 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
         switch (data_field.type())
         {
         case 16:  // bool
+          rowResult.push_back(data_field.as<bool>());
+          break;
         case 20:  // int8
         case 21:  // int2
         case 23:  // integer
@@ -226,7 +233,11 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
           break;
         }
       }
-      rows.push_back(rowResult);
+      rows.rows.push_back(rowResult);
+    }
+    if (!rows.checkRows())
+    {
+      THROW_RUNTIME_ERROR("DB::executeQuery Check rows size failed.");
     }
     // remove query statement
     mDBWork->exec("DEALLOCATE PREPARE " + query_name);
@@ -241,6 +252,12 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     logError(message);
     message = e.what();
 
+    mDBWork->exec("DEALLOCATE PREPARE " + query_name);
+    status = false;
+  }
+  catch (const std::exception &e)
+  {
+    message = e.what();
     mDBWork->exec("DEALLOCATE PREPARE " + query_name);
     status = false;
   }
@@ -268,11 +285,7 @@ void DatabaseInterface::executeQuery(const string &query, rows_t &rows)
 //========================================================================+
 void DatabaseInterface::clearQueryResult(rows_t &result)
 {
-  for (auto &row : result)
-  {
-    row_t().swap(row);
-  }
-  rows_t().swap(result);
+  result.clear();
 }
 
 //========================================================================+

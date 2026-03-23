@@ -7,7 +7,34 @@
 #include <pqxx/pqxx>
 
 using row_t = std::vector<nlohmann::basic_json<>>;
-using rows_t = std::vector<row_t>;
+using rowName_t = std::vector<std::string>;
+
+using rows_t = struct rows_t
+{
+  std::vector<row_t> rows;
+  rowName_t rowNames;
+
+  void clear()
+  {
+    rowNames.clear();
+
+    for (auto &row : rows)
+    {
+      row_t().swap(row);
+    }
+    std::vector<row_t>().swap(rows);
+  }
+
+  bool checkRows()
+  {
+    for (const auto &row : rows)
+    {
+      if (row.size() != rowNames.size())
+        return false;
+    }
+    return true;
+  }
+};
 
 class DatabaseInterface
 {

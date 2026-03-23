@@ -48,7 +48,7 @@ namespace SvtDbAgent
     {
       SvtDbInterface::SimpleUpdate update;
 
-      update.setTableName(getTableName());
+      update.setTableName(std::string(getTableName()));
 
       update.addWhereEquals(idName, id);
 
@@ -69,7 +69,7 @@ namespace SvtDbAgent
       SvtDbFilters filters;
       filters.mFilters.addValue(idName, id);
 
-      if (!getAllEntriesFromDB(entries, filters))
+      if (!getAllEntriesFromDB(entries, std::string(), filters))
       {
         return false;
       }

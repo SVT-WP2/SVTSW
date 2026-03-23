@@ -92,7 +92,7 @@ void SvtDbAgent::SvtDbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, 
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
   filters.mFilters.addValue("waferTypeId", waferTypeId);
-  waferTypeMapDto->getAllEntriesFromDB(entries, filters);
+  waferTypeMapDto->getAllEntriesFromDB(entries, std::string(), filters);
 
   if (entries.size())
   {

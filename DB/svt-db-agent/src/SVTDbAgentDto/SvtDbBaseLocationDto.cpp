@@ -106,7 +106,7 @@ void SvtDbAgent::SvtDbBaseLocationDto::getLocationHistory(const SvtKafka::SvtKaf
     filters.mFilters.addValue(mLocIdName, id);
 
     std::vector<SvtDbAgent::SvtDbEntry> entries;
-    if (locDto->getAllEntriesFromDB(entries, filters))
+    if (locDto->getAllEntriesFromDB(entries, std::string(), filters))
     {
       locDto->createReplyMsg(entries, replyMsg);
     }
@@ -134,7 +134,7 @@ void SvtDbAgent::SvtDbBaseLocationDto::updateLocation(
   std::vector<SvtDbEntry> entries;
   SvtDbFilters filters;
   filters.mFilters.addValue(mLocIdName, id);
-  getLocDto()->getAllEntriesFromDB(entries, filters, "date", true);
+  getLocDto()->getAllEntriesFromDB(entries, std::string(), filters, "date", true);
 
   if (entries.size())
   {
