@@ -6,13 +6,7 @@
   "Revision": "0.0.0",
 
   "Groups": {
-    "Group_0": [
-      { "PosInGroup": 0, "FamilyType": "AncMPW1" },
-      { "PosInGroup": 1, "FamilyType": "AncMPW1" },
-      { "PosInGroup": 2, "FamilyType": "AncMPW1" },
-      { "PosInGroup": 3, "FamilyType": "AncMPW1" },
-      { "PosInGroup": 4, "FamilyType": "AncMPW1" }
-    ]
+    "Group_0": [{ "PosInGroup": 0, "FamilyType": "AncMPW1" }]
   },
 
   "MapGroups": {

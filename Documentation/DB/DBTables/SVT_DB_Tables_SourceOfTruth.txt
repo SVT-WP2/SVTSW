@@ -73,10 +73,16 @@ Table main.ChipLocation {
   note text
 }
 
-Table main.SLDO{
+Table main.Block{
   id integer [primary key, increment]
   chipId integer [ref:> main.Chip.id]
+  blockType main.blockType
   serialNumber varchar(50)
+}
+
+Table main.AsicFamilyTypeBlockList {
+  asicFamilyType main.asicFamilyType
+  blockType main.blockType
 }
 
 Table main.ProbeCard {
@@ -193,10 +199,10 @@ Table main.SvtTestSetupDefaultConfig{
   defaultConfigId integer [ref:> main.SvtTestSetupConfig.id, default: null]
 }
 
-Table main.SvtTestSetupAsicFamilyTypeList {
-  setupId integer [ref:> main.SvtTestSetup.id]
-  asicFamilyType main.asicFamilyType [not null]
-}
+// Table main.SvtTestSetupAsicFamilyTypeList {
+//   setupId integer [ref:> main.SvtTestSetup.id]
+//   asicFamilyType main.asicFamilyType [not null]
+// }
 
 Table main.SvtTestSetupEquipList{
   setupId integer [ref:> main.SvtTestSetup.id]
@@ -238,13 +244,36 @@ Table main.SvtTestTemplate {
   isEnabled bool [default: TRUE]
 }
 
-// Table main.SvtTestList {
-//   id integer
-//   chipId
-//   Testid
-//   test_result
-//   general_status
-// }
+Table main.SvtTestList {
+  id integer [primary key, increment]
+  testTypeId integer [ref:> main.SvtTestType.id, not null]
+  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
+  testSetupId integer [ref:> main.SvtTestSetup.id]
+  createsAt timestamp [default: `CURRENT_TIMESTAMP`]
+  updatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  pathToResult text [default: null]
+  general_status main.testStatus
+}
+
+Table main.SvtAsicTestList {
+  asicId integer [ref:> main.Asic.id]
+  testId integer [ref:> main.SvtTestList.id]
+}
+
+Table main.SvtChipTestList {
+  chipId integer [ref:> main.Chip.id]
+  testId integer [ref:> main.SvtTestList.id]
+}
+
+Table main.SvtBlockTestList {
+  blockId integer [ref:> main.Block.id]
+  testId integer [ref:> main.SvtTestList.id]
+}
+
+Enum main.testStatus{
+  CREATED
+  UPDATED
+}
 
 Enum main.engineeringRun {
   ER1
@@ -351,6 +380,12 @@ Enum main.asicFamilyType {
   ER2_TDC_HEID
   ER2_TTS1
   ER2_TTS2
+}
+
+Enum main.blockType {
+  SLDO
+  NVBG
+  CML_TRANSCEIVER
 }
 
 Enum main.waferMapOrientation {
