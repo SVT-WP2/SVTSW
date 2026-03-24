@@ -19,12 +19,15 @@ namespace SvtDbAgent
 
    private:
     //! Request
-    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &msg,
-                               SvtKafka::SvtKafkaReplyMsg &replyMsg) final;
+    virtual bool getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
+                                     const std::string &,
+                                     const SvtDbFilters &filters,
+                                     const std::string &orderBy = "", const bool orderDec = "") final;
 
-    void createAllRequest() final;
     virtual void createReplyMsg(const std::vector<SvtDbEntry> &entries,
                                 SvtKafka::SvtKafkaReplyMsg &msgReply,
                                 int totalCount = -1) final;
+
+    void createAllRequest() final;
   };
 };  // namespace SvtDbAgent
