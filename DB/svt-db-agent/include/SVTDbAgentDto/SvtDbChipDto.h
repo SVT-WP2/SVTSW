@@ -7,7 +7,10 @@
  * @brief Svt Db chip DTO
  * */
 
+#include "SVTDbAgentDto/SvtDbAsicDto.h"
+#include "SVTDbAgentDto/SvtDbBlockDto.h"
 #include "SvtDbBaseLocationDto.h"
+#include "SvtUtilities.h"
 
 namespace SvtDbAgent
 {
@@ -18,6 +21,10 @@ namespace SvtDbAgent
     ~SvtDbChipDto() = default;
 
    private:
+    SvtDbAsicDto *asicDto = SvtUtils::Singleton<SvtDbAsicDto>::instance();
+    SvtDbBlockDto *blockDto = SvtUtils::Singleton<SvtDbBlockDto>::instance();
+    SvtDbAsicFamilyTypeBlockList *asicFamilyTypeBlockListDto = SvtUtils::Singleton<SvtDbAsicFamilyTypeBlockList>::instance();
+
     //! request DTO funcions
     virtual void createManyEntries(const SvtKafka::SvtKafkaMessage &msg,
                                    SvtKafka::SvtKafkaReplyMsg &replyMsg);

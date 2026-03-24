@@ -39,6 +39,11 @@ namespace SvtDbAgent
       mValues[_key] = _val;
     }
 
+    void eraseVal(const std::string &_key)
+    {
+      mValues.erase(_key);
+    }
+
     nlohmann::basic_json<> getValue(const std::string &_key) const
     {
       try

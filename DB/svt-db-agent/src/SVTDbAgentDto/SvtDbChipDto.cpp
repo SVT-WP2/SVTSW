@@ -9,9 +9,9 @@
 
 #include "nlohmann/json_fwd.hpp"
 
-#include "SVTDbAgentDto/SvtDbAsicDto.h"
+#include "SVTDbAgentDto/SvtDbBaseDto.h"
 #include "SVTDbAgentDto/SvtDbChipDto.h"
-#include "SvtUtilities.h"
+#include "SvtLogger.h"
 
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
@@ -59,24 +59,52 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 }
 
 //========================================================================+
-bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipEntry_j, SvtDbEntry &chipEntry)
+bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipData_j, SvtDbEntry &chipEntry)
 {
-  if (!chipEntry_j.contains("asicId"))
+  if (!chipData_j.contains("asicId"))
   {
     THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
     return false;
   }
-  const int asicId = chipEntry_j["asicId"].get<int>();
-  auto tempEntry_j = chipEntry_j;
-  tempEntry_j.erase("asicId");
+  const int asicId = chipData_j["asicId"].get<int>();
+  auto newChipData_j = chipData_j;
+  newChipData_j.erase("asicId");
 
-  if (!createEntryWithLocation(tempEntry_j, chipEntry))
+  // CreateChip
+  if (!createEntryWithLocation(newChipData_j, chipEntry))
   {
     return false;
   }
-  //! Update Asic chipId
+  const auto &chipId = chipEntry.getValue("id");
+  const auto &chipSN = chipEntry.getValue("serialNumber");
+
+  // get Acic with id = asicId and extract Asic familyType
   SvtDbEntry asicEntry;
-  asicEntry.addValue("chipId", chipEntry.getValue("id"));
+  asicDto->getEntryWithId(asicEntry, asicId);
+  const auto &asicFamilyType = asicEntry.getValue("familyType");
+
+  // Check if asic family has any block
+  std::vector<SvtDbEntry> blockEntries;
+  SvtDbFilters filters;
+
+  filters.mFilters.addValue("asicFamilyType", asicFamilyType);
+
+  asicFamilyTypeBlockListDto->getAllEntriesFromDB(blockEntries, "", filters);
+
+  for (auto &blockEntry : blockEntries)
+  {
+    blockEntry.eraseVal("asicFamilyType");
+    blockEntry.addValue("chipId", chipId);
+    const auto &blockType = blockEntry.getValue("blockType");
+    blockEntry.addValue("blockType", blockType);
+    std::string blockSN = blockType.get<std::string>() + "_" + std::string(chipSN);
+    blockEntry.addValue("serialNumber", blockSN);
+
+    blockDto->createEntryInDB(blockEntry);
+  }
+
+  //! Update Asic chipId
+  asicEntry.addValue("chipId", chipId);
   SvtUtils::Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
   return true;
@@ -117,7 +145,6 @@ void SvtDbAgent::SvtDbChipDto::createManyEntries(
   }
 
   const auto &msgCreate = msgData["create"];
-
   if (!msgCreate.contains("generalLocation"))
   {
     THROW_RUNTIME_ERROR("Required field generalLocation was not found");
@@ -131,6 +158,7 @@ void SvtDbAgent::SvtDbChipDto::createManyEntries(
     return;
   }
   const auto &items = msgCreate["items"];
+
   nlohmann::json filters = nlohmann::json::array();
   for (auto item : items)
   {
