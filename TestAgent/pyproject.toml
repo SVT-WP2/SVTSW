@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# Distribution name on pip / in venv
+name = "svttestagent"
+version = "1.0.0"
+description = "Kafka-based SVT TestAgent"
+readme = "README.md"
+requires-python = ">=3.9"
+
+license = "LicenseRef-Brunel-Internal"
+license-files = ["LICENSE"]
+
+authors = [
+  { name = "Liliana Teodorescu", email = "liliana.teodorescu@brunel.ac.uk" },
+  { name = "Lochana Ranatunge", email = "lochana.ranatunge@brunel.ac.uk" }
+]
+
+keywords = ["kafka", "confluent-kafka", "agent", "testagent", "SVTSW"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "confluent-kafka>=2.4.0",
+]
+
+[tool.setuptools.packages.find]
+# Your real code lives in svt_test_agent/, and you may want kafka_broker as a package too
+where = ["."]
+include = ["svt_test_agent*", "kafka_broker*"]
+
+[tool.setuptools.package-data]
+# Non-Python files you want shipped inside the wheel
+svt_test_agent = [
+  "configs/*.py",                 # config.py etc (optional)
+  "example_requests/*.json",
+  "registries/*.py",              # if you really want them as data
+  "utilities/dummy_db_Agent/*.py" # again, optional, but harmless
+]
+kafka_broker = [
+  "docker/*.yml",
+]
+
+[project.scripts]
+# Core TestAgent entrypoints – NOW pointing to svt_test_agent.*
+start-broker        = "svt_test_agent.dev.startup:start"
+stop-broker         = "svt_test_agent.dev.startup:stop"
+dummyDB-start       = "svt_test_agent.dev.startup:dummydb_start"
+dummyDB-stop        = "svt_test_agent.dev.startup:dummydb_stop"
+testagent           = "svt_test_agent.dev.startup:bootstrap"
+send-dummy-message  = "kafka_broker.broker_utils.send_request:main"

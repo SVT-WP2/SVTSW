@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+recursive-include TestAgent/Registries *.py
+recursive-include TestAgent/Dev *.yml *.yaml
+global-exclude __pycache__ *.py[cod] *.pyo *.pyd *.so *.log .DS_Store
+
+# Don’t include runtime/build stuff
+prune master_log
+prune master_output
+prune dist
+prune build
+prune *.egg-info
+prune TestAgent/*.egg-info

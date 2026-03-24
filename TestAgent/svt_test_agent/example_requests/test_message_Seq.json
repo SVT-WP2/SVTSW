@@ -1,0 +1,37 @@
+{
+  "command": "RunTest: Sequence",
+  "data": {
+    "chipId": 0,
+    "params": {
+      "planName": "Demo sequence",
+      "chipName": "SLDO",
+      "steps": [
+        { "testId": 12,
+          "iterations": 2,
+          "inputs": {            
+            "vInTarget(V)": 1.5,
+            "iInLimit(A)": 1.5,
+            "rampRate(kV/s)": 3.1
+          }
+      
+        },
+        { "testId": 13,
+          "testName": "PSRR",
+          "testConfiguration": {
+              "mode": 0,
+              "loadCapacitance(nF)": 100,
+              "loadCurrent(mA)": 40,
+              "temperature(C)": 25
+          },
+          "inputs": {            
+            "vInTarget(V)": 1.5,
+            "iInLimit(A)": 1.5,
+            "rampRate(kV/s)": 3.1,
+            "signalAmplitude(mV)": 10,
+            "signalFrequency(Hz)": 10000
+          }
+        }
+      ]
+    }
+  }
+}
