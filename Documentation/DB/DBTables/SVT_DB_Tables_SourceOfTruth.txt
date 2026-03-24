@@ -1,5 +1,5 @@
 Table main.WaferType {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   name varchar(50) [unique, not null]
   engineeringRun main.engineeringRun [unique, not null]
   foundry main.foundryName [not null]
@@ -7,17 +7,17 @@ Table main.WaferType {
 }
 
 Table main.WaferTypeMap{
-  waferTypeId integer [ref:> main.WaferType.id, unique, not null]
-  waferMap JSON
+  waferTypeId integer [pk, ref:> main.WaferType.id]
+  waferMap JSON [not null]
 }
 
 Table main.WaferTypeImage{
-  waferTypeId integer [ref:> main.WaferType.id, unique, not null]
-  imageBase64String text
+  waferTypeId integer [pk, ref:> main.WaferType.id]
+  imageBase64String text [not null]
 }
 
 Table main.Wafer {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   waferTypeId integer [ref:> main.WaferType.id, not null]
   serialNumber varchar(50) [unique, not null]
   batchNumber integer [not null]
@@ -36,7 +36,7 @@ Table main.WaferLocation {
 }
 
 Table main.Asic {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   waferId integer [ref:> main.Wafer.id, not null]
   serialNumber varchar(50) [unique, not null]
   familyType main.asicFamilyType [not null]
@@ -59,34 +59,37 @@ Table main.Asic {
 // }
 
 Table main.Chip{
-  id integer [primary key, increment]
-  asicId integer [ref:> main.Asic.id]
-  serialNumber varchar(50) UNIQUE
-  generalLocation main.wpGeneralLocation
+  id integer [pk, increment]
+  asicId integer [ref:> main.Asic.id, not null]
+  serialNumber varchar(50) [not null, unique]
+  generalLocation main.wpGeneralLocation [not null]
 }
 
 Table main.ChipLocation {
   chipId integer [ref:> main.Chip.id, not null]
-  generalLocation main.wpGeneralLocation
+  generalLocation main.wpGeneralLocation [not null]
   date date [default: `CURRENT_DATE`]
   username varchar(50)
   note text
 }
 
 Table main.Block{
-  id integer [primary key, increment]
-  chipId integer [ref:> main.Chip.id]
-  blockType main.blockType
-  serialNumber varchar(50)
+  id integer [pk, increment]
+  chipId integer [ref:> main.Chip.id, not null]
+  blockType main.blockType [not null]
+  serialNumber varchar(50) [unique, not null]
 }
 
 Table main.AsicFamilyTypeBlockList {
   asicFamilyType main.asicFamilyType
   blockType main.blockType
+  indexes {
+    (asicFamilyType, blockType) [pk]
+  }
 }
 
 Table main.ProbeCard {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   serialNumber varchar(50) [unique, not null]
   vendor main.pcVendor [not null]
   name main.pcName [unique, not null]
@@ -101,6 +104,9 @@ Table main.ProbeCard {
 Table main.ProbeCardFamilyType {
   probeCardId integer [ref:> main.ProbeCard.id, not null]
   asicFamilyType main.asicFamilyType [not null]
+  indexes {
+    (probeCardId, asicFamilyType) [pk]
+  }
 }
 
 // Table main.ProbeCardConfiguration {
@@ -120,7 +126,7 @@ Table main.ProbeCardFamilyType {
 // }
 
 Table main.WaferProbeMachine {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   serialNumber varchar(50) [unique, not null]
   name varchar(50) [unique, not null]
   hostName varchar(200) [not null]
@@ -137,8 +143,8 @@ Table main.WaferProbeMachine {
 }
 
 Table main.WaferLoadedInMachine {
-  machineId integer [ref:> main.WaferProbeMachine.id]
-  waferId integer [ref:> main.Wafer.id]
+  machineId integer [ref:> main.WaferProbeMachine.id, not null]
+  waferId integer [ref:> main.Wafer.id, not null]
   orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
@@ -146,15 +152,15 @@ Table main.WaferLoadedInMachine {
 }
 
 Table main.ProbeCardInstalledInMachine {
-  machineId integer [ref:> main.WaferProbeMachine.id]
-  probeCardId integer [ref:> main.ProbeCard.id]
+  machineId integer [ref:> main.WaferProbeMachine.id, not null]
+  probeCardId integer [ref:> main.ProbeCard.id, not null]
   orientation main.waferMapOrientation
   date date [default: `CURRENT_DATE`]
   username varchar(50)
 }
 
 Table main.WaferProbeProject {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   wpMachineId integer [ref:> main.WaferProbeMachine.id, not null]
   waferTypeId integer [ref:> main.WaferType.id, not null]
   asicFamilyType main.asicFamilyType
@@ -167,35 +173,35 @@ Table main.WaferProbeProject {
 
 Table main.EquipmentType
 {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   name varchar(50) [unique, not null]
 }
 
 Table main.Equipment
 {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   name varchar(50) [unique, not null]
-  equipmentTypeId integer [ ref:>  main.EquipmentType.id]
+  equipmentTypeId integer [ ref:>  main.EquipmentType.id, not null]
   generalLocation main.wpGeneralLocation [not null]
   specification JSON
 }
 
 Table main.EquipmentLocation{
-  equipmentId integer [ref:> main.Equipment.id]
-  generalLocation main.wpGeneralLocation
+  equipmentId integer [ref:> main.Equipment.id, not null]
+  generalLocation main.wpGeneralLocation [not null]
   date date [default: `CURRENT_DATE`]
   username varchar(50)
   note text
 }
 
 Table main.SvtTestSetup {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   name varchar(100)
   generalLocation main.wpGeneralLocation
 }
 
 Table main.SvtTestSetupDefaultConfig{
-  setupId integer [ref:> main.SvtTestSetup.id, unique, not null]
+  setupId integer [pk, ref:> main.SvtTestSetup.id]
   defaultConfigId integer [ref:> main.SvtTestSetupConfig.id, default: null]
 }
 
@@ -207,10 +213,13 @@ Table main.SvtTestSetupDefaultConfig{
 Table main.SvtTestSetupEquipList{
   setupId integer [ref:> main.SvtTestSetup.id]
   equipId integer [ref:> main.Equipment.id]
+  indexes {
+    (setupId, equipId) [pk]
+  }
 }
 
 Table main.SvtTestSetupConfig {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   setupId integer [ref:> main.SvtTestSetup.id, not null]
   name varchar(100) [unique, not null]
   note text
@@ -219,17 +228,20 @@ Table main.SvtTestSetupConfig {
 }
 
 Table main.SvtTestType {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   name varchar(100)
 }
 
-Table main.SvtTestTypeAsicFamilyTypeList {
+Table main.SvtTestTypeDUTTypeList {
+  dutType main.dutType [not null]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  asicFamilyType main.asicFamilyType [not null]
+  indexes {
+    (dutType, testTypeId) [pk]
+  }
 }
 
 Table main.SvtTestTypeConfig {
-  id integer [primary key, increment]
+  id integer [pk, increment]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   name varchar(100) [unique, not null]
   note text
@@ -238,36 +250,48 @@ Table main.SvtTestTypeConfig {
 }
 
 Table main.SvtTestTemplate {
-  id integer [primary key, increment]
-  asicFamilyType main.asicFamilyType [not null]
-  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
+  id integer [pk, increment]
+  dutType main.dutType
+  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id]
   isEnabled bool [default: TRUE]
+  indexes {
+    (dutType, testTypeConfigId) [unique]
+  }
 }
 
 Table main.SvtTestList {
-  id integer [primary key, increment]
-  testTypeId integer [ref:> main.SvtTestType.id, not null]
+  id integer [pk, increment]
   testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
-  testSetupId integer [ref:> main.SvtTestSetup.id]
+  testSetupConfigId integer
   createsAt timestamp [default: `CURRENT_TIMESTAMP`]
   updatedAt timestamp [default: `CURRENT_TIMESTAMP`]
   pathToResult text [default: null]
-  general_status main.testStatus
+  testResultStatus varchar(50)
+  generalStatus main.testStatus
 }
 
 Table main.SvtAsicTestList {
   asicId integer [ref:> main.Asic.id]
   testId integer [ref:> main.SvtTestList.id]
+  indexes {
+    (asicId, testId) [pk]
+  }
 }
 
 Table main.SvtChipTestList {
   chipId integer [ref:> main.Chip.id]
   testId integer [ref:> main.SvtTestList.id]
+  indexes {
+    (chipId, testId) [pk]
+  }
 }
 
 Table main.SvtBlockTestList {
   blockId integer [ref:> main.Block.id]
   testId integer [ref:> main.SvtTestList.id]
+  indexes {
+    (blockId, testId) [pk]
+  }
 }
 
 Enum main.testStatus{
@@ -383,9 +407,17 @@ Enum main.asicFamilyType {
 }
 
 Enum main.blockType {
-  SLDO
-  NVBG
-  CML_TRANSCEIVER
+  AncMPW1_SLDO
+  AncMPW1_NVBG
+  AncMPW1_CML_TRANSCEIVER
+}
+
+Enum main.dutType {
+  MOSAIX
+  BABYMOSAIX
+  AncMPW1_SLDO
+  AncMPW1_NVBG
+  AncMPW1_CML_TRANSCEIVER
 }
 
 Enum main.waferMapOrientation {
