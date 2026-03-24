@@ -1145,7 +1145,7 @@ paths:
       tags:
         - SvtTestType
       summary: Get all test type
-      description: Returns test type list in the reply message. Optional filter by typeId or asicFamilyType can be applied to return exact set of test type list.
+      description: Returns test type list in the reply message. Optional filter by typeId or dutType can be applied to return exact set of test type list.
       requestBody:
         content:
           application/json:
@@ -1514,6 +1514,10 @@ components:
           type: object
           properties:
             asicFamilyType:
+              type: array
+              items:
+                type: string
+            dtuType:
               type: array
               items:
                 type: string
@@ -2556,9 +2560,9 @@ components:
                   description: SvtTestType ids array. If array is empty / undefined => all test type list will be returned.
                   items:
                     type: number
-                asicFamilyType:
+                dutType:
                   type: string
-                  description: asicFamilyType.
+                  description: DUT type.
     GetAllSvtTestTypesReplyMessage:
       properties:
         type:
@@ -2711,11 +2715,11 @@ components:
             filter:
               type: object
               properties:
-                asicFamilyType:
+                dtuType:
                   type: array
                   items:
                     type: string
-                    description: Asic family type.
+                    description: Asic family type ot block type.
     GetAllSvtTestTemplatesReplyMessage:
       properties:
         type:
@@ -3491,13 +3495,13 @@ components:
       required:
         - id
         - name
-        - asicFamilyTypes
+        - dutTypes
       properties:
         id:
           type: number
         name:
           type: string
-        asicFamilyTypes:
+        dutTypes:
           type: array
           items:
             type: string
@@ -3505,12 +3509,12 @@ components:
       type: object
       required:
         - name
-        - asicFamilyTypes
+        - dutTypes
         - testTypeConfig
       properties:
         name:
           type: string
-        asicFamilyTypes:
+        dutTypes:
           type: array
           items:
             type: string
@@ -3539,7 +3543,7 @@ components:
         update:
           type: object
           properties:
-            asicFamilyTypes:
+            dutType:
               type: array
               items:
                 type: string
@@ -3597,14 +3601,14 @@ components:
     SvtTestTemplateDto:
       required:
         - id
-        - asicFamilyType
+        - dutType
         - testTypeId
         - testTypeConfigId
         - isEnabled
       properties:
         id:
           type: number
-        asicFamilyType:
+        dutType:
           type: string
         testTypeId:
           type: number
@@ -3614,11 +3618,11 @@ components:
           type: boolean
     SvtTestTemplateCreateDto:
       required:
-        - asicFamilyType
+        - dutType
         - testTypeConfigId
         - isEnabled
       properties:
-        asicFamilyType:
+        dutType:
           type: string
         testTypeConfigId:
           type: number
@@ -3635,6 +3639,7 @@ components:
       type: string
       enum:
         - asicFamilyType
+        - dutType
         - engineeringRun
         - foundryName
         - waferTech
