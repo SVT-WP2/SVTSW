@@ -5,11 +5,8 @@
  * @brief SvtDbAsicDto
  */
 
-#include <sstream>
-
 #include "SVTDbAgentDto/SvtDbAsicDto.h"
 
-using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaReplyMsg;
 
 //========================================================================+
@@ -19,7 +16,7 @@ SvtDbAgent::SvtDbAsicDto::SvtDbAsicDto()
 
   addColName("id");
   addColName("waferId");
-  addColName("chipId");
+  addColName("chipId", false);
   addColName("serialNumber");
   addColName("familyType");
   addColName("waferMapPosition");
@@ -42,52 +39,17 @@ void SvtDbAgent::SvtDbAsicDto::createAllRequest()
 }
 
 //========================================================================+
-void SvtDbAgent::SvtDbAsicDto::getAllEntries(
-    const SvtKafkaMessage &msg,
-    SvtKafkaReplyMsg &replyMsg)
+bool SvtDbAgent::SvtDbAsicDto::getAllEntriesFromDB(std::vector<SvtDbEntry> &entries,
+                                                   const std::string &,
+                                                   const SvtDbFilters &filters,
+                                                   const std::string &orderBy, const bool orderDec)
 {
-  const auto &msgData = msg.getPayload()["data"];
-  SvtDbFilters filters;
-  parseJsonFilters(msgData, filters);
+  std::string queryString = "";
+  queryString += "SELECT T0.*, T1.\"id\" AS \"chipId\"";
+  queryString += " FROM main.\"Asic\" AS T0";
+  queryString += " LEFT JOIN main.\"Chip\" AS T1 ON T0.\"id\" = T1.\"asicId\"";
 
-  std::vector<SvtDbAgent::SvtDbEntry> entries;
-  if (getAllEntriesFromDB(entries, std::string(), filters))
-  {
-    logInfo("Number of asics: " + std::to_string(entries.size()));
-  }
-
-  if (!msgData.contains("pager"))
-  {
-    auto empty_list = std::vector<SvtDbEntry>();
-    auto &asics = entries.size() <= 5000 ? entries : empty_list;
-    createReplyMsg(asics, replyMsg, asics.size());
-  }
-  else
-  {
-    size_t pager_limit = msgData["pager"]["limit"];
-    size_t pager_offset = msgData["pager"]["offset"];
-
-    if (entries.size() < pager_offset)
-    {
-      std::ostringstream err_msg;
-      err_msg << "Pager offset out of "
-                 "range, filtered asic "
-                 "size: "
-              << entries.size();
-
-      THROW_RUNTIME_ERROR(err_msg.str());
-      return;
-    }
-    size_t tail_size = entries.size() - pager_offset;
-    std::vector<SvtDbEntry>::const_iterator first =
-        entries.begin() + pager_offset;
-    std::vector<SvtDbEntry>::const_iterator last =
-        entries.begin() + pager_offset +
-        ((tail_size < pager_limit) ? tail_size : pager_limit);
-    std::vector<SvtDbEntry> asics(first, last);
-    createReplyMsg(asics, replyMsg, entries.size());
-  }
-  return;
+  return this->SvtDbBaseDto::getAllEntriesFromDB(entries, queryString, filters, orderBy, orderDec);
 }
 
 //========================================================================+

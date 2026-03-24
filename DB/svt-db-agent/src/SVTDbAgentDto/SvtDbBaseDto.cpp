@@ -82,6 +82,12 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_
                     ? getAllEntriesFromDB(entries, std::string(), filters, "id", false)
                     : getAllEntriesFromDB(entries, std::string(), filters);
 
+  if (!result)
+  {
+    THROW_RUNTIME_ERROR("Error: getting entries");
+    return;
+  }
+
   if (relationDtos.size())
   {
     for (auto &entry : entries)
@@ -90,9 +96,36 @@ void SvtDbAgent::SvtDbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_
     }
   }
 
-  if (result)
+  if (!data_j.contains("pager"))
   {
-    createReplyMsg(entries, replyMsg);
+    auto empty_list = std::vector<SvtDbEntry>();
+    auto &asics = entries.size() <= 5000 ? entries : empty_list;
+    createReplyMsg(asics, replyMsg, asics.size());
+  }
+  else
+  {
+    size_t pager_limit = data_j["pager"]["limit"];
+    size_t pager_offset = data_j["pager"]["offset"];
+
+    if (entries.size() < pager_offset)
+    {
+      std::ostringstream err_msg;
+      err_msg << "Pager offset out of "
+                 "range, filtered asic "
+                 "size: "
+              << entries.size();
+
+      THROW_RUNTIME_ERROR(err_msg.str());
+      return;
+    }
+    size_t tail_size = entries.size() - pager_offset;
+    std::vector<SvtDbEntry>::const_iterator first =
+        entries.begin() + pager_offset;
+    std::vector<SvtDbEntry>::const_iterator last =
+        entries.begin() + pager_offset +
+        ((tail_size < pager_limit) ? tail_size : pager_limit);
+    std::vector<SvtDbEntry> asics(first, last);
+    createReplyMsg(asics, replyMsg, entries.size());
   }
 }
 
@@ -247,7 +280,8 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
 
   if (!filters.ids.empty())
   {
-    query.addWhereIn("id", filters.ids);
+    const auto &filterName = queryString.empty() ? "id" : "T0.id";
+    query.addWhereIn(filterName, filters.ids);
   }
 
   for (const auto &filter : filters.mFilters.getValues())
@@ -255,6 +289,7 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     if (getColNames().find(filter.first) !=
         getColNames().end())
     {
+      const auto &filterName = queryString.empty() ? filter.first : "T0." + filter.first;
       query.addWhereEquals(filter.first, filter.second);
     }
     else
@@ -276,29 +311,32 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
     query.doQuery(rows, queryString);
     entries.reserve(rows.rows.size());
 
-    for (const auto &row : rows.rows)
+    if (!rows.rows.empty())
     {
-      if (row.size() != getColNames().size())
+      for (const auto &row : rows.rows)
       {
-        throw std::range_error("return row size unmatches query list size");
+        if (row.size() != getColNames().size())
+        {
+          throw std::range_error("return row size unmatches query list size");
+        }
+        SvtDbEntry rowEntry;
+        int valId = 0;
+        for (const auto &fieldVal : row)
+        {
+          const std::string_view &colName = rows.rowNames[valId];
+          rowEntry.addValue(std::string(colName), fieldVal);
+          ++valId;
+        }
+        entries.push_back(rowEntry);
       }
-      SvtDbEntry rowEntry;
-      int valId = 0;
-      for (const auto &fieldVal : row)
-      {
-        const std::string_view &colName = rows.rowNames[valId];
-        rowEntry.addValue(std::string(colName), fieldVal);
-        ++valId;
-      }
-      entries.push_back(rowEntry);
-    }
 
-    if (!filters.ids.empty())
-    {
-      if (filters.ids.size() != entries.size())
+      if (!filters.ids.empty())
       {
-        THROW_RUNTIME_ERROR(
-            "unmatching returned elements and requested filter size");
+        if (filters.ids.size() != entries.size())
+        {
+          THROW_RUNTIME_ERROR(
+              "unmatching returned elements and requested filter size");
+        }
       }
     }
   }

@@ -23,6 +23,7 @@ SvtDbAgent::SvtDbChipDto::SvtDbChipDto()
   setTableName("Chip");
 
   addColName("id");
+  addColName("asicId");
   addColName("serialNumber");
   addColName("generalLocation");
 
@@ -61,17 +62,17 @@ void SvtDbAgent::SvtDbChipDto::createAllRequest()
 //========================================================================+
 bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipData_j, SvtDbEntry &chipEntry)
 {
-  if (!chipData_j.contains("asicId"))
-  {
-    THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
-    return false;
-  }
-  const int asicId = chipData_j["asicId"].get<int>();
-  auto newChipData_j = chipData_j;
-  newChipData_j.erase("asicId");
+  // if (!chipData_j.contains("asicId"))
+  // {
+  //   THROW_RUNTIME_ERROR("Failed to create chip without an asicId.");
+  //   return false;
+  // }
+  // const int asicId = chipData_j["asicId"].get<int>();
+  // auto newChipData_j = chipData_j;
+  // newChipData_j.erase("asicId");
 
   // CreateChip
-  if (!createEntryWithLocation(newChipData_j, chipEntry))
+  if (!createEntryWithLocation(chipData_j, chipEntry))
   {
     return false;
   }
@@ -80,7 +81,7 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipData_j, SvtD
 
   // get Acic with id = asicId and extract Asic familyType
   SvtDbEntry asicEntry;
-  asicDto->getEntryWithId(asicEntry, asicId);
+  asicDto->getEntryWithId(asicEntry, chipData_j["asicId"]);
   const auto &asicFamilyType = asicEntry.getValue("familyType");
 
   // Check if asic family has any block
@@ -102,10 +103,6 @@ bool SvtDbAgent::SvtDbChipDto::createChip(const nlohmann::json &chipData_j, SvtD
 
     blockDto->createEntryInDB(blockEntry);
   }
-
-  //! Update Asic chipId
-  asicEntry.addValue("chipId", chipId);
-  SvtUtils::Singleton<SvtDbAsicDto>::instance()->updateEntryInDB(asicId, asicEntry);
 
   return true;
 };
