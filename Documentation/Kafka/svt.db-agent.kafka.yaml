@@ -3531,15 +3531,18 @@ components:
     SvtTestTypeUpdateDto:
       type: object
       required:
-        - testTypeId
-        - asicFamilyType
+        - id
+        - update
       properties:
-        testTypeId:
+        id:
           type: number
-        asicFamilyTypes:
-          type: array
-          items:
-            type: string
+        update:
+          type: object
+          properties:
+            asicFamilyTypes:
+              type: array
+              items:
+                type: string
     # TEST_TYPE_CONFIG :: DTO
     SvtTestTypeConfigDto:
       type: object
