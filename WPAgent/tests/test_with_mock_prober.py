@@ -143,7 +143,7 @@ def test_complete_workflow():
 
     # Import commands
     from actions.WPTestingActions import (
-        go_to_die, go_to_contact, go_to_separation,
+        move_chuck_row_column, move_chuck_contact, Move_chuck_separation,
         switch_camera, run_ptpa, move_chuck_xy,
         load_wafer, unload_wafer
     )
@@ -164,7 +164,7 @@ def test_complete_workflow():
     print("\n" + "🧪 TEST 2: Go to Die")
     response = simulate_command(
         "GoToDie",
-        go_to_die,
+        move_chuck_row_column,
         col=5,
         row=10,
         subsite=0
@@ -191,7 +191,7 @@ def test_complete_workflow():
     print("\n" + "🧪 TEST 4: Go to Contact")
     response = simulate_command(
         "GoToContact",
-        go_to_contact
+        move_chuck_contact
     )
     test_results.append(("GoToContact", response.get("status") == "Success"))
 
@@ -207,7 +207,7 @@ def test_complete_workflow():
     print("\n" + "🧪 TEST 5: Go to Separation")
     response = simulate_command(
         "GoToSeparation",
-        go_to_separation
+        Move_chuck_separation
     )
     test_results.append(("GoToSeparation", response.get("status") == "Success"))
 

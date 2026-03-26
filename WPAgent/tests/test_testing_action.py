@@ -138,13 +138,13 @@ def test_go_to_die():
     print_header("Test 2: go_to_die")
 
     try:
-        from actions.WPTestingActions import go_to_die
+        from actions.WPTestingActions import move_chuck_row_column
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         g = SvtWPAagentGlobalParameters.getInstance()
         g.reset()
 
-        response = go_to_die(col=5, row=10, subsite=0)
+        response = move_chuck_row_column(col=5, row=10, subsite=0)
 
         valid = validate_response_structure(response, "GoToDieReply", "go_to_die")
 
@@ -173,9 +173,9 @@ def test_go_to_contact():
     print_header("Test 3: go_to_contact")
 
     try:
-        from actions.WPTestingActions import go_to_contact
+        from actions.WPTestingActions import move_chuck_contact
 
-        response = go_to_contact()
+        response = move_chuck_contact()
 
         valid = validate_response_structure(response, "GoToContactReply", "go_to_contact")
 
@@ -202,9 +202,9 @@ def test_go_to_separation():
     print_header("Test 4: go_to_separation")
 
     try:
-        from actions.WPTestingActions import go_to_separation
+        from actions.WPTestingActions import Move_chuck_separation
 
-        response = go_to_separation()
+        response = Move_chuck_separation()
 
         valid = validate_response_structure(response, "GoToSeparationReply", "go_to_separation")
 

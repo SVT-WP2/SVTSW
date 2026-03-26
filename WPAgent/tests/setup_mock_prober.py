@@ -145,9 +145,9 @@ def test_mock_setup():
 
     # Try a command
     print("\n🧪 Testing a command...")
-    from actions.WPTestingActions import go_to_separation
+    from actions.WPTestingActions import Move_chuck_separation
 
-    response = go_to_separation()
+    response = Move_chuck_separation()
 
     print(f"\nResponse:")
     print(f"  Status: {response.get('status')}")

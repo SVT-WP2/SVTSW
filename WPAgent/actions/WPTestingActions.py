@@ -151,7 +151,7 @@ def run_ptpa(address=None, machine_type=None, user=None, waferAgentName=None):
 
 
 @validate_command
-def step_next_die(address=None, machine_type=None, user=None, waferAgentName=None):
+def move_chuck_next_die(address=None, machine_type=None, user=None, waferAgentName=None):
     """Step to next die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -164,7 +164,7 @@ def step_next_die(address=None, machine_type=None, user=None, waferAgentName=Non
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        result = prober.step_next_die()
+        result = prober.move_chuck_next_die()
         prober.local_mode()
 
         # TODO: Update die position if result contains die coordinates
@@ -177,33 +177,33 @@ def step_next_die(address=None, machine_type=None, user=None, waferAgentName=Non
 
 
 @validate_command
-def go_to_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None, waferAgentName=None):
+def move_chuck_row_column(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None, waferAgentName=None):
     """Move to specific die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckRowColReply", error["output"], 400)
+        return ResponseBuilder.error("MoveChuckRowColumnReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        result = prober.go_to_die(col, row)
+        result = prober.move_chuck_row_column(col, row)
         prober.local_mode()
 
         # Update die position
         g.set_current_die(col, row, subsite)
-        agentStateMachine.transition('MoveChuckRowCol')
+        agentStateMachine.transition('MoveChuckRowColumn')
 
         g.chuck_z_position_state = "Separation"
 
-        return ResponseBuilder.success("MoveChuckRowColReply", f"Moved to die {col},{row}")
+        return ResponseBuilder.success("MoveChuckRowColumnReply", f"Moved to die {col},{row}")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckRowColReply", str(e), 500)
+        return ResponseBuilder.error("MoveChuckRowColumnReply", str(e), 500)
 
 
 @validate_command
@@ -294,30 +294,6 @@ def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
 
-
-def clean_probe_station(address=None, machine_type=None, user=None, waferAgentName=None, **kwargs):
-    """Clean probe station"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-
-    error = _ensure_initialized()
-    if error:
-        return ResponseBuilder.error("CleaningReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
-
-    try:
-        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-        prober = get_prober(machine_type, address)
-        prober.clean_probe_station(**kwargs)
-        prober.local_mode()
-
-        g.wpag_state = "WP_Idle"
-
-        return ResponseBuilder.success("CleaningReply", "Cleaning completed")
-    except Exception as e:
-
-        agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("CleaningReply", str(e), 500)
 
 
 @validate_command
@@ -507,7 +483,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
 
 
 @validate_command
-def go_to_contact(address=None, machine_type=None, user=None, waferAgentName=None):
+def move_chuck_contact(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move probes to contact position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -520,7 +496,7 @@ def go_to_contact(address=None, machine_type=None, user=None, waferAgentName=Non
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        prober.go_to_contact()
+        prober.move_chuck_contact()
         prober.local_mode()
 
         # Update Z position
@@ -534,7 +510,7 @@ def go_to_contact(address=None, machine_type=None, user=None, waferAgentName=Non
 
 
 @validate_command
-def go_to_separation(address=None, machine_type=None, user=None, waferAgentName=None):
+def Move_chuck_separation(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move probes to separation position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -547,7 +523,7 @@ def go_to_separation(address=None, machine_type=None, user=None, waferAgentName=
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        prober.go_to_separation()
+        prober.Move_chuck_separation()
         prober.local_mode()
 
         # Update Z position
@@ -616,7 +592,7 @@ def move_chuck_work_area(work_area=0, address=None, machine_type=None, user=None
 
 
 @validate_command
-def local_state(address=None, machine_type=None, user=None, waferAgentName=None):
+def local_mode(address=None, machine_type=None, user=None, waferAgentName=None):
     """Set prober to local mode"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -639,7 +615,7 @@ def local_state(address=None, machine_type=None, user=None, waferAgentName=None)
 
 
 @validate_command
-def go_to_previous_die(address=None, machine_type=None, user=None, waferAgentName=None):
+def move_chuck_previous_die(address=None, machine_type=None, user=None, waferAgentName=None):
     """Move to previous die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
