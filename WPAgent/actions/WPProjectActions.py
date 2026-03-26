@@ -8,7 +8,7 @@ import actions.WPDataBaseActions
 import json
 import os
 
-
+from utilities.WPValidationDecorator import validate_command
 def _parse_die_position(die_string):
     """Parse die position string like '5,10,0' into dict"""
     try:
