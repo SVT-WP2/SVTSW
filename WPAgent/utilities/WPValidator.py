@@ -169,7 +169,7 @@ class WPCommandValidator:
         """Validate user is logged in"""
 
         # Check if user is logged in
-        if not self.g.user:
+        if not self.g.userLogged:
             return ResponseBuilder.error(
                 reply_type,
                 "No user logged in. Please call UserLogIn first.",
@@ -177,10 +177,10 @@ class WPCommandValidator:
             )
 
         # If payload has user, validate it matches
-        if payload_user and payload_user != self.g.user:
+        if payload_user and payload_user != self.g.userLogged:
             return ResponseBuilder.error(
                 reply_type,
-                f"User mismatch: Current user is '{self.g.user}', not '{payload_user}'",
+                f"User mismatch: Current user is '{self.g.userLogged}', not '{payload_user}'",
                 401
             )
 
@@ -193,14 +193,14 @@ class WPCommandValidator:
     ) -> Optional[Dict]:
         """Validate user has permission for this command"""
 
-        if not self.g.user_hierarchy:
+        if not self.g.userLoggedHierarchy:
             return ResponseBuilder.error(
                 reply_type,
                 "User hierarchy not set. Please log in again.",
                 401
             )
 
-        hierarchy = self.g.user_hierarchy
+        hierarchy = self.g.userLoggedHierarchy
 
         # ============================================================
         # DEVELOPER: ALL COMMANDS ALLOWED - No restrictions!
@@ -475,7 +475,7 @@ class WPCommandValidator:
         """Get list of commands allowed for user hierarchy"""
 
         if hierarchy is None:
-            hierarchy = self.g.user_hierarchy
+            hierarchy = self.g.userLoggedHierarchy
 
         if hierarchy == UserHierarchy.DEVELOPER:
             # Developer: ALL COMMANDS (no restrictions!)
@@ -491,7 +491,7 @@ class WPCommandValidator:
         """Check if command is allowed for user hierarchy"""
 
         if hierarchy is None:
-            hierarchy = self.g.user_hierarchy
+            hierarchy = self.g.userLoggedHierarchy
 
         # Developer: ALL commands allowed
         if hierarchy == UserHierarchy.DEVELOPER:
