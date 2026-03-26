@@ -1,6 +1,12 @@
 
 from enum import Enum, auto
 
+# Commands that work in ANY state
+BYPASS_COMMANDS = {
+        "UserLogIn",
+        "UserLogOut",
+        "Help"
+    }
 
 class WPAgentState(Enum):
     ServiceOn = auto()
@@ -179,6 +185,8 @@ class WPAgentStateMachine:
             True if transition successful, False if invalid
         """
         self.current_command = command
+        if command in BYPASS_COMMANDS:
+            return True
         # DEVELOPER BYPASS
         if self.is_developer_mode():
             # State stays UsedByDeveloper
@@ -227,6 +235,8 @@ class WPAgentStateMachine:
         Returns:
             True if command is valid for current state
         """
+        if command in BYPASS_COMMANDS:
+            return True
         # DEVELOPER BYPASS:
         if self.is_developer_mode():
             return True
