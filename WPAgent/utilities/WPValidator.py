@@ -21,7 +21,6 @@ class UserHierarchy:
 
 
 class WPCommandValidator:
-
     # Command permissions by hierarchy level
     USER_COMMANDS = {
         "OpenProject",
@@ -89,12 +88,12 @@ class WPCommandValidator:
         self.g = SvtWPAagentGlobalParameters.getInstance()
 
     def validate_command(
-        self,
-        command: str,
-        params: Dict[str, Any],
-        payload_user: Optional[str] = None,
-        payload_agent_name: Optional[str] = None,
-        reply_type: Optional[str] = None
+            self,
+            command: str,
+            params: Dict[str, Any],
+            payload_user: Optional[str] = None,
+            payload_agent_name: Optional[str] = None,
+            reply_type: Optional[str] = None
     ) -> Optional[Dict]:
         """
         Validate command execution
@@ -135,13 +134,17 @@ class WPCommandValidator:
         param_error = self._validate_parameters(command, params, reply_type)
         if param_error:
             return param_error
+        # probe card
+        probe_card_error = self._validate_probe_card_orientation(command, reply_type)
+        if probe_card_error:
+            return probe_card_error
 
         return None
 
     def _validate_agent_name(
-        self,
-        payload_agent_name: Optional[str],
-        reply_type: str
+            self,
+            payload_agent_name: Optional[str],
+            reply_type: str
     ) -> Optional[Dict]:
         """Validate agent name matches if provided"""
 
@@ -162,9 +165,9 @@ class WPCommandValidator:
         return None
 
     def _validate_user_login(
-        self,
-        payload_user: Optional[str],
-        reply_type: str
+            self,
+            payload_user: Optional[str],
+            reply_type: str
     ) -> Optional[Dict]:
         """Validate user is logged in"""
 
@@ -187,9 +190,9 @@ class WPCommandValidator:
         return None
 
     def _validate_user_permission(
-        self,
-        command: str,
-        reply_type: str
+            self,
+            command: str,
+            reply_type: str
     ) -> Optional[Dict]:
         """Validate user has permission for this command"""
 
@@ -245,10 +248,10 @@ class WPCommandValidator:
         )
 
     def _validate_parameters(
-        self,
-        command: str,
-        params: Dict[str, Any],
-        reply_type: str
+            self,
+            command: str,
+            params: Dict[str, Any],
+            reply_type: str
     ) -> Optional[Dict]:
         """
         Validate command parameters
@@ -420,7 +423,6 @@ class WPCommandValidator:
                 "withDB": {"type": "bool", "required": True},
             },
 
-
             # - MoveChuckUnloadWafer
             # - UnloadWafer
             # - MoveChuckSeparation
@@ -505,7 +507,6 @@ class WPCommandValidator:
             command: str,
             reply_type: str
     ) -> Optional[Dict]:
-
 
         # Commands that require orientation validation
         COMMANDS_REQUIRING_ORIENTATION_CHECK = {
@@ -617,8 +618,11 @@ class WPCommandValidator:
             print(f"⚠️  Warning: Cannot determine wafer orientation from project name: {project_name}")
 
         return None
+
+
 # Singleton instance
 _validator_instance = None
+
 
 def get_validator() -> WPCommandValidator:
     """Get singleton validator instance"""

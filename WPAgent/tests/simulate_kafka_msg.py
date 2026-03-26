@@ -132,11 +132,11 @@ def main():
 
     # Import all commands
     from actions.WPTestingActions import (
-        move_chuck_xy, move_chuck_z, run_ptpa, step_next_die,
-        go_to_die, switch_camera, move_chuck_home, unload_wafer,
+        move_chuck_xy, move_chuck_z, run_ptpa, move_chuck_next_die,
+        move_chuck_row_column, switch_camera, move_chuck_home, unload_wafer,
         clean_probe_station, load_wafer, find_home, align_wafer,
-        go_to_contact, go_to_separation, auto_focus,
-        move_chuck_work_area, local_state, go_to_previous_die,
+        move_chuck_contact, Move_chuck_separation, auto_focus,
+        move_chuck_work_area, local_mode, move_chuck_previous_die,
         get_chuck_position
     )
 
@@ -156,17 +156,17 @@ def main():
     print("  CATEGORY 2: DIE NAVIGATION")
     print("="*70 + "\n")
 
-    results.append(test_command("GoToDie", go_to_die, col=5, row=10, subsite=0))
-    results.append(test_command("StepNextDie", step_next_die))
-    results.append(test_command("GoToPreviousDie", go_to_previous_die))
+    results.append(test_command("GoToDie", move_chuck_row_column, col=5, row=10, subsite=0))
+    results.append(test_command("StepNextDie", move_chuck_next_die))
+    results.append(test_command("GoToPreviousDie", move_chuck_previous_die))
 
     # Test 3: Z position
     print("\n" + "="*70)
     print("  CATEGORY 3: Z POSITION CONTROL")
     print("="*70 + "\n")
 
-    results.append(test_command("GoToContact", go_to_contact))
-    results.append(test_command("GoToSeparation", go_to_separation))
+    results.append(test_command("GoToContact", move_chuck_contact))
+    results.append(test_command("GoToSeparation", Move_chuck_separation))
 
     # Test 4: Camera
     print("\n" + "="*70)
@@ -197,7 +197,7 @@ def main():
     print("="*70 + "\n")
 
     results.append(test_command("GetChuckPosition", get_chuck_position))
-    results.append(test_command("LocalState", local_state))
+    results.append(test_command("LocalState", local_mode))
 
     # Test 8: Wafer handling
     print("\n" + "="*70)
