@@ -176,21 +176,25 @@ def move_chuck_next_die(address=None, machine_type=None, user=None, waferAgentNa
         return ResponseBuilder.error("MoveChuckNextDieReply", str(e), 500)
 
 
-@validate_command
-def move_chuck_row_column(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None, waferAgentName=None):
+
+def move_chuck_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None,
+                          waferAgentName=None):
     """Move to specific die"""
+    print("CONECTED")
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
-    error = _ensure_initialized()
-    if error:
-        return ResponseBuilder.error("MoveChuckRowColumnReply", error["output"], 400)
 
+    print("init")
     g = SvtWPAagentGlobalParameters.getInstance()
+    g.set_machine_id(4)
+    g.machine_id = 4
 
     try:
         address, _, machine_type = resolve_project_parameters(address, None, machine_type)
         prober = get_prober(machine_type, address)
-        result = prober.move_chuck_row_column(col, row)
+
+        prober.go_to_die(col, row)
+
         prober.local_mode()
 
         # Update die position
@@ -198,6 +202,8 @@ def move_chuck_row_column(col: int, row: int, subsite: int = 0, address=None, ma
         agentStateMachine.transition('MoveChuckRowColumn')
 
         g.chuck_z_position_state = "Separation"
+        g.set_machine_id(4)
+        g.wpMachineId = 4  # TODO: doesnt have to be hardcoded
 
         return ResponseBuilder.success("MoveChuckRowColumnReply", f"Moved to die {col},{row}")
     except Exception as e:
@@ -293,7 +299,6 @@ def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None
 
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
-
 
 
 @validate_command
@@ -537,7 +542,7 @@ def Move_chuck_separation(address=None, machine_type=None, user=None, waferAgent
 
 
 @validate_command
-def auto_focus(address=None, machine_type=None, user=None, waferAgentName=None):
+def auto_focus(address=None, machine_type=None, user=None, waferAgentName="CERN"):
     """Execute auto-focus"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -552,6 +557,7 @@ def auto_focus(address=None, machine_type=None, user=None, waferAgentName=None):
         prober = get_prober(machine_type, address)
         prober.auto_focus()
         prober.local_mode()
+        g.wpAgentName = waferAgentName
 
         agentStateMachine.transition('AutoFocus')
 

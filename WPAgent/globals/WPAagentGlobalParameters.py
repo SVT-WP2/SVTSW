@@ -18,7 +18,7 @@ class SvtWPAagentGlobalParameters:
         self._project_metadata = {}
 
         # Database-related parameters
-        self.machine_id = None  # Database ID of the prober
+        self.wpMachineId = 4  # Database ID of the prober
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
         self.wpAgentName = None
@@ -31,7 +31,7 @@ class SvtWPAagentGlobalParameters:
         self.asic_serial_number = 0
 
         # Machine ID for response (alias to machine_id for compatibility)
-        self.wp_machine_id = 0
+        self.wpMachineId = 4
 
         # Agent FSM State
         self.wpag_state = "ServiceOff"  # ServiceOn, WP_Idle, WP_Testing, WP_Error, etc.
@@ -122,8 +122,7 @@ class SvtWPAagentGlobalParameters:
 
     def set_machine_id(self, machine_id):
         """Set the database ID of the prober"""
-        self.machine_id = machine_id
-        self.wp_machine_id = machine_id  # Also set wp_machine_id for response payload
+        self.wpMachineId = machine_id
 
     def set_machine_name(self, machine_name):
         """Set the human-readable name of the prober from database"""

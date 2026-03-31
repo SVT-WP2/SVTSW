@@ -1,7 +1,7 @@
 {
   "CERN": {
     "machineId": 4,
-    "address": "WPMIT01.cern.ch:35555",
+    "address": "wpmit01.cern.ch",
     "port": 35555,
     "machineType": "sentio",
     "description": "CERN DSF Probe Station"
