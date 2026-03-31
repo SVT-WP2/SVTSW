@@ -15,7 +15,7 @@ COMMAND_ROUTER = {
     "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
     "MoveChuckNextDie": testing_actions.move_chuck_next_die,
-    "MoveChuckRowColumn": testing_actions.move_chuck_row_column,
+    "MoveChuckRowColumn": testing_actions.move_chuck_die,
     "OpenProject": testing_actions.open_project,
     "FindHome": testing_actions.find_home,
     "SwitchCamera": testing_actions.switch_camera,

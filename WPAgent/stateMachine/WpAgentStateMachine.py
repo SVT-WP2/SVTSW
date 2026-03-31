@@ -5,7 +5,8 @@ from enum import Enum, auto
 BYPASS_COMMANDS = {
         "UserLogIn",
         "UserLogOut",
-        "Help"
+        "Help",
+        "AutoFocus",
     }
 
 class WPAgentState(Enum):

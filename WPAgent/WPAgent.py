@@ -173,6 +173,10 @@ class WaferProberAgent:
             port = config.get('port', 35555)
             address_host = config.get('address', 'localhost')
             full_address = f"{address_host}:{port}"
+            # from WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+            #
+            # g = SvtWPAagentGlobalParameters.getInstance()
+            # g.wpAgentName= "CERN"
 
             # Prepare initialization parameters
             init_params = {
