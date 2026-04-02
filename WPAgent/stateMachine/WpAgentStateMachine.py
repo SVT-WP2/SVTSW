@@ -255,6 +255,12 @@ class WPAgentStateMachine:
         self.previous_state = self.current_state
         self.current_state = WPAgentState.ServiceOn
         self.current_command = None
+
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        g = SvtWPAagentGlobalParameters.getInstance()
+        g.userLogged = None
+        g.userLoggedHierarchy = None
+
         self._sync_to_global_params()
         print(f" State machine reset to {self.current_state.name}")
 

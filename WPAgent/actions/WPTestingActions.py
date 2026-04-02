@@ -180,11 +180,8 @@ def move_chuck_next_die(address=None, machine_type=None, user=None, waferAgentNa
 def move_chuck_die(col: int, row: int, subsite: int = 0, address=None, machine_type=None, user=None,
                           waferAgentName=None):
     """Move to specific die"""
-    print("CONECTED")
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
-
-    print("init")
     g = SvtWPAagentGlobalParameters.getInstance()
     g.set_machine_id(4)
     g.machine_id = 4
@@ -301,15 +298,17 @@ def unload_wafer(address=None, machine_type=None, user=None, waferAgentName=None
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
 
 
-@validate_command
+#@validate_command
 def open_project(project_name: str, address=None, machine_type=None, user=None, waferAgentName=None):
     """Open project"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from WPDataBaseActions import get_project_id_by_name
 
-    error = _ensure_initialized()
-    if error:
-        return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
+
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    #from WPDataBaseActions import get_project_id_by_name
+
+    #error = _ensure_initialized()
+    #if error:
+    #    return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -319,18 +318,21 @@ def open_project(project_name: str, address=None, machine_type=None, user=None, 
         project_path = os.path.join(str(g.projects_base_path),
                                     project_name
                                     )
+        
+        print(project_name)
+
         prober.open_project(project_name)
-        prober.local_mode()
+        #prober.local_mode()
 
         # Update project name (ID would need to come from DB)
         g.projectName = project_name
         g.set_project_name(project_name)
-
-        g.opened_project_id = get_project_id_by_name(project_name)
+        #g.opened_project_id = get_project_id_by_name(project_name)
 
         agentStateMachine.transition('OpenProject')
 
         return ResponseBuilder.success("OpenProjectReply", f"Opened project: {project_path}")
+
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)

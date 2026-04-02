@@ -20,7 +20,7 @@ class SentioProberImpl(AbstractProber):
 
     def move_chuck_center(self):
         resp = self.prober.send_cmd("move_chuck_center")
-        self.prober.wait_complete(resp.cmd_id())
+        #self.prober.wait_complete()
 
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
@@ -28,6 +28,7 @@ class SentioProberImpl(AbstractProber):
     def run_ptpa(self):
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
         self.prober.wait_complete(resp.cmd_id())
+        print(resp.message())
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
@@ -75,7 +76,7 @@ class SentioProberImpl(AbstractProber):
 
     def auto_focus(self):
         resp = self.prober.vision.auto_focus()
-        self.prober.wait_complete(resp.cmd_id())
+        self.prober.wait_complete()
 
     def move_chuck_work_area(self, work_area):
         from sentio_prober_control.Sentio.Enumerations import WorkArea
