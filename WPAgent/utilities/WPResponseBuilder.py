@@ -22,7 +22,7 @@ class ResponseBuilder:
         data = {
             "userLogged": getattr(g, 'userLogged'),
             "userLoggedHierarchy": getattr(g, 'userLoggedHierarchy'),
-            "asicSerialNumber": getattr(g, 'asic_serial_number', 0),
+            "asicSerialNumber": 0, #(g, 'asic_serial_number', 0),
             "wpMachineId": "4",
             "WPAG_State": getattr(g, 'wpag_state', 'ServiceOff'),
             "wpAgentName": getattr(g, 'wpAgentName'),

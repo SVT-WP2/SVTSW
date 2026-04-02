@@ -329,11 +329,13 @@ def reset_agent_state(user=None, waferAgentName=None):
     """Reset the agent state machine to Idle"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-    old_state = agentStateMachine.getState().name
+    old_state = agentStateMachine.get_state_name()
 
     agentStateMachine.transition('ResetAgent')
 
-    new_state = agentStateMachine.getState().name
+    agentStateMachine.reset()
+
+    new_state = agentStateMachine.get_state_name()
 
     print(f"🔄 Agent state reset: {old_state} → {new_state}")
 
