@@ -14,20 +14,20 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9095:9095"
-    expose:
-      - "9096"
+      # Bind to ALL interfaces, not just localhost
+      - "0.0.0.0:9094:9094" # Internal (inter-container)
+      - "127.0.0.1:9095:9095" # Tunnel (ssh )
+      - "0.0.0.0:9096:9096" # External (internal network)
     environment:
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9096,OUTSIDE://localhost:9095
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:9096,OUTSIDE://0.0.0.0:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9094,TUNNEL://localhost:9095,OUTSIDE://svmithi02.cern.ch:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,TUNNEL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9094,TUNNEL://0.0.0.0:9095,OUTSIDE://0.0.0.0:9096
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_BROKER_ID: 1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
 
   kafka-ui:
     image: provectuslabs/kafka-ui
@@ -39,5 +39,4 @@ services:
     restart: always
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9096
-
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9094
