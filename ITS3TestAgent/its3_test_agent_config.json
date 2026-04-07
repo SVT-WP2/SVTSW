@@ -10,7 +10,10 @@
   "reset_agent_at_login": true,
   "wp_init_params": {},
 
-  "setup_config": "../Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
+  "log_cmd_output": false,
+  "show_cmd_output": true,
+
+  "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",
   "output": "eos",
 
@@ -19,7 +22,7 @@
   ],
 
   "Sequence": [
-    "./{build_dir}/RunSequence ../Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
-    "./{build_dir}/RunSequence ../Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
+    "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
+    "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
   ]
 }

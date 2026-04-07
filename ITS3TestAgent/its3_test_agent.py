@@ -22,6 +22,7 @@ import csv
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -127,8 +128,8 @@ class WPAgentClient:
             "group.id": f"its3-runner-{uuid.uuid4()}",
             "auto.offset.reset": "latest",
             "enable.auto.commit": False,
-            "session.timeout.ms": 60000,
-            "max.poll.interval.ms": 120000,
+            "session.timeout.ms": 60 * 1000,
+            "max.poll.interval.ms": 1 * 60 * 60 * 1000,  # 1 hour
         })
         self.consumer.subscribe([self.REPLY_TOPIC])
         # warm-up
@@ -343,14 +344,14 @@ class ITS3Runner:
         #     return False
 
         if self.dry_run:
-            project = self.cfg.get("wp_project", "")
-            if project:
-                r = wp.open_project(project)
-                log.info("  OpenProject status=%s", r.get("status", "unknown"))
-            r = wp.go_to_die(1, 1)
-            log.info("  MoveChuckRowColumn(1,1) status=%s", r.get("status", "unknown"))
-            r = wp.run_ptpa()
-            log.info("  RunPTPA status=%s", r.get("status", "unknown"))
+            # project = self.cfg.get("wp_project", "")
+            # if project:
+            #     r = wp.open_project(project)
+            #     log.info("  OpenProject status=%s", r.get("status", "unknown"))
+            # r = wp.go_to_die(1, 1)
+            # log.info("  MoveChuckRowColumn(1,1) status=%s", r.get("status", "unknown"))
+            # r = wp.run_ptpa()
+            # log.info("  RunPTPA status=%s", r.get("status", "unknown"))
             return True
 
         # --- OpenProject ---
@@ -386,16 +387,18 @@ class ITS3Runner:
         setup_script = self.mosaix_root / "setup.sh"
         log.info("Sourcing %s load ...", setup_script)
 
-        if self.dry_run:
-            self._env = dict(os.environ)
-            return self._env
+        # if self.dry_run:
+        #     self._env = dict(os.environ)
+        #     return self._env
 
+        t0 = time.time()
         result = subprocess.run(
             f"source {setup_script} load && env -0",
             shell=True, executable="/bin/bash",
             cwd=str(self.mosaix_root),
             capture_output=True,
         )
+        log.info("setup.sh finished in %.1fs (exit %d)", time.time() - t0, result.returncode)
         if result.returncode != 0:
             stderr = result.stderr.decode("utf-8", errors="replace")
             raise RuntimeError(f"source setup.sh failed (exit {result.returncode}):\n{stderr}")
@@ -419,17 +422,35 @@ class ITS3Runner:
         else:
             log.info("  $ %s", cmd)
 
-        if self.dry_run:
-            return 0
+        # if self.dry_run:
+        #     return 0
+
+        show_output = self.cfg.get("show_cmd_output", True)
+        log_output = self.cfg.get("log_cmd_output", True)
+
+        # write cmd output to log file only (skip terminal handler to avoid duplicates)
+        file_handlers = [h for h in logging.root.handlers
+                         if isinstance(h, logging.FileHandler)]
 
         env = self._source_setup()
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd, shell=True, executable="/bin/bash",
             cwd=str(self.mosaix_root), env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         )
-        if result.returncode != 0:
-            log.error("Command exited with code %d", result.returncode)
-        return result.returncode
+        for line in proc.stdout:
+            text = line.decode("utf-8", errors="replace").rstrip("\n")
+            if show_output:
+                tqdm.write(text, file=sys.stderr)
+            if log_output:
+                clean = re.sub(r'\x1b\[[0-9;]*m', '', text)
+                for fh in file_handlers:
+                    fh.stream.write(clean + "\n")
+                    fh.stream.flush()
+        proc.wait()
+        if proc.returncode != 0:
+            log.error("Command exited with code %d", proc.returncode)
+        return proc.returncode
 
     # ------------------------------------------------------------------
 
@@ -443,8 +464,8 @@ class ITS3Runner:
             return False
 
         if self.dry_run:
-            log.info("  -> WPAgent  GoToSeparation")
-            log.info("  -> WPAgent  GoToDie  col=%d row=%d", col, row)
+            log.info("  -> WPAgent  GoToSeparation (DUMMY)")
+            log.info("  -> WPAgent  GoToDie  col=%d row=%d (DUMMY)", col, row)
             return True
 
         wp = self._wp_agent()
