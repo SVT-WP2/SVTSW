@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""
+ITS3 TestInterface runner.
+
+Reads a simple JSON config + CSV run list, then:
+  1. Sources the mosaix .venv and runs Initialization commands once.
+  2. Loops over each chip in the CSV (TEST=yes) and runs the Sequence
+     commands, substituting {chip_name} automatically.
+  3. Between chips, sends WPAgent Kafka commands to move the prober.
+
+Usage:
+    python3 its3_test_interface.py L1W04_S4                        # run with wafer name
+    python3 its3_test_interface.py L1W04_S4 --dry-run              # print, don't execute
+    python3 its3_test_interface.py L1W04_S4 --config my_config.json
+    python3 its3_test_interface.py L1W04_S4 --log-file run.log     # also log to file
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import logging
+import os
+import subprocess
+import sys
+from pathlib import Path
+import time
+import uuid
+
+from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
+from confluent_kafka.admin import AdminClient
+from tqdm import tqdm
+
+log = logging.getLogger("its3")
+
+
+# ---------------------------------------------------------------------------
+# Logging setup
+# ---------------------------------------------------------------------------
+
+def setup_logging(wafer: str, log_file: str | None = None) -> None:
+    fmt = f"%(asctime)s [%(levelname)s] [{wafer}] %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S"
+
+    # Use tqdm.write so log lines appear above the progress bar
+    class TqdmHandler(logging.StreamHandler):
+        def emit(self, record):
+            try:
+                msg = self.format(record)
+                tqdm.write(msg, file=self.stream)
+            except Exception:
+                self.handleError(record)
+
+    handlers: list[logging.Handler] = [TqdmHandler(sys.stderr)]
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
+    logging.basicConfig(level=logging.INFO, format=fmt, datefmt=datefmt, handlers=handlers)
+
+
+# ---------------------------------------------------------------------------
+# CSV run-list helpers
+# ---------------------------------------------------------------------------
+
+def load_run_list(csv_path: str) -> list[dict]:
+    rows = []
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f, skipinitialspace=True)
+        for row in reader:
+            rows.append({
+                "die":  row["DIE"].strip(),
+                "wp":   row["WP"].strip(),
+                "test": row["TEST"].strip().lower() in ("yes", "1", "true"),
+            })
+    return rows
+
+
+def build_chip_name(die: str, wafer: str) -> str:
+    return f"{die}_{wafer}"
+
+
+# ---------------------------------------------------------------------------
+# WPAgent Kafka client  (thin wrapper — talks to the running WPAgent listener)
+# ---------------------------------------------------------------------------
+
+class WPAgentClient:
+    """Sends commands to the WPAgent Kafka listener.
+
+    Requires `confluent_kafka` — install it in the env that runs this script,
+    or point the script at the WPAgent venv.
+
+    The WPAgent listener must already be running (``python main.py listen``).
+    """
+
+    REQUEST_TOPIC = "svt.wp-agent.request"
+    REPLY_TOPIC   = "svt.wp-agent.request.reply"
+    HEARTBEAT_TOPIC = "svt.wp-agent.heartbeat"
+    HEARTBEAT_TIMEOUT = 6.0  # seconds — same as WPAgent uses
+    CORRELATION_HEADER = "kafka_correlationId"
+    REPLY_TOPIC_HEADER = "kafka_replyTopic"
+    REPLY_PARTITION_HEADER = "kafka_replyPartition"
+
+    def __init__(self, bootstrap_servers: str = "localhost:9095", ip_family: str = "v4"):
+        self.bootstrap_servers = bootstrap_servers
+        self.ip_family = ip_family
+
+        # --- verify broker is reachable ---
+        log.info("Connecting to Kafka broker %s ...", bootstrap_servers)
+        admin = AdminClient({"bootstrap.servers": self.bootstrap_servers, "broker.address.family": self.ip_family})
+        try:
+            md = admin.list_topics(timeout=5)
+            topics = sorted(t for t in md.topics if "svt" in t or "wp-agent" in t)
+            log.info("Kafka broker OK  (%d topics, %d SVT-related)", len(md.topics), len(topics))
+            for t in topics:
+                log.info("  topic: %s", t)
+        except Exception as exc:
+            raise ConnectionError(
+                f"Cannot reach Kafka broker at {bootstrap_servers}: {exc}\n"
+                "Make sure Kafka is running or check kafka_broker in the config."
+            ) from exc
+
+        self.producer = KafkaProducer({"bootstrap.servers": self.bootstrap_servers, "broker.address.family": self.ip_family})
+
+        self.consumer = KafkaConsumer({
+            "bootstrap.servers": self.bootstrap_servers,
+            "broker.address.family": self.ip_family,
+            "group.id": f"its3-runner-{uuid.uuid4()}",
+            "auto.offset.reset": "latest",
+            "enable.auto.commit": False,
+            "session.timeout.ms": 60000,
+            "max.poll.interval.ms": 120000,
+        })
+        self.consumer.subscribe([self.REPLY_TOPIC])
+        # warm-up
+        for _ in range(20):
+            self.consumer.poll(0.1)
+
+        log.info("WPAgent Kafka client ready")
+
+    # ------------------------------------------------------------------
+    def send(self, command: str, params: dict | None = None, timeout: float = 30.0) -> dict:
+        correlation_id = str(uuid.uuid4())
+        payload = json.dumps({"type": command, "data": params or {}}).encode()
+        headers = [
+            (self.CORRELATION_HEADER, correlation_id.encode()),
+            (self.REPLY_TOPIC_HEADER, self.REPLY_TOPIC.encode()),
+            (self.REPLY_PARTITION_HEADER, b"0"),
+        ]
+        self.producer.produce(self.REQUEST_TOPIC, value=payload, headers=headers)
+        self.producer.flush(timeout=5)
+        log.info("  -> WPAgent  %s  %s", command, params or "")
+        return self._wait_reply(correlation_id, timeout)
+
+    def _wait_reply(self, correlation_id: str, timeout: float) -> dict:
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            msg = self.consumer.poll(0.5)
+            if msg is None or msg.error():
+                continue
+            hdrs = {k: v for k, v in (msg.headers() or []) if k}
+            cid = hdrs.get(self.CORRELATION_HEADER, b"").decode(errors="ignore")
+            if cid != correlation_id:
+                continue
+            reply = json.loads(msg.value())
+            status = reply.get("status", "unknown")
+            log.info("  <- WPAgent  %s  status=%s", reply.get("type", "?"), status)
+            return reply
+        log.warning("  <- WPAgent  TIMEOUT after %.0fs", timeout)
+        return {"status": "timeout", "output": f"No reply within {timeout}s"}
+
+    # ------------------------------------------------------------------
+    # High-level helpers used by the runner
+    # ------------------------------------------------------------------
+    def go_to_separation(self) -> dict:
+        return self.send("MoveChuckSeparation")
+
+    def go_to_die(self, col: int, row: int) -> dict:
+        return self.send("MoveChuckRowColumn", {"col": col, "row": row})
+
+    def step_next_die(self) -> dict:
+        return self.send("MoveChuckNextDie")
+
+    def initialize(self, params: dict | None = None) -> dict:
+        """Initialize the WPAgent.  Params depend on mode (manual / DB / serial).
+        Kept as a thin passthrough — caller fills in the params dict."""
+        return self.send("Initialize", params or {}, timeout=60.0)
+
+    def is_listener_alive(self, timeout: float = 2.0) -> tuple[bool, float]:
+        """Check if the WPAgent listener is alive via the heartbeat topic.
+
+        Mirrors WPAgent/services/WPListenerHeartbeat.is_listener_alive().
+        Returns (is_alive, age_seconds).  age=inf if no heartbeat found.
+        """
+        hb_consumer = KafkaConsumer({
+            "bootstrap.servers": self.bootstrap_servers,
+            "broker.address.family": self.ip_family,
+            "group.id": f"its3-hb-{uuid.uuid4()}",
+            "auto.offset.reset": "earliest",
+            "enable.auto.commit": False,
+        })
+        hb_consumer.subscribe([self.HEARTBEAT_TOPIC])
+
+        start = time.time()
+        now = time.time()
+        last_ts = None
+
+        while time.time() - start < timeout:
+            msg = hb_consumer.poll(0.1)
+            if msg is None or msg.error():
+                continue
+            try:
+                heartbeat = json.loads(msg.value().decode("utf-8"))
+                ts = heartbeat.get("timestamp")
+                if ts and (now - ts) < self.HEARTBEAT_TIMEOUT:
+                    hb_consumer.close()
+                    log.info("WPAgent listener alive  (heartbeat age %.1fs)", now - ts)
+                    return True, now - ts
+                if ts and (last_ts is None or ts > last_ts):
+                    last_ts = ts
+            except Exception:
+                continue
+
+        hb_consumer.close()
+        if last_ts is not None:
+            age = now - last_ts
+            log.warning("WPAgent listener appears DOWN  (last heartbeat %.1fs ago)", age)
+            return False, age
+        else:
+            log.warning("WPAgent listener: no heartbeat found on topic %s", self.HEARTBEAT_TOPIC)
+            return False, float("inf")
+
+
+# ---------------------------------------------------------------------------
+# Runner
+# ---------------------------------------------------------------------------
+
+class ITS3Runner:
+    def __init__(self, config: dict, config_dir: Path,
+                 wafer: str, dry_run: bool = False):
+        self.cfg = config
+        self.config_dir = config_dir
+        self.dry_run = dry_run
+
+        self.mosaix_root = Path(config["mosaix_root"])
+        self.build_dir   = config.get("build_dir", "build")
+        self.wafer       = wafer
+
+        # resolve run_list path relative to config file location
+        rl = config.get("run_list", "run_list.csv")
+        rl_path = Path(rl)
+        if not rl_path.is_absolute():
+            rl_path = config_dir / rl_path
+        self.run_list_path = rl_path
+
+        # substitution values available in every command template
+        self.template_vars = {
+            "setup_config":  config.get("setup_config", ""),
+            "power_profile": config.get("power_profile", ""),
+            "output":        config.get("output", ""),
+            "wafer":         self.wafer,
+            "build_dir":     self.build_dir,
+        }
+
+        # environment captured from `source setup.sh load` (populated once)
+        self._env: dict[str, str] | None = None
+
+        # WPAgent Kafka client (lazy init)
+        self._wp: WPAgentClient | None = None
+
+    # ------------------------------------------------------------------
+
+    def _wp_agent(self) -> WPAgentClient:
+        if self._wp is not None:
+            return self._wp
+        broker = self.cfg.get("kafka_broker", "localhost:9095")
+        ip_family = self.cfg.get("kafka_ip_family", "v4")
+        self._wp = WPAgentClient(bootstrap_servers=broker, ip_family=ip_family)
+        return self._wp
+
+    # ------------------------------------------------------------------
+
+    def _wp_initialize(self) -> bool:
+        """Establish Kafka link and send Initialize to WPAgent."""
+        wp = self._wp_agent()          # connects + checks broker (always, even dry-run)
+
+        # --- heartbeat check (same as WPAgent main.py send) ---
+        alive, age = wp.is_listener_alive(timeout=2.0)
+        if not alive:
+            if age == float("inf"):
+                log.error("No WPAgent listener detected! Is 'python main.py listen' running?")
+            else:
+                log.error("WPAgent listener appears down (last heartbeat %.1fs ago)", age)
+            return False
+
+        if self.dry_run:
+            log.info("  -> WPAgent  Initialize (dry-run, dummy)")
+            return True
+
+        # --- WPAgent initialization (dummy for now) ---
+        # TODO: fill in real params once project / orientation logic is decided
+        #       differences between SEG and BAM types go here
+        wp_init_params = self.cfg.get("wp_init_params", {})
+        if wp_init_params:
+            resp = wp.initialize(wp_init_params)
+            status = resp.get("status", "unknown")
+            if status.lower() not in ("success", "ok"):
+                log.error("WPAgent Initialize failed: %s", resp.get("output", resp))
+                return False
+        else:
+            log.info("wp_init_params not set — skipping WPAgent Initialize (dummy mode)")
+        return True
+
+    # ------------------------------------------------------------------
+
+    def _source_setup(self) -> dict[str, str]:
+        if self._env is not None:
+            return self._env
+
+        setup_script = self.mosaix_root / "setup.sh"
+        log.info("Sourcing %s load ...", setup_script)
+
+        if self.dry_run:
+            self._env = dict(os.environ)
+            return self._env
+
+        result = subprocess.run(
+            f"source {setup_script} load && env -0",
+            shell=True, executable="/bin/bash",
+            cwd=str(self.mosaix_root),
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            stderr = result.stderr.decode("utf-8", errors="replace")
+            raise RuntimeError(f"source setup.sh failed (exit {result.returncode}):\n{stderr}")
+
+        env: dict[str, str] = {}
+        for chunk in result.stdout.split(b"\0"):
+            if not chunk or b"=" not in chunk:
+                continue
+            key, val = chunk.split(b"=", 1)
+            env[key.decode("utf-8", errors="replace")] = val.decode("utf-8", errors="replace")
+
+        self._env = env
+        log.info("Environment captured")
+        return self._env
+
+    # ------------------------------------------------------------------
+
+    def _run_cmd(self, cmd: str, label: str = "") -> int:
+        if label:
+            log.info("[%s]  $ %s", label, cmd)
+        else:
+            log.info("  $ %s", cmd)
+
+        if self.dry_run:
+            return 0
+
+        env = self._source_setup()
+        result = subprocess.run(
+            cmd, shell=True, executable="/bin/bash",
+            cwd=str(self.mosaix_root), env=env,
+        )
+        if result.returncode != 0:
+            log.error("Command exited with code %d", result.returncode)
+        return result.returncode
+
+    # ------------------------------------------------------------------
+
+    def _wp_move_to_die(self, wp_coord: str) -> bool:
+        """Parse WP column e.g. '[0,-1]' and send GoToDie."""
+        try:
+            coords = json.loads(wp_coord)
+            col, row = int(coords[0]), int(coords[1])
+        except Exception:
+            log.error("Cannot parse WP coordinate: %s", wp_coord)
+            return False
+
+        if self.dry_run:
+            log.info("  -> WPAgent  GoToSeparation")
+            log.info("  -> WPAgent  GoToDie  col=%d row=%d", col, row)
+            return True
+
+        wp = self._wp_agent()
+        resp = wp.go_to_separation()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("GoToSeparation: %s", resp.get("output", resp))
+
+        resp = wp.go_to_die(col, row)
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("GoToDie failed: %s", resp.get("output", resp))
+            return False
+        return True
+
+    # ------------------------------------------------------------------
+
+    def run_initialization(self) -> bool:
+        log.info("=" * 60)
+        log.info("INITIALIZATION")
+        log.info("=" * 60)
+
+        # 1. Establish Kafka + WPAgent
+        log.info("--- WPAgent connection ---")
+        if not self._wp_initialize():
+            return False
+
+        # 2. Run mosaix init commands (set_daq etc.)
+        log.info("--- Mosaix setup commands ---")
+        for cmd_template in self.cfg.get("Initialization", []):
+            cmd = cmd_template.format(**self.template_vars)
+            rc = self._run_cmd(cmd, label="init")
+            if rc != 0:
+                log.error("Initialization failed (exit %d), aborting.", rc)
+                return False
+        return True
+
+    # ------------------------------------------------------------------
+
+    def run_sequence(self) -> None:
+        chips = load_run_list(str(self.run_list_path))
+        seq_templates = self.cfg.get("Sequence", [])
+
+        total = sum(1 for c in chips if c["test"])
+        done = 0
+
+        log.info("=" * 60)
+        log.info("SEQUENCE  (%d chips to test, wafer=%s)", total, self.wafer)
+        log.info("=" * 60)
+
+        # build list of chips to test (for progress bar)
+        test_chips = [c for c in chips if c["test"]]
+        skip_chips = [c for c in chips if not c["test"]]
+        for chip in skip_chips:
+            log.info("SKIP %s  (TEST=no)", build_chip_name(chip["die"], self.wafer))
+
+        pbar = tqdm(test_chips, desc="Chips", unit="chip",
+                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+                    file=sys.stderr)
+
+        for chip in pbar:
+            # time.sleep(0.5)  # small delay to make sure logs appear in order with progress bar
+            chip_name = build_chip_name(chip["die"], self.wafer)
+            pbar.set_postfix_str(chip_name)
+            done += 1
+
+            log.info("-" * 60)
+            log.info("CHIP %d/%d: %s   WP=%s", done, total, chip_name, chip["wp"])
+            log.info("-" * 60)
+
+            # --- move prober to die ---
+            if not self._wp_move_to_die(chip["wp"]):
+                log.error("Failed to move to die %s, skipping chip", chip_name)
+                continue
+
+            # --- run sequence commands ---
+            tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
+            for cmd_template in seq_templates:
+                cmd = cmd_template.format(**tvars)
+                rc = self._run_cmd(cmd, label=chip_name)
+                if rc != 0:
+                    log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
+                    break
+
+        pbar.close()
+        log.info("Done. %d/%d chips processed.", done, total)
+
+    # ------------------------------------------------------------------
+
+    def run(self) -> int:
+        if not self.run_initialization():
+            return 1
+        self.run_sequence()
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="ITS3 TestInterface runner")
+    parser.add_argument("wafer", help="Wafer name, e.g. L1W04_S4")
+    parser.add_argument("--config", default="its3_config.json",
+                        help="JSON config file (default: its3_config.json)")
+    parser.add_argument("--log-file", default=None,
+                        help="Also write log output to this file")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print commands without executing them")
+    args = parser.parse_args()
+
+    setup_logging(args.wafer, args.log_file)
+
+    config_path = Path(args.config).expanduser().resolve()
+    if not config_path.exists():
+        log.error("Config not found: %s", config_path)
+        return 2
+
+    with open(config_path) as f:
+        config = json.load(f)
+
+    runner = ITS3Runner(config, config_dir=config_path.parent,
+                        wafer=args.wafer, dry_run=args.dry_run)
+    return runner.run()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
