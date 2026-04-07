@@ -2,6 +2,7 @@ from sentio_prober_control.Sentio.ProberSentio import SentioProber
 from sentio_prober_control.Sentio.Enumerations import *
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio.Enumerations import ChuckXYReference, ChuckZReference
+from sentio_prober_control.Sentio import Response
 
 
 class SentioProberImpl(AbstractProber):
@@ -27,6 +28,10 @@ class SentioProberImpl(AbstractProber):
 
     def run_ptpa(self):
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
+
+        if not resp.ok():
+            raise Exception(f"PTPA failed: {resp.message()}")
+
         self.prober.wait_complete(resp.cmd_id())
         print(resp.message())
 
