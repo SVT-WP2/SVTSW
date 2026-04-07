@@ -1,0 +1,21 @@
+{
+  "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
+  "build_dir": "build",
+  "run_list": "run_list.csv",
+  "kafka_broker": "svmithi02:9096",
+  "kafka_ip_family": "v4",
+  "wp_init_params": {},
+
+  "setup_config": "../Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
+  "power_profile": "smu",
+  "output": "eos",
+
+  "Initialization": [
+    "python3 utility_scripts/set_daq.py {setup_config} -s {power_profile}"
+  ],
+
+  "Sequence": [
+    "./{build_dir}/RunSequence ../Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
+    "./{build_dir}/RunSequence ../Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
+  ]
+}
