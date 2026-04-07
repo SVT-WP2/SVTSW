@@ -1,4 +1,4 @@
-# ITS3 TestInterface
+# ITS3 TestAgent
 
 Runs ITS3 test sequences on a list of chips defined in a CSV file.
 
@@ -6,13 +6,13 @@ Runs ITS3 test sequences on a list of chips defined in a CSV file.
 
 | File | What it is |
 |---|---|
-| `its3_config.json` | Config: wafer name, paths, command templates |
+| `its3_test_agent_config.json` | Config: paths, command templates |
 | `run_list.csv` | Which chips to test, with WPAgent die coordinates |
-| `its3_test_interface.py` | The runner script |
+| `its3_test_agent.py` | The runner script |
 
 ## Quick start
 
-1. Edit `its3_config.json` — set wafer, paths, and command templates.
+1. Edit `its3_test_agent_config.json` — set paths and command templates.
 2. Edit `run_list.csv` — set TEST=yes/no for each chip.
 3. Run:
 
@@ -21,10 +21,10 @@ Runs ITS3 test sequences on a list of chips defined in a CSV file.
 source ~/mosaix_testing/software/mosaix_test/setup.sh load
 
 # dry-run (prints commands, runs nothing)
-python3 its3_test_interface.py its3_config.json --dry-run
+python3 its3_test_agent.py L1W04_S4 --dry-run
 
 # real run
-python3 its3_test_interface.py its3_config.json
+python3 its3_test_agent.py L1W04_S4
 ```
 
 ## How it works
