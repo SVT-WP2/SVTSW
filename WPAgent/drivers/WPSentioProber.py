@@ -81,7 +81,7 @@ class SentioProberImpl(AbstractProber):
 
     def auto_focus(self):
         resp = self.prober.vision.auto_focus()
-        self.prober.wait_complete()
+        self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_work_area(self, work_area):
         from sentio_prober_control.Sentio.Enumerations import WorkArea

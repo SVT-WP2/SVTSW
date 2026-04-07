@@ -543,7 +543,7 @@ def Move_chuck_separation(address=None, machine_type=None, user=None, waferAgent
         return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
 
 
-@validate_command
+# @validate_command
 def auto_focus(address=None, machine_type=None, user=None, waferAgentName="CERN"):
     """Execute auto-focus"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters

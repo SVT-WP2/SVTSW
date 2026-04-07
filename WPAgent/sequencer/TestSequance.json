@@ -1,11 +1,16 @@
 [
   {
-    "command": "AutoFocus"
+    "command": "AutoFocus",
+    "data": {
+      "user": "user1",
+      "waferAgentName": "CERN"
+    }
   },
   {
-    "command": "GoToPreviousDie"
-  },
-  {
-    "command": "AutoFocus"
+    "command": "MoveChuckPreviousDie",
+    "data": {
+      "user": "user1",
+      "waferAgentName": "CERN"
+    }
   }
 ]

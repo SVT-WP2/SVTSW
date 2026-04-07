@@ -41,7 +41,7 @@ COMMAND_ROUTER = {
     "Help": project_actions.help_command,
 
     # Sequencer
-    "RunSequencer": lambda **data: sequencer_actions.run_sequence(
+    "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
         filepath=get_filepath_param(data if data else None),
         executor=_exec_in_sequence
     ),
@@ -77,11 +77,11 @@ COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_
 # Instantiation of logger
 logger = WPAgentLogger(
     kafka_enabled=True,
-    kafka_servers='localhost:9095',
+    kafka_servers='svmithi02:9096',
     severity_threshold=Severity.CRITICAL  # Only WARNING and above go to Kafka
 )
 
-health_check = ListenerHealthCheck(bootstrap_servers='localhost:9095')
+health_check = ListenerHealthCheck(bootstrap_servers='svmithi02:9096')
 
 
 def _exec_in_sequence(message_type, data=None):

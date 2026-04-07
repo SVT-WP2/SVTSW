@@ -20,7 +20,7 @@ class WPAgentCache:
         name='WPAgent',
         cache_file='WPAgent.cache.json',
         kafka_enabled=False,
-        kafka_servers='localhost:9095',
+        kafka_servers='svmithi02:9096',
         kafka_topic='svt.wp-agent.cache',
     ):
 

@@ -7,6 +7,7 @@ BYPASS_COMMANDS = {
         "UserLogOut",
         "Help",
         "AutoFocus",
+        "Initialize",
     }
 
 class WPAgentState(Enum):
