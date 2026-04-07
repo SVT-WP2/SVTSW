@@ -4,6 +4,10 @@
   "run_list": "run_list.csv",
   "kafka_broker": "svmithi02:9096",
   "kafka_ip_family": "v4",
+  "wp_user": "user1",
+  "wp_agent_name": "CERN",
+  "wp_project": "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
+  "reset_agent_at_login": true,
   "wp_init_params": {},
 
   "setup_config": "../Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
