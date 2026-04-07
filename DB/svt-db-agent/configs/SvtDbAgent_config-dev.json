@@ -13,7 +13,7 @@
     "psqlDbSchema": "main"
   },
   "kafka": {
-    "server": "localhost",
-    "port": "9095"
+    "server": "svmithi02",
+    "port": "9096"
   }
 }
