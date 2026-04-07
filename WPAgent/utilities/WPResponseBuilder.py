@@ -22,13 +22,13 @@ class ResponseBuilder:
         data = {
             "userLogged": getattr(g, 'userLogged'),
             "userLoggedHierarchy": getattr(g, 'userLoggedHierarchy'),
-            "asicSerialNumber": 0, #(g, 'asic_serial_number', 0),
+            "asicSerialNumber":  getattr(g, 'asicSerialNumber', 0),
             "wpMachineId": getattr(g, 'wpMachineId', 0),
             "WPAG_State": getattr(g, 'wpag_state', 'ServiceOff'),
             "wpAgentName": getattr(g, 'wpAgentName'),
 
             "loadedWafer": None,
-            "instaledprobeCard": None,  # Note: your spelling "instaled"
+            "instaledprobeCard": None,
 
             "openedProjectId": getattr(g, 'opened_project_id', 0),
             "projectName": getattr(g, 'projectName', ''),
