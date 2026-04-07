@@ -86,9 +86,6 @@ def build_chip_name(die: str, wafer: str) -> str:
 class WPAgentClient:
     """Sends commands to the WPAgent Kafka listener.
 
-    Requires `confluent_kafka` — install it in the env that runs this script,
-    or point the script at the WPAgent venv.
-
     The WPAgent listener must already be running (``python main.py listen``).
     """
 
@@ -100,9 +97,12 @@ class WPAgentClient:
     REPLY_TOPIC_HEADER = "kafka_replyTopic"
     REPLY_PARTITION_HEADER = "kafka_replyPartition"
 
-    def __init__(self, bootstrap_servers: str = "localhost:9095", ip_family: str = "v4"):
+    def __init__(self, bootstrap_servers: str = "localhost:9095", ip_family: str = "v4",
+                 user: str = "user1", agent_name: str = "CERN"):
         self.bootstrap_servers = bootstrap_servers
         self.ip_family = ip_family
+        self.user = user
+        self.agent_name = agent_name
 
         # --- verify broker is reachable ---
         log.info("Connecting to Kafka broker %s ...", bootstrap_servers)
@@ -140,7 +140,11 @@ class WPAgentClient:
     # ------------------------------------------------------------------
     def send(self, command: str, params: dict | None = None, timeout: float = 30.0) -> dict:
         correlation_id = str(uuid.uuid4())
-        payload = json.dumps({"type": command, "data": params or {}}).encode()
+        # inject user + waferAgentName into every command
+        data = {"user": self.user, "waferAgentName": self.agent_name}
+        if params:
+            data.update(params)
+        payload = json.dumps({"type": command, "data": data}).encode()
         headers = [
             (self.CORRELATION_HEADER, correlation_id.encode()),
             (self.REPLY_TOPIC_HEADER, self.REPLY_TOPIC.encode()),
@@ -171,6 +175,24 @@ class WPAgentClient:
     # ------------------------------------------------------------------
     # High-level helpers used by the runner
     # ------------------------------------------------------------------
+
+    # -- safe commands (don't move the prober, OK during dry-run) --
+    def user_login(self) -> dict:
+        return self.send("UserLogIn")
+
+    def user_logout(self) -> dict:
+        return self.send("UserLogOut")
+
+    def open_project(self, project_name: str) -> dict:
+        return self.send("OpenProject", {"project_name": project_name})
+
+    def auto_focus(self) -> dict:
+        return self.send("AutoFocus")
+
+    def reset_agent(self) -> dict:
+        return self.send("ResetAgent")
+
+    # -- prober-moving commands (skip during dry-run) --
     def go_to_separation(self) -> dict:
         return self.send("MoveChuckSeparation")
 
@@ -274,13 +296,18 @@ class ITS3Runner:
             return self._wp
         broker = self.cfg.get("kafka_broker", "localhost:9095")
         ip_family = self.cfg.get("kafka_ip_family", "v4")
-        self._wp = WPAgentClient(bootstrap_servers=broker, ip_family=ip_family)
+        user = self.cfg.get("wp_user", "user1")
+        agent_name = self.cfg.get("wp_agent_name", "CERN")
+        self._wp = WPAgentClient(
+            bootstrap_servers=broker, ip_family=ip_family,
+            user=user, agent_name=agent_name,
+        )
         return self._wp
 
     # ------------------------------------------------------------------
 
     def _wp_initialize(self) -> bool:
-        """Establish Kafka link and send Initialize to WPAgent."""
+        """Establish Kafka link, log in, open project, and send Initialize to WPAgent."""
         wp = self._wp_agent()          # connects + checks broker (always, even dry-run)
 
         # --- heartbeat check (same as WPAgent main.py send) ---
@@ -292,9 +319,36 @@ class ITS3Runner:
                 log.error("WPAgent listener appears down (last heartbeat %.1fs ago)", age)
             return False
 
+        # --- ResetAgent (optional, safe, always runs) ---
+        if self.cfg.get("reset_agent_at_login", False):
+            log.info("Sending ResetAgent before login ...")
+            resp = wp.reset_agent()
+            status = resp.get("status", "").lower()
+            if status not in ("success", "ok"):
+                log.warning("ResetAgent: %s (continuing anyway)", resp)
+
+        # --- UserLogIn (safe, always runs) ---
+        resp = wp.user_login()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("UserLogIn failed: %s", resp)
+            return False
+
         if self.dry_run:
+            log.info("  -> WPAgent  OpenProject (dry-run, skipped)")
             log.info("  -> WPAgent  Initialize (dry-run, dummy)")
+            r=wp.auto_focus()
+            log.info("  -> WPAgent  AutoFocus status=%s", r.get("status", "unknown"))
             return True
+
+        # --- OpenProject ---
+        project = self.cfg.get("wp_project", "")
+        if project:
+            resp = wp.open_project(project)
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.error("OpenProject failed: %s", resp)
+                return False
+        else:
+            log.info("wp_project not set — skipping OpenProject")
 
         # --- WPAgent initialization (dummy for now) ---
         # TODO: fill in real params once project / orientation logic is decided
@@ -468,7 +522,20 @@ class ITS3Runner:
     def run(self) -> int:
         if not self.run_initialization():
             return 1
-        self.run_sequence()
+        try:
+            self.run_sequence()
+        finally:
+            # --- UserLogOut (safe, always runs) ---
+            log.info("=" * 60)
+            log.info("CLEANUP")
+            log.info("=" * 60)
+            wp = self._wp_agent()
+            resp = wp.user_logout()
+            status = resp.get("status", "").lower()
+            if status in ("success", "ok"):
+                log.info("UserLogOut OK")
+            else:
+                log.warning("UserLogOut: %s", resp)
         return 0
 
 
