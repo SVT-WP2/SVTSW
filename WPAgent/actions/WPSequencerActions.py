@@ -5,7 +5,7 @@ from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 
 
-def run_sequencer(filepath, user=None, waferAgentName=None,executor=None):
+def run_sequencer(filepath, user=None, waferAgentName=None, executor=None):
     """Execute a sequence of commands from JSON file"""
     import json
     from WPCmdMap import execute_command
@@ -29,7 +29,6 @@ def run_sequencer(filepath, user=None, waferAgentName=None,executor=None):
             print(f"   Parameters: {data}")
 
             result = execute_command(command, data)
-
 
             if not result:
                 error_msg = f"Command '{command}' returned None"

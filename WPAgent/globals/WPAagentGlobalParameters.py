@@ -18,7 +18,7 @@ class SvtWPAagentGlobalParameters:
         self._project_metadata = {}
 
         # Database-related parameters
-        self.wpMachineId = 4  # Database ID of the prober
+        self.wpMachineId = None  # Database ID of the prober
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
         self.wpAgentName = None

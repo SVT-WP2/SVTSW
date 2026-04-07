@@ -12,6 +12,7 @@ from WPKafkaClient import KafkaClient
 from services.WPListenerHeartbeat import ListenerHealthCheck
 import json
 import os
+from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
 
 class WaferProberAgent:
@@ -175,7 +176,7 @@ class WaferProberAgent:
             full_address = f"{address_host}:{port}"
             # from WPAagentGlobalParameters import SvtWPAagentGlobalParameters
             #
-            # g = SvtWPAagentGlobalParameters.getInstance()
+            g = SvtWPAagentGlobalParameters.getInstance()
             # g.wpAgentName= "CERN"
 
             # Prepare initialization parameters
@@ -195,6 +196,9 @@ class WaferProberAgent:
             print(f"   Address: {full_address}")
             print(f"   Type: {init_params['machine_type']}")
             print(f"   Machine ID: {init_params['machine_id']}")
+
+            g.set_machine_id(init_params['machine_id'])
+
 
             # Call the initialization function directly
             result = svt_initialise_wp(**init_params)
