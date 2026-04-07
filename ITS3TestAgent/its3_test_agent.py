@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ITS3 TestInterface runner.
+ITS3 TestAgent runner.
 
 Reads a simple JSON config + CSV run list, then:
   1. Sources the mosaix .venv and runs Initialization commands once.
@@ -9,10 +9,10 @@ Reads a simple JSON config + CSV run list, then:
   3. Between chips, sends WPAgent Kafka commands to move the prober.
 
 Usage:
-    python3 its3_test_interface.py L1W04_S4                        # run with wafer name
-    python3 its3_test_interface.py L1W04_S4 --dry-run              # print, don't execute
-    python3 its3_test_interface.py L1W04_S4 --config my_config.json
-    python3 its3_test_interface.py L1W04_S4 --log-file run.log     # also log to file
+    python3 its3_test_agent.py L1W04_S4                        # run with wafer name
+    python3 its3_test_agent.py L1W04_S4 --dry-run              # print, don't execute
+    python3 its3_test_agent.py L1W04_S4 --config my_config.json
+    python3 its3_test_agent.py L1W04_S4 --log-file run.log     # also log to file
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ log = logging.getLogger("its3")
 # Logging setup
 # ---------------------------------------------------------------------------
 
-def setup_logging(wafer: str, log_file: str | None = None) -> None:
-    fmt = f"%(asctime)s [%(levelname)s] [{wafer}] %(message)s"
+def setup_logging(log_file: str | None = None) -> None:
+    fmt = "%(asctime)s [%(levelname)s] %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     # Use tqdm.write so log lines appear above the progress bar
@@ -192,6 +192,9 @@ class WPAgentClient:
     def reset_agent(self) -> dict:
         return self.send("ResetAgent")
 
+    def run_ptpa(self) -> dict:
+        return self.send("RunPTPA", timeout=600.0)
+
     # -- prober-moving commands (skip during dry-run) --
     def go_to_separation(self) -> dict:
         return self.send("MoveChuckSeparation")
@@ -318,26 +321,36 @@ class ITS3Runner:
             else:
                 log.error("WPAgent listener appears down (last heartbeat %.1fs ago)", age)
             return False
-
-        # --- ResetAgent (optional, safe, always runs) ---
-        if self.cfg.get("reset_agent_at_login", False):
-            log.info("Sending ResetAgent before login ...")
-            resp = wp.reset_agent()
-            status = resp.get("status", "").lower()
-            if status not in ("success", "ok"):
-                log.warning("ResetAgent: %s (continuing anyway)", resp)
-
+        
         # --- UserLogIn (safe, always runs) ---
         resp = wp.user_login()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("UserLogIn failed: %s", resp)
             return False
+        
+        # --- ResetAgent (optional, safe, always runs) ---
+        # if self.cfg.get("reset_agent_at_login", False):
+        #     log.info("Sending ResetAgent before login ...")
+        #     resp = wp.reset_agent()
+        #     status = resp.get("status", "").lower()
+        #     if status not in ("success", "ok"):
+        #         log.warning("ResetAgent: %s (continuing anyway)", resp)
+
+        # # --- UserLogIn (safe, always runs) ---
+        # resp = wp.user_login()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("UserLogIn failed: %s", resp)
+        #     return False
 
         if self.dry_run:
-            log.info("  -> WPAgent  OpenProject (dry-run, skipped)")
-            log.info("  -> WPAgent  Initialize (dry-run, dummy)")
-            r=wp.auto_focus()
-            log.info("  -> WPAgent  AutoFocus status=%s", r.get("status", "unknown"))
+            project = self.cfg.get("wp_project", "")
+            if project:
+                r = wp.open_project(project)
+                log.info("  OpenProject status=%s", r.get("status", "unknown"))
+            r = wp.go_to_die(1, 1)
+            log.info("  MoveChuckRowColumn(1,1) status=%s", r.get("status", "unknown"))
+            r = wp.run_ptpa()
+            log.info("  RunPTPA status=%s", r.get("status", "unknown"))
             return True
 
         # --- OpenProject ---
@@ -546,15 +559,15 @@ class ITS3Runner:
 def main() -> int:
     parser = argparse.ArgumentParser(description="ITS3 TestInterface runner")
     parser.add_argument("wafer", help="Wafer name, e.g. L1W04_S4")
-    parser.add_argument("--config", default="its3_config.json",
-                        help="JSON config file (default: its3_config.json)")
+    parser.add_argument("--config", default="its3_test_agent_config.json",
+                        help="JSON config file (default: its3_test_agent_config.json)")
     parser.add_argument("--log-file", default=None,
                         help="Also write log output to this file")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print commands without executing them")
     args = parser.parse_args()
 
-    setup_logging(args.wafer, args.log_file)
+    setup_logging(args.log_file)
 
     config_path = Path(args.config).expanduser().resolve()
     if not config_path.exists():
