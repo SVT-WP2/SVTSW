@@ -40,7 +40,7 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers='localhost:9095', group_id='wafer-executor'):
+    def __init__(self, bootstrap_servers='svmithi02:9096', group_id='wafer-executor'):
         self.bootstrap_servers = bootstrap_servers
         self.group_id = group_id
 

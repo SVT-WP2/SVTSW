@@ -190,7 +190,7 @@ class WaferProberAgent:
 
             # Add optional project if specified in config
             if 'projectName' in config:
-                init_params['project_name'] = config['projectName']
+                init_params['projectName'] = config['projectName']
 
             print(f"   Address: {full_address}")
             print(f"   Type: {init_params['machine_type']}")

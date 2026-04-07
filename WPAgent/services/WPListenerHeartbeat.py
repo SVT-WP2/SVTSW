@@ -18,7 +18,7 @@ class ListenerHealthCheck:
     HEARTBEAT_INTERVAL = 2.0  # Listener sends heartbeat every 2 seconds
     HEARTBEAT_TIMEOUT = 6.0  # Consider dead if no heartbeat for 6 seconds
 
-    def __init__(self, bootstrap_servers='localhost:9095'):
+    def __init__(self, bootstrap_servers='svmithi02:9096'):
         self.bootstrap_servers = bootstrap_servers
         self._ensure_topic_exists()
 
