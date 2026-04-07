@@ -213,6 +213,7 @@ def move_chuck_die(col: int, row: int, subsite: int = 0, address=None, machine_t
 def switch_camera(mount_point, address=None, machine_type=None, user=None, waferAgentName=None):
     """Switch camera mount point"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from drivers.WPFactory import get_current_prober
 
     error = _ensure_initialized()
     if error:
@@ -221,8 +222,7 @@ def switch_camera(mount_point, address=None, machine_type=None, user=None, wafer
     g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
-        address, _, machine_type = resolve_project_parameters(address, None, machine_type)
-        prober = get_prober(machine_type, address)
+        prober = get_current_prober()
         prober.switch_camera(mount_point)
         prober.local_mode()
 

@@ -423,6 +423,7 @@ class WPCommandValidator:
                 "withDB": {"type": "bool", "required": True},
             },
 
+
             # - MoveChuckUnloadWafer
             # - UnloadWafer
             # - MoveChuckSeparation
