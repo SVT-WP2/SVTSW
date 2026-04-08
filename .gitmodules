@@ -1,9 +1,0 @@
-[submodule "DB/svt-db-agent/deps/librdkafka"]
-	path = DB/svt-db-agent/deps/librdkafka
-	url = https://github.com/confluentinc/librdkafka.git
-[submodule "DB/svt-db-agent/deps/libpqxx"]
-	path = DB/svt-db-agent/deps/libpqxx
-	url = https://github.com/jtv/libpqxx.git
-[submodule "DB/svt-db-agent/deps/nlohmann_json"]
-	path = DB/svt-db-agent/deps/nlohmann_json
-	url = https://github.com/nlohmann/json.git
