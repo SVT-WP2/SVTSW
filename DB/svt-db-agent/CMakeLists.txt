@@ -100,7 +100,8 @@ foreach(CPP_FILE ${CPP_FILES})
   add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
   add_dependencies(${EXECUTABLE_NAME} version)
 
-  target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PQXX_INCLUDE_DIRS}
-                                                        ${RDKAFKA_INCLUDE_DIRS})
+  target_include_directories(
+    ${EXECUTABLE_NAME} SYSTEM PRIVATE ${PQXX_INCLUDE_DIRS}
+                                      ${RDKAFKA_INCLUDE_DIRS})
   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()

@@ -76,11 +76,11 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumTypesInDB(
   try
   {
     SvtDbInterface::doGenericQuery(query, rows);
-    for (auto &row : rows.rows)
+    for (auto &rowValues : rows.values)
     {
-      if (!schema.compare(row.at(0).get<std::string>()))
+      if (!schema.compare(rowValues.at(0).get<std::string>()))
       {
-        enum_types.push_back(row.at(1).get<std::string>());
+        enum_types.push_back(rowValues.at(1).get<std::string>());
       }
     }
     SvtDbInterface::finishQuery(rows);
@@ -104,8 +104,8 @@ bool SvtDbAgent::SvtDbEnumDto::getAllEnumValuesInDB(
   try
   {
     SvtDbInterface::doGenericQuery(query, rows);
-    const auto str_res = rows.rows[0][0].get<std::string>();
-    std::string_view res{str_res};
+    const auto &data_field = rows.values[0][0].get<std::string>();
+    std::string_view res{data_field};
     SvtDbInterface::finishQuery(rows);
 
     res.remove_prefix(res.find('{') + 1);

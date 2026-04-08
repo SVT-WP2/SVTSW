@@ -309,21 +309,21 @@ bool SvtDbAgent::SvtDbBaseDto::getAllEntriesFromDB(
   {
     rows_t rows;
     query.doQuery(rows, queryString);
-    entries.reserve(rows.rows.size());
+    entries.reserve(rows.values.size());
 
-    if (!rows.rows.empty())
+    if (!rows.values.empty())
     {
-      for (const auto &row : rows.rows)
+      for (const auto &fieldValues : rows.values)
       {
-        if (row.size() != getColNames().size())
+        if (fieldValues.size() != getColNames().size())
         {
           throw std::range_error("return row size unmatches query list size");
         }
         SvtDbEntry rowEntry;
         int valId = 0;
-        for (const auto &fieldVal : row)
+        for (const auto &fieldVal : fieldValues)
         {
-          const std::string_view &colName = rows.rowNames[valId];
+          const std::string_view &colName = rows.colNames[valId];
           rowEntry.addValue(std::string(colName), fieldVal);
           ++valId;
         }
