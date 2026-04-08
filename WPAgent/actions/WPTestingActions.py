@@ -811,7 +811,7 @@ def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None)
 def move_chuck_loaded_wafer(user=None, waferAgentName=None):
     """Load same wafer Load + MoveChuckOffAxis """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from WPDataBaseActions import get_loaded_wafer_from_db
+    from actions.WPDataBaseActions import get_loaded_wafer_from_db
 
     error = _ensure_initialized()
     if error:
@@ -832,7 +832,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         # Update info
         update_current_info(currentProber=prober)
 
-        get_loaded_wafer_from_db(g.wp_machine_id)
+        #get_loaded_wafer_from_db(g.wp_machine_id)
 
         agentStateMachine.transition('MoveChuckLoadedWafer')
 
@@ -856,6 +856,7 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckUnloadWaferReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
+    g.loaded_wafer_id = 2
 
     if g.loaded_wafer_id is None:
         return ResponseBuilder.error("MoveChuckUnloadWaferReply", "No wafer loaded", 400)

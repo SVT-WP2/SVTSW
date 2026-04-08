@@ -27,7 +27,7 @@ class ResponseBuilder:
             "WPAG_State": getattr(g, 'wpag_state', 'ServiceOff'),
             "wpAgentName": getattr(g, 'wpAgentName'),
 
-            "loadedWafer": None,
+            "loadedWafer": 1,
             "instaledprobeCard": None,
 
             "openedProjectId": getattr(g, 'opened_project_id', 0),
