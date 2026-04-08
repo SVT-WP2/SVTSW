@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.12)
-set(CMAKE_CXX_STANDARD 17)
+cmake_minimum_required(VERSION 3.24)
+set(CMAKE_CXX_STANDARD 20)
 project(svt-db-agent)
 
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR})
@@ -64,28 +64,25 @@ add_custom_target(
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-if(NOT TARGET nlohmann_json)
-  set(JSON_BuildTests
-      OFF
-      CACHE INTERNAL "")
-  add_subdirectory(deps/nlohmann_json build-nlohmann_json)
-endif()
-
+include(FetchContent)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/utils svt-utils)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/kafka svt-kafka)
 
 if(UNIX AND NOT APPLE)
-  add_subdirectory(deps/libpqxx build-pqxx)
-  set(svt_db_agent_lib pqxx rdkafka++ pthread svt-utils svt-kafka)
+  FetchContent_Declare(
+    pqxx
+    GIT_REPOSITORY https://github.com/jtv/libpqxx.git
+    GIT_TAG 334bcd22 # Or a specific version
+    FIND_PACKAGE_ARGS NAMES pqxx)
+  FetchContent_MakeAvailable(pqxx)
+
+  set(svt_db_agent_lib pqxx pthread svt-utils svt-kafka)
 
 else()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PQXX REQUIRED libpqxx)
-  pkg_check_modules(RDKAFKA REQUIRED rdkafka++)
 
-  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} ${RDKAFKA_LINK_LIBRARIES} pthread
-                       svt-utils svt-kafka)
-
+  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} pthread svt-utils svt-kafka)
 endif()
 
 # Define the directory containing your source files
