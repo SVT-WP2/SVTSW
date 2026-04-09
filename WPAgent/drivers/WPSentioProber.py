@@ -142,6 +142,16 @@ class SentioProberImpl(AbstractProber):
         "overtravel (bool): True to enable, False to disable."
         self.prober.enable_chuck_overtravel(overtravel)
 
+    def get_current_working_area(self):
+        response = self.prober.send_cmd("get_chuck_position_hint")
+        parts = response.split(",")
+        error_code = int(parts[0])
+        status_code = int(parts[1])
+        position_hint = parts[2]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
+        chuck_site = parts[3]  # e.g. "Wafer", "AuxRight", "AuxLeft"
+
+        return str(position_hint)
+
     def get_chuck_position(self):
         """
         Get current chuck position status.
