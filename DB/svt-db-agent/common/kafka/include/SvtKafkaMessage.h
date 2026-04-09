@@ -1,11 +1,10 @@
 #pragma once
 
-#include <string>
+#include "SvtJsonUtils.h"
 
-#include <librdkafka/rdkafkacpp.h>
 #include <nlohmann/json.hpp>
 
-#include "SvtJsonUtils.h"
+#include <string>
 
 namespace SvtKafka
 {

@@ -5,23 +5,29 @@
  * @brief Db-agent kafka service producer
  */
 
-#include <memory>
-#include <mutex>
-#include <string>
-#include <thread>
-
-#include <librdkafka/rdkafkacpp.h>
-
-#include "SvtKafkaMessage.h"
 #include "SvtKafkaProducer.h"
+// #include "SvtKafkaMessage.h"
 #include "SvtKafkaUtils.h"
+#include "SvtLogger.h"
+
+#include <kafka/Header.h>
+#include <kafka/KafkaProducer.h>
+#include <kafka/Types.h>
+
+#include <memory>
+#include <string>
 
 using namespace SvtKafka;
+using namespace kafka;
+using namespace kafka::clients::producer;
+
 //========================================================================+
-SvtKafkaProducer::SvtKafkaProducer(const std::string &broker)
+SvtKafkaProducer::SvtKafkaProducer(const std::string& broker, const ConfigMap_t& configs)
   : mBroker(broker)
+  , mConfigs(configs)
 {
-  mDrReportCb = std::make_shared<SvtKafkaDeliveryReportCb>();
+  assert(!broker.empty());
+
   createProducer();
 }
 
@@ -29,72 +35,18 @@ SvtKafkaProducer::SvtKafkaProducer(const std::string &broker)
 bool SvtKafkaProducer::createProducer()
 {
   //! stop consumer
-  mThread.setIsRunning(false);
+  // mThread.setIsRunning(false);
 
-  /*
-   * Set configuration properties
-   */
-  auto mGlobalConf = std::shared_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
-  auto mTopicConf = std::shared_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
-
-  SvtKafka::setConfig(mGlobalConf.get(), "metadata.broker.list", mBroker);
-
-  if (!mDebug.empty())
+  Properties props({{"bootstrap.servers", mBroker}});
+  for (const auto& [key, value] : mConfigs)
   {
-    SvtKafka::setConfig(mGlobalConf.get(), "debug", mDebug);
+    props.put(key, value);
   }
 
-  SvtKafkaEventCb event_cb(NULL);
-  SvtKafka::setConfig(mGlobalConf.get(), "event_cb", &event_cb);
-
-  if (mDumpConfig)
-  {
-    int pass;
-
-    for (pass = 0; pass < 2; pass++)
-    {
-      std::list<std::string> *dump;
-      switch (pass)
-      {
-      case 0:
-        dump = mGlobalConf->dump();
-        logInfo("# Global config");
-        break;
-      case 1:
-        dump = mTopicConf->dump();
-        logInfo("# Topic config");
-        break;
-      }
-
-      std::ostringstream ss;
-      for (std::list<std::string>::iterator it = dump->begin();
-           it != dump->end();)
-      {
-        ss << *it << " = ";
-        it++;
-        ss << *it << std::endl;
-        it++;
-      }
-      ss << std::endl;
-      logInfo(ss.str());
-    }
-  }
-
-  // /* Set delivery report callback */
-  SvtKafka::setConfig(mGlobalConf.get(), "dr_cb", mDrReportCb.get());
-
-  mGlobalConf->set("default_topic_conf", mTopicConf.get(), mErrStr);
-
-  /*
-   * Create producer using accumulated global configuration.
-   */
-  mProducer = std::shared_ptr<RdKafka::Producer>(
-      RdKafka::Producer::create(mGlobalConf.get(), mErrStr));
+  mProducer = std::make_shared<KafkaProducer>(props);
   if (!mProducer)
   {
-    logError("Failed to create producer: " + mErrStr);
+    logError("Failed to create producer: ");
     return false;
   }
 
@@ -104,89 +56,50 @@ bool SvtKafkaProducer::createProducer()
 }
 
 //========================================================================+
-bool SvtKafkaProducer::start()
+bool SvtKafkaProducer::send(const std::string_view& topic,
+                            const nlohmann::json& headers,
+                            const std::string& data)
 {
-  logInfo("Starting Producer " + mProducer->name());
-  mThread.setName(mProducer->name());
-  mThread.start(std::bind(static_cast<void (SvtKafkaProducer::*)()>(&SvtKafkaProducer::push), this));
-  return true;
-}
+  // const std::string payload = message.getPayload().dump();
 
-//========================================================================+
-void SvtKafkaProducer::push()
-{
-  while (mThread.getIsRunning() && !mThread.getSuspended())
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::lock_guard<std::mutex> lk(mMutex);
-    mProducer->poll(10);
-  }
-}
+  std::map<std::string, std::string> header_map;
 
-//========================================================================+
-bool SvtKafkaProducer::stop(const bool suspended)
-{
-  mThread.stop(suspended);
-  mProducer->flush(500);
-  return true;
-}
+  for (const auto& [key, value] : headers.items())
+  {
+    header_map.insert({key, value.get<std::string>()});
+  }
 
-//========================================================================+
-bool SvtKafkaProducer::send(const std::string_view &topic,
-                            const SvtKafka::SvtKafkaMessage &message)
-{
-  const std::string payload = message.getPayload().dump();
-  const size_t payload_size = payload.size();
-  const std::string topicName(topic);
-  std::lock_guard<std::mutex> lk(mMutex);
-  if (!mThread.getIsRunning())
+  const Partition replyPartition = std::stoi(header_map["kafka_replyPartition"]);
+  ProducerRecord record({std::string(topic)},
+                        replyPartition,
+                        NullKey,
+                        Value{data.c_str(), data.size()});
+
+  for (const auto& [key, value] : header_map)
   {
-    logWarning("Producer " + ((mProducer) ? mProducer->name() : "") + " is not running. Message will not be sent.");
-    return false;
+    record.headers().emplace_back(Header::Key(key), Header::Value(value.c_str(), value.size()));
   }
-  RdKafka::Headers *headers = RdKafka::Headers::create();
-  for (const auto &[hdr_name, hdr_value] : message.getHeaders().items())
+
+  // Prepare delivery callback
+  auto mDeliveryReportCb = [data](const RecordMetadata& metadata, const Error& error)
   {
-    headers->add(hdr_name, hdr_value);
-  }
-  /*
-   * Produce message
-   */
-  while (true)
-  {
-    RdKafka::ErrorCode resp = mProducer->produce(
-        // std::string(topicNames[SvtKafkaTopicEnum::RequestReply]),
-        // m_partition,
-        topicName, mPartition,
-        RdKafka::Producer::RK_MSG_COPY /*Copy payload*/,
-        /* Value */
-        const_cast<char *>(payload.c_str()), payload_size,
-        /* Key */
-        NULL, 0,
-        /* Timestamp (defaults to now) */
-        0,
-        /* Message headers, if any */
-        headers,
-        /* Per-message opaque value passed to
-         * delivery report */
-        NULL);
-    if (resp == RdKafka::ERR__QUEUE_FULL)
+    if (!error)
     {
-      mProducer->poll(100);
-      continue;
-    }
-    else if (resp != RdKafka::ERR_NO_ERROR)
-    {
-      logError("% Produce failed: " + RdKafka::err2str(resp));
-      delete headers;
+      logInfo(
+          "Message delivered with (" + std::to_string(data.size()) +
+          " bytes)");
+      logInfo(metadata.toString());
     }
     else
     {
-      logInfo("% Produced message (" + std::to_string(payload_size) +
-              " bytes)");
-      mProducer->poll(100);
+      logError("Message failed to be delivered: " + error.message());
     }
-    break;
-  }
+  };
+
+  //! Prepare a message
+  mProducer->send(record, mDeliveryReportCb, KafkaProducer::SendOption::ToCopyRecordValue);
+
+  // Poll events (e.g. message delivery callback)
+  mProducer->pollEvents(std::chrono::milliseconds(0));
   return true;
 }
