@@ -29,6 +29,17 @@ def _ensure_initialized():
 
 @validate_command
 def move_chuck_xy(x, y, user=None, waferAgentName=None):
+    """
+
+    Args:
+        x: in micrometer
+        y: in micrometer
+        user: current user
+        waferAgentName: current WP Agent Name
+
+    Returns:
+
+    """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     error = _ensure_initialized()
     if error:
@@ -37,10 +48,11 @@ def move_chuck_xy(x, y, user=None, waferAgentName=None):
     try:
         prober = get_current_prober()
         prober.move_chuck_xy(x, y)
-        prober.local_mode()
 
         # Update info
         update_current_info(currentProber=prober)
+        prober.local_mode()
+
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
         return ResponseBuilder.success("MoveChuckXYReply", f"Moved chuck to Center")
 
@@ -96,9 +108,11 @@ def move_chuck_center(user=None, waferAgentName=None):
     try:
         prober = get_current_prober()
         prober.move_chuck_center()
-        prober.local_mode()
+
         # Update info
         update_current_info(currentProber=prober)
+
+        prober.local_mode()
 
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
         return ResponseBuilder.success("MoveChuckCenterReply", f"Moved chuck to Center")
@@ -121,10 +135,10 @@ def move_chuck_z(z, user=None, waferAgentName=None):
     try:
         prober = get_current_prober()
         prober.move_chuck_z(z)
-        prober.local_mode()
 
         # Update info
         update_current_info(currentProber=prober)
+        prober.local_mode()
 
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
@@ -515,11 +529,10 @@ def open_project(project_name: str, user=None, waferAgentName=None):
     """Open project"""
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    # from WPDataBaseActions import get_project_id_by_name
 
-    # error = _ensure_initialized()
-    # if error:
-    #    return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
+    error = _ensure_initialized()
+    if error:
+       return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -533,7 +546,6 @@ def open_project(project_name: str, user=None, waferAgentName=None):
         print(project_name)
 
         prober.open_project(project_name)
-        # prober.local_mode()
 
         # Update project name (ID would need to come from DB)
         g.projectName = project_name
