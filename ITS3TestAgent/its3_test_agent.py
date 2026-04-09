@@ -70,7 +70,7 @@ def load_run_list(csv_path: str) -> list[dict]:
         for row in reader:
             rows.append({
                 "die":  row["DIE"].strip(),
-                "wp":   row["WP"].strip(),
+                "wp":   row["WP[col,row]"].strip(),
                 "test": row["TEST"].strip().lower() in ("yes", "1", "true"),
             })
     return rows
@@ -211,7 +211,6 @@ class WPAgentClient:
     def move_chuck_home(self) -> dict:
         return self.send("MoveChuckHome")
 
-    # -- prober-moving commands (skip during dry-run) --
     def go_to_separation(self) -> dict:
         return self.send("MoveChuckSeparation")
 
@@ -370,25 +369,25 @@ class ITS3Runner:
             log.error("InitProbing failed: %s", resp)
             return False
 
-        # --- 4. MoveChuckRowColumn to init position ---
-        init_col = self.cfg.get("wp_init_col", 0)
-        init_row = self.cfg.get("wp_init_row", 10)
-        resp = wp.go_to_die(init_col, init_row)
-        if resp.get("status", "").lower() not in ("success", "ok"):
-            log.error("MoveChuckRowColumn(%d,%d) failed: %s", init_col, init_row, resp)
-            return False
+        # # --- 4. MoveChuckRowColumn to init position ---
+        # init_col = self.cfg.get("wp_init_col", 0)
+        # init_row = self.cfg.get("wp_init_row", 10)
+        # resp = wp.go_to_die(init_col, init_row)
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("MoveChuckRowColumn(%d,%d) failed: %s", init_col, init_row, resp)
+        #     return False
 
-        # --- 5. RunPTPA ---
-        resp = wp.run_ptpa()
-        if resp.get("status", "").lower() not in ("success", "ok"):
-            log.error("RunPTPA failed: %s", resp)
-            return False
+        # # --- 5. RunPTPA ---
+        # resp = wp.run_ptpa()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("RunPTPA failed: %s", resp)
+        #     return False
 
-        # --- 6. MoveChuckWide ---
-        resp = wp.move_chuck_wide()
-        if resp.get("status", "").lower() not in ("success", "ok"):
-            log.error("MoveChuckWide failed: %s", resp)
-            return False
+        # # --- 6. MoveChuckWide ---
+        # resp = wp.move_chuck_wide()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("MoveChuckWide failed: %s", resp)
+        #     return False
 
         return True
 
@@ -585,9 +584,17 @@ class ITS3Runner:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
                 if new_project and not self.dry_run:
-                    log.info("Switching WP project: %s -> %s (%s)",
+                    log.info("Preparing to switch WP project: %s -> %s (%s)",
                              self._current_project_type, chip_type, new_project)
                     wp = self._wp_agent()
+                    resp = wp.go_to_separation()
+                    if resp.get("status", "").lower() not in ("success", "ok"):
+                        log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
+                    resp = wp.move_chuck_off_axis()
+                    if resp.get("status", "").lower() not in ("success", "ok"):
+                        log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+                    log.info("Switching WP project: %s -> %s (%s)",
+                             self._current_project_type, chip_type, new_project)  
                     resp = wp.open_project(new_project)
                     if resp.get("status", "").lower() not in ("success", "ok"):
                         log.error("OpenProject failed for %s: %s", chip_type, resp)
