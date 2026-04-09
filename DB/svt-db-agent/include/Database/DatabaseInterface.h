@@ -6,30 +6,30 @@
 #include <nlohmann/json.hpp>
 #include <pqxx/pqxx>
 
-using row_t = std::vector<nlohmann::basic_json<>>;
-using rowName_t = std::vector<std::string>;
+using rowValues_t = std::vector<nlohmann::basic_json<>>;
+using colName_t = std::vector<std::string>;
 
 using rows_t = struct rows_t
 {
-  std::vector<row_t> rows;
-  rowName_t rowNames;
+  std::vector<rowValues_t> values;
+  colName_t colNames;
 
   void clear()
   {
-    rowNames.clear();
+    colName_t().swap(colNames);
 
-    for (auto &row : rows)
+    for (auto &_rowValues : values)
     {
-      row_t().swap(row);
+      rowValues_t().swap(_rowValues);
     }
-    std::vector<row_t>().swap(rows);
+    std::vector<rowValues_t>().swap(values);
   }
 
   bool checkRows()
   {
-    for (const auto &row : rows)
+    for (const auto &_rowValues : values)
     {
-      if (row.size() != rowNames.size())
+      if (_rowValues.size() != colNames.size())
         return false;
     }
     return true;
