@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 # Set the working directory in the container
 WORKDIR /app
@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     libcpprest-dev \
     libboost-all-dev \
     libssl-dev \
-    cmake
+    cmake \
+    jq
 
 # POSGRESQL DEPS
 RUN apt install curl ca-certificates gnupg2 wget -y
@@ -18,18 +19,21 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg -
 
 RUN apt-get update
 RUN apt install postgresql-17 libpq-dev -y
+RUN apt-get install git-core -y
 
 # KAFKA DEPS
 RUN apt install librdkafka-dev -y
 
 # Copy the source code into the container
 COPY . .
+RUN chmod +x /app/docker-entrypoint.sh
 RUN bash ./compile.sh
 
 EXPOSE 6600
 EXPOSE 9095
 
-CMD ["/app/build/bin/svt_db_agent", "/app/configs/SvtDbAgent_config-dev.json"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["/app/configs/SvtDbAgent_config-local.json"]
 
 
 

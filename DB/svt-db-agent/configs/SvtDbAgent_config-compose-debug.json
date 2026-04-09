@@ -1,0 +1,20 @@
+{
+  "logger": {
+    "filePath": "/tmp/SvtDbAgent-debug",
+    "termVerbosity": "ALL",
+    "fileVerbosity": "ALL"
+  },
+  "DataBase": {
+    "psqlHost": "pg-db-dev",
+    "psqlPort": "5432",
+    "psqlUser": "postgres",
+    "psqlPass": "postgres",
+    "psqlDbName": "postgres",
+    "psqlDbSchema": "main"
+  },
+  "kafka": {
+    "server": "localhost",
+    "port": "9095"
+  }
+}
+

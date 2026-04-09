@@ -51,8 +51,8 @@ bool SvtKafkaConsumer::createConsumer()
     SvtKafka::setConfig(mGlobalConf.get(), "debug", mDebug);
   }
 
-  SvtKafkaEventCb event_cb(this);
-  SvtKafka::setConfig(mGlobalConf.get(), "event_cb", &event_cb);
+  mEventCb = std::make_shared<SvtKafkaEventCb>(this);
+  SvtKafka::setConfig(mGlobalConf.get(), "event_cb", mEventCb.get());
 
   if (mDumpConfig)
   {

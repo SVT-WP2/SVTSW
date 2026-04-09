@@ -52,5 +52,6 @@ namespace SvtKafka
     SvtKafkaThread mThread;
     std::mutex mMutex;
     std::shared_ptr<SvtKafkaDeliveryReportCb> mDrReportCb;
+    std::shared_ptr<RdKafka::EventCb> mEventCb;
   };
 }  // namespace SvtKafka

@@ -46,8 +46,8 @@ bool SvtKafkaProducer::createProducer()
     SvtKafka::setConfig(mGlobalConf.get(), "debug", mDebug);
   }
 
-  SvtKafkaEventCb event_cb(NULL);
-  SvtKafka::setConfig(mGlobalConf.get(), "event_cb", &event_cb);
+  mEventCb = std::make_shared<SvtKafkaEventCb>(nullptr);
+  SvtKafka::setConfig(mGlobalConf.get(), "event_cb", mEventCb.get());
 
   if (mDumpConfig)
   {

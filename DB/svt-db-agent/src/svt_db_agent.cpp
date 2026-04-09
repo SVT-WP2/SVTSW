@@ -12,7 +12,7 @@
 #include <string>
 #include <thread>
 
-// #include "version.h"
+#include "version.h"
 
 #include "Database/DatabaseInterface.h"
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
@@ -22,7 +22,11 @@
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
-// const std::string version = std::string(VERSION);
+#ifndef VERSION
+#define VERSION "unknown"
+#endif
+
+const std::string version = std::string(VERSION);
 
 bool run = true;
 //========================================================================+

@@ -57,6 +57,7 @@ namespace SvtKafka
     static constexpr uint8_t kKafkaWaitTime_ms = 1;
 
     std::shared_ptr<SvtKafkaConsumeCb> mKafkaComsumeCb;
+    std::shared_ptr<RdKafka::EventCb> mEventCb;
 
     std::string mBroker;
     std::string mTopicName;
