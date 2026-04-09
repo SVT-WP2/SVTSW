@@ -48,6 +48,8 @@ def take_screenshot(
 
     Returns:
         Response with screenshot path
+# @validate_command
+def move_chuck_xy(x, y, user=None, waferAgentName=None):
     """
     error = _ensure_initialized()
     if error:
@@ -208,6 +210,7 @@ def move_chuck_z(z, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
 
 
+# @validate_command
 def enable_ptpa(user=None, waferAgentName=None):
     """Enable PTPA alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -487,6 +490,7 @@ def update_current_info(currentProber=None):
 
 
 # @validate_command
+
 def switch_camera(mountPoint, user=None, waferAgentName=None):
     """Switch camera mount point"""
 
@@ -785,7 +789,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         return ResponseBuilder.error("AlignWaferReply", str(e), 500)
 
 
-# @validate_command
+@validate_command
 def move_chuck_contact(user=None, waferAgentName=None):
     """Move probes to contact position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
