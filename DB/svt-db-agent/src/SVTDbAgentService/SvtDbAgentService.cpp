@@ -5,6 +5,14 @@
  * @brief Db agent
  */
 
+#include "SVTDbAgentService/SvtDbAgentService.h"
+#include "SvtKafkaConsumer.h"
+#include "SvtKafkaMessage.h"
+#include "SvtKafkaProducer.h"
+#include "SvtLogger.h"
+
+#include <kafka/ConsumerRecord.h>
+
 #include <cstring>
 #include <exception>
 #include <functional>
@@ -13,15 +21,11 @@
 #include <string>
 #include <vector>
 
-#include "librdkafka/rdkafkacpp.h"
-
-#include "SVTDbAgentService/SvtDbAgentService.h"
-#include "SvtKafkaConsumer.h"
-#include "SvtKafkaMessage.h"
-#include "SvtKafkaProducer.h"
-#include "SvtLogger.h"
+// #include "librdkafka/rdkafkacpp.h"
 
 using namespace SvtDbAgent;
+using namespace kafka::clients::consumer;
+
 using SvtKafka::SvtKafkaConsumer;
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaProducer;
@@ -31,124 +35,104 @@ SvtDbAgentService::SvtDbAgentService()
 {
 }
 
-//===============================================~~=========================+
-SvtDbAgentService::~SvtDbAgentService() { RdKafka::wait_destroyed(1000); }
+//========================================================================+
+bool SvtDbAgentService::configureService()
+{
+  return (createConsumer_request() && createProducer_request_reply());
+}
 
 //========================================================================+
-bool SvtDbAgentService::configureService(bool stop_eof)
+bool SvtDbAgentService::createConsumer_request()
 {
-  mConsumer = std::shared_ptr<SvtKafkaConsumer>(
-      new SvtKafkaConsumer(mBrokerName, topicNames[Request], stop_eof));
-  mConsumer->setConsumeCbFun(std::bind(&SvtDbAgentService::processMsgCb, this, std::placeholders::_1, std::placeholders::_2));
-  mConsumer->start();
-  mProducer =
-      std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName));
-  mProducer->start();
+  try
+  {
+    SvtKafka::ConfigMap_t configs;
+    configs["log_level"] = "4";
+    configs["auto.offset.reset"] = "latest";
+    configs["group.id"] = "svt.db-agent.request";
+    configs["allow.auto.create.topics"] = "true";
+    //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
+    //! the consumer reaches the end of a partition.
+    configs["enable.partition.eof"] = "false";
+
+    mConsumer_request = std::shared_ptr<SvtKafkaConsumer>(
+        new SvtKafkaConsumer({mBrokerName, topicNames[Request]}, configs));
+    mConsumer_request->setConsumeCbFun(std::bind(&SvtDbAgentService::processMsgCb, this, std::placeholders::_1));
+    mConsumer_request->start();
+  }
+  catch (const std::exception &e)
+  {
+    logError(e.what());
+    return false;
+  }
 
   return true;
 }
 
 //========================================================================+
-void SvtDbAgentService::stopConsumer(const bool suspended)
+bool SvtDbAgentService::createProducer_request_reply()
 {
-  mConsumer->stop(suspended);
+  try
+  {
+    SvtKafka::ConfigMap_t configs;
+    configs["log_level"] = "4";
+    mProducer_request_reply =
+        std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName, configs));
+    // mProducer_request_reply->start();
+  }
+  catch (const std::exception &e)
+  {
+    logError(e.what());
+    return false;
+  }
+
+  return true;
 }
 
 //========================================================================+
 bool SvtDbAgentService::getIsConsRunnning()
 {
-  return mConsumer->getIsRunning();
+  return mConsumer_request->getIsRunning();
 }
 
 //========================================================================+
-void SvtDbAgentService::processMsgCb(RdKafka::Message &message, void *opaque)
+void SvtDbAgentService::processMsgCb(const ConsumerRecord &record)
 {
-  const RdKafka::Headers *headers;
-
   SvtKafkaReplyMsg svtMsg;
   SvtKafka::SvtKafkaMsgStatus status =
       SvtKafka::SvtKafkaMsgStatus::Success;
-  switch (message.err())
+
+  if (record.error())
   {
-  case RdKafka::ERR__TIMED_OUT:
-    logError("KafkaError: ERR__TIMED_OUT");
+    logError(record.toString());
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
-    break;
+  }
 
-  case RdKafka::ERR_NO_ERROR:
-    try
+  try
+  {
+    /* Real message */
+    logInfo("Read msg at offset " + std::to_string(record.offset()));
+    if (record.key().size())
     {
-      /* Real message */
-      logInfo("Read msg at offset " + std::to_string(message.offset()));
-      if (message.key())
-      {
-        logInfo("Key: " + *message.key());
-      }
-      headers = message.headers();
-      if (headers)
-      {
-        const auto &hdrs = headers->get_all();
-        for (size_t i = 0; i < hdrs.size(); i++)
-        {
-          const auto &hdr = hdrs[i];
-
-          std::string hdr_val;
-          if (hdr.value() != NULL)
-          {
-            hdr_val =
-                std::string((const char *) hdr.value(), (int) hdr.value_size());
-          }
-          else
-          {
-            hdr_val = "";
-          }
-          svtMsg.AddHeader(hdr.key().data(), hdr_val.data());
-          // if (hdr.value() != NULL)
-          // {
-          //   printf(" Header: %s = \"%.*s\"\n", hdr.key().c_str(),
-          //          (int) hdr.value_size(), (const char *) hdr.value());
-          // }
-          // else
-          // {
-          //   printf(" Header:  %s = NULL\n", hdr.key().c_str());
-          // }
-        }
-      }
-      {
-        auto bufferPayload = static_cast<const char *>(message.payload());
-        svtMsg.setPayload(nlohmann::json::parse(
-            bufferPayload, bufferPayload + static_cast<int>(message.len())));
-        // printf("%.*s\n", static_cast<int>(message->len()),
-        //        static_cast<const char *>(message->payload()));
-      }
-      status = SvtKafka::SvtKafkaMsgStatus::Success;
+      logInfo("Key: " + record.key().toString());
     }
-    catch (const std::exception &e)
+    const auto &headers = record.headers();
+    if (!headers.empty())
     {
-      status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
-      THROW_RUNTIME_ERROR("Failed to parse kafka message: " + e.what());
+      for (const auto &header : headers)
+      {
+        svtMsg.AddHeader(header.key, std::string(static_cast<const char *>(header.value.data()), header.value.size()));
+      }
     }
-    break;
-
-  case RdKafka::ERR__PARTITION_EOF:
-    /* Last message */
-    logError("KafkaError: ERR__PARTITION_EOF");
-    *(static_cast<bool *>(opaque)) = false;
+    {
+      svtMsg.setPayload(nlohmann::json::parse(record.value().toString()));
+    }
+    status = SvtKafka::SvtKafkaMsgStatus::Success;
+  }
+  catch (const std::exception &e)
+  {
     status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
-    break;
-
-  case RdKafka::ERR__UNKNOWN_TOPIC:
-  case RdKafka::ERR__UNKNOWN_PARTITION:
-    logError("KafkaError: Consume failed, " + message.errstr());
-    *(static_cast<bool *>(opaque)) = false;
-    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
-    break;
-
-  default:
-    /* Errors */
-    logError("KafkaError: Consume failed, " + message.errstr());
-    *(static_cast<bool *>(opaque)) = false;
-    status = SvtKafka::SvtKafkaMsgStatus::UnexpectedError;
+    THROW_RUNTIME_ERROR("Failed to parse kafka message: " + e.what());
   }
   parseMsg(svtMsg, status);
 }
@@ -240,5 +224,5 @@ void SvtDbAgentService::parseMsg(
             replyMsg.getPayload().dump());
   }
 
-  mProducer->send(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg);
+  mProducer_request_reply->send(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg.getHeaders(), replyMsg.getPayload().dump());
 }

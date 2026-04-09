@@ -7,14 +7,14 @@
  * @brief Db-agent service producer
  */
 
-#include <memory>
-#include <mutex>
-#include <string>
-
-#include <librdkafka/rdkafkacpp.h>
-
-#include "SvtKafkaThread.h"
 #include "SvtKafkaUtils.h"
+
+#include <kafka/KafkaProducer.h>
+
+#include <nlohmann/json.hpp>
+
+#include <string>
+// #include <mutex>
 
 namespace SvtKafka
 {
@@ -23,34 +23,19 @@ namespace SvtKafka
   class SvtKafkaProducer
   {
    public:
-    SvtKafkaProducer(const std::string &broker);
-    ~SvtKafkaProducer()
-    {
-      stop(false);
-    }
+    SvtKafkaProducer(const std::string &broker, const ConfigMap_t &configs = {});
+    ~SvtKafkaProducer() = default;
 
     bool createProducer();
 
-    bool start();
-    bool stop(const bool suspend = false);
-
-    bool send(const std::string_view &topic, const SvtKafkaMessage &message);
+    bool send(const std::string_view &topic,
+              const nlohmann::json &headers,
+              const std::string &data);
 
    private:
-    void push();
-
-    std::shared_ptr<RdKafka::Producer> mProducer;
-
-    int mPartition = 0;
+    std::shared_ptr<kafka::clients::producer::KafkaProducer> mProducer;
 
     std::string mBroker;
-    std::string mErrStr;
-    std::string mDebug;
-
-    bool mDumpConfig = false;
-
-    SvtKafkaThread mThread;
-    std::mutex mMutex;
-    std::shared_ptr<SvtKafkaDeliveryReportCb> mDrReportCb;
+    ConfigMap_t mConfigs;
   };
 }  // namespace SvtKafka

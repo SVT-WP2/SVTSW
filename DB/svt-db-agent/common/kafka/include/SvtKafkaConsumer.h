@@ -7,16 +7,17 @@
  * @brief Db agent kafka service
  */
 
+#include "SvtKafkaThread.h"
+#include "SvtKafkaUtils.h"
+
 #include <memory>
 #include <string>
 
-#include <librdkafka/rdkafkacpp.h>
-
-#include "SvtKafkaThread.h"
+// #include <librdkafka/rdkafkacpp.h>
 
 namespace
 {
-  constexpr int kKafkaWaitTime_ms = 1;
+  constexpr int kKafkaWaitTime_ms = 100;
 }  // namespace
 
 namespace RdKafka
@@ -27,12 +28,16 @@ namespace RdKafka
 
 namespace SvtKafka
 {
-  class SvtKafkaConsumeCb;
-
   class SvtKafkaConsumer
   {
+    struct Settings
+    {
+      std::string broker;
+      std::string topicName;
+    };
+
    public:
-    SvtKafkaConsumer(const std::string &, const std::string &, bool stop_eof = false);
+    SvtKafkaConsumer(const Settings & /*settings*/, const ConfigMap_t &configs = {});
     ~SvtKafkaConsumer()
     {
       stop(false);
@@ -40,8 +45,7 @@ namespace SvtKafka
 
     bool createConsumer();
 
-    void setStopEof(const bool val) { mStopEof = val; }
-    void setConsumeCbFun(std::function<void(RdKafka::Message &, void *)>);
+    void setConsumeCbFun(ConsumerCbFun_t _fun) { mKafkaComsumeCb = _fun; }
 
     bool start();
     bool stop(const bool suspend = false);
@@ -50,21 +54,12 @@ namespace SvtKafka
    private:
     void pull();
 
-    std::shared_ptr<RdKafka::Consumer> mConsumer;
-    std::shared_ptr<RdKafka::Topic> mTopic;
-    int mPartition = 0;
+    std::shared_ptr<kafka::clients::consumer::KafkaConsumer> mConsumer;
 
-    static constexpr uint8_t kKafkaWaitTime_ms = 1;
+    ConsumerCbFun_t mKafkaComsumeCb;
 
-    std::shared_ptr<SvtKafkaConsumeCb> mKafkaComsumeCb;
-
-    std::string mBroker;
-    std::string mTopicName;
-    std::string mErrStr;
-    std::string mDebug;
-
-    bool mDumpConfig = false;
-    bool mStopEof = false;
+    Settings mSettings;
+    ConfigMap_t mConfigs;
 
     SvtKafkaThread mThread;
   };
