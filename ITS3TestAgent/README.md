@@ -12,20 +12,34 @@ Runs ITS3 test sequences on a list of chips defined in a CSV file.
 
 ## Quick start
 
-1. Edit `its3_test_agent_config.json` — set paths and command templates.
-2. Edit `run_list.csv` — set TEST=yes/no for each chip.
-3. Run:
+1. Create and activate the Python virtual environment (one-time setup):
 
 ```bash
-# activate the mosaix venv first
-source ~/mosaix_testing/software/mosaix_test/setup.sh load
+cd ITS3TestAgent
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-# dry-run (prints commands, runs nothing)
+2. Edit `its3_test_agent_config.json` — set paths and command templates.
+3. Edit `run_list.csv` — set TEST=yes/no for each chip.
+4. Run:
+
+```bash
+# activate the venv (if not already active)
+source .venv/bin/activate
+
+# dry-run (prints commands, skips prober moves)
 python3 its3_test_agent.py L1W04_S4 --dry-run
 
 # real run
 python3 its3_test_agent.py L1W04_S4
+
+# with logging to file
+python3 its3_test_agent.py L1W04_S4 --log-file run.log
 ```
+
+> **Note:** The `.venv/` directory is not committed to git — only `requirements.txt` is tracked.
 
 ## How it works
 
