@@ -329,8 +329,7 @@ class ITS3Runner:
 
     def _wp_initialize(self) -> bool:
         """Establish Kafka link and run the full WPAgent init sequence:
-        UserLogIn -> OpenProject -> InitProbing -> MoveChuckRowColumn ->
-        RunPTPA -> MoveChuckWide
+        UserLogIn -> OpenProject -> InitProbing
         """
         wp = self._wp_agent()          # connects + checks broker (always, even dry-run)
 
@@ -544,6 +543,18 @@ class ITS3Runner:
                 log.error("Initialization failed (exit %d), aborting.", rc)
                 return False
         return True
+    
+    def run_set_daq(self) -> bool:
+        log.info("--- Mosaix set_daq ---")
+        for cmd_template in self.cfg.get("Initialization", []):
+            if "set_daq" not in cmd_template.lower():
+                continue
+            cmd = cmd_template.format(**self.template_vars)
+            rc = self._run_cmd(cmd, label="set_daq")
+            if rc != 0:
+                log.error("SetDAQ command failed (exit %d), aborting.", rc)
+                return False
+        return True
 
     # ------------------------------------------------------------------
 
@@ -608,6 +619,11 @@ class ITS3Runner:
             chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
             if not self._wp_move_to_die(chip["wp"], chip_type):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
+                continue
+            
+            log.info("Running set_daq before sequence commands...")
+            if not self.run_set_daq():  # ensure DAQ is set for each chip (in case it gets reset midnight)
+                log.error("Failed to set DAQ for %s, skipping chip", chip_name)
                 continue
 
             # --- run sequence commands ---
