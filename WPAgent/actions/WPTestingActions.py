@@ -48,8 +48,8 @@ def move_chuck_xy(x, y, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
 
 
-@validate_command
-def init_probing(address=None, machine_type=None):
+#@validate_command
+def init_probing(user=None, waferAgentName=None):
     """Sequance of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -67,12 +67,12 @@ def init_probing(address=None, machine_type=None):
         prober.auto_focus()
 
         # TODO: we need to get col and row for aligment from project that stored in DB
-        prober.align_wafer(alig_die_col=1, alig_die_row=1)
+        prober.align_wafer(align_die_col=-1, align_die_row=1)
         prober.find_home()
-        prober.local_mode()
 
         # Update info
         update_current_info(currentProber=prober)
+        prober.local_mode()
 
         agentStateMachine.transition('InitProbing')
         return ResponseBuilder.success("InitProbingReply", f"Moved chuck to Center")
@@ -484,7 +484,7 @@ def find_home(user=None, waferAgentName=None):
         return ResponseBuilder.error("FindHomeReply", str(e), 500)
 
 
-@validate_command
+#@validate_command
 def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
                 user=None, waferAgentName=None):
     """Perform wafer alignment"""
@@ -819,8 +819,8 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
-    if g.loaded_wafer_id is not None:
-        return ResponseBuilder.error("MoveChuckLoadedWaferReply", "Wafer loaded", 400)
+    #if g.loaded_wafer_id is not None:
+    #    return ResponseBuilder.error("MoveChuckLoadedWaferReply", "Wafer loaded", 400)
 
     try:
         prober = get_current_prober()

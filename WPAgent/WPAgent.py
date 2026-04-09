@@ -30,47 +30,47 @@ class WaferProberAgent:
         # SPECIAL HANDLING: Initialize with withDB parameter
         # ========================================================================
 
-        if command == "Initialize" and data:
-            # Normalize params to dict if needed
-            if isinstance(data, str):
-                param_dict = {}
-                for item in data.split():
-                    if '=' in item:
-                        k, v = item.split('=', 1)
-                        param_dict[k] = v
-                data = param_dict
+        # if command == "Initialize" and data:
+        #     # Normalize params to dict if needed
+        #     if isinstance(data, str):
+        #         param_dict = {}
+        #         for item in data.split():
+        #             if '=' in item:
+        #                 k, v = item.split('=', 1)
+        #                 param_dict[k] = v
+        #         data = param_dict
 
-            # Check for withDB parameter
-            if isinstance(data, dict):
-                withDB_value = str(data.get('withDB', '')).lower()
-                if withDB_value in ['true', '1', 'yes']:
-                    print("🔍 Database initialization requested - handling producer-side...")
+        #     # Check for withDB parameter
+        #     if isinstance(data, dict):
+        #         withDB_value = str(data.get('withDB', '')).lower()
+        #         if withDB_value in ['true', '1', 'yes']:
+        #             print("🔍 Database initialization requested - handling producer-side...")
 
-                    try:
-                        from services.WPInitializationService import WPInitializationService
+        #             try:
+        #                 from services.WPInitializationService import WPInitializationService
 
-                        init_service = WPInitializationService(self)
-                        projectName = data.get('projectName')
-                        force_value = str(data.get('force', '')).lower()
-                        force = force_value in ['true', '1', 'yes']
-                        db_timeout = float(data.get('db_timeout', 15.0))
+        #                 init_service = WPInitializationService(self)
+        #                 projectName = data.get('projectName')
+        #                 force_value = str(data.get('force', '')).lower()
+        #                 force = force_value in ['true', '1', 'yes']
+        #                 db_timeout = float(data.get('db_timeout', 15.0))
 
-                        return init_service.initialize_from_database(
-                            force=force,
-                            db_timeout=db_timeout
-                        )
-                    except ImportError as e:
-                        return {
-                            "status": "error",
-                            "output": f"initialization_service.py not found. Error: {e}"
-                        }
-                    except Exception as e:
-                        import traceback
-                        traceback.print_exc()
-                        return {
-                            "status": "error",
-                            "output": f"Database initialization failed: {str(e)}"
-                        }
+        #                 return init_service.initialize_from_database(
+        #                     force=force,
+        #                     db_timeout=db_timeout
+        #                 )
+        #             except ImportError as e:
+        #                 return {
+        #                     "status": "error",
+        #                     "output": f"initialization_service.py not found. Error: {e}"
+        #                 }
+        #             except Exception as e:
+        #                 import traceback
+        #                 traceback.print_exc()
+        #                 return {
+        #                     "status": "error",
+        #                     "output": f"Database initialization failed: {str(e)}"
+        #                 }
 
         # Check listener health before sending
         if check_health:
