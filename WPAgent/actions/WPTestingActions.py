@@ -428,6 +428,10 @@ def update_current_info(currentProber=None):
     g.chuck_z_position_state = currentProber.get_chuck_position()
     g.set_chuck_position(currentProber.get_chuck_position())
 
+    # update working area
+    g.current_working_area = currentProber.get_current_working_area()
+    g.camera_mount_point = currentProber.get_current_working_area()
+
 
 # @validate_command
 def switch_camera(mountPoint, user=None, waferAgentName=None):
@@ -443,11 +447,12 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
         prober = get_current_prober()
         prober.switch_camera(mountPoint)
 
-        # Update camera
-        g.camera_mount_point = mountPoint
+
         # Update info
         update_current_info(currentProber=prober)
 
+        # Update camera
+        g.camera_mount_point = mountPoint
         prober.local_mode()
 
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
