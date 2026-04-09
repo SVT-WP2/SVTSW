@@ -1,6 +1,5 @@
 [Unit]
 Description=Svt database agent
-Requires=kafka.service
 
 [Service]
 Type=simple
