@@ -339,7 +339,7 @@ bool SvtDbInterface::VersionedInsert::doInsert()
 
   rows_t rows;
   mQuery.doQuery(rows);
-  int rowCount = rows.rows.at(0).at(0).get<int>();
+  int rowCount = rows.values.at(0).at(0).get<int>();
   finishQuery(rows);
 
   bool insertSuccessful = true;
@@ -363,9 +363,9 @@ int SvtDbInterface::getBaseVersion(int versionId)
   SvtDbInterface::doGenericQuery(queryString, rows);
   int baseVersion = -1;
 
-  if (!rows.rows.empty())
+  if (!rows.values.empty())
   {
-    baseVersion = rows.rows.at(0).at(0).get<int>();
+    baseVersion = rows.values.at(0).at(0).get<int>();
   }
   else
   {
@@ -387,9 +387,9 @@ int SvtDbInterface::getMostRecentVersionId()
   doGenericQuery(queryString, rows);
   int maxVersionId = -1;
 
-  if (!rows.rows.empty())
+  if (!rows.values.empty())
   {
-    maxVersionId = rows.rows.at(0).at(0).get<int>();
+    maxVersionId = rows.values.at(0).at(0).get<int>();
   }
   else
   {
@@ -417,29 +417,29 @@ size_t SvtDbInterface::getAllVersions(
   rows_t rows;
   query.doQuery(rows);
 
-  for (const auto &row : rows.rows)
+  for (const auto &rowValues : rows.values)
   {
     dbVersion version;
-    version.id = row.at(0).get<int>();
-    if ((row.size() > 1) && (row.at(1) != NULL))
+    version.id = rowValues.at(0).get<int>();
+    if ((rowValues.size() > 1) && (rowValues.at(1) != NULL))
     {
-      version.name = row.at(1).get<std::string>();
+      version.name = rowValues.at(1).get<std::string>();
     }
     else
     {
       version.name = std::string("NONAME_ID" + std::to_string(version.id));
     }
-    if ((row.size() > 2) && (row.at(2) != NULL))
+    if ((rowValues.size() > 2) && (rowValues.at(2) != NULL))
     {
-      version.baseVersion = row.at(2).get<int>();
+      version.baseVersion = rowValues.at(2).get<int>();
     }
     else
     {
       version.baseVersion = -1;
     }
-    if ((row.size() > 3) && (row.at(3) != NULL))
+    if ((rowValues.size() > 3) && (rowValues.at(3) != NULL))
     {
-      version.note = row.at(3).get<std::string>();
+      version.note = rowValues.at(3).get<std::string>();
     }
     else
     {
@@ -461,12 +461,12 @@ size_t SvtDbInterface::getMaxId(const std::string &tableName)
   doGenericQuery(queryString, rows);
   int maxId = -1;
 
-  if (!rows.rows.empty() && !rows.rows.at(0).empty())
+  if (!rows.values.empty() && !rows.values.at(0).empty())
   {
-    const auto &row = rows.rows.at(0).at(0);
-    if (!row.is_null())
+    const auto &data_field = rows.values.at(0).at(0);
+    if (!data_field.is_null())
     {
-      maxId = row.get<int>();
+      maxId = data_field.get<int>();
     }
     else
     {
@@ -493,5 +493,5 @@ bool SvtDbInterface::checkIdExist(const std::string &tableName, int id)
 
   rows_t rows;
   query.doQuery(rows);
-  return !rows.rows.empty();
+  return !rows.values.empty();
 }

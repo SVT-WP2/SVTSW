@@ -199,41 +199,45 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
     mDBConnection->prepare(query_name, query);
     pqxx::prepped prepare_name{query_name};
     pqxx::result res{mDBWork->exec(prepare_name)};
-    for (const auto &row : res)
+
+    if (!res.empty())
     {
-      row_t rowResult;
-      for (uint8_t i{0}; i < row.size(); ++i)
+      for (const auto &data_field : res.front())
       {
-        const auto &data_field = row[i];
-        if (row == res.begin())
-        {
-          rows.rowNames.push_back(row[i].name());
-        }
-        if (data_field.is_null())
-        {
-          rowResult.push_back(nullptr);
-          continue;
-        }
-        switch (data_field.type())
-        {
-        case 16:  // bool
-          rowResult.push_back(data_field.as<bool>());
-          break;
-        case 20:  // int8
-        case 21:  // int2
-        case 23:  // integer
-          rowResult.push_back(data_field.as<int>());
-          break;
-        case 700:  // float4
-        case 701:  // float8
-          rowResult.push_back(data_field.as<double>());
-          break;
-        default:
-          rowResult.push_back(data_field.as<std::string>());
-          break;
-        }
+        rows.colNames.push_back(data_field.name());
       }
-      rows.rows.push_back(rowResult);
+      for (const auto &row : res)
+      {
+        rowValues_t rowValues;
+        for (const auto &data_field : row)
+        {
+          if (data_field.is_null())
+          {
+            rowValues.push_back(nullptr);
+            continue;
+          }
+
+          switch (data_field.type())
+          {
+          case 16:  // bool
+            rowValues.push_back(data_field.as<bool>());
+            break;
+          case 20:  // int8
+          case 21:  // int2
+          case 23:  // integer
+            rowValues.push_back(data_field.as<int>());
+            break;
+          case 700:  // float4
+          case 701:  // float8
+            rowValues.push_back(data_field.as<double>());
+            break;
+          default:
+            rowValues.push_back(data_field.as<std::string>());
+            break;
+          }
+        }
+        rows.values.push_back(rowValues);
+      }
     }
     if (!rows.checkRows())
     {
