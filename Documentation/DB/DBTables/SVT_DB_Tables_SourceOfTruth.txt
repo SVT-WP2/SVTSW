@@ -264,10 +264,10 @@ Table main.SvtTestList {
   testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
   testSetupConfigId integer
   createsAt timestamp [default: `CURRENT_TIMESTAMP`]
-  updatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  startedAt timestamp [default: null]
+  finishedAt timestamp [default: null]
   pathToResult text [default: null]
   testResultStatus varchar(50)
-  generalStatus main.testStatus
 }
 
 Table main.SvtAsicTestList {
