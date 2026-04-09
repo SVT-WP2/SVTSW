@@ -275,6 +275,11 @@ class WaferProberAgent:
                 # Auto-initialize prober connection
                 init_success = self._auto_initialize_prober(config_name, config)
 
+                print("==========INSTALED PROBE CARD ====")
+                import actions.WPDataBaseActions as dbActions
+                instaledProbeCard = dbActions.get_installed_probe_card_from_db(4)
+                print(instaledProbeCard)
+
                 if not init_success:
                     print(f"\n⚠️  Warning: Auto-initialization failed")
                     print(f"   You may need to run Initialize command manually")
