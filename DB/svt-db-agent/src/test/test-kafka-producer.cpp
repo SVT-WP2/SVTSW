@@ -1,15 +1,14 @@
+#include "SvtKafkaMessage.h"
+#include "SvtKafkaProducer.h"
+#include "SvtLogger.h"
+
+#include <nlohmann/json.hpp>
+
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
 #include <string>
 #include <thread>
-
-#include <librdkafka/rdkafkacpp.h>
-#include <nlohmann/json.hpp>
-
-#include "SvtKafkaMessage.h"
-#include "SvtKafkaProducer.h"
-#include "SvtLogger.h"
 
 int main(int argc, char **argv)
 {
@@ -30,7 +29,7 @@ int main(int argc, char **argv)
 
   // Create Producer
   std::unique_ptr<SvtKafka::SvtKafkaProducer> producer = std::make_unique<SvtKafka::SvtKafkaProducer>(brokers);
-  producer->start();
+  // producer->start();
 
   // Send Message
   for (auto it = data_j.begin(); it != data_j.end(); ++it)
@@ -41,7 +40,7 @@ int main(int argc, char **argv)
     msg.AddHeader("kafka_correlationId", "ebac231a9f3ab10fb41b8");
     msg.AddHeader("kafka_replyTopic", "svt.db-agent.request.reply");
 
-    producer->send(topic_name, msg);
+    producer->send(topic_name, msg.getHeaders(), msg.getPayload().dump());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }

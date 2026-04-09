@@ -7,6 +7,7 @@
  * @brief Db agent manager
  */
 
+#include <kafka/ConsumerRecord.h>
 #include <cstdint>
 #include <memory>
 
@@ -45,13 +46,13 @@ namespace SvtDbAgent
   {
    public:
     SvtDbAgentService();
-    ~SvtDbAgentService();
+    ~SvtDbAgentService() = default;
 
-    bool configureService(bool stop_eof = false);
-    void processMsgCb(RdKafka::Message &msg, void *opaque);
+    bool configureService();
+    void processMsgCb(const kafka::clients::consumer::ConsumerRecord & /*record*/);
     void setDebug(std::string debug) { mDebug = debug; }
 
-    void stopConsumer(const bool suspeneded);
+    // void stopConsumer(const bool suspeneded);
     bool getIsConsRunnning();
 
     void setLogMessages(const bool val) { log_messages = val; }
@@ -64,9 +65,12 @@ namespace SvtDbAgent
     void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
                   const SvtKafka::SvtKafkaMsgStatus &status);
 
-    std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer;
+    bool createConsumer_request();
+    bool createProducer_request_reply();
+    bool createProducer_heartbeat();
 
-    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer;
+    std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
+    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
 
     SvtDbAgentRequest *mRequest = SvtUtils::Singleton<SvtDbAgentRequest>::instance();
 

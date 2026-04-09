@@ -24,14 +24,25 @@ using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
 const std::string version = std::string(VERSION);
 
-bool run = true;
+static volatile std::atomic<bool> running = true;
 //========================================================================+
-void sigterm_handler(int sig)
+void stopRunning(int sig)
 {
-  std::ostringstream ss;
-  ss << "Caught signal " << sig << ", initiating shutdown...";
-  logWarning(ss.str());
-  run = false;
+  if (sig != SIGINT && sig != SIGTERM) return;
+
+  if (running)
+  {
+    std::ostringstream ss;
+    ss << "Caught signal " << sig << ", initiating shutdown...";
+    logWarning(ss.str());
+    running = false;
+  }
+  else
+  {
+    // Restore the signal handler, -- to avoid stuck with this handler
+    std::signal(SIGINT, SIG_IGN);   // Ctrl+C
+    std::signal(SIGTERM, SIG_IGN);  // kill command
+  }
 }
 
 //========================================================================+
@@ -71,8 +82,8 @@ bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const 
 int main(int argc, const char *argv[])
 {
   // Register signal handlers for graceful shutdown
-  std::signal(SIGINT, sigterm_handler);   // Ctrl+C
-  std::signal(SIGTERM, sigterm_handler);  // kill command
+  std::signal(SIGINT, stopRunning);   // Ctrl+C
+  std::signal(SIGTERM, stopRunning);  // kill command
 
   if (argc < 2)
   {
@@ -123,11 +134,11 @@ int main(int argc, const char *argv[])
         SvtUtils::Singleton<SvtDbAgent::SvtDbAgentService>::instance();
     dbAgent->setBrokerName(kafkaBroker);
     // dbAgent->setLogMessages(true);
-    if (!dbAgent->configureService(false))
+    if (!dbAgent->configureService())
     {
       return EXIT_FAILURE;
     }
-    while (dbAgent->getIsConsRunnning() && run)
+    while (dbAgent->getIsConsRunnning() && running)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       // int time = gTimer.getTicksInSeconds();
