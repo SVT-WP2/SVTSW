@@ -21,7 +21,7 @@ class SentioProberImpl(AbstractProber):
 
     def move_chuck_center(self):
         resp = self.prober.send_cmd("move_chuck_center")
-        #self.prober.wait_complete()
+        self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
@@ -39,7 +39,6 @@ class SentioProberImpl(AbstractProber):
             raise Exception(f"PTPA failed: {resp.message()}")
 
         self.prober.wait_complete(resp.cmd_id())
-        print(resp.message())
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
