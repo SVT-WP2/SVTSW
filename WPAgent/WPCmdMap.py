@@ -39,6 +39,7 @@ COMMAND_ROUTER = {
     "ShowStatus": project_actions.get_project_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help_command,
+    "InitProbing": testing_actions.init_probing,
 
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
@@ -63,6 +64,7 @@ COMMAND_ROUTER = {
     "MoveChuckAsic": testing_actions.move_chuck_asic,
     "MoveChuckSafePosition": testing_actions.move_chuck_safe_position,
     "MoveChuckWide": testing_actions.move_chuck_wide,
+    "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
     "TestingLock": testing_actions.testing_lock,
     "TestingUnLock": testing_actions.testing_unlock,
     "ChangeProject": testing_actions.change_project,

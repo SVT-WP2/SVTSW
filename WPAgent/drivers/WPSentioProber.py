@@ -64,8 +64,8 @@ class SentioProberImpl(AbstractProber):
     def find_home(self):
         self.prober.vision.find_home()
 
-    def align_wafer(self, alig_die_col: int, alig_die_row: int, subsite: int = 0):
-        col, row, sub = self.prober.map.step_die(alig_die_col, alig_die_row, subsite)
+    def align_wafer(self, align_die_col: int, align_die_row: int, subsite: int = 0):
+        col, row, sub = self.prober.map.step_die(align_die_col, align_die_row, subsite)
         print(f"Column Index {col}, Row Index {row}, Subsite Index: {sub}")
         # TODO : Have to be tested
         self.prober.vision.align_wafer()
