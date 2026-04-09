@@ -1,4 +1,4 @@
-DIE,WP[col,row],TEST
+DIE,"WP[col,row]",TEST
 BAM00,"[-3,0]",no
 BAM01,"[-2,0]",no
 BAM02,"[-1,0]",no
@@ -15,12 +15,12 @@ BAM12,"[-2,9]",no
 BAM13,"[-1,9]",no
 BAM14,"[0,9]",no
 BAM15,"[1,9]",no
-BAM16,"[-3,10]",no
+BAM16,"[-3,10]",yes
 BAM17,"[-2,10]",no
 BAM18,"[-1,10]",no
 BAM19,"[0,10]",yes
-SEG0,"[2,3]",no
-SEG1,"[2,3]",no
-SEG2,"[2,3]",no
-SEG3,"[2,3]",no
-SEG4,"[2,3]",no
+SEG0,"[0,2]",no
+SEG1,"[0,1]",no
+SEG2,"[0,0]",no
+SEG3,"[0,-1]",no
+SEG4,"[0,-2]",no
