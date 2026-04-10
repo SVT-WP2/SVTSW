@@ -2,7 +2,7 @@
   "logger": {
     "filePath": "/tmp/SvtDbAgent-local",
     "termVerbosity": "PRODUCTION",
-    "fileVerbosity": "STANDARD"
+    "fileVerbosity": "ALL"
   },
   "DataBase": {
     "psqlHost": "localhost",
