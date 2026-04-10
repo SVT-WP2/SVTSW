@@ -509,6 +509,13 @@ class ITS3Runner:
             resp = wp.run_ptpa()
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.error("RunPTPA failed: %s", resp.get("output", resp))
+                if self.cfg.get("reset_on_ptpa_failure", False):
+                    log.warning("RunPTPA failed, issuing ResetAgent and continuing with next chip...")
+                    resp=wp.reset_agent()
+                    resp=wp.user_login()  # need to log in again after reset
+                    if resp.get("status", "").lower() not in ("success", "ok"):
+                        log.error("UserLogIn failed: %s", resp)
+                        return False
                 return False
 
         resp = wp.move_chuck_wide()

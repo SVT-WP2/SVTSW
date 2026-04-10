@@ -13,6 +13,7 @@
   "wp_init_row": 10,
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
+  "reset_on_ptpa_failure": true,
 
   "log_cmd_output": false,
   "show_cmd_output": true,
