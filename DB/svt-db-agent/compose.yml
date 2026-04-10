@@ -1,0 +1,9 @@
+services:
+  svt.db-agent:
+    image: localhost/svt.db-agent:latest
+    build:
+      context: . # The directory containing your Dockerfile
+      dockerfile: Dockerfile
+    network_mode: "host"
+    volumes:
+      - /tmp:/tmp
