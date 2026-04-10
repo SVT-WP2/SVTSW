@@ -26,10 +26,10 @@ RUN apt install librdkafka-dev -y
 
 # Copy the source code into the container
 COPY . .
-RUN cd /app/DB/svt-db-agent && chmod +x ./docker-entrypoint.sh && /bin/bash ./compile.sh
+RUN chmod +x ./docker-entrypoint.sh && /bin/bash ./compile.sh
 
 EXPOSE 6600
 EXPOSE 9095
 
-ENTRYPOINT ["/app/DB/svt-db-agent/docker-entrypoint.sh"]
-CMD ["/app/DB/svt-db-agent/configs/SvtDbAgent_config-local.json"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["/app/configs/SvtDbAgent_config-local.json"]
