@@ -251,7 +251,7 @@ void DatabaseInterface::executeQuery(const string &query, bool &status,
   {
     // clear prepare
     message = std::string("SQL error: ") + e.what() +
-              std::string("Query was: ") + e.query() +
+              std::string("Query was: ") + std::string(e.query()) +
               std::string(" with statement: ") + query;
     logError(message);
     message = e.what();
