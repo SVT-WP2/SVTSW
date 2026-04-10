@@ -9,11 +9,10 @@
   "wp_project_bam": "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
   "wp_project_seg": "ER2_MOSAIX_Vertical_V0_NotchW_ArrowW",
   "reset_agent_at_login": false,
-  "wp_init_col": 0,
-  "wp_init_row": 10,
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
   "reset_on_ptpa_failure": true,
+  "always_reopen_project": true,
 
   "log_cmd_output": false,
   "show_cmd_output": true,

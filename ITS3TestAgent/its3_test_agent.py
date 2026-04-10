@@ -368,25 +368,6 @@ class ITS3Runner:
             log.error("InitProbing failed: %s", resp)
             return False
 
-        # # --- 4. MoveChuckRowColumn to init position ---
-        # init_col = self.cfg.get("wp_init_col", 0)
-        # init_row = self.cfg.get("wp_init_row", 10)
-        # resp = wp.go_to_die(init_col, init_row)
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("MoveChuckRowColumn(%d,%d) failed: %s", init_col, init_row, resp)
-        #     return False
-
-        # # --- 5. RunPTPA ---
-        # resp = wp.run_ptpa()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("RunPTPA failed: %s", resp)
-        #     return False
-
-        # # --- 6. MoveChuckWide ---
-        # resp = wp.move_chuck_wide()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("MoveChuckWide failed: %s", resp)
-        #     return False
 
         return True
 
@@ -506,6 +487,15 @@ class ITS3Runner:
 
         ptpa_key = f"run_ptpa_{chip_type.lower()}"
         if self.cfg.get(ptpa_key, False):
+            if self.cfg.get("always_reopen_project", False):
+                project_key = f"wp_project_{chip_type.lower()}"
+                project_name = self.cfg.get(project_key, "")
+                if project_name:
+                    log.info("Reopening project before PTPA: %s", project_name)
+                    resp = wp.open_project(project_name)
+                    if resp.get("status", "").lower() not in ("success", "ok"):
+                        log.warning("OpenProject before PTPA failed: %s", resp)
+                        return False
             resp = wp.run_ptpa()
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.error("RunPTPA failed: %s", resp.get("output", resp))
@@ -552,7 +542,6 @@ class ITS3Runner:
         return True
     
     def run_set_daq(self) -> bool:
-        log.info("--- Mosaix set_daq ---")
         for cmd_template in self.cfg.get("Initialization", []):
             if "set_daq" not in cmd_template.lower():
                 continue
@@ -628,7 +617,7 @@ class ITS3Runner:
                 log.error("Failed to move to die %s, skipping chip", chip_name)
                 continue
             
-            log.info("Running set_daq before sequence commands...")
+            log.info("Running set_daq before test sequence commands...")
             if not self.run_set_daq():  # ensure DAQ is set for each chip (in case it gets reset midnight)
                 log.error("Failed to set DAQ for %s, skipping chip", chip_name)
                 continue
