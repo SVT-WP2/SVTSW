@@ -277,8 +277,9 @@ class WaferProberAgent:
 
                 print("==========INSTALED PROBE CARD ====")
                 import actions.WPDataBaseActions as dbActions
-                instaledProbeCard = dbActions.get_installed_probe_card_from_db(4)
-                print(instaledProbeCard)
+                configMachineId = int(config.get('machineId'))
+                dbActions.get_installed_probe_card_from_db(configMachineId)
+
 
                 if not init_success:
                     print(f"\n⚠️  Warning: Auto-initialization failed")
