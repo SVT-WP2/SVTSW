@@ -84,6 +84,9 @@ if(UNIX AND NOT APPLE)
   set(svt_db_agent_lib pqxx pthread svt-utils svt-kafka)
 
 else()
+  set(ENV{PKG_CONFIG_PATH}
+      "/opt/homebrew/lib/postgresql@17/pkgconfig:/opt/homebrew/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+  )
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PQXX REQUIRED libpqxx)
 
