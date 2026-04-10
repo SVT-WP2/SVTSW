@@ -38,7 +38,7 @@ void stopRunning(int sig)
   {
     std::ostringstream ss;
     ss << "Caught signal " << sig << ", initiating shutdown...";
-    logWarning(ss.str());
+    logWarning(ss.str(), SvtUtils::SvtLogger::STANDARD);
     running = false;
   }
   else
@@ -74,7 +74,7 @@ bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const 
 
   if (dbInterface->connect())
   {
-    logInfo("Successfully connected to " + dbName + ".");
+    logInfo("Successfully connected to " + dbName + ".", SvtUtils::SvtLogger::STANDARD);
     return true;
   }
   logError("Cannot connect to " + dbName + "!");
@@ -107,7 +107,7 @@ int main(int argc, const char *argv[])
   configureLogger(setupConfig->getLogFilePath(),
                   setupConfig->getTermVerbosity(),
                   setupConfig->getFileVebosity());
-  logInfo("********************** Svt Db Agent, version:" + version);
+  logInfo("********************** Svt Db Agent, version:" + version, SvtUtils::SvtLogger::STANDARD);
 
   DatabaseInterface *dbInterface = DatabaseIF::instance();
 
@@ -129,8 +129,8 @@ int main(int argc, const char *argv[])
     closeLogFile();
     return EXIT_FAILURE;
   }
-  logInfo("DatabaseInterface is connected");
-  logInfo("Using Schema: " + psqlDbSchema);
+  logInfo("DatabaseInterface is connected", SvtUtils::SvtLogger::STANDARD);
+  logInfo("Using Schema: " + psqlDbSchema, SvtUtils::SvtLogger::STANDARD);
   try
   {
     std::string kafkaBroker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();

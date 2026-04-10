@@ -2,7 +2,7 @@
   "logger": {
     "filePath": "/tmp/SvtDbAgent-main",
     "termVerbosity": "PRODUCTION",
-    "fileVerbosity": "PRODUCTION"
+    "fileVerbosity": "STANDARD"
   },
   "DataBase": {
     "psqlHost": "dbod-svt-sw-pgdb.cern.ch",
