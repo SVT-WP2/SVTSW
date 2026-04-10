@@ -49,7 +49,7 @@ bool SvtKafkaConsumer::createConsumer()
     logError("Failed creating kafka consumer");
     return false;
   }
-  logInfo("% Created consumer " + mConsumer->name());
+  logInfo("% Created consumer " + mConsumer->name(), SvtUtils::SvtLogger::STANDARD);
 
   mConsumer->subscribe({mSettings.topicName});
   mConsumer->seekToEnd();
