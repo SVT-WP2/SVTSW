@@ -72,7 +72,7 @@ if(UNIX AND NOT APPLE)
   FetchContent_Declare(
     pqxx
     GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-    GIT_TAG 334bcd22 # Or a specific version
+    GIT_TAG 8.0.1 # Or a specific version
     FIND_PACKAGE_ARGS NAMES pqxx)
 
   # Optional: Skip building libpqxx's internal tests to save time
