@@ -7,6 +7,7 @@
  * @brief SVT db-agent logger
  */
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string>
