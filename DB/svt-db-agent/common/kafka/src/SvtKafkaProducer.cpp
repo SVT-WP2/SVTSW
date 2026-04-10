@@ -50,7 +50,7 @@ bool SvtKafkaProducer::createProducer()
     return false;
   }
 
-  logInfo("% Created producer " + mProducer->name());
+  logInfo("% Created producer " + mProducer->name(), SvtUtils::SvtLogger::STANDARD);
 
   return true;
 }
