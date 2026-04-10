@@ -5,11 +5,13 @@
  * @brief DbAgent setup config
  */
 
-#include <optional>
-
 #include "SVTConfig/SvtDbAgentSetupConfig.h"
 #include "SvtJsonUtils.h"
 #include "SvtLogger.h"
+
+#include <magic_enum/magic_enum.hpp>
+
+#include <optional>
 
 using json = nlohmann::json;
 
@@ -43,6 +45,16 @@ bool SvtDbAgentSetupConfig::decodeJson(json &config)
     if (it.key() == "logger")
     {
       SvtUtils::readStringVariable(it.value(), "filePath", mLogFilePath);
+
+      std::string termLogLevel, fileLogLevel;
+      SvtUtils::readStringVariable(it.value(), "termVerbosity", termLogLevel);
+      SvtUtils::readStringVariable(it.value(), "fileVerbosity", fileLogLevel);
+
+      auto termVer = magic_enum::enum_cast<SvtUtils::SvtLogger::Mode>(termLogLevel);
+      mTermVerbosity = termVer.has_value() ? termVer.value() : mTermVerbosity;
+
+      auto fileVer = magic_enum::enum_cast<SvtUtils::SvtLogger::Mode>(fileLogLevel);
+      mFileVerbosity = fileVer.has_value() ? fileVer.value() : mFileVerbosity;
     }
     if (it.key() == "kafka")
     {
