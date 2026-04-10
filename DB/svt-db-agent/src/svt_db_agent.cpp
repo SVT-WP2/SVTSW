@@ -22,7 +22,11 @@
 
 using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
 
+#ifdef VERSION
 const std::string version = std::string(VERSION);
+#else
+const std::string version("Undefined");
+#endif
 
 static volatile std::atomic<bool> running = true;
 //========================================================================+

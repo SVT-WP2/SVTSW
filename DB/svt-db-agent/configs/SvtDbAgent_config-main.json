@@ -1,8 +1,8 @@
 {
   "logger": {
-    "filePath": "/data/ycorrale/SvtDbAgentLog/SvtDbAgent",
+    "filePath": "/tmp/SvtDbAgent-main",
     "termVerbosity": "PRODUCTION",
-    "fileVerbosity": "ALL"
+    "fileVerbosity": "PRODUCTION"
   },
   "DataBase": {
     "psqlHost": "dbod-svt-sw-pgdb.cern.ch",
