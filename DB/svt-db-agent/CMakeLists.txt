@@ -74,6 +74,11 @@ if(UNIX AND NOT APPLE)
     GIT_REPOSITORY https://github.com/jtv/libpqxx.git
     GIT_TAG 334bcd22 # Or a specific version
     FIND_PACKAGE_ARGS NAMES pqxx)
+
+  # Optional: Skip building libpqxx's internal tests to save time
+  set(SKIP_BUILD_TEST
+      ON
+      CACHE INTERNAL "")
   FetchContent_MakeAvailable(pqxx)
 
   set(svt_db_agent_lib pqxx pthread svt-utils svt-kafka)
@@ -84,6 +89,16 @@ else()
 
   set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} pthread svt-utils svt-kafka)
 endif()
+
+# Find or fetch magic enum
+FetchContent_Declare(
+  magic_enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+  GIT_TAG master # Replace with latest version
+  FIND_PACKAGE_ARGS NAMES magic_enum)
+FetchContent_MakeAvailable(magic_enum)
+
+list(PREPEND svt_db_agent_lib magic_enum::magic_enum)
 
 # Define the directory containing your source files
 set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
@@ -100,8 +115,7 @@ foreach(CPP_FILE ${CPP_FILES})
   add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
   add_dependencies(${EXECUTABLE_NAME} version)
 
-  target_include_directories(
-    ${EXECUTABLE_NAME} SYSTEM PRIVATE ${PQXX_INCLUDE_DIRS}
-                                      ${RDKAFKA_INCLUDE_DIRS})
+  target_include_directories(${EXECUTABLE_NAME} SYSTEM
+                             PRIVATE ${PQXX_INCLUDE_DIRS})
   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()
