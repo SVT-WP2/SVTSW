@@ -332,6 +332,8 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
 
         # Update local globals to match DB
         g.set_probe_card(probe_card_id, probe_card_orientation or "Unknown")
+        g.probe_card_id= probe_card_id
+        g.probe_card_orientation = "West"
 
         return response
 
