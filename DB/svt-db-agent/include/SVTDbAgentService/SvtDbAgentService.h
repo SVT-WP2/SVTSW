@@ -22,11 +22,12 @@ enum SvtDbAgentTopicEnum : uint8_t
 {
   Request = 0,
   RequestReply,
-  NumTopicNames = 2
+  Heartbeat,
+  NumTopicNames = 3
 };
 
 const std::array<std::string, SvtDbAgentTopicEnum::NumTopicNames>
-    topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply"}};
+    topicNames = {{"svt.db-agent.request", "svt.db-agent.request.reply", "svt.db-agent.heartbeat"}};
 
 namespace RdKafka
 {
@@ -50,7 +51,7 @@ namespace SvtDbAgent
 
     bool configureService();
     void processMsgCb(const kafka::clients::consumer::ConsumerRecord & /*record*/);
-    void setDebug(std::string debug) { mDebug = debug; }
+    void sendHeartbeat();
 
     // void stopConsumer(const bool suspeneded);
     bool getIsConsRunnning();
@@ -71,12 +72,11 @@ namespace SvtDbAgent
 
     std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
     std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
+    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_heartbeat;
 
     SvtDbAgentRequest *mRequest = SvtUtils::Singleton<SvtDbAgentRequest>::instance();
 
     std::string mBrokerName;
-    std::string mErrStr;
-    std::string mDebug;
 
     bool log_messages = false;
   };

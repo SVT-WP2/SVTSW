@@ -9,8 +9,6 @@
 
 #include "SvtKafkaUtils.h"
 
-#include <kafka/KafkaProducer.h>
-
 #include <nlohmann/json.hpp>
 
 #include <string>
@@ -28,6 +26,9 @@ namespace SvtKafka
 
     bool createProducer();
 
+    void setDrReportCb(const DrReport_fun_t &_fun) { mDeliveryReportCb = _fun; }
+    void setEnableDrReportCb(const bool &_en) { mEnableDrReportCb = _en; }
+
     bool send(const std::string_view &topic,
               const nlohmann::json &headers,
               const std::string &data);
@@ -37,5 +38,8 @@ namespace SvtKafka
 
     std::string mBroker;
     ConfigMap_t mConfigs;
+
+    bool mEnableDrReportCb = true;
+    DrReport_fun_t mDeliveryReportCb;
   };
 }  // namespace SvtKafka

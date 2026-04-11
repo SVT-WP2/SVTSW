@@ -27,6 +27,14 @@ SvtKafkaProducer::SvtKafkaProducer(const std::string& broker, const ConfigMap_t&
   , mConfigs(configs)
 {
   assert(!broker.empty());
+  //! Prepare delivery callback
+  mDeliveryReportCb = [](const RecordMetadata& /*metadata*/, const Error& error)
+  {
+    if (error)
+    {
+      logError("Message failed to be delivered: " + error.message());
+    }
+  };
 
   createProducer();
 }
@@ -60,8 +68,6 @@ bool SvtKafkaProducer::send(const std::string_view& topic,
                             const nlohmann::json& headers,
                             const std::string& data)
 {
-  // const std::string payload = message.getPayload().dump();
-
   std::map<std::string, std::string> header_map;
 
   for (const auto& [key, value] : headers.items())
@@ -69,7 +75,8 @@ bool SvtKafkaProducer::send(const std::string_view& topic,
     header_map.insert({key, value.get<std::string>()});
   }
 
-  const Partition replyPartition = std::stoi(header_map["kafka_replyPartition"]);
+  const std::string keyReplyPartition = "kafka_replyPartition";
+  const Partition replyPartition = (header_map.find(keyReplyPartition) != header_map.end()) ? std::stoi(header_map[keyReplyPartition]) : 0;
   ProducerRecord record({std::string(topic)},
                         replyPartition,
                         NullKey,
@@ -80,21 +87,23 @@ bool SvtKafkaProducer::send(const std::string_view& topic,
     record.headers().emplace_back(Header::Key(key), Header::Value(value.c_str(), value.size()));
   }
 
-  // Prepare delivery callback
-  auto mDeliveryReportCb = [data](const RecordMetadata& metadata, const Error& error)
+  if (mEnableDrReportCb)
   {
-    if (!error)
+    mDeliveryReportCb = [data](const RecordMetadata& metadata, const Error& error)
     {
-      logInfo(
-          "Message delivered with (" + std::to_string(data.size()) +
-          " bytes)");
-      logInfo(metadata.toString());
-    }
-    else
-    {
-      logError("Message failed to be delivered: " + error.message());
-    }
-  };
+      if (!error)
+      {
+        logInfo(
+            "Message delivered with (" + std::to_string(data.size()) +
+            " bytes)");
+        logInfo(metadata.toString());
+      }
+      else
+      {
+        logError("Message failed to be delivered: " + error.message());
+      }
+    };
+  }
 
   //! Prepare a message
   mProducer->send(record, mDeliveryReportCb, KafkaProducer::SendOption::ToCopyRecordValue);

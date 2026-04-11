@@ -11,8 +11,10 @@
 #include "SvtKafkaProducer.h"
 #include "SvtLogger.h"
 
+#include <kafka/AdminClient.h>
 #include <kafka/ConsumerRecord.h>
 
+#include <kafka/Properties.h>
 #include <cstring>
 #include <exception>
 #include <functional>
@@ -38,7 +40,7 @@ SvtDbAgentService::SvtDbAgentService()
 //========================================================================+
 bool SvtDbAgentService::configureService()
 {
-  return (createConsumer_request() && createProducer_request_reply());
+  return (createConsumer_request() && createProducer_request_reply() && createProducer_heartbeat());
 }
 
 //========================================================================+
@@ -78,7 +80,45 @@ bool SvtDbAgentService::createProducer_request_reply()
     configs["log_level"] = "4";
     mProducer_request_reply =
         std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName, configs));
-    // mProducer_request_reply->start();
+  }
+  catch (const std::exception &e)
+  {
+    logError(e.what());
+    return false;
+  }
+
+  return true;
+}
+
+//========================================================================+
+bool SvtDbAgentService::createProducer_heartbeat()
+{
+  try
+  {
+    SvtKafka::ConfigMap_t configs;
+    configs["log_level"] = "4";
+
+    mProducer_heartbeat =
+        std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName, configs));
+    mProducer_heartbeat->setEnableDrReportCb(false);
+
+    // Create adminClient
+    kafka::Properties adminProps;
+    adminProps.put("bootstrap.servers", mBrokerName);
+    auto admin = kafka::clients::admin::AdminClient(adminProps);
+
+    // get list of topics
+    const auto &topics = admin.listTopics().topics;
+    if (topics.find(topicNames[SvtDbAgentTopicEnum::Heartbeat]) != topics.end())
+    {
+      logInfo("Deleting topic " + topicNames[SvtDbAgentTopicEnum::Heartbeat]);
+      const auto &deleteTopic = admin.deleteTopics({topicNames[SvtDbAgentTopicEnum::Heartbeat]});
+    }
+    kafka::Properties topicProps;
+    topicProps.put("retention.ms", "60000");
+    topicProps.put("segment.ms", "120000");
+    admin.createTopics({topicNames[SvtDbAgentTopicEnum::Heartbeat]}, 1, 1, topicProps);
+    logInfo("Creating topic " + topicNames[SvtDbAgentTopicEnum::Heartbeat]);
   }
   catch (const std::exception &e)
   {
@@ -225,4 +265,14 @@ void SvtDbAgentService::parseMsg(
   }
 
   mProducer_request_reply->send(topicNames[SvtDbAgentTopicEnum::RequestReply], replyMsg.getHeaders(), replyMsg.getPayload().dump());
+}
+
+//========================================================================+
+void SvtDbAgentService::sendHeartbeat()
+{
+  nlohmann::json data = {{"timestamp", kafka::utility::getCurrentTime()}};
+  if (mProducer_heartbeat)
+  {
+    mProducer_heartbeat->send(topicNames[SvtDbAgentTopicEnum::Heartbeat], {}, data.dump());
+  }
 }

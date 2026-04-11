@@ -87,6 +87,7 @@ void SvtKafkaConsumer::pull()
 //========================================================================+
 bool SvtKafkaConsumer::stop(const bool suspended)
 {
+  logWarning(std::string((suspended) ? "Suspending" : "Stoping") + " consumer " + mConsumer->name());
   mThread.stop(suspended);
   if (mConsumer)
     mConsumer->close();
