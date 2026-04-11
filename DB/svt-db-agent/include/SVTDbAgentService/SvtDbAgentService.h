@@ -46,7 +46,7 @@ namespace SvtDbAgent
   class SvtDbAgentService
   {
    public:
-    SvtDbAgentService();
+    explicit SvtDbAgentService() = default;
     ~SvtDbAgentService() = default;
 
     bool configureService();
@@ -66,6 +66,8 @@ namespace SvtDbAgent
     void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
                   const SvtKafka::SvtKafkaMsgStatus &status);
 
+    void createTopics();
+
     bool createConsumer_request();
     bool createProducer_request_reply();
     bool createProducer_heartbeat();
@@ -76,6 +78,7 @@ namespace SvtDbAgent
 
     SvtDbAgentRequest *mRequest = SvtUtils::Singleton<SvtDbAgentRequest>::instance();
 
+    std::array<bool, NumTopicNames> forceTopicDelete = {{false, false, false}};
     std::string mBrokerName;
 
     bool log_messages = false;
