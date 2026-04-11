@@ -10,6 +10,7 @@
 #include "SvtKafkaMessage.h"
 #include "SvtKafkaProducer.h"
 #include "SvtLogger.h"
+#include "magic_enum/magic_enum.hpp"
 
 #include <kafka/AdminClient.h>
 #include <kafka/ConsumerRecord.h>
@@ -32,15 +33,51 @@ using SvtKafka::SvtKafkaConsumer;
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaProducer;
 using SvtKafka::SvtKafkaReplyMsg;
-//========================================================================+
-SvtDbAgentService::SvtDbAgentService()
-{
-}
 
 //========================================================================+
 bool SvtDbAgentService::configureService()
 {
+  createTopics();
   return (createConsumer_request() && createProducer_request_reply() && createProducer_heartbeat());
+}
+
+//========================================================================+
+void SvtDbAgentService::createTopics()
+{
+  // Create adminClient
+  kafka::Properties adminProps;
+  adminProps.put("bootstrap.servers", mBrokerName);
+  auto admin = kafka::clients::admin::AdminClient(adminProps);
+
+  // get list of topics
+  const auto &topics = admin.listTopics().topics;
+  for (const auto &topicName : topicNames)
+  {
+    //! if topic exists check force delete else dont do nothing
+    if (topics.find(topicName) != topics.end())
+    {
+      auto index = magic_enum::enum_cast<SvtDbAgentTopicEnum>(topicName);
+      if (index.has_value() && forceTopicDelete[index.value()])
+      {
+        logInfo("Deleting topic " + topicName);
+        const auto &deleteTopic = admin.deleteTopics({topicName});
+      }
+      else
+      {
+        continue;
+      }
+    }
+
+    kafka::Properties topicProps;
+    //! if Heartbeat topic use special configuration
+    if (topicName == topicNames[SvtDbAgentTopicEnum::Heartbeat])
+    {
+      topicProps.put("retention.ms", "60000");
+      topicProps.put("segment.ms", "120000");
+    }
+    logInfo("Creating topic " + topicName);
+    admin.createTopics({topicName}, 1, 1, topicProps);
+  }
 }
 
 //========================================================================+
@@ -101,24 +138,6 @@ bool SvtDbAgentService::createProducer_heartbeat()
     mProducer_heartbeat =
         std::shared_ptr<SvtKafkaProducer>(new SvtKafkaProducer(mBrokerName, configs));
     mProducer_heartbeat->setEnableDrReportCb(false);
-
-    // Create adminClient
-    kafka::Properties adminProps;
-    adminProps.put("bootstrap.servers", mBrokerName);
-    auto admin = kafka::clients::admin::AdminClient(adminProps);
-
-    // get list of topics
-    const auto &topics = admin.listTopics().topics;
-    if (topics.find(topicNames[SvtDbAgentTopicEnum::Heartbeat]) != topics.end())
-    {
-      logInfo("Deleting topic " + topicNames[SvtDbAgentTopicEnum::Heartbeat]);
-      const auto &deleteTopic = admin.deleteTopics({topicNames[SvtDbAgentTopicEnum::Heartbeat]});
-    }
-    kafka::Properties topicProps;
-    topicProps.put("retention.ms", "60000");
-    topicProps.put("segment.ms", "120000");
-    admin.createTopics({topicNames[SvtDbAgentTopicEnum::Heartbeat]}, 1, 1, topicProps);
-    logInfo("Creating topic " + topicNames[SvtDbAgentTopicEnum::Heartbeat]);
   }
   catch (const std::exception &e)
   {

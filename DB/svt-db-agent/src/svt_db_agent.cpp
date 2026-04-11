@@ -131,6 +131,7 @@ int main(int argc, const char *argv[])
   }
   logInfo("DatabaseInterface is connected", SvtUtils::SvtLogger::STANDARD);
   logInfo("Using Schema: " + psqlDbSchema, SvtUtils::SvtLogger::STANDARD);
+
   try
   {
     std::string kafkaBroker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
