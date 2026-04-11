@@ -145,8 +145,7 @@ int main(int argc, const char *argv[])
     while (dbAgent->getIsConsRunnning() && running)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      // int time = gTimer.getTicksInSeconds();
-      // heartbeatService->updateService(time);
+      dbAgent->sendHeartbeat();
     }
   }
   catch (const std::exception &e)
