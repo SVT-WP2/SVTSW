@@ -46,7 +46,7 @@ services:
     container_name: svt.db-agent-dev
     build:
       context: ./../../DB/svt-db-agent/ # The directory containing your Dockerfile
-      dockerfile: Dockerfile
+      # dockerfile: Dockerfile
     depends_on:
       - kafka
     command: ["/app/configs/SvtDbAgent_config-dev.json"]
