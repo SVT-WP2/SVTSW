@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:24.04 AS base
 
 # Set the working directory in the container
 WORKDIR /app
@@ -24,12 +24,15 @@ RUN apt-get install git-core -y
 # KAFKA DEPS
 RUN apt install librdkafka-dev -y
 
+FROM base AS db-agent-build
 # Copy the source code into the container
 COPY . .
 RUN chmod +x ./docker-entrypoint.sh && /bin/bash ./compile.sh
 
-EXPOSE 6600
-EXPOSE 9095
+#expose port are not needed
+# EXPOSE 6600
+# EXPOSE 9095
 
+FROM db-agent-build AS db-agent-entry
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["/app/configs/SvtDbAgent_config-local.json"]

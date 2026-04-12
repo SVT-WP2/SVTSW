@@ -53,16 +53,37 @@ file(
   "src/SVTDbAgentDto/*.cpp"
   "src/SVTDbAgentService/*.cpp")
 
-add_custom_target(
-  version
-  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/version.h
-  COMMAND
-    ${CMAKE_COMMAND} -D SRC=${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in -D
-    DST=${CMAKE_CURRENT_BINARY_DIR}/version.h -P
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+# Define version build paths
+set(VERSION_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/version)
+set(VERSION_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/version-build)
+
+# Configure and build the helper sub-project Configure step
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -B ${VERSION_BINARY_DIR} -S ${VERSION_SOURCE_DIR}
+          -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} RESULT_VARIABLE CONFIG_RESULT)
+message(STATUS "Configuring version sub-project...")
+
+if(NOT CONFIG_RESULT EQUAL 0)
+  message(FATAL_ERROR "Version sub-project configuration failed!")
+endif()
+
+# Build step
+message(STATUS "Building version sub-project...")
+execute_process(COMMAND ${CMAKE_COMMAND} --build ${VERSION_BINARY_DIR} --config
+                        ${CMAKE_BUILD_TYPE} RESULT_VARIABLE BUILD_RESULT)
+
+if(NOT BUILD_RESULT EQUAL 0)
+  message(FATAL_ERROR "Version sub-project build failed!")
+endif()
+
+# add_custom_target( version BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/version.h
+# COMMAND ${CMAKE_COMMAND} -D
+# SRC=${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in -D
+# DST=${CMAKE_CURRENT_BINARY_DIR}/version.h -P
+# ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake DEPENDS
+# ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in DEPENDS
+# ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake WORKING_DIRECTORY
+# ${CMAKE_SOURCE_DIR} ALL)
 
 include(FetchContent)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/utils svt-utils)
@@ -116,9 +137,10 @@ foreach(CPP_FILE ${CPP_FILES})
 
   # Add the executable
   add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
-  add_dependencies(${EXECUTABLE_NAME} version)
+  # add_dependencies(${EXECUTABLE_NAME} version)
 
   target_include_directories(${EXECUTABLE_NAME} SYSTEM
                              PRIVATE ${PQXX_INCLUDE_DIRS})
+  target_include_directories(${EXECUTABLE_NAME} PUBLIC ${VERSION_BINARY_DIR})
   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()
