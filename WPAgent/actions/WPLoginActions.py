@@ -7,6 +7,8 @@ from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPResponseBuilder import ResponseBuilder
+import actions.WPTestingActions as testingActions
+from drivers.WPFactory import get_current_prober
 
 HIERARCHY_CONFIG_PATH = "configs/WPUserHierarchy.json"
 
@@ -46,6 +48,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
     g = SvtWPAagentGlobalParameters.getInstance()
     g_userLogged = g.userLogged
     g_userLoggedHierarchy = g.userLoggedHierarchy
+    prober = get_current_prober()
 
     # Get user's hierarchy
     user_hierarchy = _get_user_hierarchy(user)
@@ -68,6 +71,9 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
             # Normal users go to UserLogged state
             agentStateMachine.force_state(WPAgentState.UserLogged)
 
+            # update reply payload
+        testingActions.update_current_info(currentProber=prober)
+
         return ResponseBuilder.success(
             "UserLogInReply",
             f"User '{user}' logged in successfully. Hierarchy: {user_hierarchy}"
@@ -75,7 +81,8 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
     # CASE 2: Different user trying to log in
     elif g_userLogged != user:
-
+        # update reply payload
+        testingActions.update_current_info(currentProber=prober)
         # Developer can take control from non-Developer
         if user_hierarchy == "Developer" and g_userLoggedHierarchy != "Developer":
             print(f"🔓 Developer '{user}' taking control from user '{g_userLogged}'")
@@ -89,6 +96,8 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
         # Developer cannot take control from another Developer
         elif user_hierarchy == "Developer" and g_userLoggedHierarchy == "Developer":
+            # update reply payload
+            testingActions.update_current_info(currentProber=prober)
             return ResponseBuilder.error(
                 "UserLogInReply",
                 f"Cannot take control: Developer '{g_userLogged}' is currently logged in.",
@@ -97,6 +106,8 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
         # Non-Developer cannot take control
         else:
+            # update reply payload
+            testingActions.update_current_info(currentProber=prober)
             return ResponseBuilder.error(
                 "UserLogInReply",
                 f"Another user is currently logged in: {g_userLogged}.",
@@ -105,10 +116,14 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
     # CASE 3: Same user trying to log in again
     else:
+        # update reply payload
+        testingActions.update_current_info(currentProber=prober)
         return ResponseBuilder.success(
             "UserLogInReply",
             f"User '{user}' is already logged in."
         )
+
+
 
 
 def UserLogOut(user: str, waferAgentName: str = None, address: str = None, machineType: str = None) -> dict:

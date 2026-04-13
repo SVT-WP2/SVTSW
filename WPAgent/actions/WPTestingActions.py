@@ -429,7 +429,7 @@ def update_current_info(currentProber=None):
     g.set_chuck_position(currentProber.get_chuck_position())
 
     # update working area
-    g.current_working_area = currentProber.get_current_working_area()
+    g.current_working_area = currentProber.get_current_working_area().removesuffix("Camera")
     g.camera_mount_point = currentProber.get_current_working_area()
 
 
