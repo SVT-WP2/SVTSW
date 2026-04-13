@@ -144,11 +144,8 @@ class SentioProberImpl(AbstractProber):
 
     def get_current_working_area(self):
         response = self.prober.send_cmd("get_chuck_position_hint")
-        parts = response.split(",")
-        error_code = int(parts[0])
-        status_code = int(parts[1])
-        position_hint = parts[2]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
-        chuck_site = parts[3]  # e.g. "Wafer", "AuxRight", "AuxLeft"
+        parts = str(response.message()).split(',')
+        position_hint = parts[0]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
 
         return str(position_hint)
 
