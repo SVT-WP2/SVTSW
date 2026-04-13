@@ -195,6 +195,12 @@ class WPAgentClient:
 
     def run_ptpa(self) -> dict:
         return self.send("RunPTPA", timeout=600.0)
+    
+    def disable_ptpa(self) -> dict:
+        return self.send("DisablePTPA")
+    
+    def enable_ptpa(self) -> dict:
+        return self.send("EnablePTPA")
 
     def init_probing(self) -> dict:
         return self.send("InitProbing", timeout=600.0)
@@ -487,15 +493,22 @@ class ITS3Runner:
 
         ptpa_key = f"run_ptpa_{chip_type.lower()}"
         if self.cfg.get(ptpa_key, False):
-            if self.cfg.get("always_reopen_project", False):
-                project_key = f"wp_project_{chip_type.lower()}"
-                project_name = self.cfg.get(project_key, "")
-                if project_name:
-                    log.info("Reopening project before PTPA: %s", project_name)
-                    resp = wp.open_project(project_name)
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.warning("OpenProject before PTPA failed: %s", resp)
-                        return False
+            # if self.cfg.get("always_reopen_project", False):
+            #     project_key = f"wp_project_{chip_type.lower()}"
+            #     project_name = self.cfg.get(project_key, "")
+            #     if project_name:
+            #         log.info("Reopening project before PTPA: %s", project_name)
+            #         resp = wp.open_project(project_name)
+            #         if resp.get("status", "").lower() not in ("success", "ok"):
+            #             log.warning("OpenProject before PTPA failed: %s", resp)
+            #             return False
+            if self.cfg.get("re_enable_ptpa", False):
+                resp = wp.disable_ptpa()
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.warning("DisablePTPA failed: %s", resp)
+                resp = wp.enable_ptpa()
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.warning("EnablePTPA failed: %s", resp)
             resp = wp.run_ptpa()
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.error("RunPTPA failed: %s", resp.get("output", resp))

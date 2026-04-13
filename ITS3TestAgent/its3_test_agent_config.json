@@ -12,9 +12,10 @@
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
   "reset_on_ptpa_failure": true,
-  "always_reopen_project": true,
+  "always_reopen_project": null,
+  "re_enable_ptpa": true,
 
-  "log_cmd_output": false,
+  "log_cmd_output": true,
   "show_cmd_output": true,
 
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
