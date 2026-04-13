@@ -278,7 +278,7 @@ class WaferProberAgent:
                 print("==========INSTALED PROBE CARD ====")
                 import actions.WPDataBaseActions as dbActions
                 configMachineId = int(config.get('machineId'))
-                dbActions.get_installed_probe_card_from_db(configMachineId)
+                # dbActions.get_installed_probe_card_from_db(configMachineId)
 
 
                 if not init_success:
