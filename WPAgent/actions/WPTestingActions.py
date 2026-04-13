@@ -533,6 +533,8 @@ def open_project(project_name: str, user=None, waferAgentName=None):
     """Open project"""
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from actions.WPDataBaseActions import get_project_id_by_name
+
 
     error = _ensure_initialized()
     if error:
@@ -554,7 +556,7 @@ def open_project(project_name: str, user=None, waferAgentName=None):
         # Update project name (ID would need to come from DB)
         g.projectName = project_name
         g.set_project_name(project_name)
-        # g.opened_project_id = get_project_id_by_name(project_name)
+        g.opened_project_id = get_project_id_by_name(project_name)
 
         # Update info
         update_current_info(currentProber=prober)
@@ -573,7 +575,7 @@ def open_project(project_name: str, user=None, waferAgentName=None):
 def change_project(project_name: str, user=None, waferAgentName=None):
     """Change project"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from WPDataBaseActions import get_project_id_by_name
+    from actions.WPDataBaseActions import get_project_id_by_name
 
     error = _ensure_initialized()
     if error:
