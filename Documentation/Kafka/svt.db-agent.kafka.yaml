@@ -486,6 +486,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetAllBlocks:
+    post:
+      tags:
+        - Blocks
+      summary: Get All Blocks
+      description: Returns Block list in the reply message. Optional filter by block ids or chipId can be applied to return exact block list.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllBlocksMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllBlocksReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/GetAllWaferProbeMachines:
     post:
       tags:
@@ -2013,6 +2044,39 @@ components:
               items:
                 $ref: "#/components/schemas/ChipLocationHistoryRecordDto"
     #
+    # BLOCK :: LIST
+    #
+    GetAllBlocksMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllBlocks"
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                chipId:
+                  type: integer
+                ids:
+                  type: array
+                  description: Chip ids array. If array is empty / undefined => all Chip will be returned.
+                  items:
+                    type: number
+    GetAllBlocksReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllBlocksReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/BlockDto"
+    #
     # WAFER PROBE MACHINES :: LIST
     #
     GetAllWaferProbeMachinesMessage:
@@ -3097,6 +3161,24 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
+    # BLOCK :: DTO
+    BlockDto:
+      type: object
+      required:
+        - id
+        - chipId
+        - blockType
+        - serialNumber
+      properties:
+        id:
+          type: integer
+        chipId:
+          type: integer
+        blocktype:
+          type: string
+        serialNumber:
+          type: string
+    # WAFER_PROBE_MACHINE :: DTO
     WaferProbeMachineDto:
       type: object
       required:
