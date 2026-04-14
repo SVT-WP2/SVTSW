@@ -223,7 +223,7 @@ class WaferProberAgent:
 
             # Build full address: wp<name>01.<hostname>
             if machine_name and host_name and host_name != "localhost":
-                full_address = f"wp{machine_name}01.{host_name}"
+                full_address = f"{machine_name}01.{host_name}"
             else:
                 # Fallback to just hostname if name is missing
                 full_address = host_name
