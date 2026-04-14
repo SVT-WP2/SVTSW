@@ -1517,6 +1517,14 @@ components:
               type: array
               items:
                 type: string
+            asicQuality:
+              type: array
+              items:
+                type: string
+            blockType:
+              type: array
+              items:
+                type: string
             dutType:
               type: array
               items:
@@ -1529,27 +1537,27 @@ components:
               type: array
               items:
                 type: string
+            pcLocation:
+              type: array
+              items:
+                type: string
+            pcModel:
+              type: array
+              items:
+                type: string
+            pcName:
+              type: array
+              items:
+                type: string
+            pcType:
+              type: array
+              items:
+                type: string
+            pcVendor:
+              type: array
+              items:
+                type: string
             waferTech:
-              type: array
-              items:
-                type: string
-            waferMapOrientation:
-              type: array
-              items:
-                type: string
-            wpGeneralLocation:
-              type: array
-              items:
-                type: string
-            wpConnectionType:
-              type: array
-              items:
-                type: string
-            wpVendor:
-              type: array
-              items:
-                type: string
-            wpSwType:
               type: array
               items:
                 type: string
@@ -1557,7 +1565,23 @@ components:
               type: array
               items:
                 type: string
-            asicQuality:
+            waferMapOrientation:
+              type: array
+              items:
+                type: string
+            wpConnectionType:
+              type: array
+              items:
+                type: string
+            wpGeneralLocation:
+              type: array
+              items:
+                type: string
+            wpSwType:
+              type: array
+              items:
+                type: string
+            wpVendor:
               type: array
               items:
                 type: string
@@ -3646,14 +3670,20 @@ components:
       type: string
       enum:
         - asicFamilyType
+        - asicQuality
+        - blockType
         - dutType
         - engineeringRun
         - foundryName
+        - pcLocation
+        - pcModel
+        - pcName
+        - pcType
+        - pcVendor
         - waferTech
-        - waferMapOrientation
-        - wpGeneralLocation
-        - wpConnectionType
-        - wpVendor
-        - wpSwType
         - waferInMachineStatus
-        - asicQuality
+        - waferMapOrientation
+        - wpConnectionType
+        - wpGeneralLocation
+        - wpSwType
+        - wpVendor
