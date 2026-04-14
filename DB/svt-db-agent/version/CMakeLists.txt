@@ -22,6 +22,3 @@ string(STRIP ${RAW_VERSION} VERSION)
 set(SRC ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in)
 set(DST ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 configure_file(${SRC} ${DST} @ONLY)
-
-# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.h DESTINATION
-# ${CMAKE_CURRENT_SOURCE_DIR})

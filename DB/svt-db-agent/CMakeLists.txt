@@ -39,19 +39,17 @@ if(BUILD_UBSAN)
   add_link_options("-fsanitize=undefined")
 endif(BUILD_UBSAN)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-file(
-  GLOB
-  SOURCES_DB
-  "src/Database/databaseinterface.cpp"
-  "src/SVTConfig/*.cpp"
-  "src/SVTDb/*.cpp"
-  "src/SVTDbAgentDto/*.cpp"
-  "src/SVTDbAgentService/*.cpp")
+# Include standard installation directories (lib, bin, include, etc.)
+include(GNUInstallDirs)
+
+set(SVT_UTILS "svt-utils")
+set(SVT_KAFKA "svt-kafka")
+
+include(FetchContent)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/utils svt-utils)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/kafka svt-kafka)
 
 # Define version build paths
 set(VERSION_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/version)
@@ -85,10 +83,6 @@ endif()
 # ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake WORKING_DIRECTORY
 # ${CMAKE_SOURCE_DIR} ALL)
 
-include(FetchContent)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/utils svt-utils)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common/kafka svt-kafka)
-
 if(UNIX AND NOT APPLE)
   FetchContent_Declare(
     pqxx
@@ -102,16 +96,17 @@ if(UNIX AND NOT APPLE)
       CACHE INTERNAL "")
   FetchContent_MakeAvailable(pqxx)
 
-  set(svt_db_agent_lib pqxx pthread svt-utils svt-kafka)
+  set(svt_db_agent_lib pqxx pthread ${SVT_UTILS} ${SVT_KAFKA})
 
 else()
+
   set(ENV{PKG_CONFIG_PATH}
       "/opt/homebrew/lib/postgresql@17/pkgconfig:/opt/homebrew/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
   )
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PQXX REQUIRED libpqxx)
 
-  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} pthread svt-utils svt-kafka)
+  set(svt_db_agent_lib ${PQXX_LINK_LIBRARIES} pthread ${SVT_UTILS} ${SVT_KAFKA})
 endif()
 
 # Find or fetch magic enum
@@ -124,16 +119,28 @@ FetchContent_MakeAvailable(magic_enum)
 
 list(PREPEND svt_db_agent_lib magic_enum::magic_enum)
 
+file(
+  GLOB
+  SOURCES_DB
+  "src/Database/databaseinterface.cpp"
+  "src/SVTConfig/*.cpp"
+  "src/SVTDb/*.cpp"
+  "src/SVTDbAgentDto/*.cpp"
+  "src/SVTDbAgentService/*.cpp")
+
 # Define the directory containing your source files
 set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
 # Get a list of all .cpp files in the SOURCE_DIR
 file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
 # Prepend main project executable source
 list(PREPEND CPP_FILES "${SRC_TEST_DIR}/../svt_db_agent.cpp")
+
 # Loop through each .cpp file and create an executable
 foreach(CPP_FILE ${CPP_FILES})
   # Extract the base name (without path and extension) for the executable name
   get_filename_component(EXECUTABLE_NAME ${CPP_FILE} NAME_WE)
+
+  list(APPEND targets ${EXECUTABLE_NAME})
 
   # Add the executable
   add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
@@ -141,6 +148,25 @@ foreach(CPP_FILE ${CPP_FILES})
 
   target_include_directories(${EXECUTABLE_NAME} SYSTEM
                              PRIVATE ${PQXX_INCLUDE_DIRS})
-  target_include_directories(${EXECUTABLE_NAME} PUBLIC ${VERSION_BINARY_DIR})
+  target_include_directories(${EXECUTABLE_NAME} PRIVATE ${VERSION_BINARY_DIR})
   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()
+
+# Assign RPATH
+if(APPLE)
+  # 1. Enable RPATH for macOS (essential)
+  set(CMAKE_MACOSX_RPATH ON)
+  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+
+else()
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
+endif()
+
+# Add the install target
+install(
+  TARGETS ${targets}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # .dll on Windows
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} # .so on Linux
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} # .a or .lib
+)
