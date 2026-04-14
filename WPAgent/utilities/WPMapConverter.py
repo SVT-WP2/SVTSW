@@ -172,6 +172,129 @@ class CoordinateConverter:
         # Not found
         return None
 
+    def svt_to_local(
+            self,
+            row_svt: int,
+            column_svt: int,
+            sn_prefix: Optional[str] = None
+    ) -> Optional[Tuple[int, int, str]]:
+        """
+        Convert SVT coordinates to local ASIC coordinates.
+
+        Args:
+            row_svt: SVT row coordinate
+            column_svt: SVT column coordinate
+            sn_prefix: Optional ASIC serial number prefix to filter by
+
+        Returns:
+            Tuple of (row_local, column_local, SN_prefix) if found, None otherwise
+        """
+        if not self.conversion_map:
+            print("⚠️ No conversion map loaded")
+            return None
+
+        for entry in self.conversion_map:
+            if (entry.get("row_svt") == row_svt and
+                    entry.get("column_svt") == column_svt):
+                if sn_prefix and entry.get("SN_prefix") != sn_prefix:
+                    continue
+                return (entry.get("row_local"), entry.get("column_local"), entry.get("SN_prefix"))
+
+        return None
+
+    def local_to_svt(
+            self,
+            row_local: int,
+            column_local: int,
+            sn_prefix: str
+    ) -> Optional[Tuple[int, int]]:
+        """
+        Convert local ASIC coordinates to SVT coordinates.
+
+        Args:
+            row_local: Local row coordinate
+            column_local: Local column coordinate
+            sn_prefix: ASIC serial number prefix (required)
+
+        Returns:
+            Tuple of (row_svt, column_svt) if found, None otherwise
+        """
+        if not self.conversion_map:
+            print("⚠️ No conversion map loaded")
+            return None
+
+        if not sn_prefix:
+            print("⚠️ SN prefix is required for local to SVT conversion")
+            return None
+
+        for entry in self.conversion_map:
+            if (entry.get("row_local") == row_local and
+                    entry.get("column_local") == column_local and
+                    entry.get("SN_prefix") == sn_prefix):
+                return (entry.get("row_svt"), entry.get("column_svt"))
+
+        return None
+
+    def its3_to_local(
+            self,
+            id_its3: int,
+            sn_prefix: Optional[str] = None
+    ) -> Optional[Tuple[int, int, str]]:
+        """
+        Convert ITS3 die ID to local ASIC coordinates.
+
+        Args:
+            id_its3: ITS3 die identifier
+            sn_prefix: Optional ASIC serial number prefix to filter by
+
+        Returns:
+            Tuple of (row_local, column_local, SN_prefix) if found, None otherwise
+        """
+        if not self.conversion_map:
+            print("⚠️ No conversion map loaded")
+            return None
+
+        for entry in self.conversion_map:
+            if entry.get("id_its3") == id_its3:
+                if sn_prefix and entry.get("SN_prefix") != sn_prefix:
+                    continue
+                return (entry.get("row_local"), entry.get("column_local"), entry.get("SN_prefix"))
+
+        return None
+
+    def local_to_its3(
+            self,
+            row_local: int,
+            column_local: int,
+            sn_prefix: str
+    ) -> Optional[int]:
+        """
+        Convert local ASIC coordinates to ITS3 die ID.
+
+        Args:
+            row_local: Local row coordinate
+            column_local: Local column coordinate
+            sn_prefix: ASIC serial number prefix (required)
+
+        Returns:
+            id_its3 integer if found, None otherwise
+        """
+        if not self.conversion_map:
+            print("⚠️ No conversion map loaded")
+            return None
+
+        if not sn_prefix:
+            print("⚠️ SN prefix is required for local to ITS3 conversion")
+            return None
+
+        for entry in self.conversion_map:
+            if (entry.get("row_local") == row_local and
+                    entry.get("column_local") == column_local and
+                    entry.get("SN_prefix") == sn_prefix):
+                return entry.get("id_its3")
+
+        return None
+
     def get_asic_bounds(self, sn_prefix: str) -> Optional[Dict]:
         """
         Get the bounds (min/max coordinates) for a specific ASIC.
@@ -321,47 +444,125 @@ def get_converter(conversion_map_path: Optional[str] = None) -> CoordinateConver
 # ============================================================================
 
 if __name__ == "__main__":
-    # Test the converter
     converter = CoordinateConverter()
-
-    # Load example map
     converter.load_conversion_map("configs/WPMapConversion.json")
 
-    # Test conversions
-    print("\n🧪 Testing Global to Local Conversions:")
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing Global → Local")
     print("-" * 80)
-
-    test_cases = [
-        (6, 2),  # Should be (0, 0, "babyMOSAIX-2")
-        (30, 3),  # Should be (8, 1, "babyMOSAIX-3")
-        (33, 4),  # Should be (9, 3, "babyMOSAIX-4")
-        (3, 2),  # Should be (-1, 1, "babyMOSAIX-1")
+    # (row_global, col_global) → expected (row_local, col_local, sn_prefix)
+    test_global_to_local = [
+        ((3, 2),  (0,   0, "babyMOSAIX")),
+        ((6, 2),  (1,   1, "babyMOSAIX")),
+        ((6, 7),  (-4,  1, "babyMOSAIX")),
+        ((30, 3), (0,   9, "babyMOSAIX")),
+        ((33, 5), (-3, 10, "babyMOSAIX")),
+        ((16, 1), (0,   2, "MOSAIX")),
+        ((20, 1), (0,  -2, "MOSAIX")),
+        ((99, 99), None),                   # should NOT be found
     ]
+    for (rg, cg), expected in test_global_to_local:
+        result = converter.global_to_local(rg, cg)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} Global ({rg},{cg}) → {result}  (expected {expected})")
 
-    for row_g, col_g in test_cases:
-        result = converter.global_to_local(row_g, col_g)
-        if result:
-            row_l, col_l, sn = result
-            print(f"Global ({row_g}, {col_g}) → Local ({row_l}, {col_l}) on {sn}")
-        else:
-            print(f"Global ({row_g}, {col_g}) → NOT FOUND")
-
-    print("\n🧪 Testing Local to Global Conversions:")
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing Local → Global")
     print("-" * 80)
-
-    test_cases_local = [
-        (0, 0, "babyMOSAIX-2"),  # Should be (6, 2)
-        (8, 1, "babyMOSAIX-3"),  # Should be (30, 3)
-        (9, 3, "babyMOSAIX-4"),  # Should be (33, 4)
+    # (row_local, col_local, sn_prefix) → expected (row_global, col_global)
+    test_local_to_global = [
+        ((0,   0, "babyMOSAIX"),  (3,  2)),
+        ((1,   1, "babyMOSAIX"),  (6,  2)),
+        ((-4,  1, "babyMOSAIX"),  (6,  7)),
+        ((0,   9, "babyMOSAIX"),  (30, 3)),
+        ((-3, 10, "babyMOSAIX"),  (33, 5)),
+        ((0,   2, "MOSAIX"),      (16, 1)),
+        ((0,  -2, "MOSAIX"),      (20, 1)),
+        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
     ]
+    for (rl, cl, sn), expected in test_local_to_global:
+        result = converter.local_to_global(rl, cl, sn)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} Local ({rl},{cl}) on {sn} → {result}  (expected {expected})")
 
-    for row_l, col_l, sn in test_cases_local:
-        result = converter.local_to_global(row_l, col_l, sn)
-        if result:
-            row_g, col_g = result
-            print(f"Local ({row_l}, {col_l}) on {sn} → Global ({row_g}, {col_g})")
-        else:
-            print(f"Local ({row_l}, {col_l}) on {sn} → NOT FOUND")
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing SVT → Local")
+    print("-" * 80)
+    # (row_svt, col_svt, sn_prefix) → expected (row_local, col_local, sn_prefix)
+    test_svt_to_local = [
+        ((1, 1, "babyMOSAIX"),  (0,   0, "babyMOSAIX")),
+        ((2, 1, "babyMOSAIX"),  (1,   1, "babyMOSAIX")),
+        ((2, 6, "babyMOSAIX"),  (-4,  1, "babyMOSAIX")),
+        ((3, 2, "babyMOSAIX"),  (0,   9, "babyMOSAIX")),
+        ((4, 4, "babyMOSAIX"),  (-3, 10, "babyMOSAIX")),
+        ((1, 1, "MOSAIX"),      (0,   2, "MOSAIX")),
+        ((5, 1, "MOSAIX"),      (0,  -2, "MOSAIX")),
+        ((9, 9, "babyMOSAIX"),  None),      # should NOT be found
+    ]
+    for (rs, cs, sn), expected in test_svt_to_local:
+        result = converter.svt_to_local(rs, cs, sn)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} SVT ({rs},{cs}) on {sn} → {result}  (expected {expected})")
 
-    # Print table for one ASIC
-    converter.print_conversion_table("babyMOSAIX-2")
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing Local → SVT")
+    print("-" * 80)
+    # (row_local, col_local, sn_prefix) → expected (row_svt, col_svt)
+    test_local_to_svt = [
+        ((0,   0, "babyMOSAIX"),  (1, 1)),
+        ((1,   1, "babyMOSAIX"),  (2, 1)),
+        ((-4,  1, "babyMOSAIX"),  (2, 6)),
+        ((0,   9, "babyMOSAIX"),  (3, 2)),
+        ((-3, 10, "babyMOSAIX"),  (4, 4)),
+        ((0,   2, "MOSAIX"),      (1, 1)),
+        ((0,  -2, "MOSAIX"),      (5, 1)),
+        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
+    ]
+    for (rl, cl, sn), expected in test_local_to_svt:
+        result = converter.local_to_svt(rl, cl, sn)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} Local ({rl},{cl}) on {sn} → {result}  (expected {expected})")
+
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing ITS3 → Local")
+    print("-" * 80)
+    # (id_its3, sn_prefix) → expected (row_local, col_local, sn_prefix)
+    test_its3_to_local = [
+        ((3,  "babyMOSAIX"),  (0,   0, "babyMOSAIX")),
+        ((9,  "babyMOSAIX"),  (1,   1, "babyMOSAIX")),
+        ((4,  "babyMOSAIX"),  (-4,  1, "babyMOSAIX")),
+        ((14, "babyMOSAIX"),  (0,   9, "babyMOSAIX")),
+        ((16, "babyMOSAIX"),  (-3, 10, "babyMOSAIX")),
+        ((0,  "MOSAIX"),      (0,   2, "MOSAIX")),
+        ((4,  "MOSAIX"),      (0,  -2, "MOSAIX")),
+        ((99, "babyMOSAIX"),  None),        # should NOT be found
+    ]
+    for (id_i, sn), expected in test_its3_to_local:
+        result = converter.its3_to_local(id_i, sn)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} ITS3 id={id_i} on {sn} → {result}  (expected {expected})")
+
+    # -------------------------------------------------------------------------
+    print("\n🧪 Testing Local → ITS3")
+    print("-" * 80)
+    # (row_local, col_local, sn_prefix) → expected id_its3
+    test_local_to_its3 = [
+        ((0,   0, "babyMOSAIX"),  3),
+        ((1,   1, "babyMOSAIX"),  9),
+        ((-4,  1, "babyMOSAIX"),  4),
+        ((0,   9, "babyMOSAIX"),  14),
+        ((-3, 10, "babyMOSAIX"),  16),
+        ((0,   2, "MOSAIX"),      0),
+        ((0,  -2, "MOSAIX"),      4),
+        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
+    ]
+    for (rl, cl, sn), expected in test_local_to_its3:
+        result = converter.local_to_its3(rl, cl, sn)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} Local ({rl},{cl}) on {sn} → ITS3 id={result}  (expected {expected})")
+
+    # -------------------------------------------------------------------------
+    print("\n📋 Conversion table for babyMOSAIX")
+    converter.print_conversion_table("babyMOSAIX")
+    print("\n📋 Conversion table for MOSAIX")
+    converter.print_conversion_table("MOSAIX")

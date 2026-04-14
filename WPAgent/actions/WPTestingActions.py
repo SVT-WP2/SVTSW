@@ -5,6 +5,7 @@ import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPValidationDecorator import validate_command
+from utilities.WPMapConverter import get_converter
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
@@ -277,6 +278,128 @@ def move_chuck_die(col: int, row: int, subsite: int = 0, user=None,
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckRowColumnReply", str(e), 500)
 
+def _parse_svt_label(label: str):
+    """
+    Parse an SVT label string into (sn_prefix, row_svt, column_svt).
+
+    Format:
+        MOSAIX    → "MOSAIX-{row_svt}_ER2-W{n}"         column_svt is always 1
+        babyMOSAIX → "babyMOSAIX-{row_svt}_{col_svt}_ER2-W{n}"
+
+    Examples:
+        "MOSAIX-1_ER2-W1"         → ("MOSAIX",     1, 1)
+        "babyMOSAIX-1_1_ER2-W1"   → ("babyMOSAIX", 1, 1)
+        "babyMOSAIX-3_2_ER2-W5"   → ("babyMOSAIX", 3, 2)
+    """
+    if label.startswith("babyMOSAIX-"):
+        remainder = label[len("babyMOSAIX-"):]   # "1_1_ER2-W1"
+        parts = remainder.split("_")              # ["1", "1", "ER2-W1"]
+        return "babyMOSAIX", int(parts[0]), int(parts[1])
+
+    elif label.startswith("MOSAIX-"):
+        remainder = label[len("MOSAIX-"):]        # "1_ER2-W1"
+        parts = remainder.split("_")              # ["1", "ER2-W1"]
+        return "MOSAIX", int(parts[0]), 1         # column_svt always 1 for MOSAIX
+
+    else:
+        raise ValueError(f"Unknown ASIC type in SVT label: '{label}'")
+
+
+def _parse_its3_label(label: str):
+    """
+    Parse an ITS3 label string into (sn_prefix, id_its3).
+
+    Format:
+        BAM → babyMOSAIX, two-digit zero-padded index  e.g. "BAM00", "BAM19"
+        SEG → MOSAIX,     single digit index            e.g. "SEG0",  "SEG4"
+
+    Examples:
+        "BAM00" → ("babyMOSAIX", 0)
+        "BAM19" → ("babyMOSAIX", 19)
+        "SEG0"  → ("MOSAIX", 0)
+        "SEG4"  → ("MOSAIX", 4)
+    """
+    if label.startswith("BAM"):
+        return "babyMOSAIX", int(label[3:])   # int("00") == 0, int("19") == 19
+
+    elif label.startswith("SEG"):
+        return "MOSAIX", int(label[3:])
+
+    else:
+        raise ValueError(f"Unknown ITS3 label format: '{label}'")
+
+def move_chuck_die_svt(svt_label: str, subsite: int = 0, user=None, waferAgentName=None):
+    """
+    Move to a specific die using an SVT label string.
+
+    Args:
+        svt_label: SVT label string, e.g.:
+                   "MOSAIX-1_ER2-W1"       → SVT row=1, col=1 on MOSAIX
+                   "babyMOSAIX-1_1_ER2-W1" → SVT row=1, col=1 on babyMOSAIX
+        subsite: Subsite index (default 0)
+    """
+    try:
+        sn_prefix, row_svt, column_svt = _parse_svt_label(svt_label)
+    except (ValueError, IndexError) as e:
+        return ResponseBuilder.error(
+            "MoveChuckRowColumnReply",
+            f"Invalid SVT label '{svt_label}': {e}",
+            400
+        )
+
+    converter = get_converter()
+    if not converter.conversion_map:
+        converter.load_conversion_map("configs/WPMapConversion.json")
+
+    result = converter.svt_to_local(row_svt, column_svt, sn_prefix)
+
+    if result is None:
+        return ResponseBuilder.error(
+            "MoveChuckRowColumnReply",
+            f"No local mapping found for SVT ({row_svt},{column_svt}) on {sn_prefix}",
+            400
+        )
+
+    row_local, col_local, _ = result
+    return move_chuck_die(col=col_local, row=row_local, subsite=subsite,
+                          user=user, waferAgentName=waferAgentName)
+
+def move_chuck_die_its3(its3_label: str, subsite: int = 0, user=None, waferAgentName=None):
+    """
+    Move to a specific die using an ITS3 label string.
+
+    Args:
+        its3_label: ITS3 label string, e.g.:
+                    "BAM00" → id=0  on babyMOSAIX
+                    "BAM19" → id=19 on babyMOSAIX
+                    "SEG0"  → id=0  on MOSAIX
+        subsite: Subsite index (default 0)
+    """
+    try:
+        sn_prefix, id_its3 = _parse_its3_label(its3_label)
+    except (ValueError, IndexError) as e:
+        return ResponseBuilder.error(
+            "MoveChuckRowColumnReply",
+            f"Invalid ITS3 label '{its3_label}': {e}",
+            400
+        )
+
+    converter = get_converter()
+    if not converter.conversion_map:
+        converter.load_conversion_map("configs/WPMapConversion.json")
+
+    result = converter.its3_to_local(id_its3, sn_prefix)
+
+    if result is None:
+        return ResponseBuilder.error(
+            "MoveChuckRowColumnReply",
+            f"No local mapping found for ITS3 '{its3_label}' (id={id_its3}) on {sn_prefix}",
+            400
+        )
+
+    row_local, col_local, _ = result
+    return move_chuck_die(col=col_local, row=row_local, subsite=subsite,
+                          user=user, waferAgentName=waferAgentName)
 
 def update_current_info(currentProber=None):
     g = SvtWPAagentGlobalParameters.getInstance()
