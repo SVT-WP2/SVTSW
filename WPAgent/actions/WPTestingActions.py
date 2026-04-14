@@ -134,6 +134,58 @@ def move_chuck_z(z, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
 
 
+def enable_ptpa(user=None, waferAgentName=None):
+    """Enable PTPA alignment"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("EnablePTPAReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        prober = get_current_prober()
+        prober.enable_ptpa()
+        prober.local_mode()
+
+        # Update info
+        update_current_info(currentProber=prober)
+
+        #agentStateMachine.transition('RunPTPA')
+
+        return ResponseBuilder.success("EnablePTPAReply", "PTPA enabled")
+    except Exception as e:
+
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("EnablePTPAReply", str(e), 500)
+
+def disable_ptpa(user=None, waferAgentName=None):
+    """Disable PTPA alignment"""
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("DisablePTPAReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        prober = get_current_prober()
+        prober.disable_ptpa()
+        prober.local_mode()
+
+        # Update info
+        update_current_info(currentProber=prober)
+
+        #agentStateMachine.transition('RunPTPA')
+
+        return ResponseBuilder.success("DisablePTPAReply", "PTPA disabled")
+    except Exception as e:
+
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("DisablePTPAReply", str(e), 500)
+
 @validate_command
 def run_ptpa(user=None, waferAgentName=None):
     """Run PTPA alignment"""
