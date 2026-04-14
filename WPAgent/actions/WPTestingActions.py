@@ -27,6 +27,59 @@ def _ensure_initialized():
     return None
 
 
+def take_screenshot(
+        filename=None,
+        snapshot_type="CameraRaw",
+        save_locally=True,
+        output_dir="screenshots",
+        user=None,
+        waferAgentName=None
+):
+    """
+    Take a screenshot from prober camera
+
+    Args:
+        filename: Optional filename (auto-generated if not provided)
+        snapshot_type: "CameraRaw", "Overlay", or "CameraProcessed"
+        save_locally: True to save on WP Agent machine, False to save on prober
+        output_dir: Directory to save screenshots
+        user: User performing action
+        waferAgentName: Agent name
+
+    Returns:
+        Response with screenshot path
+    """
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("TakeScreenshotReply", error["output"], 400)
+
+    try:
+        prober = get_current_prober()
+
+        filepath = prober.take_screenshot(
+            filename=filename,
+            snapshot_type=snapshot_type,
+            save_locally=save_locally,
+            output_dir=output_dir
+        )
+
+        # Get absolute path
+        abs_path = os.path.abspath(filepath)
+
+        return ResponseBuilder.success(
+            "TakeScreenshotReply",
+            f"Screenshot saved: {abs_path}"
+        )
+
+    except RuntimeError as e:
+        return ResponseBuilder.error("TakeScreenshotReply", str(e), 400)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return ResponseBuilder.error("TakeScreenshotReply", str(e), 500)
+
+
 # @validate_command
 def move_chuck_xy(x, y, user=None, waferAgentName=None):
     """
@@ -275,8 +328,6 @@ def move_chuck_die(col: int, row: int, subsite: int = 0, user=None,
 
         prober.go_to_die(col, row)
 
-
-
         # Update die position
         g.set_current_die(col, row, subsite)
         agentStateMachine.transition('MoveChuckRowColumn')
@@ -447,7 +498,6 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
         prober = get_current_prober()
         prober.switch_camera(mountPoint)
 
-
         # Update info
         update_current_info(currentProber=prober)
 
@@ -535,10 +585,9 @@ def open_project(project_name: str, user=None, waferAgentName=None):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from actions.WPDataBaseActions import get_project_id_by_name
 
-
     error = _ensure_initialized()
     if error:
-       return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
+        return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -847,7 +896,6 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
         prober.local_mode()
 
-
         agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
 
         return ResponseBuilder.success("MoveChuckToWorkAreaReply", f"Moved to {work_area} workarea")
@@ -902,7 +950,6 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         # Update info
         update_current_info(currentProber=prober)
         prober.local_mode()
-
 
         # TODO: Update die position if result contains coordinates
         # g.set_current_die(col, row, subsite)
@@ -961,7 +1008,6 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
         prober.local_mode()
 
-
         agentStateMachine.transition('SetOverdrive')
 
         return ResponseBuilder.success("SetOvertravelReply", "SetOvertravel command successfully executed")
@@ -1012,7 +1058,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
-    #if g.loaded_wafer_id is not None:
+    # if g.loaded_wafer_id is not None:
     #    return ResponseBuilder.error("MoveChuckLoadedWaferReply", "Wafer loaded", 400)
 
     try:
@@ -1025,7 +1071,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         # Update info
         update_current_info(currentProber=prober)
 
-        #get_loaded_wafer_from_db(g.wp_machine_id)
+        # get_loaded_wafer_from_db(g.wp_machine_id)
 
         agentStateMachine.transition('MoveChuckLoadedWafer')
 
