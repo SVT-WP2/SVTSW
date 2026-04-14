@@ -199,7 +199,7 @@ class SentioProberImpl(AbstractProber):
             filename: str = None,
             snapshot_type: str = "CameraRaw",
             save_locally: bool = True,
-            output_dir: str = "screenshots"
+            output_dir: str = "screenshotsSVT"
     ):
         """
         Take a screenshot from the prober camera
@@ -223,14 +223,6 @@ class SentioProberImpl(AbstractProber):
         if not filename.lower().endswith(('.jpg', '.jpeg')):
             filename += '.jpg'
 
-        # Map string to SnapshotType enum
-        snapshot_type_map = {
-            "CameraRaw": SnapshotType.CameraRaw,
-            "Overlay": SnapshotType.Overlay,
-            "CameraProcessed": SnapshotType.CameraProcessed
-        }
-
-        snapshot_enum = snapshot_type_map.get(snapshot_type, SnapshotType.CameraRaw)
 
         if save_locally:
             os.makedirs(output_dir, exist_ok=True)
@@ -240,7 +232,7 @@ class SentioProberImpl(AbstractProber):
             # Take screenshot and download
             self.prober.vision.snap_image(
                 file=full_path,
-                what=snapshot_enum,
+                what=SnapshotType.CameraRaw,
                 where=SnapshotLocation.Local
             )
             return full_path

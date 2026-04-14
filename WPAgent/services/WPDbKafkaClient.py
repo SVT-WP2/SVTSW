@@ -54,7 +54,7 @@ class DBKafkaClient:
             'enable.auto.commit': False,
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,
-            'max.poll.interval.ms': 30000
+            'max.poll.interval.ms': 60000
         })
 
         # Subscribe to reply topic
@@ -167,7 +167,7 @@ class DBKafkaClient:
         messages_seen = 0
 
         while time.time() - start < timeout:
-            msg = self.consumer.poll(1.0)
+            msg = self.consumer.poll(0.1)
 
             if msg is None:
                 continue
