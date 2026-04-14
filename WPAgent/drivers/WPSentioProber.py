@@ -26,6 +26,12 @@ class SentioProberImpl(AbstractProber):
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
 
+    def enable_ptpa(self):
+        resp = self.prober.send_cmd("vis:compensation:enable Both, True")
+
+    def disable_ptpa(self):
+        resp = self.prober.send_cmd("vis:compensation:enable Both, False")
+
     def run_ptpa(self):
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
 

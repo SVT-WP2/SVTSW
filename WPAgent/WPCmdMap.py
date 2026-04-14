@@ -14,6 +14,8 @@ COMMAND_ROUTER = {
     "MoveChuckXY": testing_actions.move_chuck_xy,
     "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
+    "DisablePTPA": testing_actions.disable_ptpa,
+    "EnablePTPA": testing_actions.enable_ptpa,
     "MoveChuckNextDie": testing_actions.move_chuck_next_die,
     "MoveChuckRowColumn": testing_actions.move_chuck_die,
     "OpenProject": testing_actions.open_project,
