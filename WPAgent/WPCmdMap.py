@@ -18,6 +18,9 @@ COMMAND_ROUTER = {
     "EnablePTPA": testing_actions.enable_ptpa,
     "MoveChuckNextDie": testing_actions.move_chuck_next_die,
     "MoveChuckRowColumn": testing_actions.move_chuck_die,
+    "MoveChuckRowColumnSVT": testing_actions.move_chuck_die_svt,
+    "MoveChuckRowColumnITS3": testing_actions.move_chuck_die_its3,
+
     "OpenProject": testing_actions.open_project,
     "FindHome": testing_actions.find_home,
     "SwitchCamera": testing_actions.switch_camera,
