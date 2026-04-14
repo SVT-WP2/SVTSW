@@ -2,7 +2,7 @@
 set -euo pipefail
 
 THIS_SCRIPT_PATH=$(cd -- "$(dirname "${BASH_SOURCE[0]:-0}")" &>/dev/null && pwd -P)
-APP_BIN="${THIS_SCRIPT_PATH}/build/bin/svt_db_agent"
+APP_BIN="${THIS_SCRIPT_PATH}/install/bin/svt_db_agent"
 DEFAULT_CONFIG="${THIS_SCRIPT_PATH}/configs/SvtDbAgent_config-local.json"
 RUNTIME_CONFIG="${SVT_DB_AGENT_RUNTIME_CONFIG:-/tmp/SvtDbAgent_config-runtime.json}"
 
