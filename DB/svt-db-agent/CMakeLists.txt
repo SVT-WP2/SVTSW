@@ -44,6 +44,17 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # Include standard installation directories (lib, bin, include, etc.)
 include(GNUInstallDirs)
 
+# Assign RPATH
+if(APPLE)
+  # 1. Enable RPATH for macOS (essential)
+  set(CMAKE_MACOSX_RPATH ON)
+  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+
+else()
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
+endif()
+
 set(SVT_UTILS "svt-utils")
 set(SVT_KAFKA "svt-kafka")
 
@@ -151,17 +162,6 @@ foreach(CPP_FILE ${CPP_FILES})
   target_include_directories(${EXECUTABLE_NAME} PRIVATE ${VERSION_BINARY_DIR})
   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${svt_db_agent_lib})
 endforeach()
-
-# Assign RPATH
-if(APPLE)
-  # 1. Enable RPATH for macOS (essential)
-  set(CMAKE_MACOSX_RPATH ON)
-  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
-
-else()
-  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-
-endif()
 
 # Add the install target
 install(
