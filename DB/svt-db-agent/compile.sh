@@ -49,5 +49,5 @@ done
 update_git_tag
 
 [[ -z "${UPDATE}" ]] &&
-  cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-[[ -n "$BUILD" ]] && cmake --build build -j"$(nproc)" || exit 0
+  cmake -B build -S . -DCMAKE_INSTALL_PREFIX=install -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+[[ -n "$BUILD" ]] && cmake --build build -j"$(nproc)" --target install || exit 0
