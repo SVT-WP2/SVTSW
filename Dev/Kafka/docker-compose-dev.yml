@@ -6,8 +6,7 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    ports:
-      - "2182:2181"
+
   kafka:
     image: wurstmeister/kafka:latest
     container_name: svt-kafka-broker-dev
@@ -42,11 +41,11 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9094
 
   svt.db-agent:
-    image: localhost/svt.db-agent:latest
+    image: localhost/svt.db-agent-deploy:latest
     container_name: svt.db-agent-dev
     build:
       context: ./../../DB/svt-db-agent/ # The directory containing your Dockerfile
-      # dockerfile: Dockerfile
+      target: db-agent-deploy
     depends_on:
       - kafka
     command: ["/app/configs/SvtDbAgent_config-dev.json"]
