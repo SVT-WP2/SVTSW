@@ -3,7 +3,7 @@ Initialization Service for Wafer Prober Agent
 Handles database-driven and manual initialization with producer-side interaction
 """
 
-from services.WPKafkaDbService import KafkaDBService
+from services.WPDbKafkaClient import DBKafkaClient
 
 
 class WPInitializationService:
@@ -65,7 +65,7 @@ class WPInitializationService:
         print("=" * 70)
 
         try:
-            db_service = KafkaDBService.get_instance()
+            db_service = DBKafkaClient.get_instance()
 
             # ================================================================
             # STEP 1: Select probe machine
@@ -342,7 +342,7 @@ class WPInitializationService:
             list: List of machine dictionaries
         """
         try:
-            db_service = KafkaDBService.get_instance()
+            db_service = DBKafkaClient.get_instance()
             machines = db_service.get_all_wafer_probe_machines(timeout=timeout)
 
             if machines:
@@ -370,7 +370,7 @@ class WPInitializationService:
             list: List of project dictionaries
         """
         try:
-            db_service = KafkaDBService.get_instance()
+            db_service = DBKafkaClient.get_instance()
             all_projects = db_service.get_all_wafer_probe_projects(timeout=timeout)
 
             if not all_projects:
@@ -415,7 +415,7 @@ class WPInitializationService:
         """
         try:
             # Get all machines
-            db_service = KafkaDBService.get_instance()
+            db_service = DBKafkaClient.get_instance()
             machines = db_service.get_all_wafer_probe_machines(timeout=timeout)
 
             # Find machine by ID
