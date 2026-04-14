@@ -16,8 +16,13 @@ class SentioProberImpl(AbstractProber):
     def open_project(self, path: str):
         self.prober.open_project(path)
 
-    def move_chuck_xy(self, x: float, y: float):
-        return self.prober.move_chuck_xy(ChuckXYReference.Zero, x, y)
+    def move_chuck_xy(self, x: float, y: float, position: str):
+        reference = None
+        if position == 'Zero':
+            reference = ChuckXYReference.Zero
+        elif position == 'Relative':
+            reference = ChuckXYReference.Relative
+        return self.prober.move_chuck_xy(reference, x, y)
 
     def move_chuck_center(self):
         resp = self.prober.send_cmd("move_chuck_center")
@@ -223,7 +228,6 @@ class SentioProberImpl(AbstractProber):
         if not filename.lower().endswith(('.jpg', '.jpeg')):
             filename += '.jpg'
 
-
         if save_locally:
             os.makedirs(output_dir, exist_ok=True)
 
@@ -236,7 +240,6 @@ class SentioProberImpl(AbstractProber):
                 where=SnapshotLocation.Local
             )
             return full_path
-
 
     def get_chuck_stage(self):
         try:

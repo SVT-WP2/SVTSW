@@ -81,12 +81,14 @@ def take_screenshot(
 
 
 # @validate_command
-def move_chuck_xy(x, y, user=None, waferAgentName=None):
+def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
     """
-
     Args:
         x: in micrometer
         y: in micrometer
+        position:
+          - Relative : Use curent chuck position as reference
+          - Zero : Use curent chuck position as reference
         user: current user
         waferAgentName: current WP Agent Name
 
@@ -100,7 +102,7 @@ def move_chuck_xy(x, y, user=None, waferAgentName=None):
     g = SvtWPAagentGlobalParameters.getInstance()
     try:
         prober = get_current_prober()
-        prober.move_chuck_xy(x, y)
+        prober.move_chuck_xy(x, y, position)
 
         # Update info
         update_current_info(currentProber=prober)

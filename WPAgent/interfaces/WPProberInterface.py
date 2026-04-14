@@ -11,7 +11,7 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
-    def move_chuck_xy(self, x: float, y: float):
+    def move_chuck_xy(self, x: float, y: float, position: str):
         pass
 
     @abstractmethod
