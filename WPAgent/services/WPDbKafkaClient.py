@@ -16,7 +16,7 @@ class DBKafkaClient:
     """Singleton Kafka client specifically for DB Agent communication"""
 
     _instance = None
-    DB_BROKER = "localhost:9095"
+    DB_BROKER = "svmithi02:9096"
     DB_REQUEST_TOPIC = "svt.db-agent.request"
     DB_REPLY_TOPIC = "svt.db-agent.request.reply"
 

@@ -1,0 +1,19 @@
+{
+  "logger": {
+    "filePath": "/tmp/SvtDbAgent-dev",
+    "termVerbosity": "PRODUCTION",
+    "fileVerbosity": "STANDARD"
+  },
+  "DataBase": {
+    "psqlHost": "dbod-svt-sw-pgdb.cern.ch",
+    "psqlPort": "6600",
+    "psqlUser": "admin",
+    "psqlPass": "svt-mosaix",
+    "psqlDbName": "svt_sw_db_test",
+    "psqlDbSchema": "main"
+  },
+  "kafka": {
+    "server": "svmithi02",
+    "port": "9096"
+  }
+}

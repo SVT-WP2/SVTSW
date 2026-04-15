@@ -18,7 +18,7 @@ class SvtWPAagentGlobalParameters:
         self._project_metadata = {}
 
         # Database-related parameters
-        self.wpMachineId = 4  # Database ID of the prober
+        self.wpMachineId = None  # Database ID of the prober
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
         self.wpAgentName = None
@@ -29,9 +29,6 @@ class SvtWPAagentGlobalParameters:
 
         # ASIC info
         self.asic_serial_number = 0
-
-        # Machine ID for response (alias to machine_id for compatibility)
-        self.wpMachineId = 4
 
         # Agent FSM State
         self.wpag_state = "ServiceOff"  # ServiceOn, WP_Idle, WP_Testing, WP_Error, etc.
@@ -141,7 +138,7 @@ class SvtWPAagentGlobalParameters:
             "machine_type": self.machineType,
             "chip_name": self.chip_name,
             "orientation": self.orientation,
-            "project_name": self.projectName,
+            "projectName": self.projectName,
             "prober_status": self.prober_status,
             "initialization_mode": self.initialization_mode
         }
@@ -182,7 +179,7 @@ class SvtWPAagentGlobalParameters:
         self.machineType = data.get("machine_type", "sentio")
         self.chip_name = data.get("chip_name")
         self.orientation = data.get("orientation")
-        self.projectName = data.get("project_name")
+        self.projectName = data.get("projectName")
         self.prober_status = data.get("status", data.get("prober_status", "idle"))
 
         # Database-specific fields

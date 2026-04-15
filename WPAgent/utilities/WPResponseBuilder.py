@@ -22,20 +22,19 @@ class ResponseBuilder:
         data = {
             "userLogged": getattr(g, 'userLogged'),
             "userLoggedHierarchy": getattr(g, 'userLoggedHierarchy'),
-            "asicSerialNumber": 0, #(g, 'asic_serial_number', 0),
-            "wpMachineId": "4",
+            "asicSerialNumber":  getattr(g, 'asicSerialNumber', 0),
+            "wpMachineId": getattr(g, 'wpMachineId', 0),
             "WPAG_State": getattr(g, 'wpag_state', 'ServiceOff'),
             "wpAgentName": getattr(g, 'wpAgentName'),
 
-            "loadedWafer": None,
-            "instaledprobeCard": None,  # Note: your spelling "instaled"
+            "loadedWafer": 1,
+            "instaledprobeCard": None,
 
             "openedProjectId": getattr(g, 'opened_project_id', 0),
-            "projectName": getattr(g, 'project_name', ''),
+            "projectName": getattr(g, 'projectName', ''),
             "overdrive": getattr(g, 'overdrive', 0),
             "cameraMountPoint": getattr(g, 'camera_mount_point', ''),
             "currentWorkingArea": getattr(g, 'current_working_area', ''),
-
             "waferMapDiePosition": None,
 
             "chuckZPositionState": getattr(g, 'chuck_z_position_state', 'Unknown'),
@@ -58,15 +57,11 @@ class ResponseBuilder:
                 "orientation": getattr(g, 'probe_card_orientation', 'Unknown')
             }
 
-        # Populate die position if available
-        col = getattr(g, 'current_die_col', 0)
-        row = getattr(g, 'current_die_row', 0)
-        if col != 0 or row != 0:
-            data["waferMapDiePosition"] = {
-                "colIndex": col,
-                "rowIndex": row,
-                "subsiteIndex": getattr(g, 'current_die_subsite', 0)
-            }
+        data["waferMapDiePosition"] = {
+            "colIndex": getattr(g, 'current_die_col', 0),
+            "rowIndex": getattr(g, 'current_die_row', 0),
+            "subsiteIndex": getattr(g, 'current_die_subsite', 0)
+        }
 
         return data
 

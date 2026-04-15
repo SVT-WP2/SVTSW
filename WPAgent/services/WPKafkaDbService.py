@@ -11,7 +11,7 @@ class KafkaDBService:
 
     DB_REQUEST_TOPIC = "svt.db-agent.request"
     DB_REPLY_TOPIC = "svt.db-agent.request.reply"
-    DB_KAFKA_BROKER = "localhost:9095"
+    DB_KAFKA_BROKER = "svmithi02:9096"
 
     # Header names as per SVT conventions
     HEADER_CORRELATION_ID = 'kafka_correlationId'

@@ -1,5 +1,6 @@
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
+from concurrent.futures import ThreadPoolExecutor
 
 import json
 import time
@@ -40,7 +41,8 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers='localhost:9095', group_id='wafer-executor'):
+    def __init__(self, bootstrap_servers='svmithi02:9096', group_id='wafer-executor'):
+
         self.bootstrap_servers = bootstrap_servers
         self.group_id = group_id
 
@@ -51,21 +53,17 @@ class KafkaClient:
         self._ensure_topic_exists(self.request_topic)
         self._ensure_topic_exists(self.reply_topic)
 
-        self.producer = KafkaProducer({'bootstrap.servers': self.bootstrap_servers})
-
-        # Consumer for listener (processes requests)
-        self.request_consumer = KafkaConsumer({
+        self.producer = KafkaProducer({
             'bootstrap.servers': self.bootstrap_servers,
-            'group.id': self.group_id,
-            'auto.offset.reset': 'latest',
-            'enable.auto.commit': True,
-            'session.timeout.ms': 6000,
-            'heartbeat.interval.ms': 3000
+            'linger.ms': 0,           # ← was 10: no batching delay for interactive commands
+            'compression.type': 'none', # ← was lz4: unnecessary for small control messages
         })
-        self.request_consumer.subscribe([self.request_topic])
+        
+        # ← request_consumer removed from here entirely
+        self.request_consumer = None
 
-        # Consumer for sender (receives replies)
-        self.reply_consumer = None  # Created on-demand when sending
+        self.reply_consumer = None
+        self._initialize_reply_consumer()
 
         # Initialize heartbeat monitoring
         self.health_check = ListenerHealthCheck(bootstrap_servers=self.bootstrap_servers)
@@ -100,66 +98,33 @@ class KafkaClient:
     # -----------------------------------------
     # Reply consumer (sender side)
     # -----------------------------------------
-    def _ensure_reply_consumer_ready(self):
-        """Ensure reply consumer is initialized and ready"""
-        if self.reply_consumer is not None:
-            return  # Already initialized
 
-        consumer_group = f'reply-consumer-{uuid.uuid4()}'
+    def _initialize_reply_consumer(self):
+        if self.reply_consumer is not None:
+            return
+
+        from confluent_kafka import TopicPartition
 
         self.reply_consumer = KafkaConsumer({
             'bootstrap.servers': self.bootstrap_servers,
-            'group.id': consumer_group,
+            'group.id': f'{self.group_id}-reply-{uuid.uuid4().hex[:8]}',
             'auto.offset.reset': 'latest',
             'enable.auto.commit': False,
-            'session.timeout.ms': 60000,
-            'max.poll.interval.ms': 120000
+            'fetch.wait.max.ms': 50,
+            'socket.timeout.ms': 10000,
         })
-        self.reply_consumer.subscribe([self.reply_topic])
 
-        # Wait for consumer to be ready
-        start = time.time()
-        while time.time() - start < 5.0:
-            self.reply_consumer.poll(0.1)
-            if self.reply_consumer.assignment():
-                elapsed = time.time() - start
-                print(f"   ✅ Reply consumer ready ({elapsed:.1f}s)")
-                return
-            time.sleep(0.1)
+        partition = TopicPartition(self.reply_topic, 0)
+        self.reply_consumer.assign([partition])
 
-        print(f"   ⚠️  Reply consumer timeout (may miss fast replies)")
+        # Must poll once to let librdkafka initialize the partition state
+        self.reply_consumer.poll(1.0)
 
-    def _wait_for_reply(self, correlation_id: str, timeout: float) -> Optional[Dict]:
-        """Wait for a reply message with matching kafka_correlationId header."""
-        if self.reply_consumer is None:
-            print(f"⚠️  Reply consumer not initialized!")
-            return None
+        # Now seek to end is safe
+        low, high = self.reply_consumer.get_watermark_offsets(partition, timeout=5.0)
+        self.reply_consumer.seek(TopicPartition(self.reply_topic, 0, high))
+        print(f"✅ Reply consumer ready (manual assign, offset={high})")
 
-        start_time = time.time()
-
-        while time.time() - start_time < timeout:
-            msg = self.reply_consumer.poll(0.5)
-
-            if msg is None:
-                continue
-            if msg.error():
-                continue
-
-            try:
-                hdr = _headers_to_dict(msg.headers())
-                corr = hdr.get(KAFKA_HEADER__CORRELATION_ID)
-                if not corr:
-                    continue
-
-                if corr.decode("utf-8", errors="ignore") != correlation_id:
-                    continue
-
-                return json.loads(msg.value().decode("utf-8"))
-
-            except Exception:
-                continue
-
-        return None
 
     # -----------------------------------------
     # Param conversion helpers
@@ -220,8 +185,14 @@ class KafkaClient:
             # where fast commands reply before the consumer is ready.
             reply_consumer = None
             if wait_for_reply:
-                print(f"⏳ Initializing reply consumer...")
-                reply_consumer = self._create_fresh_reply_consumer()
+                reply_consumer = self._get_persistent_reply_consumer()
+
+                deadline = time.time() + 5.0
+                while not reply_consumer.assignment() and time.time() < deadline:
+                    reply_consumer.poll(0.05)   # keep the group alive / trigger assignment
+                if not reply_consumer.assignment():
+                    print("⚠️  Reply consumer not assigned — replies may be missed")
+
 
             # Step 2: Build payload and headers
             payload = {"type": command, "data": params}
@@ -254,7 +225,7 @@ class KafkaClient:
                 print(f"⏳ Waiting for response (timeout: {timeout}s)...")
 
                 response = self._wait_for_reply_on(reply_consumer, correlation_id, timeout)
-                reply_consumer.close()  # always clean up, even on timeout
+                #reply_consumer.close()  # always clean up, even on timeout
 
                 if response:
                     results.append(response)
@@ -315,6 +286,21 @@ class KafkaClient:
         Listen for and process Kafka messages (LISTENER MODE).
         Silent mode: no command prints, only errors are logged.
         """
+
+        # Create request consumer HERE, only when actually listening
+        self.request_consumer = KafkaConsumer({
+            'bootstrap.servers': self.bootstrap_servers,
+            'group.id': self.group_id,
+            'auto.offset.reset': 'latest',
+            'enable.auto.commit': True,
+            'session.timeout.ms': 10000,    # ← was 30000: detect dead consumers faster
+            'heartbeat.interval.ms': 3000,  # ← was 10000: must be < session.timeout/3
+            'max.poll.interval.ms': 300000,
+        })
+        self.request_consumer.subscribe([self.request_topic])
+
+        executor = ThreadPoolExecutor(max_workers=4)
+
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
             severityLevel=Severity.INFO,
@@ -327,6 +313,7 @@ class KafkaClient:
 
         try:
             while True:
+
                 msg = self.request_consumer.poll(poll_timeout)
 
                 if msg is None:
@@ -341,107 +328,7 @@ class KafkaClient:
                     )
                     continue
 
-                try:
-                    payload = json.loads(msg.value().decode("utf-8"))
-
-                    command = payload.get("type")
-                    params = payload.get("data", {}) or {}
-
-                    if hasattr(self, "_convert_param_types"):
-                        params = self._convert_param_types(params)
-
-                    hdr = _headers_to_dict(msg.headers())
-                    corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
-                    reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
-                    reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
-
-                    correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
-                    reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
-                    reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
-
-                    logger.log_command(
-                        messageOut=f"Received command: {command}",
-                        severityLevel=Severity.INFO,
-                        command=command,
-                        data=params,
-                        result=None
-                    )
-
-                    exec_start = time.time()
-                    result = execute_command(command, params)
-                    exec_end = time.time()
-                    exec_time_ms = (exec_end - exec_start) * 1000
-
-                    if result and "type" in result and "data" in result:
-                        reply_body = result
-                        if "data" in reply_body and isinstance(reply_body["data"], dict):
-                            reply_body["data"]["executionTimeMs"] = exec_time_ms
-                    else:
-                        raw_status = (result or {}).get("status", "error")
-                        output = (result or {}).get("output", "No output")
-
-                        if raw_status == "success":
-                            reply_body = {
-                                "status": SvtMessageStatus.Success,
-                                "type": f"{command}Reply",
-                                "data": {"output": output, "executionTimeMs": exec_time_ms}
-                            }
-                        else:
-                            reply_body = {
-                                "status": SvtMessageStatus.UnexpectedError,
-                                "type": f"{command}Reply",
-                                "error": {"message": output}
-                            }
-
-                    if reply_to and correlation_id:
-                        reply_headers = [
-                            (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
-                            (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
-                        ]
-                        self.producer.produce(
-                            reply_to,
-                            value=json.dumps(reply_body).encode("utf-8"),
-                            headers=reply_headers,
-                            partition=reply_partition
-                        )
-                        self.producer.flush()
-
-                except Exception as e:
-                    logger.log_command(
-                        messageOut=f"Exception during command execution: {str(e)}",
-                        severityLevel=Severity.ERROR,
-                        command=command if 'command' in locals() else "UNKNOWN",
-                        result={"error": str(e)}
-                    )
-                    try:
-                        hdr = _headers_to_dict(msg.headers())
-                        corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
-                        reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
-                        reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
-
-                        correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
-                        reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
-                        reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
-
-                        if reply_to and correlation_id:
-                            error_reply = {
-                                "status": SvtMessageStatus.UnexpectedError,
-                                "type": f"{command if 'command' in locals() and command else 'Unknown'}Reply",
-                                "error": {"message": f"Exception: {str(e)}"}
-                            }
-                            reply_headers = [
-                                (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
-                                (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
-                            ]
-                            self.producer.produce(
-                                reply_to,
-                                value=json.dumps(error_reply).encode("utf-8"),
-                                headers=reply_headers,
-                                partition=reply_partition
-                            )
-                            self.producer.flush()
-                    except Exception:
-                        pass
+                executor.submit(self._handle_message, msg)  # non-blocking
 
         except KeyboardInterrupt:
             pass
@@ -454,10 +341,141 @@ class KafkaClient:
                 self.reply_consumer.close()
 
 
+    def _handle_message(self, msg):
+
+        """Runs in a thread — executes command and sends reply."""
+        # move all the existing try/except logic from listen() here
+
+        try:
+            payload = json.loads(msg.value().decode("utf-8"))
+
+            command = payload.get("type")
+            params = payload.get("data", {}) or {}
+
+            if hasattr(self, "_convert_param_types"):
+                params = self._convert_param_types(params)
+
+            hdr = _headers_to_dict(msg.headers())
+            corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
+            reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
+            reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
+
+            correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
+            reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
+            reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
+
+            logger.log_command(
+                messageOut=f"Received command: {command}",
+                severityLevel=Severity.INFO,
+                command=command,
+                data=params,
+                result=None
+            )
+
+            exec_start = time.time()
+            result = execute_command(command, params)
+            exec_end = time.time()
+            exec_time_ms = (exec_end - exec_start) * 1000
+
+            if result and "type" in result and "data" in result:
+                reply_body = result
+                if "data" in reply_body and isinstance(reply_body["data"], dict):
+                    reply_body["data"]["executionTimeMs"] = exec_time_ms
+            else:
+                raw_status = (result or {}).get("status", "error")
+                output = (result or {}).get("output", "No output")
+
+                if raw_status == "success":
+                    reply_body = {
+                        "status": SvtMessageStatus.Success,
+                        "type": f"{command}Reply",
+                        "data": {"output": output, "executionTimeMs": exec_time_ms}
+                    }
+                else:
+                    reply_body = {
+                        "status": SvtMessageStatus.UnexpectedError,
+                        "type": f"{command}Reply",
+                        "error": {"message": output}
+                    }
+
+            if reply_to and correlation_id:
+                reply_headers = [
+                    (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
+                    (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
+                ]
+                self.producer.produce(
+                    reply_to,
+                    value=json.dumps(reply_body).encode("utf-8"),
+                    headers=reply_headers,
+                    partition=reply_partition
+                )
+                self.producer.flush(timeout=2.0)
+
+        except Exception as e:
+            logger.log_command(
+                messageOut=f"Exception during command execution: {str(e)}",
+                severityLevel=Severity.ERROR,
+                command=command if 'command' in locals() else "UNKNOWN",
+                result={"error": str(e)}
+            )
+            try:
+                hdr = _headers_to_dict(msg.headers())
+                corr_bytes = hdr.get(KAFKA_HEADER__CORRELATION_ID)
+                reply_topic_bytes = hdr.get(KAFKA_HEADER__REPLY_TOPIC)
+                reply_part_bytes = hdr.get(KAFKA_HEADER__REPLY_PARTITION)
+
+                correlation_id = corr_bytes.decode("utf-8", errors="ignore") if corr_bytes else None
+                reply_to = reply_topic_bytes.decode("utf-8", errors="ignore") if reply_topic_bytes else None
+                reply_partition = int(reply_part_bytes.decode("utf-8", errors="ignore")) if reply_part_bytes else 0
+
+                if reply_to and correlation_id:
+                    error_reply = {
+                        "status": SvtMessageStatus.UnexpectedError,
+                        "type": f"{command if 'command' in locals() and command else 'Unknown'}Reply",
+                        "error": {"message": f"Exception: {str(e)}"}
+                    }
+                    reply_headers = [
+                        (KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8")),
+                        (KAFKA_HEADER__REPLY_PARTITION, str(reply_partition).encode("utf-8")),
+                    ]
+                    self.producer.produce(
+                        reply_to,
+                        value=json.dumps(error_reply).encode("utf-8"),
+                        headers=reply_headers,
+                        partition=reply_partition
+                    )
+                    self.producer.flush(timeout=2.0)
+            except Exception:
+                pass
+
+
+
+
     # -----------------------------------------
     # (Optional) request_reply helper for other services
     #
     # -----------------------------------------
+
+    def _get_persistent_reply_consumer(self):
+        if self.reply_consumer is None:
+            self.reply_consumer = KafkaConsumer({
+                'bootstrap.servers': self.bootstrap_servers,
+                'group.id': f'{self.group_id}-reply',
+                'auto.offset.reset': 'latest',          # ← was 'earliest', BUG
+                'enable.auto.commit': False,
+                'session.timeout.ms': 60000,
+                'max.poll.interval.ms': 120000,
+                'fetch.wait.max.ms': 50,               # ← reduce poll latency
+            })
+            self.reply_consumer.subscribe([self.reply_topic])
+            # Wait for assignment before returning
+            start = time.time()
+            while time.time() - start < 10.0:
+                self.reply_consumer.poll(0.1)
+                if self.reply_consumer.assignment():
+                    break
+        return self.reply_consumer
+
     def subscribe_if_needed(self, topics: List[str]) -> None:
         """Subscribe to additional topics if needed"""
         if self.reply_consumer:
@@ -485,11 +503,7 @@ class KafkaClient:
         self._ensure_topic_exists(request_topic)
         self._ensure_topic_exists(reply_topic)
 
-        if self.reply_consumer is None:
-            self.reply_consumer = self._create_fresh_reply_consumer()
-            #self._ensure_reply_consumer_ready() #OLD
-            time.sleep(0.2)
-        # Make sure we are subscribed to that service's reply topic too
+        self._get_persistent_reply_consumer()
         self.subscribe_if_needed([reply_topic])
 
         correlation_id = str(uuid.uuid4())
@@ -515,7 +529,7 @@ class KafkaClient:
 
         start = time.time()
         while time.time() - start < timeout:
-            msg = self.reply_consumer.poll(0.5)
+            msg = self.reply_consumer.poll(0.05)
             if msg is None or msg.error():
                 continue
 
@@ -538,35 +552,12 @@ class KafkaClient:
 
         return None
 
-    def _create_fresh_reply_consumer(self):
-        consumer = KafkaConsumer({
-            'bootstrap.servers': self.bootstrap_servers,
-            'group.id': f'reply-consumer-{uuid.uuid4()}',
-            'auto.offset.reset': 'earliest',
-            'enable.auto.commit': False,
-            'session.timeout.ms': 60000,
-            'max.poll.interval.ms': 120000,
-        })
-        consumer.subscribe([self.reply_topic])
 
-        start = time.time()
-        while time.time() - start < 5.0:
-            consumer.poll(0.1)
-            assignment = consumer.assignment()
-            if assignment:
-                elapsed = time.time() - start
-                print(f"   ✅ Reply consumer ready ({elapsed:.1f}s)")
-                return consumer
-            time.sleep(0.05)
-
-        print("⚠️  Reply consumer partition assignment timed out")
-        return consumer
 
     def _wait_for_reply_on(self, consumer, correlation_id: str, timeout: float):
-        """Poll a specific consumer for a matching reply."""
         start_time = time.time()
         while time.time() - start_time < timeout:
-            msg = consumer.poll(0.5)
+            msg = consumer.poll(0.05)   # ← was 0.5, drop to 50ms
             if msg is None or msg.error():
                 continue
             try:

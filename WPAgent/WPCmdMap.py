@@ -14,8 +14,13 @@ COMMAND_ROUTER = {
     "MoveChuckXY": testing_actions.move_chuck_xy,
     "MoveChuckZ": testing_actions.move_chuck_z,
     "RunPTPA": testing_actions.run_ptpa,
+    "DisablePTPA": testing_actions.disable_ptpa,
+    "EnablePTPA": testing_actions.enable_ptpa,
     "MoveChuckNextDie": testing_actions.move_chuck_next_die,
     "MoveChuckRowColumn": testing_actions.move_chuck_die,
+    "MoveChuckRowColumnSVT": testing_actions.move_chuck_die_svt,
+    "MoveChuckRowColumnITS3": testing_actions.move_chuck_die_its3,
+
     "OpenProject": testing_actions.open_project,
     "FindHome": testing_actions.find_home,
     "SwitchCamera": testing_actions.switch_camera,
@@ -39,9 +44,10 @@ COMMAND_ROUTER = {
     "ShowStatus": project_actions.get_project_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help_command,
+    "InitProbing": testing_actions.init_probing,
 
     # Sequencer
-    "RunSequencer": lambda **data: sequencer_actions.run_sequence(
+    "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
         filepath=get_filepath_param(data if data else None),
         executor=_exec_in_sequence
     ),
@@ -63,6 +69,7 @@ COMMAND_ROUTER = {
     "MoveChuckAsic": testing_actions.move_chuck_asic,
     "MoveChuckSafePosition": testing_actions.move_chuck_safe_position,
     "MoveChuckWide": testing_actions.move_chuck_wide,
+    "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
     "TestingLock": testing_actions.testing_lock,
     "TestingUnLock": testing_actions.testing_unlock,
     "ChangeProject": testing_actions.change_project,
@@ -77,11 +84,11 @@ COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_
 # Instantiation of logger
 logger = WPAgentLogger(
     kafka_enabled=True,
-    kafka_servers='localhost:9095',
+    kafka_servers='svmithi02:9096',
     severity_threshold=Severity.CRITICAL  # Only WARNING and above go to Kafka
 )
 
-health_check = ListenerHealthCheck(bootstrap_servers='localhost:9095')
+health_check = ListenerHealthCheck(bootstrap_servers='svmithi02:9096')
 
 
 def _exec_in_sequence(message_type, data=None):

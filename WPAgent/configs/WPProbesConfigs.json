@@ -1,6 +1,6 @@
 {
   "CERN": {
-    "machineId": 4,
+    "machineId": 22,
     "address": "wpmit01.cern.ch",
     "port": 35555,
     "machineType": "sentio",

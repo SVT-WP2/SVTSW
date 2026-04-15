@@ -1517,7 +1517,15 @@ components:
               type: array
               items:
                 type: string
-            dtuType:
+            asicQuality:
+              type: array
+              items:
+                type: string
+            blockType:
+              type: array
+              items:
+                type: string
+            dutType:
               type: array
               items:
                 type: string
@@ -1529,27 +1537,27 @@ components:
               type: array
               items:
                 type: string
+            pcLocation:
+              type: array
+              items:
+                type: string
+            pcModel:
+              type: array
+              items:
+                type: string
+            pcName:
+              type: array
+              items:
+                type: string
+            pcType:
+              type: array
+              items:
+                type: string
+            pcVendor:
+              type: array
+              items:
+                type: string
             waferTech:
-              type: array
-              items:
-                type: string
-            waferMapOrientation:
-              type: array
-              items:
-                type: string
-            wpGeneralLocation:
-              type: array
-              items:
-                type: string
-            wpConnectionType:
-              type: array
-              items:
-                type: string
-            wpVendor:
-              type: array
-              items:
-                type: string
-            wpSwType:
               type: array
               items:
                 type: string
@@ -1557,7 +1565,23 @@ components:
               type: array
               items:
                 type: string
-            asicQuality:
+            waferMapOrientation:
+              type: array
+              items:
+                type: string
+            wpConnectionType:
+              type: array
+              items:
+                type: string
+            wpGeneralLocation:
+              type: array
+              items:
+                type: string
+            wpSwType:
+              type: array
+              items:
+                type: string
+            wpVendor:
               type: array
               items:
                 type: string
@@ -2560,9 +2584,11 @@ components:
                   description: SvtTestType ids array. If array is empty / undefined => all test type list will be returned.
                   items:
                     type: number
-                dutType:
-                  type: string
-                  description: DUT type.
+                dutTypes:
+                  type: array
+                  items:
+                    type: string
+                    description: dutTypes list (ASIC family type or block type).
     GetAllSvtTestTypesReplyMessage:
       properties:
         type:
@@ -2715,11 +2741,16 @@ components:
             filter:
               type: object
               properties:
-                dtuType:
+                ids:
+                  type: array
+                  items:
+                    type: number
+                    description: SvtTestTemplate ids array. If array is empty / undefined => all test type list will be returned.
+                dutTypes:
                   type: array
                   items:
                     type: string
-                    description: Asic family type ot block type.
+                    description: dutTypes list (ASIC family type or block type).
     GetAllSvtTestTemplatesReplyMessage:
       properties:
         type:
@@ -3543,7 +3574,7 @@ components:
         update:
           type: object
           properties:
-            dutType:
+            dutTypes:
               type: array
               items:
                 type: string
@@ -3639,14 +3670,20 @@ components:
       type: string
       enum:
         - asicFamilyType
+        - asicQuality
+        - blockType
         - dutType
         - engineeringRun
         - foundryName
+        - pcLocation
+        - pcModel
+        - pcName
+        - pcType
+        - pcVendor
         - waferTech
-        - waferMapOrientation
-        - wpGeneralLocation
-        - wpConnectionType
-        - wpVendor
-        - wpSwType
         - waferInMachineStatus
-        - asicQuality
+        - waferMapOrientation
+        - wpConnectionType
+        - wpGeneralLocation
+        - wpSwType
+        - wpVendor
