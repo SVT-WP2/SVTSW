@@ -1,0 +1,34 @@
+{
+  "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
+  "build_dir": "build",
+  "run_list": "run_list_L1_thinned.csv",
+  "kafka_broker": "svmithi02:9096",
+  "kafka_ip_family": "v4",
+  "wp_user": "user1",
+  "wp_agent_name": "CERN",
+  "wp_project_bam": "none",
+  "wp_project_seg": "ER2_MOSAIX_Thinned_Cantilever_V1_NotchW_ArrowW",
+  "thinned_layer": true,
+  "reset_agent_at_login": false,
+  "run_ptpa_bam": true,
+  "run_ptpa_seg": true,
+  "reset_on_ptpa_failure": true,
+  "always_reopen_project": null,
+  "re_enable_ptpa": true,
+
+  "log_cmd_output": true,
+  "show_cmd_output": true,
+
+  "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
+  "power_profile": "imp",
+  "output": "eos",
+
+  "Initialization": [
+    "python3 utility_scripts/set_daq.py {setup_config} -s {power_profile}"
+  ],
+
+  "Sequence": [
+"./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/float.json5 {setup_config} -c {chip_name} -o {output}",
+"./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/common.json5 {setup_config} -c {chip_name} -o {output}"
+]
+}
