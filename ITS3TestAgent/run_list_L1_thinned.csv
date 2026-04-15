@@ -1,0 +1,6 @@
+DIE,"WP[col,row]",TEST
+SEG0,"[0,2]",no
+SEG1,"[0,2]",yes
+SEG2,"[0,1]",yes
+SEG3,"[0,0]",yes
+SEG4,"[0,-1]",yes
