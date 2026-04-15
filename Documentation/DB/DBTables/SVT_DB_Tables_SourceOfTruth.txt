@@ -264,10 +264,10 @@ Table main.SvtTestList {
   testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
   testSetupConfigId integer
   createsAt timestamp [default: `CURRENT_TIMESTAMP`]
-  updatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  startedAt timestamp [default: null]
+  finishedAt timestamp [default: null]
   pathToResult text [default: null]
   testResultStatus varchar(50)
-  generalStatus main.testStatus
 }
 
 Table main.SvtAsicTestList {
@@ -292,29 +292,6 @@ Table main.SvtBlockTestList {
   indexes {
     (blockId, testId) [pk]
   }
-}
-
-Enum main.testStatus{
-  CREATED
-  UPDATED
-}
-
-Enum main.engineeringRun {
-  ER1
-  ER2
-  ER3
-  LAS1
-  AncMPW1
-}
-
-Enum main.foundryName {
-  TowerSemiconductor
-  Xfab
-}
-
-Enum main.waferTech {
-  TPSCo65
-  Xfab110
 }
 
 Enum main.asicFamilyType {
@@ -406,6 +383,12 @@ Enum main.asicFamilyType {
   ER2_TTS2
 }
 
+Enum main.asicQuality {
+  MechanicallyDamaged
+  MechanicallyInteger
+  CoveredByGreenLayer
+}
+
 Enum main.blockType {
   AncMPW1_SLDO
   AncMPW1_NVBG
@@ -418,6 +401,64 @@ Enum main.dutType {
   AncMPW1_SLDO
   AncMPW1_NVBG
   AncMPW1_CML_TRANSCEIVER
+}
+
+Enum main.engineeringRun {
+  ER1
+  ER2
+  ER3
+  LAS1
+  AncMPW1
+}
+
+Enum main.foundryName {
+  TowerSemiconductor
+  Xfab
+}
+
+Enum main.pcLocation {
+  CERN
+  Prague
+  LosAlamos
+  BNL
+  RAL
+ }
+
+Enum main.pcModel {
+  "NKF7-TS3500-CABLEOUT-MLO(EVS-P)"
+  MosaixLeft
+  MosaixRight
+  LAS
+  BabyMOSS
+  Ancillary
+}
+
+Enum main.pcName {
+  NKF7_MPI
+  BabyMOSS_Korea
+  Mosaix_Korea
+}
+
+Enum main.pcType {
+  Vertical
+  Cantilever
+}
+
+Enum main.pcVendor {
+  MPI
+  Korea
+  Synergie
+  FormFactorPC
+}
+
+Enum main.waferTech {
+  TPSCo65
+  Xfab110
+}
+
+Enum main.waferInMachineStatus {
+  Loaded
+  Unloaded
 }
 
 Enum main.waferMapOrientation {
@@ -462,54 +503,12 @@ Enum main.wpVendor {
   FormFactor
 }
 
-Enum main.pcVendor {
-  MPI
-  Korea
-  Synergie
-  FormFactorPC
-}
 
-Enum main.pcName {
-  NKF7_MPI
-  BabyMOSS_Korea
-  Mosaix_Korea
-}
 
-Enum main.pcModel {
-  "NKF7-TS3500-CABLEOUT-MLO(EVS-P)"
-  MosaixLeft
-  MosaixRight
-  LAS
-  BabyMOSS
-  Ancillary
-}
 
-Enum main.pcLocation {
-  CERN
-  Prague
-  LosAlamos
-  BNL
-  RAL
- }
+// Enum main.contactMechanicalQuality {
+//   Good
+//   Bad
+//   AvoidIfPossible
+// }
 
-Enum main.pcType {
-  Vertical
-  Cantilever
-}
-
-Enum main.asicQuality {
-  MechanicallyDamaged
-  MechanicallyInteger
-  CoveredByGreenLayer
-}
-
-Enum main.contactMechanicalQuality {
-  Good
-  Bad
-  AvoidIfPossible
-}
-
-Enum main.waferInMachineStatus {
-  Loaded
-  Unloaded
-}

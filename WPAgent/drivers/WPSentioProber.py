@@ -2,6 +2,7 @@ from sentio_prober_control.Sentio.ProberSentio import SentioProber
 from sentio_prober_control.Sentio.Enumerations import *
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio.Enumerations import ChuckXYReference, ChuckZReference
+from sentio_prober_control.Sentio import Response
 
 
 class SentioProberImpl(AbstractProber):
@@ -25,8 +26,18 @@ class SentioProberImpl(AbstractProber):
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
 
+    def enable_ptpa(self):
+        resp = self.prober.send_cmd("vis:compensation:enable Both, True")
+
+    def disable_ptpa(self):
+        resp = self.prober.send_cmd("vis:compensation:enable Both, False")
+
     def run_ptpa(self):
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
+
+        if not resp.ok():
+            raise Exception(f"PTPA failed: {resp.message()}")
+
         self.prober.wait_complete(resp.cmd_id())
         print(resp.message())
 
@@ -59,8 +70,8 @@ class SentioProberImpl(AbstractProber):
     def find_home(self):
         self.prober.vision.find_home()
 
-    def align_wafer(self, alig_die_col: int, alig_die_row: int, subsite: int = 0):
-        col, row, sub = self.prober.map.step_die(alig_die_col, alig_die_row, subsite)
+    def align_wafer(self, align_die_col: int, align_die_row: int, subsite: int = 0):
+        col, row, sub = self.prober.map.step_die(align_die_col, align_die_row, subsite)
         print(f"Column Index {col}, Row Index {row}, Subsite Index: {sub}")
         # TODO : Have to be tested
         self.prober.vision.align_wafer()
@@ -76,7 +87,6 @@ class SentioProberImpl(AbstractProber):
 
     def auto_focus(self):
         resp = self.prober.vision.auto_focus()
-        self.prober.wait_complete()
 
     def move_chuck_work_area(self, work_area):
         from sentio_prober_control.Sentio.Enumerations import WorkArea
@@ -152,6 +162,33 @@ class SentioProberImpl(AbstractProber):
             >>> prober.get_chuck_position()
             "In Separation"
         """
+        try:
+            # Query position using Sentio library's status.get_prop() method
+            # This sends: "status:get_prop Z_Position_Hint, chuck"
+            # Response from Sentio: "0,0,Contact" or "0,0,Separation"
+            # Library parses it and returns: "Contact" or "Separation"
+            position = self.prober.status.get_prop("Z_Position_Hint", "chuck")
+
+            # Convert to string and clean up
+            position_str = str(position).strip()
+
+            # Normalize to lowercase for comparison
+            position_lower = position_str.lower()
+
+            # Return formatted status: "In Contact" or "In Separation"
+            if 'contact' in position_lower:
+                return "In Contact"
+            elif 'separation' in position_lower or 'sep' in position_lower:
+                return "In Separation"
+            else:
+                # For any other position (Hover, Lift, Home, Overtravel)
+                # Return as-is with "In " prefix
+                return f"In {position_str}"
+
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+    def get_chuck_stage(self):
         try:
             # Query position using Sentio library's status.get_prop() method
             # This sends: "status:get_prop Z_Position_Hint, chuck"

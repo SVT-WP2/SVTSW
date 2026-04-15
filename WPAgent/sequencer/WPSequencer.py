@@ -35,7 +35,7 @@ class WPSequencer:
             messageOut=f"Running a sequence of commands: {', '.join(command_list)}",
             severityLevel=Severity.INFO,
             command="WP_RUN_SEQUENCE",
-            params=None,
+            data=None,
             result={"commands": command_list}
         )
 
@@ -52,7 +52,7 @@ class WPSequencer:
                     messageOut=f"Step {idx + 1} '{command}' failed: {result.get('output')}",
                     severityLevel=Severity.ERROR,
                     command=command,
-                    params=params,
+                    data=params,
                     result=result
                 )
                 return result

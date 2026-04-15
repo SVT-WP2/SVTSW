@@ -5,7 +5,7 @@ Cache Heartbeat System
 import time
 import json
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient, NewTopic, ConfigResource
 
 
 class CacheHealthCheck:
@@ -16,8 +16,13 @@ class CacheHealthCheck:
     HEARTBEAT_TOPIC = "svt.wp-agent.cache-heartbeat"
     HEARTBEAT_INTERVAL = 2.0  # Cache heartbeat every 2 seconds
     HEARTBEAT_TIMEOUT = 6.0  # Consider dead if no heartbeat for 6 seconds
+    
+    HEARTBEAT_TOPIC_CONFIG = {
+    'retention.ms': '60000',
+    'segment.ms':   '120000',
+    }
 
-    def __init__(self, bootstrap_servers='localhost:9095'):
+    def __init__(self, bootstrap_servers='svmithi02:9096'):
         self.bootstrap_servers = bootstrap_servers
         self._ensure_topic_exists()
 
@@ -36,15 +41,16 @@ class CacheHealthCheck:
         })
 
     def _ensure_topic_exists(self):
-        """Create heartbeat topic if it doesn't exist"""
         admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
         metadata = admin.list_topics(timeout=5)
 
         if self.HEARTBEAT_TOPIC not in metadata.topics:
+            # Topic doesn't exist — create with correct config
             new_topic = NewTopic(
                 topic=self.HEARTBEAT_TOPIC,
                 num_partitions=1,
-                replication_factor=1
+                replication_factor=1,
+                config=self.HEARTBEAT_TOPIC_CONFIG
             )
             fs = admin.create_topics([new_topic])
             try:
@@ -52,6 +58,17 @@ class CacheHealthCheck:
                 print(f"[✅ Heartbeat Topic Created] {self.HEARTBEAT_TOPIC}")
             except Exception as e:
                 print(f"[⚠️ Heartbeat Topic Error] {e}")
+        else:
+            # Topic exists — enforce config on every startup
+            resource = ConfigResource('topic', self.HEARTBEAT_TOPIC)
+            for key, value in self.HEARTBEAT_TOPIC_CONFIG.items():
+                resource.set_config(key, value)
+            fs = admin.alter_configs([resource])
+            try:
+                fs[resource].result()
+                print(f"[✅ Heartbeat Topic Config Updated] {self.HEARTBEAT_TOPIC}")
+            except Exception as e:
+                print(f"[⚠️ Heartbeat Topic Config Error] {e}")
 
     def send_heartbeat(self):
         """Send heartbeat (called by listener)"""

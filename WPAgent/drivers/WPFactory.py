@@ -14,6 +14,7 @@ class ProberFactory:
     _initialized = False
     _current_config = None
 
+
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
@@ -52,6 +53,41 @@ class ProberFactory:
         """Check if prober is initialized"""
         return self._initialized and self._prober is not None
 
+    def get_current_config(self):
+        """
+        Get the current prober configuration.
+
+        Returns:
+            tuple: (machine_type, address) or None if not initialized
+        """
+        return self._current_config
+
+    def get_current_prober(self):
+        """
+        Get the currently initialized prober without creating a new one.
+
+        This is used by command functions after auto-initialization.
+        No parameters needed since the prober was already initialized.
+
+        Returns:
+            The current prober instance
+
+        Raises:
+            RuntimeError: If no prober is currently initialized
+
+        Example:
+            >>> factory = ProberFactory.get_instance()
+            >>> prober = factory.get_current_prober()
+            >>> prober.move_chuck_center()
+        """
+        if not self._initialized or self._prober is None:
+            raise RuntimeError(
+                "No prober is currently initialized. "
+                "Please start the listener with a config: python3.12 main.py listen <CONFIG_NAME>"
+            )
+
+        return self._prober
+
     def reset(self):
         """Reset the factory (useful for testing or reconnection)"""
         self._prober = None
@@ -74,3 +110,8 @@ def get_prober(machineType: str, address: str):
     """
     factory = ProberFactory.get_instance()
     return factory.get_prober(machineType, address)
+
+
+def get_current_prober():
+    factory = ProberFactory.get_instance()
+    return factory.get_current_prober()

@@ -1,0 +1,9 @@
+services:
+  svt.db-agent:
+    image: ycorrales/svt.db-agent.deploy:latest
+    build:
+      context: . # The directory containing your Dockerfile
+      target: db-agent-deploy
+    network_mode: "host"
+    volumes:
+      - /tmp:/tmp

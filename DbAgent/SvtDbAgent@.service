@@ -1,0 +1,17 @@
+[Unit]
+Description=Svt database agent
+
+[Service]
+Type=simple
+User=root
+
+ExecStart=/data/SVTSoftware/SVTSW/DB/svt-db-agent/SvtDbAgent.sh /data/SVTSoftware/SVTSW/DB/svt-db-agent/configs/SvtDbAgent_config-%i.json
+
+Restart=always
+TimeoutStartSec=2
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+
+
