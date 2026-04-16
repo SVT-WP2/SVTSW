@@ -357,6 +357,16 @@ class ITS3Runner:
             log.error("UserLogIn failed: %s", resp)
             return False
 
+        # resp=wp.reset_agent()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("ResetAgent failed: %s", resp)
+        #     return False
+
+        # resp = wp.user_login()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("UserLogIn failed: %s", resp)
+        #     return False
+        
         if self.dry_run:
             return True
         
@@ -665,8 +675,9 @@ class ITS3Runner:
                 cmd = cmd_template.format(**tvars)
                 rc = self._run_cmd(cmd, label=chip_name)
                 if rc != 0:
-                    log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
-                    break
+                    # log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
+                    # break
+                    log.error("Sequence step failed for %s, continuing anyway...", chip_name)
 
         pbar.close()
         log.info("Done. %d/%d chips processed.", done, total)
