@@ -204,6 +204,9 @@ class WPAgentClient:
 
     def init_probing(self) -> dict:
         return self.send("InitProbing", timeout=600.0)
+    
+    def find_home(self) -> dict:
+        return self.send("FindHome")
 
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
@@ -354,8 +357,36 @@ class ITS3Runner:
             log.error("UserLogIn failed: %s", resp)
             return False
 
+        # resp=wp.reset_agent()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("ResetAgent failed: %s", resp)
+        #     return False
+
+        # resp = wp.user_login()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("UserLogIn failed: %s", resp)
+        #     return False
+        
         if self.dry_run:
             return True
+        
+        if self.cfg.get("thinned_layer", False):
+            log.info("Thinned layer mode enabled, skipping BAM project, no init probing, and starting in SEG project if configured...")
+            project = self.cfg.get("wp_project_seg", "")
+            if project:
+                resp = wp.open_project(project)
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.error("OpenProject failed: %s", resp)
+                    return False
+                self._current_project_type = "SEG"
+                resp=wp.move_chuck_off_axis()
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.error("MoveChuckOffAxis failed: %s", resp)
+                    return False
+                return True
+            else:
+                log.info("wp_project_seg not set — skipping OpenProject")
+                return True
 
         # --- 2. OpenProject (start with BAM project, BAMs come first) ---
         project = self.cfg.get("wp_project_bam", "")
@@ -618,6 +649,9 @@ class ITS3Runner:
                     resp = wp.open_project(new_project)
                     if resp.get("status", "").lower() not in ("success", "ok"):
                         log.error("OpenProject failed for %s: %s", chip_type, resp)
+                    resp = wp.find_home()
+                    if resp.get("status", "").lower() not in ("success", "ok"):
+                        log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
                         continue
                 elif self.dry_run and self._current_project_type is not None:
                     log.info("Switching WP project: %s -> %s (DUMMY)",
@@ -641,8 +675,9 @@ class ITS3Runner:
                 cmd = cmd_template.format(**tvars)
                 rc = self._run_cmd(cmd, label=chip_name)
                 if rc != 0:
-                    log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
-                    break
+                    # log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
+                    # break
+                    log.error("Sequence step failed for %s, continuing anyway...", chip_name)
 
         pbar.close()
         log.info("Done. %d/%d chips processed.", done, total)
