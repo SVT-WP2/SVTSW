@@ -7,7 +7,7 @@
   "wp_user": "user1",
   "wp_agent_name": "CERN",
   "wp_project_bam": "none",
-  "wp_project_seg": "ER2_MOSAIX_Thinned_Cantilever_V1_NotchW_ArrowW",
+  "wp_project_seg": "ER2_MOSAIX_Thinned_L1_SEG1-4_Vertical_V0_NotchW_ArrowW",
   "thinned_layer": true,
   "reset_agent_at_login": false,
   "run_ptpa_bam": true,
@@ -28,7 +28,7 @@
   ],
 
   "Sequence": [
-"./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/float.json5 {setup_config} -c {chip_name} -o {output}",
-"./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/common.json5 {setup_config} -c {chip_name} -o {output}"
+    "./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/float.json5 {setup_config} -c {chip_name} -o {output}",
+    "./{build_dir}/RunTest Configs/TestConfigs/ImpedanceMeasurement/common.json5 {setup_config} -c {chip_name} -o {output}"
 ]
 }
