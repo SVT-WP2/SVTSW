@@ -7,7 +7,6 @@ services:
       platforms:
         - "linux/amd64"
         - "linux/arm64"
-    pull_policy: always
     network_mode: "host"
     volumes:
       - /tmp:/tmp

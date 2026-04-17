@@ -20,8 +20,8 @@ namespace dbagent
     addColName("id");
     addColName("name");
 
-    asicFamilyTypeList = std::make_shared<DbBaseListDto>("SvtTestTypeAsicFamilyTypeList", "testTypeId", "asicFamilyType");
-    addRelationDto(asicFamilyTypeList.get());
+    dutTypeList = std::make_shared<DbBaseListDto>("SvtTestTypeDUTTypeList", "testTypeId", "dutType");
+    addRelationDto(dutTypeList.get());
 
     createAllRequest();
   }
@@ -31,38 +31,38 @@ namespace dbagent
                                     SvtKafka::SvtKafkaReplyMsg &replyMsg)
   {
     auto data_j = msg.getPayload()["data"];
-    if (!data_j["filter"].contains("asicFamilyType"))
+    if (!data_j["filter"].contains("dutTypes"))
     {
       this->DbBaseDto::getAllEntries(msg, replyMsg);
     }
     else
     {
-      const auto asicFamilyType = data_j["filter"]["asicFamilyType"];
+      const auto dutType = data_j["filter"]["dutType"];
 
-      DbFilters asicFamilyTypeFilter;
-      asicFamilyTypeFilter.mFilters.addValue("asicFamilyType", asicFamilyType);
+      DbFilters dutTypeFilter;
+      dutTypeFilter.mFilters.addValue("dutType", dutType);
 
-      std::vector<DbEntry> asicFamilyTypeEntries;
-      asicFamilyTypeList->getAllEntriesFromDB(asicFamilyTypeEntries, std::string(), asicFamilyTypeFilter);
+      std::vector<DbEntry> dutTypeEntries;
+      dutTypeList->getAllEntriesFromDB(dutTypeEntries, std::string(), dutTypeFilter);
 
-      if (asicFamilyTypeEntries.size())
+      if (dutTypeEntries.size())
       {
         nlohmann::json ids = nlohmann::json::array();
 
-        for (const auto &asicFamilyTypeEntry : asicFamilyTypeEntries)
+        for (const auto &dutTypeEntry : dutTypeEntries)
         {
-          ids.push_back(asicFamilyTypeEntry.getValue("testTypeId"));
+          ids.push_back(dutTypeEntry.getValue("testTypeId"));
         }
 
         auto newMsg = msg;
-        SvtUtils::recursive_erase_key(data_j, "asicFamilyType");
+        SvtUtils::recursive_erase_key(data_j, "dutTypes");
         data_j["data"]["filters"]["ids"] = ids;
         newMsg.setPayload(data_j);
         getAllEntries(newMsg, replyMsg);
       }
       else
       {
-        createReplyMsg(asicFamilyTypeEntries, replyMsg);
+        createReplyMsg(dutTypeEntries, replyMsg);
       }
     }
   }
@@ -88,8 +88,8 @@ namespace dbagent
     DbEntry dummyEntry;
     createAndReturnNewEntry(msgCreate_j, dummyEntry);
     int testTypeId = dummyEntry.getValue("id");
-    auto asicFamilyTypes_j = msgCreate_j["asicFamilyTypes"];
-    asicFamilyTypeList->addEntries(testTypeId, asicFamilyTypes_j);
+    auto dutTypes_j = msgCreate_j["dutTypes"];
+    dutTypeList->addEntries(testTypeId, dutTypes_j);
     // create test type config with correct testTypeId
     testTypeConfig_j["testTypeId"] = testTypeId;
     SvtUtils::Singleton<DbTestTypeConfigDto>::instance()->createAndReturnNewEntry(testTypeConfig_j, dummyEntry);
@@ -102,9 +102,9 @@ namespace dbagent
                                   SvtKafka::SvtKafkaReplyMsg &replyMsg)
   {
     const auto &testTypeId = msg.getPayload()["data"]["testTypeId"];
-    const auto &asicFamilyTypes = msg.getPayload()["data"]["asicFamilyTypes"];
+    const auto &dutTypes = msg.getPayload()["data"]["dutTypes"];
 
-    asicFamilyTypeList->addEntries(testTypeId, asicFamilyTypes);
+    dutTypeList->addEntries(testTypeId, dutTypes);
     DbEntry entry;
     getEntryWithId(entry, testTypeId);
     createReplyMsg(entry, replyMsg);
