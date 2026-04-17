@@ -43,9 +43,8 @@ services:
   svt.db-agent:
     image: ycorrales/svt.db-agent.deploy:latest
     container_name: svt.db-agent
-    build:
-      context: ./../../DbAgent/ # The directory containing your Dockerfile
-      target: db-agent-deploy
+    pull_policy: always # Forces a pull every time 'up' is run
+    platform: linux/amd64 # Forces the use of the x86_64 version
     depends_on:
       - kafka
     command: ["/app/configs/SvtDbAgent_config-main.json"]

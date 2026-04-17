@@ -1,25 +1,19 @@
 
-#include "SvtLogger.h"
-
-#include <kafka/KafkaConsumer.h>
-#include <kafka/Properties.h>
-
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
 
 #include <getopt.h>
 
-#include <chrono>
-#include <iostream>
-#include <sstream>
-#include <string>
+#include <kafka/KafkaConsumer.h>
+#include <kafka/Properties.h>
+
+#include "SvtLogger.h"
 
 static volatile std::atomic_bool running = {true};
 
 using namespace kafka;
 using namespace kafka::clients::consumer;
-
 //========================================================================+
 void stopRunning(int sig)
 {
