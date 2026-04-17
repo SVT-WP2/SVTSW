@@ -21,7 +21,7 @@ namespace dbagent
     ~DbTestTypeDto() = default;
 
    private:
-    std::shared_ptr<DbBaseListDto> asicFamilyTypeList;
+    std::shared_ptr<DbBaseListDto> dutTypeList;
 
     virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &,
                                SvtKafka::SvtKafkaReplyMsg &);
