@@ -1,5 +1,6 @@
 **/__pycache__
 **/.DS_Store
+**/compile_commands.json
 .idea
 .pgpass
 /WPAgent/WPAgentLogger.log

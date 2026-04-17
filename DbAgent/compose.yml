@@ -3,7 +3,11 @@ services:
     image: ycorrales/svt.db-agent.deploy:latest
     build:
       context: . # The directory containing your Dockerfile
+      dockerfile: Dockerfile-dbagent
       target: db-agent-deploy
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     network_mode: "host"
     volumes:
       - /tmp:/tmp

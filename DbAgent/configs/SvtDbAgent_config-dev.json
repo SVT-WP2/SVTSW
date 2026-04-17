@@ -4,7 +4,7 @@
     "termVerbosity": "PRODUCTION",
     "fileVerbosity": "STANDARD"
   },
-  "DataBase": {
+  "database": {
     "psqlHost": "dbod-svt-sw-pgdb.cern.ch",
     "psqlPort": "6600",
     "psqlUser": "admin",
@@ -14,6 +14,7 @@
   },
   "kafka": {
     "server": "svmithi02",
-    "port": "9096"
+    "port": "9096",
+    "recreateTopics": "HEARTBEAT_ONLY"
   }
 }
