@@ -30,14 +30,8 @@ namespace SvtKafka
 {
   class SvtKafkaConsumer
   {
-    struct Settings
-    {
-      std::string broker;
-      std::string topicName;
-    };
-
    public:
-    SvtKafkaConsumer(const Settings & /*settings*/, const ConfigMap_t &configs = {});
+    SvtKafkaConsumer(std::string_view broker, std::string_view topicName, const ConfigMap_t &configs = {});
     ~SvtKafkaConsumer()
     {
       stop(false);
@@ -58,7 +52,8 @@ namespace SvtKafka
 
     ConsumerCbFun_t mKafkaComsumeCb;
 
-    Settings mSettings;
+    std::string mBroker;
+    std::string mTopicName;
     ConfigMap_t mConfigs;
 
     SvtKafkaThread mThread;

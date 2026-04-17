@@ -1,0 +1,328 @@
+/*!
+ * @file DbWaferTypeDto.cpp
+ * @author Y. Corrales <ycorrale@cern.ch>
+ * @date Jun-2025
+ * @brief DbWaferTypeDto
+ */
+
+#include "nlohmann/json_fwd.hpp"
+
+#include "DbAgentDto/DbEnumDto.h"
+#include "DbAgentDto/DbWaferTypeDto.h"
+#include "SvtUtilities.h"
+
+using SvtKafka::SvtKafkaMessage;
+using SvtKafka::SvtKafkaReplyMsg;
+
+namespace dbagent
+{
+  using bind_type = void (DbWaferTypeDto::*)(const SvtKafkaMessage &, SvtKafkaReplyMsg &);
+
+  //========================================================================+
+  DbWaferTypeDto::DbWaferTypeDto()
+  {
+    setTableName("WaferType");
+
+    addColName("id");
+    addColName("name");
+    addColName("engineeringRun");
+    addColName("foundry");
+    addColName("technology");
+
+    waferTypeMapDto = std::make_shared<DbBaseListDto>("WaferTypeMap", "waferTypeId", "waferMap");
+    waferTypeMapDto->addColNameInJson("waferMap");
+
+    createAllRequest();
+  }
+
+  //========================================================================+
+  void DbWaferTypeDto::createAllRequest()
+  {
+    //! SvtDbWaferTypeDto::GetAllWaferTypes
+    addRequest("GetAllWaferTypes",
+               std::bind(&DbWaferTypeDto::getAllEntries, this,
+                         std::placeholders::_1, std::placeholders::_2));
+    //! SvtDbWaferTypeDto::CreateWaferType
+    addRequest("CreateWaferType",
+               std::bind(&DbWaferTypeDto::createEntry, this,
+                         std::placeholders::_1, std::placeholders::_2));
+    addRequest("GetWaferTypeMap",
+               std::bind(static_cast<bind_type>(&DbWaferTypeDto::getWaferTypeMap), this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  //========================================================================+
+  void DbWaferTypeDto::createEntry(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
+  {
+    const auto waferMap_field = "waferMap";
+    const auto &msgData = msg.getPayload()["data"];
+    if (!msgData.contains("create"))
+    {
+      THROW_RUNTIME_ERROR("Object item create was not found");
+      return;
+    }
+
+    if (!msgData["create"].contains(waferMap_field) || msgData["create"][waferMap_field].is_null())
+    {
+      THROW_RUNTIME_ERROR("Error, field not null waferMap required");
+      return;
+    }
+
+    //! check and save waferMap
+    const auto &waferMap = msgData["create"][waferMap_field];
+    std::string waferMap_s = waferMap.get<std::string>();
+    std::string err_msg;
+    if (!checkWaferTypeMap(waferMap_s, err_msg))
+    {
+      THROW_RUNTIME_ERROR(err_msg);
+      return;
+    }
+
+    //! Creating waferType Dto
+    auto newMsg = msg;
+    newMsg.eraseFromPayload("waferMap");
+    this->DbBaseDto::createEntry(newMsg, replyMsg);
+
+    auto waferTypeId = database::dbapi::getMaxId("WaferType");
+    if (!createWaferTypeMap(waferTypeId, waferMap_s))
+    {
+      THROW_RUNTIME_ERROR("Failed creating the wafer map in the DB");
+      return;
+    }
+  }
+
+  //========================================================================+
+  void DbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, DbEntry &entry)
+  {
+    std::vector<DbEntry> entries;
+    DbFilters filters;
+    filters.mFilters.addValue("waferTypeId", waferTypeId);
+    waferTypeMapDto->getAllEntriesFromDB(entries, std::string(), filters);
+
+    if (entries.size())
+    {
+      if (entries.size() != 1)
+      {
+        logWarning("More than one wafer type map found for wafertypeId: " + std::to_string(waferTypeId));
+        logWarning("Returning the first only");
+      }
+      entry = entries.at(0);
+    }
+    else
+    {
+      THROW_RUNTIME_ERROR("Failed to access Wafer location records");
+      return;
+    }
+  }
+
+  //========================================================================+
+  void DbWaferTypeDto::getWaferTypeMap(const SvtKafkaMessage &msg, SvtKafkaReplyMsg &replyMsg)
+  {
+    const auto &waferTypeId = msg.getPayload()["data"].value("waferTypeId", -1);
+    if (waferTypeId < 0)
+    {
+      THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
+      return;
+    }
+
+    DbEntry waferMap;
+    getWaferTypeMapEntry(waferTypeId, waferMap);
+    createReplyMsg(waferMap, replyMsg);
+  }
+
+  //========================================================================+
+  const std::string DbWaferTypeDto::getWaferTypeMap(const int waferTypeId)
+  {
+    if (waferTypeId < 0)
+    {
+      THROW_RUNTIME_ERROR("Error. waferTypeId item was not found in request message");
+      return "";
+    }
+
+    DbEntry waferMap;
+    getWaferTypeMapEntry(waferTypeId, waferMap);
+    return waferMap.getValue("waferMap");
+  }
+
+  // //========================================================================+
+  bool DbWaferTypeDto::createWaferTypeMap(const int waferTypeId, const std::string &waferMap_s)
+  {
+    DbEntry waferMap;
+    waferMap.addValue("waferTypeId", waferTypeId);
+    waferMap.addValue("waferMap", waferMap_s);
+    return waferTypeMapDto->createEntryInDB(waferMap);
+  }
+
+  //========================================================================+
+  bool DbWaferTypeDto::extractRange(const int g_size,
+                                    const nlohmann::json &array_j,
+                                    std::vector<int> &range)
+  {
+    if (!array_j.is_null() && array_j.size())
+    {
+      if (array_j.begin()->is_string() && array_j.begin().value() == "All")
+      {
+        range.resize(g_size);
+        std::iota(range.begin(), range.end(), 0);
+      }
+      else if (std::all_of(
+                   array_j.begin(), array_j.end(),
+                   [](const nlohmann::json &el)
+                   { return el.is_number(); }))
+      {
+        range = array_j.get<std::vector<int>>();
+      }
+      else
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  //========================================================================+
+  bool DbWaferTypeDto::checkWaferTypeMap(
+      const std::string_view &waferMap, std::string &err_msg)
+  {
+    bool ret = true;
+    if (!nlohmann::json::accept(waferMap))
+    {
+      err_msg += "WaferTypeMap don't follow json format.\n";
+      ret = false;
+    }
+    nlohmann::json waferMap_j = nlohmann::json::parse(waferMap);
+    if (!waferMap_j.contains("Groups") || !waferMap_j.contains("MapGroups"))
+    {
+      err_msg += "Wrong json format. Missing Groups or MapGroups objects.\n";
+      ret = false;
+    }
+
+    //! check Groups
+    //! get all defined asic family types
+    std::vector<std::string> enum_familyTypes =
+        SvtUtils::Singleton<DbEnumDto>::instance()->getEnumValues("asicFamilyType");
+    if (enum_familyTypes.empty())
+    {
+      err_msg = "No ASIC FamilyType found.";
+      return false;
+    }
+    for (const auto &[g_name, g_asics] : waferMap_j["Groups"].items())
+    {
+      int expected_index = 0;
+      for (const auto &asic : g_asics)
+      {
+        int posInGroup = asic.value("PosInGroup", -1);
+        if (posInGroup != expected_index)
+        {
+          std::ostringstream ss;
+          ss << "Unmatching PosInGroup index: " << posInGroup << " from expected "
+             << expected_index << " in group " << g_name << std::endl;
+          err_msg += ss.str();
+          ret = false;
+        }
+        std::string asicFamilyType = asic.value("FamilyType", "");
+        if (asicFamilyType.empty() ||
+            std::find(enum_familyTypes.begin(), enum_familyTypes.end(),
+                      asicFamilyType) == enum_familyTypes.end())
+        {
+          std::ostringstream ss;
+          ss << "Asic Family type: " << asicFamilyType
+             << " is not part of enum value in the DB" << std::endl;
+          err_msg += ss.str();
+          ret = false;
+        }
+        ++expected_index;
+      }
+    }
+
+    //! Check MapGroups
+    //! loop group rows
+    for (auto &[g_row, g_cols] : waferMap_j["MapGroups"].items())
+    {
+      int asic_col = 0;
+      // int g_col_index = 0;
+      for (auto &g_col : g_cols["MapGroupsColumns"])
+      {
+        //! check group in MapGroupsColumns exist
+        std::string g_name = g_col["GroupName"];
+        auto g_size = waferMap_j["Groups"][g_name].size();
+        if (!waferMap_j["Groups"].contains(g_name))
+        {
+          std::ostringstream ss;
+          ss << "Map Group: " << g_row << " Col: " << asic_col << " group name "
+             << g_name << "was not found";
+          err_msg = ss.str();
+          return false;
+        }
+
+        //! check array format
+        std::vector<int> existingAsics;
+        std::vector<int> mecDamagedAsics;
+        std::vector<int> coveredAsics;
+        std::vector<int> mecIntegerAsics;
+        if (!extractRange(g_size, g_col["ExistingAsics"], existingAsics) ||
+            !extractRange(g_size, g_col["MechanicallyDamagedASICs"],
+                          mecDamagedAsics) ||
+            !extractRange(g_size, g_col["ASICsCoveredByGreenLayer"],
+                          coveredAsics) ||
+            !extractRange(g_size, g_col["MechanicallyIntegerASICs"],
+                          mecIntegerAsics))
+        {
+          std::ostringstream ss;
+          ss << "Map Group: " << g_row << " Col: " << asic_col
+             << " Wrong array found";
+          err_msg = ss.str();
+
+          return false;
+        }
+
+        //! check equal number of asics and properties
+        if ((existingAsics.size() > g_size) ||
+            (existingAsics.size() !=
+             (mecDamagedAsics.size() + coveredAsics.size() +
+              mecIntegerAsics.size())))
+        {
+          logError(
+              "Total number of asics in the group: " + std::to_string(g_size) +
+              ", existing asics: " + std::to_string(existingAsics.size()) +
+              ", damaged asics: " + std::to_string(mecDamagedAsics.size()) +
+              ", covered asics: " + std::to_string(coveredAsics.size()) +
+              ", integer asics: " + std::to_string(mecIntegerAsics.size()));
+          std::ostringstream ss;
+          ss << "Map Group: " << g_row << " Col: " << asic_col
+             << ", unmaching number of asics and properties size";
+          err_msg = ss.str();
+
+          return false;
+        }
+
+        //! check unique property per asic
+        std::list<std::vector<int> *> listOfVectors = {
+            &mecDamagedAsics, &coveredAsics, &mecIntegerAsics};
+        //! loop for existing asics
+        for (const auto &asic_index : existingAsics)
+        {
+          int n_found = 0;
+          for (const auto &vec : listOfVectors)
+          {
+            if (std::find(vec->begin(), vec->end(), asic_index) != vec->end())
+            {
+              ++n_found;
+            }
+          }
+          if (n_found != 1)
+          {
+            std::ostringstream ss;
+            ss << "Map Group: " << g_row << " Col: " << asic_col
+               << ", asic index " << asic_index << " has more than one property ";
+            err_msg = ss.str();
+            return false;
+          }
+        }
+
+        ++asic_col;
+      }
+    }
+
+    return ret;
+  }
+}  // namespace dbagent

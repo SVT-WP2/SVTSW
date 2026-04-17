@@ -130,21 +130,15 @@ FetchContent_MakeAvailable(magic_enum)
 
 list(PREPEND svt_db_agent_lib magic_enum::magic_enum)
 
-file(
-  GLOB
-  SOURCES_DB
-  "src/Database/databaseinterface.cpp"
-  "src/SVTConfig/*.cpp"
-  "src/SVTDb/*.cpp"
-  "src/SVTDbAgentDto/*.cpp"
-  "src/SVTDbAgentService/*.cpp")
+file(GLOB SVT_DB_AGENT_SOURCES "src/Database/*.cpp" src/Config/*.cpp
+     "src/DbAgentDto/*.cpp" "src/DbAgentService/*.cpp")
 
 # Define the directory containing your source files
-set(SRC_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
+set(SVT_DB_AGENT_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/test")
 # Get a list of all .cpp files in the SOURCE_DIR
-file(GLOB_RECURSE CPP_FILES "${SRC_TEST_DIR}/*.cpp")
+file(GLOB_RECURSE CPP_FILES "${SVT_DB_AGENT_TEST_DIR}/*.cpp")
 # Prepend main project executable source
-list(PREPEND CPP_FILES "${SRC_TEST_DIR}/../svt_db_agent.cpp")
+list(PREPEND CPP_FILES "${SVT_DB_AGENT_TEST_DIR}/../svt_db_agent.cpp")
 
 # Loop through each .cpp file and create an executable
 foreach(CPP_FILE ${CPP_FILES})
@@ -154,7 +148,7 @@ foreach(CPP_FILE ${CPP_FILES})
   list(APPEND targets ${EXECUTABLE_NAME})
 
   # Add the executable
-  add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SOURCES_DB})
+  add_executable(${EXECUTABLE_NAME} ${CPP_FILE} ${SVT_DB_AGENT_SOURCES})
   # add_dependencies(${EXECUTABLE_NAME} version)
 
   target_include_directories(${EXECUTABLE_NAME} SYSTEM

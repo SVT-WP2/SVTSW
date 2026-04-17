@@ -13,17 +13,18 @@
 
 #include <chrono>
 #include <memory>
+#include <string_view>
 
 using namespace SvtKafka;
 using namespace kafka;
 using namespace kafka::clients::consumer;
 
 //========================================================================+
-SvtKafkaConsumer::SvtKafkaConsumer(const Settings &_settings, const ConfigMap_t &configs)
-  : mSettings(_settings)
+SvtKafkaConsumer::SvtKafkaConsumer(std::string_view broker, std::string_view topicName, const ConfigMap_t &configs)
+  : mBroker(broker)
+  , mTopicName(topicName)
   , mConfigs(configs)
 {
-  assert(!mSettings.broker.empty() && !mSettings.topicName.empty() && !mSettings.group_id.empty());
   mKafkaComsumeCb = [](const ConsumerRecord &)
   { logWarning("Dummy consumer callback"); };
   createConsumer();
@@ -38,12 +39,12 @@ bool SvtKafkaConsumer::createConsumer()
   /*
    * Set configuration properties
    */
-  Properties props({{"bootstrap.servers", mSettings.broker}});
+  Properties props({{"bootstrap.servers", mBroker}});
   for (const auto &[key, value] : mConfigs)
   {
     props.put(key, value);
   }
-  mConsumer = std::make_shared<KafkaConsumer>(props);
+  mConsumer = std::make_unique<KafkaConsumer>(props);
   if (!mConsumer)
   {
     logError("Failed creating kafka consumer");
@@ -51,7 +52,7 @@ bool SvtKafkaConsumer::createConsumer()
   }
   logInfo("% Created consumer " + mConsumer->name(), SvtUtils::SvtLogger::STANDARD);
 
-  mConsumer->subscribe({mSettings.topicName});
+  mConsumer->subscribe({mTopicName});
   mConsumer->seekToEnd();
 
   return true;
@@ -61,7 +62,7 @@ bool SvtKafkaConsumer::createConsumer()
 bool SvtKafkaConsumer::start()
 {
   logInfo("Starting Consumer " + mConsumer->name() +
-          " in topic " + mSettings.topicName);
+          " in topic " + mTopicName);
   mThread.setName(mConsumer->name());
   mThread.start(std::bind(&SvtKafkaConsumer::pull, this));
   return true;

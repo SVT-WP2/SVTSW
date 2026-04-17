@@ -1,14 +1,9 @@
-#include "SvtKafkaMessage.h"
-#include "SvtKafkaProducer.h"
+#include <string>
+
 #include "SvtLogger.h"
 
-#include <nlohmann/json.hpp>
-
-#include <chrono>
-#include <cstdlib>
-#include <fstream>
-#include <string>
-#include <thread>
+#include "SvtKafkaMessage.h"
+#include "SvtKafkaProducer.h"
 
 int main(int argc, char **argv)
 {

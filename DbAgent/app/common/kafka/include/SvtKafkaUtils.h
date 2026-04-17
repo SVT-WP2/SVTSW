@@ -12,7 +12,6 @@
 #include <kafka/KafkaProducer.h>
 
 #include <functional>
-#include <memory>
 #include <string>
 
 namespace SvtKafka

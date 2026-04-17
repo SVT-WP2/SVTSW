@@ -9,6 +9,7 @@
 
 #include "SvtKafkaUtils.h"
 
+#include <memory>
 #include <nlohmann/json.hpp>
 
 #include <string>
@@ -34,7 +35,7 @@ namespace SvtKafka
               const std::string &data);
 
    private:
-    std::shared_ptr<kafka::clients::producer::KafkaProducer> mProducer;
+    std::unique_ptr<kafka::clients::producer::KafkaProducer> mProducer;
 
     std::string mBroker;
     ConfigMap_t mConfigs;

@@ -7,20 +7,22 @@
 
 #include <csignal>
 #include <cstdlib>
-#include <exception>
-#include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 
+#include "Database/DbInterface.h"
 #include "version.h"
 
-#include "Database/DatabaseInterface.h"
-#include "SVTConfig/SvtDbAgentSetupConfig.h"
-#include "SVTDbAgentService/SvtDbAgentService.h"
 #include "SvtLogger.h"
 #include "SvtUtilities.h"
 
-using DatabaseIF = SvtUtils::Singleton<DatabaseInterface>;
+#include "Config/ConfigDb.h"
+#include "Config/ConfigDbAgentSetup.h"
+#include "DbAgentService/DbAgentService.h"
+
+using DatabaseIF = SvtUtils::Singleton<database::DbInterface>;
 
 #ifdef VERSION
 const std::string version = std::string(VERSION);
@@ -50,10 +52,10 @@ void stopRunning(int sig)
 }
 
 //========================================================================+
-std::shared_ptr<SvtDbAgentSetupConfig>
+std::shared_ptr<config::dbagent::ConfigDbAgentSetup>
 createDbAgentSetupConfig(const std::string &dbAgentSetupConfigFile)
 {
-  auto setupConfig = SvtDbAgentSetupConfig::factory(dbAgentSetupConfigFile);
+  auto setupConfig = config::dbagent::ConfigDbAgentSetup::factory(dbAgentSetupConfigFile);
   if (!setupConfig.has_value())
   {
     logError("Unable to create setup config");
@@ -63,7 +65,7 @@ createDbAgentSetupConfig(const std::string &dbAgentSetupConfigFile)
 }
 
 //========================================================================+
-bool connectToDB(DatabaseInterface *dbInterface, const std::string &user, const std::string &pass,
+bool connectToDB(database::DbInterface *dbInterface, const std::string &user, const std::string &pass,
                  const std::string &host, const std::string &port, const std::string &dbName,
                  const std::string &dbSchema)
 {
@@ -102,14 +104,14 @@ int main(int argc, const char *argv[])
   {
     return EXIT_FAILURE;
   }
-  const auto dbConfig = setupConfig->getDbConfig();
+  const config::ConfigDb *dbConfig = setupConfig->getDbConfig().get();
 
   configureLogger(setupConfig->getLogFilePath(),
                   setupConfig->getTermVerbosity(),
                   setupConfig->getFileVebosity());
   logInfo("********************** Svt Db Agent, version:" + version, SvtUtils::SvtLogger::STANDARD);
 
-  DatabaseInterface *dbInterface = DatabaseIF::instance();
+  auto *dbInterface = DatabaseIF::instance();
 
   // take the DB connection out once integrated with FRED
   // but just in case, perhaps checking for connection first will prevent
@@ -135,8 +137,8 @@ int main(int argc, const char *argv[])
   try
   {
     std::string kafkaBroker = setupConfig->getKafkaServer() + ":" + setupConfig->getKafkaPort();
-    SvtDbAgent::SvtDbAgentService *dbAgent =
-        SvtUtils::Singleton<SvtDbAgent::SvtDbAgentService>::instance();
+    dbagent::DbAgentService *dbAgent =
+        SvtUtils::Singleton<dbagent::DbAgentService>::instance();
     dbAgent->setBrokerName(kafkaBroker);
     // dbAgent->setLogMessages(true);
     if (!dbAgent->configureService())
@@ -145,7 +147,8 @@ int main(int argc, const char *argv[])
     }
     while (dbAgent->getIsConsRunnning() && running)
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      //! send heartbeat every 2 seconds
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
       dbAgent->sendHeartbeat();
     }
   }
