@@ -27,9 +27,8 @@ namespace dbagent
     void setTableName(const std::string_view &tName) { mTableName = tName; }
 
     //! Getters
-    const std::string &getTableName() { return mTableName; }
-
-    const colMap &getColNames() { return mColNames; }
+    const auto &getTableName() const { return mTableName; }
+    const auto &getColNames() const { return mColNames; }
 
     void clear()
     {

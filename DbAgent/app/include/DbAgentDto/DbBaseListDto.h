@@ -1,7 +1,7 @@
 #pragma once
 
 /*!
- * @file DbBaseListDto.h
+ * @file SvtDbBaseListDto.h
  * @author Y. Corrales <ycorrale@cern.ch>
  * @date Aug-2025
  * @brief Base list DTO class
@@ -18,14 +18,21 @@ namespace dbagent
   class DbBaseListDto : public DbBaseDto
   {
    public:
-    DbBaseListDto(const std::string &tableName, const std::string &_idName, const std::string &_colName)
-      : idName(_idName)
-      , colName(_colName)
+    using props_t = struct props_s
+    {
+      std::string pkName;
+      std::string colName;
+      std::string inDtoName;
+      bool isArray;
+    };
+
+    explicit DbBaseListDto(const std::string &tableName, const std::string &pkName, const std::string &colName, const std::string &inDtoName = {}, const bool &isArray = false)
+      : mProps({pkName, colName, inDtoName.empty() ? colName : inDtoName, isArray})
     {
       setTableName(tableName);
 
-      addColName(idName);
-      addColName(colName);
+      addColName(mProps.pkName);
+      addColName(mProps.colName);
     };
     ~DbBaseListDto() = default;
 
@@ -33,13 +40,13 @@ namespace dbagent
                                SvtKafka::SvtKafkaReplyMsg &replyMsg) final
     {
       auto msgData = msg.getPayload()["data"];
-      if (!msgData.contains(idName))
+      if (!msgData.contains(mProps.pkName))
       {
-        THROW_RUNTIME_ERROR("Missing field " + idName);
+        THROW_RUNTIME_ERROR("Missing field " + mProps.pkName);
       }
-      int id = msgData[idName];
-      SvtUtils::recursive_erase_key(msgData, idName);
-      msgData["filter"] = nlohmann::json::object({{idName, id}});
+      int id = msgData[mProps.pkName];
+      SvtUtils::recursive_erase_key(msgData, mProps.pkName);
+      msgData["filter"] = nlohmann::json::object({{mProps.pkName, id}});
 
       this->DbBaseDto::getAllEntriesAndReply(msgData, replyMsg);
     }
@@ -50,9 +57,9 @@ namespace dbagent
 
       update.setTableName(std::string(getTableName()));
 
-      update.addWhereEquals(idName, id);
+      update.addWhereEquals(mProps.pkName, id);
 
-      update.addColumnAndValue(colName, val);
+      update.addColumnAndValue(mProps.colName, val);
 
       if (!update.doUpdate())
       {
@@ -66,8 +73,8 @@ namespace dbagent
 
     virtual bool getEntriesWithId(const int &id, std::vector<DbEntry> &entries)
     {
-      DbFilters filters;
-      filters.mFilters.addValue(idName, id);
+      DbEntry filters;
+      filters.addValue(mProps.pkName, id);
 
       if (!getAllEntriesFromDB(entries, std::string(), filters))
       {
@@ -87,7 +94,7 @@ namespace dbagent
         bool isFound = false;
         for (auto &entry : entries)
         {
-          if (entry.getValue(colName) == it.value())
+          if (entry.getValue(mProps.colName) == it.value())
           {
             isFound = true;
             break;
@@ -97,19 +104,17 @@ namespace dbagent
         if (!isFound)
         {
           DbEntry entry;
-          entry.addValue(idName, id);
-          entry.addValue(colName, it.value());
+          entry.addValue(mProps.pkName, id);
+          entry.addValue(mProps.colName, it.value());
           createEntryInDB(entry);
         }
       }
     }
 
-    const std::string &getIdName() { return idName; }
-    const std::string &getColName() { return colName; }
+    const auto &getProps() { return mProps; }
 
    private:
-    std::string idName;
-    std::string colName;
+    props_t mProps;
     virtual void createAllRequest() final {};
   };
 };  // namespace dbagent

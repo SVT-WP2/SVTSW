@@ -48,6 +48,9 @@ namespace dbagent
     addItemToExclude("configBody");
     addColNameInJson("configBody");
 
+    addValidFilter("ids", "id");
+    addValidFilter("setupId");
+
     testSetupConfigBody = std::make_shared<DbTestSetupConfigBodyDto>();
 
     createAllRequest();

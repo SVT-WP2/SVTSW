@@ -21,7 +21,7 @@ namespace dbagent
     //! Request
     virtual bool getAllEntriesFromDB(std::vector<DbEntry> &entries,
                                      const std::string &,
-                                     const DbFilters &filters,
+                                     const DbEntry &filters,
                                      const std::string &orderBy = "", const bool orderDec = "") final;
 
     virtual void createReplyMsg(const std::vector<DbEntry> &entries,

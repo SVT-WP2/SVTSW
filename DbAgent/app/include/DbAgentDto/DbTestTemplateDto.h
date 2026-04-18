@@ -21,7 +21,7 @@ namespace dbagent
    private:
     virtual bool getAllEntriesFromDB(std::vector<DbEntry> &entries,
                                      const std::string &queryString,
-                                     const DbFilters &filters,
+                                     const DbEntry &filters,
                                      const std::string &orderBy, const bool orderDec) final;
 
     // virtual void createEntry(const SvtKafka::SvtKafkaMessage &,

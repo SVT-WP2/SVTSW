@@ -7,6 +7,7 @@
 
 #include "DbAgentDto/DbTestTemplateDto.h"
 #include <string>
+#include "DbAgentDto/DbBaseDto.h"
 
 namespace dbagent
 {
@@ -28,7 +29,7 @@ namespace dbagent
   //========================================================================+
   bool DbTestTemplateDto::getAllEntriesFromDB(std::vector<DbEntry> &entries,
                                               const std::string &,
-                                              const DbFilters &filters,
+                                              const DbEntry &filters,
                                               const std::string &orderBy, const bool orderDec)
   {
     std::string queryString = "";

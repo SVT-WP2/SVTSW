@@ -6,6 +6,7 @@
  */
 
 #include "DbAgentDto/DbAsicDto.h"
+#include "DbAgentDto/DbBaseDto.h"
 
 using SvtKafka::SvtKafkaReplyMsg;
 
@@ -23,6 +24,12 @@ namespace dbagent
     addColName("familyType");
     addColName("waferMapPosition");
     addColName("quality");
+
+    addValidFilter("ids", "id");
+    addValidFilter("waferId");
+    addValidFilter("chipId");
+    addValidFilter("familyType");
+    addValidFilter("quality");
 
     createAllRequest();
   }
@@ -43,7 +50,7 @@ namespace dbagent
   //========================================================================+
   bool DbAsicDto::getAllEntriesFromDB(std::vector<DbEntry> &entries,
                                       const std::string &,
-                                      const DbFilters &filters,
+                                      const DbEntry &filters,
                                       const std::string &orderBy, const bool orderDec)
   {
     std::string queryString = "";

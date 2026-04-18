@@ -33,6 +33,8 @@ namespace dbagent
     addColName("installedProbeCardId", false);
     addColName("installedProbeCardOrientation", false);
 
+    addValidFilter("ids", "id");
+
     createAllRequest();
   }
 

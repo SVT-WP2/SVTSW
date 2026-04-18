@@ -21,6 +21,8 @@ namespace dbagent
     addColName("name");
     addColName("generalLocation");
 
+    addValidFilter("ids", "id");
+
     equipList = std::make_shared<DbBaseListDto>("SvtTestSetupEquipList", "setupId", "equipId");
     setupDefaultConfigId = std::make_shared<DbBaseListDto>("SvtTestSetupDefaultConfig", "setupId", "defaultConfigId");
 

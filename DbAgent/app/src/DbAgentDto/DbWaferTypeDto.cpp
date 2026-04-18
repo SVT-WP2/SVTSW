@@ -5,6 +5,7 @@
  * @brief DbWaferTypeDto
  */
 
+#include "DbAgentDto/DbBaseDto.h"
 #include "nlohmann/json_fwd.hpp"
 
 #include "DbAgentDto/DbEnumDto.h"
@@ -28,6 +29,8 @@ namespace dbagent
     addColName("engineeringRun");
     addColName("foundry");
     addColName("technology");
+
+    addValidFilter("ids", "id");
 
     waferTypeMapDto = std::make_shared<DbBaseListDto>("WaferTypeMap", "waferTypeId", "waferMap");
     waferTypeMapDto->addColNameInJson("waferMap");
@@ -94,8 +97,8 @@ namespace dbagent
   void DbWaferTypeDto::getWaferTypeMapEntry(const int waferTypeId, DbEntry &entry)
   {
     std::vector<DbEntry> entries;
-    DbFilters filters;
-    filters.mFilters.addValue("waferTypeId", waferTypeId);
+    DbEntry filters;
+    filters.addValue("waferTypeId", waferTypeId);
     waferTypeMapDto->getAllEntriesFromDB(entries, std::string(), filters);
 
     if (entries.size())

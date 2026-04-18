@@ -10,6 +10,7 @@
 #include <string>
 
 #include "Database/DbAPI.h"
+#include "DbAgentDto/DbBaseDto.h"
 #include "DbAgentDto/DbBaseLocationDto.h"
 
 namespace dbagent
@@ -104,8 +105,8 @@ namespace dbagent
     try
     {
       const auto &id = msg.getPayload()["data"][mLocIdName];
-      DbFilters filters;
-      filters.mFilters.addValue(mLocIdName, id);
+      DbEntry filters;
+      filters.addValue(mLocIdName, id);
 
       std::vector<DbEntry> entries;
       if (locDto->getAllEntriesFromDB(entries, std::string(), filters))
@@ -134,8 +135,8 @@ namespace dbagent
     const auto id = locEntry.getValue(mLocIdName);
 
     std::vector<DbEntry> entries;
-    DbFilters filters;
-    filters.mFilters.addValue(mLocIdName, id);
+    DbEntry filters;
+    filters.addValue(mLocIdName, id);
     getLocDto()->getAllEntriesFromDB(entries, std::string(), filters, "date", true);
 
     if (entries.size())

@@ -25,6 +25,8 @@ namespace dbagent
     addColName("location");
     addColName("type");
 
+    addValidFilter("ids", "id");
+
     createAllRequest();
   }
 

@@ -7,6 +7,11 @@
 
 #include <string_view>
 
+#include "DbAgentService/DbAgentRequest.h"
+#include "SvtUtilities.h"
+
+#include "DbAgentDto/DbBaseDto.h"
+
 #include "DbAgentDto/DbAsicDto.h"
 #include "DbAgentDto/DbChipDto.h"
 #include "DbAgentDto/DbEnumDto.h"
@@ -22,9 +27,6 @@
 #include "DbAgentDto/DbWPProjectDto.h"
 #include "DbAgentDto/DbWaferDto.h"
 #include "DbAgentDto/DbWaferTypeDto.h"
-#include "DbAgentService/DbAgentRequest.h"
-
-#include "SvtUtilities.h"
 
 using SvtUtils::Singleton;
 namespace dbagent

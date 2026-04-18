@@ -40,15 +40,15 @@ namespace dbagent
     {
       for (const auto &rel : relationDtos)
       {
-        DbFilters relFilter;
-        relFilter.mFilters.addValue(rel->getIdName(), entry.getValue("id"));
+        DbEntry relFilter;
+        relFilter.addValue(rel->getProps().pkName, entry.getValue("id"));
 
         std::vector<DbEntry> relEntries;
         rel->getAllEntriesFromDB(relEntries, std::string(), relFilter);
-        const auto &colName = rel->getColName();
-        if (relEntries.size())
+        const auto &colName = rel->getProps().colName;
+        if (rel->getProps().isArray)  // array
         {
-          if (relEntries.size() > 1)
+          if (relEntries.size())
           {
             nlohmann::json relEntries_array = nlohmann::json::array();
 
@@ -56,17 +56,16 @@ namespace dbagent
             {
               relEntries_array.push_back(relEntry.getValue(colName));
             }
-            std::string colNameArray = colName + "s";
-            entry.addValue(colNameArray, relEntries_array);
+            entry.addValue(rel->getProps().inDtoName, relEntries_array);
           }
           else
           {
-            entry.addValue(colName, relEntries.at(0).getValue(colName));
+            entry.addValue(colName, nlohmann::json::array());
           }
         }
-        else
+        else  // single value
         {
-          entry.addValue(colName, nlohmann::json::array());
+          entry.addValue(colName, relEntries.at(0).getValue(colName));
         }
       }
     }
@@ -76,13 +75,11 @@ namespace dbagent
   void DbBaseDto::getAllEntriesAndReply(const nlohmann::json &data_j,
                                         SvtKafkaReplyMsg &replyMsg)
   {
-    DbFilters filters;
+    DbEntry filters;
     parseJsonFilters(data_j, filters);
 
     std::vector<DbEntry> entries;
-    bool result = mainTable.getColNames().find("id") != mainTable.getColNames().end()
-                      ? getAllEntriesFromDB(entries, std::string(), filters, "id", false)
-                      : getAllEntriesFromDB(entries, std::string(), filters);
+    bool result = getAllEntriesFromDB(entries, std::string(), filters, "id", false);
 
     if (!result)
     {
@@ -151,9 +148,9 @@ namespace dbagent
     {
       for (const auto &rel : relationDtos)
       {
-        if (modifiedData_j.contains(rel->getColName()))
+        if (modifiedData_j.contains(rel->getProps().colName))
         {
-          SvtUtils::recursive_erase_key(modifiedData_j, rel->getColName());
+          SvtUtils::recursive_erase_key(modifiedData_j, rel->getProps().colName);
         }
       }
     }
@@ -171,9 +168,9 @@ namespace dbagent
     {
       for (const auto &rel : relationDtos)
       {
-        if (data_j.contains(rel->getColName()))
+        if (data_j.contains(rel->getProps().colName))
         {
-          rel->addEntries(newEntryId, data_j[rel->getColName()]);
+          rel->addEntries(newEntryId, data_j[rel->getProps().colName]);
         }
       }
     }
@@ -250,7 +247,7 @@ namespace dbagent
     }
 
     int id = msgData["id"];
-    if (!relationDto->updateRelationEntryInDB(id, msgData["update"][relationDto->getColName()]))
+    if (!relationDto->updateRelationEntryInDB(id, msgData["update"][relationDto->getProps().colName]))
     {
       THROW_RUNTIME_ERROR("");
       return;
@@ -264,7 +261,7 @@ namespace dbagent
   bool DbBaseDto::getAllEntriesFromDB(
       std::vector<DbEntry> &entries,
       const std::string &queryString,
-      const DbFilters &filters,
+      const DbEntry &filters,
       const std::string &orderBy,
       const bool orderDec)
   {
@@ -280,16 +277,18 @@ namespace dbagent
       }
     }
 
-    if (!filters.ids.empty())
-    {
-      const auto &filterName = queryString.empty() ? "id" : "T0.id";
-      query.addWhereIn(filterName, filters.ids);
-    }
+    std::vector<int> ids;
 
-    for (const auto &filter : filters.mFilters.getValues())
+    for (const auto &filter : filters.getValues())
     {
-      if (getColNames().find(filter.first) !=
-          getColNames().end())
+      if ((filter.first == "ids") && (!filter.second.empty()))
+      {
+        ids = filter.second.get<std::vector<int>>();
+        const auto &filterName = queryString.empty() ? "id" : "T0.id";
+        query.addWhereIn(filterName, ids);
+      }
+      else if (getColNames().find(filter.first) !=
+               getColNames().end())
       {
         const auto &filterName = queryString.empty() ? filter.first : "T0." + filter.first;
         query.addWhereEquals(filter.first, filter.second);
@@ -332,9 +331,9 @@ namespace dbagent
           entries.push_back(rowEntry);
         }
 
-        if (!filters.ids.empty())
+        if (!ids.empty())
         {
-          if (filters.ids.size() != entries.size())
+          if (ids.size() != entries.size())
           {
             THROW_RUNTIME_ERROR(
                 "unmatching returned elements and requested filter size");
@@ -355,8 +354,8 @@ namespace dbagent
   //========================================================================+
   bool DbBaseDto::getEntryWithId(DbEntry &entry, int id)
   {
-    DbFilters filters;
-    filters.ids.push_back(id);
+    DbEntry filters;
+    filters.addValue("ids", nlohmann::json::array({id}));
 
     std::vector<DbEntry> entries;
     if (!getAllEntriesFromDB(entries, std::string(), filters))
@@ -366,28 +365,6 @@ namespace dbagent
     entry = std::move(entries.at(0));
     addItemFromRelationDto(entry);
 
-    return true;
-  }
-
-  //========================================================================+
-  bool DbBaseDto::createEntryInDB(const DbEntry &entry)
-  {
-    database::dbapi::SimpleInsert insert;
-
-    insert.setTableName(getTableName());
-
-    //! checkinput values and Add columns & values
-    for (const auto &item : entry.getValues())
-    {
-      insert.addColumnAndValue(item.first, item.second);
-    }
-
-    if (!insert.doInsert())
-    {
-      database::dbapi::rollbackUpdate();
-      return -1;
-    }
-    database::dbapi::commitUpdate();
     return true;
   }
 
@@ -526,25 +503,22 @@ namespace dbagent
 
   //========================================================================+
   void DbBaseDto::parseJsonFilters(const nlohmann::json &j_data,
-                                   DbFilters &filters)
+                                   DbEntry &filters)
   {
+    filters.clear();
+
     if (j_data.contains("filter"))
     {
       const auto filterData = j_data["filter"];
       for (auto it = filterData.cbegin(); it != filterData.cend(); ++it)
       {
-        if (it.key() == "ids")
-        {
-          filters.ids = it->get<std::vector<int>>();
-        }
-        else if (mainTable.getColNames().find(it.key()) != mainTable.getColNames().end())
-        {
-          filters.mFilters.addValue(it.key(), it.value());
-        }
-        else
+        if (!validFilters.count(it.key()))
         {
           THROW_RUNTIME_ERROR("Error: " + it.key() + " is not an allowed filter.");
+          filters.clear();
+          return;
         }
+        filters.addValue(it.key(), it.value());
       }
     }
   }

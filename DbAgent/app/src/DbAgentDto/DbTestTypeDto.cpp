@@ -20,7 +20,7 @@ namespace dbagent
     addColName("id");
     addColName("name");
 
-    dutTypeList = std::make_shared<DbBaseListDto>("SvtTestTypeDUTTypeList", "testTypeId", "dutType");
+    dutTypeList = std::make_shared<DbBaseListDto>("SvtTestTypeDUTTypeList", "testTypeId", "dutType", "dutTypes", true);
     addRelationDto(dutTypeList.get());
 
     createAllRequest();
@@ -39,8 +39,8 @@ namespace dbagent
     {
       const auto dutType = data_j["filter"]["dutType"];
 
-      DbFilters dutTypeFilter;
-      dutTypeFilter.mFilters.addValue("dutType", dutType);
+      DbEntry dutTypeFilter;
+      dutTypeFilter.addValue("dutType", dutType);
 
       std::vector<DbEntry> dutTypeEntries;
       dutTypeList->getAllEntriesFromDB(dutTypeEntries, std::string(), dutTypeFilter);

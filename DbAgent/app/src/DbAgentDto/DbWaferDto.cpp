@@ -30,6 +30,8 @@ namespace dbagent
     addColName("dicingDate");
     addColName("productionDate");
 
+    addValidFilter("ids", "id");
+
     createAllRequest();
   }
 

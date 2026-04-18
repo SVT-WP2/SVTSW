@@ -10,7 +10,7 @@
 #include <functional>
 #include <map>
 #include <set>
-#include <stdexcept>
+// #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -23,12 +23,14 @@
 
 namespace dbagent
 {
-  using jsonMap = std::map<std::string, nlohmann::basic_json<>>;
-  using reqMap = std::map<std::string_view, std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>;
+  using jsonMap_t = std::map<std::string, nlohmann::basic_json<>>;
+  using strStrMap_t = std::map<std::string, std::string>;
+  using reqMap_t = std::map<std::string_view, std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>>;
+  using strSet_t = std::set<std::string>;
 
   class DbBaseListDto;
 
-  struct DbEntry
+  class DbEntry
   {
    public:
     explicit DbEntry() = default;
@@ -46,18 +48,16 @@ namespace dbagent
 
     nlohmann::basic_json<> getValue(const std::string &_key) const
     {
-      try
+      if (mValues.find(_key) != mValues.end())
       {
         return mValues.at(_key);
       }
-      catch (const std::out_of_range &ex)
-      {
-        THROW_RUNTIME_ERROR("ERROR: Out of range " + ex.what());
-        return {};
-      }
+      return {};
     }
 
-    const jsonMap &getValues() const { return mValues; }
+    void clear() { mValues.clear(); }
+
+    const jsonMap_t &getValues() const { return mValues; }
 
     void dump() const
     {
@@ -69,14 +69,7 @@ namespace dbagent
     }
 
    private:
-    std::string mName;
-    jsonMap mValues;
-  };
-
-  struct DbFilters
-  {
-    std::vector<int> ids;
-    DbEntry mFilters;
+    jsonMap_t mValues;
   };
 
   class DbBaseDto
@@ -99,12 +92,12 @@ namespace dbagent
     //! database function
     virtual bool getAllEntriesFromDB(std::vector<DbEntry> &entries,
                                      const std::string &queryString = "",
-                                     const DbFilters &filters = DbFilters(),
+                                     const DbEntry &filters = DbEntry(),
                                      const std::string &orderBy = "",
                                      const bool orderDec = false);
     virtual bool getEntryWithId(DbEntry &entry, int id);
 
-    virtual bool createEntryInDB(const DbEntry &entry);
+    virtual bool createEntryInDB(const DbEntry & /*entry*/) { return true; };
     virtual bool updateEntryInDB(const int id, const DbEntry &entry, bool allowNull = false);
 
     //! Reply Message
@@ -138,11 +131,24 @@ namespace dbagent
       relationDtos.push_back(dto);
     }
 
+    void addValidFilter(const std::string &filterName)
+    {
+      addValidFilter(filterName, filterName);
+    }
+
+    void addValidFilter(const std::string &filterName, const std::string &colName)
+    {
+      validFilters.insert({filterName, colName});
+    }
+
     void setTableName(const std::string &tName) { mainTable.setTableName(tName); }
 
     //! Getters
-    const std::string &getTableName() { return mainTable.getTableName(); }
-    const colMap &getColNames() { return mainTable.getColNames(); }
+    const auto &getTableName() const { return mainTable.getTableName(); }
+    const auto &getColNames() const { return mainTable.getColNames(); }
+    const auto &getValidFilterNames() const { return validFilters; }
+
+    // const auto getFilterValue(const std::string &name) { return mFilters.getValue(name); }
 
    protected:
     virtual void getAllEntriesAndReply(const nlohmann::json &data_j,
@@ -156,20 +162,31 @@ namespace dbagent
 
     virtual void parseJsonData(const nlohmann::json &j_data, DbEntry &entry);
     virtual void parseJsonFilters(const nlohmann::json &j_data,
-                                  DbFilters &filters);
+                                  DbEntry &filters);
     virtual void addRequest(
         std::string_view,
         std::function<void(const SvtKafka::SvtKafkaMessage &, SvtKafka::SvtKafkaReplyMsg &)>);
 
     virtual void createAllRequest() = 0;
 
+    // void addFilter(const std::string &_name, const nlohmann::basic_json<> &_val)
+    // {
+    //   mFilters.addValue(_name, _val);
+    // }
+
    private:
+    std::string mName;
+
     DbTableDto mainTable;
-    std::set<std::string> colNameInJson;
-    std::set<std::string> excludeItemsInReply;
+    strSet_t colNameInJson;
+    strSet_t excludeItemsInReply;
 
     std::vector<DbBaseListDto *> relationDtos;
-    reqMap requestMap;
+
+    strStrMap_t validFilters;
+    // DbEntry mFilters;
+
+    reqMap_t requestMap;
   };
 
 };  // namespace dbagent

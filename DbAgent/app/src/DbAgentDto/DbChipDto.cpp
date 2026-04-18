@@ -29,6 +29,10 @@ namespace dbagent
     addColName("serialNumber");
     addColName("generalLocation");
 
+    addValidFilter("ids", "id");
+    addValidFilter("generalLocation");
+    addValidFilter("serialNumber");
+
     createAllRequest();
   }
 
@@ -88,9 +92,9 @@ namespace dbagent
 
     // Check if asic family has any block
     std::vector<DbEntry> blockEntries;
-    DbFilters filters;
 
-    filters.mFilters.addValue("asicFamilyType", asicFamilyType);
+    DbEntry filters;
+    filters.addValue("asicFamilyType", asicFamilyType);
 
     asicFamilyTypeBlockListDto->getAllEntriesFromDB(blockEntries, "", filters);
 
