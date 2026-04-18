@@ -243,10 +243,13 @@ Table main.SvtTestTypeDUTTypeList {
 Table main.SvtTestTypeConfig {
   id integer [pk, increment]
   testTypeId integer [ref:> main.SvtTestType.id, not null]
-  name varchar(100) [unique, not null]
+  name varchar(100) [not null]
   note text
   configBody JSON [not null]
   createdAt date [default: `CURRENT_DATE`]
+  indexes {
+    (testTypeId, name) [unique]
+  }
 }
 
 Table main.SvtTestTemplate {
