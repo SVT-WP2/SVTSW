@@ -25,8 +25,8 @@ class SentioProberImpl(AbstractProber):
         return self.prober.move_chuck_xy(reference, x, y)
 
     def move_chuck_center(self):
-        resp = self.prober.send_cmd("move_chuck_center")
-        self.prober.wait_complete(resp.cmd_id())
+        self.prober.send_cmd("move_chuck_center")
+        # self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
