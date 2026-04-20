@@ -25,6 +25,9 @@ RUN apt-get install git-core -y
 # KAFKA DEPS
 RUN apt install librdkafka-dev -y
 
+COPY ./.pgpass /root/.pgpass
+RUN chmod 0600 /root/.pgpass
+
 COPY ./configs ./configs
 COPY ./docker-entrypoint.sh .
 
