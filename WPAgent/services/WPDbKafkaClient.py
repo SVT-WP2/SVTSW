@@ -54,7 +54,7 @@ class DBKafkaClient:
             'enable.auto.commit': False,
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,
-            'max.poll.interval.ms': 60000
+            'max.poll.interval.ms': 120000
         })
 
         # Subscribe to reply topic
@@ -215,7 +215,7 @@ class DBKafkaClient:
         """Get all wafer probe machines from database"""
         result = self.request_reply(
             message_type="GetAllWaferProbeMachines",
-            data={"filter": {"ids": []}},
+            data={},
             reply_type="GetAllWaferProbeMachinesReply",
             timeout=timeout
         )
@@ -228,7 +228,7 @@ class DBKafkaClient:
         """Get all wafer probe projects from database"""
         result = self.request_reply(
             message_type="GetAllWaferProbeProjects",
-            data={"filter": {"ids": []}},
+            data={},
             reply_type="GetAllWaferProbeProjectsReply",
             timeout=timeout
         )

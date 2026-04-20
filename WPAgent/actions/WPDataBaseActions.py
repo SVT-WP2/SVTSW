@@ -163,6 +163,7 @@ def get_project_id_by_name(project_name, timeout: float = 15.0, user=None, wafer
 
         if not matching_project:
             print('No project')
+            return None
 
         project_id = matching_project.get('id')
 
