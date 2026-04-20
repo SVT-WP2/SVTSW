@@ -48,7 +48,7 @@ def take_screenshot(
 
     Returns:
         Response with screenshot path
-# @validate_command
+# # @validate_command
 def move_chuck_xy(x, y, user=None, waferAgentName=None):
     """
     error = _ensure_initialized()
@@ -82,7 +82,7 @@ def move_chuck_xy(x, y, user=None, waferAgentName=None):
         return ResponseBuilder.error("TakeScreenshotReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
     """
     Args:
@@ -118,7 +118,7 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
 
 
-## @validate_command
+## # @validate_command
 def init_probing(user=None, waferAgentName=None):
     """Sequance of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -151,7 +151,7 @@ def init_probing(user=None, waferAgentName=None):
         return ResponseBuilder.error("InitProbingReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_center(user=None, waferAgentName=None):
     """Move chuck to Center"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -182,7 +182,7 @@ def move_chuck_center(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckCenterReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_z(z, user=None, waferAgentName=None):
     """Move chuck to Z position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -210,7 +210,7 @@ def move_chuck_z(z, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def enable_ptpa(user=None, waferAgentName=None):
     """Enable PTPA alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -263,8 +263,8 @@ def disable_ptpa(user=None, waferAgentName=None):
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("DisablePTPAReply", str(e), 500)
 
-@validate_command
 # @validate_command
+# # @validate_command
 def run_ptpa(user=None, waferAgentName=None):
     """Run PTPA alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -292,7 +292,7 @@ def run_ptpa(user=None, waferAgentName=None):
         return ResponseBuilder.error("RunPTPAReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_next_die(user=None, waferAgentName=None):
     """Step to next die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -489,7 +489,7 @@ def update_current_info(currentProber=None):
     g.camera_mount_point = currentProber.get_current_working_area()
 
 
-# @validate_command
+# # @validate_command
 
 def switch_camera(mountPoint, user=None, waferAgentName=None):
     """Switch camera mount point"""
@@ -519,7 +519,7 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
         return ResponseBuilder.error("SwitchCameraReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_home(user=None, waferAgentName=None):
     """Move chuck to home position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -546,7 +546,7 @@ def move_chuck_home(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckHomeReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def unload_wafer(user=None, waferAgentName=None):
     """Unload wafer from chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -584,7 +584,7 @@ def unload_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
 
 
-# # @validate_command
+# # # @validate_command
 def open_project(project_name: str, user=None, waferAgentName=None):
     """Open project"""
 
@@ -626,7 +626,7 @@ def open_project(project_name: str, user=None, waferAgentName=None):
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def change_project(project_name: str, user=None, waferAgentName=None):
     """Change project"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -664,7 +664,7 @@ def change_project(project_name: str, user=None, waferAgentName=None):
         return ResponseBuilder.error("ChangeProjectReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None):
     """Load wafer onto chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -703,7 +703,7 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
         return ResponseBuilder.error("LoadWaferReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def find_home(user=None, waferAgentName=None):
     """Find home position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -732,7 +732,7 @@ def find_home(user=None, waferAgentName=None):
         return ResponseBuilder.error("FindHomeReply", str(e), 500)
 
 
-## @validate_command
+## # @validate_command
 def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
                 user=None, waferAgentName=None):
     """Perform wafer alignment"""
@@ -789,7 +789,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None,
         return ResponseBuilder.error("AlignWaferReply", str(e), 500)
 
 
-@validate_command
+# @validate_command
 def move_chuck_contact(user=None, waferAgentName=None):
     """Move probes to contact position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -819,7 +819,7 @@ def move_chuck_contact(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckContactReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def Move_chuck_separation(user=None, waferAgentName=None):
     """Move probes to separation position"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -848,7 +848,7 @@ def Move_chuck_separation(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
 
 
-# # @validate_command
+# # # @validate_command
 def auto_focus(user=None, waferAgentName="CERN"):
     """Execute auto-focus"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -878,7 +878,7 @@ def auto_focus(user=None, waferAgentName="CERN"):
         return ResponseBuilder.error("AutoFocusReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
     """Move chuck to specified work area"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -911,7 +911,7 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckToWorkAreaReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def local_mode(user=None, waferAgentName=None):
     """Set prober to local mode"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -937,7 +937,7 @@ def local_mode(user=None, waferAgentName=None):
         return ResponseBuilder.error("LocalModeReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_previous_die(user=None, waferAgentName=None):
     """Move to previous die"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -968,7 +968,7 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckPreviousDieReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def get_chuck_position(user=None, waferAgentName=None):
     """Get current chuck position"""
     error = _ensure_initialized()
@@ -991,7 +991,7 @@ def get_chuck_position(user=None, waferAgentName=None):
         return ResponseBuilder.error("GetChuckPositionReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
     """Set overtravel that includes seting actual gap and enable overtravel"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -1022,7 +1022,7 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
         return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
     """Disaable overtravel, set to 0"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -1052,7 +1052,7 @@ def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None)
         return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_loaded_wafer(user=None, waferAgentName=None):
     """Load same wafer Load + MoveChuckOffAxis """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -1091,7 +1091,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckLoadedWaferReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
     """Unload wafer from chuck"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -1127,12 +1127,12 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckUnloadWaferReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_asic():
     pass
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_safe_position(user=None, waferAgentName=None):
     "Sequence MoveChuckOffAxis MoveChuckXY MoveChuckZ"
     # TODO: Do we need to control angle as well ? for absolute  0.0025. Check if ChuckXYReference.Zero is correlated to absolute coordinates
@@ -1167,7 +1167,7 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckSafePositionReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_offaxis(user=None, waferAgentName=None):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -1197,7 +1197,7 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckOffAxisReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def move_chuck_wide(user=None, waferAgentName=None):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -1227,11 +1227,11 @@ def move_chuck_wide(user=None, waferAgentName=None):
         return ResponseBuilder.error("MoveChuckWideReply", str(e), 500)
 
 
-# @validate_command
+# # @validate_command
 def testing_lock():
     pass
 
 
-# @validate_command
+# # @validate_command
 def testing_unlock():
     pass
