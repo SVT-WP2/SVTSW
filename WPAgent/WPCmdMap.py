@@ -74,7 +74,7 @@ COMMAND_ROUTER = {
     "TestingUnLock": testing_actions.testing_unlock,
     "ChangeProject": testing_actions.change_project,
     "ConnectProbeMachine": project_actions.connect_probe_machine,
-
+    "TakeScreenshot": testing_actions.take_screenshot,
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(

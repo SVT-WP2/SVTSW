@@ -2,7 +2,6 @@ from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
 from utilities.WPHelpers import (resolve_project_parameters, ensure_prober_initialized, check_prober_ready)
 from utilities.WPResponseBuilder import ResponseBuilder
-from services.WPKafkaDbService import KafkaDBService
 from services.WPDbKafkaClient import DBKafkaClient
 import actions.WPDataBaseActions
 import json
@@ -115,52 +114,47 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
         # ============================================================
         if machine_id and machine_id != 0 and is_mock == False:
 
-            print("TEST")
-            #
-            #     db_client = DBKafkaClient.get_instance()
-            #     machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
-            #
-            #     # Find our machine
-            #     our_machine = None
-            #     for machine in machines:
-            #         if machine.get('id') == machine_id:
-            #             our_machine = machine
-            #             break
-            #
-            #     if our_machine:
-            #         # Sync loaded wafer
-            #         wafer_id = our_machine.get('loadedWaferId')
-            #         wafer_orientation = our_machine.get('loadedWaferOrientation')
-            #
-            #         if wafer_id:
-            #             globals_.loaded_wafer_id = wafer_id
-            #             globals_.wafer_orientation = wafer_orientation
-            #             print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={wafer_orientation}")
-            #         else:
-            #             globals_.loaded_wafer_id = None
-            #             globals_.wafer_orientation = None
-            #             print(f"ℹ️  No wafer loaded in DB")
-            #
-            #         # Sync installed probe card
-            #         card_id = our_machine.get('installedProbeCardId')
-            #         card_orientation = our_machine.get('installedProbeCardOrientation')
-            #
-            #         if card_id:
-            #             globals_.probe_card_id = card_id
-            #             globals_.probe_card_orientation = card_orientation
-            #             print(f"✓ Synced probe card: ID={card_id}, orientation={card_orientation}")
-            #         else:
-            #             globals_.probe_card_id = None
-            #             globals_.probe_card_orientation = None
-            #             print(f"ℹ️  No probe card installed in DB")
-            #  else:
-            #         print(f"⚠️  Machine ID {machine_id} not found in database")
+                print("TEST")
 
-             # except Exception as e:
-             #    print(f"⚠️  Warning: Could not sync with database: {str(e)}")
-        # elif machine_id == 0:
-        #     print(f"ℹ️  Mock mode - skipping DB sync")
-        # ============================================================
+                db_client = DBKafkaClient.get_instance()
+                machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
+
+                # Find our machine
+                our_machine = None
+                for machine in machines:
+                    if machine.get('id') == machine_id:
+                        our_machine = machine
+                        break
+
+                if our_machine:
+                    # Sync loaded wafer
+                    wafer_id = our_machine.get('loadedWaferId')
+                    wafer_orientation = our_machine.get('loadedWaferOrientation')
+
+                    if wafer_id:
+                        globals_.loaded_wafer_id = wafer_id
+                        globals_.wafer_orientation = wafer_orientation
+                        print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={wafer_orientation}")
+                    else:
+                        globals_.loaded_wafer_id = None
+                        globals_.wafer_orientation = None
+                        print(f"ℹ️  No wafer loaded in DB")
+
+                    # Sync installed probe card
+                    card_id = our_machine.get('installedProbeCardId')
+                    card_orientation = our_machine.get('installedProbeCardOrientation')
+
+                    if card_id:
+                        globals_.probe_card_id = card_id
+                        globals_.probe_card_orientation = card_orientation
+                        print(f"✓ Synced probe card: ID={card_id}, orientation={card_orientation}")
+                    else:
+                        globals_.probe_card_id = None
+                        globals_.probe_card_orientation = None
+                        print(f"ℹ️  No probe card installed in DB")
+        else:
+            print(f"⚠️  Machine ID {machine_id} not found in database")
+
 
         # Set project
         if project_name:

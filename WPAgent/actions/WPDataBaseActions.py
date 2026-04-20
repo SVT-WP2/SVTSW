@@ -20,6 +20,38 @@ def _get_db_client():
     return _db_client
 
 
+def get_machine_by_location(location_name: str, timeout: float = 5.0):
+    """
+    Get prober machine configuration by location name
+
+    Args:
+        location_name: Location name (e.g., "CERN", "MIT")
+        timeout: Query timeout in seconds
+
+    Returns:
+        Machine config dict or None if not found
+    """
+    try:
+        db_client = _get_db_client()
+
+        # Get all machines
+        machines = db_client.get_all_wafer_probe_machines(timeout=timeout)
+
+        if not machines:
+            return None
+
+        # Find machine by location
+        for machine in machines:
+            # Check if 'location' field matches
+            if machine.get('generalLocation') == location_name:
+                return machine
+
+        return None
+
+    except Exception as e:
+        print(f"Error getting machine by location: {e}")
+        return None
+
 def list_probers(timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get all wafer probe machines from database.
@@ -332,6 +364,8 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
 
         # Update local globals to match DB
         g.set_probe_card(probe_card_id, probe_card_orientation or "Unknown")
+        g.probe_card_id= probe_card_id
+        g.probe_card_orientation = "West"
 
         return response
 

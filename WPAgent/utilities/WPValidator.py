@@ -302,90 +302,59 @@ class WPCommandValidator:
         """
 
         schemas = {
-            # OpenProject / Initialize
+            # open_project(project_name: str)
+            #TODO: have to be with asicSerialNumber
             "OpenProject": {
-                "asicSerialNumber": {"type": "str", "required": True},
+                "projectName": {"type": "str", "required": True},
             },
 
-            # InitProbing
-            "InitProbing": {
-                "wpMachineId": {"type": "int", "required": True},
-            },
-
-            # LoadWafer
+            # load_wafer(waferId: float, orientation: str)
             "LoadWafer": {
-                "waferId": {"type": "str", "required": True},
+                "waferId": {"type": "float", "required": True},
                 "orientation": {"type": "str", "required": False},
             },
 
-            # MoveChuckLoadedWafer
-            "MoveChuckLoadedWafer": {
-                "waferId": {"type": "int", "required": False},
-            },
-
-            # MoveChuckAsic
-            "MoveChuckAsic": {
-                "machineId": {"type": "int", "required": True},
-                "asicId": {"type": "str", "required": True},
-            },
-
-            # ChangeProject
-            "ChangeProject": {
-                "projectName": {"type": "str", "required": True},
-                "projectId": {"type": "int", "required": False},
-            },
-
-            # MoveChuckRowColumn / MoveChuckDie
+            # move_chuck_die(col: int, row: int, subsite: int = 0)
             "MoveChuckRowColumn": {
-                "wpMachineId": {"type": "int", "required": True},
-                "row": {"type": "int", "required": True},
                 "col": {"type": "int", "required": True},
-            },
-            "GoToDie": {  # Alias
                 "row": {"type": "int", "required": True},
-                "col": {"type": "int", "required": True},
+                "subsite": {"type": "int", "required": False},
             },
 
-            # MoveChuckXY
+            # move_chuck_xy(x, y)
             "MoveChuckXY": {
                 "x": {"type": "float", "required": True},
                 "y": {"type": "float", "required": True},
             },
 
-            # MoveChuckZ
+            # move_chuck_z(z)
             "MoveChuckZ": {
                 "z": {"type": "float", "required": True},
             },
 
-            # SetOverdrive / SetOvertravel
-            "SetOverdrive": {
-                "overdrive": {"type": "float", "required": True},
-            },
-            "SetOvertravel": {  # Alias
+            # set_chuck_overtravel(overtravelGap=None)
+            "SetOvertravel": {
                 "overtravelGap": {"type": "float", "required": True},
             },
 
-            # SwitchCamera
+            # switch_camera(mountPoint)
             "SwitchCamera": {
                 "mountPoint": {"type": "str", "required": True},
             },
 
-            # MoveChuckToWorkArea
+            # move_chuck_work_area(work_area=0)
             "MoveChuckToWorkArea": {
                 "workArea": {"type": "str", "required": True},
             },
-            "MoveChuckWorkArea": {  # Alias
-                "workArea": {"type": "str", "required": True},
-            },
 
-            # RunSequencer
+            # run_sequencer(filePath)
             "RunSequencer": {
                 "filePath": {"type": "str", "required": True},
             },
 
-            # UserLogIn
-            "UserLogIn": {
-                "user": {"type": "str", "required": True},
+            # change_project(project_name: str)
+            "ChangeProject": {
+                "projectName": {"type": "str", "required": True},
             },
 
             # ConnectProbeMachine
@@ -394,7 +363,14 @@ class WPCommandValidator:
                 "projectId": {"type": "str", "required": False},
             },
 
-            # WPAGInitializeManual / Initialize
+            # align_wafer(align_die_col, align_die_row, subsite)
+            "AlignWafer": {
+                "align_die_col": {"type": "int", "required": False},
+                "align_die_row": {"type": "int", "required": False},
+                "subsite": {"type": "int", "required": False},
+            },
+
+            # Initialize — all optional
             "Initialize": {
                 "serialNumber": {"type": "str", "required": False},
                 "address": {"type": "str", "required": False},
@@ -406,53 +382,8 @@ class WPCommandValidator:
                 "withDB": {"type": "bool", "required": False},
             },
 
-            # SetChuckZPositionState
-            "SetChuckZPositionState": {
-                "wpMachineId": {"type": "int", "required": True},
-                "chuckZPositionState": {"type": "str", "required": True},
-            },
-
-            # GetMoveChuckAsic
-            "GetMoveChuckAsic": {
-                "wpMachineId": {"type": "int", "required": True},
-                "asicId": {"type": "int", "required": True},
-            },
-
-            # WPAGInitializeDB
-            "WPAGInitializeDB": {
-                "withDB": {"type": "bool", "required": True},
-            },
-
-
-            # - MoveChuckUnloadWafer
-            # - UnloadWafer
-            # - MoveChuckSeparation
-            # - MoveChuckSafePosition
-            # - MoveChuckContact
-            # - MoveChuckWide
-            # - MoveChuckNextDie
-            # - MoveChuckPreviousDie
-            # - RunPTPA
-            # - DisableOverdrive
-            # - AutoFocus
-            # - ShowStatus
-            # - MoveChuckOffAxis
-            # - TestingLock
-            # - TestingUnLock
-            # - UserLogOut
-            # - MoveChuckCenter
-            # - AlignWafer
-            # - FindHome
-            # - MoveChuckHome
-            # - ResetAgent
-            # - LocalMode
-            # - Help
-            # - ListProbers
-            # - ListChipTypes
-            # - ListOrientations
-            # - GetAgentState
-            # - GetDiesNumber
         }
+
 
         return schemas.get(command)
 

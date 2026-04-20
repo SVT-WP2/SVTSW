@@ -153,6 +153,96 @@ class WaferProberAgent:
 
         return all_configs[config_name]
 
+    def _load_probe_config_with_db(self, config_name):
+        """
+        Load probe station config - tries DB first, automatically falls back to JSON file
+
+        Args:
+            config_name: Name of config/location (e.g., "CERN", "MOCK")
+
+        Returns:
+            dict: Config with machineId, address, port, machineType
+        """
+        # Always try database first
+        print(f"🔍 Loading configuration for '{config_name}'...")
+        config = self._load_from_database(config_name, timeout=5.0)
+
+        if config:
+            print(f"   ✅ Loaded from database")
+            return config
+
+        # Fallback to config file
+        print(f"   ℹ️  Database unavailable or location not found")
+        print(f"   📋 Loading from config file...")
+
+        config_path = "configs/WPProbesConfigs.json"
+
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(
+                f"Config file not found: {config_path}\n"
+                f"Please create configs/WPProbesConfigs.json or add '{config_name}' to database"
+            )
+
+        with open(config_path, 'r') as f:
+            all_configs = json.load(f)
+
+        if config_name not in all_configs:
+            available = ', '.join(all_configs.keys())
+            raise KeyError(
+                f"Config '{config_name}' not found in database or {config_path}\n"
+                f"Available configs: {available}"
+            )
+
+        print(f"   ✅ Loaded from config file")
+        return all_configs[config_name]
+
+    def _load_from_database(self, location_name, timeout=5.0):
+        """
+        Load prober configuration from database (silent - no prints on failure)
+
+        Args:
+            location_name: Location name (e.g., "CERN")
+            timeout: Query timeout in seconds
+
+        Returns:
+            Config dict or None if not found/error
+        """
+        try:
+            from actions.WPDataBaseActions import get_machine_by_location
+
+            # Query database (silently)
+            machine_data = get_machine_by_location(location_name, timeout=timeout)
+
+            if not machine_data:
+                return None
+
+            # Construct address from name + hostName
+            # Example: name="CERN" + "01" + hostName="cern.ch" => "wpmit01.cern.ch"
+            machine_name = machine_data.get("name", "").lower()
+            host_name = machine_data.get("hostName", "localhost")
+
+            # Build full address: wp<name>01.<hostname>
+            if machine_name and host_name and host_name != "localhost":
+                full_address = f"{machine_name}01.{host_name}"
+            else:
+                # Fallback to just hostname if name is missing
+                full_address = host_name
+
+            # Convert DB format to config format
+            config = {
+                "address": full_address,
+                "port": machine_data.get("connectionPort", 35555),
+                "machineType": machine_data.get("software", "sentio"),
+                "machineId": machine_data.get("id", 0),
+                "description": machine_data.get("generalLocation", "")
+            }
+
+            return config
+
+        except Exception as e:
+            # Silently fail - will fallback to config file
+            return None
+
     def _auto_initialize_prober(self, config_name, config):
         """
         Auto-initialize prober connection when listener starts
@@ -252,7 +342,7 @@ class WaferProberAgent:
 
             try:
                 # Load config
-                config = self._load_probe_config(config_name)
+                config = self._load_probe_config_with_db(config_name)
                 self.wp_agent_name = config_name
 
                 print(f"📋 Loaded config for '{config_name}':")

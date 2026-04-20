@@ -16,12 +16,17 @@ class SentioProberImpl(AbstractProber):
     def open_project(self, path: str):
         self.prober.open_project(path)
 
-    def move_chuck_xy(self, x: float, y: float):
-        return self.prober.move_chuck_xy(ChuckXYReference.Zero, x, y)
+    def move_chuck_xy(self, x: float, y: float, position: str):
+        reference = None
+        if position == 'Zero':
+            reference = ChuckXYReference.Zero
+        elif position == 'Relative':
+            reference = ChuckXYReference.Relative
+        return self.prober.move_chuck_xy(reference, x, y)
 
     def move_chuck_center(self):
-        resp = self.prober.send_cmd("move_chuck_center")
-        #self.prober.wait_complete()
+        self.prober.send_cmd("move_chuck_center")
+        # self.prober.wait_complete(resp.cmd_id())
 
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
@@ -39,7 +44,6 @@ class SentioProberImpl(AbstractProber):
             raise Exception(f"PTPA failed: {resp.message()}")
 
         self.prober.wait_complete(resp.cmd_id())
-        print(resp.message())
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
@@ -143,6 +147,13 @@ class SentioProberImpl(AbstractProber):
         "overtravel (bool): True to enable, False to disable."
         self.prober.enable_chuck_overtravel(overtravel)
 
+    def get_current_working_area(self):
+        response = self.prober.send_cmd("get_chuck_position_hint")
+        parts = str(response.message()).split(',')
+        position_hint = parts[0]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
+
+        return str(position_hint)
+
     def get_chuck_position(self):
         """
         Get current chuck position status.
@@ -187,6 +198,48 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
+
+    def take_screenshot(
+            self,
+            filename: str = None,
+            snapshot_type: str = "CameraRaw",
+            save_locally: bool = True,
+            output_dir: str = "screenshotsSVT"
+    ):
+        """
+        Take a screenshot from the prober camera
+
+        Args:
+            filename: Output filename (auto-generated if None)
+            snapshot_type: Type of snapshot - "CameraRaw", "Overlay", "CameraProcessed"
+            save_locally: If True, downloads to local machine; if False, saves on prober
+            output_dir: Directory to save screenshots (default: "screenshots")
+
+        Returns:
+            str: Full path to saved screenshot
+        """
+        import datetime
+        import os
+
+        if not filename:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"screenshot_{timestamp}.jpg"
+
+        if not filename.lower().endswith(('.jpg', '.jpeg')):
+            filename += '.jpg'
+
+        if save_locally:
+            os.makedirs(output_dir, exist_ok=True)
+
+            full_path = os.path.join(output_dir, filename)
+
+            # Take screenshot and download
+            self.prober.vision.snap_image(
+                file=full_path,
+                what=SnapshotType.CameraRaw,
+                where=SnapshotLocation.Local
+            )
+            return full_path
 
     def get_chuck_stage(self):
         try:
