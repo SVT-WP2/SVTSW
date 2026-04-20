@@ -79,7 +79,9 @@ namespace dbagent
     parseJsonFilters(data_j, filters);
 
     std::vector<DbEntry> entries;
-    bool result = getAllEntriesFromDB(entries, std::string(), filters, "id", false);
+    bool result = mainTable.getColNames().find("id") != mainTable.getColNames().end()
+                      ? getAllEntriesFromDB(entries, std::string(), filters, "id", false)
+                      : getAllEntriesFromDB(entries, std::string(), filters);
 
     if (!result)
     {
@@ -279,15 +281,24 @@ namespace dbagent
     }
 
     std::vector<int> ids;
-
     for (const auto &filter : filters.getValues())
     {
-      if ((filter.first == "ids") && (!filter.second.empty()))
+      //! chwck if filter name is special filter ids
+      if ((filter.first == "ids"))
       {
-        ids = filter.second.get<std::vector<int>>();
-        const auto &filterName = queryString.empty() ? "id" : "T0.id";
-        query.addWhereIn(filterName, ids);
+        //! if not empty
+        if (!filter.second.empty())
+        {
+          ids = filter.second.get<std::vector<int>>();
+          const auto &filterName = queryString.empty() ? validFilters["ids"] : "T0.id";
+          query.addWhereIn(filterName, ids);
+        }
+        else
+        {
+          continue;
+        }
       }
+      //! check if filter name is a colName in the table
       else if (getColNames().find(filter.first) !=
                getColNames().end())
       {
@@ -332,7 +343,7 @@ namespace dbagent
           entries.push_back(rowEntry);
         }
 
-        if (!ids.empty())
+        if (!ids.empty() && (filters.getValues().size() == 1))
         {
           if (ids.size() != entries.size())
           {
