@@ -63,7 +63,7 @@ class DBKafkaClient:
         # Warm up consumer
         print(f"   Warming up consumer...")
         for _ in range(3):
-            self.consumer.poll(0.1)
+            self.consumer.poll(0.05)
 
         print(f"✅ DB Kafka Client initialized successfully")
 
@@ -167,7 +167,7 @@ class DBKafkaClient:
         messages_seen = 0
 
         while time.time() - start < timeout:
-            msg = self.consumer.poll(0.1)
+            msg = self.consumer.poll(0.05)
 
             if msg is None:
                 continue
