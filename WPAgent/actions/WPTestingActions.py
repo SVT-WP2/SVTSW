@@ -1152,7 +1152,7 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         prober = get_current_prober()
 
         prober.move_chuck_offaxis_area()
-        prober.move_chuck_xy(x=absolute_x, y=absolute_y)
+        prober.move_chuck_xy(x=absolute_x, y=absolute_y,position='Zero')
         prober.move_chuck_z(z=absolute_z)
 
         prober.local_mode()
