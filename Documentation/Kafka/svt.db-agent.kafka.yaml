@@ -1826,6 +1826,9 @@ components:
                   type: string
                 quality:
                   type: string
+                serialNumber:
+                  type: string
+                  description: Optional filter used to fetch ASIC with particular serial number
                 ids:
                   type: array
                   description: Asic ids array. If array is empty / undefined => all Asics will be returned.

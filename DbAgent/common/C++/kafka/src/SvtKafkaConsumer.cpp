@@ -45,7 +45,7 @@ bool SvtKafkaConsumer::createConsumer()
   {
     props.put(key, value);
   }
-  mConsumer = std::make_shared<KafkaConsumer>(props);
+  mConsumer = std::make_unique<KafkaConsumer>(props);
   if (!mConsumer)
   {
     logError("Failed creating kafka consumer");
