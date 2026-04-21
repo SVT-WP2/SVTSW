@@ -25,10 +25,14 @@ class WaferProberAgent:
         """
         Send a command via Kafka and wait for response.
         """
+        wafer_agent_name = data["waferAgentName"]
+        config = self._load_probe_config_with_db(wafer_agent_name)
+        kafka_broker = config.get('kafka_broker')
+
         # Ensure Kafka is initialized
         if self.kafka is None:
             print(f"⚠️  Kafka not initialized, using defaults")
-            self.kafka = KafkaClient()
+            self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
 
         # Check listener health before sending
         if check_health and self.health_check:

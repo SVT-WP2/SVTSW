@@ -55,7 +55,7 @@ class KafkaClient:
             self.bootstrap_servers = bootstrap_servers
             print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
         else:
-            self.bootstrap_servers = 'svmithi02:9096'
+            self.bootstrap_servers = 'svmithi02:9098'
             print(f"🔌 Using default Kafka broker: {self.bootstrap_servers}")
 
         self.group_id = group_id
@@ -75,7 +75,7 @@ class KafkaClient:
             'client.id': f'wp-agent-producer-{uuid.uuid4().hex[:8]}',
             # Disable localhost fallback
             'socket.timeout.ms': 10000,
-            'api.version.request': True,
+            #'api.version.request': True,
         }
         self.producer = KafkaProducer(producer_config)
 
@@ -164,6 +164,9 @@ class KafkaClient:
             wait_for_reply=True,
             timeout=30.0
     ):
+
+        print (self.bootstrap_servers)
+
         if data is not None:
             params = data
 
@@ -291,6 +294,9 @@ class KafkaClient:
             # Disable localhost fallback
             'broker.address.family': 'v4',  # Force IPv4 only
         }
+
+        print(self.bootstrap_servers)
+
         self.request_consumer = KafkaConsumer(consumer_config)
         self.request_consumer.subscribe([self.request_topic])
 
