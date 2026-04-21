@@ -16,7 +16,6 @@
 #include <nlohmann/json.hpp>
 
 #include "DbAgentRequest.h"
-#include "SvtKafkaAdminClient.h"
 #include "SvtKafkaConsumer.h"
 #include "SvtKafkaMessage.h"
 #include "SvtKafkaProducer.h"
@@ -68,10 +67,9 @@ namespace dbagent
     bool createProducer_request_reply();
     bool createProducer_heartbeat();
 
-    std::shared_ptr<SvtKafka::SvtKafkaAdminClient> mAdminClient;
-    std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
-    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
-    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_heartbeat;
+    std::unique_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
+    std::unique_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
+    std::unique_ptr<SvtKafka::SvtKafkaProducer> mProducer_heartbeat;
 
     DbAgentRequest *mRequest = SvtUtils::Singleton<DbAgentRequest>::instance();
 

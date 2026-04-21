@@ -21,7 +21,6 @@
 
 using namespace kafka::clients::consumer;
 
-using SvtKafka::SvtKafkaAdminClient;
 using SvtKafka::SvtKafkaConsumer;
 using SvtKafka::SvtKafkaMessage;
 using SvtKafka::SvtKafkaProducer;
@@ -86,6 +85,66 @@ namespace dbagent
   {
     try
     {
+      // Create admin clien, conf, errbuf, sizeof(errbuf));
+      const kafka::Properties props({{"bootstrap.servers", mBrokerName}});
+      kafka::clients::admin::AdminClient AdminClient(props);
+
+      const auto &topics = AdminClient.listTopics().topics;
+
+      const std::string &topicName = topicNames[DbAgentTopicEnum::Heartbeat];
+      if (topics.count(topicName))
+      {
+        std::string errstr;
+        // 1. Create configuration object
+        RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+
+        // 2. Set bootstrap brokers
+        if (conf->set("bootstrap.servers", mBrokerName, errstr) != RdKafka::Conf::CONF_OK)
+        {
+          THROW_RUNTIME_ERROR("Error: " + errstr);
+          return false;
+        }
+
+        /*
+         * Create producer using accumulated global configuration.
+         */
+        RdKafka::Producer *producer = RdKafka::Producer::create(conf, errstr);
+        if (!producer)
+        {
+          std::cerr << "Failed to create producer: " << errstr << std::endl;
+          return false;
+        }
+
+        rd_kafka_AdminOptions_t *options;
+
+        // 1. Define the Config Resource (Topic)
+        rd_kafka_ConfigResource_t *resources[2];
+        resources[0] = rd_kafka_ConfigResource_new(RD_KAFKA_RESOURCE_TOPIC, topicName.c_str());
+        resources[1] = rd_kafka_ConfigResource_new(RD_KAFKA_RESOURCE_TOPIC, topicName.c_str());
+        // 2. Set the Config Update (retention.ms = 1 day)
+        rd_kafka_ConfigResource_set_config(resources[0], "retention.ms", "60000");
+        rd_kafka_ConfigResource_set_config(resources[1], "segment.ms", "120000");
+
+        // 3. Create Admin Options
+        options = rd_kafka_AdminOptions_new(producer->c_ptr(), RD_KAFKA_ADMIN_OP_ALTERCONFIGS);
+
+        // 4. Call AlterConfigs
+        rd_kafka_AlterConfigs(producer->c_ptr(), resources, 2, options,
+                              rd_kafka_queue_get_main(producer->c_ptr()));
+
+        // 5. Clean up
+        rd_kafka_AdminOptions_destroy(options);
+        rd_kafka_ConfigResource_destroy(resources[0]);
+        rd_kafka_ConfigResource_destroy(resources[1]);
+      }
+      else
+      {
+        kafka::Properties topicProps;
+        topicProps.put("retention.ms", "60000");
+        topicProps.put("segment.ms", "120000");
+        AdminClient.createTopics({topicNames[DbAgentTopicEnum::Heartbeat]}, 1, 1, topicProps);
+      }
+
       SvtKafka::ConfigMap_t configs;
       configs["log_level"] = "4";
 
