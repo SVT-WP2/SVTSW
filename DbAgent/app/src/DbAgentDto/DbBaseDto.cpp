@@ -286,11 +286,17 @@ namespace dbagent
       //! chwck if filter name is special filter ids
       if ((filter.first == "ids"))
       {
+        const std::string &id_key("id");
+        if (!getColNames().count(id_key))
+        {
+          THROW_RUNTIME_ERROR("Invalid filter ids for Table " + getTableName());
+          return false;
+        }
         //! if not empty
         if (!filter.second.empty())
         {
           ids = filter.second.get<std::vector<int>>();
-          const auto &filterName = queryString.empty() ? validFilters["ids"] : "T0.id";
+          const auto &filterName = queryString.empty() ? id_key : "T0.id";
           query.addWhereIn(filterName, ids);
         }
         else
@@ -299,16 +305,14 @@ namespace dbagent
         }
       }
       //! check if filter name is a colName in the table
-      else if (getColNames().find(filter.first) !=
-               getColNames().end())
+      else if (validFilters.count(filter.first))
       {
         const auto &filterName = queryString.empty() ? filter.first : "T0." + filter.first;
         query.addWhereEquals(filter.first, filter.second);
       }
       else
       {
-        logError("Wrong filter: column with name " + std::string(filter.first) +
-                 " does not exists in table " + std::string(getTableName()));
+        logError("Invalid filter: " + filter.first);
         return false;
       }
     }
@@ -547,7 +551,7 @@ namespace dbagent
       const auto filterData = j_data["filter"];
       for (auto it = filterData.cbegin(); it != filterData.cend(); ++it)
       {
-        if (!validFilters.count(it.key()))
+        if ((it.key() != "ids") && !validFilters.count(it.key()))
         {
           THROW_RUNTIME_ERROR("Error: " + it.key() + " is not an allowed filter.");
           filters.clear();

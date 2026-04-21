@@ -48,7 +48,7 @@ namespace SvtKafka
    private:
     void pull();
 
-    std::shared_ptr<kafka::clients::consumer::KafkaConsumer> mConsumer;
+    std::unique_ptr<kafka::clients::consumer::KafkaConsumer> mConsumer;
 
     ConsumerCbFun_t mKafkaComsumeCb;
 

@@ -16,12 +16,6 @@
 
 namespace SvtUtils
 {
-  enum RecreateTopics
-  {
-    HEARTBEAT_ONLY = 0,
-    ALL
-  };
-
   template <typename T>
   inline void clearVector(std::vector<T> &vec)
   {
