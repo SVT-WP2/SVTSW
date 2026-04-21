@@ -396,14 +396,15 @@ Enum main.blockType {
   AncMPW1_SLDO
   AncMPW1_NVBG
   AncMPW1_CML_TRANSCEIVER
+  AncMPW2_SLDO
+  AncMPW2_NVBG
+  AncMPW2_CML_TRANSCEIVER
 }
 
 Enum main.dutType {
   MOSAIX
   BABYMOSAIX
-  AncMPW1_SLDO
-  AncMPW1_NVBG
-  AncMPW1_CML_TRANSCEIVER
+  AncMPW2_SLDO
 }
 
 Enum main.engineeringRun {
@@ -412,6 +413,7 @@ Enum main.engineeringRun {
   ER3
   LAS1
   AncMPW1
+  AncMPW2
 }
 
 Enum main.foundryName {

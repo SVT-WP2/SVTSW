@@ -51,7 +51,7 @@ bool SvtKafkaProducer::createProducer()
     props.put(key, value);
   }
 
-  mProducer = std::make_unique<KafkaProducer>(props);
+  mProducer = std::make_shared<KafkaProducer>(props);
   if (!mProducer)
   {
     logError("Failed to create producer: ");

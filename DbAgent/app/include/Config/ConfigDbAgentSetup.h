@@ -9,7 +9,6 @@
 
 #include "SvtConfig.h"
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 class ConfigDb;
 
@@ -31,7 +30,6 @@ namespace config
 
     std::string mKafkaServer;
     std::string mKaflaPort;
-    SvtUtils::RecreateTopics mRecreateTopicAction = SvtUtils::HEARTBEAT_ONLY;
 
    protected:
     bool decodeJson(nlohmann::json &config) override;
@@ -46,7 +44,6 @@ namespace config
     const std::string &getLogFilePath() const { return mLogFilePath; }
     const std::string &getKafkaServer() const { return mKafkaServer; }
     const std::string &getKafkaPort() const { return mKaflaPort; }
-    SvtUtils::RecreateTopics getRecreateTopicAction() const { return mRecreateTopicAction; }
     SvtUtils::SvtLogger::Mode getTermVerbosity() const { return mTermVerbosity; }
     SvtUtils::SvtLogger::Mode getFileVebosity() const { return mFileVerbosity; }
   };

@@ -25,7 +25,6 @@ namespace dbagent
     addColName("waferMapPosition");
     addColName("quality");
 
-    addValidFilter("ids", "id");
     addValidFilter("waferId");
     addValidFilter("chipId");
     addValidFilter("familyType");

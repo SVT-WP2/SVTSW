@@ -34,11 +34,13 @@ COPY ./docker-entrypoint.sh .
 FROM base AS db-agent-build
 COPY ./common ./common
 COPY ./app ./app
+COPY ./compile.sh ./compile.sh
+
 # Copy the source code into the container
-RUN cd app && /bin/bash ./compile.sh
+RUN /bin/bash ./compile.sh
 
 FROM base AS db-agent-deploy
-COPY --from=db-agent-build /app/app/install /app/svt-db-agent
+COPY --from=db-agent-build /app/install /app/svt-db-agent
 RUN chmod +x ./docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["/app/configs/SvtDbAgent_config-local.json"]

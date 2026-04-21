@@ -35,7 +35,7 @@ namespace SvtKafka
               const std::string &data);
 
    private:
-    std::unique_ptr<kafka::clients::producer::KafkaProducer> mProducer;
+    std::shared_ptr<kafka::clients::producer::KafkaProducer> mProducer;
 
     std::string mBroker;
     ConfigMap_t mConfigs;
