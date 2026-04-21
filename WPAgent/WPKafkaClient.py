@@ -14,8 +14,8 @@ from utilities.WPAgentCache import WPAgentCache
 from services.WPListenerHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from services.WPCacheHeartbeat import CacheHealthCheck, CacheHealthMonitor
 
-logger = WPAgentLogger()
-cache = WPAgentCache()
+logger = WPAgentLogger(kafka_servers=None)
+cache = WPAgentCache(kafka_servers=None)
 cache.initialize_cache()
 
 # =========================
@@ -74,7 +74,6 @@ class KafkaClient:
             'compression.type': 'none',
             'client.id': f'wp-agent-producer-{uuid.uuid4().hex[:8]}',
             # Disable localhost fallback
-            'broker.address.family': 'v4',  # Force IPv4 only
             'socket.timeout.ms': 10000,
             'api.version.request': True,
         }

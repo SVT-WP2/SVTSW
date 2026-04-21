@@ -159,10 +159,6 @@ class WaferProberAgent:
 
             return db_config
 
-        # Fallback: use config file entirely
-        print(f"   ℹ️  Database unavailable or location not found")
-        print(f"   📋 Using config file only")
-
         if not os.path.exists(config_path):
             raise FileNotFoundError(
                 f"Config file not found: {config_path}\n"

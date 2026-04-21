@@ -5,7 +5,7 @@
     "port": 35555,
     "machineType": "sentio",
     "description": "CERN DSF Probe Station",
-    "kafka_broker": "svmithi02:9092"
+    "kafka_broker": "svmithi02:9093"
   },
     "CERN_DEV": {
     "machineId": 1,
