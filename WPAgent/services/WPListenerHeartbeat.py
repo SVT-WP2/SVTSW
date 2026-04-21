@@ -19,12 +19,24 @@ class ListenerHealthCheck:
     HEARTBEAT_TIMEOUT = 6.0  # Consider dead if no heartbeat for 6 seconds
 
     HEARTBEAT_TOPIC_CONFIG = {
-    'retention.ms': '60000',
-    'segment.ms':   '120000',
+        'retention.ms': '60000',
+        'segment.ms': '120000',
     }
 
-    def __init__(self, bootstrap_servers='svmithi02:9096'):
-        self.bootstrap_servers = bootstrap_servers
+    def __init__(self, bootstrap_servers=None):  # ← CHANGED: Added parameter with default None
+        """
+        Initialize listener health check
+
+        Args:
+            bootstrap_servers: Kafka broker address (e.g., "svmithi02:9092")
+                              If None, uses default
+        """
+        # ← CHANGED: Use provided broker or default
+        if bootstrap_servers:
+            self.bootstrap_servers = bootstrap_servers
+        else:
+            self.bootstrap_servers = 'svmithi02:9096'
+
         self._ensure_topic_exists()
 
         # For checking health
@@ -71,7 +83,6 @@ class ListenerHealthCheck:
                 print(f"[✅ Heartbeat Topic Config Updated] {self.HEARTBEAT_TOPIC}")
             except Exception as e:
                 print(f"[⚠️ Heartbeat Topic Config Error] {e}")
-
 
     def send_heartbeat(self):
         """Send heartbeat (called by listener)"""

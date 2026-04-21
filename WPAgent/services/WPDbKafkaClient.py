@@ -1,8 +1,7 @@
 """
 Kafka client specifically for DB Agent communication
-Connects to "localhost:9095"
 
-FIXED: Sends proper SVT Kafka headers (correlationId, replyTopic, replyPartition)
+UPDATED: Accepts bootstrap_servers parameter for dynamic broker configuration
 """
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -16,20 +15,38 @@ class DBKafkaClient:
     """Singleton Kafka client specifically for DB Agent communication"""
 
     _instance = None
-    DB_BROKER = "svmithi02:9096"
-    DB_REQUEST_TOPIC = "svt.db-agent.request"
-    DB_REPLY_TOPIC = "svt.db-agent.request.reply"
 
     @classmethod
-    def get_instance(cls):
+    def get_instance(cls, bootstrap_servers=None):  # ← CHANGED: Added parameter
         """Get or create singleton instance"""
         if cls._instance is None:
-            cls._instance = cls()
+            cls._instance = cls(bootstrap_servers=bootstrap_servers)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, bootstrap_servers=None):  # ← CHANGED: Added parameter
+        """
+        Initialize DB Kafka Client
+
+        Args:
+            bootstrap_servers: Kafka broker address (e.g., "svmithi02:9096")
+                              If None, uses default
+        """
         if DBKafkaClient._instance is not None:
             raise RuntimeError("DBKafkaClient is a singleton. Use get_instance() instead.")
+
+        # ============================================================
+        # NEW: Use provided broker or fallback to default
+        # ============================================================
+        if bootstrap_servers:
+            self.DB_BROKER = bootstrap_servers
+            print(f"🔌 Using DB Kafka broker from config: {bootstrap_servers}")
+        else:
+            self.DB_BROKER = "svmithi02:9096"  # Default
+            print(f"🔌 Using default DB Kafka broker: {self.DB_BROKER}")
+        # ============================================================
+
+        self.DB_REQUEST_TOPIC = "svt.db-agent.request"
+        self.DB_REPLY_TOPIC = "svt.db-agent.request.reply"
 
         print(f"🔄 Initializing DB Kafka Client...")
         print(f"   Broker: {self.DB_BROKER}")
@@ -119,8 +136,6 @@ class DBKafkaClient:
         """
         Send request and wait for reply using SVT Kafka conventions
 
-        FIXED: Uses kafka_correlationId header (NOT requestId in body)
-
         Args:
             message_type: Type of message (e.g., "GetAllWaferProbeMachines")
             data: Data payload
@@ -134,13 +149,13 @@ class DBKafkaClient:
         # Generate correlation ID for SVT convention
         correlation_id = str(uuid.uuid4())
 
-        # Build payload (NO requestId in body - DB Agent doesn't want it!)
+        # Build payload (NO requestId in body)
         payload = {
             "type": message_type,
             "data": data
         }
 
-        # SVT Kafka headers (REQUIRED by DB Agent)
+        # SVT Kafka headers
         headers = [
             ("kafka_correlationId", correlation_id.encode("utf-8")),
             ("kafka_replyTopic", self.DB_REPLY_TOPIC.encode("utf-8")),
@@ -211,6 +226,19 @@ class DBKafkaClient:
         print(f"   Messages seen: {messages_seen}")
         return None
 
+    def get_all_wafer_probe_projects(self, timeout: float = 15.0):
+        """Get all wafer probe projects from database"""
+        result = self.request_reply(
+            message_type="GetAllWaferProbeProjects",
+            data={},
+            reply_type="GetAllWaferProbeProjectsReply",
+            timeout=timeout
+        )
+
+        if result and result.get("status") == "Success":
+            return result.get("data", {}).get("items", [])
+        return []
+
     def get_all_wafer_probe_machines(self, timeout: float = 15.0):
         """Get all wafer probe machines from database"""
         result = self.request_reply(
@@ -224,17 +252,25 @@ class DBKafkaClient:
             return result.get("data", {}).get("items", [])
         return []
 
-    def get_all_wafer_probe_projects(self, timeout: float = 15.0):
-        """Get all wafer probe projects from database"""
+    def get_all_asic_by_id(self, asicId: int, timeout: float = 15.0):
+        """Get ASIC from database by ID"""
         result = self.request_reply(
-            message_type="GetAllWaferProbeProjects",
-            data={},
-            reply_type="GetAllWaferProbeProjectsReply",
+            message_type="GetAllAsics",
+            data={
+                "filter": {
+                    "ids": [asicId]
+                },
+                "pager": {
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            reply_type="GetAllAsicsReply",
             timeout=timeout
         )
 
         if result and result.get("status") == "Success":
-            return result.get("data", {}).get("items", [])
+            return result
         return []
 
     def update_machine_loaded_wafer(self, wp_machine_id: int, wafer_id, orientation, timeout: float = 15.0):

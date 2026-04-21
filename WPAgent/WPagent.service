@@ -7,7 +7,7 @@ Type=simple
 User=root
 
 WorkingDirectory=/data/SVTSoftware/SVTSW/WPAgent
-ExecStart=/usr/local/bin/python3.12 /data/SVTSoftware/SVTSW/WPAgent/main.py listen
+ExecStart=/usr/local/bin/python3.12 /data/SVTSoftware/SVTSW/WPAgent/main.py listen CERN
 
 Restart=always
 TimeoutStartSec=2
