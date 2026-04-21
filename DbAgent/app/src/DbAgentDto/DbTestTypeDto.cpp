@@ -22,6 +22,7 @@ namespace dbagent
     addColName("name");
 
     dutTypeList = std::make_shared<DbBaseListDto>("SvtTestTypeDUTTypeList", "testTypeId", "dutType", "dutTypes", true);
+    dutTypeList->addValidFilter("testTypeId");
     addRelationDto(dutTypeList.get());
 
     createAllRequest();

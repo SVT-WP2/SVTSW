@@ -140,7 +140,6 @@ int main(int argc, const char *argv[])
     dbagent::DbAgentService *dbAgent =
         SvtUtils::Singleton<dbagent::DbAgentService>::instance();
     dbAgent->setBrokerName(kafkaBroker);
-    dbAgent->setRecreateTopicsAction(setupConfig->getRecreateTopicAction());
     // dbAgent->setLogMessages(true);
     if (!dbAgent->configureService())
     {

@@ -14,7 +14,7 @@ THIS_SCRIPT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]:-0}")" &>/dev/null && pwd -P)
 
 update_git_tag() {
   # Define the output file
-  GIT_TAG_FILE="$THIS_SCRIPT_PATH/version/.git_tag"
+  GIT_TAG_FILE="$THIS_SCRIPT_PATH/app/version/.git_tag"
 
   # Check git is found
   command -v git >/dev/null 2>&1 || return 0
@@ -51,5 +51,5 @@ done
 update_git_tag
 
 [[ -z "${UPDATE}" ]] &&
-  cmake -B build -S . -DCMAKE_INSTALL_PREFIX=install -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  cmake -B build -S ./app -DCMAKE_INSTALL_PREFIX=install -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 [[ -n "$BUILD" ]] && cmake --build build -j"$(nproc)" --target install || exit 0

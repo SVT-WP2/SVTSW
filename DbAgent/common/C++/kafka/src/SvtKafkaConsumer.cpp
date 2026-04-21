@@ -40,11 +40,12 @@ bool SvtKafkaConsumer::createConsumer()
    * Set configuration properties
    */
   Properties props({{"bootstrap.servers", mBroker}});
+  props.put("enable.auto.commit", "false");
   for (const auto &[key, value] : mConfigs)
   {
     props.put(key, value);
   }
-  mConsumer = std::make_unique<KafkaConsumer>(props);
+  mConsumer = std::make_shared<KafkaConsumer>(props);
   if (!mConsumer)
   {
     logError("Failed creating kafka consumer");
@@ -82,6 +83,11 @@ void SvtKafkaConsumer::pull()
       }
       mKafkaComsumeCb(record);
     }
+    //! commit asynchronous if there are records
+    if (!records.empty())
+    {
+      mConsumer->commitAsync();
+    }
   }
 }
 
@@ -91,6 +97,9 @@ bool SvtKafkaConsumer::stop(const bool suspended)
   logWarning(std::string((suspended) ? "Suspending" : "Stoping") + " consumer " + mConsumer->name());
   mThread.stop(suspended);
   if (mConsumer)
+  {
+    mConsumer->commitSync();
     mConsumer->close();
+  }
   return true;
 }

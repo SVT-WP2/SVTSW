@@ -29,7 +29,6 @@ namespace dbagent
     addColName("serialNumber");
     addColName("generalLocation");
 
-    addValidFilter("ids", "id");
     addValidFilter("generalLocation");
     addValidFilter("serialNumber");
 

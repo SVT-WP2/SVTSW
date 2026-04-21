@@ -13,7 +13,6 @@
 #include "Config/ConfigDbAgentSetup.h"
 #include "SvtJsonUtils.h"
 #include "SvtLogger.h"
-#include "SvtUtilities.h"
 
 using json = nlohmann::json;
 namespace config
@@ -63,18 +62,6 @@ namespace config
       {
         SvtUtils::readStringVariable(it.value(), "server", mKafkaServer);
         SvtUtils::readStringVariable(it.value(), "port", mKaflaPort);
-
-        std::string recreateTopics;
-        SvtUtils::readStringVariable(it.value(), "recreateTopics", recreateTopics, false);
-        if (recreateTopics.empty())
-        {
-          mRecreateTopicAction = SvtUtils::HEARTBEAT_ONLY;
-        }
-        else
-        {
-          const auto &action = magic_enum::enum_cast<SvtUtils::RecreateTopics>(recreateTopics);
-          mRecreateTopicAction = action.has_value() ? action.value() : SvtUtils::HEARTBEAT_ONLY;
-        }
       }
       if (it.key() == "database")
       {

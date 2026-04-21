@@ -30,10 +30,9 @@ namespace dbagent
     addColName("foundry");
     addColName("technology");
 
-    addValidFilter("ids", "id");
-
     waferTypeMapDto = std::make_shared<DbBaseListDto>("WaferTypeMap", "waferTypeId", "waferMap");
     waferTypeMapDto->addColNameInJson("waferMap");
+    waferTypeMapDto->addValidFilter("waferTypeId");
 
     createAllRequest();
   }

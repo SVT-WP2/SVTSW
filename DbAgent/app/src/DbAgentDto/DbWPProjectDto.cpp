@@ -24,8 +24,6 @@ namespace dbagent
     addColName("homeDie");
     addColName("local2GlobalMap");
 
-    addValidFilter("ids", "id");
-
     createAllRequest();
   }
 

@@ -60,29 +60,22 @@ namespace dbagent
     void setBrokerName(const std::string &name) { mBrokerName = name; }
     std::string &getBrokerName() { return mBrokerName; }
 
-    void setRecreateTopicsAction(const SvtUtils::RecreateTopics &action) { mRecreateToipic = action; }
-    const auto &getRecreateTopicAction() const { return mRecreateToipic; }
-
    private:
     void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
                   const SvtKafka::SvtKafkaMsgStatus &status);
-
-    void createTopics();
 
     bool createConsumer_request();
     bool createProducer_request_reply();
     bool createProducer_heartbeat();
 
-    std::unique_ptr<SvtKafka::SvtKafkaAdminClient> mAdminClient;
-    std::unique_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
-    std::unique_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
-    std::unique_ptr<SvtKafka::SvtKafkaProducer> mProducer_heartbeat;
+    std::shared_ptr<SvtKafka::SvtKafkaAdminClient> mAdminClient;
+    std::shared_ptr<SvtKafka::SvtKafkaConsumer> mConsumer_request;
+    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_request_reply;
+    std::shared_ptr<SvtKafka::SvtKafkaProducer> mProducer_heartbeat;
 
     DbAgentRequest *mRequest = SvtUtils::Singleton<DbAgentRequest>::instance();
 
     std::string mBrokerName;
-
-    SvtUtils::RecreateTopics mRecreateToipic = SvtUtils::HEARTBEAT_ONLY;
 
     bool log_messages = false;
   };

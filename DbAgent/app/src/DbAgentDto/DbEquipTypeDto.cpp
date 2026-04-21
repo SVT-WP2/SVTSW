@@ -17,8 +17,6 @@ namespace dbagent
     addColName("id");
     addColName("name");
 
-    addValidFilter("ids", "id");
-
     createAllRequest();
   }
 

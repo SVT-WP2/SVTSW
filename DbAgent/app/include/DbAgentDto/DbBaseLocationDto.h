@@ -26,6 +26,8 @@ namespace dbagent
       addColName("date");
       addColName("username");
       addColName("note");
+
+      addValidFilter(std::string(id_name));
     };
     ~DbLocationDto() = default;
 

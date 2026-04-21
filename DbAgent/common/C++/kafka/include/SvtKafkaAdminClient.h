@@ -7,8 +7,8 @@
  * @brief Admin Client
  */
 
+#include <kafka/Properties.h>
 #include <memory>
-#include "SvtUtilities.h"
 
 #include <kafka/AdminClient.h>
 
@@ -25,10 +25,10 @@ namespace SvtKafka
 
     auto getAdmin() const { return mAdminClient.get(); }
 
-    void createTopics(const Map& topicMap, const SvtUtils::RecreateTopics& action = SvtUtils::HEARTBEAT_ONLY);
+    // void createTopics(const std::string& topic, const kafka::Properties& props);
 
    private:
-    std::unique_ptr<kafka::clients::admin::AdminClient> mAdminClient;
+    std::shared_ptr<kafka::clients::admin::AdminClient> mAdminClient;
 
     std::string mBroker;
   };

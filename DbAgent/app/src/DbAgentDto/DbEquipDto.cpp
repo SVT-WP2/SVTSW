@@ -20,8 +20,6 @@ namespace dbagent
     addColName("generalLocation");
     addColName("specification");
 
-    addValidFilter("ids", "id");
-
     createAllRequest();
   }
 
