@@ -41,9 +41,28 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers='svmithi02:9096', group_id='wafer-executor'):
+    def __init__(self, bootstrap_servers=None,
+                 group_id='wafer-executor'):  # ← CHANGED: Added bootstrap_servers parameter
+        """
+        Initialize Kafka client
 
-        self.bootstrap_servers = bootstrap_servers
+        Args:
+            bootstrap_servers: Kafka broker address (e.g., "svmithi02:9096")
+                              If None, uses default
+            group_id: Consumer group ID
+        """
+        # ============================================================
+        # NEW: Use provided broker or fallback to default
+        # ============================================================
+        if bootstrap_servers:
+            self.bootstrap_servers = bootstrap_servers
+            print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
+        else:
+            # Fallback to default
+            self.bootstrap_servers = 'svmithi02:9096'
+            print(f"🔌 Using default Kafka broker: {self.bootstrap_servers}")
+        # ============================================================
+
         self.group_id = group_id
 
         #  topics
@@ -55,13 +74,11 @@ class KafkaClient:
 
         self.producer = KafkaProducer({
             'bootstrap.servers': self.bootstrap_servers,
-            'linger.ms': 0,           # ← was 10: no batching delay for interactive commands
-            'compression.type': 'none', # ← was lz4: unnecessary for small control messages
+            'linger.ms': 0,
+            'compression.type': 'none',
         })
-        
-        # ← request_consumer removed from here entirely
-        self.request_consumer = None
 
+        self.request_consumer = None
         self.reply_consumer = None
         self._initialize_reply_consumer()
 
@@ -70,7 +87,7 @@ class KafkaClient:
         self.heartbeat_monitor = ListenerHealthMonitor(self.health_check)
 
         self.cache_health_check = CacheHealthCheck(bootstrap_servers=self.bootstrap_servers)
-        self.cache_heartbeat    = CacheHealthMonitor(self.cache_health_check, on_heartbeat=cache.cache_command)
+        self.cache_heartbeat = CacheHealthMonitor(self.cache_health_check, on_heartbeat=cache.cache_command)
 
     def _ensure_topic_exists(self, topic_name, num_partitions=1, replication_factor=1):
         admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
@@ -95,10 +112,6 @@ class KafkaClient:
         if err:
             print(f"[❌ Delivery failed] {err}")
 
-    # -----------------------------------------
-    # Reply consumer (sender side)
-    # -----------------------------------------
-
     def _initialize_reply_consumer(self):
         if self.reply_consumer is not None:
             return
@@ -116,19 +129,12 @@ class KafkaClient:
 
         partition = TopicPartition(self.reply_topic, 0)
         self.reply_consumer.assign([partition])
-
-        # Must poll once to let librdkafka initialize the partition state
         self.reply_consumer.poll(1.0)
 
-        # Now seek to end is safe
         low, high = self.reply_consumer.get_watermark_offsets(partition, timeout=5.0)
         self.reply_consumer.seek(TopicPartition(self.reply_topic, 0, high))
         print(f"✅ Reply consumer ready (manual assign, offset={high})")
 
-
-    # -----------------------------------------
-    # Param conversion helpers
-    # -----------------------------------------
     def _convert_param_types(self, params):
         converted = {}
         for k, v in params.items():
@@ -138,27 +144,20 @@ class KafkaClient:
                 converted[k] = v
         return converted
 
-    # -----------------------------------------
-    # SEND (client mode)
-    # -----------------------------------------
     def send(
-        self,
-        command,
-        params=None,
-        *,
-        data=None,
-        repeat=1,
-        delay=0,
-        wait_for_reply=True,
-        timeout=30.0
+            self,
+            command,
+            params=None,
+            *,
+            data=None,
+            repeat=1,
+            delay=0,
+            wait_for_reply=True,
+            timeout=30.0
     ):
-        # Backward/forward compatibility:
-        # - old callers: send(command, params=...)
-        # - WPAgent.py: send(command=..., data=...)
         if data is not None:
             params = data
 
-        # --- normalize params ---
         if isinstance(params, str):
             if command == "RunSequencer" and params.endswith(".json"):
                 params = {"filepath": params}
@@ -180,21 +179,16 @@ class KafkaClient:
         for i in range(repeat):
             correlation_id = str(uuid.uuid4())
 
-            # Step 1: Create fresh consumer and wait for partition assignment
-            # MUST happen before producer.flush() to avoid the race condition
-            # where fast commands reply before the consumer is ready.
             reply_consumer = None
             if wait_for_reply:
                 reply_consumer = self._get_persistent_reply_consumer()
 
                 deadline = time.time() + 5.0
                 while not reply_consumer.assignment() and time.time() < deadline:
-                    reply_consumer.poll(0.05)   # keep the group alive / trigger assignment
+                    reply_consumer.poll(0.05)
                 if not reply_consumer.assignment():
                     print("⚠️  Reply consumer not assigned — replies may be missed")
 
-
-            # Step 2: Build payload and headers
             payload = {"type": command, "data": params}
             headers = [(KAFKA_HEADER__CORRELATION_ID, correlation_id.encode("utf-8"))]
 
@@ -210,7 +204,6 @@ class KafkaClient:
                 result=None,
             )
 
-            # Step 3: Publish the command — consumer is already assigned and ready
             self.producer.produce(
                 self.request_topic,
                 value=json.dumps(payload).encode("utf-8"),
@@ -219,13 +212,11 @@ class KafkaClient:
             )
             self.producer.flush()
 
-            # Step 4: Wait for reply on the dedicated per-request consumer
             if wait_for_reply:
                 print(f"📤 Command sent: {command}")
                 print(f"⏳ Waiting for response (timeout: {timeout}s)...")
 
                 response = self._wait_for_reply_on(reply_consumer, correlation_id, timeout)
-                #reply_consumer.close()  # always clean up, even on timeout
 
                 if response:
                     results.append(response)
@@ -233,7 +224,6 @@ class KafkaClient:
                     status = response.get("status", "unknown")
                     rtype = response.get("type", "UnknownReply")
 
-                    # Extract message for display (handles both ResponseBuilder and old format)
                     display_output = None
 
                     if "data" in response and isinstance(response["data"], dict):
@@ -277,24 +267,16 @@ class KafkaClient:
 
         return results if repeat > 1 else (results[0] if results else None)
 
-
-    # -----------------------------------------
-    # LISTEN (server mode)
-    # -----------------------------------------
     def listen(self, poll_timeout=0.1):
-        """
-        Listen for and process Kafka messages (LISTENER MODE).
-        Silent mode: no command prints, only errors are logged.
-        """
+        """Listen for and process Kafka messages (LISTENER MODE)."""
 
-        # Create request consumer HERE, only when actually listening
         self.request_consumer = KafkaConsumer({
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': self.group_id,
             'auto.offset.reset': 'latest',
             'enable.auto.commit': True,
-            'session.timeout.ms': 10000,    # ← was 30000: detect dead consumers faster
-            'heartbeat.interval.ms': 3000,  # ← was 10000: must be < session.timeout/3
+            'session.timeout.ms': 10000,
+            'heartbeat.interval.ms': 3000,
             'max.poll.interval.ms': 300000,
         })
         self.request_consumer.subscribe([self.request_topic])
@@ -313,7 +295,6 @@ class KafkaClient:
 
         try:
             while True:
-
                 msg = self.request_consumer.poll(poll_timeout)
 
                 if msg is None:
@@ -328,7 +309,7 @@ class KafkaClient:
                     )
                     continue
 
-                executor.submit(self._handle_message, msg)  # non-blocking
+                executor.submit(self._handle_message, msg)
 
         except KeyboardInterrupt:
             pass
@@ -340,12 +321,8 @@ class KafkaClient:
             if self.reply_consumer:
                 self.reply_consumer.close()
 
-
     def _handle_message(self, msg):
-
         """Runs in a thread — executes command and sends reply."""
-        # move all the existing try/except logic from listen() here
-
         try:
             payload = json.loads(msg.value().decode("utf-8"))
 
@@ -448,27 +425,18 @@ class KafkaClient:
             except Exception:
                 pass
 
-
-
-
-    # -----------------------------------------
-    # (Optional) request_reply helper for other services
-    #
-    # -----------------------------------------
-
     def _get_persistent_reply_consumer(self):
         if self.reply_consumer is None:
             self.reply_consumer = KafkaConsumer({
                 'bootstrap.servers': self.bootstrap_servers,
                 'group.id': f'{self.group_id}-reply',
-                'auto.offset.reset': 'latest',          # ← was 'earliest', BUG
+                'auto.offset.reset': 'latest',
                 'enable.auto.commit': False,
                 'session.timeout.ms': 60000,
                 'max.poll.interval.ms': 120000,
-                'fetch.wait.max.ms': 50,               # ← reduce poll latency
+                'fetch.wait.max.ms': 50,
             })
             self.reply_consumer.subscribe([self.reply_topic])
-            # Wait for assignment before returning
             start = time.time()
             while time.time() - start < 10.0:
                 self.reply_consumer.poll(0.1)
@@ -494,11 +462,7 @@ class KafkaClient:
             reply_partition: int = 0,
             match_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        Generic request-reply for other services (like DB agent), SVT convention:
-          - reply topic is request_topic + ".reply"
-          - correlation via kafka headers
-        """
+        """Generic request-reply for other services (like DB agent)"""
         reply_topic = f"{request_topic}.reply"
         self._ensure_topic_exists(request_topic)
         self._ensure_topic_exists(reply_topic)
@@ -508,8 +472,6 @@ class KafkaClient:
 
         correlation_id = str(uuid.uuid4())
 
-        # Ensure convention request body {type,data} if caller didn't do it
-        # If you already pass {type,data}, this will keep it.
         if "type" in payload and ("data" in payload or "params" in payload):
             body = payload
             if "params" in body and "data" not in body:
@@ -552,12 +514,10 @@ class KafkaClient:
 
         return None
 
-
-
     def _wait_for_reply_on(self, consumer, correlation_id: str, timeout: float):
         start_time = time.time()
         while time.time() - start_time < timeout:
-            msg = consumer.poll(0.05)   # ← was 0.5, drop to 50ms
+            msg = consumer.poll(0.05)
             if msg is None or msg.error():
                 continue
             try:
@@ -568,4 +528,3 @@ class KafkaClient:
             except Exception:
                 continue
         return None
-

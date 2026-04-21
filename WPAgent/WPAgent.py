@@ -17,63 +17,21 @@ from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
 class WaferProberAgent:
     def __init__(self):
-        self.kafka = KafkaClient()
-        self.health_check = ListenerHealthCheck()
+        self.kafka = None  # Initialize later with config
+        self.health_check = None  # ← CHANGED: Don't initialize here (needs broker from config)
         self.wp_agent_name = None
 
     def send(self, command, data=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
         """
         Send a command via Kafka and wait for response.
-        (Same as before - no changes)
         """
-        # ========================================================================
-        # SPECIAL HANDLING: Initialize with withDB parameter
-        # ========================================================================
-
-        # if command == "Initialize" and data:
-        #     # Normalize params to dict if needed
-        #     if isinstance(data, str):
-        #         param_dict = {}
-        #         for item in data.split():
-        #             if '=' in item:
-        #                 k, v = item.split('=', 1)
-        #                 param_dict[k] = v
-        #         data = param_dict
-
-        #     # Check for withDB parameter
-        #     if isinstance(data, dict):
-        #         withDB_value = str(data.get('withDB', '')).lower()
-        #         if withDB_value in ['true', '1', 'yes']:
-        #             print("🔍 Database initialization requested - handling producer-side...")
-
-        #             try:
-        #                 from services.WPInitializationService import WPInitializationService
-
-        #                 init_service = WPInitializationService(self)
-        #                 projectName = data.get('projectName')
-        #                 force_value = str(data.get('force', '')).lower()
-        #                 force = force_value in ['true', '1', 'yes']
-        #                 db_timeout = float(data.get('db_timeout', 15.0))
-
-        #                 return init_service.initialize_from_database(
-        #                     force=force,
-        #                     db_timeout=db_timeout
-        #                 )
-        #             except ImportError as e:
-        #                 return {
-        #                     "status": "error",
-        #                     "output": f"initialization_service.py not found. Error: {e}"
-        #                 }
-        #             except Exception as e:
-        #                 import traceback
-        #                 traceback.print_exc()
-        #                 return {
-        #                     "status": "error",
-        #                     "output": f"Database initialization failed: {str(e)}"
-        #                 }
+        # Ensure Kafka is initialized
+        if self.kafka is None:
+            print(f"⚠️  Kafka not initialized, using defaults")
+            self.kafka = KafkaClient()
 
         # Check listener health before sending
-        if check_health:
+        if check_health and self.health_check:  # ← CHANGED: Added check for None
             is_alive, age = self.health_check.is_listener_alive(timeout=2.0)
 
             if not is_alive:
@@ -114,6 +72,10 @@ class WaferProberAgent:
 
     def send_async(self, command, data=None, repeat=1, delay=0):
         """Send command without waiting for reply"""
+        # Ensure Kafka is initialized
+        if self.kafka is None:
+            self.kafka = KafkaClient()
+
         print(f"📤 Sending '{command}' (async - no reply expected)")
         return self.kafka.send(
             command=command,
@@ -131,7 +93,7 @@ class WaferProberAgent:
             config_name: Name of config (e.g., "CERN", "MOCK")
 
         Returns:
-            dict: Config with machineId, address, port, machineType
+            dict: Config with machineId, address, port, machineType, kafka_broker
         """
         config_path = "configs/WPProbesConfigs.json"
 
@@ -155,32 +117,53 @@ class WaferProberAgent:
 
     def _load_probe_config_with_db(self, config_name):
         """
-        Load probe station config - tries DB first, automatically falls back to JSON file
+        Load probe station config - DB for machine info, file for kafka_broker
 
         Args:
             config_name: Name of config/location (e.g., "CERN", "MOCK")
 
         Returns:
-            dict: Config with machineId, address, port, machineType
+            dict: Config with machineId, address, port, machineType, kafka_broker
         """
-        # Always try database first
         print(f"🔍 Loading configuration for '{config_name}'...")
-        config = self._load_from_database(config_name, timeout=5.0)
 
-        if config:
-            print(f"   ✅ Loaded from database")
-            return config
+        # Try database first for machine info
+        db_config = self._load_from_database(config_name, timeout=5.0)
 
-        # Fallback to config file
+        # ALWAYS load config file to get kafka_broker
+        config_path = "configs/WPProbesConfigs.json"
+        file_config = None
+
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    all_configs = json.load(f)
+                    if config_name in all_configs:
+                        file_config = all_configs[config_name]
+            except Exception as e:
+                print(f"   ⚠️  Warning: Could not load config file: {e}")
+
+        # If we got DB config, merge with kafka_broker from file
+        if db_config:
+            print(f"   ✅ Loaded machine info from database")
+
+            # Override kafka_broker from config file
+            if file_config and 'kafka_broker' in file_config:
+                db_config['kafka_broker'] = file_config['kafka_broker']
+                print(f"   ✅ Using kafka_broker from config file: {file_config['kafka_broker']}")
+            else:
+                print(f"   ⚠️  No kafka_broker in config file, using default")
+
+            return db_config
+
+        # Fallback: use config file entirely
         print(f"   ℹ️  Database unavailable or location not found")
         print(f"   📋 Loading from config file...")
-
-        config_path = "configs/WPProbesConfigs.json"
 
         if not os.path.exists(config_path):
             raise FileNotFoundError(
                 f"Config file not found: {config_path}\n"
-                f"Please create configs/WPProbesConfigs.json or add '{config_name}' to database"
+                f"Please create configs/WPProbesConfigs.json"
             )
 
         with open(config_path, 'r') as f:
@@ -199,6 +182,8 @@ class WaferProberAgent:
     def _load_from_database(self, location_name, timeout=5.0):
         """
         Load prober configuration from database (silent - no prints on failure)
+
+        NOTE: Does NOT include kafka_broker - that always comes from config file
 
         Args:
             location_name: Location name (e.g., "CERN")
@@ -221,7 +206,7 @@ class WaferProberAgent:
             machine_name = machine_data.get("name", "").lower()
             host_name = machine_data.get("hostName", "localhost")
 
-            # Build full address: wp<name>01.<hostname>
+            # Build full address: wp<n>01.<hostname>
             if machine_name and host_name and host_name != "localhost":
                 full_address = f"{machine_name}01.{host_name}"
             else:
@@ -229,12 +214,14 @@ class WaferProberAgent:
                 full_address = host_name
 
             # Convert DB format to config format
+            # NOTE: kafka_broker is NOT included - always from config file
             config = {
                 "address": full_address,
                 "port": machine_data.get("connectionPort", 35555),
                 "machineType": machine_data.get("software", "sentio"),
                 "machineId": machine_data.get("id", 0),
                 "description": machine_data.get("generalLocation", "")
+                # ← NO kafka_broker here - always from file!
             }
 
             return config
@@ -264,10 +251,8 @@ class WaferProberAgent:
             port = config.get('port', 35555)
             address_host = config.get('address', 'localhost')
             full_address = f"{address_host}:{port}"
-            # from WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-            #
+
             g = SvtWPAagentGlobalParameters.getInstance()
-            # g.wpAgentName= "CERN"
 
             # Prepare initialization parameters
             init_params = {
@@ -288,7 +273,6 @@ class WaferProberAgent:
             print(f"   Machine ID: {init_params['machine_id']}")
 
             g.set_machine_id(init_params['machine_id'])
-
 
             # Call the initialization function directly
             result = svt_initialise_wp(**init_params)
@@ -351,6 +335,12 @@ class WaferProberAgent:
                 print(f"   Type: {config.get('machineType', 'sentio')}")
                 if 'description' in config:
                     print(f"   Description: {config['description']}")
+
+                # Show kafka_broker
+                kafka_broker = config.get('kafka_broker')
+                if kafka_broker:
+                    print(f"   Kafka Broker: {kafka_broker}")
+
                 print()
 
                 # Set wpAgentName in global parameters first
@@ -361,6 +351,52 @@ class WaferProberAgent:
                     print(f"✓ Set wpAgentName: {config_name}\n")
                 except Exception as e:
                     print(f"⚠️  Warning: Could not set wpAgentName: {e}\n")
+
+                # ============================================================
+                # NEW: Initialize health check with correct broker FIRST
+                # ============================================================
+                if kafka_broker:
+                    print(f"🔌 Initializing health check with broker from config...")
+                    print(f"   Broker: {kafka_broker}")
+                    self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker)
+                    print(f"   ✅ Health check initialized\n")
+                else:
+                    print(f"⚠️  No kafka_broker in config, using default for health check")
+                    self.health_check = ListenerHealthCheck()
+                # ============================================================
+
+                # ============================================================
+                # Initialize Kafka client with broker from config
+                # ============================================================
+                if kafka_broker:
+                    print(f"🔌 Initializing Kafka with broker from config...")
+                    print(f"   Broker: {kafka_broker}")
+                    self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
+                    print(f"   ✅ Kafka client initialized\n")
+
+                    # ============================================================
+                    # Also initialize DB Kafka client with same broker
+                    # ============================================================
+                    from services.WPDbKafkaClient import DBKafkaClient
+
+                    # Reset singleton if it was already created with default broker
+                    if DBKafkaClient._instance:
+                        try:
+                            DBKafkaClient._instance.close()
+                        except:
+                            pass
+                        DBKafkaClient._instance = None  # Reset singleton
+
+                    # Create new instance with correct broker
+                    print(f"🔌 Initializing DB Kafka Client...")
+                    print(f"   Broker: {kafka_broker}")
+                    db_client = DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
+                    print(f"   ✅ DB Kafka client initialized\n")
+                    # ============================================================
+                else:
+                    print(f"⚠️  No kafka_broker in config, using defaults")
+                    self.kafka = KafkaClient()
+                # ============================================================
 
                 # Auto-initialize prober connection
                 init_success = self._auto_initialize_prober(config_name, config)
@@ -390,6 +426,12 @@ class WaferProberAgent:
             print(f"   python main.py listen MOCK\n")
             print(f"   You will need to run Initialize command manually.\n")
 
+            # Initialize with defaults if no config
+            if self.kafka is None:
+                self.kafka = KafkaClient()
+            if self.health_check is None:
+                self.health_check = ListenerHealthCheck()
+
         # Start Kafka listener
         print(f"{'=' * 70}")
         print(f"  Starting Kafka Listener")
@@ -398,6 +440,10 @@ class WaferProberAgent:
 
     def check_listener_health(self):
         """Check if the listener is alive and responding"""
+        # Initialize health check if needed
+        if self.health_check is None:
+            self.health_check = ListenerHealthCheck()
+
         print("🔍 Checking listener health...")
         is_alive, age = self.health_check.is_listener_alive(timeout=2.0)
 
@@ -419,10 +465,18 @@ class WaferProberAgent:
 
     def wait_for_listener(self, max_wait=30.0):
         """Wait until listener comes online"""
+        # Initialize health check if needed
+        if self.health_check is None:
+            self.health_check = ListenerHealthCheck()
+
         return self.health_check.wait_for_listener(max_wait=max_wait)
 
     def send_force(self, command, data=None, repeat=1, delay=0, timeout=30.0):
         """Force send a command without checking listener health"""
+        # Ensure Kafka is initialized
+        if self.kafka is None:
+            self.kafka = KafkaClient()
+
         print(f"⚠️  Sending '{command}' WITHOUT health check (forced)")
         return self.kafka.send(
             command=command,
