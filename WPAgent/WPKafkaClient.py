@@ -41,48 +41,50 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers=None,
-                 group_id='wafer-executor'):  # ← CHANGED: Added bootstrap_servers parameter
+    def __init__(self, bootstrap_servers=None, group_id='wafer-executor'):
         """
         Initialize Kafka client
 
         Args:
-            bootstrap_servers: Kafka broker address (e.g., "svmithi02:9096")
+            bootstrap_servers: Kafka broker address (e.g., "svmithi02:9092")
                               If None, uses default
             group_id: Consumer group ID
         """
-        # ============================================================
-        # NEW: Use provided broker or fallback to default
-        # ============================================================
+        # Use provided broker or fallback to default
         if bootstrap_servers:
             self.bootstrap_servers = bootstrap_servers
             print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
         else:
-            # Fallback to default
             self.bootstrap_servers = 'svmithi02:9096'
             print(f"🔌 Using default Kafka broker: {self.bootstrap_servers}")
-        # ============================================================
 
         self.group_id = group_id
 
-        #  topics
+        # Topics
         self.request_topic = 'svt.wp-agent.request'
-        self.reply_topic = f'{self.request_topic}.reply'  # svt.wp-agent.request.reply
+        self.reply_topic = f'{self.request_topic}.reply'
 
         self._ensure_topic_exists(self.request_topic)
         self._ensure_topic_exists(self.reply_topic)
 
-        self.producer = KafkaProducer({
+        # Producer configuration
+        producer_config = {
             'bootstrap.servers': self.bootstrap_servers,
             'linger.ms': 0,
             'compression.type': 'none',
-        })
+            'client.id': f'wp-agent-producer-{uuid.uuid4().hex[:8]}',
+            # Disable localhost fallback
+            'broker.address.family': 'v4',  # Force IPv4 only
+            'socket.timeout.ms': 10000,
+            'api.version.request': True,
+        }
+        self.producer = KafkaProducer(producer_config)
 
         self.request_consumer = None
         self.reply_consumer = None
         self._initialize_reply_consumer()
 
-        # Initialize heartbeat monitoring
+        # Initialize heartbeat monitoring with correct broker
         self.health_check = ListenerHealthCheck(bootstrap_servers=self.bootstrap_servers)
         self.heartbeat_monitor = ListenerHealthMonitor(self.health_check)
 
@@ -90,7 +92,11 @@ class KafkaClient:
         self.cache_heartbeat = CacheHealthMonitor(self.cache_health_check, on_heartbeat=cache.cache_command)
 
     def _ensure_topic_exists(self, topic_name, num_partitions=1, replication_factor=1):
-        admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
+        admin_config = {
+            'bootstrap.servers': self.bootstrap_servers,
+            'broker.address.family': 'v4',  # Force IPv4 only
+        }
+        admin = AdminClient(admin_config)
         metadata = admin.list_topics(timeout=5)
 
         if topic_name not in metadata.topics:
@@ -118,14 +124,18 @@ class KafkaClient:
 
         from confluent_kafka import TopicPartition
 
-        self.reply_consumer = KafkaConsumer({
+        consumer_config = {
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': f'{self.group_id}-reply-{uuid.uuid4().hex[:8]}',
             'auto.offset.reset': 'latest',
             'enable.auto.commit': False,
             'fetch.wait.max.ms': 50,
             'socket.timeout.ms': 10000,
-        })
+            'client.id': f'wp-agent-reply-consumer-{uuid.uuid4().hex[:8]}',
+            # Disable localhost fallback
+            'broker.address.family': 'v4',  # Force IPv4 only
+        }
+        self.reply_consumer = KafkaConsumer(consumer_config)
 
         partition = TopicPartition(self.reply_topic, 0)
         self.reply_consumer.assign([partition])
@@ -270,7 +280,7 @@ class KafkaClient:
     def listen(self, poll_timeout=0.1):
         """Listen for and process Kafka messages (LISTENER MODE)."""
 
-        self.request_consumer = KafkaConsumer({
+        consumer_config = {
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': self.group_id,
             'auto.offset.reset': 'latest',
@@ -278,7 +288,11 @@ class KafkaClient:
             'session.timeout.ms': 10000,
             'heartbeat.interval.ms': 3000,
             'max.poll.interval.ms': 300000,
-        })
+            'client.id': f'wp-agent-listener-{uuid.uuid4().hex[:8]}',
+            # Disable localhost fallback
+            'broker.address.family': 'v4',  # Force IPv4 only
+        }
+        self.request_consumer = KafkaConsumer(consumer_config)
         self.request_consumer.subscribe([self.request_topic])
 
         executor = ThreadPoolExecutor(max_workers=4)
@@ -427,7 +441,7 @@ class KafkaClient:
 
     def _get_persistent_reply_consumer(self):
         if self.reply_consumer is None:
-            self.reply_consumer = KafkaConsumer({
+            consumer_config = {
                 'bootstrap.servers': self.bootstrap_servers,
                 'group.id': f'{self.group_id}-reply',
                 'auto.offset.reset': 'latest',
@@ -435,8 +449,13 @@ class KafkaClient:
                 'session.timeout.ms': 60000,
                 'max.poll.interval.ms': 120000,
                 'fetch.wait.max.ms': 50,
-            })
+                'client.id': f'wp-agent-persistent-reply-{uuid.uuid4().hex[:8]}',
+                # Disable localhost fallback
+                'broker.address.family': 'v4',  # Force IPv4 only
+            }
+            self.reply_consumer = KafkaConsumer(consumer_config)
             self.reply_consumer.subscribe([self.reply_topic])
+
             start = time.time()
             while time.time() - start < 10.0:
                 self.reply_consumer.poll(0.1)
