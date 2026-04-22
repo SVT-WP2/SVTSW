@@ -441,9 +441,6 @@ class ITS3Runner:
         else:
             log.info("  $ %s", cmd)
 
-        # if self.dry_run:
-        #     return 0
-
         show_output = self.cfg.get("show_cmd_output", True)
         log_output = self.cfg.get("log_cmd_output", True)
 
@@ -462,9 +459,8 @@ class ITS3Runner:
             if show_output:
                 tqdm.write(text, file=sys.stderr)
             if log_output:
-                # Skip logging lines that start with 'LIVE'
+                clean = re.sub(r'\x1b\[[0-9;]*m', '', text) # remove ANSI color codes 
                 if not text.lstrip().startswith("LIVE"):
-                    clean = re.sub(r'\x1b\[[0-9;]*m', '', text)
                     for fh in file_handlers:
                         fh.stream.write(clean + "\n")
                         fh.stream.flush()
@@ -476,7 +472,7 @@ class ITS3Runner:
     # ------------------------------------------------------------------
 
     def _wp_move_to_die(self, wp_coord: str, chip_type: str) -> bool:
-        """Full per-chip WP sequence:
+        """Full per-chip sequence:
         MoveChuckSeparation -> MoveChuckOffAxis -> MoveChuckRowColumn ->
         RunPTPA (optional) -> MoveChuckWide -> MoveChuckContact
         """
