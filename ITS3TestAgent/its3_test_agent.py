@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json5 as json
+import json
 import logging
 import os
 import re
@@ -177,7 +177,6 @@ class WPAgentClient:
     # High-level helpers used by the runner
     # ------------------------------------------------------------------
 
-    # -- safe commands (don't move the prober, OK during dry-run) --
     def user_login(self) -> dict:
         return self.send("UserLogIn")
 
@@ -210,6 +209,9 @@ class WPAgentClient:
 
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
+    
+    def move_chuck_center(self) -> dict:
+        return self.send("MoveChuckCenter")
 
     def move_chuck_off_axis(self) -> dict:
         return self.send("MoveChuckOffAxis")
@@ -549,6 +551,12 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("OpenProject failed for %s: %s", chip_type, resp)
             return False
+        resp = wp.move_chuck_center()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckCenter failed: %s", resp.get("output", resp))
+        resp = wp.auto_focus()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("AutoFocus failed: %s", resp.get("output", resp))
         resp = wp.find_home()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("FindHome failed after switching to %s project: %s", chip_type, resp)

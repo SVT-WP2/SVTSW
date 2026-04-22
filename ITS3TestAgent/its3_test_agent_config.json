@@ -27,8 +27,6 @@
   ],
 
   "Sequence": [
-"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
-// "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
-// "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_hsch_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
-]
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"]
 }

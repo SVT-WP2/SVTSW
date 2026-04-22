@@ -1,6 +1,6 @@
 DIE,"WP[col,row]",TEST
 BAM00,"[-3,0]",yes
-BAM01,"[-2,0]",yes
+BAM01,"[-2,0]",no
 BAM02,"[-1,0]",yes
 BAM03,"[0,0]",no
 BAM04,"[-4,1]",no
@@ -20,7 +20,7 @@ BAM17,"[-2,10]",no
 BAM18,"[-1,10]",no
 BAM19,"[0,10]",no
 SEG0,"[0,2]",no
-SEG1,"[0,1]",no
+SEG1,"[0,1]",yes
 SEG2,"[0,0]",no
 SEG3,"[0,-1]",no
 SEG4,"[0,-2]",no
