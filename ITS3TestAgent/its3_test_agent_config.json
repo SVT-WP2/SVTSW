@@ -2,7 +2,7 @@
   "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
   "build_dir": "build",
   "run_list": "run_list.csv",
-  "kafka_broker": "svmithi02:9096",
+  "kafka_broker": "svmithi02:9093",
   "kafka_ip_family": "v4",
   "wp_user": "user1",
   "wp_agent_name": "CERN",
@@ -12,7 +12,6 @@
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
   "reset_on_ptpa_failure": true,
-  "always_reopen_project": null,
   "re_enable_ptpa": true,
 
   "log_cmd_output": true,

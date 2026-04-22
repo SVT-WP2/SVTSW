@@ -226,14 +226,6 @@ class WPAgentClient:
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
 
-    def step_next_die(self) -> dict:
-        return self.send("MoveChuckNextDie")
-
-    def initialize(self, params: dict | None = None) -> dict:
-        """Initialize the WPAgent.  Params depend on mode (manual / DB / serial).
-        Kept as a thin passthrough — caller fills in the params dict."""
-        return self.send("Initialize", params or {}, timeout=60.0)
-
     def is_listener_alive(self, timeout: float = 2.0) -> tuple[bool, float]:
         """Check if the WPAgent listener is alive via the heartbeat topic.
 
@@ -417,9 +409,6 @@ class ITS3Runner:
         setup_script = self.mosaix_root / "setup.sh"
         log.info("Sourcing %s load ...", setup_script)
 
-        # if self.dry_run:
-        #     self._env = dict(os.environ)
-        #     return self._env
 
         t0 = time.time()
         result = subprocess.run(
@@ -500,13 +489,6 @@ class ITS3Runner:
 
         if self.dry_run:
             log.info("  -> WPAgent  MoveChuckSeparation (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckOffAxis (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckRowColumn  col=%d row=%d (DUMMY)", col, row)
-            ptpa_key = f"run_ptpa_{chip_type.lower()}"
-            if self.cfg.get(ptpa_key, False):
-                log.info("  -> WPAgent  RunPTPA (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckWide (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckContact (DUMMY)")
             return True
 
         wp = self._wp_agent()
@@ -526,15 +508,6 @@ class ITS3Runner:
 
         ptpa_key = f"run_ptpa_{chip_type.lower()}"
         if self.cfg.get(ptpa_key, False):
-            # if self.cfg.get("always_reopen_project", False):
-            #     project_key = f"wp_project_{chip_type.lower()}"
-            #     project_name = self.cfg.get(project_key, "")
-            #     if project_name:
-            #         log.info("Reopening project before PTPA: %s", project_name)
-            #         resp = wp.open_project(project_name)
-            #         if resp.get("status", "").lower() not in ("success", "ok"):
-            #             log.warning("OpenProject before PTPA failed: %s", resp)
-            #             return False
             if self.cfg.get("re_enable_ptpa", False):
                 resp = wp.disable_ptpa()
                 if resp.get("status", "").lower() not in ("success", "ok"):
@@ -564,6 +537,27 @@ class ITS3Runner:
             return False
 
         return True
+    
+    def _change_wp_project(self, chip_type: str, new_project: str) -> bool:
+        log.info("Preparing to switch WP project: %s -> %s (%s)",
+                             self._current_project_type, chip_type, new_project)
+        wp = self._wp_agent()
+        resp = wp.go_to_separation()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
+        resp = wp.move_chuck_off_axis()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+        log.info("Switching WP project: %s -> %s (%s)",
+                    self._current_project_type, chip_type, new_project)
+        resp = wp.open_project(new_project)
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("OpenProject failed for %s: %s", chip_type, resp)
+        resp = wp.find_home()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+            return False
+
 
     # ------------------------------------------------------------------
 
@@ -637,23 +631,25 @@ class ITS3Runner:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
                 if new_project and not self.dry_run:
-                    log.info("Preparing to switch WP project: %s -> %s (%s)",
-                             self._current_project_type, chip_type, new_project)
-                    wp = self._wp_agent()
-                    resp = wp.go_to_separation()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
-                    resp = wp.move_chuck_off_axis()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
-                    log.info("Switching WP project: %s -> %s (%s)",
-                             self._current_project_type, chip_type, new_project)
-                    resp = wp.open_project(new_project)
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.error("OpenProject failed for %s: %s", chip_type, resp)
-                    resp = wp.find_home()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+                    # log.info("Preparing to switch WP project: %s -> %s (%s)",
+                    #          self._current_project_type, chip_type, new_project)
+                    # wp = self._wp_agent()
+                    # resp = wp.go_to_separation()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
+                    # resp = wp.move_chuck_off_axis()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+                    # log.info("Switching WP project: %s -> %s (%s)",
+                    #          self._current_project_type, chip_type, new_project)
+                    # resp = wp.open_project(new_project)
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.error("OpenProject failed for %s: %s", chip_type, resp)
+                    # resp = wp.find_home()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+                    if not self._change_wp_project(chip_type, new_project):
+                        log.error("Failed to switch to %s project, skipping chip", chip_type)
                         continue
                 elif self.dry_run and self._current_project_type is not None:
                     log.info("Switching WP project: %s -> %s (DUMMY)",
