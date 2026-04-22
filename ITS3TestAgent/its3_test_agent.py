@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
+import json5 as json
 import logging
 import os
 import re
@@ -397,7 +397,6 @@ class ITS3Runner:
             log.error("InitProbing failed: %s", resp)
             return False
 
-
         return True
 
     # ------------------------------------------------------------------
@@ -707,20 +706,15 @@ class ITS3Runner:
             wp = self._wp_agent()
 
             # --- park the prober ---
-            if self.dry_run:
-                log.info("  -> WPAgent  MoveChuckSeparation (DUMMY)")
-                log.info("  -> WPAgent  MoveChuckOffAxis (DUMMY)")
-                log.info("  -> WPAgent  MoveChuckHome (DUMMY)")
-            else:
-                resp = wp.go_to_separation()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckSeparation: %s", resp)
-                resp = wp.move_chuck_off_axis()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckOffAxis: %s", resp)
-                resp = wp.move_chuck_home()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckHome: %s", resp)
+            resp = wp.go_to_separation()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckSeparation: %s", resp)
+            resp = wp.move_chuck_off_axis()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckOffAxis: %s", resp)
+            resp = wp.move_chuck_home()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckHome: %s", resp)
 
             # --- logout last ---
             resp = wp.user_logout()
@@ -730,7 +724,6 @@ class ITS3Runner:
             else:
                 log.warning("UserLogOut: %s", resp)
         return 0
-
 
 # ---------------------------------------------------------------------------
 # CLI
