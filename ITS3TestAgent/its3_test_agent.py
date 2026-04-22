@@ -553,10 +553,25 @@ class ITS3Runner:
         resp = wp.open_project(new_project)
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("OpenProject failed for %s: %s", chip_type, resp)
+            return False
         resp = wp.find_home()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
             return False
+        return True
+        
+    def _remove_daq_status_file(self) -> None:
+        daq_status_path = self.cfg.get("daq_status_file", "")
+        if daq_status_path:
+            daq_status_path_obj = self.mosaix_root / daq_status_path
+            try:
+                os.remove(daq_status_path_obj)
+                log.info("Removed DAQ status file: %s", daq_status_path_obj)
+            except FileNotFoundError:
+                log.info("DAQ status file not found (already removed?): %s", daq_status_path_obj)
+                pass
+            except Exception as exc:
+                log.warning("Failed to remove DAQ status file %s: %s", daq_status_path_obj, exc)
 
 
     # ------------------------------------------------------------------
@@ -671,17 +686,7 @@ class ITS3Runner:
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
                 if self.cfg.get("remove_daq_status_file", False):
-                    daq_status_path = self.cfg.get("daq_status_file", "")
-                    if daq_status_path:
-                        daq_status_path_obj = self.mosaix_root / daq_status_path
-                        try:
-                            os.remove(daq_status_path_obj)
-                            log.info("Removed DAQ status file: %s", daq_status_path_obj)
-                        except FileNotFoundError:
-                            log.info("DAQ status file not found (already removed?): %s", daq_status_path_obj)
-                            pass
-                        except Exception as exc:
-                            log.warning("Failed to remove DAQ status file %s: %s", daq_status_path_obj, exc)
+                    self._remove_daq_status_file()
                 cmd = cmd_template.format(**tvars)
                 rc = self._run_cmd(cmd, label=chip_name)
                 if rc != 0:
