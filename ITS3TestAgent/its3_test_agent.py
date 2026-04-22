@@ -473,10 +473,12 @@ class ITS3Runner:
             if show_output:
                 tqdm.write(text, file=sys.stderr)
             if log_output:
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', text)
-                for fh in file_handlers:
-                    fh.stream.write(clean + "\n")
-                    fh.stream.flush()
+                # Skip logging lines that start with 'LIVE'
+                if not text.lstrip().startswith("LIVE"):
+                    clean = re.sub(r'\x1b\[[0-9;]*m', '', text)
+                    for fh in file_handlers:
+                        fh.stream.write(clean + "\n")
+                        fh.stream.flush()
         proc.wait()
         if proc.returncode != 0:
             log.error("Command exited with code %d", proc.returncode)
@@ -645,7 +647,7 @@ class ITS3Runner:
                     if resp.get("status", "").lower() not in ("success", "ok"):
                         log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
                     log.info("Switching WP project: %s -> %s (%s)",
-                             self._current_project_type, chip_type, new_project)  
+                             self._current_project_type, chip_type, new_project)
                     resp = wp.open_project(new_project)
                     if resp.get("status", "").lower() not in ("success", "ok"):
                         log.error("OpenProject failed for %s: %s", chip_type, resp)
@@ -672,6 +674,18 @@ class ITS3Runner:
             # --- run sequence commands ---
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
+                if self.cfg.get("remove_daq_status_file", False):
+                    daq_status_path = self.cfg.get("daq_status_file", "")
+                    if daq_status_path:
+                        daq_status_path_obj = self.mosaix_root / daq_status_path
+                        try:
+                            os.remove(daq_status_path_obj)
+                            log.info("Removed DAQ status file: %s", daq_status_path_obj)
+                        except FileNotFoundError:
+                            log.info("DAQ status file not found (already removed?): %s", daq_status_path_obj)
+                            pass
+                        except Exception as exc:
+                            log.warning("Failed to remove DAQ status file %s: %s", daq_status_path_obj, exc)
                 cmd = cmd_template.format(**tvars)
                 rc = self._run_cmd(cmd, label=chip_name)
                 if rc != 0:

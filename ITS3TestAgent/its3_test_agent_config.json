@@ -21,6 +21,8 @@
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",
   "output": "eos",
+  "remove_daq_status_file": true,
+  "daq_status_file": ".daq_status.json",
 
   "Initialization": [
     "python3 utility_scripts/set_daq.py {setup_config} -s {power_profile}"
