@@ -41,7 +41,7 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9091
 
   svt.db-agent:
-    image: ycorrales/svt.db-agent.deploy:latest
+    image: ycorrales/svt.db-agent:release
     container_name: svt.db-agent
     pull_policy: always # Forces a pull every time 'up' is run
     platform: linux/amd64 # Forces the use of the x86_64 version
