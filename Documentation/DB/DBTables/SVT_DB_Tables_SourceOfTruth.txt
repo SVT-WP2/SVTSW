@@ -229,7 +229,7 @@ Table main.SvtTestSetupConfig {
 
 Table main.SvtTestType {
   id integer [pk, increment]
-  name varchar(100)
+  name varchar(100) [unique, not null]
 }
 
 Table main.SvtTestTypeDUTTypeList {
