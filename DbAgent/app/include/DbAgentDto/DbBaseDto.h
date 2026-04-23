@@ -113,6 +113,10 @@ namespace dbagent
 
     void addColName(const std::string &name, const bool _isReq = true)
     {
+      if (name == "id")
+      {
+        addValidFilter("ids", "id");
+      }
       mainTable.addColName(name, _isReq);
     }
 

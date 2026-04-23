@@ -280,39 +280,49 @@ namespace dbagent
       }
     }
 
-    std::vector<int> ids;
-    for (const auto &filter : filters.getValues())
+    for (const auto &[name, value] : filters.getValues())
     {
-      //! chwck if filter name is special filter ids
-      if ((filter.first == "ids"))
+      if (validFilters.count(name))
       {
-        const std::string &id_key("id");
-        if (!getColNames().count(id_key))
+        const std::string &colName = validFilters[name];
+        //! check if filter name is a colName in the table
+        if (!getColNames().count(colName))
         {
-          THROW_RUNTIME_ERROR("Invalid filter ids for Table " + getTableName());
+          THROW_RUNTIME_ERROR("Invalid filter " + name + ", col " + colName + " non found in Table " + getTableName());
           return false;
         }
-        //! if not empty
-        if (!filter.second.empty())
+
+        const auto &whereColName = queryString.empty() ? colName : "T0." + colName;
+
+        if (value.is_array())
         {
-          ids = filter.second.get<std::vector<int>>();
-          const auto &filterName = queryString.empty() ? id_key : "T0.id";
-          query.addWhereIn(filterName, ids);
+          // if empty array skip
+          if (value.empty())
+            continue;
+          if (std::all_of(value.begin(), value.end(), [](const json &el)
+                          { return el.is_number_integer(); }))
+          {
+            query.addWhereIn(whereColName, value.get<std::vector<int>>());
+          }
+          else if (std::all_of(value.begin(), value.end(), [](const json &el)
+                               { return el.is_string(); }))
+          {
+            query.addWhereIn(whereColName, value.get<std::vector<std::string>>());
+          }
+          else
+          {
+            THROW_RUNTIME_ERROR("Invalid filter type, only array of integer or string is allowed");
+            return false;
+          }
         }
         else
         {
-          continue;
+          query.addWhereEquals(whereColName, value);
         }
-      }
-      //! check if filter name is a colName in the table
-      else if (validFilters.count(filter.first))
-      {
-        const auto &filterName = queryString.empty() ? filter.first : "T0." + filter.first;
-        query.addWhereEquals(filter.first, filter.second);
       }
       else
       {
-        logError("Invalid filter: " + filter.first);
+        logError("Invalid filter: " + name);
         return false;
       }
     }
@@ -347,14 +357,14 @@ namespace dbagent
           entries.push_back(rowEntry);
         }
 
-        if (!ids.empty() && (filters.getValues().size() == 1))
-        {
-          if (ids.size() != entries.size())
-          {
-            THROW_RUNTIME_ERROR(
-                "unmatching returned elements and requested filter size");
-          }
-        }
+        // if (!ids.empty() && (filters.getValues().size() == 1))
+        // {
+        //   if (ids.size() != entries.size())
+        //   {
+        //     THROW_RUNTIME_ERROR(
+        //         "unmatching returned elements and requested filter size");
+        //   }
+        // }
       }
     }
     catch (const std::exception &e)
@@ -378,8 +388,15 @@ namespace dbagent
     {
       return false;
     }
-    entry = std::move(entries.at(0));
-    addItemFromRelationDto(entry);
+    if (!entries.empty())
+    {
+      entry = std::move(entries.at(0));
+      addItemFromRelationDto(entry);
+    }
+    else
+    {
+      entry = std::move(DbEntry());
+    }
 
     return true;
   }

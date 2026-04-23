@@ -78,7 +78,17 @@ namespace database
 
       //! helper function quote string
       //========================================================================+
-      std::string formatStr(const std::string_view &str) { return "\"" + std::string(str) + "\""; }
+      std::string formatStr(const std::string_view &str_view)
+      {
+        auto str = std::string(str_view);
+        auto dQuote = "\"";
+
+        //! if str contains dot
+        const auto &lastDot = str.rfind(".");
+        auto result = (lastDot == str.npos) ? dQuote + str + dQuote : str.substr(0, lastDot + 1) + dQuote + str.substr(lastDot + 1) + dQuote;
+
+        return result;
+      }
 
       //! helper function prepend schema name
       //========================================================================+
@@ -192,12 +202,28 @@ namespace database
     //========================================================================+
     void GenericQuery::addWhereIn(const std::string_view &columnName, vector<int> values)
     {
-      if (values.size() == 0)
+      if (values.empty())
         return;
-      string clause = std::string(columnName) + " IN (";
+      string clause = helper::formatStr(columnName) + " IN (";
       for (unsigned int i = 0; i < values.size(); i++)
       {
         clause += std::to_string(values.at(i));
+        if (i < values.size() - 1)
+          clause += ",";
+      }
+      clause += ")";
+      mWhereClauses.push_back(clause);
+    }
+
+    //========================================================================+
+    void GenericQuery::addWhereIn(const std::string_view &columnName, vector<std::string> values)
+    {
+      if (values.empty())
+        return;
+      string clause = helper::formatStr(columnName) + " IN (";
+      for (unsigned int i = 0; i < values.size(); i++)
+      {
+        clause += "'" + values.at(i) + "'";
         if (i < values.size() - 1)
           clause += ",";
       }

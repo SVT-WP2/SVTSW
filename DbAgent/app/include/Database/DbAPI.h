@@ -76,6 +76,7 @@ namespace database
       }
 
       void addWhereIn(const std::string_view &columnName, std::vector<int> values);
+      void addWhereIn(const std::string_view &columnName, std::vector<std::string> values);
 
      protected:
       std::string mTableName;
