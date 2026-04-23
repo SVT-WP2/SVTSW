@@ -351,15 +351,15 @@ class ITS3Runner:
             log.error("UserLogIn failed: %s", resp)
             return False
 
-        # resp=wp.reset_agent()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("ResetAgent failed: %s", resp)
-        #     return False
+        resp=wp.reset_agent()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("ResetAgent failed: %s", resp)
+            return False
 
-        # resp = wp.user_login()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("UserLogIn failed: %s", resp)
-        #     return False
+        resp = wp.user_login()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("UserLogIn failed: %s", resp)
+            return False
         
         if self.dry_run:
             return True
