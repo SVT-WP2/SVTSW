@@ -26,10 +26,11 @@ while [[ ! $# -eq 0 ]]; do
     exit 1
     ;;
   esac
+  shift
 done
 
 if [[ -n "$RELEASE" ]]; then
-  docker build -f Dockerfile-dbagent --platform amd64 --platform arm64 --target db-agent -t ${DOCKER_TAG}.
+  docker build -f Dockerfile-dbagent --platform linux/amd64 --platform linux/arm64 --target db-agent -t ${DOCKER_TAG} .
   docker push ${DOCKER_TAG}
 else
   docker build -f Dockerfile-dbagent --target db-agent -t ${DOCKER_TAG} .
