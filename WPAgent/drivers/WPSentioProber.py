@@ -30,11 +30,10 @@ class SentioProberImpl(AbstractProber):
     def move_chuck_z(self, z: float):
         return self.prober.move_chuck_z(ChuckZReference.Zero, z)
 
-    def enable_ptpa(self):
-        resp = self.prober.send_cmd("vis:compensation:enable Both, True")
-
-    def disable_ptpa(self):
-        resp = self.prober.send_cmd("vis:compensation:enable Both, False")
+    def set_ptpa(self, enable: bool):
+        """Enable or disable PTPA compensation"""
+        resp = self.prober.send_cmd(f"vis:compensation:enable Both, {enable}")
+        return resp
 
     def run_ptpa(self):
         resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
@@ -140,7 +139,7 @@ class SentioProberImpl(AbstractProber):
 
     def set_overtravel(self, overtravelGap: float):
         "Sets overtravel gap for all chuck sites in μm"
-        self.prober.send_cmd("set_chuck_overtravel_gap")
+        self.prober.send_cmd(f"set_chuck_overtravel_gap {overtravelGap}")
 
     def enable_overtravel(self, overtravel: bool):
         "overtravel (bool): True to enable, False to disable."
@@ -257,8 +256,9 @@ class SentioProberImpl(AbstractProber):
             # Return formatted status: "In Contact" or "In Separation"
             if 'contact' in position_lower:
                 return "In Contact"
-            elif 'separation' in position_lower or 'sep' in position_lower:
-                return "In Separation"
+
+            elif 'default' in position_lower or 'def' in position_lower:
+                return "In Default"
             else:
                 # For any other position (Hover, Lift, Home, Overtravel)
                 # Return as-is with "In " prefix

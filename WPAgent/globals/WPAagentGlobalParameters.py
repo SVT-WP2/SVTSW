@@ -64,6 +64,56 @@ class SvtWPAagentGlobalParameters:
         self.sentio_projects_base_path = "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
         self.projects_base_path = self.sentio_projects_base_path
 
+        # Locker for testing
+        self.is_locked_for_testing = False
+        self.locked_by_user = None
+        self.locked_at_timestamp = None
+        self.lock_reason = None
+        self.test_sequence_id = None  # ID of running test sequence
+
+    def lock_for_testing(self, user: str, reason: str = "Testing in progress",
+                         test_sequence_id: str = None):
+        """Lock the agent for testing"""
+        import time
+        self.is_locked_for_testing = True
+        self.locked_by_user = user
+        self.locked_at_timestamp = time.time()
+        self.lock_reason = reason
+        self.test_sequence_id = test_sequence_id
+        print(f"🔒 WP Agent locked by {user}: {reason}")
+
+    def unlock_from_testing(self):
+        """Unlock the agent"""
+        print(f"🔓 WP Agent unlocked (was locked by {self.locked_by_user})")
+        self.is_locked_for_testing = False
+        self.locked_by_user = None
+        self.locked_at_timestamp = None
+        self.lock_reason = None
+        self.test_sequence_id = None
+
+    def get_lock_info(self):
+        """Get current lock status"""
+        if not self.is_locked_for_testing:
+            return {
+                "is_locked": False,
+                "locked_by": None,
+                "locked_at": None,
+                "reason": None,
+                "test_sequence_id": None
+            }
+
+        import time
+        locked_duration = time.time() - self.locked_at_timestamp if self.locked_at_timestamp else 0
+
+        return {
+            "is_locked": True,
+            "locked_by": self.locked_by_user,
+            "locked_at": self.locked_at_timestamp,
+            "locked_duration_seconds": locked_duration,
+            "reason": self.lock_reason,
+            "test_sequence_id": self.test_sequence_id
+        }
+
     @classmethod
     def getInstance(cls):
         if cls._instance is None:
@@ -307,7 +357,7 @@ class SvtWPAagentGlobalParameters:
         Args:
             position: Chuck position ("Contact", "Separation", "Unknown")
         """
-        if position not in ["Contact", "Separation", "Unknown"]:
+        if position not in ["Contact", "Separation", "Unknown", "In Default"]:
             print(f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'")
         self.chuck_z_position_state = position
 
