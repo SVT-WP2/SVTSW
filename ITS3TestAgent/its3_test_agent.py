@@ -177,7 +177,6 @@ class WPAgentClient:
     # High-level helpers used by the runner
     # ------------------------------------------------------------------
 
-    # -- safe commands (don't move the prober, OK during dry-run) --
     def user_login(self) -> dict:
         return self.send("UserLogIn")
 
@@ -210,6 +209,9 @@ class WPAgentClient:
 
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
+    
+    def move_chuck_center(self) -> dict:
+        return self.send("MoveChuckCenter")
 
     def move_chuck_off_axis(self) -> dict:
         return self.send("MoveChuckOffAxis")
@@ -225,14 +227,6 @@ class WPAgentClient:
 
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
-
-    def step_next_die(self) -> dict:
-        return self.send("MoveChuckNextDie")
-
-    def initialize(self, params: dict | None = None) -> dict:
-        """Initialize the WPAgent.  Params depend on mode (manual / DB / serial).
-        Kept as a thin passthrough — caller fills in the params dict."""
-        return self.send("Initialize", params or {}, timeout=60.0)
 
     def is_listener_alive(self, timeout: float = 2.0) -> tuple[bool, float]:
         """Check if the WPAgent listener is alive via the heartbeat topic.
@@ -357,15 +351,15 @@ class ITS3Runner:
             log.error("UserLogIn failed: %s", resp)
             return False
 
-        # resp=wp.reset_agent()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("ResetAgent failed: %s", resp)
-        #     return False
+        resp=wp.reset_agent()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("ResetAgent failed: %s", resp)
+            return False
 
-        # resp = wp.user_login()
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.error("UserLogIn failed: %s", resp)
-        #     return False
+        resp = wp.user_login()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("UserLogIn failed: %s", resp)
+            return False
         
         if self.dry_run:
             return True
@@ -405,7 +399,6 @@ class ITS3Runner:
             log.error("InitProbing failed: %s", resp)
             return False
 
-
         return True
 
     # ------------------------------------------------------------------
@@ -417,9 +410,6 @@ class ITS3Runner:
         setup_script = self.mosaix_root / "setup.sh"
         log.info("Sourcing %s load ...", setup_script)
 
-        # if self.dry_run:
-        #     self._env = dict(os.environ)
-        #     return self._env
 
         t0 = time.time()
         result = subprocess.run(
@@ -452,9 +442,6 @@ class ITS3Runner:
         else:
             log.info("  $ %s", cmd)
 
-        # if self.dry_run:
-        #     return 0
-
         show_output = self.cfg.get("show_cmd_output", True)
         log_output = self.cfg.get("log_cmd_output", True)
 
@@ -473,10 +460,11 @@ class ITS3Runner:
             if show_output:
                 tqdm.write(text, file=sys.stderr)
             if log_output:
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', text)
-                for fh in file_handlers:
-                    fh.stream.write(clean + "\n")
-                    fh.stream.flush()
+                clean = re.sub(r'\x1b\[[0-9;]*m', '', text) # remove ANSI color codes 
+                if not text.lstrip().startswith("LIVE"):
+                    for fh in file_handlers:
+                        fh.stream.write(clean + "\n")
+                        fh.stream.flush()
         proc.wait()
         if proc.returncode != 0:
             log.error("Command exited with code %d", proc.returncode)
@@ -485,7 +473,7 @@ class ITS3Runner:
     # ------------------------------------------------------------------
 
     def _wp_move_to_die(self, wp_coord: str, chip_type: str) -> bool:
-        """Full per-chip WP sequence:
+        """Full per-chip sequence:
         MoveChuckSeparation -> MoveChuckOffAxis -> MoveChuckRowColumn ->
         RunPTPA (optional) -> MoveChuckWide -> MoveChuckContact
         """
@@ -498,13 +486,6 @@ class ITS3Runner:
 
         if self.dry_run:
             log.info("  -> WPAgent  MoveChuckSeparation (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckOffAxis (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckRowColumn  col=%d row=%d (DUMMY)", col, row)
-            ptpa_key = f"run_ptpa_{chip_type.lower()}"
-            if self.cfg.get(ptpa_key, False):
-                log.info("  -> WPAgent  RunPTPA (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckWide (DUMMY)")
-            log.info("  -> WPAgent  MoveChuckContact (DUMMY)")
             return True
 
         wp = self._wp_agent()
@@ -524,15 +505,6 @@ class ITS3Runner:
 
         ptpa_key = f"run_ptpa_{chip_type.lower()}"
         if self.cfg.get(ptpa_key, False):
-            # if self.cfg.get("always_reopen_project", False):
-            #     project_key = f"wp_project_{chip_type.lower()}"
-            #     project_name = self.cfg.get(project_key, "")
-            #     if project_name:
-            #         log.info("Reopening project before PTPA: %s", project_name)
-            #         resp = wp.open_project(project_name)
-            #         if resp.get("status", "").lower() not in ("success", "ok"):
-            #             log.warning("OpenProject before PTPA failed: %s", resp)
-            #             return False
             if self.cfg.get("re_enable_ptpa", False):
                 resp = wp.disable_ptpa()
                 if resp.get("status", "").lower() not in ("success", "ok"):
@@ -562,6 +534,48 @@ class ITS3Runner:
             return False
 
         return True
+    
+    def _change_wp_project(self, chip_type: str, new_project: str) -> bool:
+        log.info("Preparing to switch WP project: %s -> %s (%s)",
+                             self._current_project_type, chip_type, new_project)
+        wp = self._wp_agent()
+        resp = wp.go_to_separation()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
+        resp = wp.move_chuck_off_axis()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+        log.info("Switching WP project: %s -> %s (%s)",
+                    self._current_project_type, chip_type, new_project)
+        resp = wp.open_project(new_project)
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("OpenProject failed for %s: %s", chip_type, resp)
+            return False
+        resp = wp.move_chuck_center()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckCenter failed: %s", resp.get("output", resp))
+        resp = wp.auto_focus()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("AutoFocus failed: %s", resp.get("output", resp))
+        resp = wp.find_home()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+            return False
+        return True
+        
+    def _remove_daq_status_file(self) -> None:
+        daq_status_path = self.cfg.get("daq_status_file", "")
+        if daq_status_path:
+            daq_status_path_obj = self.mosaix_root / daq_status_path
+            try:
+                os.remove(daq_status_path_obj)
+                log.info("Removed DAQ status file: %s", daq_status_path_obj)
+            except FileNotFoundError:
+                log.info("DAQ status file not found (already removed?): %s", daq_status_path_obj)
+                pass
+            except Exception as exc:
+                log.warning("Failed to remove DAQ status file %s: %s", daq_status_path_obj, exc)
+
 
     # ------------------------------------------------------------------
 
@@ -635,23 +649,25 @@ class ITS3Runner:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
                 if new_project and not self.dry_run:
-                    log.info("Preparing to switch WP project: %s -> %s (%s)",
-                             self._current_project_type, chip_type, new_project)
-                    wp = self._wp_agent()
-                    resp = wp.go_to_separation()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
-                    resp = wp.move_chuck_off_axis()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
-                    log.info("Switching WP project: %s -> %s (%s)",
-                             self._current_project_type, chip_type, new_project)  
-                    resp = wp.open_project(new_project)
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.error("OpenProject failed for %s: %s", chip_type, resp)
-                    resp = wp.find_home()
-                    if resp.get("status", "").lower() not in ("success", "ok"):
-                        log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+                    # log.info("Preparing to switch WP project: %s -> %s (%s)",
+                    #          self._current_project_type, chip_type, new_project)
+                    # wp = self._wp_agent()
+                    # resp = wp.go_to_separation()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
+                    # resp = wp.move_chuck_off_axis()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+                    # log.info("Switching WP project: %s -> %s (%s)",
+                    #          self._current_project_type, chip_type, new_project)
+                    # resp = wp.open_project(new_project)
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.error("OpenProject failed for %s: %s", chip_type, resp)
+                    # resp = wp.find_home()
+                    # if resp.get("status", "").lower() not in ("success", "ok"):
+                    #     log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+                    if not self._change_wp_project(chip_type, new_project):
+                        log.error("Failed to switch to %s project, skipping chip", chip_type)
                         continue
                 elif self.dry_run and self._current_project_type is not None:
                     log.info("Switching WP project: %s -> %s (DUMMY)",
@@ -672,6 +688,8 @@ class ITS3Runner:
             # --- run sequence commands ---
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
+                if self.cfg.get("remove_daq_status_file", False):
+                    self._remove_daq_status_file()
                 cmd = cmd_template.format(**tvars)
                 rc = self._run_cmd(cmd, label=chip_name)
                 if rc != 0:
@@ -696,20 +714,15 @@ class ITS3Runner:
             wp = self._wp_agent()
 
             # --- park the prober ---
-            if self.dry_run:
-                log.info("  -> WPAgent  MoveChuckSeparation (DUMMY)")
-                log.info("  -> WPAgent  MoveChuckOffAxis (DUMMY)")
-                log.info("  -> WPAgent  MoveChuckHome (DUMMY)")
-            else:
-                resp = wp.go_to_separation()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckSeparation: %s", resp)
-                resp = wp.move_chuck_off_axis()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckOffAxis: %s", resp)
-                resp = wp.move_chuck_home()
-                if resp.get("status", "").lower() not in ("success", "ok"):
-                    log.warning("MoveChuckHome: %s", resp)
+            resp = wp.go_to_separation()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckSeparation: %s", resp)
+            resp = wp.move_chuck_off_axis()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckOffAxis: %s", resp)
+            resp = wp.move_chuck_home()
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckHome: %s", resp)
 
             # --- logout last ---
             resp = wp.user_logout()
@@ -719,7 +732,6 @@ class ITS3Runner:
             else:
                 log.warning("UserLogOut: %s", resp)
         return 0
-
 
 # ---------------------------------------------------------------------------
 # CLI

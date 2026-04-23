@@ -1,8 +1,8 @@
 DIE,"WP[col,row]",TEST
-BAM00,"[-3,0]",yes
-BAM01,"[-2,0]",yes
-BAM02,"[-1,0]",yes
-BAM03,"[0,0]",yes
+BAM00,"[-3,0]",no
+BAM01,"[-2,0]",no
+BAM02,"[-1,0]",no
+BAM03,"[0,0]",no
 BAM04,"[-4,1]",yes
 BAM05,"[-3,1]",yes
 BAM06,"[-2,1]",yes
