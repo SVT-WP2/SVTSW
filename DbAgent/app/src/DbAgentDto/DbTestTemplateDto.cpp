@@ -18,10 +18,12 @@ namespace dbagent
     setTableName("SvtTestTemplate");
 
     addColName("id");
-    addColName("asicFamilyType");
+    addColName("dutType");
     addColName("testTypeConfigId");
     addColName("testTypeId", false);
     addColName("isEnabled", false);
+
+    addValidFilter("dutTypes", "dutType");
 
     createAllRequest();
   }
@@ -33,7 +35,7 @@ namespace dbagent
                                               const std::string &orderBy, const bool orderDec)
   {
     std::string queryString = "";
-    queryString += "SELECT T0.id, T0.\"asicFamilyType\", T0.\"testTypeConfigId\", T1.\"testTypeId\", T0.\"isEnabled\"";
+    queryString += "SELECT T0.id, T0.\"dutType\", T0.\"testTypeConfigId\", T1.\"testTypeId\", T0.\"isEnabled\"";
     queryString += " FROM main.\"SvtTestTemplate\" AS T0";
     queryString += " JOIN main.\"SvtTestTypeConfig\" AS T1 ON T0.\"testTypeConfigId\" = T1.id";
 
