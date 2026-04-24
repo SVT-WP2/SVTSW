@@ -253,7 +253,7 @@ class DBKafkaClient:
         return []
 
     def get_all_asic_by_id(self, asicId: int, timeout: float = 15.0):
-        """Get ASIC from database by ID"""
+        """Get all asics  from database"""
         result = self.request_reply(
             message_type="GetAllAsics",
             data={
@@ -261,7 +261,7 @@ class DBKafkaClient:
                     "ids": [asicId]
                 },
                 "pager": {
-                    "limit": 1,
+                    "limit": 1,  # Only need 1 result
                     "offset": 0
                 }
             },
@@ -288,7 +288,8 @@ class DBKafkaClient:
 
         return result and result.get("status") == "Success"
 
-    def update_machine_installed_probe_card(self, wp_machine_id: int, probe_card_id, orientation, timeout: float = 15.0):
+    def update_machine_installed_probe_card(self, wp_machine_id: int, probe_card_id, orientation,
+                                            timeout: float = 15.0):
         """Update installed probe card on machine"""
         result = self.request_reply(
             message_type="UpdateWpMachineInstalledProbeCard",

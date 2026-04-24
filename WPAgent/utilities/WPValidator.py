@@ -1,17 +1,7 @@
-"""
-WP Command Validator
-
-Validates:
-- User login and hierarchy permissions
-- WP Agent name matching
-- Command parameters (type, required fields)
-- State machine requirements
-
-"""
-
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from utilities.WPResponseBuilder import ResponseBuilder
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
+import re
 
 
 class UserHierarchy:
@@ -36,7 +26,8 @@ class WPCommandValidator:
         "ShowStatus",
         "MoveChuckOffAxis",
         "TestingLock",
-        "TestingUnLock",
+        "TestingUnlock",
+        "GetLockStatus",
         "UserLogIn",
         "UserLogOut",
     }
@@ -46,6 +37,7 @@ class WPCommandValidator:
         "ChangeProject",
         "MoveChuckNextDie",
         "RunPTPA",
+        "SetPTPA",
         "MoveChuckPreviousDie",
         "SetOvertravel",
         "DisableOvertravel",
@@ -54,7 +46,7 @@ class WPCommandValidator:
     }
 
     DEVELOPER_COMMANDS = {
-        # Developers can execute ALL command - no restrictions!
+        # Developers can execute ALL commands - no restrictions!
         "SwitchCamera",
         "ListProbers",
         "ListChipTypes",
@@ -64,7 +56,7 @@ class WPCommandValidator:
         "FindHome",
         "MoveChuckZ",
         "ConnectProbeMachine",
-        "Initialize",  # WPAGInitializeManual
+        "Initialize",
         "ResetAgent",
         "LocalMode",
         "Help",
@@ -72,6 +64,7 @@ class WPCommandValidator:
         "MoveChuckHome",
         "AlignWafer",
         "MoveChuckCenter",
+        "OpenProjectWithAsicSerialNumber",
     }
 
     # Commands that bypass all checks (system commands)
@@ -82,6 +75,31 @@ class WPCommandValidator:
         "ShowProjectStatus",
         "ShowStatus",
         "Help",
+    }
+
+    # Commands that are EXEMPT from testing lock (READ-ONLY monitoring)
+    LOCK_EXEMPT_COMMANDS = {
+        # Lock management - must always work!
+        "TestingLock",
+        "TestingUnlock",
+        "GetLockStatus",
+
+        # Status and monitoring (READ-ONLY)
+        "ShowStatus",
+
+        # Position queries (READ-ONLY)
+        "GetChuckPosition",
+        "GetCurrentPosition",
+        "GetWaferMap",
+        "GetProjectInfo",
+        "ShowProjectStatus",
+
+        # System commands
+        "Help",
+
+        # Login/logout
+        "UserLogIn",
+        "UserLogOut",
     }
 
     def __init__(self):
@@ -115,29 +133,35 @@ class WPCommandValidator:
         if command in self.BYPASS_COMMANDS:
             return None
 
-        # agent name
+        # 1. Validate agent name
         agent_error = self._validate_agent_name(payload_agent_name, reply_type)
         if agent_error:
             return agent_error
 
-        #  user login
+        # 2. Validate user login
         user_error = self._validate_user_login(payload_user, reply_type)
         if user_error:
             return user_error
 
-        #  user permissions
+        # 3. Validate testing lock (NEW!)
+        lock_error = self._validate_testing_lock(command, payload_user, reply_type)
+        if lock_error:
+            return lock_error
+
+        # 4. Validate user permissions
         permission_error = self._validate_user_permission(command, reply_type)
         if permission_error:
             return permission_error
 
-        # parameters (if schema defined)
+        # 5. Validate parameters (if schema defined)
         param_error = self._validate_parameters(command, params, reply_type)
         if param_error:
             return param_error
-        # probe card
-        probe_card_error = self._validate_probe_card_orientation(command, reply_type)
-        if probe_card_error:
-            return probe_card_error
+
+        # 6. Validate probe card and wafer orientation
+        orientation_error = self._validate_orientations(command, reply_type)
+        if orientation_error:
+            return orientation_error
 
         return None
 
@@ -187,6 +211,65 @@ class WPCommandValidator:
                 401
             )
 
+        return None
+
+    def _validate_testing_lock(
+            self,
+            command: str,
+            payload_user: Optional[str],
+            reply_type: str
+    ) -> Optional[Dict]:
+        """
+        Validate testing lock status.
+
+        Blocks control commands when agent is locked for testing,
+        but allows monitoring/status commands to continue.
+
+        Authorization:
+        - Lock owner can execute commands
+        - Developer can always execute commands
+        - All other users blocked from control commands
+        """
+
+        # Check if lock validation is enabled in global parameters
+        if not hasattr(self.g, 'is_locked_for_testing'):
+            return None  # Lock system not initialized yet
+
+        # Skip if command is exempt from lock (monitoring/status commands)
+        if command in self.LOCK_EXEMPT_COMMANDS:
+            return None
+
+        # Check if agent is locked for testing
+        if not self.g.is_locked_for_testing:
+            return None  # Not locked - allow command
+
+        # Get user from payload or current logged user
+        current_user = payload_user or self.g.userLogged
+
+        # Get user hierarchy
+        user_hierarchy = self.g.userLoggedHierarchy if hasattr(self.g, 'userLoggedHierarchy') else None
+
+        # Check if user can override lock
+        can_override = (
+                current_user == self.g.locked_by_user or  # User who locked it
+                user_hierarchy == UserHierarchy.DEVELOPER  # Developer can always override
+        )
+
+        if not can_override:
+            # Get lock info for detailed error message
+            lock_info = self.g.get_lock_info() if hasattr(self.g, 'get_lock_info') else {}
+            locked_duration = lock_info.get('locked_duration_seconds', 0)
+
+            return ResponseBuilder.error(
+                reply_type,
+                f"🔒 WP Agent is locked for testing by '{self.g.locked_by_user}'. "
+                f"Reason: {self.g.lock_reason}. "
+                f"Locked for {locked_duration:.0f} seconds. "
+                f"Only '{self.g.locked_by_user}' or a Developer can execute commands during testing.",
+                423  # HTTP 423 Locked
+            )
+
+        # User authorized - allow command
         return None
 
     def _validate_user_permission(
@@ -289,7 +372,7 @@ class WPCommandValidator:
                     )
             else:
                 # Unknown parameter - Warning only
-                print(f" Warning: Unknown parameter '{param_name}' for command '{command}'")
+                print(f"⚠️  Warning: Unknown parameter '{param_name}' for command '{command}'")
 
         return None
 
@@ -303,9 +386,13 @@ class WPCommandValidator:
 
         schemas = {
             # open_project(project_name: str)
-            #TODO: have to be with asicSerialNumber
             "OpenProject": {
                 "projectName": {"type": "str", "required": True},
+            },
+
+            # open_project_with_asic_serial_number(asicSerialNumber: str)
+            "OpenProjectWithAsicSerialNumber": {
+                "asicSerialNumber": {"type": "str", "required": True},
             },
 
             # load_wafer(waferId: float, orientation: str)
@@ -314,22 +401,34 @@ class WPCommandValidator:
                 "orientation": {"type": "str", "required": False},
             },
 
-            # move_chuck_die(col: int, row: int, subsite: int = 0)
+            # move_chuck_die - NOW SUPPORTS LABELS!
             "MoveChuckRowColumn": {
-                "col": {"type": "int", "required": True},
-                "row": {"type": "int", "required": True},
+                "col": {"type": "int", "required": False},
+                "row": {"type": "int", "required": False},
+                "label": {"type": "str", "required": False},
                 "subsite": {"type": "int", "required": False},
             },
 
-            # move_chuck_xy(x, y)
+            # move_chuck_asic(asicId from DB)
+            "MoveChuckAsic": {
+                "asicId": {"type": "int", "required": True},
+            },
+
+            # move_chuck_xy(x, y, position)
             "MoveChuckXY": {
                 "x": {"type": "float", "required": True},
                 "y": {"type": "float", "required": True},
+                "position": {"type": "str", "required": True},
             },
 
             # move_chuck_z(z)
             "MoveChuckZ": {
                 "z": {"type": "float", "required": True},
+            },
+
+            # set_ptpa(enable: bool) - NEW COMBINED FUNCTION!
+            "SetPTPA": {
+                "enable": {"type": "bool", "required": True},
             },
 
             # set_chuck_overtravel(overtravelGap=None)
@@ -382,8 +481,20 @@ class WPCommandValidator:
                 "withDB": {"type": "bool", "required": False},
             },
 
-        }
+            # Testing lock/unlock
+            "TestingLock": {
+                "reason": {"type": "str", "required": False},
+                "test_sequence_id": {"type": "str", "required": False},
+            },
 
+            "TestingUnlock": {
+                "force": {"type": "bool", "required": False},
+            },
+
+            "GetLockStatus": {
+                # No required parameters
+            },
+        }
 
         return schemas.get(command)
 
@@ -434,23 +545,97 @@ class WPCommandValidator:
         allowed = self.get_user_allowed_commands(hierarchy)
         return command in allowed
 
-    def _validate_probe_card_orientation(
+    def _extract_orientations_from_project_name(self, project_name: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Extract wafer and probe card orientations from project name.
+
+        Supports two formats:
+        1. New format: "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+           - NotchW = Wafer orientation West
+           - ArrowW = Probe card orientation West
+
+        2. Old format: "ER2_NKF7_Vertical_East"
+           - East at end = Wafer orientation (probe card assumed same)
+
+        Args:
+            project_name: Project name string
+
+        Returns:
+            tuple: (wafer_orientation, probe_card_orientation) or (None, None) if not found
+
+        Examples:
+            "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW" → ("West", "West")
+            "ER2_babyMOSAIX_Vertical_V0_NotchE_ArrowN" → ("East", "North")
+            "ER2_NKF7_Vertical_East" → ("East", "East")
+        """
+        project_name_lower = project_name.lower()
+
+        # Try NEW format first: Notch{X}_Arrow{Y}
+        # Pattern: Notch followed by single letter, then Arrow followed by single letter
+        match = re.search(r'notch([ewns])_arrow([ewns])', project_name_lower)
+
+        if match:
+            # Map single letters to full orientation names
+            orientation_map = {
+                'e': 'East',
+                'w': 'West',
+                'n': 'North',
+                's': 'South'
+            }
+
+            wafer_letter = match.group(1)  # First capture group (after Notch)
+            probe_letter = match.group(2)  # Second capture group (after Arrow)
+
+            wafer_orientation = orientation_map.get(wafer_letter)
+            probe_card_orientation = orientation_map.get(probe_letter)
+
+            return (wafer_orientation, probe_card_orientation)
+
+        # Try OLD format: East/West/North/South at end of name
+        orientations = {
+            "east": "East",
+            "west": "West",
+            "north": "North",
+            "south": "South"
+        }
+
+        for orient_key, orient_value in orientations.items():
+            if orient_key in project_name_lower:
+                # Old format: same orientation for both wafer and probe card
+                return (orient_value, orient_value)
+
+        # No orientation found
+        return (None, None)
+
+    def _validate_orientations(
             self,
             command: str,
             reply_type: str
     ) -> Optional[Dict]:
+        """
+        Validate probe card type and wafer/probe card orientations.
+
+        Supports both old and new project name formats:
+        - Old: "ER2_NKF7_Vertical_East"
+        - New: "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+        """
 
         # Commands that require orientation validation
         COMMANDS_REQUIRING_ORIENTATION_CHECK = {
             "InitProbing",
             "MoveChuckContact",
             "RunPTPA",
+            "SetPTPA",
             "AutoFocus",
             "AlignWafer",
             "MoveChuckAsic",
             "MoveChuckRowColumn",
             "MoveChuckNextDie",
             "MoveChuckPreviousDie",
+            "LoadWafer",
+            "MoveChuckLoadedWafer",
+            "MoveChuckZ",
+            "MoveChuckXY"
         }
 
         # Skip if command doesn't require orientation check
@@ -511,44 +696,48 @@ class WPCommandValidator:
                 )
 
         # ============================================================
-        # VALIDATE WAFER ORIENTATION (East/West/North/South)
+        # VALIDATE WAFER AND PROBE CARD ORIENTATIONS
         # ============================================================
 
-        # Extract orientation from project name
-        # Expected format: ends with _{East|West|North|South}
-        # Examples: "ER2_NKF7_Vertical_East", "ER2_MOSS_Cantilever_West"
+        # Extract expected orientations from project name
+        (expected_wafer_orient, expected_probe_orient) = self._extract_orientations_from_project_name(project_name)
 
-        # Check for orientation keywords in project name
-        orientations = {
-            "east": "East",
-            "west": "West",
-            "north": "North",
-            "south": "South"
-        }
+        # If project name doesn't specify orientations, just warn
+        if not expected_wafer_orient:
+            print(f"⚠️  Warning: Cannot determine orientations from project name: {project_name}")
+            return None
 
-        project_orientation = None
-        for orient_key, orient_value in orientations.items():
-            if orient_key in project_name_lower:
-                project_orientation = orient_value
-                break
+        print(f"\n🔍 Orientation validation:")
+        print(f"   Project expects: Wafer={expected_wafer_orient}, ProbeCard={expected_probe_orient}")
+        print(f"   Machine has: Wafer={wafer_orientation}, ProbeCard={probe_card_orientation}")
 
-        # If project name specifies orientation, validate it
-        if project_orientation:
-            wafer_orient_normalized = wafer_orientation.strip().lower()
-            project_orient_normalized = project_orientation.lower()
+        # Normalize orientations for comparison
+        wafer_orient_normalized = wafer_orientation.strip().lower()
+        probe_orient_normalized = probe_card_orientation.strip().lower()
+        expected_wafer_normalized = expected_wafer_orient.lower()
+        expected_probe_normalized = expected_probe_orient.lower()
 
-            if wafer_orient_normalized != project_orient_normalized:
-                return ResponseBuilder.error(
-                    reply_type,
-                    f"Wafer orientation mismatch: Project '{project_name}' requires {project_orientation} orientation, "
-                    f"but wafer is loaded in {wafer_orientation} orientation. "
-                    f"Please reload wafer with correct orientation or change project.",
-                    400
-                )
-        else:
-            # Project name doesn't specify orientation - just warn
-            print(f"⚠️  Warning: Cannot determine wafer orientation from project name: {project_name}")
+        # Check wafer orientation
+        if wafer_orient_normalized != expected_wafer_normalized:
+            return ResponseBuilder.error(
+                reply_type,
+                f"Wafer orientation mismatch: Project '{project_name}' requires wafer in {expected_wafer_orient} orientation, "
+                f"but wafer is loaded in {wafer_orientation} orientation. "
+                f"Please reload wafer with correct orientation.",
+                400
+            )
 
+        # Check probe card orientation
+        if probe_orient_normalized != expected_probe_normalized:
+            return ResponseBuilder.error(
+                reply_type,
+                f"Probe card orientation mismatch: Project '{project_name}' requires probe card in {expected_probe_orient} orientation, "
+                f"but probe card is installed in {probe_card_orientation} orientation. "
+                f"Please reinstall probe card with correct orientation.",
+                400
+            )
+
+        print(f"   ✅ Orientations match!")
         return None
 
 

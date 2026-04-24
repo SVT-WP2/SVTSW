@@ -580,6 +580,45 @@ def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, 
         return (None, None)
 
 
+def get_asic_by_id(asic_id: int) -> dict:
+    """
+    Get ASIC from database by ID using GetAllAsics with filter
+
+    Args:
+        asic_id: ASIC ID from database
+
+    Returns:
+        dict with ASIC info
+
+    Raises:
+        Exception if ASIC not found
+    """
+    from services.WPDbKafkaClient import DBKafkaClient
+
+    db_client = DBKafkaClient.get_instance()
+
+
+    # Use GetAllAsics with ID filter
+    response = db_client.get_all_asic_by_id(asic_id)
+    print(response)
+    # Extract items
+    data = response.get("data", {})
+    items = data.get("items", [])
+
+    if not items or len(items) == 0:
+        raise Exception(f"ASIC with ID {asic_id} not found in database")
+
+    # Get first (and only) item
+    asic_data = items[0]
+
+    print(f"✅ Found ASIC in database:")
+    print(f"   ID: {asic_data.get('id')}")
+    print(f"   Serial Number: {asic_data.get('serialNumber')}")
+    print(f"   Family Type: {asic_data.get('familyType')}")
+    print(f"   Wafer ID: {asic_data.get('waferId')}")
+
+    return asic_data
+
 def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
     """
     Get installed probe card ID and orientation from machine record
