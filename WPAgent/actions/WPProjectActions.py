@@ -134,7 +134,9 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
                     if wafer_id:
                         globals_.loaded_wafer_id = wafer_id
                         globals_.wafer_orientation = wafer_orientation
-                        print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={wafer_orientation}")
+                        # TODO: hardcoded till implemented in DB
+                        globals_.wafer_orientation = 'West'
+                        print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={globals_.wafer_orientation}")
                     else:
                         globals_.loaded_wafer_id = None
                         globals_.wafer_orientation = None
@@ -147,7 +149,9 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
                     if card_id:
                         globals_.probe_card_id = card_id
                         globals_.probe_card_orientation = card_orientation
-                        print(f"✓ Synced probe card: ID={card_id}, orientation={card_orientation}")
+                        # TODO: hardcoded till implemented in DB
+                        globals_.probe_card_orientation = 'West'
+                        print(f"✓ Synced probe card: ID={card_id}, orientation={globals_.probe_card_orientation}")
                     else:
                         globals_.probe_card_id = None
                         globals_.probe_card_orientation = None

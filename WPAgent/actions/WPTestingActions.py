@@ -179,7 +179,35 @@ def take_screenshot(
     Returns:
         Response with screenshot path
     """
-    pass
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("TakeScreenshotReply", error["output"], 400)
+
+    try:
+        prober = get_current_prober()
+
+        filepath = prober.take_screenshot(
+            filename=filename,
+            snapshot_type=snapshot_type,
+            save_locally=save_locally,
+            output_dir=output_dir
+        )
+
+        # Get absolute path
+        abs_path = os.path.abspath(filepath)
+
+        return ResponseBuilder.success(
+            "TakeScreenshotReply",
+            f"Screenshot saved: {abs_path}"
+        )
+
+    except RuntimeError as e:
+        return ResponseBuilder.error("TakeScreenshotReply", str(e), 400)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return ResponseBuilder.error("TakeScreenshotReply", str(e), 500)
 
 
 @validate_command
