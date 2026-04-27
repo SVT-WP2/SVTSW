@@ -73,7 +73,7 @@ Table main.ChipLocation {
   note text
 }
 
-Table main.Block{
+Table main.ChipBlock{
   id integer [pk, increment]
   chipId integer [ref:> main.Chip.id, not null]
   blockType main.blockType [not null]
@@ -289,8 +289,8 @@ Table main.SvtChipTestList {
   }
 }
 
-Table main.SvtBlockTestList {
-  blockId integer [ref:> main.Block.id]
+Table main.SvtChipBlockTestList {
+  blockId integer [ref:> main.ChipBlock.id]
   testId integer [ref:> main.SvtTestList.id]
   indexes {
     (blockId, testId) [pk]
