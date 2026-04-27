@@ -319,6 +319,11 @@ namespace database
         {
           addColumnAndValue(columnName, value.get<float>());
         }
+        else if (value.is_boolean())
+        {
+          const std::string &bool_str = value.get<bool>() ? "true" : "false";
+          addColumnAndValue(columnName, bool_str);
+        }
       }
       else
       {

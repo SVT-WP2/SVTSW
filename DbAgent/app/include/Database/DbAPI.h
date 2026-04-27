@@ -139,7 +139,7 @@ namespace database
       // modify each as needed
       void addColumnAndValue(const std::string_view &columnName,
                              const nlohmann::basic_json<> &value);
-      void addColumnAndValue(const std::string_view &columnName, std::string value)
+      void addColumnAndValue(const std::string_view &columnName, const std::string &value)
       {
         if (value == "NULL")
         {

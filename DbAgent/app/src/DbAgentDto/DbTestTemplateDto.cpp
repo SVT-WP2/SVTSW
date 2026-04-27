@@ -6,8 +6,8 @@
  */
 
 #include "DbAgentDto/DbTestTemplateDto.h"
+
 #include <string>
-#include "DbAgentDto/DbBaseDto.h"
 
 namespace dbagent
 {
@@ -40,12 +40,6 @@ namespace dbagent
     queryString += " JOIN main.\"SvtTestTypeConfig\" AS T1 ON T0.\"testTypeConfigId\" = T1.id";
 
     return this->DbBaseDto::getAllEntriesFromDB(entries, queryString, filters, orderBy, orderDec);
-  }
-
-  //========================================================================+
-  void DbTestTemplateDto::updateEntry(const SvtKafka::SvtKafkaMessage &,
-                                      SvtKafka::SvtKafkaReplyMsg &)
-  {
   }
 
   //========================================================================+

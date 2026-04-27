@@ -8,6 +8,7 @@
  */
 
 #include <string>
+
 #include "DbBaseDto.h"
 
 namespace dbagent
@@ -23,12 +24,6 @@ namespace dbagent
                                      const std::string &queryString,
                                      const DbEntry &filters,
                                      const std::string &orderBy, const bool orderDec) final;
-
-    // virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
-    //                          SvtKafka::SvtKafkaReplyMsg &) final;
-
-    virtual void updateEntry(const SvtKafka::SvtKafkaMessage &,
-                             SvtKafka::SvtKafkaReplyMsg &) final;
 
     virtual void createAllRequest() final;
   };
