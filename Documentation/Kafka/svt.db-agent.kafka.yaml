@@ -486,12 +486,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/GetAllBlocks:
+  /svt.db-agent.request/GetAllChipBlocks:
     post:
       tags:
-        - Blocks
-      summary: Get All Blocks
-      description: Returns Block list in the reply message. Optional filter by block ids or chipId can be applied to return exact block list.
+        - ChipBlocks
+      summary: Get All chip blocks
+      description: Returns chip block list in the reply message. Optional filter by chip block ids or chipId can be applied to return exact block list.
       requestBody:
         content:
           application/json:
@@ -499,7 +499,7 @@ paths:
               type: object
               allOf:
                 - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllBlocksMessage"
+                - $ref: "#/components/schemas/GetAllChipBlocksMessage"
         required: true
       responses:
         "200":
@@ -510,7 +510,7 @@ paths:
                 type: object
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllBlocksReplyMessage"
+                  - $ref: "#/components/schemas/GetAllChipBlocksReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -2046,11 +2046,11 @@ components:
     #
     # BLOCK :: LIST
     #
-    GetAllBlocksMessage:
+    GetAllChipBlocksMessage:
       properties:
         type:
           type: string
-          default: "GetAllBlocks"
+          default: "GetAllChipBlocks"
         data:
           type: object
           properties:
@@ -2064,7 +2064,7 @@ components:
                   description: Chip ids array. If array is empty / undefined => all Chip will be returned.
                   items:
                     type: number
-    GetAllBlocksReplyMessage:
+    GetAllChipBlocksReplyMessage:
       properties:
         type:
           type: string
@@ -2075,7 +2075,7 @@ components:
             items:
               type: array
               items:
-                $ref: "#/components/schemas/BlockDto"
+                $ref: "#/components/schemas/ChipBlockDto"
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -3161,8 +3161,8 @@ components:
         note:
           type: string
           description: General comment/reason about the location update.
-    # BLOCK :: DTO
-    BlockDto:
+    # CHIP BLOCK :: DTO
+    ChipBlockDto:
       type: object
       required:
         - id
@@ -3174,7 +3174,7 @@ components:
           type: integer
         chipId:
           type: integer
-        blocktype:
+        blockType:
           type: string
         serialNumber:
           type: string
