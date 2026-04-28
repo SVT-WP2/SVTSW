@@ -257,7 +257,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
         return ResponseBuilder.error("InitializeReply", error_msg, 500)
 
 
-def get_project_status():
+def get_project_status(user=None, waferAgentName=None):
     """Get current project status"""
     try:
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
