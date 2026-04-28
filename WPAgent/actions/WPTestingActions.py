@@ -1348,7 +1348,7 @@ def testing_lock(
         user=None,
         waferAgentName=None,
         reason="Testing in progress",
-        test_sequence_id=None
+        testSequenceId=None
 ):
     """
     Lock the WP Agent for testing to prevent interference from other users.
@@ -1386,7 +1386,7 @@ def testing_lock(
 
         # If locked by same user, allow re-lock (update reason/test_id)
         if g.locked_by_user == user:
-            g.lock_for_testing(user, reason, test_sequence_id)
+            g.lock_for_testing(user, reason, testSequenceId)
             return ResponseBuilder.success(
                 "TestingLockReply",
                 f"Lock updated for user '{user}'"
@@ -1403,7 +1403,7 @@ def testing_lock(
         )
 
     # Lock the agent
-    g.lock_for_testing(user, reason, test_sequence_id)
+    g.lock_for_testing(user, reason, testSequenceId)
 
     # Update state machine
     agentStateMachine.force_state(WPAgentState.AtContact_Locked)
