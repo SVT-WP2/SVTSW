@@ -22,6 +22,8 @@ class SentioProberImpl(AbstractProber):
             reference = ChuckXYReference.Zero
         elif position == 'Relative':
             reference = ChuckXYReference.Relative
+        elif position == 'Center':
+            reference = ChuckXYReference.Center
         return self.prober.move_chuck_xy(reference, x, y)
 
     def move_chuck_center(self):

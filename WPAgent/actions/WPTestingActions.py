@@ -10,6 +10,7 @@ from utilities.WPMapConverter import get_converter
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
 
+
 def _ensure_initialized():
     """
     Helper function to check if prober is initialized before executing commands.
@@ -423,9 +424,17 @@ def move_chuck_wide(user=None, waferAgentName=None):
 @validate_command
 def move_chuck_safe_position(user=None, waferAgentName=None):
     """Sequence MoveChuckOffAxis MoveChuckXY MoveChuckZ"""
-    absolute_x = 183672.8
-    absolute_y = -33439.9
-    absolute_z = 10377.7
+    # absolute_x = 183672.8
+    # absolute_y = -33439.9
+    # absolute_z = 10377.7
+    WAFER_DIAMETER_UM = 300000
+    MARGIN_UM = 20000
+    RADIUS_UM = WAFER_DIAMETER_UM / 2
+
+    safe_x_um = RADIUS_UM * 0.25
+    safe_y_um = -(RADIUS_UM + MARGIN_UM)
+    safe_z_um = 10377.7
+
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
@@ -438,8 +447,8 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         prober = get_current_prober()
 
         prober.move_chuck_offaxis_area()
-        prober.move_chuck_xy(x=absolute_x, y=absolute_y, position='Zero')
-        prober.move_chuck_z(z=absolute_z)
+        prober.move_chuck_xy(x=safe_x_um, y=safe_y_um, position='Center')
+        prober.move_chuck_z(z=safe_z_um)
 
         prober.local_mode()
 
