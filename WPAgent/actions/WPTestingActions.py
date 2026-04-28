@@ -158,10 +158,10 @@ def update_current_info(currentProber=None):
 # ==============================================================================
 
 def take_screenshot(
-        filename=None,
+        fileName=None,
         snapshot_type="CameraRaw",
         save_locally=True,
-        output_dir="screenshots",
+        outputDir="screenshots",
         user=None,
         waferAgentName=None
 ):
@@ -187,10 +187,10 @@ def take_screenshot(
         prober = get_current_prober()
 
         filepath = prober.take_screenshot(
-            filename=filename,
+            filename=fileName,
             snapshot_type=snapshot_type,
             save_locally=save_locally,
-            output_dir=output_dir
+            output_dir=outputDir
         )
 
         # Get absolute path
