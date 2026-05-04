@@ -35,6 +35,8 @@ from tqdm import tqdm
 
 log = logging.getLogger("its3")
 
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -57,6 +59,15 @@ def setup_logging(log_file: str | None = None) -> None:
     if log_file:
         handlers.append(logging.FileHandler(log_file))
     logging.basicConfig(level=logging.INFO, format=fmt, datefmt=datefmt, handlers=handlers)
+
+
+def iter_loggable_cmd_output(text: str):
+    clean = ANSI_ESCAPE_RE.sub("", text)
+    for part in re.split(r"\r+", clean):
+        for line in part.splitlines():
+            if line.lstrip().startswith("LIVE"):
+                continue
+            yield line
 
 
 # ---------------------------------------------------------------------------
@@ -187,7 +198,7 @@ class WPAgentClient:
         return self.send("OpenProject", {"project_name": project_name})
 
     def auto_focus(self) -> dict:
-        return self.send("AutoFocus")
+        return self.send("AutoFocus", timeout=90.0)
 
     def reset_agent(self) -> dict:
         return self.send("ResetAgent")
@@ -205,13 +216,13 @@ class WPAgentClient:
         return self.send("InitProbing", timeout=600.0)
     
     def find_home(self) -> dict:
-        return self.send("FindHome")
+        return self.send("FindHome", timeout=90.0)
 
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
     
     def move_chuck_center(self) -> dict:
-        return self.send("MoveChuckCenter")
+        return self.send("MoveChuckCenter", timeout=90.0)
 
     def move_chuck_off_axis(self) -> dict:
         return self.send("MoveChuckOffAxis")
@@ -460,10 +471,9 @@ class ITS3Runner:
             if show_output:
                 tqdm.write(text, file=sys.stderr)
             if log_output:
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', text) # remove ANSI color codes 
-                if not text.lstrip().startswith("LIVE"):
+                for clean_line in iter_loggable_cmd_output(text):
                     for fh in file_handlers:
-                        fh.stream.write(clean + "\n")
+                        fh.stream.write(clean_line + "\n")
                         fh.stream.flush()
         proc.wait()
         if proc.returncode != 0:
@@ -559,8 +569,8 @@ class ITS3Runner:
             log.warning("AutoFocus failed: %s", resp.get("output", resp))
         resp = wp.find_home()
         if resp.get("status", "").lower() not in ("success", "ok"):
-            log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
-            return False
+           log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
+           return False
         return True
         
     def _remove_daq_status_file(self) -> None:
