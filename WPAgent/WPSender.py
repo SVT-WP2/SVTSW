@@ -3,11 +3,7 @@
 WPSender.py — Standalone WP Agent Kafka client
 
 Usage:
-  python WPSender.py MoveChuckCenter --data='{"user":"user1","waferAgentName":"CERN_DEV"}'
-  python WPSender.py GetStatus       --data='{"waferAgentName":"CERN"}'
-  python WPSender.py RunSequencer    --data='{"filepath":"myseq.json","waferAgentName":"CERN_DEV"}'
-  python WPSender.py GetStatus       --data='{"waferAgentName":"CERN_DEV"}' --no-reply
-  python WPSender.py GetStatus       --data='{"waferAgentName":"CERN_DEV"}' --timeout 60
+  python3.12 WPSender.py UserLogIn --data='{"user":"user1","waferAgentName":"CERN"}'
 
 Port selection (auto-detected from waferAgentName in --data, or override with --port):
   CERN_DEV  → 9096
@@ -100,7 +96,7 @@ def main():
         epilog=__doc__,
     )
     parser.add_argument('command',
-        help='Command to send, e.g. MoveChuckCenter, GetStatus, RunSequencer')
+        help='Command to send, e.g. UserLogIn')
     parser.add_argument('--data', default='{}',
         help='JSON payload string, e.g. \'{"user":"user1","waferAgentName":"CERN_DEV"}\'')
     parser.add_argument('--port', type=int, default=None,
