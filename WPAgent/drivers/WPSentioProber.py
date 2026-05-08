@@ -1,5 +1,6 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
-from sentio_prober_control.Sentio.Enumerations import *
+#from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
+from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
 
@@ -53,7 +54,6 @@ class SentioProberImpl(AbstractProber):
         return self.prober.map.step_die(col, row)
 
     def switch_camera(self, mountPoint: str):
-        from sentio_prober_control.Sentio.Enumerations import CameraMountPoint
         cam_enum = getattr(CameraMountPoint, mountPoint)
         self.prober.vision.switch_camera(cam_enum)
 
@@ -91,7 +91,6 @@ class SentioProberImpl(AbstractProber):
         resp = self.prober.vision.auto_focus()
 
     def move_chuck_work_area(self, work_area):
-        from sentio_prober_control.Sentio.Enumerations import WorkArea
         try:
             work_area_enum = getattr(WorkArea, work_area)
         except AttributeError:
