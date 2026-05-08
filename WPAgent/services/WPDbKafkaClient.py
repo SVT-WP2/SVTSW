@@ -41,8 +41,10 @@ class DBKafkaClient:
             self.DB_BROKER = bootstrap_servers
             print(f"🔌 Using DB Kafka broker from config: {bootstrap_servers}")
         else:
-            self.DB_BROKER = "svmithi02:9096"  # Default
-            print(f"🔌 Using default DB Kafka broker: {self.DB_BROKER}")
+            #self.DB_BROKER = "svmithi02:9096"  # Default
+            #print(f"🔌 Using default DB Kafka broker: {self.DB_BROKER}")
+            print("WARNING - Kafka broker not found")
+            
         # ============================================================
 
         self.DB_REQUEST_TOPIC = "svt.db-agent.request"

@@ -55,8 +55,8 @@ class KafkaClient:
             self.bootstrap_servers = bootstrap_servers
             print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
         else:
-            self.bootstrap_servers = 'svmithi02:9098'
-            print(f"🔌 Using default Kafka broker: {self.bootstrap_servers}")
+            #self.bootstrap_servers = 'svmithi02:9098'
+            print("WARNING - Kafka broker not found")
 
         self.group_id = group_id
 

@@ -35,7 +35,8 @@ class ListenerHealthCheck:
         if bootstrap_servers:
             self.bootstrap_servers = bootstrap_servers
         else:
-            self.bootstrap_servers = 'svmithi02:9096'
+            #self.bootstrap_servers = 'svmithi02:9096'
+            print("WARNING - Kafka broker not found")
 
         self._ensure_topic_exists()
 
