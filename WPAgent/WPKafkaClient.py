@@ -50,13 +50,9 @@ class KafkaClient:
                               If None, uses default
             group_id: Consumer group ID
         """
-        # Use provided broker or fallback to default
-        if bootstrap_servers:
-            self.bootstrap_servers = bootstrap_servers
-            print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
-        else:
-            #self.bootstrap_servers = 'svmithi02:9098'
-            print("WARNING - Kafka broker not found")
+        
+        self.bootstrap_servers = bootstrap_servers
+        print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
 
         self.group_id = group_id
 

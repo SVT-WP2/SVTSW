@@ -79,7 +79,7 @@ COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_
 
 # Instantiation of logger
 logger = WPAgentLogger()
-health_check = ListenerHealthCheck()
+#health_check = ListenerHealthCheck()
 
 
 def _exec_in_sequence(message_type, data=None):

@@ -1,6 +1,6 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
 #from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
-from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition
+from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition, DieNumber
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
 

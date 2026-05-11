@@ -428,11 +428,11 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
     # absolute_y = -33439.9
     # absolute_z = 10377.7
     WAFER_DIAMETER_UM = 300000
-    MARGIN_UM = 20000
+    MARGIN_UM = 10000
     RADIUS_UM = WAFER_DIAMETER_UM / 2
 
     safe_x_um = RADIUS_UM * 0.25
-    safe_y_um = -(RADIUS_UM + MARGIN_UM)
+    safe_y_um = (RADIUS_UM + MARGIN_UM)
     safe_z_um = 10377.7
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
