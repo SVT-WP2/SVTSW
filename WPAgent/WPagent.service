@@ -13,13 +13,10 @@ ExecStart=/data/SVTSoftware/SVTSW/WPAgent/WPAgent.sh listen CERN
 
 Restart=always
 RestartSec=2
-TimeoutStartSec=10
+TimeoutStartSec=120
 
-#Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONUNBUFFERED=1"
 Environment="PYTHONNOUSERSITE=1"
-#Environment="PYTHONPATH="
 
-#LimitMEMLOCK=infinity
-
-#[Install]
-#WantedBy=default.target
+[Install]
+WantedBy=multi-user.target
