@@ -1,0 +1,10 @@
+argcomplete==3.6.1
+confluent-kafka==2.12.0
+Deprecated==1.2.18
+fire==0.7.1
+PyVISA==1.15.0
+sentio-prober-control==24.4.0
+termcolor==3.1.0
+tomli==2.3.0
+typing_extensions==4.15.0
+wrapt==1.17.3
