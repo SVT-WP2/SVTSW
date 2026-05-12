@@ -172,12 +172,12 @@ def take_image(
         snapshot_type="CameraRaw",
         save_locally=True,
         outputDir="screenshots",
-        num_columns=3,
-        num_rows=3,
+        num_columns=5,
+        num_rows=5,
         column_spacing_um=3140,
         row_spacing_um=2600,
         start_x_um=0,
-        start_y_um=0,
+        start_y_um=110000,
         settle_time_s=1,
         user=None,
         waferAgentName=None
@@ -197,8 +197,6 @@ def take_image(
 
     try:
         from utilities.WPImageStitching import stitch_images
-
-        print("We got in here")
 
         prober = get_current_prober()
         saved_files = []
