@@ -35,6 +35,11 @@ COMMAND_ROUTER = {
     "GetChuckPosition": testing_actions.get_chuck_position,
     "MoveChuckCenter": testing_actions.move_chuck_center,
 
+    "MoveChuckTopLeft": testing_actions.move_chuck_top_left,
+    "MoveChuckTopRight": testing_actions.move_chuck_top_right,
+    "MoveChuckBottomLeft": testing_actions.move_chuck_bottom_left,
+    "MoveChuckBottomRight": testing_actions.move_chuck_bottom_right,
+
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
     "ShowStatus": project_actions.get_project_status,

@@ -26,6 +26,30 @@ class SentioProberImpl(AbstractProber):
             reference = ChuckXYReference.Center
         return self.prober.move_chuck_xy(reference, x, y)
 
+    def move_chuck_top_left(self, x: float, y: float, position: str):
+        reference = ChuckXYReference.Center
+        x = 20.0
+        y = -20.0
+        return self.prober.move_chuck_xy(reference, x, y)
+
+    def move_chuck_top_right(self, x: float, y: float, position: str):
+        reference = ChuckXYReference.Center
+        x = -20.0
+        y = -20.0
+        return self.prober.move_chuck_xy(reference, x, y)
+
+    def move_chuck_bottom_left(self, x: float, y: float, position: str):
+        reference = ChuckXYReference.Center
+        x = 20.0
+        y = 20.0
+        return self.prober.move_chuck_xy(reference, x, y)
+
+    def move_chuck_bottom_right(self, x: float, y: float, position: str):
+        reference = ChuckXYReference.Center
+        x = -20.0
+        y = 20.0
+        return self.prober.move_chuck_xy(reference, x, y)
+
     def move_chuck_center(self):
         self.prober.send_cmd("move_chuck_center")
         # self.prober.wait_complete(resp.cmd_id())
