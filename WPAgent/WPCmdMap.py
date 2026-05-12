@@ -34,6 +34,7 @@ COMMAND_ROUTER = {
     "DisableOvertravel": testing_actions.disable_chuck_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
     "MoveChuckCenter": testing_actions.move_chuck_center,
+    "StressOpenProject": testing_actions.stress_open_project,
 
     "MoveChuckTopLeft": testing_actions.move_chuck_top_left,
     "MoveChuckTopRight": testing_actions.move_chuck_top_right,

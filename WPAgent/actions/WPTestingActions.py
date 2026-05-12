@@ -1096,6 +1096,46 @@ def open_project(projectName: str, user=None, waferAgentName=None):
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("OpenProjectReply", str(e), 500)
 
+@validate_command
+def stress_open_project(projectName: str, user=None, waferAgentName=None):
+    """Open project"""
+
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from actions.WPDataBaseActions import get_project_id_by_name
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("StressOpenProjectReply", error["output"], 400)
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    N = 100  # ← edit here
+
+    try:
+        for i in range(N):
+            prober = get_current_prober()
+
+            project_path = os.path.join(str(g.projects_base_path), projectName)
+
+            print(f"[{i+1}/{N}] {projectName}")
+
+            prober.open_project(projectName)
+
+            g.projectName = projectName
+            g.set_project_name(projectName)
+            g.opened_project_id = get_project_id_by_name(projectName)
+
+            prober.go_to_separation()
+
+            update_current_info(currentProber=prober)
+            prober.local_mode()
+
+        return ResponseBuilder.success("StressOpenProjectReply", f"Opened project: {project_path}")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("StressOpenProjectReply", str(e), 500)
+
 
 @validate_command
 def change_project(projectName: str, user=None, waferAgentName=None):
