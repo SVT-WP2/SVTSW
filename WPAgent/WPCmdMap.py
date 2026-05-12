@@ -70,6 +70,7 @@ COMMAND_ROUTER = {
     "TestingLock": testing_actions.testing_lock,
     "TestingUnlock": testing_actions.testing_unlock,
     "TakeScreenshot": testing_actions.take_screenshot,
+    "TakeImage": testing_actions.take_image
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = (

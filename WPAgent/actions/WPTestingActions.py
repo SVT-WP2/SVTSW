@@ -168,28 +168,104 @@ def update_current_info(currentProber=None):
 # SCREENSHOT
 # ==============================================================================
 
-
-def take_screenshot(
-    fileName=None,
-    snapshot_type="CameraRaw",
-    save_locally=True,
-    outputDir="screenshots",
-    user=None,
-    waferAgentName=None,
+def take_image(
+        snapshot_type="CameraRaw",
+        save_locally=True,
+        outputDir="screenshots",
+        num_columns=3,
+        num_rows=3,
+        column_spacing_um=3140,
+        row_spacing_um=2600,
+        start_x_um=0,
+        start_y_um=0,
+        settle_time_s=1,
+        user=None,
+        waferAgentName=None
 ):
     """
-    Take a screenshot from prober camera
+    Step the chuck in a row/column raster, snap a JPEG at each position,
+    then stitch all tiles into a single output image.
+    Images saved as 00_00.jpg under outputDir.
+    Starts at (start_x_um, start_y_um) absolutely, then steps relatively.
+    """
+
+    import time
+
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("TakeImageReply", error["output"], 400)
+
+    try:
+        from utilities.WPImageStitching import stitch_images
+
+        print("We got in here")
+
+        prober = get_current_prober()
+        saved_files = []
+
+        os.makedirs(outputDir, exist_ok=True)
+
+        prober.move_chuck_xy(start_x_um, start_y_um, "Center")
+        time.sleep(settle_time_s)
+
+        for row in range(num_rows):
+            for col in range(num_columns):
+
+                fname = f"{row:02d}_{col:02d}.jpg"
+
+                filepath = prober.take_screenshot(
+                    filename=fname,
+                    snapshot_type=snapshot_type,
+                    save_locally=save_locally,
+                    output_dir=outputDir
+                )
+                saved_files.append(os.path.abspath(filepath))
+
+                if col < num_columns - 1:
+                    prober.move_chuck_xy(column_spacing_um, 0, "Relative")
+                    time.sleep(settle_time_s)
+
+            if row < num_rows - 1:
+                prober.move_chuck_xy(
+                    -(column_spacing_um * (num_columns - 1)),
+                    row_spacing_um,
+                    "Relative"
+                )
+                time.sleep(settle_time_s)
+
+        stitched_path = stitch_images(folder=outputDir)
+
+        return ResponseBuilder.success(
+            "TakeImageReply",
+            f"Captured {len(saved_files)} images, stitched -> {stitched_path}"
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return ResponseBuilder.error("TakeImageReply", str(e), 500)
+
+def take_screenshot(
+        fileName=None,
+        snapshot_type="CameraRaw",
+        save_locally=True,
+        outputDir="screenshotsSVT",
+        user=None,
+        waferAgentName=None
+):
+    """
+    Take a screenshot from prober camera.
 
     Args:
-        fileName: Optional filename (auto-generated if not provided)
-        snapshot_type: "CameraRaw", "Overlay", or "CameraProcessed"
-        save_locally: True to save on WP Agent machine, False to save on prober
-        outputDir: Directory to save screenshots
+        fileName: Optional filename (auto-generated if not provided, always saved as .jpg)
+        snapshot_type: "CameraRaw" (raw sensor image) or "WithOverlays" (SENTIO UI overlay)
+        save_locally: True to save on WP Agent machine, False to save on prober PC
+        outputDir: Directory to save screenshots (only used when save_locally=True)
         user: User performing action
         waferAgentName: Agent name
 
     Returns:
-        Response with screenshot path
+        Response with screenshot absolute path
     """
     error = _ensure_initialized()
     if error:
@@ -205,7 +281,6 @@ def take_screenshot(
             output_dir=outputDir,
         )
 
-        # Get absolute path
         abs_path = os.path.abspath(filepath)
 
         agentStateMachine.transition("TakeScreenshot")

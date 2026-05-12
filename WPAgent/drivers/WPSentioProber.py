@@ -1,16 +1,6 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
-
-# from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
-from sentio_prober_control.Sentio.Enumerations import (
-    CameraMountPoint,
-    WorkArea,
-    ChuckXYReference,
-    ChuckZReference,
-    SnapshotType,
-    SnapshotLocation,
-    LoadPosition,
-    DieNumber,
-)
+#from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
+from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition, DieNumber, SnapshotType, SnapshotLocation 
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
 
@@ -237,6 +227,22 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
+            
+
+    def take_image(
+        self,
+        snapshot_type : str = "CameraRaw",
+        save_locally : bool =True,
+        outputDir : str = "screenshots",
+        num_columns : int = 3,
+        num_rows : int = 3,
+        column_spacing_um : int = 3400,
+        row_spacing_um : int = 2800,
+        start_x_um : int = 0,
+        start_y_um : int = 0,
+        settle_time_s : float = 1,
+    ):
+        self.prober.take_image(snapshot_type, save_locally, outputDir, num_columns, num_rows, column_spacing_um, row_spacing_um, start_x_um, start_y_um, settle_time_s)
 
     def take_screenshot(
         self,
@@ -246,39 +252,52 @@ class SentioProberImpl(AbstractProber):
         output_dir: str = "screenshotsSVT",
     ):
         """
-        Take a screenshot from the prober camera
+        Take a screenshot from the prober camera.
 
         Args:
             filename: Output filename (auto-generated if None)
-            snapshot_type: Type of snapshot - "CameraRaw", "Overlay", "CameraProcessed"
+            snapshot_type: "CameraRaw" or "WithOverlays"
             save_locally: If True, downloads to local machine; if False, saves on prober
-            output_dir: Directory to save screenshots (default: "screenshots")
+            output_dir: Directory to save screenshots
 
         Returns:
             str: Full path to saved screenshot
         """
         import datetime
         import os
+        
+        # Map string to enum — only two valid values exist
+        type_map = {
+            "CameraRaw": SnapshotType.CameraRaw,
+            "WithOverlays": SnapshotType.WithOverlays,
+        }
+        what = type_map.get(snapshot_type, SnapshotType.CameraRaw)
 
         if not filename:
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"screenshot_{timestamp}.jpg"
 
-        if not filename.lower().endswith((".jpg", ".jpeg")):
-            filename += ".jpg"
+        # API always returns JPEG bytes — enforce .jpg regardless of user input
+        if not filename.lower().endswith(('.jpg', '.jpeg')):
+            filename = os.path.splitext(filename)[0] + '.jpg'
 
         if save_locally:
             os.makedirs(output_dir, exist_ok=True)
-
             full_path = os.path.join(output_dir, filename)
-
-            # Take screenshot and download
             self.prober.vision.snap_image(
                 file=full_path,
-                what=SnapshotType.CameraRaw,
-                where=SnapshotLocation.Local,
+                what=what,
+                where=SnapshotLocation.Local
             )
-            return full_path
+        else:
+            full_path = filename  # path on prober PC
+            self.prober.vision.snap_image(
+                file=full_path,
+                what=what,
+                where=SnapshotLocation.Prober
+            )
+
+        return full_path
 
     def get_chuck_stage(self):
         try:
