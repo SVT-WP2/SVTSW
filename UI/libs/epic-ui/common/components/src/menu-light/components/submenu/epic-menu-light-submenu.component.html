@@ -1,0 +1,75 @@
+﻿<mat-menu #menu
+          class="epic-menu-light-submenu"
+          backdropClass="epic-menu-light-submenu__backdrop">
+    <!-- HEADER -->
+    <epic-mat-menu-header *ngIf="(header || subheader)"
+                         [header]="header | translate"
+                         [subheader]="subheader | translate">
+    </epic-mat-menu-header>
+    <!-- ./HEADER -->
+
+    <mat-divider *ngIf="(header || subheader) && items?.length"></mat-divider>
+
+    <!-- SUB MENU ITEMS -->
+    <ng-container *ngFor="let item of items">
+        <!-- LINK -->
+        <a *ngIf="item.routerLink && !item.submenu"
+           class="epic-menu-light-submenu__item"
+           [item]="item"
+           [queryParams]="item.routerQueryParams"
+           [routerLink]="item.routerLink"
+           epicMenuLightActiveItem
+           mat-menu-item>
+            <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+        </a>
+        <!-- ./LINK -->
+
+        <!-- ITEM WITH SUBMENU -->
+        <button *ngIf="item.submenu && !item.routerLink"
+                class="epic-menu-light-submenu__item"
+                [item]="item"
+                [matMenuTriggerFor]="submenu.menu"
+                epicMenuLightActiveItem
+                mat-menu-item
+                (click)="onItemClick(item, $event)">
+
+            <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+
+            <epic-menu-light-submenu #submenu
+                                    [header]="item.submenu.header"
+                                    [items]="item.submenu.items"
+                                    [subheader]="item.submenu.subheader">
+            </epic-menu-light-submenu>
+        </button>
+        <!-- ./ITEM WITH SUBMENU -->
+
+        <!-- ITEM WITHOUT SUBMENU -->
+        <button *ngIf="!item.routerLink && !item.submenu"
+                class="epic-menu-light-submenu__item"
+                mat-menu-item
+                (click)="onItemClick(item, $event)">
+            <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+        </button>
+        <!-- ./ITEM WITHOUT SUBMENU -->
+
+        <!-- ITEM CONTENT -->
+        <ng-template #itemContent>
+            <epic-icon *ngIf="item.icon" [name]="item.icon"></epic-icon>
+            <span class="epic-menu-light-submenu__item-label">{{ item.label | translate }}</span>
+            <!-- ACTIONS -->
+            <div class="epic-menu-light-submenu__item-actions">
+                <button *ngFor="let action of item.sideActions" class="ms-2"
+                        [matTooltip]="action.tooltip | translate"
+                        mat-icon-button
+                        (click)="onSideActionClick(action, $event)">
+                    <epic-icon [name]="action.icon"></epic-icon>
+                </button>
+            </div>
+            <!-- ./ACTIONS -->
+        </ng-template>
+        <!-- ./ITEM CONTENT -->
+    </ng-container>
+    <!-- ./SUB MENU ITEMS -->
+</mat-menu>
+
+

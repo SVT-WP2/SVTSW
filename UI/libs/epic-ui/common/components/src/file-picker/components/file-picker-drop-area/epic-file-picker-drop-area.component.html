@@ -1,0 +1,29 @@
+<div class="nano-file-picker-drop-area"
+     epicFileDragAndDropArea
+     (click)="fileInput.click()"
+     (fileDrop$)="onFileDrop($event)">
+
+        <div class="nano-file-picker-drop-area__placeholder">
+
+            <div class="nano-file-picker-drop-area__placeholder-text">
+
+                <epic-icon class="me-3 d-flex" name="file_upload"/>
+
+                <epic-long-text [tooltip]="'COMMON.FILE_PICKER.DROP_AREA_TITLE' | translate">
+                    {{ 'COMMON.FILE_PICKER.DROP_AREA_TITLE' | translate }}
+                </epic-long-text>
+            </div>
+
+            <div class="nano-file-picker-drop-area__placeholder-action">
+                {{ 'COMMON.FILE_PICKER.BROWSE_FILE_BTN' | translate }}
+            </div>
+
+        </div>
+
+        <input #fileInput
+                class="d-none"
+               [accept]="acceptFileExtensions"
+               [multiple]="isMultiple"
+               type="file"
+               (change)="handleInputChange($event)"/>
+</div>

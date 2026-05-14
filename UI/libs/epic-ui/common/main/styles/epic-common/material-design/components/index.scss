@@ -1,0 +1,26 @@
+@import './mat-button';
+@import './mat-button-toggle';
+@import './mat-card';
+@import './mat-cdk-overlay';
+@import './mat-chips';
+@import './mat-dialog';
+@import './mat-divider';
+@import './mat-form-field';
+@import './mat-menu';
+@import './mat-tab-nav-bar';
+@import './mat-checkbox';
+@import './mat-pseudo-checkbox';
+@import './mat-radio';
+@import './mat-drawer';
+@import './mat-calendar';
+@import './mat-progress-bar';
+@import './mat-date-picker';
+@import './mat-slide-toggle';
+@import './mat-select';
+@import './mat-slider';
+@import './mat-selection-list';
+@import './mat-list';
+
+body {
+    --mdc-theme-text-primary-on-background: #{$color-neutral-900};
+}

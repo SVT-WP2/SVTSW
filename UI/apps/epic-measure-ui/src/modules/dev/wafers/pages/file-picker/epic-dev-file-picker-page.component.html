@@ -1,0 +1,21 @@
+<mat-card >
+    <mat-card-header>
+        <mat-card-title>File Picker</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+
+        <epic-file-picker
+                [acceptFileExtensions]="acceptFileExtensions"
+                [(ngModel)]="value"
+                          (ngModelChange)="onValueChanged($event)">
+        </epic-file-picker>
+        <div class="pt-3">
+            <mat-divider></mat-divider>
+            <div class="nano-font-title mt-3 pb-3">Selected Value</div>
+            <code *ngIf="value">
+                File Name: {{  value.name }}
+            </code>
+            <code *ngIf="!value">{{ value | json }}</code>
+        </div>
+    </mat-card-content>
+</mat-card>

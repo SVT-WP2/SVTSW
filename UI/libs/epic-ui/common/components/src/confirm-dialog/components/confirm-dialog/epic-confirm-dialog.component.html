@@ -1,0 +1,31 @@
+﻿<epic-mat-dialog-header *ngIf="data?.headerTitle"
+                       [headerIconName]="data?.headerIconName">
+    {{ data?.headerTitle | translate }}
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    <ng-container *ngIf="!!data?.messageTemplateRef">
+        <ng-container *ngTemplateOutlet="data.messageTemplateRef"></ng-container>
+    </ng-container>
+
+    <div *ngIf="!data?.messageTemplateRef" [innerHTML]="(data?.message ? data.message : defaultMessage) | translate | epicSafeHtml"></div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button *ngIf="!data?.hideCancelButton"
+            [disabled]="isProcessing"
+            mat-stroked-button
+            (click)="onCancelButtonClicked()">
+        {{ 'COMMON.CANCEL' | translate }}
+    </button>
+
+    <button [color]="data?.confirmButtonColor ?? defaultConfirmBtnStyles"
+            [disabled]="isProcessing"
+            mat-flat-button
+            (click)="onConfirmButtonClicked()">
+        {{ (isProcessing ? 'COMMON.PROCESSING' : (data?.confirmButtonText ? data.confirmButtonText : defaultConfirmButtonText)) | translate }}
+    </button>
+</mat-dialog-actions>
+

@@ -1,0 +1,123 @@
+﻿@import 'vars';
+@import '../shared';
+
+$logo-width: 56px;
+$sidebar-color: $color-primary-300;
+
+.epic-layout-light {
+    height: 100vh;
+
+    &__drawer-container {
+        background-color: unset;
+        color: unset;
+        height: 100%;
+    }
+
+    &__wrapper {
+        display: flex;
+        height: 100%;
+    }
+
+    &__content-wrapper {
+        background-color: $sidebar-color;
+        display: flex;
+        flex-grow: 1;
+        overflow: hidden;
+        padding: 0.5rem 0.5rem 0.5rem 0;
+        position: relative;
+    }
+
+    &__content {
+        background-color: $color-neutral-0;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    &__content-body {
+        background: $color-neutral-20;
+        flex-grow: 1;
+        overflow: auto;
+        padding: 0 1rem 1rem;
+        padding-block: 1rem;
+        position: relative;
+    }
+
+    &__sidebar {
+        align-items: center;
+        background-color: $sidebar-color;
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 0 $sidebar-padding--x;
+        width: $sidebar-width;
+    }
+
+    &__sidebar-header {
+        position: relative;
+        width: 100%;
+    }
+
+    &__sidebar-logo-container {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+    }
+
+    &__sidebar-logo {
+        margin-top: 6px;
+        width: $logo-width;
+    }
+
+    &__sidebar-env-container {
+        margin-top: -16px;
+        padding-bottom: 4px;
+        width: 100%;
+    }
+
+    &__sidebar-env {
+        background-color: $color-primary-400;
+        border: 1px solid $color-neutral-0;
+        border-radius: 4px;
+        color: $color-neutral-0;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 14px;
+        text-align: center;
+    }
+
+    &__sidebar-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: center;
+        overflow-x: hidden;
+        padding-bottom: 96px;
+
+        &::-webkit-scrollbar {
+            width: 0;
+        }
+    }
+
+    &__sidebar-footer {
+        padding-bottom: 8px;
+    }
+
+    &__sidebar-content-bottom {
+        margin-top: 64px;
+        padding-bottom: 12px;
+    }
+
+    &__side-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: fit-content;
+    }
+}

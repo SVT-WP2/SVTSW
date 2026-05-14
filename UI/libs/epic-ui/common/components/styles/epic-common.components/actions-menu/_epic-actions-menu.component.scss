@@ -1,0 +1,19 @@
+﻿.epic-actions-menu {
+    &__item {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    &__item-title {
+        flex-grow: 1;
+        vertical-align: middle;
+    }
+
+    &__item-image {
+        height: 16px;
+        margin-right: 8px;
+        vertical-align: middle !important;
+        width: 16px;
+    }
+}

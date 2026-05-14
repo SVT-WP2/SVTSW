@@ -1,0 +1,102 @@
+@use '@angular/material' as mat;
+@import 'vars';
+
+
+$select-option-border-radius: 8px;
+$select-option-color: $color-neutral-900;
+$select-option-color--active: $color-primary-300;
+$select-option-bg-color--hover: $color-neutral-20;
+$select-option-bg-color--active: $color-primary-50;
+
+
+.mat-mdc-select-placeholder {
+    --mat-select-placeholder-text-color: #{$color-neutral-60};
+}
+
+// SELECT OPTION
+mat-option.mat-mdc-option {
+    --mat-option-focus-state-layer-color: #{$select-option-bg-color--hover};
+
+    &.mdc-list-item {
+
+        border-radius: $select-option-border-radius;
+        margin: 4px;
+        min-height: 40px;
+        padding-left: 8px;
+        padding-right: 8px;
+
+        .mat-mdc-menu-item-text {
+            overflow: auto;
+        }
+
+        &:not(.mdc-list-item--disabled):not(.mdc-list-item--selected):hover {
+            background: $select-option-bg-color--hover;
+        }
+
+        &.mat-mdc-option.mat-mdc-option-active:not(.mdc-list-item--selected) {
+            background: $select-option-bg-color--hover;
+
+            .mat-mdc-menu-item-text {
+                color: $select-option-color--active;
+                font-weight: 500;
+            }
+        }
+    }
+
+
+
+    // SELECTED
+    &.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+        --mat-option-selected-state-layer-color: #{$select-option-bg-color--active};
+        --mat-option-selected-state-label-text-color: #{$select-option-color--active};
+        font-weight: 500;
+    }
+
+}
+
+// ngx-mat-select-search
+
+mat-option.mat-mdc-option.mdc-list-item.mat-mdc-option.mat-mdc-option-active:not(.mdc-list-item--selected).contains-mat-select-search {
+    background: $color-neutral-0;
+}
+
+.mat-mdc-option.contains-mat-select-search.mdc-list-item {
+    @include epic-border-style(bottom);
+    background: $color-neutral-0;
+    border-radius: 0;
+    margin-inline: 0;
+    padding: 0 8px;
+
+    ngx-mat-select-search > .mat-select-search-input {
+        height: 56px;
+    }
+
+    .mat-select-search-inner {
+        left: 8px;
+        padding: 0;
+        right: 8px;
+        width: unset;
+
+        .mat-select-search-inner-row {
+            padding: 0;
+
+            .mat-select-search-input {
+                @include epic-border-style(all);
+                border-radius: 8px;
+                height: 40px;
+                line-height: 40px;
+                margin: 8px 0;
+
+                &::placeholder {
+                    color: $color-neutral-60;
+                }
+            }
+
+            .mat-select-search-clear {
+                right: 2px;
+                top: 8px;
+            }
+        }
+    }
+}
+

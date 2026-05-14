@@ -1,0 +1,152 @@
+﻿@if(initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <div class="d-flex gap-3 flex-row w-100 align-items-center">
+            <mat-form-field class="w-100">
+                <mat-label>Display Name</mat-label>
+                <input [formControlName]="FormField.name" matInput>
+                <mat-error>Required Field</mat-error>
+            </mat-form-field>
+            <mat-checkbox [formControlName]="FormField.allowCustomName"></mat-checkbox>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>WP Machine</mat-label>
+                    <mat-select [formControlName]="FormField.wpMachineId">
+                        <mat-option>
+                            <ngx-mat-select-search
+                                    [formControl]="wpMachineSearchTermControl"
+                                    [placeholderLabel]="'Search ...'"
+                                    [noEntriesFoundLabel]="''"/>
+                        </mat-option>
+
+                        @let wpMachinesOptions = formGroup.controls[FormField.wpMachineId].selectOptions || [] | epicSearch: (wpMachineSearchTermControl.value || '') : 'name';
+
+                        @for (option of wpMachinesOptions; track option?.id) {
+                            <mat-option [value]="option.id">
+                                {{ option.name }}
+                            </mat-option>
+                        }
+
+                        @if (wpMachinesOptions.length === 0) {
+                            <epic-no-result size="small" />
+                        }
+
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.wpMachineId].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+
+                </mat-form-field>
+            </div>
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Wafer</mat-label>
+                    <mat-select [formControlName]="FormField.waferId">
+                        <mat-option>
+                            <ngx-mat-select-search
+                                    [formControl]="waferSearchTermControl"
+                                    [placeholderLabel]="'Search ...'"
+                                    [noEntriesFoundLabel]="''"/>
+                        </mat-option>
+
+                        @let wafersOptions = formGroup.controls[FormField.waferId].selectOptions || [] | epicSearch: (waferSearchTermControl.value || '') : 'name';
+
+                        @for (option of wafersOptions; track option?.id) {
+                            <mat-option [value]="option.id">
+                                {{ option.serialNumber }}
+                            </mat-option>
+                        }
+
+                        @if (wafersOptions.length === 0) {
+                            <epic-no-result size="small" />
+                        }
+
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.waferId].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Asic Test Type</mat-label>
+                    <mat-select [formControlName]="FormField.asicTestTypeId">
+                        <mat-option>
+                            <ngx-mat-select-search
+                                    [formControl]="asicTestTypeSearchTermControl"
+                                    [placeholderLabel]="'Search ...'"
+                                    [noEntriesFoundLabel]="''"/>
+                        </mat-option>
+
+                        @let asicTestTypesOptions = formGroup.controls[FormField.asicTestTypeId].selectOptions || [] | epicSearch: (asicTestTypeSearchTermControl.value || '') : 'name';
+
+                        @for (option of asicTestTypesOptions; track option?.id) {
+                            <mat-option [value]="option.id">
+                                {{ option.name }}
+                            </mat-option>
+                        }
+
+                        @if (wpMachinesOptions.length === 0) {
+                            <epic-no-result size="small" />
+                        }
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.asicTestTypeId].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+
+        </div>
+
+        @if (formGroup.controls[FormField.asicTestTypeId].value) {
+
+            <div class="epic-font-label">
+                Asics Under Test
+            </div>
+
+            <mat-button-toggle-group [value]="'ALL'">
+                <mat-button-toggle [value]="'ALL'">
+                    All Asics
+                </mat-button-toggle>
+                <mat-button-toggle [value]="'SPECIFIC'">
+                    Specific Asics
+                </mat-button-toggle>
+            </mat-button-toggle-group>
+
+            <div class="epic-font-label">
+                Test Parameters
+            </div>
+
+            <mat-form-field class="w-100">
+                <mat-label>Voltage, [V]</mat-label>
+                <input [formControl]="formGroup.controls[FormField.testConfig].controls.voltage" matInput type="number" min="0" step="0.1" max="100000">
+                <mat-error>Required Field</mat-error>
+            </mat-form-field>
+
+            <mat-checkbox [formControl]="formGroup.controls[FormField.testConfig].controls.skipInitialAlignment">
+                <mat-label>Skip Initial Alignment</mat-label>
+            </mat-checkbox>
+
+            <mat-checkbox [formControl]="formGroup.controls[FormField.testConfig].controls.skipPtpaForEachStep">
+                <mat-label>Skip PTPA For Each Step</mat-label>
+            </mat-checkbox>
+        }
+
+
+
+    </div>
+}
+
+

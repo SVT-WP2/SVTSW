@@ -1,0 +1,34 @@
+﻿@if(initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <div>
+            <div class="epic-font-label mb-2">
+                Config Schema *
+            </div>
+            <epic-file-picker [formControlName]="FormField.configBody" acceptFileExtensions=".json" />
+        </div>
+
+        <mat-form-field class="w-100">
+            <mat-label>Note</mat-label>
+            <textarea [formControlName]="FormField.note" matInput></textarea>
+        </mat-form-field>
+
+
+    </div>
+}
+
+

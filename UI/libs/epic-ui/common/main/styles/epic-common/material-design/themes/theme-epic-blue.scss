@@ -1,0 +1,32 @@
+@use '@angular/material' as mat;
+@use '../palletes/theme-colors-epic' as themeColors;
+
+html {
+    color-scheme: light;
+
+    @include mat.theme((
+        color: themeColors.$primary-palette,
+        typography: Roboto,
+    ),
+    $overrides: (
+        surface: $color-neutral-0,
+        surface-container: $color-neutral-0,
+        surface-container-high: $color-neutral-0,
+        surface-container-highest: $color-neutral-0,
+        surface-container-low: $color-neutral-0,
+        surface-container-lowest: $color-neutral-0,
+        outline: $color-neutral-40,
+        outline-variant: $color-neutral-40,
+        background: $color-neutral-0,
+    ));
+}
+
+:root {
+    --mat-sys-body-medium-size: $font-size--body-lg;
+    --mat-sys-body-medium-line-height: 24px;
+    --mat-sys-body-medium-tracking: 0;
+    --mat-sys-body-large-line-size: $font-size--body-lg;
+    --mat-sys-body-large-line-height: 24px;
+    --mat-sys-body-large-tracking: 0;
+    --mat-sys-primary-container: $color-neutral-0;
+}

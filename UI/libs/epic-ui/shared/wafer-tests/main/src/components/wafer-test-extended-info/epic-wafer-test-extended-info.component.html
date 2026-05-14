@@ -1,0 +1,123 @@
+﻿<div class="p-3">
+    <div class="row ">
+        <div class="col-12">
+            <div class="row py-1 align-items-center">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Status
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    <epic-label [ngClass]="{
+                                'epic-color-success-400 epic-bg-color-success-50': entity?.status === EpicWaferTestStatus.Done,
+                                'epic-color-primary-400 epic-bg-color-primary-50': entity?.status === EpicWaferTestStatus.Processing,
+                               }"
+                               size="sm">
+                        {{ entity.status }}
+                    </epic-label>
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    ID
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ entity.id }}
+                </div>
+            </div>
+            @if (entity?.description?.length) {
+                <div class="row py-1">
+                    <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                        Description
+                    </div>
+                    <div class="col-lg-6 epic-font-label">
+                        {{ entity.description }}
+                    </div>
+                </div>
+            }
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Created At
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ entity.createdAt ? (entity.createdAt | date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Started At
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ entity.startedAt ? (entity.startedAt | date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Finished At
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ entity.finishedAt ? (entity.finishedAt | date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    WP Machine
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    <a href="/">{{ entity.wpMachine?.name || entity.wpMachineId }}</a>
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Wafer
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    <a [routerLink]="['/wafers/details/', entity.waferId]">
+                        {{ entity.wafer?.serialNumber || entity.waferId }}
+                    </a>
+                </div>
+            </div>
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    ASIC Test Type
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    <a href="/">{{ entity.asicTestType?.name || entity.asicTestTypeId }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="epic-font-label mb-2">ASIC Test Parameters</div>
+
+        <div class="row py-1">
+            <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                Skip Initial Alignment
+            </div>
+            <div class="col-lg-6 epic-font-label">
+                {{ entity.testConfig?.skipInitialAlignment ? 'Yes' : 'No' }}
+            </div>
+        </div>
+
+        <div class="row py-1">
+            <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                Skip PTPA
+            </div>
+            <div class="col-lg-6 epic-font-label">
+                {{ entity.testConfig?.skipPtpaForEachStep ? 'Yes' : 'No' }}
+            </div>
+        </div>
+
+        @if (entity.testConfig?.voltage) {
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    Voltage
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ entity.testConfig?.voltage }} V
+                </div>
+            </div>
+        }
+    </div>
+
+
+</div>

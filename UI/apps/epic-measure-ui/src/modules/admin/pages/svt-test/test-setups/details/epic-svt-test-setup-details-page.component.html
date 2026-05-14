@@ -1,0 +1,89 @@
+﻿@if (dataFetchingProcessing().processing) {
+    <epic-loader [fillAllSection]="true"/>
+} @else if (dataFetchingProcessing().processingError) {
+    <epic-content-error>
+        {{ dataFetchingProcessing().processingError | epicContentErrorMessage }}
+    </epic-content-error>
+} @else {
+
+    <div class="e2e-container">
+    <div class="epic-bg-color-neutral-0 py-2 px-3 epic-border-style-bottom--solid d-flex align-items-center gap-3">
+        <button [matTooltip]="'COMMON.BACK' | translate"
+                [routerLink]="['../../list']"
+                epicStrokedButton
+                mat-icon-button>
+            <epic-icon name="arrow_back"/>
+        </button>
+
+        <mat-divider [vertical]="true"/>
+
+        <!-- BREADCRUMBS -->
+        <epic-breadcrumbs [breadcrumbs]="breadcrumbs()" [size]="'large'"/>
+        <!-- ./BREADCRUMBS -->
+
+        <div class="flex-1 d-flex justify-content-end gap-2">
+            <!-- GENERAL LOCATION -->
+            <epic-label [iconName]="'location_on' | epicIconMatOutlined"
+                       [matTooltip]="'Location' | translate"
+                       size="lg">
+                {{ testSetup()?.generalLocation }}
+            </epic-label>
+            <!-- ./GENERAL LOCATION -->
+            <!-- GENERAL LOCATION -->
+            <epic-label [iconName]="'tag' | epicIconMatOutlined"
+                       [matTooltip]="'ID' | translate"
+                       size="lg">
+                {{ testSetup()?.id }}
+            </epic-label>
+            <!-- ./GENERAL LOCATION -->
+        </div>
+    </div>
+
+    <div class="e2e-container__body-with-scroll position-relative">
+        <div class="e2e-container flex-row">
+            <div class="epic-bg-color-neutral-0 py-2 px-3 epic-border-style-right--solid position-relative" style="width: 378px;">
+                <div class="e2e-container">
+                    <div class="px-3 pt-3">
+                        <div class="d-flex w-100 align-items-center gap-3">
+                            <div class="flex-1">
+                                <epic-search-box [searchTerm]="searchTerm" (search$)="searchTerm = $event"/>
+                            </div>
+                            <mat-divider [vertical]="true"/>
+                            <button [matTooltip]="'Add New Config'"
+                                    epicStrokedButton
+                                    mat-icon-button
+                                    (click)="onCreateConfig()">
+                                <epic-icon name="add"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="e2e-container__body-with-scroll px-3">
+                        @let visibleNavTabs = navTabs() | epicSearch : searchTerm : 'label';
+                        @if (visibleNavTabs.length === 0) {
+                            <epic-no-result/>
+                        } @else {
+                            <epic-vertical-nav-tabs [tabs]="visibleNavTabs">
+                                <ng-template epicTabContent let-tabInfo="tabInfo">
+                                    <div class="d-flex align-items-center gap-2 w-100">
+                                        <div class="flex-1">{{ tabInfo.label }}</div>
+                                        <!-- DEFAULT LABEL -->
+                                        @if (tabInfo.additionalData?.isDefault) {
+                                            <epic-label class="epic-color-warning-300 epic-bg-color-warning-50">Default</epic-label>
+                                        }
+                                        <!-- DEFAULT LABEL -->
+                                    </div>
+                                </ng-template>
+                            </epic-vertical-nav-tabs>
+                        }
+
+                    </div>
+                </div>
+            </div>
+            <div class="e2e-container__body-with-scroll p-3">
+                <router-outlet/>
+            </div>
+        </div>
+
+    </div>
+</div>
+}

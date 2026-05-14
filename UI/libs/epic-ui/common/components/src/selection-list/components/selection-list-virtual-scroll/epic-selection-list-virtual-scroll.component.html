@@ -1,0 +1,33 @@
+<mat-selection-list [disabled]="disabled"
+                    [multiple]="multiple"
+                    color="primary"
+                    (blur)="onTouch()">
+    <cdk-virtual-scroll-viewport [itemSize]="itemHeight"
+                                 [maxBufferPx]="maxBufferPx ? maxBufferPx : itemHeight * 50"
+                                 [minBufferPx]="minBufferPx ? minBufferPx : itemHeight * 10">
+        <ng-container *cdkVirtualFor="let currentOption of selectOptions; templateCacheSize: 0; trackBy: trackByFn; let index = index">
+            <mat-list-option [disabled]="!!currentOption.disabled"
+                             [selected]="selectionModel.isSelected(currentOption.value)"
+                             [value]="currentOption.value"
+                             togglePosition="before"
+                             (selectedChange)="onOptionSelectionChanged(currentOption.value, $event)">
+                @if (customOptionTemplate) {
+                    <ng-container
+                        *ngTemplateOutlet="customOptionTemplate.templateRef; context: { option: currentOption, isSelected: selectionModel.isSelected(currentOption.value), index: index }"/>
+                } @else {
+                    <ng-container *ngTemplateOutlet="defaultOptionTemplateRef; context: { option: currentOption }"/>
+                }
+            </mat-list-option>
+        </ng-container>
+
+        @if (!selectOptions.length) {
+            <epic-no-result size="small"/>
+        }
+    </cdk-virtual-scroll-viewport>
+</mat-selection-list>
+
+<ng-template #defaultOptionTemplateRef let-option="option">
+    <epic-long-text [tooltip]="option.label | translate">
+        {{ option.label | translate }}
+    </epic-long-text>
+</ng-template>

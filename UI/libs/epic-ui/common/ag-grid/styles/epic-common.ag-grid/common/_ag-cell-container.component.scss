@@ -1,0 +1,37 @@
+@import 'vars';
+@import 'mixins';
+
+%epic-ag-cell-aligned {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.epic-ag-cell--centered {
+    @extend %epic-ag-cell-aligned;
+    justify-content: center;
+}
+
+.epic-ag-cell--align-right {
+    @extend %epic-ag-cell-aligned;
+    justify-content: flex-end;
+}
+
+.epic-ag-cell--align-left {
+    @extend %epic-ag-cell-aligned;
+    justify-content: flex-start;
+}
+
+.epic-ag-cell--vertical-centered {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.epic-ag-cell-container--no-padding {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+

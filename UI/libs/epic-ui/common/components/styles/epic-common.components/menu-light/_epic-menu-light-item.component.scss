@@ -1,0 +1,84 @@
+﻿@import 'vars';
+@import 'mixins';
+
+$badge-size: 16px;
+$sidebar-width: 64px;
+$sidebar-item-size: 56px;
+$submenu-max-width: 350px;
+
+$menu-color: $color-primary-50;
+$menu-bg-color: $color-primary-300;
+
+$menu-color--hover: $color-primary-300;
+$menu-bg-color--hover: $color-primary-50;
+
+$menu-color--active: $color-primary-50;
+$menu-bg-color--active: $color-primary-400;
+
+.epic-menu-light-item,
+a.epic-menu-light-item {
+    align-items: center;
+    background-color: $menu-bg-color;
+    border: 0;
+    border-radius: 12px;
+    color: $menu-color;
+    display: flex;
+    flex-direction: column;
+    height: $sidebar-item-size;
+    justify-content: center;
+    line-height: 1;
+    margin: 0.25rem 0;
+    padding: 0;
+    position: relative;
+    text-decoration: none;
+    width: $sidebar-item-size;
+
+    &.is-open,
+    &:hover {
+        background-color: $menu-bg-color--hover;
+        color: $menu-color--hover;
+        text-decoration: none;
+    }
+
+    &:active,
+    &:focus {
+        text-decoration: none;
+    }
+
+    &.active,
+    &.active:hover {
+        background-color: $menu-bg-color--active;
+        color: $menu-color--active;
+    }
+
+    &__icon {
+        @include epic-icon-size(24px);
+        display: block;
+        margin: 0 0 0.5rem;
+    }
+
+    &__label {
+        font-size: 10px;
+        font-weight: 400;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__badge {
+        background-color: $color-error-300;
+        border: 1px solid $color-neutral-0;
+        border-radius: $badge-size;
+        color: $color-neutral-0;
+        font-size: 10px;
+        height: $badge-size;
+        line-height: $badge-size - 1px;
+        min-width: $badge-size;
+        padding: 0 0.125rem;
+        position: absolute;
+        right: 4px;
+        text-align: center;
+        top: 4px;
+    }
+}

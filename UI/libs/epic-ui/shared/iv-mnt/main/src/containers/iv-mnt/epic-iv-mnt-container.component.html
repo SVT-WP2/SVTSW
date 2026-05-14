@@ -1,0 +1,43 @@
+﻿<div class="epic-iv-mnt">
+    @if (!mntProcessing().processing && mntProcessing().processingError) {
+        <epic-alert severity="error" class="mb-3 d-block">
+            <epic-icon epicAlertIcon name="epic-info" />
+            <div class="epic-font-label-lg">Measurement Processing Error</div>
+            {{ mntProcessing().processingError }}
+        </epic-alert>
+    }
+    <mat-card appearance="outlined">
+        <mat-card-content class="p-0">
+            <div class="epic-iv-mnt__inner-wrapper">
+                <div class="epic-iv-mnt__sidebar">
+                    <epic-iv-mnt-new-form #form
+                                          [formData]="initFormData"
+                                          (formGroupReady$)="onFormGroupReady($event)"/>
+                    <div class="epic-iv-mnt__sidebar-footer">
+                        @if(!mntProcessing().processing) {
+                            <button class="w-100"
+                                    color="primary"
+                                     mat-flat-button
+                                    [disabled]="formGroup?.invalid"
+                                    (click)="onSubmitBtnClicked()">
+                                Start
+                            </button>
+                        }
+                        @else {
+                            <button class="w-100"
+                                    color="warn"
+                                    mat-flat-button
+                                    [disabled]="formGroup?.invalid || isAbortProcessing()"
+                                    (click)="onStopBtnClicked()">
+                                {{ isAbortProcessing() ? 'Processing ...' : 'Stop' }}
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="epic-iv-mnt__content">
+                    <epic-iv-mnt-chart [data]="chartData()" />
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

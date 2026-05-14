@@ -1,0 +1,20 @@
+{
+    "name": "epic-ui/shared/iv-mnt/__mock__",
+    "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/epic-ui/shared/iv-mnt/__mock__/src",
+    "prefix": "lib",
+    "projectType": "library",
+    "tags": ["ui common"],
+    "targets": {
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/epic-ui/shared/iv-mnt/__mock__/jest.config.ts"
+            }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint"
+        }
+    }
+}

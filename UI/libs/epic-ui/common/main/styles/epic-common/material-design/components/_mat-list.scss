@@ -1,0 +1,15 @@
+@use '@angular/material' as mat;
+
+:root {
+    @include mat.list-overrides((
+        list-item-one-line-container-height: auto,
+        list-item-supporting-text-color: $color-neutral-90,
+        list-item-supporting-text-size: 12px,
+        list-item-supporting-text-line-height: 16px,
+    ));
+}
+
+.mat-mdc-list-item.mdc-list-item {
+    padding-left: 8px;
+    padding-right: 8px;
+}

@@ -1,0 +1,31 @@
+﻿<epic-layout-light-header-title>
+    ASICs
+</epic-layout-light-header-title>
+
+<epic-layout-light-header-actions>
+    <button [matTooltip]="'Refresh'" epicStrokedButton mat-icon-button (click)="onReload()">
+        <epic-icon [name]="'epic-refresh'" matButtonIcon/>
+    </button>
+</epic-layout-light-header-actions>
+
+
+@let fetchFilterDataProcessing = fetchFilterDataProcessing$ | async;
+@if (fetchFilterDataProcessing.processing) {
+    <epic-loader />
+}
+@else if (fetchFilterDataProcessing.processingError) {
+    <epic-content-error>
+        {{ fetchFilterDataProcessing?.processingError | epicContentErrorMessage}}
+    </epic-content-error>
+}
+@else {
+    @let filterData = filterData$ | async;
+    <div class="e2e-container">
+        <div class="epic-border-style-bottom--solid epic-bg-color-neutral-0 px-3 py-2 overflow-x-auto">
+            <epic-chips-list-filter [(filterValue)]="headerFilterValue" [filterData]="filterData"/>
+        </div>
+        <div class="e2e-container__body">
+            <epic-chips-list-container class="d-flex h-100 w-100" [filterValue]="dsFilterValue()"/>
+        </div>
+    </div>
+}

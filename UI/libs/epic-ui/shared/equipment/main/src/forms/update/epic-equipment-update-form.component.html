@@ -1,0 +1,62 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+        @if (!isEditMode) {
+            <mat-form-field class="w-100">
+                <mat-label>Location</mat-label>
+                <mat-select [formControlName]="FormField.generalLocation">
+                    @for (option of formGroup.controls[FormField.generalLocation].selectOptions; track option) {
+                        <mat-option [value]="option">
+                            {{ option }}
+                        </mat-option>
+                    }
+                </mat-select>
+                @if (formGroup.controls[FormField.generalLocation].hasError('required')) {
+                    <mat-error>Required Field</mat-error>
+                }
+            </mat-form-field>
+        }
+        <mat-form-field class="w-100">
+            <mat-label>Equipment Type</mat-label>
+            <mat-select [formControlName]="FormField.equipmentTypeId">
+                <mat-option>
+                    <ngx-mat-select-search
+                            [formControl]="equipmentTypeIdSearchTermControl"
+                            [noEntriesFoundLabel]="''"
+                            [placeholderLabel]="'Search ...'"/>
+                </mat-option>
+                @for (
+                    equipmentTypeId of formGroup.controls[FormField.equipmentTypeId].selectOptions | epicSearch: (equipmentTypeIdSearchTermControl.value || '') : 'name'; track equipmentTypeId.id) {
+                    <mat-option [value]="equipmentTypeId.id">
+                        {{ equipmentTypeId.name }}
+                    </mat-option>
+                }
+                @empty {
+                    <epic-no-result size="small"/>
+                }
+
+            </mat-select>
+            @if (formGroup.controls[FormField.equipmentTypeId].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+        <div>
+            <div class="epic-font-label-lg mb-2">
+                Specifications <span class="epic-color-error-300">*</span>
+            </div>
+            <epic-file-picker [formControlName]="FormField.specification" acceptFileExtensions=".json" />
+        </div>
+    </div>
+}
+
+

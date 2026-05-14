@@ -1,0 +1,19 @@
+<div class="nano-file-picker-file-preview">
+
+    <epic-icon class="nano-file-picker-file-preview__img"
+               name="description"></epic-icon>
+
+    <div class="nano-file-picker-file-preview__name" (click)="onFileNameClicked()">
+        <epic-long-text [tooltip]="file.name">{{ file.name }}</epic-long-text>
+    </div>
+
+    @if (!readonly) {
+        <div class="nano-file-picker-file-preview__actions">
+            <button mat-icon-button
+                    (click)="onRemoveBtnClicked()"
+                    [matTooltip]="'COMMON.CLEAR' | translate">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+    }
+</div>

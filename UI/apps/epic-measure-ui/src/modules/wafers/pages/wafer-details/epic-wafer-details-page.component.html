@@ -1,0 +1,110 @@
+﻿<epic-layout-light-header-title>
+    <div class="d-flex align-items-center">
+        <epic-breadcrumbs [size]="'large'" [breadcrumbs]="breadcrumbs()"/>
+    </div>
+</epic-layout-light-header-title>
+
+@if (waferFetchOneProcessing().processing) {
+    <epic-loader [fillAllSection]="true"/>
+} @else if (waferFetchOneProcessing().processingError) {
+    <epic-content-error>
+        {{ waferFetchOneProcessing().processingError | epicContentErrorMessage }}
+    </epic-content-error>
+} @else {
+    <div class="h-100 d-flex w-100">
+        <div class="e2e-container flex-row">
+            <div style="width: 320px" class="epic-bg-color-neutral-0 overflow-auto epic-border-style-right--solid position-relative pb-5">
+                <div class="d-flex justify-content-between align-items-center p-3 pb-0">
+                    <div class="epic-font-title">
+                        {{ wafer().serialNumber }}
+                    </div>
+                    <button [matMenuTriggerFor]="menu" epicStrokedButton mat-icon-button>
+                        <epic-icon name="more_vert"/>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="onOpenLocationHistory()">
+                            <epic-icon [name]="'history'" matMenuItemIcon/>
+                            Location History
+                        </button>
+                        <mat-divider/>
+                        <button mat-menu-item (click)="onEdit()">
+                            <epic-icon [name]="'epic-pencil'" matMenuItemIcon/>
+                            Edit
+                        </button>
+                        <button mat-menu-item (click)="onUpdateLocation()">
+                            <epic-icon [name]="'location_on' | epicIconMatOutlined" matMenuItemIcon/>
+                            Update Location
+                        </button>
+                    </mat-menu>
+                </div>
+                <epic-wafer-info [wafer]="wafer()"/>
+                <div class="position-absolute bottom-0 epic-bg-color-neutral-0 w-100">
+                    <mat-divider/>
+                    <div class="p-2 px-3">
+                        <button mat-stroked-button class="w-100">
+                            <epic-icon name="map" matButtonIcon matIconPrefix />
+                            Wafer Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="e2e-container__body">
+                @if (asicsFetchAllProcessing().processing) {
+                    <epic-loader [fillAllSection]="true"/>
+                } @else if (asicsFetchAllProcessing().processingError) {
+                    <epic-content-error>
+                        {{ asicsFetchAllProcessing().processingError | epicContentErrorMessage }}
+                    </epic-content-error>
+                } @else {
+                    <div class="d-flex h-100 w-100 p-3">
+                        <epic-ag-grid-card-wrapper [isFullHeight]="true">
+                            <epic-ag-grid-card-header>
+                                <h2 class="m-0">ASICs</h2>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <button mat-icon-button epicStrokedButton [matTooltip]="'Refresh'" (click)="onAsicsReload()">
+                                        <epic-icon name="epic-refresh"/>
+                                    </button>
+                                    <mat-divider [vertical]="true"/>
+                                    <button mat-icon-button epicStrokedButton [matTooltip]="'Export CSV'" (click)="onAsicsGridExport()">
+                                        <epic-icon name="file_download"/>
+                                    </button>
+                                    <mat-divider [vertical]="true"/>
+                                    <button color="primary" mat-flat-button [matMenuTriggerFor]="menu">
+                                        <epic-icon [name]="'add'" matButtonIcon/>
+                                        Create New
+                                        <epic-icon matButtonIcon epicExpandIcon iconPositionEnd/>
+                                    </button>
+
+                                    <mat-menu #menu="matMenu">
+                                        <button mat-menu-item (click)="onAsicCreate()">
+                                            <epic-icon [name]="'layers' | epicIconMatOutlined" matMenuItemIcon/>
+                                            Create ASIC
+                                        </button>
+                                        <button mat-menu-item (click)="onCreateChip()">
+                                            <epic-icon [name]="'memory' | epicIconMatOutlined" matMenuItemIcon/>
+                                            Create Chip
+                                        </button>
+                                    </mat-menu>
+                                </div>
+                            </epic-ag-grid-card-header>
+
+                            <epic-wafer-asics-list
+                                    class="flex-1 d-flex"
+                                    (clone$)="onAsicClone($event)"
+                                    (rowClicked$)="onAsicRowClicked($event)"
+                                    (gridReady$)="onGridReady($event)"
+                                    [entities]="asicsList()"
+                            />
+
+                        </epic-ag-grid-card-wrapper>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+
+

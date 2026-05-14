@@ -1,0 +1,27 @@
+﻿<div [class.epic-search-box--focused]="isFocused" class="epic-search-box">
+
+    <!-- SEARCH ICON -->
+    <epic-icon class="epic-search-box__search-icon" name="search"></epic-icon>
+    <!-- ./SEARCH ICON -->
+
+    <input #inputRef
+           class="epic-search-box__input"
+           type="text"
+           [placeholder]="placeholder | translate"
+           [ngModel]="inputValue"
+           [matAutocomplete]="matAutocomplete"
+           [matAutocompleteDisabled]="!matAutocomplete"
+           (keyup)="onSearchChanged(inputRef.value)"
+           (focusin)="isFocused = true"
+           (focusout)="isFocused = false">
+
+    <!-- CLEAR ICON -->
+    <epic-icon [hidden]="!inputValue?.length"
+              class="epic-search-box__clear-icon"
+              name="close"
+              [matTooltip]="'COMMON.CLEAR' | translate"
+              (click)="onClearBtnClicked()">
+    </epic-icon>
+    <!-- ./CLEAR ICON -->
+
+</div>

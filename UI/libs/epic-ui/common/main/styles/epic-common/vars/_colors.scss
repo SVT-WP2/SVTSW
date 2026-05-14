@@ -1,0 +1,130 @@
+@use 'sass:color';
+
+$color-neutral-0: #fff;
+$color-neutral-0--opacity-25: rgba(255, 255, 255, 0.25);
+$color-neutral-0--opacity-50: rgba(255, 255, 255, 0.5);
+$color-neutral-0--opacity-75: rgba(255, 255, 255, 0.75);
+
+$color-neutral-10: #fafafb;
+$color-neutral-20: #f5f6f6;
+$color-neutral-30: #ebeced;
+$color-neutral-40: #dee1e2;
+
+$color-neutral-50: #bfc5c8;
+$color-neutral-50--opacity-75: rgba(191, 197, 200, .75);
+
+$color-neutral-60: #b0b6bb;
+$color-neutral-90: #858f95;
+$color-neutral-300: #57656e;
+
+$color-neutral-900: #020b11;
+$color-neutral-900--opacity-25: rgba(2, 11, 17, 0.25);
+$color-neutral-900--opacity-50: rgba(2, 11, 17, .5);
+$color-neutral-900--opacity-75: rgba(2, 11, 17, .75);
+
+$color-primary-50: color.adjust(#255d86, $lightness: 60%);
+$color-primary-100: color.adjust(#255d86, $lightness: 20%);
+$color-primary-300: #255d86;
+$color-primary-400: #183c56;
+
+$color-success-50: #ebf8e9;
+$color-success-100: #5bc84b;
+$color-success-300: #3abd26;
+$color-success-400: #29841b;
+
+$color-warning-50: #fef2e6;
+$color-warning-100: #f39132;
+$color-warning-300: #f07b08;
+$color-warning-400: #a85606;
+
+$color-error-50: #fceaea;
+$color-error-100: #e95252;
+$color-error-300: #e52e2e;
+$color-error-400: #a02020;
+
+$color-info-50: #e7f5ff;
+$color-info-100: #71c7ff;
+$color-info-300: #0a9eff;
+$color-info-400: #076fb3;
+
+$color-yellow-50: #fefaea;
+$color-yellow-100: #f6e487;
+$color-yellow-300: #f0d030;
+$color-yellow-400: #a89222;
+
+$color-duke-blue-50: #e6e6f5;
+$color-duke-blue-100: #6b6bc4;
+$color-duke-blue-300: #009;
+$color-duke-blue-400: #00006b;
+
+$color-cyan-50: #e6f7f7;
+$color-cyan-100: #6bd2d2;
+$color-cyan-300: #00b2b2;
+$color-cyan-400: #007d7d;
+
+$color-pink-50: #f5e6ed;
+$color-pink-100: #c46b95;
+$color-pink-300: #990049;
+$color-pink-400: #6b0033;
+
+$color-purple-50: #f5e6f4;
+$color-purple-100: #c46bbd;
+$color-purple-300: #99008d;
+$color-purple-400: #6b0063;
+
+// extra color mapping
+
+$color-text: $color-neutral-900;
+$color-text--disabled: $color-neutral-50;
+
+$color-primary: $color-primary-300;
+$color-primary--hover: $color-primary-400;
+
+// Used when the variable is categorical in nature.
+// Categorical variables are those that take on distinct labels without inherent ordering.
+// Examples include country or state, race, and gender.
+// Each possible value of the variable is assigned one color from a qualitative palette.
+$color-qualitative-1: #0a9eff;
+$color-qualitative-2: #009;
+$color-qualitative-3: #00b2b2;
+$color-qualitative-4: #3f00c5;
+$color-qualitative-5: #99008d;
+$color-qualitative-6: #dd0050;
+$color-qualitative-7: #990049;
+$color-qualitative-8: #e52e2e;
+$color-qualitative-9: #f07b08;
+$color-qualitative-10: #f0d030;
+$color-qualitative-11: #f5f6f6;
+
+// When the variable assigned to be colored is numeric or has inherently ordered values,
+// then it can be depicted with a sequential palette.
+// Colors are assigned to data values in a continuum, usually based on lightness, hue, or both.
+$color-sequential-1: #0a9eff;
+$color-sequential-2: #43a7ff;
+$color-sequential-3: #5fafff;
+$color-sequential-4: #75b8ff;
+$color-sequential-5: #89c1ff;
+$color-sequential-6: #9bcaff;
+$color-sequential-7: #add2ff;
+$color-sequential-8: #bedbff;
+$color-sequential-9: #cee4ff;
+$color-sequential-10: #deedff;
+$color-sequential-11: #f5f6f6;
+
+// If our numeric variable has a meaningful central value, like zero, then we can apply a diverging palette.
+// A diverging palette is essentially a combination of two sequential palettes with a shared endpoint sitting
+// at the central value. Values larger than the center are assigned to colors on one side of the center,
+// while smaller values get assigned to colors on the opposing side.
+$color-diverging-1: #3abd26;
+$color-diverging-2: #6cc855;
+$color-diverging-3: #91d37d;
+$color-diverging-4: #b3dda3;
+$color-diverging-5: #d2e7ca;
+$color-diverging-6: #f5f6f6;
+$color-diverging-7: #f8cec7;
+$color-diverging-8: #f9ab9e;
+$color-diverging-9: #f68777;
+$color-diverging-10: #ef6052;
+$color-diverging-11: #e52e2e;
+
+

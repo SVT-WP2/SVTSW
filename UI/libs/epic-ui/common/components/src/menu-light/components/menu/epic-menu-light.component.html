@@ -1,0 +1,8 @@
+﻿<div class="epic-menu-light">
+    <ng-container *ngIf="items?.length">
+        <epic-menu-light-item *ngFor="let item of items"
+                             [item]="item"
+                             (sideActionEvent$)="onSideActionClick($event)">
+        </epic-menu-light-item>
+    </ng-container>
+</div>

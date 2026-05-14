@@ -1,0 +1,30 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Serial Number</mat-label>
+            <input [formControlName]="FormField.serialNumber" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Location</mat-label>
+            <mat-select [formControlName]="FormField.generalLocation">
+                @for (option of formGroup.controls[FormField.generalLocation].selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.generalLocation].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+    </div>
+}
+

@@ -1,0 +1,60 @@
+﻿<mat-card class="epic-wp-machine-card" appearance="outlined">
+    <mat-card-content>
+        <div class="d-flex gap-3">
+            <div class="d-flex align-items-center justify-content-center flex-column">
+                <div class="epic-bg-color-neutral-20 epic-border-radius--300 p-3">
+                    <epic-icon class="epic-color-neutral-300" name="power_settings_new"/>
+                </div>
+            </div>
+            <div class="flex-1 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="epic-font-title mb-1">{{ entity.name }}</div>
+                    <div class="epic-font-body">{{ entity.hostName }}:{{ entity.connectionPort }} | {{ entity.generalLocation }}</div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <mat-form-field class="w-100"
+                                    [class.epic-wp-machine-card__select--active]="!!entity.installedProbeCardId"
+                                    [subscriptSizing]="'dynamic'"
+                                    (click)="$event.stopPropagation()">
+                        <mat-label>Loaded Probe Card</mat-label>
+                        <mat-select class="epic-wp-machine-card__select"
+                                    [ngModel]="entity.installedProbeCardId"
+                                    (ngModelChange)="onProbeCardChanged($event)">
+                            <mat-option [value]="null">- None -</mat-option>
+                            @for (option of [1,2,3]; track option) {
+                                <mat-option [value]="option">
+                                    Probe Card # {{ option }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                        <span class="px-3" matPrefix>
+                            <epic-icon class="epic-wp-machine-card__select-icon" [name]="'developer_board'"/>
+                        </span>
+                    </mat-form-field>
+                    <mat-form-field class="w-100"
+                                    [class.epic-wp-machine-card__select--active]="!!entity.loadedWaferId"
+                                    [subscriptSizing]="'dynamic'"
+                                    (click)="$event.stopPropagation()">
+                        <span class="px-3" matPrefix>
+                            <epic-icon class="epic-wp-machine-card__select-icon" [name]="'epic-dashboard'"/>
+                        </span>
+                        <mat-label>Loaded Wafer</mat-label>
+                        <mat-select class="epic-wp-machine-card__select"
+                                    [ngModel]="entity.loadedWaferId"
+                                    (ngModelChange)="onLoadedWaferChanged($event)">
+                            <mat-option [value]="null">- None -</mat-option>
+                            @for (option of [1,2,3]; track option) {
+                                <mat-option [value]="option">
+                                    Wafer # {{ option }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+<!--                    <button mat-icon-button matTooltip="Details">-->
+<!--                        <epic-icon class="epic-color-neutral-300" [name]="'epic-arrow-chevron-right'"/>-->
+<!--                    </button>-->
+                </div>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

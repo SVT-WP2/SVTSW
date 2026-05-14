@@ -1,0 +1,16 @@
+﻿<epic-mat-dialog-header>
+    Create Chip Preview
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+    <epic-chip-create-many-preview-grid [entities]="dialogData.data" />
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-dialog-close
+            mat-stroked-button>
+        {{ 'COMMON.CLOSE' | translate }}
+    </button>
+</mat-dialog-actions>
+
+

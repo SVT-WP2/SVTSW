@@ -1,0 +1,26 @@
+@mixin square-size($size: 24px, $with-min: true) {
+    height: $size;
+    width: $size;
+
+    @if ($with-min) {
+        min-height: $size;
+        min-width: $size;
+    }
+}
+
+@mixin long-text-wrapper() {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@mixin text-stroke($color: #000, $size: 1px) {
+    text-shadow: -#{$size} -#{$size} 0 $color,
+        0        -#{$size} 0 $color,
+        #{$size} -#{$size} 0 $color,
+        #{$size}  0 0 $color,
+        #{$size}  #{$size} 0 $color,
+        0         #{$size} 0 $color,
+        -#{$size}  #{$size} 0 $color,
+        -#{$size} 0 0 $color;
+}

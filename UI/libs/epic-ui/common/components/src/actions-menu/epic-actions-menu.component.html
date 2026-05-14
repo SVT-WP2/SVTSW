@@ -1,0 +1,187 @@
+﻿<mat-menu #matMenuRef="matMenu">
+    <ng-template matMenuContent>
+        <ng-container *ngFor="let action of actionList">
+
+            <!--    <ng-container *ngTemplateOutlet="menuItem; context: { action: action }"></ng-container> -->
+            <!--    TODO: all the code below should be replaced with commented out code above after bug fix described in the relevant .ts file  -->
+
+            <!-- MENU ITEM :: DIVIDER -->
+            <mat-divider *ngIf="action.divider"></mat-divider>
+            <!-- MENU ITEM :: ./DIVIDER -->
+
+            <!-- MENU ITEM :: LEAF -->
+            <ng-container *ngIf="!action?.children?.length && !action?.children$">
+
+                <a *ngIf="action.url"
+                   class="epic-actions-menu__item"
+                   [disabled]="!!action.disabled"
+                   [href]="action.url"
+                   [target]="action.target"
+                   mat-menu-item>
+                    <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+                    <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+                </a>
+
+                <button *ngIf="action.routerLink"
+                        class="epic-actions-menu__item"
+                        [disabled]="!!action.disabled"
+                        [queryParams]="action.routerQueryParams"
+                        [routerLink]="action.routerLink"
+                        mat-menu-item>
+
+                    <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+                    <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+                </button>
+
+                <button *ngIf="action.onClick || !!action.disabled"
+                        class="epic-actions-menu__item"
+                        [disabled]="!!action.disabled"
+                        mat-menu-item
+                        (click)="onActionClicked(action)">
+
+                    <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+                    <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+                </button>
+            </ng-container>
+            <!-- ./MENU ITEM :: LEAF -->
+
+            <!-- MENU ITEM :: NESTED -->
+            <ng-container *ngIf="action?.children?.length || action.children$">
+
+                <button class="epic-actions-menu__item"
+                        [matMenuTriggerFor]="childMenu"
+                        mat-menu-item>
+
+                    <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+                    <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+                </button>
+
+                <!-- MENU :: CHILD ITEMS -->
+                <mat-menu #childMenu="matMenu">
+                    <ng-template matMenuContent>
+                        <ng-container *ngIf="action.children">
+                            <ng-container *ngFor="let childAction of action.children">
+                                <ng-container *ngTemplateOutlet="menuItem; context: { action: childAction }"></ng-container>
+                            </ng-container>
+                        </ng-container>
+
+                        <ng-container *ngIf="action.children$">
+                            <ng-container *ngIf="(action.children$ | async) as children; else menuLoading">
+                                <ng-container *ngFor="let childAction of children">
+                                    <ng-container *ngTemplateOutlet="menuItem; context: { action: childAction }"></ng-container>
+                                </ng-container>
+                            </ng-container>
+                        </ng-container>
+                    </ng-template>
+                </mat-menu>
+                <!-- ./MENU :: CHILD ITEMS -->
+
+            </ng-container>
+            <!-- ./MENU ITEM :: NESTED -->
+
+        </ng-container>
+    </ng-template>
+</mat-menu>
+
+<ng-template #menuLoading>
+    <epic-loader></epic-loader>
+</ng-template>
+
+<ng-template #menuItem let-action="action">
+
+    <!-- MENU ITEM :: DIVIDER -->
+    <mat-divider *ngIf="action.divider"></mat-divider>
+    <!-- MENU ITEM :: ./DIVIDER -->
+
+    <!-- MENU ITEM :: LEAF -->
+    <ng-container *ngIf="!action?.children?.length && !action?.children$">
+
+        <a *ngIf="action.url"
+           class="epic-actions-menu__item"
+           [disabled]="!!action.disabled"
+           [href]="action.url"
+           [target]="action.target"
+           mat-menu-item>
+            <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+            <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+        </a>
+
+        <button *ngIf="action.routerLink"
+                class="epic-actions-menu__item"
+                [disabled]="!!action.disabled"
+                [queryParams]="action.routerQueryParams"
+                [routerLink]="action.routerLink"
+                mat-menu-item>
+
+            <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+            <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+        </button>
+
+        <button *ngIf="action.onClick || !!action.disabled"
+                class="epic-actions-menu__item"
+                [disabled]="!!action.disabled"
+                mat-menu-item
+                (click)="onActionClicked(action)">
+
+            <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+
+            <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+        </button>
+    </ng-container>
+    <!-- ./MENU ITEM :: LEAF -->
+
+    <!-- MENU ITEM :: NESTED -->
+    <ng-container *ngIf="action?.children?.length || action.children$">
+
+        <button class="epic-actions-menu__item"
+                [matMenuTriggerFor]="childMenu"
+                mat-menu-item>
+
+            <epic-icon *ngIf="action.icon" [name]="action.icon" matMenuItemIcon></epic-icon>
+
+            <ng-container *ngTemplateOutlet="menuItemContent; context: { action: action }"></ng-container>
+
+        </button>
+
+        <!-- MENU :: CHILD ITEMS -->
+        <mat-menu #childMenu="matMenu">
+            <ng-template matMenuContent>
+                <ng-container *ngIf="action.children">
+                    <ng-container *ngFor="let childAction of action.children">
+                        <ng-container *ngTemplateOutlet="menuItem; context: { action: childAction }"></ng-container>
+                    </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="action.children$">
+                    <ng-container *ngIf="(action.children$ | async) as children; else menuLoading">
+                        <ng-container *ngFor="let childAction of children">
+                            <ng-container *ngTemplateOutlet="menuItem; context: { action: childAction }"></ng-container>
+                        </ng-container>
+                    </ng-container>
+                </ng-container>
+            </ng-template>
+        </mat-menu>
+        <!-- ./MENU :: CHILD ITEMS -->
+
+    </ng-container>
+    <!-- ./MENU ITEM :: NESTED -->
+
+</ng-template>
+
+<ng-template #menuItemContent let-action="action">
+
+    <img *ngIf="action.imageUrl"
+         class="epic-actions-menu__item-image"
+         [epicDefaultImage]="action.defaultImageUrl"
+         [src]="action.imageUrl">
+
+    <span class="epic-actions-menu__item-title">
+        {{ action.title | translate }}
+    </span>
+
+</ng-template>

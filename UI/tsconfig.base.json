@@ -1,0 +1,157 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "baseUrl": ".",
+        "importHelpers": true,
+        "outDir": "./dist/out-tsc",
+        "sourceMap": true,
+        "declaration": false,
+        "module": "es2022",
+        "allowJs": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "target": "ES2022",
+        "esModuleInterop": true,
+        "lib": [
+            "ES2022",
+            "dom"
+        ],
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "allowSyntheticDefaultImports": true,
+        "strictPropertyInitialization": false,
+        "paths": {
+            "@env": [
+                "apps/epic-measure-ui/src/environments"
+            ],
+            "@env/*": [
+                "apps/epic-measure-ui/src/environments/*"
+            ],
+            "epic-ui/api": [
+                "libs/epic-ui/api/main/src/index.ts"
+            ],
+            "epic-ui/api/__mock__": [
+                "libs/epic-ui/api/__mock__/src/index.ts"
+            ],
+            "epic-ui/common": [
+                "libs/epic-ui/common/main/src/index.ts"
+            ],
+            "epic-ui/common/auth": [
+                "libs/epic-ui/common/auth/src/index.ts"
+            ],
+            "epic-ui/common/ag-grid": [
+                "libs/epic-ui/common/ag-grid/src/index.ts"
+            ],
+            "epic-ui/common/components": [
+                "libs/epic-ui/common/components/src/index.ts"
+            ],
+            "epic-ui/common/layout": [
+                "libs/epic-ui/common/layout/src/index.ts"
+            ],
+            "epic-ui/shared": [
+                "libs/epic-ui/shared/main/src/index.ts"
+            ],
+            "epic-ui/shared/iv-mnt": [
+                "libs/epic-ui/shared/iv-mnt/main/src/index.ts"
+            ],
+            "epic-ui/shared/iv-mnt/__mock__": [
+                "libs/epic-ui/shared/iv-mnt/__mock__/src/index.ts"
+            ],
+            "epic-ui/shared/kafka": [
+                "libs/epic-ui/shared/kafka/src/index.ts"
+            ],
+            "epic-ui/shared/tcp": [
+                "libs/epic-ui/shared/tcp/src/index.ts"
+            ],
+            "epic-ui/shared/wafers": [
+                "libs/epic-ui/shared/wafers/main/src/index.ts"
+            ],
+            "epic-ui/shared/location": [
+                "libs/epic-ui/shared/location/src/index.ts"
+            ],
+            "epic-ui/shared/wafers/__mock__": [
+                "libs/epic-ui/shared/wafers/__mock__/src/index.ts"
+            ],
+            "epic-ui/shared/wafer-tests": [
+                "libs/epic-ui/shared/wafer-tests/main/src/index.ts"
+            ],
+            "epic-ui/shared/wafer-tests/__mock__": [
+                "libs/epic-ui/shared/wafer-tests/__mock__/src/index.ts"
+            ],
+            "epic-ui/shared/wafer-types": [
+                "libs/epic-ui/shared/wafer-types/main/src/index.ts"
+            ],
+            "epic-ui/shared/wafer-types/__mock__": [
+                "libs/epic-ui/shared/wafer-types/__mock__/src/index.ts"
+            ],
+            "epic-ui/shared/wp": [
+                "libs/epic-ui/shared/wp/main/src/index.ts"
+            ],
+            "epic-ui/shared/asics": [
+                "libs/epic-ui/shared/asics/main/src/index.ts"
+            ],
+            "epic-ui/shared/chips": [
+                "libs/epic-ui/shared/chips/main/src/index.ts"
+            ],
+            "epic-ui/shared/asics/__mock__": [
+                "libs/epic-ui/shared/asics/__mock__/src/index.ts"
+            ],
+            "epic-ui/shared/asic-tests": [
+                "libs/epic-ui/shared/asic-tests/main/src/index.ts"
+            ],
+            "epic-ui/shared/asic-tests/__mock__": [
+                "libs/epic-ui/shared/asic-tests/__mock__/src/index.ts"
+            ],
+            "epic-ui/utils": [
+                "libs/epic-ui/utils/main/src/index.ts"
+            ],
+            "epic-ui/utils/colors": [
+                "libs/epic-ui/utils/colors/src/index.ts"
+            ],
+            "epic-ui/utils/material": [
+                "libs/epic-ui/utils/material/src/index.ts"
+            ],
+            "epic/core": [
+                "libs/epic/core/src/index.ts"
+            ],
+            "epic/entities": [
+                "libs/epic/entities/src/index.ts"
+            ],
+            "epic-ui/shared/equipment": [
+                "libs/epic-ui/shared/equipment/main/src/index.ts"
+            ],
+            "epic-ui/shared/equipment-types": [
+                "libs/epic-ui/shared/equipment-types/main/src/index.ts"
+            ],
+            "epic-ui/shared/svt-tests": [
+                "libs/epic-ui/shared/svt-tests/main/src/index.ts"
+            ],
+            "epic-ui/shared/svt-test/test-types": [
+                "libs/epic-ui/shared/svt-tests/test-types/src/index.ts"
+            ],
+            "epic-ui/shared/svt-test/test-templates": [
+                "libs/epic-ui/shared/svt-tests/test-templates/src/index.ts"
+            ]
+        },
+        "useDefineForClassFields": false,
+        "resolveJsonModule": true,
+        "rootDir": "."
+    },
+    "angularCompilerOptions": {
+        "fullTemplateTypeCheck": true,
+        "strictInjectionParameters": true
+    },
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs"
+        },
+        "require": [
+            "tsconfig-paths/register"
+        ]
+    },
+    "exclude": [
+        "node_modules",
+        "tmp"
+    ]
+}

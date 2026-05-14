@@ -1,0 +1,10 @@
+@import 'vars';
+@import 'mixins';
+
+epic-inline-filter {
+    display: inline-block;
+
+    .epic-inline-filter {
+        $root: &;
+    }
+}

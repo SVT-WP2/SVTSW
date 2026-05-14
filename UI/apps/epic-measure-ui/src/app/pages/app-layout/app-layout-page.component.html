@@ -1,0 +1,58 @@
+﻿<epic-layout-light>
+
+    <epic-layout-light-section-sidebar>
+        <epic-menu-light [items]="sidebarMenu"/>
+    </epic-layout-light-section-sidebar>
+
+    @if (user()) {
+        <epic-layout-light-section-sidebar-bottom>
+            <button #menuTrigger="matMenuTrigger"
+                    class="epic-menu-light-item"
+                    [class.is-open]="menuTrigger.menuOpen"
+                    [matMenuTriggerFor]="menu">
+                <epic-icon class="epic-menu-light-item__icon" [name]="'account_circle' | epicIconMatOutlined"/>
+                <span class="epic-menu-light-item__label">
+                    Account
+                </span>
+            </button>
+            <mat-menu #menu="matMenu">
+                <div class="py-2 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="epic-font-title">{{ user().name }}</div>
+                        <div class="epic-font-label epic-color-neutral-300">
+                            {{ user().role }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="epic-font-label epic-color-neutral-300">
+                            v{{ version }}
+                        </div>
+                    </div>
+                </div>
+                <mat-divider/>
+
+                <div mat-menu-item>
+                    <mat-slide-toggle
+                            [disabled]="disableMockDataControl"
+                            [ngModel]="useMockData"
+                            (ngModelChange)="onUseMockDataChanged($event)"
+                            (click)="$event.stopPropagation()">
+                        Use Mock Data
+                    </mat-slide-toggle>
+                </div>
+
+                <mat-divider/>
+                <button mat-menu-item (click)="onLogout()">
+                    <epic-icon name="logout" matMenuItemIcon/>
+                    Logout
+                </button>
+            </mat-menu>
+        </epic-layout-light-section-sidebar-bottom>
+    }
+    <!-- CONTENT -->
+    <epic-layout-light-section-content>
+        <router-outlet></router-outlet>
+    </epic-layout-light-section-content>
+    <!-- ./CONTENT -->
+
+</epic-layout-light>

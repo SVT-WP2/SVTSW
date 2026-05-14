@@ -1,0 +1,31 @@
+﻿<nav class="epic-horizontal-tabs epic-horizontal-tabs--{{tabsStyle}}"
+     [attr.mat-align-tabs]="align"
+     [mat-stretch-tabs]="stretchTabs"
+     [tabPanel]="tabPanel"
+     color="primary"
+     mat-tab-nav-bar>
+
+    <a *ngFor="let tabInfo of tabs"
+       [active]="tabInfo.id === activeTabId"
+       [disabled]="tabInfo?.disabled"
+       mat-tab-link
+       (click)="onTabClicked(tabInfo)">
+
+        <!-- ICON -->
+        <epic-icon *ngIf="tabInfo?.icon"
+                  class="me-2"
+                  [name]="tabInfo.icon">
+        </epic-icon>
+        <!-- ./ICON -->
+
+        <!-- CONTENT -->
+        <ng-container *ngTemplateOutlet="(tabContentTemplate?.templateRef || defaultContentTemplate); context: { tabInfo: tabInfo }"></ng-container>
+        <!-- ./CONTENT -->
+    </a>
+</nav>
+
+<mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+
+<ng-template #defaultContentTemplate let-tabInfo="tabInfo">
+    {{ tabInfo.label | translate }}
+</ng-template>

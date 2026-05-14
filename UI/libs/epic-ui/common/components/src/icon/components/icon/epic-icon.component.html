@@ -1,0 +1,10 @@
+@if (name()) {
+    @switch (isSvgIcon()) {
+        @case (true) {
+            <mat-icon [svgIcon]="name()"/>
+        }
+        @case (false) {
+            <mat-icon [class.material-icons-outlined]="isMatOutlined()">{{ name() }}</mat-icon>
+        }
+    }
+}

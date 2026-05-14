@@ -1,0 +1,20 @@
+$checkbox-size: 16px;
+
+:root {
+    --mat-full-pseudo-checkbox-unselected-icon-color: #{$color-neutral-60};
+    --mat-full-pseudo-checkbox-disabled-unselected-icon-color: #{$color-neutral-40};
+}
+
+mat-pseudo-checkbox.mat-pseudo-checkbox {
+    border-radius: 4px;
+    height: $checkbox-size;
+    width: $checkbox-size;
+
+    &.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after {
+        height: 3px;
+        top: -2px;
+        transform-origin: center;
+        width: 8px;
+    }
+
+}

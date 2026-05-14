@@ -1,0 +1,22 @@
+// Grid breakpoints for big displays http://benwhitehead.github.io/bootstrap-big-grid/
+$grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1400px,
+    max: 1600px,
+);
+
+$container-max-widths: (
+    xs: 539px,
+    sm: 540px,
+    md: 720px,
+    lg: 960px,
+    xl: 1140px,
+    xxl: 1340px,
+    max: 1540px,
+);
+
+$enable-negative-margins: true;

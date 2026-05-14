@@ -1,0 +1,77 @@
+﻿@import 'vars';
+@import 'mixins';
+
+$input-bg: $color-neutral-0;
+
+$border-color: $color-neutral-40;
+$border-color--hover: $color-neutral-60;
+$border-color--focus: $color-primary-300;
+
+$input-text-color: $color-neutral-900;
+$input-placeholder-color: $color-neutral-60;
+$input-text-color--active: $color-neutral-900;
+$search-icon-color: $color-neutral-60;
+
+$height: 40px;
+$border-radius: 12px;
+
+.epic-search-box {
+    $self: &;
+
+    align-items: center;
+    background: $input-bg;
+    // CONTAINER
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    display: flex;
+    line-height: $height;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); // duplicate MD styles
+
+    // ICONS
+
+    &__clear-icon {
+        position: absolute;
+        right: 0.5rem;
+    }
+
+    &__search-icon {
+        color: $search-icon-color;
+        left: 0.5rem;
+        position: absolute;
+    }
+
+    &__clear-icon {
+        cursor: pointer;
+        margin-left: 0.5rem;
+    }
+
+    // INPUT
+
+    input {
+        @include epic-font-body-lg();
+        background: none;
+        border-style: none;
+        color: $input-text-color;
+        flex: 1;
+        line-height: $height;
+        outline: none;
+        padding: 0 2.5rem;
+
+        &::placeholder {
+            color: $input-placeholder-color;
+        }
+    }
+
+    // HOVER STATE
+    &:not(.epic-search-box--focused):hover {
+        border-color: $border-color--hover;
+    }
+
+    // FOCUSED STATE
+    &--focused {
+        border-color: $border-color--focus;
+    }
+}

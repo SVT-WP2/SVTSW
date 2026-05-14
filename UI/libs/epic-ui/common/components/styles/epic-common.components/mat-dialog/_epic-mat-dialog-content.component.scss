@@ -1,0 +1,78 @@
+﻿@import 'vars';
+@import 'mixins';
+@import './epic-mat-dialog-shared';
+
+$footer-checkbox-margin-x: 12px;
+
+
+epic-mat-dialog-content {
+    display: block;
+    flex-grow: 1;
+    position: relative;
+}
+
+@mixin footer-items-margin($margin-x: 4px) {
+    margin: 0 $margin-x;
+
+    &:last-child {
+        margin-right: 0;
+    }
+
+    &:first-child {
+        margin-left: 0;
+    }
+}
+
+.epic-mat-dialog-content {
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    overflow: auto;
+    padding: $dialog-side-padding;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+
+
+    &__inner {
+        padding: 16px $dialog-side-padding;
+    }
+
+    &__footer {
+        align-items: center;
+        display: flex;
+        justify-content: flex-end;
+        padding: $dialog-side-padding;
+
+        .mat-mdc-button {
+            @include footer-items-margin();
+        }
+
+        mat-checkbox.mat-mdc-checkbox {
+            @include footer-items-margin($footer-checkbox-margin-x);
+
+            label {
+                font-weight: 500;
+                margin-bottom: 0;
+            }
+        }
+
+        button + button {
+            margin-left: 8px;
+        }
+    }
+
+    &__footer-actions {
+        align-items: center;
+        display: flex;
+        flex-grow: 1;
+        padding-right: $footer-checkbox-margin-x;
+    }
+
+
+    &--with-sidebar {
+        margin-left: $dialog-sidebar-width;
+    }
+}

@@ -1,0 +1,27 @@
+.epic-iv-mnt {
+    &__inner-wrapper {
+        display: flex;
+        height: 100%;
+        min-height: 580px;
+    }
+
+    &__sidebar {
+        border-right: 1px solid $border-color;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1rem;
+        width: 420px;
+    }
+
+    &__sidebar-footer {
+        flex-grow: 0;
+        padding-top: 1rem;
+    }
+
+    &__content {
+        display: flex;
+        flex: 1;
+        padding: 2rem;
+    }
+}

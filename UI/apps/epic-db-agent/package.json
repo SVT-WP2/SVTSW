@@ -1,0 +1,12 @@
+{
+    "name": "epic-db-agent",
+    "version": "0.0.1",
+    "scripts": {
+        "next-preminor-version": "npm version preminor --preid=SNAPSHOT",
+        "next-snapshot-version": "npm version prerelease --preid=SNAPSHOT",
+        "next-major-version": "npm version major",
+        "next-minor-version": "npm version minor",
+        "next-patch-version": "npm version patch",
+        "version": "echo $npm_package_version"
+    }
+}

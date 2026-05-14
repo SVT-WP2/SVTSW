@@ -1,0 +1,13 @@
+<div class="epic-mat-menu-header">
+    @if (header) {
+        <div class="epic-mat-menu-header__header">
+            {{ header }}
+        </div>
+    }
+    @if (subheader) {
+        <div class="epic-mat-menu-header__subheader"
+             [class.mt-2]="header?.length">
+            {{ subheader }}
+        </div>
+    }
+</div>

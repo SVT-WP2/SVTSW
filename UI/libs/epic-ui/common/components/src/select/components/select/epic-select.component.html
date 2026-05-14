@@ -1,0 +1,114 @@
+﻿<ng-select #ngSelect
+           [appendTo]="appendTo"
+           [bindLabel]="bindLabel"
+           [bindValue]="bindValue"
+           [class.ng-select--small]="size === Size.small"
+           [clearAllText]="'COMMON.CLEAR_ALL' | translate"
+           [clearable]="clearable"
+           [compareWith]="compareWith"
+           [dropdownPosition]="dropdownPosition"
+           [groupBy]="groupBy"
+           [readonly]="readonly || disabled"
+           [groupValue]="groupValue"
+           [items]="options"
+           [loading]="loading"
+           [ngClass]="customClass"
+           [ngModel]="value"
+           [placeholder]="placeholder | translate"
+           [searchable]="false"
+           [tabIndex]="tabIndex"
+           [trackByFn]="trackByFn"
+           [virtualScroll]="virtualScroll"
+           (close)="onPanelClosed()"
+           (ngModelChange)="writeValue($event)"
+           (open)="onPanelOpened()"
+           (scroll)="onScroll($event)"
+           (scrollToEnd)="onScrollToEnd()">
+
+    <!-- SELECTED OPTION -->
+    <ng-template let-item="item" let-label="label" ng-label-tmp>
+        <ng-template #defaultLabelTemplate>
+            <span class="ng-value-label">{{ label | translate }}</span>
+        </ng-template>
+        <span class="ng-value-icon left" aria-hidden="true" (click)="ngSelect.unselect(item);">×</span>
+        <ng-template
+            [ngTemplateOutletContext]="{ item: item, clear: ngSelect.clearItem, label: label }"
+            [ngTemplateOutlet]="templatesCollection[TemplateName.selectedOption] || defaultLabelTemplate">
+        </ng-template>
+    </ng-template>
+    <!-- ./SELECTED OPTION -->
+
+    <!-- SEARCH HEADER -->
+    <ng-template *ngIf="searchable" ng-header-tmp>
+        <epic-search-box #searchBoxRef
+                        (search$)="onSearch($event)">
+        </epic-search-box>
+    </ng-template>
+    <!-- ./SEARCH HEADER -->
+
+    <!-- OPTION -->
+    <ng-template let-index="index" let-item="item" let-item$="item$" ng-option-tmp>
+
+        <ng-template #defaultOptionTemplate>
+            <span class="ng-option-label" [title]="item$.label | translate">{{ item$.label | translate }}</span>
+        </ng-template>
+        <ng-template
+            [ngTemplateOutletContext]="{ item: item$.value, item$: item$, index: item$.index, searchTerm: currentSearchTerm }"
+            [ngTemplateOutlet]="item.children
+                        ? (templatesCollection[TemplateName.group] || defaultOptionTemplate)
+                        : (templatesCollection[TemplateName.option] || defaultOptionTemplate)">
+        </ng-template>
+
+        <!-- LOADING MORE -->
+        <div *ngIf="loadingMore && (ngSelect.viewPortItems.length === 0 || ngSelect.viewPortItems.length - 1 === index) ">
+            <div class="ng-option-label text-center">
+                <epic-loader size="small"></epic-loader>
+                {{ loadingText | translate }}
+            </div>
+        </div>
+        <!-- ./LOADING MORE -->
+
+    </ng-template>
+    <!-- ./OPTION -->
+
+    <!-- OPTION GROUP -->
+    <ng-template let-index="index" let-item="item" let-item$="item$" ng-optgroup-tmp>
+        <ng-template #defaultOptgroupTemplate>
+            <span class="ng-option-label">{{ item$.label | translate }}</span>
+        </ng-template>
+        <ng-template
+            [ngTemplateOutletContext]="{ item: item$.value, item$: item$, index: item$.index, searchTerm: currentSearchTerm }"
+            [ngTemplateOutlet]="(templatesCollection[TemplateName.group] || defaultOptgroupTemplate)">
+        </ng-template>
+    </ng-template>
+    <!-- ./OPTION GROUP -->
+
+    <!-- NO RESULT -->
+    <ng-template ng-notfound-tmp>
+        <ng-template #defaultNotFoundTemplate>
+            <epic-select-option-no-result [text]="notFoundText"></epic-select-option-no-result>
+        </ng-template>
+
+        <ng-template
+            [ngTemplateOutletContext]="{ searchTerm: currentSearchTerm }"
+            [ngTemplateOutlet]="templatesCollection[TemplateName.noResult] || defaultNotFoundTemplate">
+        </ng-template>
+    </ng-template>
+    <!-- NO RESULT -->
+
+    <!-- LOADING -->
+    <ng-template ng-loadingtext-tmp>
+        <ng-template #defaultLoadingTextTemplate>
+            <div class="ng-option ng-option-disabled mb-3 text-center">
+                {{ loadingText | translate }}
+            </div>
+        </ng-template>
+
+        <ng-template
+            [ngTemplateOutletContext]="{ searchTerm: currentSearchTerm }"
+            [ngTemplateOutlet]="templatesCollection[TemplateName.loading] || defaultLoadingTextTemplate">
+        </ng-template>
+    </ng-template>
+    <!-- ./LOADING -->
+
+</ng-select>

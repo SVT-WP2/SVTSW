@@ -1,0 +1,16 @@
+﻿<div class="epic-label">
+    <!-- ICON -->
+    <ng-content select="epic-icon:not([epicLabelAction])"></ng-content>
+    <epic-icon *ngIf="iconName?.length" [name]="iconName"></epic-icon>
+    <!-- ./ICON -->
+
+    <!-- CONTENT -->
+    <div class="epic-label__content">
+        <ng-content></ng-content>
+    </div>
+    <!-- ./CONTENT -->
+
+    <!-- ACTIONS -->
+    <ng-content select="[epicLabelAction]"></ng-content>
+    <!-- ./ACTIONS -->
+</div>

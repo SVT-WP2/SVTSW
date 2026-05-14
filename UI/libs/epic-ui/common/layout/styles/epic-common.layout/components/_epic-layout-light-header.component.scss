@@ -1,0 +1,72 @@
+﻿@import 'vars';
+@import '../shared';
+
+
+.epic-layout-light__content-header {
+    align-items: center;
+    border-bottom: 1px solid $color-neutral-40;
+    display: flex;
+    flex: 0 0 $header-height;
+    height: $header-height;
+    justify-content: space-between;
+    padding: 0 1rem;
+
+    .mat-divider.mat-divider-vertical {
+        border-color: $color-neutral-40;
+        height: 24px;
+        margin: 0 1rem;
+    }
+}
+
+.epic-layout-light-header {
+    align-items: center;
+    display: flex;
+    width: 100%;
+
+    &__title-wrapper {
+        display: inline-grid;
+        margin-right: 16px;
+    }
+
+    &__title {
+        @include epic-font-title-lg();
+        flex-grow: 1;
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+
+    &__sub-title {
+        color: $color-neutral-60;
+        font-size: 14px;
+        line-height: 1;
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+
+    &__content {
+        align-items: center;
+        display: flex;
+        flex-grow: 1;
+        height: 100%;
+    }
+
+    &__actions {
+        align-items: center;
+        display: flex;
+        height: 100%;
+    }
+}
+
+// header actions
+$select-min-width: 220px;
+
+.epic-layout-light-header__actions {
+    .ng-select .ng-select-container {
+        min-width: $select-min-width;
+    }
+
+    ag-view-control {
+        $actions-button-width: 40px;
+        max-width: $select-min-width + $actions-button-width;
+    }
+}

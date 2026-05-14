@@ -1,0 +1,100 @@
+﻿@use 'sass:map';
+@use 'ag-grid-community/styles' as ag;
+
+@import 'vars';
+
+$epic-ag-grid--side-buttons-width: 40px !default;
+
+@include ag.grid-styles((
+    theme: alpine,
+    alpine-active-color: $color-primary-300,
+    range-selection-border-color: $color-primary-300,
+    foreground-color: $color-neutral-900,
+    control-panel-background-color: $color-neutral-10,
+    odd-row-background-color: $color-neutral-10,
+    font-family: $font-family--body,
+    font-size: 14px,
+    border-color: $color-neutral-40,
+    secondary-border-color: $color-neutral-30,
+    invalid-color: $color-error-300,
+    side-bar-panel-width: 320px,
+));
+
+
+.ag-theme-alpine {
+    --ag-header-background-color: #{$color-neutral-10};
+    --ag-row-border-color: #{$color-neutral-30};
+    --ag-row-hover-color: #{$color-neutral-20};
+    --ag-selected-row-background-color: #{$color-primary-50};
+
+    .ag-checkbox-input-wrapper.ag-disabled {
+        opacity: 0.2;
+    }
+
+    .ag-root-wrapper {
+        border-radius: 12px;
+    }
+
+    .ag-side-buttons {
+        width: $epic-ag-grid--side-buttons-width;
+
+        .ag-button.ag-side-button-button:hover {
+            background-color: $color-neutral-10;
+            color: $color-neutral-900;
+        }
+    }
+
+    .ag-menu {
+        background: $color-neutral-0;
+    }
+
+    .ag-header-cell-text,
+    .ag-header-group-text {
+        font-weight: 500;
+    }
+
+    .ag-row-hover.ag-row-selected::before {
+        background-color: $color-primary-50 !important;
+        background-image: none !important;
+    }
+
+    .mat-mdc-icon-button {
+        color: $color-neutral-900;
+    }
+
+    .ag-row-group {
+        @include epic-font-title-sm();
+        line-height: unset;
+    }
+}
+
+ag-grid-angular {
+    height: 100%;
+    width: 100%;
+}
+
+.ag-ltr input[class^=ag-],
+.ag-input-field-input {
+    border-radius: 4px;
+}
+
+.ag-cell-value,
+.ag-group-value {
+    height: 100%;
+}
+
+.ag-tool-panel-wrapper {
+    width: 280px;
+}
+
+.ag-body-viewport::-webkit-scrollbar-track:vertical {
+    border-left: 1px solid $color-neutral-50;
+}
+
+.ag-body-horizontal-scroll {
+    border-top: 1px solid $color-neutral-30;
+}
+
+.ag-cell-wrapper {
+    height: 100%;
+}

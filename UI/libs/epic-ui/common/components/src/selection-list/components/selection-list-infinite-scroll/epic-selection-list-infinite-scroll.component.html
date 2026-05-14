@@ -1,0 +1,35 @@
+<mat-selection-list [disabled]="disabled"
+                    [multiple]="multiple"
+                    color="primary"
+                    (blur)="onTouch()">
+    <cdk-virtual-scroll-viewport [class.overflow-hidden]="dataSource.fetchDataProcessing()!.processing"
+                                 [dataSource]="dataSource"
+                                 [initAutoFetchData]="initAutoFetchData"
+                                 [itemSize]="itemHeight"
+                                 [maxBufferPx]="maxBufferPx ? maxBufferPx : itemHeight * 50"
+                                 [minBufferPx]="minBufferPx ? minBufferPx : itemHeight * 10"
+                                 epicInfiniteScrolling>
+        <epic-infinite-scroll-content [epicScrollingDataSource]="dataSource">
+            <mat-list-option
+                    *cdkVirtualFor="let currentOption of dataSource.dataRecords(); templateCacheSize: 0; trackBy: trackByFn; let index = index"
+                    [disabled]="!!currentOption.disabled"
+                    [selected]="selectionModel.isSelected(currentOption.value)"
+                    [value]="currentOption.value"
+                    togglePosition="before"
+                    (selectedChange)="onOptionSelectionChanged(currentOption.value, $event)">
+                @if (customOptionTemplate) {
+                    <ng-container
+                            *ngTemplateOutlet="customOptionTemplate.templateRef; context: { option: currentOption, isSelected: selectionModel.isSelected(currentOption.value), index: index }"/>
+                } @else {
+                    <ng-container *ngTemplateOutlet="defaultOptionTemplateRef; context: { option: currentOption }"/>
+                }
+            </mat-list-option>
+        </epic-infinite-scroll-content>
+    </cdk-virtual-scroll-viewport>
+</mat-selection-list>
+
+<ng-template #defaultOptionTemplateRef let-option="option">
+    <epic-long-text [tooltip]="option.label | translate">
+        {{ option.label | translate }}
+    </epic-long-text>
+</ng-template>

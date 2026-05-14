@@ -1,0 +1,40 @@
+@import 'vars';
+
+.nano-file-preview {
+    align-items: center;
+    border: 1px solid $color-info-50;
+    border-radius: 8px;
+    display: flex;
+    height: 72px;
+    overflow: hidden;
+    padding: 24px;
+    width: 100%;
+
+    &__img {
+        color: $color-primary-300;
+        display: flex;
+    }
+
+    &__name {
+        color: $color-neutral-900;
+        cursor: pointer;
+        flex: 1;
+        font-weight: 500;
+        padding-inline-start: 16px;
+
+        &,
+        > * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__actions {
+    }
+
+}

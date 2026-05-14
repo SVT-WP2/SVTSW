@@ -1,0 +1,79 @@
+﻿<mat-card class="d-flex h-100 w-100" appearance="outlined">
+    <mat-card-header>
+        <div class="flex-1">
+            <mat-card-title>
+                {{ testSetupConfig()?.name }}
+            </mat-card-title>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            @if (!isDefault()) {
+                <button mat-stroked-button (click)="onSetDefault()">
+                    <epic-icon [name]="'star_border'" matButtonIcon/>
+                    Mark as Default
+                </button>
+            } @else {
+                <epic-label class="epic-bg-color-warning-50 epic-color-warning-300" size="xl">
+                    Default
+                </epic-label>
+            }
+        </div>
+    </mat-card-header>
+    <mat-card-content class="d-flex h-100 w-100 overflow-auto position-relative pb-3">
+        <div class="e2e-container">
+            <div class="p-3">
+                <div class="epic-border-radius--300 epic-border-style--solid p-3">
+                    <div class="d-flex gap-5 flex-wrap">
+                        <div class="d-flex gap-1 flex flex-column">
+                            <div class="epic-color-neutral-300 epic-font-body-sm">ID</div>
+                            <div class="epic-font-label">{{ testSetupConfig()?.id }}</div>
+                        </div>
+                        <div class="d-flex gap-1 flex flex-column">
+                            <div class="epic-color-neutral-300 epic-font-body-sm">Created At</div>
+                            <div class="epic-font-label">{{ testSetupConfig()?.createdAt | date : 'dd.MM.YYYY - HH:mm:ss' }}</div>
+                        </div>
+                        @if (testSetupConfig()?.note?.length) {
+                            <div class="d-flex gap-1 flex flex-column">
+                                <div class="epic-color-neutral-300 epic-font-body-sm">Note</div>
+                                <div class="epic-font-label">{{ testSetupConfig()?.note }}</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center w-100 px-3">
+                <div class="epic-font-title-sm flex-1">Config Schema</div>
+                @if(!testSetupConfigBodyResource.isLoading() && !testSetupConfigBodyResource.error()) {
+                    <div class="d-flex gap-2">
+                        <button epicSmallButton mat-stroked-button (click)="onCopyToClipboard()">
+                            <epic-icon [name]="'epic-copy'" matMenuItemIcon/>
+                            Copy JSON
+                        </button>
+                        <button epicSmallButton mat-stroked-button (click)="onDownloadJson()">
+                            <epic-icon [name]="'download'" matMenuItemIcon/>
+                            Download JSON
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="e2e-container__body-with-scroll p-3 pt-2">
+                @if(testSetupConfigBodyResource.isLoading()) {
+                    <epic-loader />
+                }
+                @else if(testSetupConfigBodyResource.error()) {
+                    <epic-content-error>
+                        {{ testSetupConfigBodyResource.error() | epicContentErrorMessage }}
+                    </epic-content-error>
+                }
+                @else {
+                    <ace class="h-100 w-100 epic-border-radius--300 overflow-hidden epic-border-style--solid"
+                         [config]="{fontSize: '16px'}"
+                         [disabled]="true"
+                         [mode]="'hjson'"
+                         [theme]="'ace/theme/github'"
+                         [value]="testSetupConfigBody() | json">
+                    </ace>
+                }
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

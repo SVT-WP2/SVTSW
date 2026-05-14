@@ -1,0 +1,24 @@
+﻿<ng-template epicLayoutLightDynamicSection="Header"
+             [alias]="sectionAlias">
+
+    <div class="epic-layout-light-header__title-wrapper">
+
+        <!-- TITLE -->
+        <h1 class="epic-layout-light-header__title">
+            <epic-long-text>
+                <ng-content></ng-content>
+            </epic-long-text>
+        </h1>
+        <!-- ./TITLE -->
+
+        <!-- SUBTITLE -->
+        <h2 class="epic-layout-light-header__sub-title" *ngIf="subTitle?.length">
+            <epic-long-text [tooltip]="subTitle">
+                {{ subTitle }}
+            </epic-long-text>
+        </h2>
+        <!-- ./SUBTITLE -->
+
+    </div>
+
+</ng-template>
