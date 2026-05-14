@@ -1,0 +1,4 @@
+{
+    "*.scss": "stylelint --fix",
+    "*.ts": "eslint --fix --flag unstable_config_lookup_from_file"
+}

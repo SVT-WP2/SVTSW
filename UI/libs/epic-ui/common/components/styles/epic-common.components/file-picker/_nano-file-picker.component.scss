@@ -1,0 +1,14 @@
+@import 'vars';
+@import './shared';
+
+
+.nano-file-picker {
+    border-radius: $nano-file-picker-border-radius;
+    outline: none;
+
+    &__note {
+        color: $color-neutral-60;
+        font-size: 12px;
+        padding-left: 8px;
+    }
+}

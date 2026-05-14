@@ -1,0 +1,26 @@
+<!--<mat-card appearance="outlined">-->
+<!--    <mat-card-content style="height: 160px" class="position-relative">-->
+<!--        @if (echartsOption()) {-->
+<!--            <div echarts-->
+<!--                 class="w-100 h-100"-->
+<!--                 [options]="echartsOption()"></div>-->
+<!--        }-->
+<!--        <div class="position-absolute top-0 bottom-0 right-0 left-0 d-flex align-items-center justify-content-center w-100 epic-font-title epic-color-primary-300">-->
+<!--            {{ progressPercentage() }}%-->
+<!--        </div>-->
+<!--    </mat-card-content>-->
+<!--</mat-card>-->
+
+<div style="height: 120px" class="position-relative">
+    @if (echartsOption()) {
+        <div echarts
+             class="w-100 h-100"
+             [options]="echartsOption()"></div>
+    }
+    <div class="position-absolute top-0 bottom-0 right-0 left-0 d-flex align-items-center justify-content-center w-100 flex-column">
+        <div class="epic-font-title epic-color-primary-300">{{ progressPercentage() }}%</div>
+        <div class="epic-font-body-sm epic-color-neutral-90">
+            60 / 100
+        </div>
+    </div>
+</div>

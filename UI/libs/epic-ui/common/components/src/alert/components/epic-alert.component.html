@@ -1,0 +1,16 @@
+﻿<div class="epic-alert"
+     [class.epic-alert--error]="severity === Severity.error"
+     [class.epic-alert--warning]="severity === Severity.warning"
+     [class.epic-alert--success]="severity === Severity.success"
+     [class.epic-alert--info]="severity === Severity.info"
+     [class.epic-alert--neutral]="severity === Severity.neutral">
+
+    <ng-content select="[epicAlertIcon]"></ng-content>
+
+    <div class="epic-alert__message">
+        <ng-content></ng-content>
+    </div>
+
+    <ng-content select="[epicAlertAction]"></ng-content>
+
+</div>

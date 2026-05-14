@@ -1,0 +1,38 @@
+﻿<epic-inline-filter-with-overlay [icon]="icon()"
+                                 [isIconOnly]="isIconOnly()"
+                                 [disabled]="disabled"
+                                 [isActive]="isActive() !== undefined ? isActive() : false"
+                                 [label]="label()"
+                                 [suppressFooterActions]="true"
+                                 (panelOpened$)="onPanelOpen()">
+
+    <span inlineFilterLabel>
+        <ng-content select="[inlineFilterLabel]"></ng-content>
+    </span>
+
+    <ng-content></ng-content>
+
+    @if (isFirstOpenProcessed()) {
+        <div class="position-relative" [ngStyle]="overlayCustomStyles()">
+            <epic-selection-list-box-wrapper [stickyHeader]="false">
+                @if (!suppressSearch()) {
+                    <div epicSelectionListBoxHeader>
+                        <epic-search-box [(epicSearchBoxValue)]="searchValue"/>
+                    </div>
+                }
+                <epic-selection-list [ngModel]="value"
+                                     (ngModelChange)="onSelectionChanged($event)"
+                                     [selectOptions]="selectOptions() | epicSearchI18n: searchValue : 'label'"
+                                     [multiple]="false">
+                    @if (customOptionTemplate()) {
+                        <ng-template let-option=option let-isSelected=isSelected let-index=index epicSelectionListOption>
+                            <ng-container
+                                    *ngTemplateOutlet="customOptionTemplate()!.templateRef; context: { option: option, isSelected: isSelected, index: index }">
+                            </ng-container>
+                        </ng-template>
+                    }
+                </epic-selection-list>
+            </epic-selection-list-box-wrapper>
+        </div>
+    }
+</epic-inline-filter-with-overlay>

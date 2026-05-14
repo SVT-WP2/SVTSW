@@ -1,0 +1,30 @@
+<div class="container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>TCP/IP Communication</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="py-3">
+            <div class="row">
+                <div class="col-xl-6">
+                    <epic-tcp-send-message-form
+                            [isProcessing]="isTcpSendMessageProcessing()"
+                            (cancel$)="onCancelTcpProcessing()"
+                            (read$)="onReadTcpMessage($event)"
+                            (send$)="onSendTcpMessage($event)"
+                            (sendAndRead$)="onSendAndReadTcpMessage($event)"/>
+                </div>
+                <div class="col-xl-6">
+                    <mat-divider class="my-4 mx--3 d-xl-none d-block" />
+                    <mat-form-field class="w-100">
+                        <mat-label>Communication Log</mat-label>
+                        <textarea [ngModel]="tcpMessages$ | async" matInput readonly rows="12"></textarea>
+                    </mat-form-field>
+                    <button mat-stroked-button
+                            (click)="onClearTcpLogBtnClicked()">
+                        Clear Log
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

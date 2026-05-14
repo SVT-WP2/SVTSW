@@ -1,0 +1,40 @@
+﻿@import 'vars';
+@import 'mixins';
+
+$nav-item-bg--active: $color-primary-50;
+
+epic-horizontal-tabs {
+    display: block;
+    width: 100%;
+}
+
+.mat-mdc-tab-nav-bar {
+    &.epic-horizontal-tabs {
+        &--primary {
+            .mat-mdc-tab-links {
+                gap: 0.5rem;
+            }
+
+            .mdc-tab-indicator--active {
+                background-color: $nav-item-bg--active;
+            }
+
+            .mdc-tab-indicator {
+                display: none;
+            }
+
+            .mat-mdc-tab-link.mdc-tab {
+                border-radius: 8px;
+                overflow: hidden;
+                padding-inline: 16px;
+            }
+        }
+
+        &--secondary {
+
+        }
+    }
+}
+
+
+

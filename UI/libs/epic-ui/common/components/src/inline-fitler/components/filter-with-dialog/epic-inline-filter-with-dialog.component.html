@@ -1,0 +1,50 @@
+﻿<epic-inline-filter [icon]="icon"
+                   [isActive]="isActive"
+                   [isOpened]="isOpened"
+                   [label]="label"
+                   [selectedItemsNumber]="selectedItemsNumber"
+                   (click)="onOpenDialog()">
+</epic-inline-filter>
+
+<ng-template #dialogTmpl>
+
+    <epic-mat-dialog-header [showCloseButton]="true">
+        {{ dialogTitle | translate }}
+    </epic-mat-dialog-header>
+
+    <mat-dialog-content>
+        <ng-content></ng-content>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        @if (showClearBtn) {
+            <div class="flex-1 text-start">
+                <button [matTooltip]="'COMMON.CLEAR' | translate"
+                        epicStrokedButton
+                        mat-icon-button
+                        (click)="onClearBtnClicked()">
+                    <epic-icon name="epic-clean-filter"/>
+                </button>
+            </div>
+        }
+
+        <button mat-stroked-button
+                mat-dialog-close>
+            {{ 'COMMON.CLOSE' | translate }}
+        </button>
+
+        @if (showApplyBtn) {
+            <button [disabled]="applyBtnDisabled"
+                    color="primary"
+                    mat-flat-button
+                    (click)="onApplyBtnClicked()">
+                {{ 'COMMON.APPLY' | translate }}
+                @if (applyItemsNumber) {
+                    <epic-dot-divider class="epic-color-inherit"></epic-dot-divider>
+                    {{ applyItemsNumber }}
+                }
+            </button>
+        }
+    </mat-dialog-actions>
+
+</ng-template>

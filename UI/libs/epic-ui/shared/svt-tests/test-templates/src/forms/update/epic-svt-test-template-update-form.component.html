@@ -1,0 +1,54 @@
+@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>DUT Type</mat-label>
+            <mat-select [formControlName]="FormField.dutType">
+                @for (option of formGroup.controls.dutType.selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls.dutType.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+        <mat-form-field class="w-100">
+            <mat-label>Test Type</mat-label>
+            <mat-select [formControlName]="FormField.testTypeId">
+                @for (option of activeTestTypes(); track option) {
+                    <mat-option [value]="option.id">
+                        {{ option.name }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls.testTypeId.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Test Type Config</mat-label>
+            <mat-select [formControlName]="FormField.testTypeConfigId">
+                @for (option of activeTestTypeConfigs(); track option) {
+                    <mat-option [value]="option.id">
+                        {{ option.name }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls.testTypeConfigId.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+        <div class="d-flex align-items-center gap-2">
+            <mat-slide-toggle [formControlName]="FormField.isEnabled">Enabled</mat-slide-toggle>
+        </div>
+    </div>
+}
+

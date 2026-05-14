@@ -1,0 +1,9 @@
+{
+    "name": "epic-entities",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/epic/entities/src",
+    "projectType": "library",
+    "tags": [],
+    "targets": {
+    }
+}

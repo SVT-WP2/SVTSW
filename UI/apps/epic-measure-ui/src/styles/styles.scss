@@ -1,0 +1,26 @@
+@import 'vars';
+@import 'mixins';
+
+@include epic-scrollbar();
+
+@supports not selector(::-webkit-scrollbar) {
+    @include epic-standardized-scrollbar();
+}
+
+@import 'epic-common/material-design/themes/theme-epic-blue';
+@import 'epic-common/material-design/components';
+@import 'epic-common/bootstrap';
+@import 'epic-common/common';
+@import 'epic-common.auth';
+@import 'epic-common.components';
+@import 'epic-common.layout';
+@import 'epic-common.ag-grid';
+@import 'epic-shared.iv-mnt';
+@import 'epic-shared.wp';
+
+@import './components';
+
+
+body {
+    background: $color-neutral-10;
+}

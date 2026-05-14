@@ -1,0 +1,86 @@
+<div class="">
+
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            ID
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.id }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Name
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.name }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Status
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.status }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Voltage Start [V]
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.settings.voltageStart }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Voltage Stop [V]
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.settings.voltageStop }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Voltage Step [V]
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.settings.voltageStep }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Compliance [A]
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.settings.complianceInA }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Sweep Delay [ms]
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.settings.sweepDelayInMs }}
+        </div>
+    </div>
+    <div class="py-2 mx--3">
+        <mat-divider />
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Started At
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.startedAt }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Finished At
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ asicIvMnt.finishedAt }}
+        </div>
+    </div>
+</div>

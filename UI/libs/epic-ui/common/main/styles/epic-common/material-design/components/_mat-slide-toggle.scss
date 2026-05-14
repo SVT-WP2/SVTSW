@@ -1,0 +1,63 @@
+@use '@angular/material' as mat;
+
+@import 'vars';
+@import 'mixins';
+
+$handle-size: 16px;
+$track-width: 40px;
+
+:root {
+    @include mat.slide-toggle-overrides((
+        track-height: 24px,
+        handle-height: $handle-size,
+        track-width: $track-width,
+        track-outline-width: 0,
+        disabled-unselected-track-outline-width: 0,
+        unselected-handle-size: $handle-size,
+        selected-handle-size: $handle-size,
+        pressed-handle-size: $handle-size,
+        unselected-track-color: $color-neutral-60,
+        unselected-focus-track-color: $color-neutral-60,
+        unselected-hover-track-color: $color-neutral-60,
+        unselected-pressed-track-color: $color-neutral-60,
+        disabled-unselected-track-color: $color-neutral-40,
+        visible-track-opacity: 1,
+        disabled-track-opacity: 1,
+        disabled-unselected-handle-color: $color-neutral-0,
+        unselected-handle-color: $color-neutral-0,
+        unselected-focus-handle-color: $color-neutral-0,
+        unselected-hover-handle-color: $color-neutral-0,
+        unselected-pressed-handle-color: $color-neutral-0,
+        selected-pressed-handle-color: $color-neutral-0,
+        selected-handle-horizontal-margin: 0 0 0 #{$track-width - $handle-size - 4px},
+        selected-hover-handle-color: $color-neutral-0,
+        selected-focus-handle-color: $color-neutral-0,
+        selected-pressed-handle-horizontal-margin: 0 0 0 #{$track-width - $handle-size - 4px},
+        unselected-handle-horizontal-margin: 0 4px,
+        unselected-pressed-handle-horizontal-margin: 0 4px,
+        state-layer-size: 24px,
+        disabled-selected-track-color: #{$color-neutral-40},
+        handle-surface-color: #{$color-neutral-0},
+    ));
+}
+
+
+.mat-mdc-slide-toggle {
+    .mdc-form-field--align-end {
+        align-items: center;
+        display: flex;
+        flex-direction: row-reverse;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 0;
+        width: 100%;
+        
+        > label {
+            flex: 1;
+            order: 0;
+            padding-left: 0;
+            padding-right: 8px;
+
+        }
+    }
+}

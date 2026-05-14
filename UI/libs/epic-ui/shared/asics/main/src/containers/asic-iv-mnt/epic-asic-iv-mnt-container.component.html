@@ -1,0 +1,65 @@
+﻿<div class="epic-iv-mnt h-100">
+    @if (!mntProcessing().processing && mntProcessing().processingError) {
+        <epic-alert severity="error" class="mb-3 d-block">
+            <epic-icon epicAlertIcon name="epic-info"/>
+            <div class="epic-font-label-lg">Measurement Processing Error</div>
+            {{ mntProcessing().processingError }}
+        </epic-alert>
+    }
+    <div class="epic-iv-mnt__inner-wrapper">
+        <div class="epic-iv-mnt__sidebar">
+            @if (asicIvMnt) {
+                <epic-asic-iv-mnt-info [asicIvMnt]="asicIvMnt"/>
+            } @else {
+                <epic-iv-mnt-new-form #form
+                                      [formData]="initFormData"
+                                      (formGroupReady$)="onFormGroupReady($event)"/>
+            }
+
+            @if (!asicIvMnt) {
+                <div class="epic-iv-mnt__sidebar-footer">
+                    @if (!mntProcessing().processing) {
+                        <button class="w-100"
+                                color="primary"
+                                mat-flat-button
+                                [disabled]="formGroup?.invalid"
+                                (click)="onSubmitBtnClicked()">
+                            Start
+                        </button>
+                    } @else {
+                        <button class="w-100"
+                                color="warn"
+                                mat-flat-button
+                                [disabled]="formGroup?.invalid || isAbortProcessing()"
+                                (click)="onStopBtnClicked()">
+                            {{ isAbortProcessing() ? 'Processing ...' : 'Stop' }}
+                        </button>
+                    }
+
+                </div>
+            }
+        </div>
+        <div class="epic-iv-mnt__content position-relative">
+            <div class="e2e-container">
+                <div class="p-2 epic-border-style-bottom--solid">
+                    <epic-horizontal-tabs
+                            [activeTabId]="activeTabId"
+                            [tabs]="tabs"
+                            (activeTabChanged$)="activeTabId = $event.tabInfo.id"/>
+                </div>
+                <div class="e2e-container__body p-3 epic-bg-color-neutral-20">
+                    @if (activeTabId === 'chart') {
+                        <mat-card class="d-flex flex-1 h-100" appearance="outlined">
+                            <mat-card-content class="py-5 h-100">
+                                <epic-iv-mnt-chart [data]="chartData()"/>
+                            </mat-card-content>
+                        </mat-card>
+
+                    } @else {
+                        Data will be here ...
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

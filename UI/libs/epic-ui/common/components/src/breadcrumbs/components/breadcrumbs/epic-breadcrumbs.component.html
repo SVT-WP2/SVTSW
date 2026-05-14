@@ -1,0 +1,31 @@
+﻿<div class="epic-breadcrumbs"
+     [class.epic-breadcrumbs--large]="size === 'large'"
+     [class.epic-breadcrumbs--small]="size === 'small'">
+    @for (breadcrumb of breadcrumbs; track breadcrumb.id; let isLast = $last) {
+        @if (breadcrumb.routerLink && !breadcrumb.disabled) {
+            <a [routerLink]="breadcrumb.routerLink"
+               [class.epic-breadcrumbs__item--active]="breadcrumb.active"
+               (click)="onBreadcrumbClick(breadcrumb)"
+               class="epic-breadcrumbs__item">
+                <epic-long-text [tooltip]="breadcrumb.label">
+                    {{ breadcrumb.label | translate }}
+                </epic-long-text>
+            </a>
+        } @else {
+            <button class="epic-breadcrumbs__item"
+                    [class.epic-breadcrumbs__item--active]="breadcrumb.active"
+                    [disabled]="breadcrumb.disabled"
+                    (click)="onBreadcrumbClick(breadcrumb)">
+                <epic-long-text [tooltip]="breadcrumb.label">
+                    {{ breadcrumb.label | translate }}
+                </epic-long-text>
+            </button>
+        }
+
+        @if (!isLast) {
+            <epic-icon name="epic-arrow-chevron-right"
+                      class="epic-breadcrumbs__icon"/>
+        }
+    }
+</div>
+

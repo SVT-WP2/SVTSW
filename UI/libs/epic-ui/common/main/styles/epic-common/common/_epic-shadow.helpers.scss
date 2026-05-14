@@ -1,0 +1,38 @@
+@import 'mixins';
+
+
+.epic-shadow-level-1 {
+    @include shadow-level-1();
+}
+
+.epic-shadow-level-2 {
+    @include shadow-level-2();
+}
+
+.epic-shadow-hover:hover {
+    @include shadow-hover();
+}
+
+.epic-mat-shadow-1 {
+    @include mat-shadow-1();
+}
+
+.epic-mat-shadow-2 {
+    @include mat-shadow-2();
+}
+
+.epic-mat-shadow-3 {
+    @include mat-shadow-3();
+}
+
+.epic-mat-shadow-4 {
+    @include mat-shadow-4();
+}
+
+.epic-mat-shadow-5 {
+    @include mat-shadow-5();
+}
+
+.epic-shadow-level-1--on-hover:hover {
+    @include shadow-level-1();
+}

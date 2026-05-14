@@ -1,0 +1,51 @@
+@use '@angular/material' as mat;
+@import 'vars';
+@import 'mixins';
+
+:root {
+    @include mat.button-toggle-overrides((
+        shape: var(--epic-mat-button-container-shape),
+        selected-state-background-color: $color-primary-50,
+        selected-state-text-color: $color-primary-300,
+        disabled-state-background-color: $color-neutral-30,
+        disabled-state-text-color: $color-neutral-60,
+        divider-color: transparent,
+    ));
+}
+
+.mat-button-toggle-group {
+    > .mat-button-toggle {
+        border: 1px solid $color-neutral-40;
+        min-width: 100px;
+
+        &:not(:first-child) {
+            margin-left: -1px;
+        }
+
+        &:first-child:not(:last-child) {
+            border-radius: var(--epic-mat-button-container-shape) 0 0 var(--epic-mat-button-container-shape);
+        }
+
+        &:last-child:not(:first-child) {
+            border-radius: 0 var(--epic-mat-button-container-shape) var(--epic-mat-button-container-shape) 0;
+        }
+
+        &:last-child:first-child {
+            border-radius: var(--epic-mat-button-container-shape);
+        }
+
+        &.mat-button-toggle-checked {
+            border: 1px solid $color-primary-300;
+        }
+
+        + .mat-button-toggle.mat-button-toggle-checked {
+            border-left: 1px solid $color-primary-300;
+        }
+    }
+
+    &--icon-only {
+        > .mat-button-toggle {
+            min-width: auto;
+        }
+    }
+}

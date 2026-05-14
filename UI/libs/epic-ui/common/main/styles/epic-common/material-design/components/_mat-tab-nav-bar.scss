@@ -1,0 +1,65 @@
+@import 'vars';
+@import 'mixins';
+
+$nav-item-text-color: $color-neutral-900;
+$nav-item-text-color--active: $color-primary-300;
+$nav-item-bg--hover: $color-neutral-20;
+$nav-item-bg--active: $color-primary-50;
+
+
+.mat-mdc-tab-nav-bar {
+    .mat-mdc-tab-link.mdc-tab {
+        --mat-tab-header-inactive-label-text-color: #{$nav-item-text-color};
+        --mat-tab-header-active-label-text-color: #{$nav-item-text-color--active};
+        border-radius: 8px 8px 0 0;
+        color: $nav-item-text-color;
+        height: 40px;
+        min-width: 0;
+        opacity: 1;
+        text-decoration: none;
+
+        .mdc-tab__text-label {
+        }
+
+        &.mdc-tab-indicator--active.mdc-tab--active {
+            color: $nav-item-text-color--active;
+
+            .mdc-tab__text-label {
+                color: $nav-item-text-color--active;
+            }
+        }
+
+        &:hover:not(.mdc-tab-indicator--active) {
+            background-color: $nav-item-bg--hover;
+        }
+
+        &.mat-mdc-tab-link:hover .mdc-tab__ripple::before {
+            opacity: 0;
+        }
+
+        .mat-ripple {
+            border-radius: 8px 8px 0 0;
+        }
+    }
+
+    .mat-mdc-tab-link-container {
+        border-style: none;
+    }
+
+
+
+    &--primary {
+        padding-bottom: 1rem;
+        padding-top: 0.5rem;
+
+        .mat-mdc-tab-links {
+            gap: 0.5rem;
+        }
+
+        .mdc-tab-indicator--active {
+            background-color: $nav-item-bg--active;
+        }
+    }
+}
+
+

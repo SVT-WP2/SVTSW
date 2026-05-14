@@ -1,0 +1,51 @@
+<div class="p-3">
+
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            ID
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ entity().id }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Name
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ entity().name }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Engineering Run
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ entity().engineeringRun }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Foundry
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ entity().foundry }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Technology
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ entity().technology }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Wafer Map
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            <a class="action" (click)="onWaferMapDownload()">wafer-map.json</a>
+        </div>
+    </div>
+</div>

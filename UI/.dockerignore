@@ -1,0 +1,15 @@
+node_modules
+dist
+.nx
+.angular
+.git
+*.md
+**/*.spec.ts
+**/*.test.ts
+.env*
+pm2
+postgresql
+tools
+scripts
+Deployment
+

@@ -1,0 +1,7 @@
+export * from './epic-chips-scrolling-data-source.service'
+export * from './epic-chips-list-filter.data-source'
+export * from './epic-chip-location-history-dialog.service'
+export * from './epic-chip-location-update-dialog.service'
+export * from './epic-chip-create-dialog.service'
+export * from './epic-chip-create-with-file-dialog.service'
+export * from './epic-chip-create-many-preview-dialog.service'

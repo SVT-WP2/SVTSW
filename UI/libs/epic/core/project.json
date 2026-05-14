@@ -1,0 +1,9 @@
+{
+    "name": "epic/core",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/epic/core/src",
+    "projectType": "library",
+    "tags": ["business", "core"],
+    "targets": {
+    }
+}

@@ -1,0 +1,225 @@
+{
+    "name": "epic-measure-ui",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "generators": {
+        "@schematics/angular:component": {
+            "style": "scss",
+            "skipTests": true
+        },
+        "@schematics/angular:class": {
+            "skipTests": true
+        },
+        "@schematics/angular:directive": {
+            "skipTests": true
+        },
+        "@schematics/angular:guard": {
+            "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+            "skipTests": true
+        },
+        "@schematics/angular:module": {},
+        "@schematics/angular:pipe": {
+            "skipTests": true
+        },
+        "@schematics/angular:service": {
+            "skipTests": true
+        }
+    },
+    "sourceRoot": "apps/epic-measure-ui/src",
+    "prefix": "app",
+    "targets": {
+        "build": {
+            "executor": "@angular-devkit/build-angular:application",
+            "options": {
+                "outputPath": "dist/apps/epic-measure-ui",
+                "index": "apps/epic-measure-ui/src/index.html",
+                "browser": "apps/epic-measure-ui/src/main.ts",
+                "polyfills": ["zone.js"],
+                "tsConfig": "apps/epic-measure-ui/tsconfig.app.json",
+                "inlineStyleLanguage": "scss",
+                "baseHref": "/app/",
+                "assets": [
+                    {
+                        "glob": "**/*",
+                        "input": "apps/epic-measure-ui/public"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "apps/epic-measure-ui/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/common/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/common/components/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/common/layout/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/common/auth/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/wafer-types/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/wp/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/chips/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/wafer-tests/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/equipment-types/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/equipment/main/assets",
+                        "output": "/assets"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "libs/epic-ui/shared/svt-tests/main/assets",
+                        "output": "/"
+                    },
+                    {
+                        "glob": "**/*",
+                        "input": "apps/epic-measure-ui/assets/ace",
+                        "output": "/"
+                    }
+                ],
+                "styles": [
+                    "apps/epic-measure-ui/src/styles/styles.scss",
+                    "node_modules/ngx-toastr/toastr.css"
+                ],
+                "scripts": [
+                ],
+                "stylePreprocessorOptions": {
+                    "sass": {
+                        "silenceDeprecations": ["import"]
+                    },
+                    "includePaths": [
+                        "libs/epic-ui/common/auth/styles",
+                        "libs/epic-ui/common/main/styles",
+                        "libs/epic-ui/common/components/styles",
+                        "libs/epic-ui/common/layout/styles",
+                        "libs/epic-ui/common/ag-grid/styles",
+                        "libs/epic-ui/shared/main/styles",
+                        "libs/epic-ui/shared/kafka/styles",
+                        "libs/epic-ui/shared/tcp/styles",
+                        "libs/epic-ui/shared/wafers/main/styles",
+                        "libs/epic-ui/shared/wafer-types/main/styles",
+                        "libs/epic-ui/shared/wafer-tests/main/styles",
+                        "libs/epic-ui/shared/iv-mnt/main/styles",
+                        "libs/epic-ui/shared/wp/main/styles",
+                        "libs/epic-ui/shared/chips/main/styles",
+                        "libs/epic-ui/shared/equipment-types/main/styles",
+                        "libs/epic-ui/shared/equipment/main/styles",
+                        "libs/epic-ui/shared/svt-tests/main/styles"
+                    ]
+                },
+                "externalDependencies": ["assets/*"]
+            },
+            "configurations": {
+                "production": {
+                    "budgets": [
+                        {
+                            "type": "initial",
+                            "maximumWarning": "5000kB",
+                            "maximumError": "10MB"
+                        },
+                        {
+                            "type": "anyComponentStyle",
+                            "maximumWarning": "200kB",
+                            "maximumError": "400kB"
+                        }
+                    ],
+                    "outputHashing": "all",
+                    "fileReplacements": [
+                        {
+                            "replace": "apps/epic-measure-ui/src/environments/environment.ts",
+                            "with": "apps/epic-measure-ui/src/environments/environment.prod.ts"
+                        }
+                    ]
+                },
+                "development": {
+                    "optimization": false,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "styles": [
+                        "apps/epic-measure-ui/src/styles/styles.scss",
+                        "node_modules/ngx-toastr/toastr.css",
+                        "node_modules/prismjs/themes/prism-okaidia.css",
+                        "node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css"
+                    ],
+                    "scripts": [
+                        "node_modules/prismjs/prism.js",
+                        "node_modules/prismjs/components/prism-typescript.min.js",
+                        "node_modules/prismjs/components/prism-css.min.js",
+                        "node_modules/prismjs/plugins/line-numbers/prism-line-numbers.js"
+                    ]
+                }
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@angular-devkit/build-angular:dev-server",
+            "options": {
+                "port": 7755,
+                "open": true,
+                "proxyConfig": "apps/epic-measure-ui/proxy.conf.json"
+            },
+            "configurations": {
+                "production": {
+                    "buildTarget": "epic-measure-ui:build:production"
+                },
+                "development": {
+                    "buildTarget": "epic-measure-ui:build:development"
+                }
+            },
+            "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+            "executor": "@angular-devkit/build-angular:extract-i18n"
+        },
+        "test": {
+            "executor": "@angular-builders/jest:run",
+            "options": {
+                "polyfills": ["zone.js", "zone.js/testing"],
+                "tsConfig": "tsconfig.spec.json",
+                "inlineStyleLanguage": ["scss"],
+                "assets": [],
+                "styles": ["src/styles/styles.scss"],
+                "scripts": []
+            }
+        }
+    }
+}

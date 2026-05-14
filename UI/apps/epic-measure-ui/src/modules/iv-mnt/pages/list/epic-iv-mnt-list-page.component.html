@@ -1,0 +1,25 @@
+﻿<epic-layout-light-header-title>
+    <epic-breadcrumbs [breadcrumbs]="breadcrumbs" [size]="'large'"/>
+</epic-layout-light-header-title>
+
+<epic-layout-light-header-actions>
+    <button [routerLink]="'../new'" color="primary" mat-flat-button>
+        <epic-icon [name]="'add'" matButtonIcon/>
+        New
+    </button>
+</epic-layout-light-header-actions>
+
+<div class="d-flex w-100 h-100">
+
+    @let loadingProcessing = loadingProcessing$ | async;
+
+    @if (loadingProcessing.processing) {
+        <epic-loader [fillAllSection]="true"/>
+    } @else if (loadingProcessing.processingError) {
+        <epic-content-error [floating]="true">
+            {{ loadingProcessing.processingError | epicContentErrorMessage }}
+        </epic-content-error>
+    } @else {
+        <epic-iv-mnt-grid class="h-100 w-100 d-flex" [entities]="entitiesList$ | async"/>
+    }
+</div>

@@ -1,0 +1,23 @@
+<div class="nano-file-picker" [tabIndex]="1">
+
+    @if (!value) {
+        <epic-file-picker-drop-area
+                [acceptFileExtensions]="acceptFileExtensions"
+                [isMultiple]="false"
+                (fileDrop$)="onFileDrop($event)">
+        </epic-file-picker-drop-area>
+    }
+    @else {
+        <epic-file-picker-file-preview [file]="value"
+                                       [readonly]="disabled"
+                                       (remove$)="onFileRemoved()">
+        </epic-file-picker-file-preview>
+    }
+
+    @if (acceptFileExtensions?.length && !disabled) {
+        <div class="nano-file-picker__note">
+            {{ 'COMMON.FILE_PICKER.NOTE_ALLOWED_FILE_FORMATS' | translate }} {{ acceptFileExtensions }}
+        </div>
+    }
+
+</div>

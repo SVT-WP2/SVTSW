@@ -1,0 +1,59 @@
+<epic-inline-filter
+        [icon]="icon"
+        [disabled]="disabled"
+        [isActive]="isActive"
+        [isIconOnly]="isIconOnly"
+        [isOpened]="isOpened"
+        [label]="label"
+        [matMenuTriggerFor]="overlay"
+        [selectedItemsNumber]="selectedItemsNumber">
+
+    <ng-content select="[inlineFilterLabel]"></ng-content>
+
+</epic-inline-filter>
+
+
+
+<mat-menu #overlay="matMenu" class="epic-inline-filter-overlay">
+    <ng-template matMenuContent>
+        <div (click)="$event.stopPropagation()">
+            <div class="epic-inline-filter-overlay__content-wrapper">
+                <!-- VALUE CONTROL -->
+                <ng-content></ng-content>
+                <!-- VALUE CONTROL -->
+            </div>
+
+            <!-- ACTIONS -->
+            @if (!suppressFooterActions) {
+                <div class="epic-inline-filter-overlay__footer-wrapper">
+                    <div class="d-flex w-100">
+                        <div class="flex-1">
+                            <ng-content select="[actionsLeft]"></ng-content>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <!-- CANCEL -->
+                            <button mat-stroked-button
+                                    (click)="onCancelBtnClicked($event)">
+                                {{ 'COMMON.CANCEL' | translate }}
+                            </button>
+                            <!-- ./CANCEL -->
+
+                            <!-- APPLY -->
+                            <button mat-flat-button
+                                    [color]="applyBtnColor"
+                                    [disabled]="applyBtnDisabled"
+                                    (click)="onApplyBtnClicked($event)">
+                                {{ (applyBtnLabel || 'COMMON.APPLY') | translate }}
+                                @if (applyItemsNumber) {
+                                    <epic-dot-divider/> {{ applyItemsNumber }}
+                                }
+                            </button>
+                            <!-- ./APPLY -->
+                        </div>
+                    </div>
+                </div>
+            }
+            <!-- ./ACTIONS -->
+        </div>
+    </ng-template>
+</mat-menu>

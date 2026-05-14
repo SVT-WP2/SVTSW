@@ -1,0 +1,43 @@
+﻿<div class="epic-toast-renderer">
+
+    <div class="epic-toast-renderer__left">
+        <epic-icon [name]="iconName"></epic-icon>
+    </div>
+
+    <div class="epic-toast-renderer__content">
+        <div *ngIf="title" class="epic-toast-renderer__title">
+            {{ title | translate }}
+        </div>
+
+        <div *ngIf="message" class="epic-toast-renderer__message">
+            {{ message | translate }}
+        </div>
+
+        <div *ngIf="actions?.length" class="d-flex pt-2 gap-2 flex-wrap">
+            <button *ngFor="let currentAction of actions"
+                    [color]="currentAction.color"
+                    [disabled]="!!currentAction.disabled"
+                    [epicButtonStyle]="currentAction.buttonStyle || 'flat'"
+                    epicButtonSize="small"
+                    mat-button
+                    (click)="handleActionClick(currentAction)">
+
+                <epic-icon *ngIf="currentAction.icon"
+                          [name]="currentAction.icon"
+                          matButtonIcon>
+                </epic-icon>
+
+                {{ currentAction.title | translate }}
+            </button>
+        </div>
+    </div>
+
+    <div class="epic-toast-renderer__right">
+        <button epicButtonSize="small"
+                mat-icon-button
+                (click)="handleCloseBtnClicked()">
+            <epic-icon name="epic-close"></epic-icon>
+        </button>
+    </div>
+
+</div>

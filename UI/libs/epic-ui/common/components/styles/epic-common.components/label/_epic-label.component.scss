@@ -1,0 +1,58 @@
+﻿@import 'vars';
+@import 'mixins';
+
+epic-label {
+    @include epic-font-body();
+    @include any-icon-size($font-size-icon--small);
+    background: $color-neutral-20;
+    border-radius: 8px;
+    color: $color-neutral-300;
+    display: inline-block;
+    height: 24px;
+    line-height: 24px;
+    overflow: hidden;
+    padding: 0 8px;
+    position: relative;
+    vertical-align: top;
+
+    .epic-label {
+        align-items: center;
+        display: flex;
+        gap: 4px;
+        max-width: 100%;
+
+        &__content {
+            @include long-text-wrapper();
+            flex: 1;
+        }
+
+        [epicLabelAction] {
+            cursor: pointer;
+            opacity: 0.5;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+
+    &.epic-label--large {
+        @include epic-font-body-lg();
+        height: 32px;
+        line-height: 32px;
+    }
+
+    &.epic-label--extra-large {
+        @include epic-font-body-lg();
+        height: 40px;
+        line-height: 40px;
+    }
+
+    &.epic-label--small {
+        @include epic-font-body-sm();
+        height: 24px;
+        line-height: 24px;
+    }
+
+
+}

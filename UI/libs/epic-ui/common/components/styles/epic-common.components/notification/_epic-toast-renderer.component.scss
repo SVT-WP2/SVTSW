@@ -1,0 +1,89 @@
+﻿@import 'vars';
+@import 'mixins';
+
+@mixin toastr-color($color) {
+    .epic-toast-renderer {
+        &__left {
+            @include epic-icon-component-color($color);
+        }
+    }
+}
+
+.toast-container {
+    &.toast-top-center {
+        top: 16px !important;
+    }
+
+    &.toast-bottom-center {
+        bottom: 8px !important; // consider margin-bottom: 8px
+    }
+
+    &.toast-bottom-left {
+        bottom: 8px !important; // consider margin-bottom: 8px
+        left: 16px !important;
+    }
+
+    epic-toast-renderer.ngx-toastr {
+        @include shadow-hover();
+        background: transparent;
+        border-radius: 8px;
+        display: block;
+        overflow: hidden;
+        padding: 0;
+        width: 393px !important;
+
+        &:hover {
+            @include shadow-hover();
+        }
+
+        .epic-toast-renderer {
+            background-color: $color-neutral-0;
+            cursor: default;
+            display: flex;
+            padding: 16px;
+
+            &__left {
+                flex: 0 0 24px;
+            }
+
+            &__content {
+                flex: 1;
+                padding-left: 16px;
+                padding-right: 8px;
+            }
+
+            &__right {
+                flex: 0 0 24px;
+            }
+
+            &__title {
+                @include epic-font-title();
+                color: $color-neutral-900;
+            }
+
+            &__message {
+                @include epic-font-body-lg();
+                color: $color-neutral-900;
+            }
+        }
+
+        &.toast-success {
+            @include toastr-color($color-success-300);
+        }
+
+        &.toast-error {
+            @include toastr-color($color-error-300);
+        }
+
+        &.toast-warning {
+            @include toastr-color($color-warning-300);
+        }
+
+        &.toast-info {
+            @include toastr-color($color-primary-300);
+        }
+    }
+
+
+
+}

@@ -1,0 +1,224 @@
+@use 'sass:math';
+@import 'vars';
+@import 'mixins';
+
+// SMALL
+$btn-height--small: 24px;
+$btn-icon-size--small: 16px;
+$btn-border-radius--small: 8px;
+
+@mixin epic-button-size-definition($btn-height, $btn-icon-size, $btn-border-radius) {
+    border-radius: $btn-border-radius;
+    height: $btn-height !important;
+    line-height: $btn-icon-size;
+
+    .mdc-button__label {
+        display: inline-block;
+        line-height: $btn-icon-size;
+    }
+
+    &.mat-mdc-raised-button,
+    &.mat-mdc-outlined-button,
+    &.mat-mdc-unelevated-button,
+    &.mat-mdc-button {
+
+        @include epic-icon-component-size($btn-icon-size);
+        border-radius: $btn-border-radius;
+        height: $btn-height;
+        line-height: $btn-icon-size;
+
+        > .mat-icon,
+        .mat-icon {
+            @include icon-size($btn-icon-size);
+        }
+    }
+
+    &.mat-mdc-icon-button {
+
+        @include epic-icon-component-size($btn-icon-size);
+        border-radius: $btn-border-radius;
+        height: $btn-height;
+        line-height: $btn-icon-size;
+        padding: math.div($btn-height - $btn-icon-size, 2);
+        width: $btn-height;
+
+        > .mat-icon,
+        .mat-icon {
+            @include icon-size($btn-icon-size);
+        }
+
+        .mat-mdc-button-persistent-ripple {
+            border-radius: $btn-border-radius;
+        }
+
+        &.mat-mdc-outlined-button {
+            line-height: $btn-icon-size;
+            padding: math.div($btn-height - $btn-icon-size - 2, 2); // compensate border width
+        }
+    }
+
+    .mat-mdc-button-touch-target {
+        height: $btn-height;
+        width: $btn-height;
+    }
+}
+
+body {
+    //
+    //.mat-mdc-button {
+    //    &.epic-button-size--small {
+    //        @include epic-button-size-definition($btn-height--small, $btn-icon-size--small, $btn-border-radius--small);
+    //    }
+    //}
+
+
+    .mat-mdc-button-base {
+        &.mat-mdc-raised-button,
+        &.mat-mdc-unelevated-button,
+        &.mat-mdc-outlined-button {
+            > epic-icon {
+                display: inline-block;
+                margin-left: -4px;
+                margin-right: 8px;
+                position: relative;
+                vertical-align: top;
+
+                .mat-icon {
+                    display: inline-block;
+                    position: relative;
+                    vertical-align: top;
+                }
+            }
+        }
+
+        > .mdc-button__label + epic-icon {
+            margin-left: 8px;
+            margin-right: -4px;
+        }
+
+        &.epic-button-size--small {
+            @include epic-button-size-definition($btn-height--small, $btn-icon-size--small, $btn-border-radius--small);
+
+            &.mat-mdc-raised-button,
+            &.mat-mdc-unelevated-button,
+            &.mat-mdc-outlined-button,
+            &.mat-mdc-button {
+                > epic-icon {
+                    margin-left: 0;
+                    margin-right: 4px;
+                }
+
+                > .mat-icon,
+                > epic-icon {
+                    margin-left: 0;
+                    margin-right: 4px;
+                }
+
+                > .mdc-button__label + mat-icon.mat-icon {
+                    margin-left: 4px;
+                    margin-right: 0;
+                }
+
+                > .mdc-button__label + epic-icon {
+                    margin-left: 4px;
+                    margin-right: 0;
+                }
+            }
+
+            &.mat-mdc-button {
+                padding: 0 8px;
+            }
+        }
+
+        &.mat-mdc-icon-button {
+            > .mat-icon {
+                margin: 0;
+            }
+
+            > epic-icon {
+                margin: 0;
+
+                .mat-icon {
+                    vertical-align: top;
+                }
+            }
+        }
+
+        &.epic-button-style--stroked {
+            background-color: $color-neutral-0;
+            border-style: solid;
+            border-width: 1px;
+
+            &:not(:disabled) {
+                border-color: $color-neutral-40;
+
+                &.mat-primary {
+                    border-color: $color-primary-300;
+                }
+
+                &.mat-warn {
+                    border-color: $color-error-300;
+                }
+            }
+        }
+
+        &.epic-button-style--flat,
+        &.mdc-button--unelevated.mat-mdc-unelevated-button {
+            &:not(:disabled) {
+                &.mat-primary {
+                    background-color: $color-primary-300;
+                    color: $color-neutral-0;
+
+                    &:hover {
+                        background-color: $color-primary-100;
+                    }
+
+                }
+
+                &.mat-accent {
+                    background-color: $color-warning-300;
+                    color: $color-neutral-0;
+
+                    &:hover {
+                        background-color: $color-warning-100;
+                    }
+                }
+
+                &.mat-warn {
+                    background-color: $color-error-300;
+                    color: $color-neutral-0;
+
+                    &:hover {
+                        background-color: $color-error-100;
+                    }
+                }
+            }
+        }
+
+    }
+
+    .mdc-button.epic-button-size--small {
+        padding: 0 8px;
+    }
+
+}
+
+// epicExpandIcon
+button,
+a {
+    &.mat-mdc-button,
+    &.mat-mdc-outlined-button,
+    &.mat-mdc-unelevated-button {
+        > epic-icon[epicExpandIcon] {
+            @include epic-icon-component-self-size($font-size-icon--small);
+        }
+    }
+
+    &.mat-mdc-button,
+    &.mat-mdc-outlined-button {
+        &:not(.mat-warn):not(.mat-primary):not(.mat-accent):not(.mat-mdc-button-disabled) > epic-icon[epicExpandIcon] {
+            color: $color-neutral-90;
+        }
+    }
+
+}

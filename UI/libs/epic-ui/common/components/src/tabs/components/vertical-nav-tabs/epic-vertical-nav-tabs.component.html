@@ -1,0 +1,26 @@
+<epic-mat-menu-content>
+
+    <a *ngFor="let tabInfo of decoratedTabs"
+       [disabled]="tabInfo?.disabled"
+       [queryParams]="tabInfo?.routerQueryParams"
+       [routerLink]="tabInfo.routerLink"
+       [routerLinkActiveOptions]="tabInfo?.routerLinkActiveOptions"
+       routerLinkActive="active"
+       mat-menu-item>
+
+        <!-- ICON -->
+        <epic-icon *ngIf="tabInfo?.icon"
+                  [name]="tabInfo.icon"
+                  matMenuItemIcon>
+        </epic-icon>
+        <!-- ./ICON -->
+
+        <!-- CONTENT -->
+        <ng-container *ngTemplateOutlet="(tabContentTemplate?.templateRef || defaultContentTemplate); context: { tabInfo: tabInfo }"></ng-container>
+        <!-- ./CONTENT -->
+    </a>
+</epic-mat-menu-content>
+
+<ng-template #defaultContentTemplate let-tabInfo="tabInfo">
+    {{ tabInfo.label | translate }}
+</ng-template>

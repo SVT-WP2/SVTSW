@@ -1,0 +1,15 @@
+@import 'mixins';
+
+
+.e2e-container {
+    @include e2e-container();
+
+    &__body {
+        @include e2e-container-body();
+    }
+
+    &__body-with-scroll {
+        @include e2e-container-body-with-scroll();
+    }
+
+}

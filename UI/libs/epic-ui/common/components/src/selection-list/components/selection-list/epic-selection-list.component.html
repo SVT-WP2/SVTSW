@@ -1,0 +1,31 @@
+<mat-selection-list [disabled]="disabled"
+                    [multiple]="multiple"
+                    color="primary"
+                    (blur)="onTouch()">
+
+    @for (currentOption of selectOptions; track trackByFn($index, currentOption)) {
+        <mat-list-option [value]="currentOption.value"
+                         [selected]="selectionModel.isSelected(currentOption.value)"
+                         (selectedChange)="onOptionSelectionChanged(currentOption.value, $event)"
+                         togglePosition="before">
+
+            @if (customOptionTemplate) {
+                <ng-container
+                        *ngTemplateOutlet="customOptionTemplate.templateRef; context: { option: currentOption, isSelected: selectionModel.isSelected(currentOption.value), index: $index }"/>
+            } @else {
+                <ng-container *ngTemplateOutlet="defaultOptionTemplateRef; context: { option: currentOption }"/>
+            }
+
+        </mat-list-option>
+    }
+
+    @if (!selectOptions.length) {
+        <epic-no-result size="small"/>
+    }
+</mat-selection-list>
+
+<ng-template #defaultOptionTemplateRef let-option="option">
+    <epic-long-text [tooltip]="option.label | translate">
+        {{ option.label | translate }}
+    </epic-long-text>
+</ng-template>

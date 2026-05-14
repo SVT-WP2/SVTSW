@@ -1,0 +1,7 @@
+@if (chartOptions()) {
+    <div class="epic-iv-mnt-chart"
+         echarts
+         [options]="chartOptions()"
+         (chartInit)="onChartInit($event)">
+    </div>
+}

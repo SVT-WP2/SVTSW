@@ -1,0 +1,18 @@
+@import 'vars';
+@import 'mixins';
+
+epic-dot-divider {
+    @include epic-font-body();
+    color: $color-neutral-900;
+    display: inline-block;
+    line-height: inherit;
+    vertical-align: top;
+
+    &::before {
+        content: '\2022';
+    }
+}
+
+button epic-dot-divider {
+    color: inherit;
+}

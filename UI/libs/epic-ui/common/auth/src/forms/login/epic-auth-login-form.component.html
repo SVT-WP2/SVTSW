@@ -1,0 +1,21 @@
+<div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+    <mat-form-field class="w-100">
+        <mat-label>Login</mat-label>
+        <input [formControlName]="FormField.login" matInput autofocus>
+        <mat-error>Required Field</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="w-100">
+        <mat-label>Password</mat-label>
+        <input [formControlName]="FormField.password" matInput [type]="isPasswordVisible ? 'text' : 'password'">
+        @if (formGroup.controls[FormField.password].hasError('required')) {
+            <mat-error>Required Field</mat-error>
+        }
+        <div matSuffix>
+            <button mat-icon-button class="me-2" (click)="isPasswordVisible = !isPasswordVisible">
+                <epic-icon [name]="isPasswordVisible ? 'epic-eye-close' : 'epic-eye-open'" />
+            </button>
+        </div>
+    </mat-form-field>
+
+</div>

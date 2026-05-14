@@ -1,0 +1,120 @@
+﻿<div class="epic-layout-light">
+    <mat-drawer-container class="epic-layout-light__drawer-container"
+                          [autosize]="true">
+        <div class="epic-layout-light__wrapper">
+            <!-- SIDEBAR -->
+            <div class="epic-layout-light__sidebar">
+
+                <!-- SIDEBAR :: HEADER -->
+                <div class="epic-layout-light__sidebar-header">
+                    <!-- LOGO -->
+                    <div class="epic-layout-light__sidebar-logo-container">
+                        <!-- LOGO -->
+                        <ng-container *ngIf="dynamicSectionsCollection.current[SectionName.Logo]?.length; else defaultLogoTmpl">
+                            <ng-container
+                                    *ngFor="let sectionInfo of dynamicSectionsCollection.current[SectionName.Logo]">
+                                <ng-container *ngTemplateOutlet="sectionInfo.template"></ng-container>
+                            </ng-container>
+                        </ng-container>
+                        <!-- ./LOGO -->
+
+                        <ng-template #defaultLogoTmpl>
+                            <a routerLink="/">
+                                <epic-layout-light-logo class="d-block my-1"></epic-layout-light-logo>
+                            </a>
+                        </ng-template>
+
+                    </div>
+                    <!-- ./LOGO -->
+
+                    <!-- ENV NAME -->
+                    <div *ngIf="environmentName" class="epic-layout-light__sidebar-env-container">
+                        <div class="epic-layout-light__sidebar-env">
+                            {{ environmentName }}
+                        </div>
+                    </div>
+                    <!-- ENV NAME -->
+                </div>
+                <!-- ./SIDEBAR :: HEADER -->
+
+                <div class="epic-layout-light__sidebar-content">
+                    <!-- SIDEBAR :: CONTENT -->
+                    <div>
+                        <ng-content select="epic-layout-light-section-sidebar"></ng-content>
+                    </div>
+                    <!-- ./SIDEBAR :: CONTENT -->
+                </div>
+
+                <!-- SIDEBAR :: CONTENT BOTTOM -->
+                <div class="epic-layout-light__sidebar-content-bottom">
+                    <ng-content select="epic-layout-light-section-sidebar-bottom"></ng-content>
+                </div>
+                <!-- ./SIDEBAR :: CONTENT BOTTOM -->
+            </div>
+            <!-- ./SIDEBAR -->
+
+            <!-- SIDE PANEL -->
+            <div class="epic-layout-light__side-panel">
+                <ng-container *ngIf="dynamicSectionsCollection.current[SectionName.SidePanel]?.length">
+                    <ng-container
+                        *ngFor="let sectionInfo of dynamicSectionsCollection.current[SectionName.SidePanel]">
+
+                        <ng-container *ngTemplateOutlet="sectionInfo.template"></ng-container>
+
+                    </ng-container>
+                </ng-container>
+            </div>
+            <!-- ./SIDE PANEL -->
+
+            <!-- CONTENT -->
+            <div class="epic-layout-light__content-wrapper">
+                <div class="epic-layout-light__content">
+                    <!-- CONTENT :: HEADER -->
+                    <div class="epic-layout-light__content-header">
+
+                        <div class="epic-layout-light-header">
+
+                            <!-- HEADER CONTENT -->
+                            <div class="epic-layout-light-header__content">
+                                <ng-container *ngIf="dynamicSectionsCollection.current[SectionName.Header]?.length">
+                                    <ng-container
+                                        *ngFor="let sectionInfo of dynamicSectionsCollection.current[SectionName.Header]">
+
+                                        <ng-container *ngTemplateOutlet="sectionInfo.template"></ng-container>
+
+                                    </ng-container>
+                                </ng-container>
+                            </div>
+                            <!-- ./HEADER CONTENT -->
+
+                            <div class="epic-layout-light-header__actions">
+
+                                <!-- ACTIONS -->
+                                <ng-container *ngIf="dynamicSectionsCollection.current[SectionName.HeaderAction]?.length">
+                                    <ng-container
+                                        *ngFor="let sectionInfo of dynamicSectionsCollection.current[SectionName.HeaderAction]; let isFirst = first">
+
+                                        <mat-divider *ngIf="!isFirst" [vertical]="true"></mat-divider>
+
+                                        <ng-container *ngTemplateOutlet="sectionInfo.template"></ng-container>
+
+                                    </ng-container>
+                                </ng-container>
+                                <!-- ./ACTIONS -->
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./CONTENT :: HEADER -->
+
+                    <!-- CONTENT :: BODY -->
+                    <div class="epic-layout-light__content-body">
+                        <ng-content select="epic-layout-light-section-content"></ng-content>
+                    </div>
+                    <!-- ./CONTENT :: BODY -->
+                </div>
+            </div>
+            <!-- ./CONTENT -->
+        </div>
+    </mat-drawer-container>
+</div>

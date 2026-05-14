@@ -1,0 +1,48 @@
+<div [formGroup]="formGroup" class="d-flex gap-3 flex-column">
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+        </mat-form-field>
+    <div class="py-1">
+        <mat-divider />
+    </div>
+    <div class="row g-3">
+
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Voltage Start [V]</mat-label>
+                <input [formControlName]="FormField.voltageStart" type="number" matInput>
+            </mat-form-field>
+        </div>
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Voltage Stop [V]</mat-label>
+                <input [formControlName]="FormField.voltageStop" type="number" matInput>
+            </mat-form-field>
+        </div>
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Voltage Step [V]</mat-label>
+                <input [formControlName]="FormField.voltageStep" type="number" matInput [min]="0">
+            </mat-form-field>
+        </div>
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Compliance [A]</mat-label>
+                <input [formControlName]="FormField.complianceInA" type="number" matInput [min]="0" [step]="0.00001">
+            </mat-form-field>
+        </div>
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Sweep Delay [ms]</mat-label>
+                <input [formControlName]="FormField.sweepDelayInMs" type="number" matInput [min]="0">
+            </mat-form-field>
+        </div>
+        <div class="col-xl-6">
+            <mat-form-field class="w-100">
+                <mat-label>Init Delay [ms]</mat-label>
+                <input [formControlName]="FormField.initDelayInMs" type="number" matInput [min]="0" [step]="0.00001">
+            </mat-form-field>
+        </div>
+    </div>
+</div>

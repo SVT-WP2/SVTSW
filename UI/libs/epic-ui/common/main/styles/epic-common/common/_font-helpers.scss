@@ -1,0 +1,77 @@
+@import 'mixins';
+@import 'vars';
+
+.epic-font-display-lg {
+    @include epic-font-display-lg();
+}
+
+.epic-font-display {
+    @include epic-font-display();
+}
+
+.epic-font-display-sm {
+    @include epic-font-display-sm();
+}
+
+.epic-font-headline-lg {
+    @include epic-font-headline-lg();
+}
+
+.epic-font-headline {
+    @include epic-font-headline();
+}
+
+.epic-font-headline-sm {
+    @include epic-font-headline-sm();
+}
+
+.epic-font-title-lg {
+    @include epic-font-title-lg();
+}
+
+.epic-font-title {
+    @include epic-font-title();
+}
+
+.epic-font-title-sm {
+    @include epic-font-title-sm();
+}
+
+.epic-font-body-lg {
+    @include epic-font-body-lg();
+}
+
+.epic-font-body {
+    @include epic-font-body();
+}
+
+.epic-font-body-sm {
+    @include epic-font-body-sm();
+}
+
+.epic-font-label-lg {
+    @include epic-font-label-lg();
+}
+
+.epic-font-label {
+    @include epic-font-label();
+}
+
+.epic-font-label-sm {
+    @include epic-font-label-sm();
+}
+
+
+.epic-font-overline {
+    @include epic-font-overline();
+}
+
+.fw-medium {
+    font-weight: 500 !important;
+}
+
+.epic-font-icon-small {
+    @include epic-icon-component-self-size($font-size-icon--small);
+}
+
+

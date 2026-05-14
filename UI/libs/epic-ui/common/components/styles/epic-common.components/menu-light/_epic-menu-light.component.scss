@@ -1,0 +1,12 @@
+﻿@import 'vars';
+@import 'mixins';
+
+epic-menu-light {
+    display: block;
+}
+
+.epic-menu-light {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}

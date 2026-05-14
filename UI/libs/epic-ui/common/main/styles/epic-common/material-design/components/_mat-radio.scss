@@ -1,0 +1,64 @@
+@use '@angular/material' as mat;
+@import 'vars';
+@import 'mixins';
+
+$_radio-size: 16px;
+$radio-container-size: 32px;
+
+:root {
+    @include mat.radio-overrides((
+        state-layer-size: $radio-container-size,
+        unselected-icon-color: $color-neutral-60,
+        unselected-focus-icon-color: $color-neutral-60,
+        unselected-hover-icon-color: $color-neutral-60,
+        disabled-unselected-icon-color: $color-neutral-40,
+        disabled-selected-icon-color: $color-neutral-40,
+    ));
+}
+
+mat-radio-button.mat-mdc-radio-button {
+    .mdc-radio {
+        height: $_radio-size;
+        padding: calc((var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+        width: $_radio-size;
+
+        .mat-mdc-radio-touch-target {
+            height: var(--mdc-radio-state-layer-size, $radio-container-size);
+            width: var(--mdc-radio-state-layer-size, $radio-container-size);
+        }
+
+        .mdc-radio__background {
+            height: $_radio-size;
+            width: $_radio-size;
+
+            &::before {
+                left: calc(-1 * (var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+                top: calc(-1 * (var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+            }
+        }
+    }
+
+    .mat-mdc-radio-button .mat-internal-form-field {
+        display: flex;
+    }
+
+    .mat-internal-form-field > label.mdc-label {
+        padding-left: 4px;
+
+        &:empty {
+            padding-left: 0;
+        }
+    }
+
+    .mdc-radio__inner-circle {
+        border-width: 8px;
+    }
+}
+
+mat-radio-group.mat-mdc-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+

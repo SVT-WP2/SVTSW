@@ -1,0 +1,12 @@
+@import 'mixins';
+
+epic-icon {
+    @include icon-size(24px);
+    display: inline-block;
+    vertical-align: top;
+
+    mat-icon.mat-icon {
+        @include icon-size(24px);
+        color: inherit;
+    }
+}

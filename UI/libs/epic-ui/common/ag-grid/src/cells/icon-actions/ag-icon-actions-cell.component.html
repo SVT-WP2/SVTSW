@@ -1,0 +1,34 @@
+﻿<div class="epic-ag-cell--centered ag-icon-actions-cell">
+    <ng-container *ngFor="let iconAction of iconActions">
+
+        @if (iconAction.routerLink) {
+            <a class="ag-icon-actions-cell__item"
+               [queryParams]="iconAction.routerQueryParams"
+               [routerLink]="iconAction.routerLink">
+                <button
+                        [disabled]="!!iconAction.disabled"
+                        [matTooltip]="(iconAction.tooltip || '') | translate : iconAction.tooltipI18nParams"
+                        epicButtonSize="small"
+                        epicStrokedButton
+                        mat-icon-button>
+                    <epic-icon [name]="iconAction.icon"></epic-icon>
+                </button>
+            </a>
+        } @else {
+            <button class="ag-icon-actions-cell__item"
+                    [matMenuTriggerFor]="iconAction.menuActions?.length ? actionsMenu.matMenuRef : null"
+                    [disabled]="iconAction.disabled"
+                    epicButtonSize="small"
+                    epicStrokedButton
+                    mat-icon-button
+                    (click)="onIconActionClicked(iconAction.onClick); $event.stopPropagation()">
+                <epic-icon [name]="iconAction.icon"></epic-icon>
+            </button>
+
+            <epic-actions-menu #actionsMenu
+                              [actionList]="iconAction.menuActions"
+                              (actionEvent$)="onActionEvent($event)">
+            </epic-actions-menu>
+        }
+    </ng-container>
+</div>

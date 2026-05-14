@@ -1,0 +1,85 @@
+﻿<epic-mat-dialog-container>
+    <epic-mat-dialog-header>
+        {{ dialogData.dialogTitle | translate }}
+    </epic-mat-dialog-header>
+
+    <epic-mat-dialog-content>
+        @if (submitProcessing.processing) {
+            <epic-loader [fillAllSection]="true" [isTransparentBackground]="true"/>
+        }
+
+        @if (initProcessing.processing) {
+            <epic-loader [fillAllSection]="true"/>
+        } @else if (initProcessing.processingError) {
+            <epic-content-error>
+                {{ initProcessing?.processingError?.message' }}
+            </epic-content-error>
+        } @else {
+            <epic-selection-list-box-wrapper>
+                <div epicSelectionListBoxHeader>
+                    @if (dialogData.contentHeaderRenderer) {
+                        <epic-generic-content-renderer class="d-block mb-2"
+                                                      [factory]="dialogData.contentHeaderRenderer.factory"
+                                                      [params]="contentHeaderRendererParams$ | async"/>
+                    }
+                    <epic-search-box [(epicSearchBoxValue)]="searchValue"/>
+                </div>
+
+                <epic-selection-list-virtual-scroll
+                        [(ngModel)]="selectedValues"
+                        [selectOptions]="selectOptions | epicSearch: searchValue : 'label'"
+                        [trackBy]="dialogData.trackBy"
+                        [itemHeight]="dialogData.itemHeight || 44"
+                        [multiple]="!!dialogData.multiple">
+
+                    @if (!!dialogData.selectOptionRenderer) {
+                        <ng-template epicSelectionListOption let-isSelected="isSelected" let-option="option">
+                            <epic-select-option-renderer
+                                    [isSelected]="isSelected"
+                                    [option]="option"
+                                    [factory]="dialogData.selectOptionRenderer">
+                            </epic-select-option-renderer>
+                        </ng-template>
+                    }
+                </epic-selection-list-virtual-scroll>
+            </epic-selection-list-box-wrapper>
+        }
+
+        <ng-template epicMatDialogSection="contentFooter">
+            <div class="d-flex w-100 align-items-center">
+                <div class="flex-1">
+                    <epic-selection-toggle
+                            [showSelectAll]="dialogData.multiple && selectedValuesArray().length !== selectOptions.length"
+                            (selectAll$)="onSelectAll()"
+                            (clear$)="onClear()"
+                    />
+                </div>
+                <div>
+                    <button [disabled]="submitProcessing.processing"
+                            mat-dialog-close
+                            mat-stroked-button>
+                        {{ 'COMMON.CANCEL' | translate }}
+                    </button>
+
+                    @if (!initProcessing.processing) {
+                        <button color="primary"
+                                [disabled]="selectedValuesArray().length === 0 || submitProcessing.processing || initProcessing.processing"
+                                mat-flat-button
+                                (click)="onSubmitBtnClicked()">
+
+                            @if (submitProcessing.processing) {
+                                <span>{{ 'COMMON.PROCESSING' | translate }}</span>
+                            } @else {
+                                <span>{{ submitButtonText | translate }}</span>
+                                @if (!!dialogData.multiple) {
+                                    <epic-dot-divider class="mx-1"/>
+                                    <span>{{ selectedValuesArray().length ?? 0 }}</span>
+                                }
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+        </ng-template>
+    </epic-mat-dialog-content>
+</epic-mat-dialog-container>

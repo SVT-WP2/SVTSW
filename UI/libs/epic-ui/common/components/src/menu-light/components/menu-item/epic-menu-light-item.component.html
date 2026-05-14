@@ -1,0 +1,58 @@
+﻿<!-- LINK -->
+<a *ngIf="item.routerLink"
+   class="epic-menu-light-item"
+   [item]="item"
+   [queryParams]="item.routerQueryParams"
+   [routerLink]="item.routerLink"
+   [title]="item.label | translate"
+   epicMenuLightActiveItem>
+    <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+</a>
+<!-- ./LINK -->
+
+<!-- BUTTON WITH SUBMENU -->
+<ng-container *ngIf="item.submenu">
+    <button #menuTrigger="matMenuTrigger"
+            *ngIf="item.submenu"
+            class="epic-menu-light-item"
+            [class.is-open]="menuTrigger.menuOpen"
+            [item]="item"
+            [matMenuTriggerFor]="submenu.menu"
+            [title]="item.label | translate"
+            epicMenuLightActiveItem
+            (click)="onItemClick($event)">
+        <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+    </button>
+
+    <epic-menu-light-submenu #submenu
+                            [header]="item.submenu.header"
+                            [items]="item.submenu.items"
+                            [subheader]="item.submenu.subheader"
+                            (sideActionEvent$)="onSideActionClick($event)">
+    </epic-menu-light-submenu>
+</ng-container>
+<!-- ./BUTTON WITH SUBMENU -->
+
+<!-- BUTTON WITHOUT SUBMENU -->
+<button *ngIf="!item.submenu && !item.routerLink"
+        class="epic-menu-light-item"
+        (click)="onItemClick($event)">
+    <ng-container *ngTemplateOutlet="itemContent"></ng-container>
+</button>
+<!-- ./BUTTON WITHOUT SUBMENU -->
+
+<!-- ITEM CONTENT -->
+<ng-template #itemContent>
+
+    <epic-icon class="epic-menu-light-item__icon" [name]="item.icon"></epic-icon>
+
+    <span class="epic-menu-light-item__label">
+        {{ item.label | translate }}
+    </span>
+
+    <span *ngIf="item.badge !== undefined" class="epic-menu-light-item__badge">
+        {{ item.badge }}
+    </span>
+
+</ng-template>
+<!-- ./ITEM CONTENT -->

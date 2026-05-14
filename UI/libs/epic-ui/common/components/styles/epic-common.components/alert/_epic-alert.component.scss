@@ -1,0 +1,42 @@
+﻿@import 'vars';
+@import 'mixins';
+
+.epic-alert {
+    align-items: center;
+    border-radius: 8px;
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+
+    &--error {
+        @include epic-icon-component-color($color-error-300);
+        background-color: $color-error-50;
+    }
+
+    &--warning {
+        @include epic-icon-component-color($color-warning-300);
+        background-color: $color-warning-50;
+    }
+
+    &--success {
+        @include epic-icon-component-color($color-success-300);
+        background-color: $color-success-50;
+    }
+
+    &--info {
+        @include epic-icon-component-color($color-primary-300);
+        background-color: $color-primary-50;
+    }
+
+    &--neutral {
+        @include epic-icon-component-color($color-neutral-300);
+        background-color: $color-neutral-20;
+    }
+
+    &__message {
+        @include epic-font-body-lg();
+        color: $color-neutral-900;
+        flex: 1;
+        width: 0;
+    }
+}

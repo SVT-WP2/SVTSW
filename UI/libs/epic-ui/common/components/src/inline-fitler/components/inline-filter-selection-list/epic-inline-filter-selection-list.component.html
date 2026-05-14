@@ -1,0 +1,48 @@
+﻿<epic-inline-filter-with-overlay [applyBtnDisabled]="applyBtnDisabled()"
+                                 [applyBtnLabel]="applyBtnLabel()"
+                                 [applyItemsNumber]="multiple() ? selectionListValueArray()?.length : undefined"
+                                 [disabled]="disabled"
+                                 [icon]="icon()"
+                                 [isActive]="isActive() !== undefined ? isActive() : !!arrayValue?.length"
+                                 [isIconOnly]="isIconOnly()"
+                                 [label]="label()"
+                                 [selectedItemsNumber]="multiple() ? arrayValue?.length : undefined"
+                                 (apply$)="onApply()"
+                                 (panelClosed$)="onPanelClosed()"
+                                 (panelOpened$)="onPanelOpen()">
+
+    <span inlineFilterLabel>
+        <ng-content select="[inlineFilterLabel]"></ng-content>
+    </span>
+
+    <div actionsLeft>
+        <epic-selection-toggle
+                [showSelectAll]="multiple() && selectionListValueArray()?.length !== selectOptions().length"
+                (clear$)="onDeselectAll()"
+                (selectAll$)="onSelectAll()"
+        />
+    </div>
+    @if (isFirstOpenProcessed()) {
+        <div class="position-relative mb-2" [style.height]="height()" [style.width]="width()">
+            <epic-selection-list-box-wrapper>
+                @if (!suppressSearch()) {
+                    <div epicSelectionListBoxHeader>
+                        <epic-search-box [(epicSearchBoxValue)]="searchValue"/>
+                    </div>
+                }
+                <epic-selection-list-virtual-scroll [(ngModel)]="selectionListValue"
+                                                    [itemHeight]="selectionOptionHeight()"
+                                                    [selectOptions]="selectOptions() | epicSearchI18n: searchValue : 'label'"
+                                                    [multiple]="multiple()">
+                    @if (customOptionTemplate()) {
+                        <ng-template let-option=option let-isSelected=isSelected let-index=index epicSelectionListOption>
+                            <ng-container
+                                    *ngTemplateOutlet="customOptionTemplate()!.templateRef; context: { option: option, isSelected: isSelected, index: index }">
+                            </ng-container>
+                        </ng-template>
+                    }
+                </epic-selection-list-virtual-scroll>
+            </epic-selection-list-box-wrapper>
+        </div>
+    }
+</epic-inline-filter-with-overlay>

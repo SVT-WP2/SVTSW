@@ -1,0 +1,127 @@
+@import 'vars';
+@import 'mixins';
+
+.epic-border-radius--0 {
+    border-radius: $border-radius--0 !important;
+}
+
+.epic-border-radius--100 {
+    border-radius: $border-radius--100 !important;
+}
+
+.epic-border-radius--200 {
+    border-radius: $border-radius--200 !important;
+}
+
+.epic-border-radius--300 {
+    border-radius: $border-radius--300 !important;
+}
+
+.epic-border-radius--400 {
+    border-radius: $border-radius--400 !important;
+}
+
+.epic-border-radius--500 {
+    border-radius: $border-radius--500 !important;
+}
+
+.epic-border-style--solid {
+    @include epic-border-style(all);
+}
+
+.epic-border-style-bottom--solid {
+    @include epic-border-style(bottom);
+}
+
+.epic-border-style-top--solid {
+    @include epic-border-style(top);
+}
+
+.epic-border-style-left--solid {
+    @include epic-border-style(left);
+}
+
+.epic-border-style-right--solid {
+    @include epic-border-style(right);
+}
+
+.epic-border-style-right--none {
+    border-right-style: none;
+}
+
+.epic-border-style-left--none {
+    border-left-style: none;
+}
+
+@include media-breakpoint-up(md) {
+    .epic-border-style-left-md--none {
+        border-left-style: none;
+    }
+
+    .epic-border-style-right-md--none {
+        border-right-style: none;
+    }
+
+    .epic-border-style-right-md--solid {
+        @include epic-border-style(right);
+    }
+
+    .epic-border-style-left-md--solid {
+        @include epic-border-style(left);
+    }
+}
+
+@include media-breakpoint-up(lg) {
+    .epic-border-style-left-lg--none {
+        border-left-style: none;
+    }
+
+    .epic-border-style-right-lg--none {
+        border-right-style: none;
+    }
+
+    .epic-border-style-right-lg--solid {
+        @include epic-border-style(right);
+    }
+
+    .epic-border-style-left-lg--solid {
+        @include epic-border-style(left);
+    }
+}
+
+@include media-breakpoint-up(xl) {
+    .epic-border-style-left-xl--none {
+        border-left-style: none;
+    }
+
+    .epic-border-style-right-xl--none {
+        border-right-style: none;
+    }
+
+    .epic-border-style-right-xl--solid {
+        @include epic-border-style(right);
+    }
+
+    .epic-border-style-left-xl--solid {
+        @include epic-border-style(left);
+    }
+}
+
+@include media-breakpoint-up(xxl) {
+    .epic-border-style-left-xxl--none {
+        border-left-style: none;
+    }
+
+    .epic-border-style-right-xxl--none {
+        border-right-style: none;
+    }
+
+    .epic-border-style-right-xxl--solid {
+        @include epic-border-style(right);
+    }
+
+    .epic-border-style-left-xxl--solid {
+        @include epic-border-style(left);
+    }
+}
+

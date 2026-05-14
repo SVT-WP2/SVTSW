@@ -1,0 +1,39 @@
+﻿<epic-mat-dialog-header>
+    ASIC - Create
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    @if (processingError?.length) {
+        <epic-alert severity="error" class="mb-3 d-block">
+            <epic-icon name="epic-info" />
+            {{ processingError }}
+        </epic-alert>
+    }
+
+    <epic-asic-update-form #form
+                            [formData]="dialogData.formData"/>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [disabled]="isProcessing"
+            mat-dialog-close
+            mat-stroked-button>
+        {{ 'COMMON.CANCEL' | translate }}
+    </button>
+
+    <button [disabled]="!form.formGroup?.valid || isProcessing"
+            color="primary"
+            mat-flat-button
+            tabindex="-1"
+            (click)="onSubmitBtnClicked(form.formGroup)">
+        @if (!isProcessing) {
+            {{ (!isUpdate ? 'COMMON.CREATE' : 'COMMON.SAVE') | translate }}
+        } @else {
+            {{ 'COMMON.PROCESSING' | translate }}
+        }
+    </button>
+</mat-dialog-actions>
+
+

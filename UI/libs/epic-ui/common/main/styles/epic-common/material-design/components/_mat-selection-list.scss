@@ -1,0 +1,105 @@
+@use '@angular/material' as mat;
+@use 'sass:math';
+
+@import 'vars';
+@import 'mixins';
+
+
+:root {
+    @include mat.list-overrides((
+        list-item-one-line-container-height: auto,
+        list-item-selected-container-color: $color-primary-50,
+    ));
+}
+
+$list-option-border-radius: 8px;
+$list-option-bg--hover: $color-neutral-20;
+$list-option-bg--focus: $color-neutral-20;
+
+$selection-control-size: 16px;
+$selection-control-container-size: 24px;
+
+// list option
+.mdc-list-item.mdc-list-item--with-one-line {
+    &.mdc-list-item--with-leading-radio,
+    &.mdc-list-item--with-leading-checkbox {
+        .mdc-list-item__start {
+            margin-left: 0;
+            margin-right: 4px;
+        }
+    }
+
+}
+
+mat-selection-list.mat-mdc-list-base {
+    --mdc-checkbox-state-layer-size: $selection-control-container-size;
+    --mdc-radio-state-layer-size: $selection-control-container-size;
+    --mdc-list-list-item-container-shape: #{$list-option-border-radius};
+    --mdc-list-list-item-hover-state-layer-opacity: 0;
+    --mdc-list-list-item-focus-state-layer-opacity: 0;
+    --mdc-checkbox-unselected-icon-color: #{$color-neutral-60};
+    --mdc-radio-unselected-icon-color: #{$color-neutral-60};
+
+    .mat-mdc-list-option {
+        margin-bottom: 4px;
+        overflow: hidden;
+        padding: 8px;
+        position: relative;
+
+        // checkbox styles
+        .mdc-checkbox {
+            height: $selection-control-size;
+            padding: calc(($selection-control-container-size - $selection-control-size) / 2);
+            width: $selection-control-size;
+        }
+
+        .mdc-checkbox__background {
+            border-radius: 4px;
+            height: $selection-control-size;
+            width: $selection-control-size;
+        }
+
+        .mdc-checkbox__checkmark {
+        }
+
+        // radio styles
+        .mdc-radio {
+            display: block;
+            height: $selection-control-size;
+            padding: calc(($selection-control-container-size - $selection-control-size) / 2);
+            width: $selection-control-size;
+        }
+
+        .mdc-radio__background {
+            height: $selection-control-size;
+            width: $selection-control-size;
+        }
+
+        .mdc-radio__inner-circle {
+            border-width: 8px;
+        }
+    }
+
+    .mdc-list-item:not(.mdc-list-item--selected):not(.mdc-list-item--disabled):focus {
+        background-color: $list-option-bg--focus;
+    }
+
+    .mdc-list-item:not(.mdc-list-item--selected):not(.mdc-list-item--disabled):hover {
+        background-color: $list-option-bg--hover;
+    }
+
+    cdk-virtual-scroll-viewport {
+        height: 100%;
+    }
+
+    .mdc-list-item--selected {
+        --mdc-list-list-item-label-text-color: #{$color-primary-300};
+        --mdc-list-list-item-hover-label-text-color: #{$color-primary-300};
+        --mdc-list-list-item-focus-label-text-color: #{$color-primary-300};
+        --mdc-list-list-item-label-text-size: #{$font-size--title};
+        --mdc-list-list-item-label-text-weight: 500;
+    }
+
+}
+
+

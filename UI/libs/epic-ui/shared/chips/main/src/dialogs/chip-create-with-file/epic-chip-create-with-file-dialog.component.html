@@ -1,0 +1,50 @@
+﻿<epic-mat-dialog-header>
+    Chip - Create
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    @if (processingError?.length) {
+        <epic-alert severity="error" class="mb-3 d-block">
+            <epic-icon name="epic-info"/>
+            {{ processingError }}
+        </epic-alert>
+    }
+
+    <epic-chip-create-with-file-form [formData]="dialogData.formData"
+                                     (formGroupReady$)="onFormGroupReady($event)"/>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    @if (!!this.formGroup()?.controls?.asicToChipMap?.value) {
+        <button [disabled]="isProcessing"
+                (click)="onPreviewBtnClicked()"
+                mat-stroked-button>
+            <epic-icon name="epic-eye-open"/>
+            {{ 'Preview' | translate }}
+        </button>
+
+        <mat-divider [vertical]="true" class="mx-3"/>
+    }
+
+    <button [disabled]="isProcessing"
+            mat-dialog-close
+            mat-stroked-button>
+        {{ 'COMMON.CANCEL' | translate }}
+    </button>
+
+    <button [disabled]="!formGroup()?.valid || isProcessing"
+            color="primary"
+            mat-flat-button
+            tabindex="-1"
+            (click)="onSubmitBtnClicked(formGroup()!)">
+        @if (!isProcessing) {
+            {{ 'COMMON.CREATE' | translate }}
+        } @else {
+            {{ 'COMMON.PROCESSING' | translate }}
+        }
+    </button>
+</mat-dialog-actions>
+
+

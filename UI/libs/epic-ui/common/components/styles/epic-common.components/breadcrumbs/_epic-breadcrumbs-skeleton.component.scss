@@ -1,0 +1,34 @@
+﻿@import 'vars';
+@import 'mixins';
+
+.epic-breadcrumbs-skeleton {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+
+    &__box {
+        animation: breadcrumbs-skeleton 1.5s infinite;
+        border-radius: 16px;
+        height: 16px;
+        width: 80px;
+    }
+
+    &__icon {
+        @include epic-icon-component-self-size($font-size-icon--small);
+        color: $color-neutral-40;
+    }
+}
+
+@keyframes breadcrumbs-skeleton {
+    0% {
+        background: $color-neutral-30;
+    }
+
+    50% {
+        background: $color-neutral-40;
+    }
+
+    100% {
+        background: $color-neutral-30;
+    }
+}

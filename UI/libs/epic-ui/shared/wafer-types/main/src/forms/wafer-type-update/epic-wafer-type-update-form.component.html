@@ -1,0 +1,81 @@
+﻿@if(initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <div class="row g-3">
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Engineering Run</mat-label>
+                    <mat-select [formControlName]="FormField.engineeringRun">
+                        @for (option of formGroup.controls[FormField.engineeringRun].selectOptions; track option) {
+                            <mat-option [value]="option">
+                                {{ option }}
+                            </mat-option>
+                        }
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.engineeringRun].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+
+                </mat-form-field>
+            </div>
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Foundry</mat-label>
+                    <mat-select [formControlName]="FormField.foundry">
+                        @for (option of formGroup.controls[FormField.foundry].selectOptions; track option) {
+                            <mat-option [value]="option">
+                                {{ option }}
+                            </mat-option>
+                        }
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.foundry].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+
+                </mat-form-field>
+            </div>
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Technology</mat-label>
+                    <mat-select [formControlName]="FormField.technology">
+                        @for (option of formGroup.controls[FormField.technology].selectOptions; track option) {
+                            <mat-option [value]="option">
+                                {{ option }}
+                            </mat-option>
+                        }
+                    </mat-select>
+
+                    @if (formGroup.controls[FormField.technology].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+
+                </mat-form-field>
+            </div>
+            <div>
+                <div class="epic-font-label-lg mb-2">
+                    Wafer Map
+                </div>
+                <epic-file-picker [formControlName]="FormField.waferMap" acceptFileExtensions=".json" />
+            </div>
+
+        </div>
+
+    </div>
+}
+
+

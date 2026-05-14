@@ -1,0 +1,8 @@
+﻿@import 'vars';
+@import 'mixins';
+
+.epic-mat-dialog-header-subtitle {
+    @include epic-font-body-sm();
+    color: $color-neutral-300;
+    margin-top: 4px;
+}

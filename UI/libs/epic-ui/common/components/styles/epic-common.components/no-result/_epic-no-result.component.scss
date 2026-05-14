@@ -1,0 +1,34 @@
+@import 'vars';
+@import 'mixins';
+
+epic-no-result {
+    display: block;
+}
+
+.epic-no-result {
+    $self: &;
+    padding: 24px;
+    text-align: center;
+
+    &--small {
+        #{$self}__icon {
+            width: 72px;
+        }
+
+        #{$self}__message {
+            @include epic-font-label();
+        }
+    }
+
+    &__icon {
+        margin-bottom: 0.5rem;
+        max-width: 100%;
+        width: 144px;
+    }
+
+    &__message {
+        @include epic-font-title();
+        color: $color-neutral-900;
+    }
+
+}

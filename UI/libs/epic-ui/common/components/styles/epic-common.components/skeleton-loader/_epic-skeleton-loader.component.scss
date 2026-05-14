@@ -1,0 +1,38 @@
+﻿@import 'vars';
+@import 'mixins';
+
+.epic-skeleton-loader {
+    animation: skeleton-loading 1.5s infinite linear;
+    background: linear-gradient(90deg, $color-neutral-20 25%, $color-neutral-30 50%, $color-neutral-20 75%);
+    background-size: 200% 100%;
+    border-radius: .5rem;
+    display: block;
+    height: var(--epic-skeleton-loader--height);
+    width: 100%;
+
+    &--size-sm {
+        --epic-skeleton-loader--height: 24px;
+    }
+
+    &--size-md {
+        --epic-skeleton-loader--height: 32px;
+    }
+
+    &--size-lg {
+        --epic-skeleton-loader--height: 40px;
+    }
+
+    &--size-xl {
+        --epic-skeleton-loader--height: 56px;
+    }
+
+    @keyframes skeleton-loading {
+        0% {
+            background-position: 100% 0;
+        }
+
+        100% {
+            background-position: -100% 0;
+        }
+    }
+}

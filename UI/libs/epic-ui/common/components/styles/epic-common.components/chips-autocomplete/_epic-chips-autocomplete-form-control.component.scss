@@ -1,0 +1,33 @@
+﻿@import 'vars';
+@import 'mixins';
+
+
+.epic-chips-autocomplete-form-control {
+    width: 100%;
+
+    &__expand {
+        color: $color-neutral-60 !important;
+        margin-right: 16px;
+    }
+
+    &__autocomplete-footer {
+        @include epic-font-body-lg();
+        @include epic-border-style(top);
+        background: $color-neutral-0;
+        border-radius: 0 0 4px 4px;
+        bottom: -8px;
+        gap: .5rem;
+        margin-bottom: -8px;
+        padding: 0 0 4px;
+        position: sticky;
+        z-index: 2;
+    }
+}
+
+.epic-mat-form-field--small {
+    .epic-chips-autocomplete-form-control {
+        &__expand {
+            margin-right: 8px;
+        }
+    }
+}

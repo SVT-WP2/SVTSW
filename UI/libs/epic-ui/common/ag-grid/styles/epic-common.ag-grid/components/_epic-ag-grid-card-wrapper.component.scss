@@ -1,0 +1,13 @@
+@import 'mixins';
+
+.epic-ag-grid-card-wrapper {
+    .ag-theme-alpine {
+        .ag-root-wrapper {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    }
+
+    &--full-height {
+        @include e2e-container(); }
+}

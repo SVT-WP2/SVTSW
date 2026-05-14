@@ -1,0 +1,10 @@
+<div class="epic-no-result"
+     [class.epic-no-result--small]="size === Size.small">
+    <img *ngIf="displayIcon"
+         class="epic-no-result__icon"
+         src="./assets/images/epic-common.components/no-result.svg">
+
+    <div class="epic-no-result__message">
+        {{ message | translate }}
+    </div>
+</div>

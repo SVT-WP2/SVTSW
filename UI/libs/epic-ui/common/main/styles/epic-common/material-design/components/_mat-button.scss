@@ -1,0 +1,273 @@
+@use '@angular/material' as mat;
+@import 'vars';
+
+:root {
+    --epic-mat-button-container-height: 40px;
+    --epic-mat-button-container-shape: 12px;
+    --epic-mat-button-icon-size: #{$font-size-icon};
+    --epic-mat-button-icon-offset: 0;
+    --epic-mat-button-icon-spacing: 8px;
+    --epic-mat-button-horizontal-padding: 12px;
+    --epic-mat-button-state-opacity: 0.07;
+
+    --epic-mat-text-button-text-color: #{$color-text};
+    --epic-mat-text-button-state-color: #{$color-neutral-900};
+    --epic-mat-text-button-container-color: transparent;
+    --epic-mat-text-button-outline-color: transparent;
+    --epic-mat-text-button-outline-size: 0;
+    --epic-mat-text-button-text-color-disabled: #{$color-neutral-60};
+    --epic-mat-text-button-container-color-disabled: transparent;
+    --epic-mat-text-button-outline-color-disabled: transparent;
+
+    --epic-mat-outlined-button-text-color: #{$color-text};
+    --epic-mat-outlined-button-state-color: #{$color-neutral-900};
+    --epic-mat-outlined-button-container-color: #{$color-neutral-0};
+    --epic-mat-outlined-button-outline-color: #{$color-neutral-40};
+    --epic-mat-outlined-button-outline-size: 1px;
+    --epic-mat-outlined-button-text-color-disabled: #{$color-neutral-60};
+    --epic-mat-outlined-button-container-color-disabled: #{$color-neutral-40};
+    --epic-mat-outlined-button-outline-color-disabled: #{$color-neutral-40};
+
+    --epic-mat-filled-button-text-color: #{$color-neutral-0};
+    --epic-mat-filled-button-state-color: #{$color-neutral-0};
+    --epic-mat-filled-button-container-color: #{$color-primary-300};
+    --epic-mat-filled-button-text-color-disabled: #{$color-neutral-60};
+    --epic-mat-filled-button-container-color-disabled: #{$color-neutral-40};
+
+    --epic-mat-icon-button-text-color: #{$color-text};
+    --epic-mat-icon-button-state-color: #{$color-neutral-900};
+    --epic-mat-icon-button-container-color: transparent;
+    --epic-mat-icon-button-outline-color: transparent;
+    --epic-mat-icon-button-outline-size: 0;
+    --epic-mat-icon-button-text-color-disabled: #{$color-neutral-60};
+    --epic-mat-icon-button-container-color-disabled: transparent;
+    --epic-mat-icon-button-outline-color-disabled: transparent;
+}
+
+.mat-mdc-button {
+    @include mat.button-overrides((
+        text-label-text-color: var(--epic-mat-text-button-text-color),
+        text-ripple-color: var(--epic-mat-text-button-state-color),
+        text-state-layer-color: var(--epic-mat-text-button-state-color),
+        text-hover-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        text-focus-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        text-pressed-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        text-container-height: var(--epic-mat-button-container-height),
+        text-container-shape: var(--epic-mat-button-container-shape),
+        text-icon-offset: var(--epic-mat-button-icon-offset),
+        text-icon-spacing: var(--epic-mat-button-icon-spacing),
+        text-horizontal-padding: var(--epic-mat-button-horizontal-padding),
+        text-with-icon-horizontal-padding: var(--epic-mat-button-horizontal-padding),
+        text-disabled-label-text-color: var(--epic-mat-text-button-text-color-disabled),
+    ));
+
+    &.mat-primary {
+        --epic-mat-text-button-text-color: #{$color-primary-300};
+        --epic-mat-text-button-state-color: #{$color-primary-300};
+    }
+
+    &.mat-accent {
+        --epic-mat-text-button-text-color: #{$color-warning-300};
+        --epic-mat-text-button-state-color: #{$color-warning-300};
+    }
+
+    &.mat-warn {
+        --epic-mat-text-button-text-color: #{$color-error-300};
+        --epic-mat-text-button-state-color: #{$color-error-300};
+    }
+}
+
+.mat-mdc-outlined-button {
+    @include mat.button-overrides((
+        outlined-label-text-color: var(--epic-mat-outlined-button-text-color),
+        outlined-ripple-color: var(--epic-mat-outlined-button-state-color),
+        outlined-state-layer-color: var(--epic-mat-outlined-button-state-color),
+        outlined-outline-color: var(--epic-mat-outlined-button-outline-color),
+        outlined-outline-width: var(--epic-mat-outlined-button-outline-size),
+        outlined-hover-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        outlined-focus-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        outlined-pressed-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        outlined-container-height: var(--epic-mat-button-container-height),
+        outlined-container-shape: var(--epic-mat-button-container-shape),
+        outlined-icon-offset: var(--epic-mat-button-icon-offset),
+        outlined-icon-spacing: var(--epic-mat-button-icon-spacing),
+        outlined-horizontal-padding: var(--epic-mat-button-horizontal-padding),
+        outlined-disabled-outline-color: var(--epic-mat-outlined-button-outline-color-disabled),
+        outlined-disabled-label-text-color: var(--epic-mat-outlined-button-text-color-disabled),
+    ));
+
+    &.mat-primary {
+        --epic-mat-outlined-button-text-color: #{$color-primary-300};
+        --epic-mat-outlined-button-state-color: #{$color-primary-300};
+        --epic-mat-outlined-button-container-color: #{$color-primary-50};
+        --epic-mat-outlined-button-outline-color: #{$color-primary-300};
+    }
+
+    &.mat-accent {
+        --epic-mat-outlined-button-text-color: #{$color-warning-300};
+        --epic-mat-outlined-button-state-color: #{$color-warning-300};
+        --epic-mat-outlined-button-container-color: #{$color-warning-50};
+        --epic-mat-outlined-button-outline-color: #{$color-warning-300};
+    }
+
+    &.mat-warn {
+        --epic-mat-outlined-button-text-color: #{$color-error-300};
+        --epic-mat-outlined-button-state-color: #{$color-error-300};
+        --epic-mat-outlined-button-container-color: #{$color-error-50};
+        --epic-mat-outlined-button-outline-color: #{$color-error-300};
+    }
+}
+
+.mat-mdc-unelevated-button {
+    @include mat.button-overrides((
+        filled-container-color: var(--epic-mat-filled-button-container-color),
+        filled-label-text-color: var(--epic-mat-filled-button-text-color),
+        filled-ripple-color: var(--epic-mat-filled-button-state-color),
+        filled-state-layer-color: var(--epic-mat-filled-button-state-color),
+        filled-hover-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        filled-focus-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        filled-pressed-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        filled-container-height: var(--epic-mat-button-container-height),
+        filled-container-shape: var(--epic-mat-button-container-shape),
+        filled-icon-offset: var(--epic-mat-button-icon-offset),
+        filled-icon-spacing: var(--epic-mat-button-icon-spacing),
+        filled-horizontal-padding: var(--epic-mat-button-horizontal-padding),
+        filled-disabled-container-color: var(--epic-mat-filled-button-container-color-disabled),
+        filled-disabled-label-text-color: var(--epic-mat-filled-button-text-color-disabled),
+    ));
+
+    &.mat-accent {
+        --epic-mat-filled-button-container-color: #{$color-warning-300};
+    }
+
+    &.mat-warn {
+        --epic-mat-filled-button-container-color: #{$color-error-300};
+    }
+}
+
+.mat-mdc-icon-button {
+    @include mat.icon-button-overrides((
+        icon-color: var(--epic-mat-icon-button-text-color),
+        state-layer-color: var(--epic-mat-icon-button-state-color),
+        ripple-color: var(--epic-mat-icon-button-state-color),
+        state-layer-size: var(--epic-mat-button-container-height),
+        hover-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        focus-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        pressed-state-layer-opacity: var(--epic-mat-button-state-opacity),
+        disabled-icon-color: var(--epic-mat-icon-button-text-color-disabled),
+    ));
+
+    --mdc-icon-button-state-layer-size: var(--epic-mat-button-container-height);
+    --mdc-icon-button-icon-size: var(--epic-mat-button-icon-size);
+    --mat-outlined-button-horizontal-padding: 8px;
+
+    &.mat-primary {
+        --epic-mat-icon-button-text-color: #{$color-primary-300};
+        --epic-mat-icon-button-state-color: #{$color-primary-300};
+    }
+
+    &.mat-accent {
+        --epic-mat-icon-button-text-color: #{$color-warning-300};
+        --epic-mat-icon-button-state-color: #{$color-warning-300};
+    }
+
+    &.mat-warn {
+        --epic-mat-icon-button-text-color: #{$color-error-300};
+        --epic-mat-icon-button-state-color: #{$color-error-300};
+    }
+}
+
+//
+// CUSTOM OVERRIDES
+// Keep as small as possible
+//
+
+button,
+a {
+    &.mat-mdc-button,
+    &.mat-mdc-outlined-button,
+    &.mat-mdc-unelevated-button {
+        text-decoration: none;
+        white-space: nowrap;
+
+        > .mat-icon {
+            @include epic-icon-size(var(--epic-mat-button-icon-size));
+        }
+
+        > epic-icon {
+            @include epic-icon-component-self-size(var(--epic-mat-button-icon-size));
+            margin-left: var(--epic-mat-button-icon-offset);
+            margin-right: var(--epic-mat-button-icon-spacing);
+        }
+
+        .mdc-button__label + epic-icon {
+            margin-left: var(--epic-mat-button-icon-spacing);
+            margin-right: var(--epic-mat-button-icon-offset);
+        }
+
+        .mat-mdc-button-touch-target {
+            height: var(--epic-mat-button-container-height);
+        }
+    }
+
+    &.mat-mdc-button {
+        background-color: var(--epic-mat-text-button-container-color);
+        border-color: var(--epic-mat-text-button-outline-color);
+        border-style: solid;
+        border-width: var(--epic-mat-text-button-outline-size);
+
+        &[disabled],
+        &.mat-mdc-button-disabled {
+            background-color: var(--epic-mat-text-button-container-color-disabled);
+            border-color: var(--epic-mat-text-button-outline-color-disabled);
+        }
+    }
+
+    &.mat-mdc-outlined-button {
+        background-color: var(--epic-mat-outlined-button-container-color);
+
+        &[disabled],
+        &.mat-mdc-button-disabled {
+            background-color: var(--epic-mat-outlined-button-container-color-disabled);
+        }
+    }
+
+    &.mat-mdc-icon-button {
+        background-color: var(--epic-mat-icon-button-container-color);
+        border-color: var(--epic-mat-icon-button-outline-color);
+        border-radius: var(--epic-mat-button-container-shape);
+        border-style: solid;
+        border-width: var(--epic-mat-icon-button-outline-size);
+
+        > .mat-icon {
+            @include epic-icon-size(var(--epic-mat-button-icon-size));
+        }
+
+        > epic-icon {
+            @include epic-icon-component-self-size(var(--epic-mat-button-icon-size));
+            line-height: 1;
+        }
+
+        .mat-mdc-button-touch-target {
+            width: var(--epic-mat-button-container-height);
+        }
+
+        .mat-mdc-button-persistent-ripple {
+            border-radius: var(--epic-mat-button-container-shape);
+        }
+
+        &[disabled],
+        &.mat-mdc-button-disabled {
+            background-color: var(--epic-mat-icon-button-container-color-disabled);
+            border-color: var(--epic-mat-icon-button-outline-color-disabled);
+        }
+    }
+
+    &.mat-mdc-button-base {
+        transition: 200ms color, 200ms background-color, 200ms border;
+
+        .mat-ripple {
+            opacity: var(--epic-mat-button-state-opacity);
+        }
+    }
+}

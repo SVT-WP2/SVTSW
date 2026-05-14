@@ -1,0 +1,32 @@
+@use '@angular/material' as mat;
+@import 'vars';
+@import 'mixins';
+
+
+:root {
+    @include mat.dialog-overrides((
+        content-padding: 1rem,
+        with-actions-content-padding: 1rem 1rem 0,
+        container-shape: 24px,
+        container-elevation-shadow: #{$shadow-hover}
+    ));
+}
+
+.mat-mdc-dialog-content {
+    max-height: 80vh;
+    position: relative;
+    will-change: transform, opacity;
+}
+
+.mat-mdc-dialog-container.mdc-dialog {
+    position: relative;
+
+    .mdc-dialog__content {
+        --mdc-dialog-supporting-text-color: $color-neutral-900;
+        @include epic-font-body-lg();
+    }
+
+    .mdc-dialog__actions {
+        padding: 16px;
+    }
+}
