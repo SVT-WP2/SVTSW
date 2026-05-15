@@ -30,10 +30,86 @@ using SvtKafka::SvtKafkaReplyMsg;
 
 namespace dbagent
 {
+  namespace
+  {
+    constexpr size_t KAFKA_TOPIC_TIMEOUT_MS = 5000;
+  }
+
   //========================================================================+
   bool DbAgentService::configureService()
   {
-    return (createConsumer_request() && createProducer_request_reply() && createProducer_heartbeat());
+    return (ensureTopicsExist() && createConsumer_request() && createProducer_request_reply() && createProducer_heartbeat());
+  }
+
+  //========================================================================+
+  bool DbAgentService::ensureTopicsExist()
+  {
+    try
+    {
+      const kafka::Properties props({{"bootstrap.servers", mBrokerName}});
+      kafka::clients::admin::AdminClient adminClient(props);
+
+      if (!ensureTopicExists(adminClient, topicNames[DbAgentTopicEnum::Request]))
+      {
+        return false;
+      }
+      if (!ensureTopicExists(adminClient, topicNames[DbAgentTopicEnum::RequestReply]))
+      {
+        return false;
+      }
+
+      kafka::Properties heartbeatTopicProps;
+      heartbeatTopicProps.put("retention.ms", "60000");
+      heartbeatTopicProps.put("segment.ms", "120000");
+      if (!ensureTopicExists(adminClient, topicNames[DbAgentTopicEnum::Heartbeat], &heartbeatTopicProps))
+      {
+        return false;
+      }
+    }
+    catch (const std::exception &e)
+    {
+      logError(e.what());
+      return false;
+    }
+
+    return true;
+  }
+
+  //========================================================================+
+  bool DbAgentService::ensureTopicExists(kafka::clients::admin::AdminClient &adminClient,
+                                         const std::string &topicName,
+                                         const kafka::Properties *topicProps)
+  {
+    auto topic_exist_f = [&adminClient](const std::string &tName)
+    { return adminClient.listTopics().topics.count(tName); };
+
+    if (topic_exist_f(topicName))
+    {
+      return true;
+    }
+
+    if (topicProps != nullptr)
+    {
+      adminClient.createTopics({topicName}, 1, 1, *topicProps);
+    }
+    else
+    {
+      adminClient.createTopics({topicName}, 1, 1);
+    }
+
+    const auto deadline =
+        std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(KAFKA_TOPIC_TIMEOUT_MS);
+    while (!topic_exist_f(topicName))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      if (std::chrono::high_resolution_clock::now() >= deadline)
+      {
+        THROW_RUNTIME_ERROR("TIMEOUT creating topic " + topicName);
+        return false;
+      }
+    }
+
+    return true;
   }
 
   //========================================================================+
@@ -45,7 +121,6 @@ namespace dbagent
       configs["log_level"] = "4";
       configs["auto.offset.reset"] = "latest";
       configs["group.id"] = "svt.db-agent.request";
-      configs["allow.auto.create.topics"] = "true";
       //! Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever
       //! the consumer reaches the end of a partition.
       configs["enable.partition.eof"] = "false";
@@ -85,65 +160,8 @@ namespace dbagent
   //========================================================================+
   bool DbAgentService::createProducer_heartbeat()
   {
-    constexpr size_t TIMEOUT_MS = 5000;
     try
     {
-      const std::string &topicName = topicNames[DbAgentTopicEnum::Heartbeat];
-
-      // 1. Create AdminClient
-      //
-      const kafka::Properties props({{"bootstrap.servers", mBrokerName}});
-      kafka::clients::admin::AdminClient adminClient(props);
-
-      auto topic_exist_f = [&adminClient](const std::string &tName)
-      { return adminClient.listTopics().topics.count(tName); };
-
-      // Get list of topics
-      const auto &topic_exist = topic_exist_f(topicName);
-      if (topic_exist)
-      {
-        // 2. Request topic deletion
-        // The library provides an asynchronous API that returns a result map
-        auto result = adminClient.deleteTopics({topicName});
-
-        // 3. Wait/Verify the event
-        if (result.error)
-        {
-          std::cerr << "Failed to delete topic " << ": " << result.error.message() << std::endl;
-        }
-
-        auto start = std::chrono::high_resolution_clock::now();
-        auto deadline = start + std::chrono::milliseconds(TIMEOUT_MS);
-        while (topic_exist_f(topicName))
-        {
-          std::this_thread::sleep_for(std::chrono::milliseconds(10));
-          if (std::chrono::high_resolution_clock::now() < deadline)
-          {
-            THROW_RUNTIME_ERROR("TIMEOUT deleting topic " + topicName);
-            return false;
-          }
-        }
-      }
-
-      // Create heartbeat topic
-      kafka::Properties topicProps;
-      topicProps.put("retention.ms", "60000");
-      topicProps.put("segment.ms", "120000");
-      adminClient.createTopics({topicName}, 1, 1, topicProps);
-
-      auto start = std::chrono::high_resolution_clock::now();
-      auto deadline = start + std::chrono::milliseconds(TIMEOUT_MS);
-      while (!topic_exist_f(topicName))
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        if (std::chrono::high_resolution_clock::now() < deadline)
-        {
-          THROW_RUNTIME_ERROR("TIMEOUT creating topic " + topicName);
-          return false;
-        }
-      }
-
-      // Creating heartbeat producer
       SvtKafka::ConfigMap_t configs;
       configs["log_level"] = "4";
 
