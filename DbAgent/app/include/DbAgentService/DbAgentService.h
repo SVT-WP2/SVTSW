@@ -63,6 +63,10 @@ namespace dbagent
     void parseMsg(const SvtKafka::SvtKafkaMessage &msg,
                   const SvtKafka::SvtKafkaMsgStatus &status);
 
+    bool ensureTopicsExist();
+    bool ensureTopicExists(kafka::clients::admin::AdminClient &adminClient,
+                           const std::string &topicName,
+                           const kafka::Properties *topicProps = nullptr);
     bool createConsumer_request();
     bool createProducer_request_reply();
     bool createProducer_heartbeat();
