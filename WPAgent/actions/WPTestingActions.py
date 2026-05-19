@@ -174,9 +174,9 @@ def take_image(
         outputDir="screenshots",
         num_columns=5,
         num_rows=5,
-        column_spacing_um=3140,
-        row_spacing_um=2600,
-        start_x_um=0,
+        column_spacing_um=-2967,
+        row_spacing_um=2476,
+        start_x_um=500,
         start_y_um=110000,
         settle_time_s=1,
         user=None,
@@ -203,7 +203,7 @@ def take_image(
 
         os.makedirs(outputDir, exist_ok=True)
 
-        prober.move_chuck_xy(start_x_um, start_y_um, "Center")
+        #prober.move_chuck_xy(start_x_um, start_y_um, "Center")
         time.sleep(settle_time_s)
 
         for row in range(num_rows):

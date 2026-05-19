@@ -234,12 +234,12 @@ class SentioProberImpl(AbstractProber):
         snapshot_type : str = "CameraRaw",
         save_locally : bool =True,
         outputDir : str = "screenshots",
-        num_columns : int = 3,
-        num_rows : int = 3,
-        column_spacing_um : int = 3400,
-        row_spacing_um : int = 2800,
-        start_x_um : int = 0,
-        start_y_um : int = 0,
+        num_columns : int = 5,
+        num_rows : int = 5,
+        column_spacing_um : int = -2967,
+        row_spacing_um : int = 2476,
+        start_x_um : int = 500,
+        start_y_um : int = 110000,
         settle_time_s : float = 1,
     ):
         self.prober.take_image(snapshot_type, save_locally, outputDir, num_columns, num_rows, column_spacing_um, row_spacing_um, start_x_um, start_y_um, settle_time_s)
