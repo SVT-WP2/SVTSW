@@ -195,7 +195,7 @@ class WPAgentClient:
         return self.send("UserLogOut")
 
     def open_project(self, project_name: str) -> dict:
-        return self.send("OpenProject", {"project_name": project_name})
+        return self.send("OpenProject", {"projectName": project_name})
 
     def auto_focus(self) -> dict:
         return self.send("AutoFocus", timeout=90.0)
@@ -207,10 +207,13 @@ class WPAgentClient:
         return self.send("RunPTPA", timeout=600.0)
     
     def disable_ptpa(self) -> dict:
-        return self.send("DisablePTPA")
+        return self.send("SetPTPA", {"enable": False})
     
     def enable_ptpa(self) -> dict:
-        return self.send("EnablePTPA")
+        return self.send("SetPTPA", {"enable": True})
+    
+    def set_ptpa(self, enabled: bool, project_name: str) -> dict:
+        return self.send("SetPTPA", {"enable": True} if enabled else {"enable": False})
 
     def init_probing(self) -> dict:
         return self.send("InitProbing", timeout=600.0)
@@ -233,8 +236,11 @@ class WPAgentClient:
     def move_chuck_home(self) -> dict:
         return self.send("MoveChuckHome")
 
-    def go_to_separation(self) -> dict:
-        return self.send("MoveChuckSeparation")
+    def go_to_separation(self, timeout: float = 30.0) -> dict:
+        return self.send("MoveChuckSeparation", timeout=timeout)
+    
+    def move_chuck_xy(self, x: int, y: int, position: str = "Relative") -> dict:
+        return self.send("MoveChuckXY", {"x": x, "y": y, "position": position})
 
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
@@ -538,6 +544,10 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckWide: %s", resp.get("output", resp))
 
+        resp = wp.move_chuck_xy(x=15,y=15, position="Relative")
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
+
         resp = wp.move_chuck_contact()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("MoveChuckContact failed: %s", resp.get("output", resp))
@@ -564,6 +574,9 @@ class ITS3Runner:
         resp = wp.move_chuck_center()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckCenter failed: %s", resp.get("output", resp))
+        # resp = wp.move_chuck_xy(x=132980,y=-10106)  # hardcoded for SEG - TODO!!!
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.warning("MoveChuckXY to center failed: %s", resp.get("output", resp))
         resp = wp.auto_focus()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("AutoFocus failed: %s", resp.get("output", resp))
@@ -659,29 +672,17 @@ class ITS3Runner:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
                 if new_project and not self.dry_run:
-                    # log.info("Preparing to switch WP project: %s -> %s (%s)",
-                    #          self._current_project_type, chip_type, new_project)
-                    # wp = self._wp_agent()
-                    # resp = wp.go_to_separation()
-                    # if resp.get("status", "").lower() not in ("success", "ok"):
-                    #     log.warning("MoveChuckSeparation: %s", resp.get("output", resp))
-                    # resp = wp.move_chuck_off_axis()
-                    # if resp.get("status", "").lower() not in ("success", "ok"):
-                    #     log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
-                    # log.info("Switching WP project: %s -> %s (%s)",
-                    #          self._current_project_type, chip_type, new_project)
-                    # resp = wp.open_project(new_project)
-                    # if resp.get("status", "").lower() not in ("success", "ok"):
-                    #     log.error("OpenProject failed for %s: %s", chip_type, resp)
-                    # resp = wp.find_home()
-                    # if resp.get("status", "").lower() not in ("success", "ok"):
-                    #     log.error("FindHome failed after switching to %s project: %s", chip_type, resp)
                     if not self._change_wp_project(chip_type, new_project):
-                        log.error("Failed to switch to %s project, skipping chip", chip_type)
-                        continue
-                elif self.dry_run and self._current_project_type is not None:
-                    log.info("Switching WP project: %s -> %s (DUMMY)",
-                             self._current_project_type, chip_type)
+                        log.error("Failed to switch to %s project, retrying...", chip_type)
+                        time.sleep(0.5)  # small delay before retrying
+                        resp=self._wp_initialize()
+                        if not resp:
+                            log.error("WPAgent re-initialization failed after project switch failure, skipping chip")
+                            continue
+                        resp = self._change_wp_project(chip_type, new_project)
+                        if not resp:
+                            log.error("Failed to switch to %s project on retry, skipping chip", chip_type)
+                            continue
                 self._current_project_type = chip_type
 
             # --- move prober to die ---
@@ -724,7 +725,7 @@ class ITS3Runner:
             wp = self._wp_agent()
 
             # --- park the prober ---
-            resp = wp.go_to_separation()
+            resp = wp.go_to_separation(timeout=600.0)
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.warning("MoveChuckSeparation: %s", resp)
             resp = wp.move_chuck_off_axis()

@@ -8,14 +8,14 @@ from datetime import datetime, timedelta
 
 # New-format: EOS path contains the folder name directly.
 PATH_PATTERN = re.compile(
-    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequence)"
-    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L1W\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequence))/"
+    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequence|WaferHschTestingSequence)"
+    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequence|WaferHschTestingSequence))/"
 )
 
 # Old-format fallback: command invocation line.
 # e.g.  2026-04-23 04:02:28 [INFO] [SEG0_L1W06_S4]  $ ./build/RunSequence .../wafer_primary_seq.json5 ...
 INVOKE_PATTERN = re.compile(
-    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L1W\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq)\.json5"
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq|wafer_hsch_seq)\.json5"
 )
 
 # New-format: overall sequence result line.
@@ -31,13 +31,16 @@ PTPA_REPLY_PATTERN = re.compile(
 SEQ_LABEL = {
     "WaferPrimaryTestingSequence": "wafer_primary_seq",
     "WaferTileTestingSequence": "wafer_tile_seq",
+    "WaferHschTestingSequence": "wafer_hsch_seq",
     "wafer_primary_seq": "wafer_primary_seq",
     "wafer_tile_seq": "wafer_tile_seq",
+    "wafer_hsch_seq": "wafer_hsch_seq",
 }
 
 SEQ_FOLDER_SUFFIX = {
     "wafer_primary_seq": "WaferPrimaryTestingSequence",
     "wafer_tile_seq": "WaferTileTestingSequence",
+    "wafer_hsch_seq": "WaferHschTestingSequence",
 }
 
 
@@ -136,6 +139,7 @@ def extract_entries(log_path: str) -> tuple[
                 idx = len(entries)
                 entries.append((wafer, chip, seq_type, "", folder))
                 folder_index[folder] = idx
+                current_folder = folder
 
     return entries, ptpa_results
 
