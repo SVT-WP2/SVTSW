@@ -31,7 +31,6 @@ class WaferProberAgent:
 
         # Ensure Kafka is initialized
         if self.kafka is None:
-            print(f"⚠️  Kafka not initialized, using defaults")
             self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
 
         # Check listener health before sending

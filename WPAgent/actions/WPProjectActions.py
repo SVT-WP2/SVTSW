@@ -114,7 +114,7 @@ def svt_initialise_wp(address=None, machine_type=None, project_name=None,
         # ============================================================
         if machine_id and machine_id != 0 and is_mock == False:
 
-                print("TEST")
+
 
                 db_client = DBKafkaClient.get_instance()
                 machines = db_client.get_all_wafer_probe_machines(timeout=15.0)

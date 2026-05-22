@@ -1119,10 +1119,12 @@ def stress_open_project(projectNameFirst: str, projectNameSecond: str, iteration
         for i in range(iterations):
             if i % 2 == 0:
                 current_project = projectNameFirst
+
             else:
                 current_project = projectNameSecond
 
             print(f"[{i + 1}/{iterations}] Opening: {current_project}")
+            time1 = time.time()
 
             prober.open_project(current_project)
 
@@ -1132,6 +1134,8 @@ def stress_open_project(projectNameFirst: str, projectNameSecond: str, iteration
 
             # Go to separation
             prober.go_to_separation()
+            time2 =  time.time()
+            dif = round(time2-time1,1)
 
             # Update current info
             update_current_info(currentProber=prober)
@@ -1139,6 +1143,9 @@ def stress_open_project(projectNameFirst: str, projectNameSecond: str, iteration
             # Optional delay between switches
             if delay > 0:
                 time.sleep(delay)
+
+            print("Dif =====================> ")
+            print(dif)
 
         return ResponseBuilder.success("StressOpenProjectReply", f"Opened project: {current_project}")
 
