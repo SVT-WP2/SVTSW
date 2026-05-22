@@ -14,7 +14,7 @@ class SentioProberImpl(AbstractProber):
         self.prober.initialize_if_needed()
 
     def open_project(self, path: str):
-        self.prober.open_project(path)
+        self.prober.open_project(path, restore_heights=True)
 
     def move_chuck_xy(self, x: float, y: float, position: str):
         reference = None
