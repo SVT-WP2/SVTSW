@@ -37,21 +37,23 @@ def test_help():
             print(response_str[:500])
 
             # Check if it's the correct format
-            if result.get('status') == 'Success' and result.get('type') == 'HelpReply':
+            if result.get("status") == "Success" and result.get("type") == "HelpReply":
                 print("\n✅ CORRECT FORMAT - ResponseBuilder is working!")
 
                 # Show the message
-                data = result.get('data', {})
-                if 'message' in data:
+                data = result.get("data", {})
+                if "message" in data:
                     print(f"\nMessage length: {len(data['message'])} characters")
                     print(f"First 300 chars of message:")
                     print("-" * 70)
-                    print(data['message'][:300])
+                    print(data["message"][:300])
                     print("-" * 70)
             else:
                 print("\n❌ WRONG FORMAT")
                 print(f"   Expected: status='Success', type='HelpReply'")
-                print(f"   Got: status='{result.get('status')}', type='{result.get('type')}'")
+                print(
+                    f"   Got: status='{result.get('status')}', type='{result.get('type')}'"
+                )
         else:
             print(f"\n❌ Result is not a dict, it's: {type(result)}")
             print(f"Result: {result}")
@@ -61,6 +63,7 @@ def test_help():
     except Exception as e:
         print(f"\n❌ Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -72,18 +75,18 @@ def test_help_with_command():
     print("=" * 70)
 
     try:
-        result = help_command(command='MoveChuckXY')
+        result = help_command(command="MoveChuckXY")
 
         print(f"\n✓ Function returned successfully")
         print(f"Status: {result.get('status')}")
         print(f"Type: {result.get('type')}")
 
-        if result.get('status') == 'Success':
+        if result.get("status") == "Success":
             print("\n✅ Got help for MoveChuckXY")
             # Show a bit of the message
-            data = result.get('data', {})
-            if 'message' in data:
-                msg = data['message']
+            data = result.get("data", {})
+            if "message" in data:
+                msg = data["message"]
                 print(f"\nMessage preview (first 300 chars):")
                 print("-" * 70)
                 print(msg[:300])
@@ -94,6 +97,7 @@ def test_help_with_command():
     except Exception as e:
         print(f"\n❌ Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -111,7 +115,7 @@ def check_help_file():
     paths = [
         "utilities/WPCommandsHelpList.json",
         "WPCommandsHelpList.json",
-        "../utilities/WPCommandsHelpList.json"
+        "../utilities/WPCommandsHelpList.json",
     ]
 
     for path in paths:
@@ -122,7 +126,7 @@ def check_help_file():
 
         if exists:
             try:
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     data = json.load(f)
                 print(f"   → Valid JSON with {len(data)} commands")
                 print(f"   → Sample commands: {list(data.keys())[:5]}")
@@ -164,15 +168,15 @@ if __name__ == "__main__":
     print("  SUMMARY")
     print("=" * 70)
 
-    if result1 and result1.get('status') == 'Success':
+    if result1 and result1.get("status") == "Success":
         print("✅ help() works correctly")
     else:
         print("❌ help() has issues")
-        if result1 and result1.get('status') == 'Error':
-            error = result1.get('error', {})
+        if result1 and result1.get("status") == "Error":
+            error = result1.get("error", {})
             print(f"   Error message: {error.get('message')}")
 
-    if result2 and result2.get('status') == 'Success':
+    if result2 and result2.get("status") == "Success":
         print("✅ help('MoveChuckXY') works correctly")
     else:
         if file_ok:

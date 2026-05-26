@@ -59,7 +59,7 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
     if not address or not machineType:
         return {
             "status": "error",
-            "output": f"Missing required parameters: address={address}, machineType={machineType}"
+            "output": f"Missing required parameters: address={address}, machineType={machineType}",
         }
 
     # Check if already initialized with same config
@@ -68,7 +68,7 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
         if current_config == (machineType.lower(), address):
             return {
                 "status": "success",
-                "output": f"Prober already initialized at {address}"
+                "output": f"Prober already initialized at {address}",
             }
 
     # Initialize the prober (this will create singleton instance)
@@ -76,13 +76,10 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
         prober = factory.get_prober(machineType, address)
         return {
             "status": "success",
-            "output": f"Prober initialized: {machineType} at {address}"
+            "output": f"Prober initialized: {machineType} at {address}",
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "output": f"Failed to initialize prober: {str(e)}"
-        }
+        return {"status": "error", "output": f"Failed to initialize prober: {str(e)}"}
 
 
 def check_prober_ready():
@@ -101,6 +98,9 @@ def check_prober_ready():
 
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     if not globals_.address or not globals_.machineType:
-        return False, "Global parameters not set. Please run 'Initialize' command first."
+        return (
+            False,
+            "Global parameters not set. Please run 'Initialize' command first.",
+        )
 
     return True, "Prober ready"

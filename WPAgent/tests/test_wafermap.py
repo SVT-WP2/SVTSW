@@ -1,10 +1,8 @@
-
-
 import sys
 import os
 
 # Add parent directory to path to import from WPAgent
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from sentio_prober_control.Communication.CommunicatorTcpIp import CommunicatorTcpIp
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
@@ -36,8 +34,8 @@ def test_create_project():
     print(f"Response: {response_str}")
 
     # For create_project, response might just be the path, not "0,0,path"
-    if ',' in response_str:
-        parts = response_str.split(',', 2)
+    if "," in response_str:
+        parts = response_str.split(",", 2)
         if len(parts) >= 3:
             project_path = parts[2].strip()
         else:
@@ -59,10 +57,28 @@ def test_setup_wafermap(prober):
 
     # Define routable dies FIRST (we need this info)
     routable_dies = [
-        (2, 11), (-2, 3), (3, 3),
-        (-2, 2), (-1, 2), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2),
-        (-1, 1), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1),
-        (0, 0), (1, 0), (2, 0), (3, 0)
+        (2, 11),
+        (-2, 3),
+        (3, 3),
+        (-2, 2),
+        (-1, 2),
+        (0, 2),
+        (1, 2),
+        (2, 2),
+        (3, 2),
+        (4, 2),
+        (5, 2),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
+        (2, 1),
+        (3, 1),
+        (4, 1),
+        (5, 1),
+        (0, 0),
+        (1, 0),
+        (2, 0),
+        (3, 0),
     ]
 
     # Create rectangular grid
@@ -149,8 +165,8 @@ def test_save_project(prober, project_path):
     print(f"Response: {response_str}")
 
     # Parse response
-    if ',' in response_str:
-        parts = response_str.split(',', 2)
+    if "," in response_str:
+        parts = response_str.split(",", 2)
         if len(parts) >= 3:
             saved_path = parts[2].strip()
         else:
@@ -201,6 +217,7 @@ def run_all_tests():
         print("=" * 60)
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -213,60 +230,3 @@ if __name__ == "__main__":
 
     success = run_all_tests()
     sys.exit(0 if success else 1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

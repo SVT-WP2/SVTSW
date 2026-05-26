@@ -19,17 +19,18 @@ from drivers.WPFactory import get_prober
 
 
 class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
 
 
 # ============================================================
 # DECORATED TEST FUNCTIONS (These simulate your real commands)
 # ============================================================
+
 
 @validate_command
 def move_chuck_home(user=None, waferAgentName=None, **kwargs):
@@ -44,16 +45,16 @@ def move_chuck_home(user=None, waferAgentName=None, **kwargs):
         prober.move_chuck_home()
 
         return ResponseBuilder.success(
-            "MoveChuckHomeReply",
-            "Chuck moved to home position"
+            "MoveChuckHomeReply", "Chuck moved to home position"
         )
     except Exception as e:
         return ResponseBuilder.error("MoveChuckHomeReply", str(e), 500)
 
 
 @validate_command
-def move_chuck_row_column(row: int, col: int, wpMachineId: int = 0,
-                          user=None, waferAgentName=None, **kwargs):
+def move_chuck_row_column(
+    row: int, col: int, wpMachineId: int = 0, user=None, waferAgentName=None, **kwargs
+):
     """
     Move to specific die - Expert command
     Decorated with @validate_command
@@ -64,8 +65,7 @@ def move_chuck_row_column(row: int, col: int, wpMachineId: int = 0,
         prober = get_prober(g.machineType, g.address)
 
         return ResponseBuilder.success(
-            "MoveChuckRowColumnReply",
-            f"Chuck moved to die (row={row}, col={col})"
+            "MoveChuckRowColumnReply", f"Chuck moved to die (row={row}, col={col})"
         )
     except Exception as e:
         return ResponseBuilder.error("MoveChuckRowColumnReply", str(e), 500)
@@ -74,6 +74,7 @@ def move_chuck_row_column(row: int, col: int, wpMachineId: int = 0,
 # ============================================================
 # TEST FUNCTIONS
 # ============================================================
+
 
 def print_header(text: str):
     print(f"\n{Colors.BLUE}{Colors.BOLD}{'=' * 70}{Colors.RESET}")
@@ -119,9 +120,9 @@ def test_decorator_blocks_no_user():
     result = move_chuck_home(user=None, waferAgentName="MOCK_TEST")
 
     # Check if it's an error (status can be 'Error' or 'UnexpectedError')
-    status = result.get('status', '')
-    is_error = status in ['Error', 'UnexpectedError']
-    error_code = result.get('error', {}).get('code')
+    status = result.get("status", "")
+    is_error = status in ["Error", "UnexpectedError"]
+    error_code = result.get("error", {}).get("code")
 
     if is_error and error_code == 401:
         print_success("Decorator blocked command - no user logged in")
@@ -145,9 +146,9 @@ def test_decorator_blocks_wrong_agent():
     # Call with wrong agent name
     result = move_chuck_home(user="developer1", waferAgentName="WRONG_AGENT")
 
-    status = result.get('status', '')
-    is_error = status in ['Error', 'UnexpectedError']
-    error_code = result.get('error', {}).get('code')
+    status = result.get("status", "")
+    is_error = status in ["Error", "UnexpectedError"]
+    error_code = result.get("error", {}).get("code")
 
     if is_error and error_code == 403:
         print_success("Decorator blocked command - wrong agent")
@@ -168,9 +169,9 @@ def test_decorator_blocks_insufficient_permissions():
     # User tries Developer command
     result = move_chuck_home(user="user1", waferAgentName="MOCK_TEST")
 
-    status = result.get('status', '')
-    is_error = status in ['Error', 'UnexpectedError']
-    error_code = result.get('error', {}).get('code')
+    status = result.get("status", "")
+    is_error = status in ["Error", "UnexpectedError"]
+    error_code = result.get("error", {}).get("code")
 
     if is_error and error_code == 403:
         print_success("Decorator blocked User from Developer command")
@@ -194,12 +195,12 @@ def test_decorator_validates_parameters():
         # col is missing!
         wpMachineId=0,
         user="expert1",
-        waferAgentName="MOCK_TEST"
+        waferAgentName="MOCK_TEST",
     )
 
-    status = result.get('status', '')
-    is_error = status in ['Error', 'UnexpectedError']
-    error_code = result.get('error', {}).get('code')
+    status = result.get("status", "")
+    is_error = status in ["Error", "UnexpectedError"]
+    error_code = result.get("error", {}).get("code")
 
     if is_error and error_code == 400:
         print_success("Decorator detected missing parameter")
@@ -227,23 +228,19 @@ def test_decorator_validates_orientations():
 
     # Call decorated function
     result = move_chuck_row_column(
-        row=1,
-        col=1,
-        wpMachineId=0,
-        user="expert1",
-        waferAgentName="MOCK_TEST"
+        row=1, col=1, wpMachineId=0, user="expert1", waferAgentName="MOCK_TEST"
     )
 
-    status = result.get('status', '')
-    is_error = status in ['Error', 'UnexpectedError']
-    error_code = result.get('error', {}).get('code')
-    error_msg = result.get('error', {}).get('message', '')
+    status = result.get("status", "")
+    is_error = status in ["Error", "UnexpectedError"]
+    error_code = result.get("error", {}).get("code")
+    error_msg = result.get("error", {}).get("message", "")
 
     print_info(f"DEBUG - Result Status: {status}")
     print_info(f"DEBUG - Error Code: {error_code}")
     print_info(f"DEBUG - Error Message: {error_msg}")
 
-    if is_error and error_code == 400 and 'probe card' in error_msg.lower():
+    if is_error and error_code == 400 and "probe card" in error_msg.lower():
         print_success("Decorator detected probe card type mismatch")
         print_info(f"Error: {error_msg}")
     else:
@@ -252,7 +249,7 @@ def test_decorator_validates_orientations():
         print_info(f"Got: Status={status}, Code={error_code}")
 
         # Additional debug
-        if status == 'Success':
+        if status == "Success":
             print_info("⚠️  WARNING: Command succeeded when it should have failed!")
             print_info("⚠️  Check that g.projectName is being set correctly")
 
@@ -268,13 +265,15 @@ def test_decorator_allows_valid_command():
     # Call decorated function with everything correct
     result = move_chuck_home(user="developer1", waferAgentName="MOCK_TEST")
 
-    status = result.get('status', '')
-    is_success = status == 'Success'
+    status = result.get("status", "")
+    is_success = status == "Success"
 
     if is_success:
         print_success("Decorator allowed valid command to execute!")
         # Get message from error.message (ResponseBuilder format)
-        message = result.get('error', {}).get('message', 'Command executed successfully')
+        message = result.get("error", {}).get(
+            "message", "Command executed successfully"
+        )
         print_info(f"Message: {message}")
         print_info("Function code was actually executed ✓")
     else:
@@ -295,19 +294,15 @@ def test_decorator_allows_expert_command():
 
     # Expert uses Expert-level command
     result = move_chuck_row_column(
-        row=5,
-        col=10,
-        wpMachineId=0,
-        user="expert1",
-        waferAgentName="MOCK_TEST"
+        row=5, col=10, wpMachineId=0, user="expert1", waferAgentName="MOCK_TEST"
     )
 
-    status = result.get('status', '')
-    is_success = status == 'Success'
+    status = result.get("status", "")
+    is_success = status == "Success"
 
     if is_success:
         print_success("Decorator allowed Expert to execute command!")
-        message = result.get('error', {}).get('message', 'Command executed')
+        message = result.get("error", {}).get("message", "Command executed")
         print_info(f"Message: {message}")
         print_info("All validations passed ✓")
         print_info("  - User: expert1 (Expert)")
@@ -333,17 +328,13 @@ def test_decorator_developer_full_access():
 
     # Test Expert command
     result2 = move_chuck_row_column(
-        row=1,
-        col=1,
-        wpMachineId=0,
-        user="developer1",
-        waferAgentName="MOCK_TEST"
+        row=1, col=1, wpMachineId=0, user="developer1", waferAgentName="MOCK_TEST"
     )
 
-    status1 = result1.get('status', '')
-    status2 = result2.get('status', '')
+    status1 = result1.get("status", "")
+    status2 = result2.get("status", "")
 
-    if status1 == 'Success' and status2 == 'Success':
+    if status1 == "Success" and status2 == "Success":
         print_success("Decorator allows Developer to execute ALL commands!")
         print_info("Developer has unrestricted access ✓")
     else:
@@ -378,6 +369,7 @@ def run_all_tests():
     except Exception as e:
         print_failure(f"Test error: {str(e)}")
         import traceback
+
         traceback.print_exc()
 
 

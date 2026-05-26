@@ -1,6 +1,6 @@
-
 import sys
 import os
+
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parent_dir)
 
@@ -12,12 +12,13 @@ def test_get_machine_info(machine_id=4):
     print("=" * 70)
 
     from services.WPDbKafkaClient import DBKafkaClient
+
     db_client = DBKafkaClient.get_instance()
 
     machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
 
     for machine in machines:
-        if machine.get('id') == machine_id:
+        if machine.get("id") == machine_id:
             print(f"\n✅ Found Machine {machine_id}")
             print(f"   Name: {machine.get('name')}")
             print(f"   Software: {machine.get('software')}")
@@ -44,8 +45,7 @@ def test_get_loaded_wafer(machine_id=4):
     from actions.WPDataBaseActions import get_loaded_wafer_info
 
     wafer_id, orientation = get_loaded_wafer_info(
-        wp_machine_id=machine_id,
-        timeout=15.0
+        wp_machine_id=machine_id, timeout=15.0
     )
 
     print("\n" + "=" * 70)
@@ -71,8 +71,7 @@ def test_get_installed_probe_card(machine_id=4):
     from actions.WPDataBaseActions import get_installed_probe_card_info
 
     card_id, orientation = get_installed_probe_card_info(
-        wp_machine_id=machine_id,
-        timeout=15.0
+        wp_machine_id=machine_id, timeout=15.0
     )
 
     print("\n" + "=" * 70)

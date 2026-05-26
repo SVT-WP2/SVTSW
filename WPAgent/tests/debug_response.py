@@ -1,4 +1,3 @@
-
 from sentio_prober_control.Communication.CommunicatorTcpIp import CommunicatorTcpIp
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
 from sentio_prober_control.Sentio.Enumerations import Module
@@ -12,9 +11,9 @@ prober.select_module(Module.Wafermap)
 print("\nSending create_project command...")
 response = prober.send_cmd("create_project TestDebug123")
 
-print("\n" + "="*70)
+print("\n" + "=" * 70)
 print("RESPONSE OBJECT INSPECTION")
-print("="*70)
+print("=" * 70)
 
 print(f"\nType: {type(response)}")
 print(f"Class: {response.__class__.__name__}")
@@ -22,12 +21,12 @@ print(f"Class: {response.__class__.__name__}")
 print("\n--- All Attributes ---")
 all_attrs = dir(response)
 for attr in sorted(all_attrs):
-    if not attr.startswith('_'):
+    if not attr.startswith("_"):
         print(f"  {attr}")
 
 print("\n--- Attribute Values ---")
 for attr in sorted(all_attrs):
-    if not attr.startswith('_'):
+    if not attr.startswith("_"):
         try:
             value = getattr(response, attr)
             if not callable(value):
@@ -37,7 +36,7 @@ for attr in sorted(all_attrs):
 
 print("\n--- Methods ---")
 for attr in sorted(all_attrs):
-    if not attr.startswith('_'):
+    if not attr.startswith("_"):
         try:
             value = getattr(response, attr)
             if callable(value):
@@ -46,7 +45,16 @@ for attr in sorted(all_attrs):
             pass
 
 print("\n--- Try Common Attributes ---")
-common_attrs = ['errmsg', 'message', 'resp', 'data', 'result', 'value', 'text', 'content']
+common_attrs = [
+    "errmsg",
+    "message",
+    "resp",
+    "data",
+    "result",
+    "value",
+    "text",
+    "content",
+]
 for attr in common_attrs:
     if hasattr(response, attr):
         try:
@@ -62,18 +70,18 @@ print(f"str(response): {str(response)}")
 print(f"repr(response): {repr(response)}")
 
 print("\n--- Try Calling Methods ---")
-if hasattr(response, 'get'):
+if hasattr(response, "get"):
     try:
         print(f"response.get(): {response.get()}")
     except Exception as e:
         print(f"response.get() failed: {e}")
 
-if hasattr(response, 'value'):
+if hasattr(response, "value"):
     try:
         print(f"response.value(): {response.value()}")
     except Exception as e:
         print(f"response.value() failed: {e}")
 
-print("\n" + "="*70)
+print("\n" + "=" * 70)
 print("Use the attribute that contains '0,0,<path>' format")
-print("="*70)
+print("=" * 70)

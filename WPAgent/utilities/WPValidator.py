@@ -83,20 +83,16 @@ class WPCommandValidator:
         "TestingLock",
         "TestingUnlock",
         "GetLockStatus",
-
         # Status and monitoring (READ-ONLY)
         "ShowStatus",
-
         # Position queries (READ-ONLY)
         "GetChuckPosition",
         "GetCurrentPosition",
         "GetWaferMap",
         "GetProjectInfo",
         "ShowProjectStatus",
-
         # System commands
         "Help",
-
         # Login/logout
         "UserLogIn",
         "UserLogOut",
@@ -106,12 +102,12 @@ class WPCommandValidator:
         self.g = SvtWPAagentGlobalParameters.getInstance()
 
     def validate_command(
-            self,
-            command: str,
-            params: Dict[str, Any],
-            payload_user: Optional[str] = None,
-            payload_agent_name: Optional[str] = None,
-            reply_type: Optional[str] = None
+        self,
+        command: str,
+        params: Dict[str, Any],
+        payload_user: Optional[str] = None,
+        payload_agent_name: Optional[str] = None,
+        reply_type: Optional[str] = None,
     ) -> Optional[Dict]:
         """
         Validate command execution
@@ -166,9 +162,7 @@ class WPCommandValidator:
         return None
 
     def _validate_agent_name(
-            self,
-            payload_agent_name: Optional[str],
-            reply_type: str
+        self, payload_agent_name: Optional[str], reply_type: str
     ) -> Optional[Dict]:
         """Validate agent name matches if provided"""
 
@@ -176,31 +170,27 @@ class WPCommandValidator:
             return ResponseBuilder.error(
                 reply_type,
                 "Agent not initialized. Please start with: python main.py listen <CONFIG_NAME>",
-                500
+                500,
             )
 
         if payload_agent_name != self.g.wpAgentName:
             return ResponseBuilder.error(
                 reply_type,
                 f"Wrong agent: This is '{self.g.wpAgentName}', not '{payload_agent_name}'",
-                403
+                403,
             )
 
         return None
 
     def _validate_user_login(
-            self,
-            payload_user: Optional[str],
-            reply_type: str
+        self, payload_user: Optional[str], reply_type: str
     ) -> Optional[Dict]:
         """Validate user is logged in"""
 
         # Check if user is logged in
         if not self.g.userLogged:
             return ResponseBuilder.error(
-                reply_type,
-                "No user logged in. Please call UserLogIn first.",
-                401
+                reply_type, "No user logged in. Please call UserLogIn first.", 401
             )
 
         # If payload has user, validate it matches
@@ -208,16 +198,13 @@ class WPCommandValidator:
             return ResponseBuilder.error(
                 reply_type,
                 f"User mismatch: Current user is '{self.g.userLogged}', not '{payload_user}'",
-                401
+                401,
             )
 
         return None
 
     def _validate_testing_lock(
-            self,
-            command: str,
-            payload_user: Optional[str],
-            reply_type: str
+        self, command: str, payload_user: Optional[str], reply_type: str
     ) -> Optional[Dict]:
         """
         Validate testing lock status.
@@ -232,7 +219,7 @@ class WPCommandValidator:
         """
 
         # Check if lock validation is enabled in global parameters
-        if not hasattr(self.g, 'is_locked_for_testing'):
+        if not hasattr(self.g, "is_locked_for_testing"):
             return None  # Lock system not initialized yet
 
         # Skip if command is exempt from lock (monitoring/status commands)
@@ -247,18 +234,25 @@ class WPCommandValidator:
         current_user = payload_user or self.g.userLogged
 
         # Get user hierarchy
-        user_hierarchy = self.g.userLoggedHierarchy if hasattr(self.g, 'userLoggedHierarchy') else None
+        user_hierarchy = (
+            self.g.userLoggedHierarchy
+            if hasattr(self.g, "userLoggedHierarchy")
+            else None
+        )
 
         # Check if user can override lock
         can_override = (
-                current_user == self.g.locked_by_user or  # User who locked it
-                user_hierarchy == UserHierarchy.DEVELOPER  # Developer can always override
+            current_user == self.g.locked_by_user  # User who locked it
+            or user_hierarchy
+            == UserHierarchy.DEVELOPER  # Developer can always override
         )
 
         if not can_override:
             # Get lock info for detailed error message
-            lock_info = self.g.get_lock_info() if hasattr(self.g, 'get_lock_info') else {}
-            locked_duration = lock_info.get('locked_duration_seconds', 0)
+            lock_info = (
+                self.g.get_lock_info() if hasattr(self.g, "get_lock_info") else {}
+            )
+            locked_duration = lock_info.get("locked_duration_seconds", 0)
 
             return ResponseBuilder.error(
                 reply_type,
@@ -266,24 +260,20 @@ class WPCommandValidator:
                 f"Reason: {self.g.lock_reason}. "
                 f"Locked for {locked_duration:.0f} seconds. "
                 f"Only '{self.g.locked_by_user}' or a Developer can execute commands during testing.",
-                423  # HTTP 423 Locked
+                423,  # HTTP 423 Locked
             )
 
         # User authorized - allow command
         return None
 
     def _validate_user_permission(
-            self,
-            command: str,
-            reply_type: str
+        self, command: str, reply_type: str
     ) -> Optional[Dict]:
         """Validate user has permission for this command"""
 
         if not self.g.userLoggedHierarchy:
             return ResponseBuilder.error(
-                reply_type,
-                "User hierarchy not set. Please log in again.",
-                401
+                reply_type, "User hierarchy not set. Please log in again.", 401
             )
 
         hierarchy = self.g.userLoggedHierarchy
@@ -303,7 +293,7 @@ class WPCommandValidator:
                 return ResponseBuilder.error(
                     reply_type,
                     f"Command '{command}' requires Developer access. Current level: Expert",
-                    403
+                    403,
                 )
 
         # User has access to User commands only
@@ -314,27 +304,22 @@ class WPCommandValidator:
                 return ResponseBuilder.error(
                     reply_type,
                     f"Command '{command}' requires Expert access. Current level: User",
-                    403
+                    403,
                 )
             else:
                 return ResponseBuilder.error(
                     reply_type,
                     f"Command '{command}' requires Developer access. Current level: User",
-                    403
+                    403,
                 )
 
         # Unknown hierarchy
         return ResponseBuilder.error(
-            reply_type,
-            f"Unknown user hierarchy: {hierarchy}",
-            500
+            reply_type, f"Unknown user hierarchy: {hierarchy}", 500
         )
 
     def _validate_parameters(
-            self,
-            command: str,
-            params: Dict[str, Any],
-            reply_type: str
+        self, command: str, params: Dict[str, Any], reply_type: str
     ) -> Optional[Dict]:
         """
         Validate command parameters
@@ -352,27 +337,27 @@ class WPCommandValidator:
 
         # Check required parameters
         for param_name, param_def in schema.items():
-            if param_def.get('required', False):
+            if param_def.get("required", False):
                 if param_name not in params:
                     return ResponseBuilder.error(
-                        reply_type,
-                        f"Missing required parameter: '{param_name}'",
-                        400
+                        reply_type, f"Missing required parameter: '{param_name}'", 400
                     )
 
         # Check parameter types
         for param_name, param_value in params.items():
             if param_name in schema:
-                expected_type = schema[param_name].get('type')
+                expected_type = schema[param_name].get("type")
                 if expected_type and not self._check_type(param_value, expected_type):
                     return ResponseBuilder.error(
                         reply_type,
                         f"Invalid type for '{param_name}': expected {expected_type}, got {type(param_value).__name__}",
-                        400
+                        400,
                     )
             else:
                 # Unknown parameter - Warning only
-                print(f"⚠️  Warning: Unknown parameter '{param_name}' for command '{command}'")
+                print(
+                    f"⚠️  Warning: Unknown parameter '{param_name}' for command '{command}'"
+                )
 
         return None
 
@@ -389,18 +374,15 @@ class WPCommandValidator:
             "OpenProject": {
                 "projectName": {"type": "str", "required": True},
             },
-
             # open_project_with_asic_serial_number(asicSerialNumber: str)
             "OpenProjectWithAsicSerialNumber": {
                 "asicSerialNumber": {"type": "str", "required": True},
             },
-
             # load_wafer(waferId: float, orientation: str)
             "LoadWafer": {
                 "waferId": {"type": "float", "required": True},
                 "orientation": {"type": "str", "required": False},
             },
-
             # move_chuck_die - NOW SUPPORTS LABELS!
             "MoveChuckRowColumn": {
                 "col": {"type": "int", "required": False},
@@ -408,67 +390,55 @@ class WPCommandValidator:
                 "label": {"type": "str", "required": False},
                 "subsite": {"type": "int", "required": False},
             },
-
             # move_chuck_asic(asicId from DB)
             "MoveChuckAsic": {
                 "asicId": {"type": "int", "required": True},
             },
-
             # move_chuck_xy(x, y, position)
             "MoveChuckXY": {
                 "x": {"type": "float", "required": True},
                 "y": {"type": "float", "required": True},
                 "position": {"type": "str", "required": True},
             },
-
             # move_chuck_z(z)
             "MoveChuckZ": {
                 "z": {"type": "float", "required": True},
             },
-
             # set_ptpa(enable: bool) - NEW COMBINED FUNCTION!
             "SetPTPA": {
                 "enable": {"type": "bool", "required": True},
             },
-
             # set_chuck_overtravel(overtravelGap=None)
             "SetOvertravel": {
                 "overtravelGap": {"type": "float", "required": True},
             },
-
             # switch_camera(mountPoint)
             "SwitchCamera": {
                 "mountPoint": {"type": "str", "required": True},
             },
-
             # move_chuck_work_area(work_area=0)
             "MoveChuckToWorkArea": {
                 "workArea": {"type": "str", "required": True},
             },
-
             # run_sequencer(filePath)
             "RunSequencer": {
                 "filePath": {"type": "str", "required": True},
             },
-
             # change_project(project_name: str)
             "ChangeProject": {
                 "projectName": {"type": "str", "required": True},
             },
-
             # ConnectProbeMachine
             "ConnectProbeMachine": {
                 "wpMachineId": {"type": "int", "required": True},
                 "projectId": {"type": "str", "required": False},
             },
-
             # align_wafer(align_die_col, align_die_row, subsite)
             "AlignWafer": {
                 "align_die_col": {"type": "int", "required": False},
                 "align_die_row": {"type": "int", "required": False},
                 "subsite": {"type": "int", "required": False},
             },
-
             # Initialize — all optional
             "Initialize": {
                 "serialNumber": {"type": "str", "required": False},
@@ -480,17 +450,14 @@ class WPCommandValidator:
                 "force": {"type": "bool", "required": False},
                 "withDB": {"type": "bool", "required": False},
             },
-
             # Testing lock/unlock
             "TestingLock": {
                 "reason": {"type": "str", "required": False},
                 "test_sequence_id": {"type": "str", "required": False},
             },
-
             "TestingUnlock": {
                 "force": {"type": "bool", "required": False},
             },
-
             "GetLockStatus": {
                 # No required parameters
             },
@@ -545,7 +512,9 @@ class WPCommandValidator:
         allowed = self.get_user_allowed_commands(hierarchy)
         return command in allowed
 
-    def _extract_orientations_from_project_name(self, project_name: str) -> Tuple[Optional[str], Optional[str]]:
+    def _extract_orientations_from_project_name(
+        self, project_name: str
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Extract wafer and probe card orientations from project name.
 
@@ -572,16 +541,11 @@ class WPCommandValidator:
 
         # Try NEW format first: Notch{X}_Arrow{Y}
         # Pattern: Notch followed by single letter, then Arrow followed by single letter
-        match = re.search(r'notch([ewns])_arrow([ewns])', project_name_lower)
+        match = re.search(r"notch([ewns])_arrow([ewns])", project_name_lower)
 
         if match:
             # Map single letters to full orientation names
-            orientation_map = {
-                'e': 'East',
-                'w': 'West',
-                'n': 'North',
-                's': 'South'
-            }
+            orientation_map = {"e": "East", "w": "West", "n": "North", "s": "South"}
 
             wafer_letter = match.group(1)  # First capture group (after Notch)
             probe_letter = match.group(2)  # Second capture group (after Arrow)
@@ -596,7 +560,7 @@ class WPCommandValidator:
             "east": "East",
             "west": "West",
             "north": "North",
-            "south": "South"
+            "south": "South",
         }
 
         for orient_key, orient_value in orientations.items():
@@ -607,11 +571,7 @@ class WPCommandValidator:
         # No orientation found
         return (None, None)
 
-    def _validate_orientations(
-            self,
-            command: str,
-            reply_type: str
-    ) -> Optional[Dict]:
+    def _validate_orientations(self, command: str, reply_type: str) -> Optional[Dict]:
         """
         Validate probe card type and wafer/probe card orientations.
 
@@ -635,7 +595,7 @@ class WPCommandValidator:
             "LoadWafer",
             "MoveChuckLoadedWafer",
             "MoveChuckZ",
-            "MoveChuckXY"
+            "MoveChuckXY",
         }
 
         # Skip if command doesn't require orientation check
@@ -656,7 +616,7 @@ class WPCommandValidator:
             return ResponseBuilder.error(
                 reply_type,
                 "No probe card installed. Please install probe card before probing operations.",
-                400
+                400,
             )
 
         # Check wafer loaded
@@ -664,7 +624,7 @@ class WPCommandValidator:
             return ResponseBuilder.error(
                 reply_type,
                 "No wafer loaded or orientation not set. Please load wafer before probing operations.",
-                400
+                400,
             )
 
         # ============================================================
@@ -684,7 +644,7 @@ class WPCommandValidator:
                     reply_type,
                     f"Probe card type mismatch: Project '{project_name}' requires Vertical probe card, "
                     f"but Cantilever probe card is installed. Please install correct probe card.",
-                    400
+                    400,
                 )
 
             if has_cantilever and "vertical" in probe_card_lower:
@@ -692,7 +652,7 @@ class WPCommandValidator:
                     reply_type,
                     f"Probe card type mismatch: Project '{project_name}' requires Cantilever probe card, "
                     f"but Vertical probe card is installed. Please install correct probe card.",
-                    400
+                    400,
                 )
 
         # ============================================================
@@ -700,16 +660,24 @@ class WPCommandValidator:
         # ============================================================
 
         # Extract expected orientations from project name
-        (expected_wafer_orient, expected_probe_orient) = self._extract_orientations_from_project_name(project_name)
+        expected_wafer_orient, expected_probe_orient = (
+            self._extract_orientations_from_project_name(project_name)
+        )
 
         # If project name doesn't specify orientations, just warn
         if not expected_wafer_orient:
-            print(f"⚠️  Warning: Cannot determine orientations from project name: {project_name}")
+            print(
+                f"⚠️  Warning: Cannot determine orientations from project name: {project_name}"
+            )
             return None
 
         print(f"\n🔍 Orientation validation:")
-        print(f"   Project expects: Wafer={expected_wafer_orient}, ProbeCard={expected_probe_orient}")
-        print(f"   Machine has: Wafer={wafer_orientation}, ProbeCard={probe_card_orientation}")
+        print(
+            f"   Project expects: Wafer={expected_wafer_orient}, ProbeCard={expected_probe_orient}"
+        )
+        print(
+            f"   Machine has: Wafer={wafer_orientation}, ProbeCard={probe_card_orientation}"
+        )
 
         # Normalize orientations for comparison
         wafer_orient_normalized = wafer_orientation.strip().lower()
@@ -724,7 +692,7 @@ class WPCommandValidator:
                 f"Wafer orientation mismatch: Project '{project_name}' requires wafer in {expected_wafer_orient} orientation, "
                 f"but wafer is loaded in {wafer_orientation} orientation. "
                 f"Please reload wafer with correct orientation.",
-                400
+                400,
             )
 
         # Check probe card orientation
@@ -734,7 +702,7 @@ class WPCommandValidator:
                 f"Probe card orientation mismatch: Project '{project_name}' requires probe card in {expected_probe_orient} orientation, "
                 f"but probe card is installed in {probe_card_orientation} orientation. "
                 f"Please reinstall probe card with correct orientation.",
-                400
+                400,
             )
 
         print(f"   ✅ Orientations match!")

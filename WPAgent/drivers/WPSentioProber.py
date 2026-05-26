@@ -1,6 +1,16 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
-#from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
-from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition, DieNumber
+
+# from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
+from sentio_prober_control.Sentio.Enumerations import (
+    CameraMountPoint,
+    WorkArea,
+    ChuckXYReference,
+    ChuckZReference,
+    SnapshotType,
+    SnapshotLocation,
+    LoadPosition,
+    DieNumber,
+)
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
 
@@ -18,11 +28,11 @@ class SentioProberImpl(AbstractProber):
 
     def move_chuck_xy(self, x: float, y: float, position: str):
         reference = None
-        if position == 'Zero':
+        if position == "Zero":
             reference = ChuckXYReference.Zero
-        elif position == 'Relative':
+        elif position == "Relative":
             reference = ChuckXYReference.Relative
-        elif position == 'Center':
+        elif position == "Center":
             reference = ChuckXYReference.Center
         return self.prober.move_chuck_xy(reference, x, y)
 
@@ -63,7 +73,9 @@ class SentioProberImpl(AbstractProber):
         return resp
 
     def run_ptpa(self):
-        resp = self.prober.send_cmd("vis:compensation:start_execute OffAxis, BothWithProbeTips, True")
+        resp = self.prober.send_cmd(
+            "vis:compensation:start_execute OffAxis, BothWithProbeTips, True"
+        )
 
         if not resp.ok():
             raise Exception(f"PTPA failed: {resp.message()}")
@@ -121,7 +133,9 @@ class SentioProberImpl(AbstractProber):
             work_area_enum = getattr(WorkArea, work_area)
         except AttributeError:
             valid_areas = [e.name for e in WorkArea]
-            raise ValueError(f"Invalid work area '{work_area}'. Valid options are: {valid_areas}")
+            raise ValueError(
+                f"Invalid work area '{work_area}'. Valid options are: {valid_areas}"
+            )
         self.prober.move_chuck_work_area(work_area_enum)
 
     def move_chuck_offaxis_area(self):
@@ -134,11 +148,11 @@ class SentioProberImpl(AbstractProber):
     def get_current_index(self):
         resp = self.prober.send_cmd("map:die:get_current_index")
 
-        if hasattr(resp, 'message'):
+        if hasattr(resp, "message"):
             return resp.message()
-        elif hasattr(resp, 'data'):
+        elif hasattr(resp, "data"):
             return resp.data()
-        elif hasattr(resp, 'value'):
+        elif hasattr(resp, "value"):
             return resp.value()
         else:
             # Last resort - convert to string
@@ -148,11 +162,11 @@ class SentioProberImpl(AbstractProber):
 
         resp = self.prober.map.get_num_dies(DieNumber.Selected)
 
-        if hasattr(resp, 'message'):
+        if hasattr(resp, "message"):
             return resp.message()
-        elif hasattr(resp, 'data'):
+        elif hasattr(resp, "data"):
             return resp.data()
-        elif hasattr(resp, 'value'):
+        elif hasattr(resp, "value"):
             return resp.value()
         else:
             # Last resort - convert to string
@@ -172,8 +186,10 @@ class SentioProberImpl(AbstractProber):
 
     def get_current_working_area(self):
         response = self.prober.send_cmd("get_chuck_position_hint")
-        parts = str(response.message()).split(',')
-        position_hint = parts[0]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
+        parts = str(response.message()).split(",")
+        position_hint = parts[
+            0
+        ]  # e.g. "Probing", "FrontLoad", "SideLoad", "OffAxisCamera"
 
         return str(position_hint)
 
@@ -210,9 +226,9 @@ class SentioProberImpl(AbstractProber):
             position_lower = position_str.lower()
 
             # Return formatted status: "In Contact" or "In Separation"
-            if 'contact' in position_lower:
+            if "contact" in position_lower:
                 return "In Contact"
-            elif 'separation' in position_lower or 'sep' in position_lower:
+            elif "separation" in position_lower or "sep" in position_lower:
                 return "In Separation"
             else:
                 # For any other position (Hover, Lift, Home, Overtravel)
@@ -223,11 +239,11 @@ class SentioProberImpl(AbstractProber):
             return f"Error: {str(e)}"
 
     def take_screenshot(
-            self,
-            filename: str = None,
-            snapshot_type: str = "CameraRaw",
-            save_locally: bool = True,
-            output_dir: str = "screenshotsSVT"
+        self,
+        filename: str = None,
+        snapshot_type: str = "CameraRaw",
+        save_locally: bool = True,
+        output_dir: str = "screenshotsSVT",
     ):
         """
         Take a screenshot from the prober camera
@@ -248,8 +264,8 @@ class SentioProberImpl(AbstractProber):
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"screenshot_{timestamp}.jpg"
 
-        if not filename.lower().endswith(('.jpg', '.jpeg')):
-            filename += '.jpg'
+        if not filename.lower().endswith((".jpg", ".jpeg")):
+            filename += ".jpg"
 
         if save_locally:
             os.makedirs(output_dir, exist_ok=True)
@@ -260,7 +276,7 @@ class SentioProberImpl(AbstractProber):
             self.prober.vision.snap_image(
                 file=full_path,
                 what=SnapshotType.CameraRaw,
-                where=SnapshotLocation.Local
+                where=SnapshotLocation.Local,
             )
             return full_path
 
@@ -279,10 +295,10 @@ class SentioProberImpl(AbstractProber):
             position_lower = position_str.lower()
 
             # Return formatted status: "In Contact" or "In Separation"
-            if 'contact' in position_lower:
+            if "contact" in position_lower:
                 return "In Contact"
 
-            elif 'default' in position_lower or 'def' in position_lower:
+            elif "default" in position_lower or "def" in position_lower:
                 return "In Default"
             else:
                 # For any other position (Hover, Lift, Home, Overtravel)

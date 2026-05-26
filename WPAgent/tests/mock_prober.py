@@ -1,4 +1,3 @@
-
 import time
 import random
 from interfaces.WPProberInterface import AbstractProber
@@ -59,7 +58,8 @@ class MockProberImpl(AbstractProber):
     def get_chuck_position(self):
         """Get current chuck position"""
         print(
-            f"📍 Getting chuck position: ({self.current_position['x']}, {self.current_position['y']}, {self.current_position['z']})")
+            f"📍 Getting chuck position: ({self.current_position['x']}, {self.current_position['y']}, {self.current_position['z']})"
+        )
         if self.at_contact:
             return "Contact"
         else:
@@ -73,19 +73,27 @@ class MockProberImpl(AbstractProber):
 
     def step_next_die(self):
         """Simulate stepping to next die"""
-        print(f"➡️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})")
+        print(
+            f"➡️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})"
+        )
         time.sleep(0.5)
-        self.current_die['col'] += 1
-        print(f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})")
+        self.current_die["col"] += 1
+        print(
+            f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})"
+        )
         return f"{self.current_die['col']},{self.current_die['row']},{self.current_die['subsite']}"
 
     def step_prev_die(self):
         """Simulate stepping to previous die"""
-        print(f"⬅️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})")
+        print(
+            f"⬅️  Stepping from die ({self.current_die['col']}, {self.current_die['row']})"
+        )
         time.sleep(0.5)
-        if self.current_die['col'] > 0:
-            self.current_die['col'] -= 1
-        print(f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})")
+        if self.current_die["col"] > 0:
+            self.current_die["col"] -= 1
+        print(
+            f"✅ Stepped to die ({self.current_die['col']}, {self.current_die['row']})"
+        )
         return f"{self.current_die['col']},{self.current_die['row']},{self.current_die['subsite']}"
 
     def go_to_die(self, col, row, subsite=0):
@@ -99,7 +107,9 @@ class MockProberImpl(AbstractProber):
     def get_current_index(self):
         """Get current die index"""
         # Format: "number,col,row"
-        number = self.current_die['col'] * 10 + self.current_die['row']  # Mock calculation
+        number = (
+            self.current_die["col"] * 10 + self.current_die["row"]
+        )  # Mock calculation
         return f"{number},{self.current_die['col']},{self.current_die['row']}"
 
     def get_dies_number(self):
@@ -156,7 +166,11 @@ class MockProberImpl(AbstractProber):
         """Simulate wafer alignment"""
         print(f"📐 Aligning wafer at die ({align_die_col}, {align_die_row})")
         time.sleep(3)
-        self.current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite or 0}
+        self.current_die = {
+            "col": align_die_col,
+            "row": align_die_row,
+            "subsite": subsite or 0,
+        }
         print("✅ Wafer aligned")
 
     def go_to_contact(self):
@@ -234,7 +248,9 @@ class FailingMockProberImpl(MockProberImpl):
     def __init__(self, address, failure_rate=0.3):
         super().__init__(address)
         self.failure_rate = failure_rate
-        print(f"⚠️  Failing Mock Prober initialized ({failure_rate * 100}% failure rate)")
+        print(
+            f"⚠️  Failing Mock Prober initialized ({failure_rate * 100}% failure rate)"
+        )
 
     def _should_fail(self):
         """Randomly decide if operation should fail"""

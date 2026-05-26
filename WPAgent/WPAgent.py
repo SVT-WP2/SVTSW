@@ -21,13 +21,22 @@ class WaferProberAgent:
         self.health_check = None  # Initialize later with config
         self.wp_agent_name = None
 
-    def send(self, command, data=None, repeat=1, delay=0, check_health=True, wait_for_reply=True, timeout=30.0):
+    def send(
+        self,
+        command,
+        data=None,
+        repeat=1,
+        delay=0,
+        check_health=True,
+        wait_for_reply=True,
+        timeout=30.0,
+    ):
         """
         Send a command via Kafka and wait for response.
         """
         wafer_agent_name = data["waferAgentName"]
         config = self._load_probe_config_with_db(wafer_agent_name)
-        kafka_broker = config.get('kafka_broker')
+        kafka_broker = config.get("kafka_broker")
 
         # Ensure Kafka is initialized
         if self.kafka is None:
@@ -38,12 +47,14 @@ class WaferProberAgent:
             is_alive, age = self.health_check.is_listener_alive(timeout=2.0)
 
             if not is_alive:
-                if age == float('inf'):
+                if age == float("inf"):
                     print(f"⚠️  WARNING: No listener detected!")
                     print(f"   The listener is not running or not sending heartbeats.")
                 else:
                     print(f"⚠️  WARNING: Listener appears to be down!")
-                    print(f"   Last heartbeat was {age:.1f}s ago (timeout: {self.health_check.HEARTBEAT_TIMEOUT}s)")
+                    print(
+                        f"   Last heartbeat was {age:.1f}s ago (timeout: {self.health_check.HEARTBEAT_TIMEOUT}s)"
+                    )
 
                 print(f"\n❌ The command '{command}' may not execute.")
                 print(f"   Options:")
@@ -53,11 +64,11 @@ class WaferProberAgent:
 
                 response = input(f"\n   Continue sending? (yes/no): ").strip().lower()
 
-                if response not in ['yes', 'y']:
+                if response not in ["yes", "y"]:
                     print("❌ Command cancelled")
                     return {
                         "status": "cancelled",
-                        "output": "Command cancelled by user"
+                        "output": "Command cancelled by user",
                     }
 
                 print("📤 Sending command anyway...")
@@ -69,7 +80,7 @@ class WaferProberAgent:
             repeat=repeat,
             delay=delay,
             wait_for_reply=wait_for_reply,
-            timeout=timeout
+            timeout=timeout,
         )
         return response
 
@@ -81,11 +92,7 @@ class WaferProberAgent:
 
         print(f"📤 Sending '{command}' (async - no reply expected)")
         return self.kafka.send(
-            command=command,
-            data=data,
-            repeat=repeat,
-            delay=delay,
-            wait_for_reply=False
+            command=command, data=data, repeat=repeat, delay=delay, wait_for_reply=False
         )
 
     def _load_probe_config(self, config_name):
@@ -106,11 +113,11 @@ class WaferProberAgent:
                 f"Please create configs/WPProbesConfigs.json"
             )
 
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             all_configs = json.load(f)
 
         if config_name not in all_configs:
-            available = ', '.join(all_configs.keys())
+            available = ", ".join(all_configs.keys())
             raise KeyError(
                 f"Config '{config_name}' not found in {config_path}\n"
                 f"Available configs: {available}"
@@ -137,7 +144,7 @@ class WaferProberAgent:
 
         if os.path.exists(config_path):
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path, "r") as f:
                     all_configs = json.load(f)
                     if config_name in all_configs:
                         file_config = all_configs[config_name]
@@ -145,12 +152,14 @@ class WaferProberAgent:
                 print(f"   ⚠️  Warning: Could not load config file: {e}")
 
         # Get kafka_broker from file config
-        if file_config and 'kafka_broker' in file_config:
-            kafka_broker = file_config['kafka_broker']
+        if file_config and "kafka_broker" in file_config:
+            kafka_broker = file_config["kafka_broker"]
             print(f"   ✅ Using kafka_broker from config file: {kafka_broker}")
 
         # NOW try database with the correct broker
-        db_config = self._load_from_database(config_name, kafka_broker=kafka_broker, timeout=5.0)
+        db_config = self._load_from_database(
+            config_name, kafka_broker=kafka_broker, timeout=5.0
+        )
 
         # If we got DB config, merge with kafka_broker from file
         if db_config:
@@ -158,7 +167,7 @@ class WaferProberAgent:
 
             # Add kafka_broker from file
             if kafka_broker:
-                db_config['kafka_broker'] = kafka_broker
+                db_config["kafka_broker"] = kafka_broker
 
             return db_config
 
@@ -169,13 +178,17 @@ class WaferProberAgent:
             )
 
         if not file_config:
-            available = ', '.join(all_configs.keys()) if 'all_configs' in locals() else 'unknown'
+            available = (
+                ", ".join(all_configs.keys())
+                if "all_configs" in locals()
+                else "unknown"
+            )
             raise KeyError(
                 f"Config '{config_name}' not found in {config_path}\n"
                 f"Available configs: {available}"
             )
 
-        print(f"   ✅ Loaded from config file")
+        print("   ✅ Loaded from config file")
         return file_config
 
     def _load_from_database(self, location_name, kafka_broker=None, timeout=5.0):
@@ -200,7 +213,7 @@ class WaferProberAgent:
             machine_data = get_machine_by_location(
                 location_name,
                 kafka_broker=kafka_broker,  # ← Pass broker!
-                timeout=timeout
+                timeout=timeout,
             )
 
             if not machine_data:
@@ -223,7 +236,7 @@ class WaferProberAgent:
                 "port": machine_data.get("connectionPort", 35555),
                 "machineType": machine_data.get("software", "sentio"),
                 "machineId": machine_data.get("id", 0),
-                "description": machine_data.get("generalLocation", "")
+                "description": machine_data.get("generalLocation", ""),
             }
 
             return config
@@ -241,55 +254,57 @@ class WaferProberAgent:
             config: Config dict from JSON
         """
         try:
-            print(f"\n🔌 Auto-initializing prober connection...")
+            print("\n🔌 Auto-initializing prober connection...")
 
             from actions.WPProjectActions import svt_initialise_wp
 
-            port = config.get('port', 35555)
-            address_host = config.get('address', 'localhost')
+            port = config.get("port", 35555)
+            address_host = config.get("address", "localhost")
             full_address = f"{address_host}:{port}"
 
             g = SvtWPAagentGlobalParameters.getInstance()
 
             init_params = {
-                'address': full_address,
-                'machine_type': config.get('machineType', 'sentio'),
-                'machine_id': config.get('machineId', 0),
-                'machine_name': config.get('description', config_name),
-                'initialization_mode': 'config',
-                'force': True
+                "address": full_address,
+                "machine_type": config.get("machineType", "sentio"),
+                "machine_id": config.get("machineId", 0),
+                "machine_name": config.get("description", config_name),
+                "initialization_mode": "config",
+                "force": True,
             }
 
-            if 'projectName' in config:
-                init_params['projectName'] = config['projectName']
+            if "projectName" in config:
+                init_params["projectName"] = config["projectName"]
 
             print(f"   Address: {full_address}")
             print(f"   Type: {init_params['machine_type']}")
             print(f"   Machine ID: {init_params['machine_id']}")
 
-            g.set_machine_id(init_params['machine_id'])
+            g.set_machine_id(init_params["machine_id"])
 
             result = svt_initialise_wp(**init_params)
 
-            if result.get('status', '').lower() == 'success':
-                msg = result.get('data', {}).get('message', 'Initialized successfully')
+            if result.get("status", "").lower() == "success":
+                msg = result.get("data", {}).get("message", "Initialized successfully")
                 print(f"✅ {msg}")
                 return True
             else:
-                print(f"❌ Initialization failed:")
-                error_obj = result.get('error', {})
-                error_msg = error_obj.get('message', 'Unknown error')
-                error_code = error_obj.get('code', 'N/A')
+                print("❌ Initialization failed:")
+                error_obj = result.get("error", {})
+                error_msg = error_obj.get("message", "Unknown error")
+                error_code = error_obj.get("code", "N/A")
                 print(f"   Error code: {error_code}")
                 print(f"   Error message: {error_msg}")
-                print(f"\n   Full result:")
+                print("\n   Full result:")
                 import json
+
                 print(json.dumps(result, indent=2))
                 return False
 
         except Exception as e:
-            print(f"❌ Auto-initialization error: {str(e)}")
+            print("❌ Auto-initialization error: {str(e)}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -309,12 +324,14 @@ class WaferProberAgent:
 
                 print(f"\n📋 Loaded config for '{config_name}':")
                 print(f"   Machine ID: {config.get('machineId')}")
-                print(f"   Address: {config.get('address')}:{config.get('port', 35555)}")
+                print(
+                    f"   Address: {config.get('address')}:{config.get('port', 35555)}"
+                )
                 print(f"   Type: {config.get('machineType', 'sentio')}")
-                if 'description' in config:
+                if "description" in config:
                     print(f"   Description: {config['description']}")
 
-                kafka_broker = config.get('kafka_broker')
+                kafka_broker = config.get("kafka_broker")
                 if kafka_broker:
                     print(f"   Kafka Broker: {kafka_broker}")
 
@@ -331,9 +348,11 @@ class WaferProberAgent:
                 # Initialize all Kafka clients with correct broker
                 if kafka_broker:
                     # Health check
-                    print(f"🔌 Initializing health check...")
+                    print("🔌 Initializing health check...")
                     print(f"   Broker: {kafka_broker}")
-                    self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker)
+                    self.health_check = ListenerHealthCheck(
+                        bootstrap_servers=kafka_broker
+                    )
                     print(f"   ✅ Health check initialized\n")
 
                     # WP Kafka client
@@ -355,7 +374,9 @@ class WaferProberAgent:
 
                     print(f"🔌 Initializing DB Kafka Client...")
                     print(f"   Broker: {kafka_broker}")
-                    db_client = DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
+                    db_client = DBKafkaClient.get_instance(
+                        bootstrap_servers=kafka_broker
+                    )
                     print(f"   ✅ DB Kafka client initialized\n")
                 else:
                     print(f"⚠️  No kafka_broker in config, using defaults")
@@ -378,6 +399,7 @@ class WaferProberAgent:
             except Exception as e:
                 print(f"❌ Unexpected error: {e}")
                 import traceback
+
                 traceback.print_exc()
                 return
         else:
@@ -410,7 +432,7 @@ class WaferProberAgent:
             print(f"✅ Listener is ALIVE (heartbeat age: {age:.1f}s)")
             print(f"   Heartbeat topic: {self.health_check.HEARTBEAT_TOPIC}")
         else:
-            if age == float('inf'):
+            if age == float("inf"):
                 print(f"❌ Listener is DOWN (no heartbeat found)")
             else:
                 print(f"❌ Listener is DOWN (last heartbeat: {age:.1f}s ago)")
@@ -437,5 +459,5 @@ class WaferProberAgent:
             repeat=repeat,
             delay=delay,
             wait_for_reply=True,
-            timeout=timeout
+            timeout=timeout,
         )

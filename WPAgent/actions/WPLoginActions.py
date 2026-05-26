@@ -1,6 +1,4 @@
-'''
-
-'''
+""" """
 
 import json
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -18,7 +16,9 @@ def _load_user_hierarchy() -> dict:
         with open(HIERARCHY_CONFIG_PATH, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Warning: {HIERARCHY_CONFIG_PATH} not found.  Make sure that config file exists.")
+        print(
+            f"Warning: {HIERARCHY_CONFIG_PATH} not found.  Make sure that config file exists."
+        )
 
 
 def _get_user_hierarchy(user: str) -> str:
@@ -29,7 +29,9 @@ def _get_user_hierarchy(user: str) -> str:
     return None
 
 
-def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machineType: str = None) -> dict:
+def UserLogIn(
+    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+) -> dict:
     """
     User login - sets state based on hierarchy
 
@@ -54,9 +56,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
     user_hierarchy = _get_user_hierarchy(user)
     if user_hierarchy is None:
         return ResponseBuilder.error(
-            "UserLogInReply",
-            f"User '{user}' is not recognized. Access denied.",
-            403
+            "UserLogInReply", f"User '{user}' is not recognized. Access denied.", 403
         )
 
     # CASE 1: No one logged in - allow login
@@ -76,7 +76,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
         return ResponseBuilder.success(
             "UserLogInReply",
-            f"User '{user}' logged in successfully. Hierarchy: {user_hierarchy}"
+            f"User '{user}' logged in successfully. Hierarchy: {user_hierarchy}",
         )
 
     # CASE 2: Different user trying to log in
@@ -91,7 +91,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
 
             return ResponseBuilder.success(
                 "UserLogInReply",
-                f"Developer '{user}' has taken control from '{g_userLogged}'."
+                f"Developer '{user}' has taken control from '{g_userLogged}'.",
             )
 
         # Developer cannot take control from another Developer
@@ -101,7 +101,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
             return ResponseBuilder.error(
                 "UserLogInReply",
                 f"Cannot take control: Developer '{g_userLogged}' is currently logged in.",
-                409
+                409,
             )
 
         # Non-Developer cannot take control
@@ -111,7 +111,7 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
             return ResponseBuilder.error(
                 "UserLogInReply",
                 f"Another user is currently logged in: {g_userLogged}.",
-                409
+                409,
             )
 
     # CASE 3: Same user trying to log in again
@@ -119,14 +119,13 @@ def UserLogIn(user: str, waferAgentName: str = None, address: str = None, machin
         # update reply payload
         testingActions.update_current_info(currentProber=prober)
         return ResponseBuilder.success(
-            "UserLogInReply",
-            f"User '{user}' is already logged in."
+            "UserLogInReply", f"User '{user}' is already logged in."
         )
 
 
-
-
-def UserLogOut(user: str, waferAgentName: str = None, address: str = None, machineType: str = None) -> dict:
+def UserLogOut(
+    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+) -> dict:
     """
     User logout - clears user and resets state
 
@@ -146,9 +145,7 @@ def UserLogOut(user: str, waferAgentName: str = None, address: str = None, machi
     # CASE 1: No one logged in
     if not g_userLogged:
         return ResponseBuilder.error(
-            "UserLogOutReply",
-            "No user is currently logged in.",
-            400
+            "UserLogOutReply", "No user is currently logged in.", 400
         )
 
     # CASE 2: Wrong user trying to log out
@@ -156,12 +153,12 @@ def UserLogOut(user: str, waferAgentName: str = None, address: str = None, machi
         return ResponseBuilder.error(
             "UserLogOutReply",
             f"Cannot log out: another user is currently logged in: {g_userLogged}.",
-            403
+            403,
         )
 
     # CASE 3: log out
     else:
-        was_developer = (g_userLoggedHierarchy == "Developer")
+        was_developer = g_userLoggedHierarchy == "Developer"
 
         # Clear user
         g.set_user(None, None)
@@ -176,6 +173,5 @@ def UserLogOut(user: str, waferAgentName: str = None, address: str = None, machi
             print(f"👤 User '{user}' logged out")
 
         return ResponseBuilder.success(
-            "UserLogOutReply",
-            f"User '{user}' logged out successfully."
+            "UserLogOutReply", f"User '{user}' logged out successfully."
         )

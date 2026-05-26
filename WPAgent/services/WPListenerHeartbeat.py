@@ -19,11 +19,13 @@ class ListenerHealthCheck:
     HEARTBEAT_TIMEOUT = 6.0  # Consider dead if no heartbeat for 6 seconds
 
     HEARTBEAT_TOPIC_CONFIG = {
-        'retention.ms': '60000',
-        'segment.ms': '120000',
+        "retention.ms": "60000",
+        "segment.ms": "120000",
     }
 
-    def __init__(self, bootstrap_servers=None):  # ← CHANGED: Added parameter with default None
+    def __init__(
+        self, bootstrap_servers=None
+    ):  # ← CHANGED: Added parameter with default None
         """
         Initialize listener health check
 
@@ -35,28 +37,28 @@ class ListenerHealthCheck:
         if bootstrap_servers:
             self.bootstrap_servers = bootstrap_servers
         else:
-            #self.bootstrap_servers = 'svmithi02:9096'
+            # self.bootstrap_servers = 'svmithi02:9096'
             print("WARNING - Kafka broker not found")
 
         self._ensure_topic_exists()
 
         # For checking health
         # FIX: Changed 'latest' to 'earliest' so we can see existing heartbeats
-        self.consumer = KafkaConsumer({
-            'bootstrap.servers': self.bootstrap_servers,
-            'group.id': f'heartbeat-checker-{time.time()}',  # Unique group ID each time
-            'auto.offset.reset': 'earliest',  # FIX: Read from beginning
-            'enable.auto.commit': False  # Don't commit offsets
-        })
+        self.consumer = KafkaConsumer(
+            {
+                "bootstrap.servers": self.bootstrap_servers,
+                "group.id": f"heartbeat-checker-{time.time()}",  # Unique group ID each time
+                "auto.offset.reset": "earliest",  # FIX: Read from beginning
+                "enable.auto.commit": False,  # Don't commit offsets
+            }
+        )
         self.consumer.subscribe([self.HEARTBEAT_TOPIC])
 
         # For sending heartbeats (listener side)
-        self.producer = KafkaProducer({
-            'bootstrap.servers': self.bootstrap_servers
-        })
+        self.producer = KafkaProducer({"bootstrap.servers": self.bootstrap_servers})
 
     def _ensure_topic_exists(self):
-        admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
+        admin = AdminClient({"bootstrap.servers": self.bootstrap_servers})
         metadata = admin.list_topics(timeout=5)
 
         if self.HEARTBEAT_TOPIC not in metadata.topics:
@@ -65,7 +67,7 @@ class ListenerHealthCheck:
                 topic=self.HEARTBEAT_TOPIC,
                 num_partitions=1,
                 replication_factor=1,
-                config=self.HEARTBEAT_TOPIC_CONFIG
+                config=self.HEARTBEAT_TOPIC_CONFIG,
             )
             fs = admin.create_topics([new_topic])
             try:
@@ -75,7 +77,7 @@ class ListenerHealthCheck:
                 print(f"[⚠️ Heartbeat Topic Error] {e}")
         else:
             # Topic exists — enforce config on every startup
-            resource = ConfigResource('topic', self.HEARTBEAT_TOPIC)
+            resource = ConfigResource("topic", self.HEARTBEAT_TOPIC)
             for key, value in self.HEARTBEAT_TOPIC_CONFIG.items():
                 resource.set_config(key, value)
             fs = admin.alter_configs([resource])
@@ -87,14 +89,10 @@ class ListenerHealthCheck:
 
     def send_heartbeat(self):
         """Send heartbeat (called by listener)"""
-        heartbeat = {
-            "timestamp": time.time(),
-            "status": "alive"
-        }
+        heartbeat = {"timestamp": time.time(), "status": "alive"}
 
         self.producer.produce(
-            self.HEARTBEAT_TOPIC,
-            value=json.dumps(heartbeat).encode("utf-8")
+            self.HEARTBEAT_TOPIC, value=json.dumps(heartbeat).encode("utf-8")
         )
         self.producer.poll(0)
 
@@ -129,7 +127,10 @@ class ListenerHealthCheck:
                             return True, age
 
                         # Keep track of most recent heartbeat
-                        if last_heartbeat_time is None or heartbeat_time > last_heartbeat_time:
+                        if (
+                            last_heartbeat_time is None
+                            or heartbeat_time > last_heartbeat_time
+                        ):
                             last_heartbeat_time = heartbeat_time
 
                 except Exception as e:
@@ -141,7 +142,7 @@ class ListenerHealthCheck:
             age = current_time - last_heartbeat_time
             return False, age
         else:
-            return False, float('inf')
+            return False, float("inf")
 
     def wait_for_listener(self, max_wait=30.0, check_interval=2.0):
         """
@@ -194,7 +195,9 @@ class ListenerHealthMonitor:
         self.running = True
 
         def heartbeat_loop():
-            print(f"💓 Heartbeat monitor started (interval: {self.health_check.HEARTBEAT_INTERVAL}s)")
+            print(
+                f"💓 Heartbeat monitor started (interval: {self.health_check.HEARTBEAT_INTERVAL}s)"
+            )
 
             while self.running:
                 try:

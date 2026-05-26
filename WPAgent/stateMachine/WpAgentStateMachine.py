@@ -1,14 +1,14 @@
-
 from enum import Enum, auto
 
 # Commands that work in ANY state
 BYPASS_COMMANDS = {
-        "UserLogIn",
-        "UserLogOut",
-        "Help",
-        "AutoFocus",
-        "Initialize",
-    }
+    "UserLogIn",
+    "UserLogOut",
+    "Help",
+    "AutoFocus",
+    "Initialize",
+}
+
 
 class WPAgentState(Enum):
     ServiceOn = auto()
@@ -25,7 +25,7 @@ class WPAgentState(Enum):
     AtContact = auto()
     AtContact_Locked = auto()
     Error = auto()
-    UsedByDeveloper = auto() # ← Developer mode - ALL commands have to be allowed
+    UsedByDeveloper = auto()  # ← Developer mode - ALL commands have to be allowed
     UserLogged = auto()
 
 
@@ -44,123 +44,109 @@ class WPAgentStateMachine:
         self.transitions = {
             # From ServiceOn
             WPAgentState.ServiceOn: {
-                'OpenProject': WPAgentState.OpenedProject,
-                'Error': WPAgentState.Error,
+                "OpenProject": WPAgentState.OpenedProject,
+                "Error": WPAgentState.Error,
             },
-
             # From OpenedProject
             WPAgentState.OpenedProject: {
-                'AlignWafer': WPAgentState.Aligned,
-                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
-                'Error': WPAgentState.Error,
+                "AlignWafer": WPAgentState.Aligned,
+                "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
+                "Error": WPAgentState.Error,
             },
-
             # From Aligned
             WPAgentState.Aligned: {
-                'UnloadWafer': WPAgentState.Unloaded,
-                'MoveChuckUnloaded': WPAgentState.ChuckUnloaded,
-                'MoveChuckSafePosition': WPAgentState.ChuckSafePosition,
-                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
-                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'Error': WPAgentState.Error,
+                "UnloadWafer": WPAgentState.Unloaded,
+                "MoveChuckUnloaded": WPAgentState.ChuckUnloaded,
+                "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "Error": WPAgentState.Error,
             },
-
             # From ChuckSafePosition
             WPAgentState.ChuckSafePosition: {
-                'InitProbing': WPAgentState.Aligned,
-                'UnloadWafer': WPAgentState.Unloaded,
-                'MoveChuckUnloadWafer': WPAgentState.ChuckUnloaded,
-                'Error': WPAgentState.Error,
+                "InitProbing": WPAgentState.Aligned,
+                "UnloadWafer": WPAgentState.Unloaded,
+                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
+                "Error": WPAgentState.Error,
             },
-
             # From ChuckUnloaded
             WPAgentState.ChuckUnloaded: {
-                'MoveChuckLoadedWafer': WPAgentState.UserLogged,
-                'Error': WPAgentState.Error,
+                "MoveChuckLoadedWafer": WPAgentState.UserLogged,
+                "Error": WPAgentState.Error,
             },
-
             # From Unloaded
             WPAgentState.Unloaded: {
-                'LoadWafer': WPAgentState.UserLogged,
-                'Error': WPAgentState.Error,
+                "LoadWafer": WPAgentState.UserLogged,
+                "Error": WPAgentState.Error,
             },
-
             # From OnDie_Wide
             WPAgentState.OnDie_Wide: {
-                'MoveChuckContact': WPAgentState.AtContact,
-                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
-                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'Error': WPAgentState.Error,
+                "MoveChuckContact": WPAgentState.AtContact,
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "Error": WPAgentState.Error,
             },
-
-
-
             # From AtContact
             WPAgentState.AtContact: {
-                'TestingLock': WPAgentState.AtContact_Locked,
-                'MoveChuckSeparation': WPAgentState.OnDie_Wide,
-                'Error': WPAgentState.Error,
+                "TestingLock": WPAgentState.AtContact_Locked,
+                "MoveChuckSeparation": WPAgentState.OnDie_Wide,
+                "Error": WPAgentState.Error,
             },
-
             # From AtContact_Locked
             WPAgentState.AtContact_Locked: {
-                'TestingUnlock': WPAgentState.AtContact,
-                'Error': WPAgentState.Error,
+                "TestingUnlock": WPAgentState.AtContact,
+                "Error": WPAgentState.Error,
             },
-
             # From OnDie_OffAxis_withoutPTPA
             WPAgentState.OnDie_OffAxis_withoutPTPA: {
-                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
-                'RunPTPA': WPAgentState.OnDie_OffAxis_withPTPA,
-                'MoveChuckWide': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckNextDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckPreviousDie': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckRowColumn': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'AutoFocus': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'Error': WPAgentState.Error,
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "RunPTPA": WPAgentState.OnDie_OffAxis_withPTPA,
+                "MoveChuckWide": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "AutoFocus": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "Error": WPAgentState.Error,
             },
-
             # From OnDie_Wide_withPTPA
             WPAgentState.OnDie_Wide_withPTPA: {
-                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
-                'SetOverdrive': WPAgentState.OnDie_Wide_withPTPA,
-                'MoveChuckContact': WPAgentState.AtContact,
-                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
-                'Error': WPAgentState.Error,
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "SetOverdrive": WPAgentState.OnDie_Wide_withPTPA,
+                "MoveChuckContact": WPAgentState.AtContact,
+                "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "Error": WPAgentState.Error,
             },
-
             # From OnDie_Wide_withoutPTPA
             WPAgentState.OnDie_Wide_withoutPTPA: {
-                'MoveChuckAsic': WPAgentState.OnDie_Wide_withPTPA,
-                'SetOverdrive': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckContact': WPAgentState.AtContact,
-                'MoveChuckOffAxis': WPAgentState.OnDie_OffAxis_withoutPTPA,
-                'MoveChuckNextDie': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckPreviousDie': WPAgentState.OnDie_Wide_withoutPTPA,
-                'MoveChuckRowColumn': WPAgentState.OnDie_Wide_withoutPTPA,
-                'Error': WPAgentState.Error,
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "SetOverdrive": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckContact": WPAgentState.AtContact,
+                "MoveChuckOffAxis": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "Error": WPAgentState.Error,
             },
-
             # From Error
             WPAgentState.Error: {
-                'ResetAgent': WPAgentState.UserLogged,
+                "ResetAgent": WPAgentState.UserLogged,
             },
-
             WPAgentState.UsedByDeveloper: {
                 # NOTE: In can_execute(),  allow ALL commands
-                'Error': WPAgentState.Error,
+                "Error": WPAgentState.Error,
             },
         }
 
     def _sync_to_global_params(self):
-        """Auto-sync current state to global parameters to not to write same thing a few times """
+        """Auto-sync current state to global parameters to not to write same thing a few times"""
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
         g = SvtWPAagentGlobalParameters.getInstance()
         g.wpag_state = self.current_state.name
 
@@ -200,7 +186,9 @@ class WPAgentStateMachine:
 
         if command not in valid_transitions:
             print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
-            print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
+            print(
+                f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}"
+            )
             return False
 
         # run transition
@@ -258,6 +246,7 @@ class WPAgentStateMachine:
         self.current_command = None
 
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
         g = SvtWPAagentGlobalParameters.getInstance()
         g.userLogged = None
         g.userLoggedHierarchy = None

@@ -5,6 +5,7 @@ from utilities.WPAgentLogger import WPAgentLogger, Severity
 # Initialize logger
 logger = WPAgentLogger()
 
+
 class WPSequencer:
     def __init__(self, executor):
         """
@@ -20,8 +21,7 @@ class WPSequencer:
         :param filepath: Path to the JSON file.
         """
 
-
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             self.sequence = json.load(f)
 
     def run_sequence(self, delay=0.5):
@@ -36,7 +36,7 @@ class WPSequencer:
             severityLevel=Severity.INFO,
             command="WP_RUN_SEQUENCE",
             data=None,
-            result={"commands": command_list}
+            result={"commands": command_list},
         )
 
         for idx, step in enumerate(self.sequence):
@@ -53,9 +53,7 @@ class WPSequencer:
                     severityLevel=Severity.ERROR,
                     command=command,
                     data=params,
-                    result=result
+                    result=result,
                 )
                 return result
             time.sleep(delay)
-
-

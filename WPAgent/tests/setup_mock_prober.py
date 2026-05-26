@@ -3,10 +3,11 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from drivers.WPFactory import ProberFactory,prober_classes
+from drivers.WPFactory import ProberFactory, prober_classes
 from tests.mock_prober import MockProberImpl
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
 
 def setup_mock_prober(address="mock-prober:35555", machineType="sentio"):
     """
@@ -84,6 +85,7 @@ def setup_mock_prober(address="mock-prober:35555", machineType="sentio"):
     # Step 7: Reset state machine to Idle
     try:
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+
         agentStateMachine.reset()
         print("  ✓ Reset state machine to Idle")
     except Exception as e:
@@ -100,6 +102,7 @@ def setup_mock_prober(address="mock-prober:35555", machineType="sentio"):
 
     # Test check_prober_ready
     from utilities.WPHelpers import check_prober_ready
+
     is_ready, message = check_prober_ready()
     print(f"  check_prober_ready(): {is_ready} - {message}")
 
@@ -126,6 +129,7 @@ def reset_mock_environment():
     # Reset state machine
     try:
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+
         agentStateMachine.reset()
     except:
         pass
@@ -153,10 +157,12 @@ def test_mock_setup():
     print(f"  Status: {response.get('status')}")
     print(f"  Type: {response.get('type')}")
 
-    if response.get('status') == 'Success':
+    if response.get("status") == "Success":
         print("\n✅ SUCCESS! Mock prober is working correctly!")
     else:
-        print(f"\n❌ FAILED: {response.get('error', {}).get('message', response.get('output'))}")
+        print(
+            f"\n❌ FAILED: {response.get('error', {}).get('message', response.get('output'))}"
+        )
 
     print("\n" + "=" * 70 + "\n")
 

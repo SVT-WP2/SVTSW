@@ -1,229 +1,353 @@
+
 import time
-import random
+import os
+import datetime
+
+# Working-area constants (mirrors SENTIO position-hint values)
+AREA_PROBING = "Probing"
+AREA_OFFAXIS = "OffAxisCamera"
+AREA_WIDE    = "WideFieldCamera"
 
 
 class MockProberImpl:
     """
-    Mock Prober - Implements same interface as SentioProberImpl
+    Full mock of SentioProberImpl.
 
+    Every method returns the same data shape the real prober would return
+    so the rest of the codebase (actions, globals, response builder) works
+    identically whether a real machine is connected or not.
     """
 
     def __init__(self, address="mock-prober:35555"):
-        """
-        Initialize mock prober
-
-        Args:
-            address: Mock address (not used, but kept for interface compatibility)
-        """
         self.address = address
-        self.is_connected = True  # Mock is always "connected"
 
-        # Simulated state
-        self.current_project = None
-        self.chuck_position = {"x": 0.0, "y": 0.0, "z": 50.0}  # Start at separation
-        self.current_die = {"col": 0, "row": 0, "subsite": 0}
-        self.wafer_loaded = False
-        self.camera_position = "Top"
-        self.overdrive = 0
-        self.overdrive_enabled = False
+        # Connection state
+        self._connected = True
 
+        # Chuck state
+        self._chuck_xy = {"x": 0.0, "y": 0.0}
+        self._chuck_z  = 50.0           # 50 um = separation height
+        self._at_contact = False
+        self._working_area = AREA_PROBING
 
+        # Wafer / project state
+        self._project = None
+        self._wafer_loaded = False
+        self._wafer_id = None
+        self._orientation = None
 
-    def open_project(self, project_name):
-        """Simulate opening a project"""
-        time.sleep(0.2)  # Simulate delay
-        self.current_project = project_name
-        return f"Project {project_name} opened (mock)"
+        # Die map (10x10 mock map, 100 total / 100 good / 0 bad)
+        self._total_dies = 100
+        self._good_dies  = 100
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        self._die_index   = 0
 
+        # Camera
+        self._camera = "TopCamera"
 
-    def load_wafer(self):
-        """Simulate loading wafer"""
-        time.sleep(0.5)
-        self.wafer_loaded = True
-        self.chuck_position["z"] = 50.0  # Separation position
-        return "Wafer loaded to center (mock)"
+        # Overtravel
+        self._overtravel_gap     = 0.0
+        self._overtravel_enabled = False
 
-    def unload_wafer(self):
-        """Simulate unloading wafer"""
-        time.sleep(0.5)
-        self.wafer_loaded = False
-        self.chuck_position = {"x": 0.0, "y": 0.0, "z": 0.0}
-        self.current_die = {"col": 0, "row": 0, "subsite": 0}
-        return "Wafer unloaded (mock)"
+        # PTPA
+        self._ptpa_enabled = False
 
-    def align_wafer(self, col, row, subsite=0):
-        """Simulate wafer alignment"""
-        time.sleep(1.0)
-        self.current_die = {"col": col, "row": row, "subsite": subsite}
-        return f"Wafer aligned at die {col},{row},{subsite} (mock)"
+        print(f"[MockProber] Initialized at {address}")
 
+    # ------------------------------------------------------------------
+    # Connection
+    # ------------------------------------------------------------------
 
-    def move_chuck_xy(self, x, y):
-        """Simulate XY movement"""
-        time.sleep(0.3)
-        self.chuck_position["x"] = x
-        self.chuck_position["y"] = y
-        return f"Chuck moved to X={x}, Y={y} (mock)"
-
-    def move_chuck_z(self, z):
-        """Simulate Z movement"""
-        time.sleep(0.3)
-        self.chuck_position["z"] = z
-        return f"Chuck moved to Z={z} (mock)"
-
-    def move_chuck_home(self):
-        """Simulate moving to home position"""
-        time.sleep(0.5)
-        self.chuck_position = {"x": 0.0, "y": 0.0, "z": 0.0}
-        return "Chuck at home position (mock)"
-
-    def go_to_contact(self):
-        """Simulate moving to contact"""
-        time.sleep(0.4)
-        self.chuck_position["z"] = 100.0  # Contact position
-        return "Probes in contact (mock)"
-
-    def go_to_separation(self):
-        """Simulate moving to separation"""
-        time.sleep(0.4)
-        self.chuck_position["z"] = 50.0  # Separation position
-        return "Probes in separation (mock)"
-
-
-    def step_next_die(self):
-        """Simulate stepping to next die"""
-        time.sleep(0.3)
-        self.current_die["col"] += 1
-        if self.current_die["col"] > 10:  # Wrap to next row
-            self.current_die["col"] = 0
-            self.current_die["row"] += 1
-
-        result = f"Die: {self.current_die['col']},{self.current_die['row']}"
-        return result
-
-    def step_prev_die(self):
-        """Simulate stepping to previous die"""
-        time.sleep(0.3)
-        self.current_die["col"] -= 1
-        if self.current_die["col"] < 0:
-            self.current_die["col"] = 10
-            self.current_die["row"] -= 1
-
-        result = f"Die: {self.current_die['col']},{self.current_die['row']}"
-        return result
-
-    def go_to_die(self, col, row):
-        """Simulate going to specific die"""
-        time.sleep(0.4)
-        self.current_die["col"] = col
-        self.current_die["row"] = row
-        return f"Moved to die {col},{row} (mock)"
-
-
-    def switch_camera(self, mount_point):
-        """
-        Simulate switching camera
-
-        Args:
-            mount_point: "Top", "Offaxis", "Wide", etc.
-        """
+    def initialize(self):
+        """Simulate hardware initialisation (always succeeds)."""
         time.sleep(0.2)
-        self.camera_position = mount_point
-        return f"Camera switched to {mount_point} (mock)"
-
-    def auto_focus(self):
-        """Simulate auto-focus"""
-        time.sleep(0.5)
-        return "Auto-focus complete (mock)"
-
-    def run_ptpa(self):
-        """Simulate PTPA alignment"""
-        time.sleep(1.0)
-        return "PTPA alignment successful (mock)"
-
-
-    def find_home(self):
-        """Simulate finding home"""
-        time.sleep(0.5)
-        return "Home position found (mock)"
-
-    def local_mode(self):
-        """Simulate switching to local mode"""
-        return "Local mode (mock)"
-
-    def clean_probe_station(self):
-        """Simulate cleaning"""
-        time.sleep(2.0)
-        return "Cleaning complete (mock)"
-
-    def move_chuck_work_area(self, area):
-        """
-        Simulate moving to work area
-
-        Args:
-            area: 0 = Probing, 1 = Offaxis, etc.
-        """
-        time.sleep(0.3)
-        area_names = {0: "Probing", 1: "Offaxis"}
-        area_name = area_names.get(area, f"Area{area}")
-        return f"Moved to work area {area_name} (mock)"
-
-
-    def set_overtravel(self, value):
-        """
-        Simulate setting overtravel
-
-        Args:
-            value: Overtravel gap value
-        """
-        self.overdrive = value
-        return f"Overtravel set to {value} (mock)"
-
-    def enable_overtravel(self, overtravel=True):
-        """
-        Simulate enabling/disabling overtravel
-
-        Args:
-            overtravel: True to enable, False to disable
-        """
-        self.overdrive_enabled = overtravel
-        status = "enabled" if overtravel else "disabled"
-        return f"Overtravel {status} (mock)"
-
-
-    def get_chuck_position(self):
-        """Get current chuck position"""
-        return self.chuck_position
-
-    def get_status(self):
-        """Get prober status"""
-        status = {
-            "connected": self.is_connected,
-            "project": self.current_project,
-            "wafer_loaded": self.wafer_loaded,
-            "chuck_position": self.chuck_position,
-            "current_die": self.current_die,
-            "camera": self.camera_position,
-            "overdrive": self.overdrive,
-            "overdrive_enabled": self.overdrive_enabled
-        }
-        return status
+        print("[MockProber] Initialization complete")
+        return "0,OK"
 
     def connect(self):
-        """Mock connection (always succeeds)"""
-        self.is_connected = True
+        self._connected = True
         return True
 
     def disconnect(self):
-        """Mock disconnection"""
-        self.is_connected = False
+        self._connected = False
 
     def is_alive(self):
-        """Check if mock prober is alive (always True)"""
-        return self.is_connected
+        return self._connected
+
+    # ------------------------------------------------------------------
+    # Project
+    # ------------------------------------------------------------------
+
+    def open_project(self, path: str):
+        time.sleep(0.2)
+        self._project = path
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        self._die_index = 0
+        print(f"[MockProber] Project opened: {path}")
+        return f"0,{path}"
+
+    # ------------------------------------------------------------------
+    # Wafer
+    # ------------------------------------------------------------------
+
+    def load_wafer(self):
+        time.sleep(0.5)
+        self._wafer_loaded = True
+        self._chuck_z = 50.0
+        self._working_area = AREA_PROBING
+        print("[MockProber] Wafer loaded")
+        return "0,OK"
+
+    def unload_wafer(self):
+        time.sleep(0.5)
+        self._wafer_loaded = False
+        self._wafer_id = None
+        self._orientation = None
+        self._current_die = {"col": 0, "row": 0, "subsite": 0}
+        self._die_index = 0
+        self._chuck_xy = {"x": 0.0, "y": 0.0}
+        print("[MockProber] Wafer unloaded")
+        return "0,OK"
+
+    def align_wafer(self, align_die_col: int, align_die_row: int, subsite: int = 0):
+        time.sleep(1.0)
+        self._current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite}
+        self._die_index = align_die_col * 10 + align_die_row
+        print(f"[MockProber] Wafer aligned at die ({align_die_col}, {align_die_row})")
+        return f"0,{align_die_col},{align_die_row},{subsite}"
+
+    # ------------------------------------------------------------------
+    # Chuck - XY / Z movement
+    # ------------------------------------------------------------------
+
+    def move_chuck_xy(self, x: float, y: float, position: str = "Site"):
+        time.sleep(0.3)
+        self._chuck_xy = {"x": x, "y": y}
+        return f"0,{x},{y}"
+
+    def move_chuck_z(self, z: float):
+        time.sleep(0.3)
+        self._chuck_z = z
+        return f"0,{z}"
+
+    def move_chuck_home(self):
+        time.sleep(0.5)
+        self._chuck_xy = {"x": 0.0, "y": 0.0}
+        self._chuck_z  = 0.0
+        self._working_area = AREA_PROBING
+        return "0,OK"
+
+    def move_chuck_center(self):
+        """Move chuck to wafer centre (used before loading / unloading)."""
+        time.sleep(0.4)
+        self._chuck_xy = {"x": 0.0, "y": 0.0}
+        self._working_area = AREA_PROBING
+        return "0,OK"
+
+    def move_chuck_offaxis_area(self):
+        """Move chuck to off-axis camera area."""
+        time.sleep(0.5)
+        self._working_area = AREA_OFFAXIS
+        self._camera = "OffAxisCamera"
+        return "0,OK"
+
+    def move_chuck_wide(self):
+        """Move chuck to wide-field camera area."""
+        time.sleep(0.5)
+        self._working_area = AREA_WIDE
+        self._camera = "WideFieldCamera"
+        return "0,OK"
+
+    def move_chuck_work_area(self, work_area):
+        """Move to a numbered work area: 0=Probing, 1=OffAxis, 2=WideField."""
+        time.sleep(0.3)
+        mapping = {0: AREA_PROBING, 1: AREA_OFFAXIS, 2: AREA_WIDE}
+        self._working_area = mapping.get(int(work_area), AREA_PROBING)
+        return f"0,{self._working_area}"
+
+    # ------------------------------------------------------------------
+    # Chuck - contact / separation
+    # ------------------------------------------------------------------
+
+    def go_to_contact(self):
+        time.sleep(0.4)
+        self._at_contact = True
+        self._chuck_z = 100.0
+        return "0,OK"
+
+    def go_to_separation(self):
+        time.sleep(0.4)
+        self._at_contact = False
+        self._chuck_z = 50.0
+        return "0,OK"
+
+    # ------------------------------------------------------------------
+    # Chuck - position queries
+    # ------------------------------------------------------------------
+
+    def get_chuck_position(self) -> str:
+        """
+        Return "In Contact" or "In Separation".
+        Matches SentioProberImpl.get_chuck_position() so
+        globals.chuck_z_position_state is set correctly.
+        """
+        return "In Contact" if self._at_contact else "In Separation"
+
+    def get_current_working_area(self) -> str:
+        """
+        Return the current working area string.
+        update_current_info() calls .removesuffix("Camera") on this value.
+        """
+        return self._working_area
+
+    # ------------------------------------------------------------------
+    # Die navigation
+    # ------------------------------------------------------------------
+
+    def step_next_die(self) -> str:
+        """Advance to next die. Returns 'index,col,row'."""
+        time.sleep(0.3)
+        self._current_die["col"] += 1
+        if self._current_die["col"] >= 10:
+            self._current_die["col"] = 0
+            self._current_die["row"] += 1
+        self._die_index += 1
+        col = self._current_die["col"]
+        row = self._current_die["row"]
+        return f"{self._die_index},{col},{row}"
+
+    def step_prev_die(self) -> str:
+        """Step back one die. Returns 'index,col,row'."""
+        time.sleep(0.3)
+        self._current_die["col"] -= 1
+        if self._current_die["col"] < 0:
+            self._current_die["col"] = 9
+            self._current_die["row"] -= 1
+        self._die_index = max(0, self._die_index - 1)
+        col = self._current_die["col"]
+        row = self._current_die["row"]
+        return f"{self._die_index},{col},{row}"
+
+    def go_to_die(self, col: int, row: int, subsite: int = 0) -> str:
+        """Jump directly to a die. Returns 'index,col,row,subsite'."""
+        time.sleep(0.4)
+        self._current_die = {"col": col, "row": row, "subsite": subsite}
+        self._die_index = col * 10 + row
+        return f"{self._die_index},{col},{row},{subsite}"
+
+    def get_current_index(self) -> str:
+        """
+        Return current die as 'index,col,row'.
+        update_current_info() parses index [1] as col and [2] as row.
+        """
+        col = self._current_die["col"]
+        row = self._current_die["row"]
+        return f"{self._die_index},{col},{row}"
+
+    def get_dies_number(self) -> str:
+        """
+        Return die counts as 'total,good,bad'.
+        update_current_info() parses index [0] as total.
+        """
+        bad = self._total_dies - self._good_dies
+        return f"{self._total_dies},{self._good_dies},{bad}"
+
+    # ------------------------------------------------------------------
+    # Camera
+    # ------------------------------------------------------------------
+
+    def switch_camera(self, mountPoint: str):
+        time.sleep(0.2)
+        self._camera = mountPoint
+        return f"0,{mountPoint}"
+
+    def get_camera_status(self) -> str:
+        return self._camera
+
+    def auto_focus(self):
+        time.sleep(0.5)
+        return "0,OK"
+
+    def take_screenshot(
+        self,
+        filename: str = None,
+        snapshot_type: str = "CameraRaw",
+        save_locally: bool = True,
+        output_dir: str = "screenshotsSVT",
+    ) -> str:
+        """
+        Simulate taking a screenshot.
+        Creates an empty placeholder file so any code that checks the
+        returned path does not crash.
+        """
+        if filename is None:
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"mock_screenshot_{ts}.png"
+
+        if save_locally:
+            os.makedirs(output_dir, exist_ok=True)
+            path = os.path.join(output_dir, filename)
+            open(path, "wb").close()
+            print(f"[MockProber] Screenshot saved: {path}")
+            return path
+
+        return f"/mock/remote/{filename}"
+
+    # ------------------------------------------------------------------
+    # Overtravel
+    # ------------------------------------------------------------------
+
+    def set_overtravel(self, overtravelGap: float):
+        self._overtravel_gap = overtravelGap
+        return f"0,{overtravelGap}"
+
+    def enable_overtravel(self, overtravel: bool):
+        self._overtravel_enabled = overtravel
+        return f"0,{overtravel}"
+
+    # ------------------------------------------------------------------
+    # PTPA
+    # ------------------------------------------------------------------
+
+    def set_ptpa(self, enable: bool):
+        """Enable or disable PTPA compensation."""
+        self._ptpa_enabled = enable
+        return f"0,{enable}"
+
+    def run_ptpa(self):
+        time.sleep(1.0)
+        print("[MockProber] PTPA alignment complete")
+        return "0,OK"
+
+    # ------------------------------------------------------------------
+    # Home / local / clean
+    # ------------------------------------------------------------------
+
+    def find_home(self):
+        time.sleep(0.5)
+        self._chuck_xy = {"x": 0.0, "y": 0.0}
+        self._chuck_z  = 0.0
+        return "0,OK"
+
+    def local_mode(self):
+        return "0,LocalMode"
+
+    def clean_probe_station(self):
+        time.sleep(2.0)
+        return "0,OK"
+
+    # ------------------------------------------------------------------
+    # Repr
+    # ------------------------------------------------------------------
 
     def __repr__(self):
-        return f"MockProberImpl(address='{self.address}', connected={self.is_connected})"
+        return (
+            f"MockProberImpl(address='{self.address}', "
+            f"connected={self._connected}, "
+            f"wafer={self._wafer_loaded}, "
+            f"die=({self._current_die['col']},{self._current_die['row']}), "
+            f"contact={self._at_contact})"
+        )
 
     def __str__(self):
-        return f"Mock Prober at {self.address} (simulated)"
+        return f"Mock Prober at {self.address}"

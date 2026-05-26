@@ -4,11 +4,10 @@ WPAgent Test Runner with Mock Prober
 Run tests without connecting to real hardware
 """
 
-
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import time
 from threading import Thread
@@ -23,19 +22,19 @@ def setup_mock_prober():
     from tests.mock_prober import MockProberImpl, SlowMockProberImpl
 
     # Add mock prober to factory
-    factory.prober_classes['sentio'] = MockProberImpl
-    factory.prober_classes['sentio_slow'] = SlowMockProberImpl
+    factory.prober_classes["sentio"] = MockProberImpl
+    factory.prober_classes["sentio_slow"] = SlowMockProberImpl
 
     print("✅ Mock prober configured\n")
 
 
 class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
 
 
 class TestRunner:
@@ -53,7 +52,7 @@ class TestRunner:
         """Run a test and track results"""
         print(f"\n{'=' * 60}")
         self.log(f"TEST: {name}", Colors.BOLD + Colors.BLUE)
-        print('=' * 60)
+        print("=" * 60)
 
         try:
             func()
@@ -85,7 +84,7 @@ class TestRunner:
         result = svt_initialise_wp(
             address="mock://localhost:35555",
             machineType="sentio",
-            projectName="test_project"
+            projectName="test_project",
         )
 
         print(f"Result: {result}")
@@ -104,7 +103,7 @@ class TestRunner:
             ("MoveChuckHome", {}),
             ("MoveChuckXY", {"x": 100, "y": 200}),
             ("StepNextDie", {}),
-            ("AutoFocus", {})
+            ("AutoFocus", {}),
         ]
 
         for cmd, params in commands:
@@ -149,11 +148,17 @@ class TestRunner:
         print(f"3d. Second command result: {results['second']}")
 
         # First should succeed
-        self.assert_equal(results["first"]["status"], "success", "First command should succeed")
+        self.assert_equal(
+            results["first"]["status"], "success", "First command should succeed"
+        )
 
         # Second should fail with busy message
-        self.assert_equal(results["second"]["status"], "error", "Second command should be blocked")
-        self.assert_contains(results["second"]["output"], "busy", "Should show busy message")
+        self.assert_equal(
+            results["second"]["status"], "error", "Second command should be blocked"
+        )
+        self.assert_contains(
+            results["second"]["output"], "busy", "Should show busy message"
+        )
 
         print("✓ Busy flag works correctly")
 
@@ -192,7 +197,9 @@ class TestRunner:
         print(f"   State: {agentStateMachine.getState().name}")
         print(f"   Is busy: {agentStateMachine.isBusy()}")
 
-        self.assert_equal(agentStateMachine.getState(), SvtWpAgentState.Idle, "Should return to Idle")
+        self.assert_equal(
+            agentStateMachine.getState(), SvtWpAgentState.Idle, "Should return to Idle"
+        )
         assert not agentStateMachine.isBusy(), "Should not be busy"
 
         print("✓ State transitions correct")
@@ -206,7 +213,9 @@ class TestRunner:
         print(f"Result: {result}")
 
         self.assert_equal(result["status"], "error", "Should return error")
-        self.assert_contains(result["output"], "Unknown command", "Should show unknown command message")
+        self.assert_contains(
+            result["output"], "Unknown command", "Should show unknown command message"
+        )
 
         print("✓ Invalid command handled correctly")
 
@@ -216,17 +225,16 @@ class TestRunner:
 
         print("\n7a. Re-initializing without force...")
         result1 = svt_initialise_wp(
-            address="mock://localhost:35555",
-            machineType="sentio"
+            address="mock://localhost:35555", machineType="sentio"
         )
         print(f"Result: {result1}")
-        self.assert_contains(result1["output"], "Already initialized", "Should skip re-init")
+        self.assert_contains(
+            result1["output"], "Already initialized", "Should skip re-init"
+        )
 
         print("\n7b. Re-initializing with force=True...")
         result2 = svt_initialise_wp(
-            address="mock://localhost:35555",
-            machineType="sentio",
-            force=True
+            address="mock://localhost:35555", machineType="sentio", force=True
         )
         print(f"Result: {result2}")
         self.assert_equal(result2["status"], "success", "Force re-init should succeed")
@@ -264,7 +272,9 @@ class TestRunner:
         if USE_MOCK_PROBER:
             self.log(" Using MOCK PROBER - no hardware needed!\n", Colors.YELLOW)
         else:
-            self.log("⚠️  Using REAL PROBER - ensure hardware is connected!\n", Colors.YELLOW)
+            self.log(
+                "⚠️  Using REAL PROBER - ensure hardware is connected!\n", Colors.YELLOW
+            )
 
         start = time.time()
 

@@ -16,13 +16,15 @@ class CacheHealthCheck:
     HEARTBEAT_TOPIC = "svt.wp-agent.cache-heartbeat"
     HEARTBEAT_INTERVAL = 2.0  # Cache heartbeat every 2 seconds
     HEARTBEAT_TIMEOUT = 6.0  # Consider dead if no heartbeat for 6 seconds
-    
+
     HEARTBEAT_TOPIC_CONFIG = {
-        'retention.ms': '60000',
-        'segment.ms': '120000',
+        "retention.ms": "60000",
+        "segment.ms": "120000",
     }
 
-    def __init__(self, bootstrap_servers=None):  # ← CHANGED: Added parameter with default None
+    def __init__(
+        self, bootstrap_servers=None
+    ):  # ← CHANGED: Added parameter with default None
         """
         Initialize cache health check
 
@@ -34,27 +36,27 @@ class CacheHealthCheck:
         if bootstrap_servers:
             self.bootstrap_servers = bootstrap_servers
         else:
-            #self.bootstrap_servers = 'svmithi02:9096'
+            # self.bootstrap_servers = 'svmithi02:9096'
             print("WARNING - Kafka broker not found")
-            
+
         self._ensure_topic_exists()
 
         # For checking health
-        self.consumer = KafkaConsumer({
-            'bootstrap.servers': self.bootstrap_servers,
-            'group.id': f'heartbeat-checker-{time.time()}',  # Unique group ID each time
-            'auto.offset.reset': 'earliest',  # FIX: Read from beginning
-            'enable.auto.commit': False  # Don't commit offsets
-        })
+        self.consumer = KafkaConsumer(
+            {
+                "bootstrap.servers": self.bootstrap_servers,
+                "group.id": f"heartbeat-checker-{time.time()}",  # Unique group ID each time
+                "auto.offset.reset": "earliest",  # FIX: Read from beginning
+                "enable.auto.commit": False,  # Don't commit offsets
+            }
+        )
         self.consumer.subscribe([self.HEARTBEAT_TOPIC])
 
         # For sending heartbeats (listener side)
-        self.producer = KafkaProducer({
-            'bootstrap.servers': self.bootstrap_servers
-        })
+        self.producer = KafkaProducer({"bootstrap.servers": self.bootstrap_servers})
 
     def _ensure_topic_exists(self):
-        admin = AdminClient({'bootstrap.servers': self.bootstrap_servers})
+        admin = AdminClient({"bootstrap.servers": self.bootstrap_servers})
         metadata = admin.list_topics(timeout=5)
 
         if self.HEARTBEAT_TOPIC not in metadata.topics:
@@ -63,7 +65,7 @@ class CacheHealthCheck:
                 topic=self.HEARTBEAT_TOPIC,
                 num_partitions=1,
                 replication_factor=1,
-                config=self.HEARTBEAT_TOPIC_CONFIG
+                config=self.HEARTBEAT_TOPIC_CONFIG,
             )
             fs = admin.create_topics([new_topic])
             try:
@@ -73,7 +75,7 @@ class CacheHealthCheck:
                 print(f"[⚠️ Heartbeat Topic Error] {e}")
         else:
             # Topic exists — enforce config on every startup
-            resource = ConfigResource('topic', self.HEARTBEAT_TOPIC)
+            resource = ConfigResource("topic", self.HEARTBEAT_TOPIC)
             for key, value in self.HEARTBEAT_TOPIC_CONFIG.items():
                 resource.set_config(key, value)
             fs = admin.alter_configs([resource])
@@ -85,14 +87,10 @@ class CacheHealthCheck:
 
     def send_heartbeat(self):
         """Send heartbeat (called by listener)"""
-        heartbeat = {
-            "timestamp": time.time(),
-            "status": "alive"
-        }
+        heartbeat = {"timestamp": time.time(), "status": "alive"}
 
         self.producer.produce(
-            self.HEARTBEAT_TOPIC,
-            value=json.dumps(heartbeat).encode("utf-8")
+            self.HEARTBEAT_TOPIC, value=json.dumps(heartbeat).encode("utf-8")
         )
         self.producer.poll(0)
 
@@ -127,7 +125,10 @@ class CacheHealthCheck:
                             return True, age
 
                         # Keep track of most recent heartbeat
-                        if last_heartbeat_time is None or heartbeat_time > last_heartbeat_time:
+                        if (
+                            last_heartbeat_time is None
+                            or heartbeat_time > last_heartbeat_time
+                        ):
                             last_heartbeat_time = heartbeat_time
 
                 except Exception as e:
@@ -139,7 +140,7 @@ class CacheHealthCheck:
             age = current_time - last_heartbeat_time
             return False, age
         else:
-            return False, float('inf')
+            return False, float("inf")
 
     def wait_for_cache(self, max_wait=30.0, check_interval=2.0):
         """
@@ -178,21 +179,24 @@ class CacheHealthCheck:
 class CacheHealthMonitor:
     def __init__(self, cache_check: CacheHealthCheck, on_heartbeat=None):
         self.cache_check = cache_check
-        self.on_heartbeat = on_heartbeat   # ← callable, or None
+        self.on_heartbeat = on_heartbeat  # ← callable, or None
         self.running = False
         self._thread = None
 
     def start(self):
         import threading
+
         self.running = True
 
         def heartbeat_loop():
-            print(f"💓 Cache Heartbeat monitor started (interval: {self.cache_check.HEARTBEAT_INTERVAL}s)")
+            print(
+                f"💓 Cache Heartbeat monitor started (interval: {self.cache_check.HEARTBEAT_INTERVAL}s)"
+            )
             while self.running:
                 try:
                     self.cache_check.send_heartbeat()
 
-                    if self.on_heartbeat:        # ← call snapshot if provided
+                    if self.on_heartbeat:  # ← call snapshot if provided
                         self.on_heartbeat()
 
                     time.sleep(self.cache_check.HEARTBEAT_INTERVAL)

@@ -31,12 +31,23 @@ def main():
     g = SvtWPAagentGlobalParameters.getInstance()
 
     required_fields = [
-        'user', 'asic_serial_number', 'wp_machine_id', 'wpag_state',
-        'loaded_wafer_id', 'wafer_orientation', 'probe_card_id',
-        'probe_card_orientation', 'opened_project_id', 'overdrive',
-        'camera_mount_point', 'current_working_area', 'current_die_col',
-        'current_die_row', 'current_die_subsite', 'chuck_z_position_state',
-        'total_dies_number'
+        "user",
+        "asic_serial_number",
+        "wp_machine_id",
+        "wpag_state",
+        "loaded_wafer_id",
+        "wafer_orientation",
+        "probe_card_id",
+        "probe_card_orientation",
+        "opened_project_id",
+        "overdrive",
+        "camera_mount_point",
+        "current_working_area",
+        "current_die_col",
+        "current_die_row",
+        "current_die_subsite",
+        "chuck_z_position_state",
+        "total_dies_number",
     ]
 
     missing_fields = []
@@ -87,7 +98,8 @@ def main():
         "data.user": response.get("data", {}).get("user") == "test_user",
         "data.wpMachineId": response.get("data", {}).get("wpMachineId") == 1,
         "data.WPAG_State": response.get("data", {}).get("WPAG_State") == "WP_Idle",
-        "data.chuckZPositionState": response.get("data", {}).get("chuckZPositionState") == "Separation",
+        "data.chuckZPositionState": response.get("data", {}).get("chuckZPositionState")
+        == "Separation",
     }
 
     all_passed = True
@@ -109,10 +121,20 @@ def main():
     data = response.get("data", {})
 
     expected_fields = [
-        "user", "asicSerialNumber", "wpMachineId", "WPAG_State",
-        "loadedWafer", "instaledprobeCard", "openedProjectId", "projectName",
-        "overdrive", "cameraMountPoint", "currentWorkingArea",
-        "waferMapDiePosition", "chuckZPositionState", "totalDiesNumber"
+        "user",
+        "asicSerialNumber",
+        "wpMachineId",
+        "WPAG_State",
+        "loadedWafer",
+        "instaledprobeCard",
+        "openedProjectId",
+        "projectName",
+        "overdrive",
+        "cameraMountPoint",
+        "currentWorkingArea",
+        "waferMapDiePosition",
+        "chuckZPositionState",
+        "totalDiesNumber",
     ]
 
     missing = [f for f in expected_fields if f not in data]
@@ -135,7 +157,9 @@ def main():
         return False
 
     if wafer.get("orientation") != "North":
-        print(f"❌ FAILED: orientation should be 'North', got {wafer.get('orientation')}")
+        print(
+            f"❌ FAILED: orientation should be 'North', got {wafer.get('orientation')}"
+        )
         return False
 
     print("✓ Wafer object correct")
@@ -148,7 +172,9 @@ def main():
         return False
 
     if die_pos.get("colIndex") != 5 or die_pos.get("rowIndex") != 10:
-        print(f"❌ FAILED: Die position should be (5, 10), got ({die_pos.get('colIndex')}, {die_pos.get('rowIndex')})")
+        print(
+            f"❌ FAILED: Die position should be (5, 10), got ({die_pos.get('colIndex')}, {die_pos.get('rowIndex')})"
+        )
         return False
 
     print("✓ Die position correct")
@@ -158,10 +184,14 @@ def main():
     try:
         error_response = ResponseBuilder.error("TestReply", "Test error", 400)
         if error_response.get("status") != "Error":
-            print(f"❌ FAILED: Error status should be 'Error', got {error_response.get('status')}")
+            print(
+                f"❌ FAILED: Error status should be 'Error', got {error_response.get('status')}"
+            )
             return False
         if error_response.get("error", {}).get("code") != 400:
-            print(f"❌ FAILED: Error code should be 400, got {error_response.get('error', {}).get('code')}")
+            print(
+                f"❌ FAILED: Error code should be 400, got {error_response.get('error', {}).get('code')}"
+            )
             return False
         print("✓ Error response works")
     except Exception as e:

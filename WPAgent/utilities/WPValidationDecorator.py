@@ -1,4 +1,3 @@
-
 from functools import wraps
 from utilities.WPValidator import get_validator
 from typing import Callable
@@ -28,15 +27,18 @@ def validate_command(func: Callable) -> Callable:
         # Extract command name from function name
         # Example: open_project -> OpenProject
         func_name = func.__name__
-        command_name = ''.join(word.capitalize() for word in func_name.split('_'))
+        command_name = "".join(word.capitalize() for word in func_name.split("_"))
 
         # Extract user and waferAgentName from kwargs
-        payload_user = kwargs.get('user')
-        payload_agent_name = kwargs.get('waferAgentName')
+        payload_user = kwargs.get("user")
+        payload_agent_name = kwargs.get("waferAgentName")
 
         # Build params dict (exclude user, waferAgentName, and other special kwargs)
-        params = {k: v for k, v in kwargs.items()
-                  if k not in ['user', 'waferAgentName'] and not k.startswith('_')}
+        params = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in ["user", "waferAgentName"] and not k.startswith("_")
+        }
 
         # Determine reply type
         reply_type = f"{command_name}Reply"
@@ -47,7 +49,7 @@ def validate_command(func: Callable) -> Callable:
             params=params,
             payload_user=payload_user,
             payload_agent_name=payload_agent_name,
-            reply_type=reply_type
+            reply_type=reply_type,
         )
 
         if validation_error:
@@ -77,11 +79,14 @@ def validate_command_with_name(command_name: str):
         def wrapper(*args, **kwargs):
             validator = get_validator()
 
-            payload_user = kwargs.get('user')
-            payload_agent_name = kwargs.get('waferAgentName')
+            payload_user = kwargs.get("user")
+            payload_agent_name = kwargs.get("waferAgentName")
 
-            params = {k: v for k, v in kwargs.items()
-                      if k not in ['user', 'waferAgentName'] and not k.startswith('_')}
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ["user", "waferAgentName"] and not k.startswith("_")
+            }
 
             reply_type = f"{command_name}Reply"
 
@@ -90,7 +95,7 @@ def validate_command_with_name(command_name: str):
                 params=params,
                 payload_user=payload_user,
                 payload_agent_name=payload_agent_name,
-                reply_type=reply_type
+                reply_type=reply_type,
             )
 
             if validation_error:

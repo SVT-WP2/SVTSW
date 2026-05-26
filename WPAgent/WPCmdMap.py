@@ -51,8 +51,7 @@ COMMAND_ROUTER = {
 
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
-        filepath=get_filepath_param(data if data else None),
-        executor=_exec_in_sequence
+        filepath=get_filepath_param(data if data else None), executor=_exec_in_sequence
     ),
 
     # Database Actions
@@ -80,8 +79,8 @@ COMMAND_ROUTER = {
     "TakeScreenshot": testing_actions.take_screenshot,
 }
 
-COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(
-    COMMAND_ROUTER, **kwargs
+COMMAND_ROUTER["ListAvailableCommands"] = (
+    lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)
 )
 
 # Instantiation of logger
@@ -136,7 +135,7 @@ def _normalize_boolean_param(value):
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        return value.lower() in ('true', '1', 'yes')
+        return value.lower() in ("true", "1", "yes")
     if isinstance(value, int):
         return value != 0
     return False
@@ -198,14 +197,10 @@ def execute_command(message_type, data=None):
 
             result = {
                 "status": "error",
-                "output": f"Command '{message_type}' not allowed in state '{current_state}'. Available: {', '.join(available)}"
+                "output": f"Command '{message_type}' not allowed in state '{current_state}'. Available: {', '.join(available)}",
             }
             logger.log_command(
-                result["output"],
-                Severity.WARNING,
-                message_type,
-                data,
-                result
+                result["output"], Severity.WARNING, message_type, data, result
             )
             return result
 
@@ -221,7 +216,9 @@ def execute_command(message_type, data=None):
         else:
             # Check if it's a parameter error (less severe)
             error_msg = result.get("output", "").lower()
-            if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
+            if any(
+                kw in error_msg for kw in ["missing", "invalid parameter", "required"]
+            ):
                 severity = Severity.WARNING
             else:
                 severity = Severity.ERROR
@@ -229,6 +226,7 @@ def execute_command(message_type, data=None):
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
 
         result = {"status": "error", "output": str(e)}
@@ -241,12 +239,6 @@ def execute_command(message_type, data=None):
         _try_local_mode()  # Try to recover
 
     # Log the command execution
-    logger.log_command(
-        result.get("output", ""),
-        severity,
-        message_type,
-        data,
-        result
-    )
+    logger.log_command(result.get("output", ""), severity, message_type, data, result)
 
     return result
