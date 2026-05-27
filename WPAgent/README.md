@@ -7,17 +7,14 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
-- [Features](#-features)
 - [Architecture](#-architecture)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
-- [Usage](#-usage)
+- [State Machine](#-state-machine)
 - [Available Commands](#-available-commands)
 - [Configuration](#-configuration)
-- [API Documentation](#-api-documentation)
 - [Development](#-development)
 - [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
 
 ---
 
@@ -28,59 +25,17 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 ### Key Capabilities
 
 - ✅ **Remote Control**: Command wafer probers from anywhere via Kafka
-- ✅ **Producer-Consumer Pattern**: Clean separation of concerns
-- ✅ **Database Integration**: Interactive machine selection and configuration
-- ✅ **State Management**: Track agent and equipment status
+- ✅ **State Machine**: FSM enforces safe operation sequences and prevents conflicting commands
+- ✅ **User Hierarchy**: Developer / Operator / User access levels with login/logout control
+- ✅ **Database Integration**: Machine lookup and configuration via DB Kafka service
 - ✅ **Health Monitoring**: Built-in heartbeat and health checks
 - ✅ **Comprehensive Logging**: Full audit trail of operations
-- ✅ **Die Position Storage**: Automatic alignment and home die tracking
 - ✅ **Project Management**: Open and manage SENTIO project files
-- ✅ **Optimized Messaging**: Unique consumer groups for fast responses
-
-### Use Cases
-
-- Sensor testing and characterization
-- Automated wafer probing workflows
-- Remote equipment control and monitoring
-- Multi-prober orchestration
-
----
-
-## ✨ Features
-
-### Core Features
-
-- ✅ **Kafka-based Communication**: Reliable, asynchronous message passing
-- ✅ **Multiple Prober Support**: SENTIO and other platforms
-- ✅ **Database Integration**: PostgreSQL via Kafka DB service with interactive selection
-- ✅ **State Machine**: Prevent conflicting operations
-- ✅ **Heartbeat System**: Monitor listener health in real-time
-- ✅ **Producer-Side Logic**: Interactive operations happen where the user is
-- ✅ **Non-Interactive Listener**: Can run as daemon/service
-- ✅ **Command Validation**: Type checking and parameter validation
-- ✅ **Error Handling**: Comprehensive error reporting and recovery
-- ✅ **Unique Consumer Groups**: Fast message delivery without rebalancing delays
-- ✅ **Die Position Tracking**: Stores alignmentDie and homeDie for automated operations
-
-### Command Categories
-
-1. **Setup & Initialization**: Initialize connections with database or manual configuration
-2. **Wafer Handling**: Load/unload wafers with automated positioning
-3. **Movement**: Chuck positioning and navigation with micrometer precision
-4. **Positioning**: Go to specific dies, step through die patterns
-5. **Probe Control**: Contact/separation movements
-6. **Vision**: Camera control and status monitoring
-7. **Alignment**: Pattern-to-pad alignment (PTPA), wafer alignment
-8. **Testing**: Execute test sequences and collect data
-9. **Status**: Project status, camera status, listener health
-10. **System**: Help, heartbeat monitoring
-11. **Database**: Query prober configurations
-12. **Automation**: Multi-step sequencing
+- ✅ **PTPA Support**: Pattern-to-pad alignment with state tracking
 
 ---
 
 ## 🏗 Architecture
-
 
 ### System Overview
 
@@ -88,10 +43,7 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 ┌──────────────────────────────────────────────────────────────┐
 │                    PRODUCER (User Side)                      │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │  CLI / Python API / Web Interface                      │  │
-│  │  - Parse commands                                      │  │
-│  │  - Interactive prompts (database selection, etc.)      │  │
-│  │  - Validate parameters                                 │  │
+│  │  CLI: python3.12 main.py send <Command> --data='{...}' │  │
 │  └─────────────────────┬──────────────────────────────────┘  │
 │                        │                                     │
 │  ┌─────────────────────▼────────────────────────────────┐    │
@@ -99,13 +51,11 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 │  │  - Send commands with unique request IDs             │    │
 │  │  - Check listener health via heartbeat               │    │
 │  │  - Wait for responses with timeout                   │    │
-│  │  - Handle consumer group management                  │    │
 │  └─────────────────────┬────────────────────────────────┘    │
 └────────────────────────┼─────────────────────────────────────┘
                          │
                     ┌────▼──────────────────────┐
-                    │  Kafka                    │
-                    │  Topics                   │
+                    │  Kafka Topics             │
                     │  - svt.wp-agent.request   │
                     │  - svt.wp-agent.reply     │
                     │  - svt.wp-agent.heartbeat │
@@ -114,18 +64,21 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 ┌────────────────────────┼────────────────────────────────────┐
 │                    CONSUMER (Hardware Side)                 │
 │  ┌─────────────────────▼────────────────────────────────┐   │
-│  │  Kafka Client (Listener)                             │   │
-│  │  - Receive commands with static consumer group       │   │
-│  │  - Route to handlers                                 │   │
-│  │  - Send replies with metadata                        │   │
-│  │  - Publish heartbeats every 5 seconds                │   │
+│  │  Kafka Listener                                      │   │
+│  │  - Receives commands, routes to handlers             │   │
+│  │  - Publishes heartbeats every 5 seconds              │   │
+│  └─────────────────────┬────────────────────────────────┘   │
+│                        │                                    │
+│  ┌─────────────────────▼────────────────────────────────┐   │
+│  │  State Machine (FSM)                                 │   │
+│  │  - Validates every command against current state     │   │
+│  │  - Enforces safe operation sequences                 │   │
 │  └─────────────────────┬────────────────────────────────┘   │
 │                        │                                    │
 │  ┌─────────────────────▼────────────────────────────────┐   │
 │  │  Command Handlers (Actions)                          │   │
-│  │  - Execute commands                                  │   │
-│  │  - Manage state (Idle/Busy/Error/Failed)             │   │
-│  │  - Store die positions and project info              │   │
+│  │  - Execute validated commands                        │   │
+│  │  - Manage global state and parameters                │   │
 │  │  - Control hardware via drivers                      │   │
 │  └─────────────────────┬────────────────────────────────┘   │
 │                        │                                    │
@@ -133,43 +86,56 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 │  │  Hardware Drivers                                    │   │
 │  │  - SENTIO prober interface                           │   │
 │  │  - Direct hardware control                           │   │
-│  │  - Vision system integration                         │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Component Overview
+### Project Structure
 
 ```
 WPAgent/
-├── WPAgent.py       # Main API - Producer side
-├── WPKafkaClient.py              # Kafka communication layer
-├── WPCmdMap.py                   # Command routing
-├── WPCommandHandler.py           # Command execution
+├── main.py                          # CLI entry point
+├── WPAgent.py                       # Main producer API
+├── WPKafkaClient.py                 # Kafka communication layer
+├── WPCmdMap.py                      # Command routing (COMMAND_ROUTER)
+├── WPCommandHandler.py              # Command execution and dispatch
 │
-├── actions/                     # Command handlers (Consumer side)
-│   ├── WPProjectActions.py     # Initialization & project commands
-│   ├── WPTestingActions.py     # Testing & movement commands
-│   ├── WPSequencerActions.py   # Sequencer commands
-│   └── WPDataBaseActions.py    # Database queries
+├── stateMachine/
+│   ├── WpAgentStateMachine.py       # FSM states, transitions, logic
+│   └── WpAgentStateMachineGlobals.py  # Singleton FSM instance
 │
-├── drivers/                     # Hardware drivers
-│   ├── WPProberInterface.py     # Abstract interface
-│   ├── WPSentioProber.py        # SENTIO implementation
-│   └── WPFactory.py              # Driver factory
+├── actions/                         # Command handlers (Consumer side)
+│   ├── WPLoginActions.py            # UserLogIn / UserLogOut
+│   ├── WPProjectActions.py          # Initialize, OpenProject, Help, ResetAgent
+│   ├── WPTestingActions.py          # Movement, probing, alignment commands
+│   ├── WPSequencerActions.py        # Sequencer commands
+│   └── WPDataBaseActions.py         # Database queries
 │
-├── services/                    # Services
-│   ├── WPInitializationService.py  # Producer-side init with DB selection
-│   ├── WPKafkaDbService.py     # Database service with unique consumer groups
-│   └── WPListenerHeartbeat.py   # Health monitoring
+├── drivers/                         # Hardware drivers
+│   ├── WPProberInterface.py         # Abstract interface
+│   ├── WPSentioProber.py            # SENTIO implementation
+│   └── WPFactory.py                 # Driver factory
 │
-├── globals/                     # Global state
-│   └── WPAagentGlobalParameters.py  # Stores die positions, state
+├── services/
+│   ├── WPKafkaDbService.py          # Database Kafka service
+│   └── WPListenerHeartbeat.py       # Health monitoring
 │
-└── WPAgentUtilities/           # Utilities
-    ├── WPAgentLogger.py        # Logging with file and console output
-    ├── WPHelpers.py            # Helper functions
-    └── commands_help.json      # Command help documentation
+├── globals/
+│   └── WPAagentGlobalParameters.py  # Global state: user, state, project, chuck
+│
+├── utilities/
+│   ├── WPResponseBuilder.py         # Standard response format builder
+│   └── WPAgentLogger.py             # Logging
+│
+├── configs/
+│   └── WPUserHierarchy.json         # User → hierarchy level mapping
+│
+└── tests/
+    └── unit/
+        ├── conftest.py
+        ├── test_fsm.py
+        ├── test_login_actions.py
+        └── test_testing_actions.py
 ```
 
 ---
@@ -182,24 +148,251 @@ WPAgent/
 - Apache Kafka cluster (accessible)
 - SENTIO prober control software (for hardware control)
 - Network access to prober equipment
-- PostgreSQL database (optional, for database features)
 
 ### Install Dependencies
 
 ```bash
-# Clone the repository
-git clone <repository-url>
 cd WPAgent
-
-# Install Python dependencies
 pip install confluent-kafka fire
 ```
 
-### Configuration
+---
 
-#### 1. Kafka Configuration
+## 🚀 Quick Start
 
-Edit `WPKafkaClient.py` or set environment variables:
+### 1. Start the Listener (Consumer side — runs on the hardware machine)
+
+```bash
+python3.12 main.py listen
+```
+
+### 2. Send Commands (Producer side — runs anywhere with Kafka access)
+
+All commands follow this pattern:
+
+```bash
+python3.12 main.py send <CommandName> --data='{"user":"<user>","waferAgentName":"<agent>", ...}'
+```
+
+### 3. Minimal Happy Path
+
+```bash
+# 1. Log in
+python3.12 main.py send UserLogIn --data='{"user":"user1","waferAgentName":"CERN"}'
+
+# 2. Open project
+python3.12 main.py send OpenProject --data='{"user":"user1","waferAgentName":"CERN","projectName":"MyProject"}'
+
+# 3. Align wafer
+python3.12 main.py send AlignWafer --data='{"user":"user1","waferAgentName":"CERN"}'
+
+# 4. Move to first die and contact
+python3.12 main.py send MoveChuckAsic --data='{"user":"user1","waferAgentName":"CERN","asicId":1}'
+python3.12 main.py send MoveChuckContact --data='{"user":"user1","waferAgentName":"CERN"}'
+
+# 5. Lock, test, unlock
+python3.12 main.py send TestingLock --data='{"user":"user1","waferAgentName":"CERN","reason":"IV sweep"}'
+python3.12 main.py send TestingUnlock --data='{"user":"user1","waferAgentName":"CERN"}'
+
+# 6. Log out
+python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CERN"}'
+```
+
+---
+
+## 🔄 State Machine
+
+Every command (except bypass commands) is validated against the current FSM state before execution. Invalid commands are rejected with an error response — the state does not change.
+
+### States
+
+| State | Description |
+|-------|-------------|
+| `ServiceOn` | Initial state, no user logged in |
+| `UserLogged` | User authenticated, wafer loaded but no project open |
+| `OpenedProject` | Project open, ready for alignment |
+| `Aligned` | Wafer aligned, ready for die navigation |
+| `ChuckSafePosition` | Chuck at safe position |
+| `ChuckUnloaded` | Chuck in unloaded position |
+| `Unloaded` | Wafer unloaded |
+| `OnDie_OffAxis_withoutPTPA` | On die, off-axis view, no PTPA done |
+| `OnDie_OffAxis_withPTPA` | On die, off-axis view, PTPA completed |
+| `OnDie_Wide_withPTPA` | On die, wide view, PTPA valid |
+| `OnDie_Wide_withoutPTPA` | On die, wide view, PTPA not valid |
+| `OnDie_Wide` | On die, wide view (after separation) |
+| `AtContact` | Probes in contact with die |
+| `AtContact_Locked` | Contact + testing lock active |
+| `Error` | Error state — only `ResetAgent` allowed |
+| `UsedByDeveloper` | Developer mode — all commands allowed |
+
+### Bypass Commands (work in any state)
+
+`UserLogIn`, `UserLogOut`, `Help`, `AutoFocus`, `Initialize`
+
+### State Transition Map
+
+```
+ServiceOn ──[UserLogIn]──► UserLogged
+                               │
+                    [OpenProject]▼
+                          OpenedProject
+                               │
+                    [AlignWafer / InitProbing]▼
+                             Aligned
+                          ┌────┴────┐
+           [MoveChuckAsic]▼         ▼[MoveChuckNextDie/PreviousDie/RowColumn]
+         OnDie_Wide_withPTPA    OnDie_OffAxis_withoutPTPA
+                │                       │
+  [MoveChuckNextDie]▼        [RunPTPA]  ▼
+     OnDie_Wide_withoutPTPA  OnDie_OffAxis_withPTPA
+                │
+   [MoveChuckContact]▼
+            AtContact
+                │
+    [TestingLock]▼
+         AtContact_Locked
+                │
+   [TestingUnlock]▼
+            AtContact
+                │
+  [MoveChuckSeparation]▼
+            OnDie_Wide
+
+Any state ──[Error command / exception]──► Error
+Error ──[ResetAgent]──► UserLogged
+```
+
+---
+
+## 📋 Available Commands
+
+### Authentication
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `UserLogIn` | `user` | Log in; Developer → `UsedByDeveloper`, others → `UserLogged` |
+| `UserLogOut` | `user` | Log out and reset FSM to `ServiceOn` |
+
+```bash
+python3.12 main.py send UserLogIn  --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CERN"}'
+```
+
+### Project & Initialization
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `ConnectProbeMachine` | `wpMachineId` | Connect to a prober by its DB machine ID |
+| `Initialize` | `address`, `machineType` | Connect to prober manually (no DB) |
+| `OpenProject` | `projectName` | Open a SENTIO project file |
+| `ChangeProject` | `projectName` | Swap active project (stays in `OpenedProject`) |
+| `ShowStatus` | — | Show connection and project status |
+| `Help` | `command` (optional) | Show all commands or help for one command |
+| `GetAgentState` | — | Return current FSM state name |
+
+```bash
+python3.12 main.py send ConnectProbeMachine --data='{"user":"dev1","waferAgentName":"CERN","wpMachineId":3}'
+python3.12 main.py send OpenProject  --data='{"user":"user1","waferAgentName":"CERN","projectName":"NKF7_Test"}'
+python3.12 main.py send Help
+python3.12 main.py send Help --data='{"command":"MoveChuckContact"}'
+```
+
+### Wafer Handling
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `LoadWafer` | `waferId`, `orientation` | Load wafer; transitions to `UserLogged` |
+| `UnloadWafer` | — | Unload wafer; transitions to `Unloaded` |
+| `MoveChuckLoadedWafer` | — | Move chuck to loaded-wafer position |
+| `MoveChuckUnloadWafer` | — | Move chuck to unload position |
+| `AlignWafer` | `align_die_col`, `align_die_row` (optional) | Align wafer; transitions to `Aligned` |
+| `InitProbing` | — | Initialize probing sequence; transitions to `Aligned` |
+
+```bash
+python3.12 main.py send LoadWafer   --data='{"user":"user1","waferAgentName":"CERN","waferId":42,"orientation":"flat_down"}'
+python3.12 main.py send AlignWafer  --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send UnloadWafer --data='{"user":"user1","waferAgentName":"CERN"}'
+```
+
+### Chuck Movement
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `MoveChuckAsic` | `asicId`, `subsite` | Move to ASIC by ID → `OnDie_Wide_withPTPA` |
+| `MoveChuckRowColumn` | `col`, `row`, `label`, `subsite` | Move to die by row/col or label |
+| `MoveChuckNextDie` | — | Step to next die |
+| `MoveChuckPreviousDie` | — | Step to previous die |
+| `MoveChuckContact` | — | Move probes to contact → `AtContact` |
+| `MoveChuckSeparation` | — | Lift probes → `OnDie_Wide` |
+| `MoveChuckWide` | — | Move to wide view |
+| `MoveChuckOffAxis` | — | Move to off-axis view |
+| `MoveChuckSafePosition` | — | Move chuck to safe position |
+| `MoveChuckCenter` | — | Center chuck (Developer only) |
+| `MoveChuckHome` | — | Move to home position (Developer only) |
+| `MoveChuckToWorkArea` | `work_area` | Move to work area (Developer only) |
+| `MoveChuckXY` | `x`, `y`, `position` | Free XY movement (Developer only) |
+| `MoveChuckZ` | `z` | Free Z movement (Developer only) |
+
+```bash
+python3.12 main.py send MoveChuckAsic       --data='{"user":"user1","waferAgentName":"CERN","asicId":1,"subsite":0}'
+python3.12 main.py send MoveChuckRowColumn  --data='{"user":"user1","waferAgentName":"CERN","col":3,"row":2,"subsite":0}'
+python3.12 main.py send MoveChuckNextDie    --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send MoveChuckContact    --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send MoveChuckSeparation --data='{"user":"user1","waferAgentName":"CERN"}'
+```
+
+### Alignment & Vision
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `RunPTPA` | — | Run Pattern-to-Pad Alignment → `OnDie_OffAxis_withPTPA` |
+| `AutoFocus` | — | Auto-focus camera (bypass command — works in any state) |
+| `FindHome` | — | Move to stored home die position |
+| `SwitchCamera` | `mountPoint` | Switch active camera (Developer only) |
+| `TakeScreenshot` | `fileName`, `snapshot_type`, `outputDir` | Save camera image (Developer only) |
+
+```bash
+python3.12 main.py send RunPTPA    --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send AutoFocus  --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send TakeScreenshot --data='{"user":"dev1","waferAgentName":"CERN","fileName":"before_test"}'
+```
+
+### Testing
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `TestingLock` | `reason`, `testSequenceId` | Lock agent for testing → `AtContact_Locked` |
+| `TestingUnlock` | `force` | Unlock agent → `AtContact` |
+| `SetOvertravel` | `overtravelGap` | Set chuck overtravel gap (Developer only) |
+| `DisableOvertravel` | — | Disable overtravel (Developer only) |
+
+```bash
+python3.12 main.py send TestingLock   --data='{"user":"user1","waferAgentName":"CERN","reason":"IV sweep","testSequenceId":"seq_001"}'
+python3.12 main.py send TestingUnlock --data='{"user":"user1","waferAgentName":"CERN"}'
+```
+
+### System & Recovery
+
+| Command | Key Parameters | Description |
+|---------|---------------|-------------|
+| `ResetAgent` | — | Recover from `Error` state → `UserLogged` |
+| `LocalMode` | — | Set prober to local mode (Developer only) |
+| `ListAvailableCommands` | — | List all registered commands |
+| `ListProbers` | — | List all probe machines from database |
+| `ListChipTypes` | — | List chip types from database |
+
+```bash
+python3.12 main.py send ResetAgent --data='{"user":"user1","waferAgentName":"CERN"}'
+python3.12 main.py send ListProbers
+```
+
+---
+
+## ⚙️ Configuration
+
+### Kafka
+
+Edit `WPKafkaClient.py` or use environment variables:
 
 ```bash
 export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
@@ -208,9 +401,7 @@ export KAFKA_REPLY_TOPIC="svt.wp-agent.reply"
 export KAFKA_HEARTBEAT_TOPIC="svt.wp-agent.heartbeat"
 ```
 
-#### 2. Database Configuration (Optional)
-
-For database-driven initialization:
+### Database Kafka
 
 ```bash
 export DB_KAFKA_BROKER="localhost:9095"
@@ -218,703 +409,153 @@ export DB_REQUEST_TOPIC="svt.db-agent.request"
 export DB_REPLY_TOPIC="svt.db-agent.request.reply"
 ```
 
-#### 3. Kafka SSH Tunnel (Optional)
-
-For remote Kafka access:
+### SSH Tunnel (remote Kafka access)
 
 ```bash
-# In a separate terminal, create SSH tunnel
 ssh -L 9092:localhost:9092 -L 9095:localhost:9095 user@remote-server
-
-# Then configure as localhost
-export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ```
 
----
+### User Hierarchy
 
-## 🚀 Quick Start
-
-### 1. Start the Listener (Consumer)
-
-In one terminal, start the listener that will execute commands:
-
-```bash
-python3.12 main.py listen
-```
-
-Output:
-```
-🎧 Starting WP Agent Listener...
-📡 Connected to Kafka at localhost:9092
-✅ Listener is running and waiting for commands...
-💓 Sending heartbeat every 5 seconds
-```
-
-### 2. Send Commands (Producer)
-
-In another terminal, send commands to the listener:
-
-```bash
-# Get help
-python3.12 main.py send Help
-
-# Initialize from database (interactive)
-python3.12 main.py send Initialize withDB=true
-
-# Initialize manually
-python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machineType":"sentio"}'
-
-# Check status
-python3.12 main.py send ShowProjectStatus
-
-# Move chuck to position
-python3.12 main.py send MoveChuckXY --params='{"x":155560.9,"y":-238764.7}'
-
-# Find chuck home position
-python3.12 main.py send FindHome
-```
-
-### 3. Using Python API
-
-```python
-from WPAgent import WaferProberAgent
-
-# Create agent
-agent = WaferProberAgent()
-
-# Initialize prober from database (interactive)
-from services.WPInitializationService import WPInitializationService
-
-init_service = WPInitializationService(agent)
-result = init_service.initialize_from_database()
-
-# Or initialize manually
-result = agent.send("Initialize", {
-    "address": "WPMIT01.cern.ch:35555",
-    "machineType": "sentio",
-    "projectName": "MyProject",
-    "alignmentDie": "2,2,0",
-    "homeDie": "5,2,0"
-})
-
-# Move chuck
-result = agent.send("MoveChuckXY", {"x": 1000, "y": 2000})
-print(result["output"])
-
-# Check status
-if result["status"] == "success":
-    print("✅ Command succeeded!")
-else:
-    print(f"❌ Command failed: {result['output']}")
-```
-
----
-
-## 📖 Usage
-
-### Command Line Interface
-
-```bash
-python3.12 main.py <action> [options]
-```
-
-**Actions:**
-
-- `listen` - Start the listener (consumer)
-- `send <command> [params]` - Send a command to listener
-
-**Examples:**
-
-```bash
-# Start listener
-python3.12 main.py listen
-
-# Get help
-python3.12 main.py send Help
-
-# Initialize prober (database)
-python3.12 main.py send Initialize withDB=true
-# Initialize prober (manual)
-python3.12 main.py send Initialize --params='{"address":"wpmit01.cern.ch:35555","machineType":"sentio"}'
-
-# Movement commands
-python3.12 main.py send FindHome
-python3.12 main.py send MoveChuckXY --params='{"x":155560.9,"y":-238764.7}'
-python3.12 main.py send MoveChuckZ z=50
-python3.12 main.py send MoveChuckContact
-python3.12 main.py send MoveChuckSeparation
-
-# Positioning commands
-python3.12 main.py send GoToDie --params='{"col":2,"row":2}'
-python3.12 main.py send StepNextDie
-python3.12 main.py send StepFirstDie
-
-# Testing commands
-python3.12 main.py send Load
-python3.12 main.py send RunPTPA
-python3.12 main.py send AlignWafer
-python3.12 main.py send Unload
-
-# Vision commands
-python3.12 main.py send SwitchCamera mountPoint=scope
-python3.12 main.py send GetCameraStatus
-
-# Status commands
-python3.12 main.py send ShowProjectStatus
-```
-
-### Python API
-
-#### Basic Usage
-
-```python
-from WPAgent import WaferProberAgent
-
-agent = WaferProberAgent()
-
-# Send command and wait for response
-result = agent.send("MoveChuckXY", {"x": 100, "y": 200})
-
-# Check result
-if result["status"] == "success":
-    print(f"✅ {result['output']}")
-else:
-    print(f"❌ {result['output']}")
-```
-
-#### Advanced Usage with Error Handling
-
-```python
-from WPAgent import WaferProberAgent
-
-agent = WaferProberAgent()
-
-try:
-    # Initialize
-    result = agent.send("Initialize", {
-        "address": "WPMIT01.cern.ch:35555",
-        "machineType": "sentio"
-    })
-
-    if result["status"] != "success":
-        raise Exception(f"Initialization failed: {result['output']}")
-
-    # Load wafer
-    result = agent.send("Load")
-
-    # Run alignment
-    result = agent.send("RunPTPA")
-
-    # Move to first die
-    result = agent.send("StepFirstDie")
-
-except Exception as e:
-    print(f"Error: {e}")
-```
-
-#### Database Initialization
-
-```python
-from WPAgent import WaferProberAgent
-from services.WPInitializationService import WPInitializationService
-
-agent = WaferProberAgent()
-init_service = WPInitializationService(agent)
-
-# Interactive database initialization
-# User will be prompted to select:
-# 1. Prober machine
-# 2. ASIC family
-# 3. Orientation
-# 4. Project file
-result = init_service.initialize_from_database()
-
-# Automated by machine ID
-result = init_service.initialize_by_id(machineId="123")
-
-# Automated by machine name
-result = init_service.initialize_by_name(machineName="WPMIT01")
-```
-
----
-
-## 📋 Available Commands
-
-### Setup & Initialization
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `Initialize` | `address`, `machineType`, `withDB`, `projectName`, `alignmentDie`, `homeDie` | Initialize prober connection |
-| `OpenProject` | `path`, `alignmentDie`, `homeDie` | Open a SENTIO project file |
-| `ShowProjectStatus` | - | Show current connection and project status |
-| `Help` | - | Display all available commands with parameters |
-
-**Example:**
-```bash
-# Database-driven (interactive - prompts for prober/ASIC/orientation/project)
-python main.py send Initialize withDB=true
-
-# Manual with project and die positions
-python main.py send Initialize address=WPMIT01.cern.ch:35555 machineType=sentio projectName=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
-
-# Open project with die positions
-python main.py send OpenProject path=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
-```
-
-### Wafer Handling
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `Load` | - | Load wafer onto chuck |
-| `Unload` | - | Unload wafer from chuck |
-
-### Movement Commands
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `FindHome` | - | Move chuck to stored homeDie position |
-| `MoveChuckXY` | `x`, `y` | Move chuck to coordinates (µm) |
-| `MoveChuckZ` | `z` | Move chuck Z-axis (µm) |
-| `MoveChuckContact` | - | Move chuck to contact position |
-| `MoveChuckSeparation` | - | Move chuck to separation position |
-
-**Example:**
-```bash
-python3.12 main.py send MoveChuckXY x=1000 y=2000
-python3.12 main.py send MoveChuckZ z=50
-python3.12 main.py send FindHome  # Uses stored homeDie position
-```
-
-### Positioning Commands
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `GoToDie` | `col`, `row`, `subsite` | Move to specific die coordinates |
-| `StepNextDie` | - | Step to next die in pattern |
-| `StepFirstDie` | - | Move to first die in pattern |
-
-**Example:**
-```bash
-python3.12 main.py send GoToDie col=5 row=3 subsite=0
-python3.12 main.py send StepNextDie
-```
-
-### Vision Commands
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `SwitchCamera` | `mountPoint` | Switch active camera (scope/chuck/aux) |
-| `GetCameraStatus` | - | Get current camera information and vision properties |
-
-**Example:**
-```bash
-python3.12 main.py send SwitchCamera mountPoint=scope
-python3.12 main.py send GetCameraStatus
-```
-
-### Alignment & Testing Commands
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `RunPTPA` | - | Run Pattern to Pad Alignment |
-| `AlignWafer` | - | Run wafer alignment using stored alignmentDie |
-
-**Example:**
-```bash
-python3.12 main.py send Load
-python3.12 main.py send RunPTPA
-python3.12 main.py send AlignWafer  # Uses stored alignmentDie position
-```
-
-### Database Commands
-
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `ListProbers` | - | List all wafer probe machines from database |
-
-**Example:**
-```bash
-python3.12 main.py send ListProbers
-```
-
----
-
-## ⚙️ Configuration
-
-### Kafka Configuration
-
-Edit `WPKafkaClient.py` or set environment variables:
-
-```python
-# Default configuration
-KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
-KAFKA_REQUEST_TOPIC = "svt.wp-agent.request"
-KAFKA_REPLY_TOPIC = "svt.wp-agent.reply"
-KAFKA_HEARTBEAT_TOPIC = "svt.wp-agent.heartbeat"
-CONSUMER_GROUP_ID = "wp-agent-listener"  # Static for listener
-```
-
-### Database Kafka Configuration
-
-Edit `WPKafkaDbService.py`:
-
-```python
-# Database Kafka broker
-DB_BROKER = "localhost:9095"
-DB_REQUEST_TOPIC = "svt.db-agent.request"
-DB_RESPONSE_TOPIC = "svt.db-agent.request.reply"
-# Consumer groups are unique (UUID) to avoid rebalancing delays
-```
-
-### Logging Configuration
-
-Edit `WPAgentLogger.py`:
-
-```python
-# Log level
-LOG_LEVEL = "INFO"  # DEBUG, INFO, WARNING, ERROR
-
-# Log file
-LOG_FILE = "wp_agent.log"
-
-# Console output
-CONSOLE_LOGGING = True
-```
-
-### Timeout Configuration
-
-Edit `WPAgent.py`:
-
-```python
-# Command timeout (seconds)
-DEFAULT_TIMEOUT = 30
-
-# Listener check timeout
-LISTENER_CHECK_TIMEOUT = 5
-
-# Heartbeat interval
-HEARTBEAT_INTERVAL = 5
-```
-
----
-
-## 📚 API Documentation
-
-### Message Format
-
-#### Request Format (What users send)
+Edit `configs/WPUserHierarchy.json` to define which users are Developers, Operators, or Users:
 
 ```json
 {
-  "type": "CommandName",
-  "params": {
-    "key": "value"
-  }
+  "Developer": ["dev1", "dev2"],
+  "Operator": ["operator1"],
+  "User": ["user1", "user2"]
 }
 ```
 
-The `kafka_client` automatically adds:
-- `requestId`: Unique UUID for tracking
-- `sent_at`: Timestamp
-- `reply_to`: Reply topic
+Developers enter `UsedByDeveloper` state on login — all commands are allowed and FSM restrictions are bypassed.
 
-#### Response Format (What kafka_client returns)
+---
+
+## 📡 Response Format
+
+All commands return a standard response:
 
 ```json
 {
-  "type": "CommandReply",
-  "requestId": "abc-123-uuid",
-  "command": "CommandName",
-  "status": "success",
-  "output": "Human readable message",
-  "execution_time_ms": 123.45,
-  "timestamp": 1733155200.123
-}
-```
-
-Some commands also include:
-```json
-{
+  "status": "Success",
+  "type": "CommandNameReply",
   "data": {
-    "structured": "information"
-  }
+    "output": "Human readable message",
+    "...": "additional fields depending on command"
+  },
+  "error": null
 }
 ```
 
-### Swagger/OpenAPI Documentation
+On error:
 
-A complete Swagger/OpenAPI 3.0 specification is available with:
-- Full request/response examples for all 28 commands
-- Error response examples
-- Parameter descriptions
-- Status codes
-
-See `swagger_FINAL_CLEAN.yaml` for the complete API specification.
-
-**Load in Swagger UI:**
-1. Go to https://editor.swagger.io/
-2. Import `swagger_FINAL_CLEAN.yaml`
-3. Browse all commands and examples
+```json
+{
+  "status": "Error",
+  "type": "CommandNameReply",
+  "data": {},
+  "error": {
+    "code": 400,
+    "message": "Description of what went wrong"
+  }
+}
+```
 
 ---
 
 ## 🛠 Development
 
-### Adding New Commands
+### Adding a New Command
 
-1. **Define the action** in appropriate actions file:
+**1. Implement the action function** (in the appropriate `actions/` file):
 
 ```python
 # actions/WPTestingActions.py
-def my_new_command(param1: str, param2: int, address=None, machineType=None):
-    """
-    My new command description.
-    
-    Args:
-        param1: First parameter
-        param2: Second parameter
-        address: Prober address (auto-injected)
-        machineType: Machine type (auto-injected)
-        
-    Returns:
-        dict: {"status": "success|error", "output": "message"}
-    """
+@validate_command
+def my_new_command(param1: str, param2: int = 0, user=None, waferAgentName=None) -> dict:
+    """Brief description."""
+    error = _ensure_initialized()
+    if error:
+        return ResponseBuilder.error("MyNewCommandReply", error["output"], 400)
+
     try:
-        # Implementation
-        result = do_something(param1, param2)
-        return {
-            "status": "success",
-            "output": f"Command executed: {result}"
-        }
+        prober = get_current_prober()
+        # ... do work ...
+        agentStateMachine.transition("MyNewCommand")
+        return ResponseBuilder.success("MyNewCommandReply", f"Done: {param1}")
     except Exception as e:
-        return {
-            "status": "error",
-            "output": f"Error: {str(e)}"
-        }
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MyNewCommandReply", str(e), 500)
 ```
 
-2. **Register in WPCmdMap.py**:
+**2. Register in `WPCmdMap.py`:**
 
 ```python
-COMMAND_MAP = {
-    # ... existing commands ...
-    "MyNewCommand": ("WPTestingActions", "my_new_command"),
+COMMAND_ROUTER = {
+    ...
+    "MyNewCommand": testing_actions.my_new_command,
 }
 ```
 
-3. **Add to commands_help.json**:
+**3. Add FSM transition** (if the command changes state) in `WpAgentStateMachine.py`:
 
-```json
-{
-  "MyNewCommand": {
-    "description": "My new command description",
-    "parameters": {
-      "param1": "string - First parameter",
-      "param2": "int - Second parameter"
-    },
-    "example": "python main.py send MyNewCommand param1=value1 param2=42"
-  }
+```python
+WPAgentState.SomeState: {
+    "MyNewCommand": WPAgentState.SomeOtherState,
+    ...
 }
 ```
 
-4. **Use it**:
+**4. Add a test** in `tests/unit/test_fsm.py`.
+
+### Running Tests
 
 ```bash
-python main.py send MyNewCommand param1=value1 param2=42
-```
-
-### Testing
-
-```bash
-# Test initialization
-python main.py send Initialize address=test:35555 machineType=sentio
-
-# Test movement
-python main.py send MoveChuckXY x=0 y=0
-
-# Test with debugging
-export LOG_LEVEL=DEBUG
-python main.py listen
+cd WPAgent
+python3.12 -m pytest tests/unit/ -v
 ```
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### Listener not responding
 
-#### 1. Listener Not Responding
-
-**Symptoms:**
 ```
 ⚠️  WARNING: No listener detected!
 ```
 
-**Solutions:**
-- Start listener: `python3.12 main.py listen`
-- Check Kafka connection
-- Verify topics exist: `kafka-topics --list`
-- Check heartbeat topic for activity
+Start the listener: `python3.12 main.py listen`
 
-#### 2. Kafka Connection Failed
+### Command rejected (FSM)
 
-**Symptoms:**
 ```
-❌ Failed to connect to Kafka broker
+❌ Error: Command 'MoveChuckContact' not allowed in state 'Aligned'
 ```
 
-**Solutions:**
-- Check Kafka is running: `systemctl status kafka`
-- Verify broker address in configuration
-- Check network connectivity: `telnet localhost 9092`
-- Verify topics exist and are accessible
+You are calling a command that is not valid from the current FSM state. Check the State Transition Map above and make sure you follow the correct sequence (e.g. you must `MoveChuckAsic` or navigate to a die before `MoveChuckContact`).
 
-#### 3. Database Service Not Available
+### Kafka connection failed
 
-**Symptoms:**
-```
-❌ Database agent not responding
-⏱️  Timeout waiting for database response
-```
+- Verify Kafka is running: `systemctl status kafka` or check your Kafka cluster
+- Check broker address in config
+- If using remote Kafka, confirm your SSH tunnel is up
 
-**Solutions:**
-- Check DB agent is running
-- Verify DB Kafka broker configuration (`localhost:9095`)
-- Check consumer group conflicts
-- Use manual initialization as fallback:
-  ```bash
-  python main.py send Initialize address=WPMIT01.cern.ch:35555 machineType=sentio
-  ```
+### Prober not initializing
 
-#### 4. Slow Response Times / Timeouts
+- Verify SENTIO software is running on the prober machine
+- Check IP address and port: `ping <prober-host>`
+- Use `ConnectProbeMachine` with a valid `wpMachineId` from the database, or `Initialize` with a direct `address`
 
-**Symptoms:**
-```
-⏱️  Waiting for response... (90+ seconds)
-```
+### Error state recovery
 
-**Root Cause:** Consumer group rebalancing delays
-
-**Solutions:**
-- ✅ **Already Fixed**: Unique consumer group IDs implemented
-- Verify `kafka_db_service.py` uses UUID consumer groups
-- Check for orphaned consumer groups: `kafka-consumer-groups --list`
-- Delete old consumer groups if needed
-
-#### 5. Python Version Errors
-
-**Symptoms:**
-```
-TypeError: unsupported operand type(s) for |
-```
-
-**Solution:**
-- Use Python 3.12+: `python3.12 --version`
-- Union types (`str | None`) require Python 3.10+
-
-#### 6. Prober Not Initializing
-
-**Symptoms:**
-```
-❌ Failed to initialize prober
-```
-
-**Solutions:**
-- Verify prober address and port: `ping WPMIT01.cern.ch`
-- Check SENTIO software is running on prober
-- Check network connectivity and firewall rules
-- Verify machineType is correct (`sentio`)
-- Try with force flag: `force=true`
-
-#### 7. Die Position Not Found
-
-**Symptoms:**
-```
-❌ No alignment die position stored
-❌ No home die position stored
-```
-
-**Solutions:**
-- Initialize with die positions:
-  ```bash
-  python main.py send Initialize address=... alignmentDie=2,2,0 homeDie=5,2,0
-  ```
-- Or open project with die positions:
-  ```bash
-  python main.py send OpenProject path=NKF7_Test alignmentDie=2,2,0 homeDie=5,2,0
-  ```
-
-### Debug Mode
-
-Enable debug logging:
+If the agent enters `Error` state:
 
 ```bash
-export LOG_LEVEL=DEBUG
-python3.12 main.py listen
+python3.12 main.py send ResetAgent --data='{"user":"user1","waferAgentName":"CERN"}'
 ```
 
-Or edit `WPAgentLogger.py`:
-```python
-LOG_LEVEL = "DEBUG"
-```
-
-### Checking Listener Health
-
-```bash
-# Check heartbeat messages
-kafka-console-consumer --bootstrap-server localhost:9092 \
-  --topic svt.wp-agent.heartbeat --from-beginning
-
-# Expected output:
-{"status": "alive", "timestamp": 1733155200.123, "state": "Idle"}
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes following the coding standards
-4. Add tests for new functionality
-5. Update documentation (README, commands_help.json, Swagger)
-6. Ensure all tests pass
-7. Commit changes: `git commit -m "Add my feature"`
-8. Push to branch: `git push origin feature/my-feature`
-9. Open a Pull Request
-
-### Development Guidelines
-
-- Follow PEP 8 style guide
-- Add docstrings to all functions (Google style)
-- Write unit tests for new code
-- Update `commands_help.json` for new commands
-- Add Swagger documentation for new endpoints
-- Keep commits atomic and well-described
-
-### Code Style
-
-```python
-def example_function(param1: str, param2: int) -> dict:
-    """
-    Brief description of function.
-    
-    Longer description if needed.
-    
-    Args:
-        param1: Description of param1
-        param2: Description of param2
-        
-    Returns:
-        dict: Description of return value
-        
-    Raises:
-        ValueError: When param1 is invalid
-    """
-    pass
-```
+This returns the FSM to `UserLogged` so normal operations can resume.
 
 ---
 
@@ -926,31 +567,11 @@ def example_function(param1: str, param2: int) -> dict:
 
 ## 🙏 Acknowledgments
 
-- SVT SW Core Team 
+- SVT SW Core Team
 - MPI Corporation for SENTIO prober platform
 - Apache Kafka community
 
 ---
 
-## 📞 Contact
-
-- **Organization**:  SVT SW Core Team
-- **Project**: Silicon Vertex Tracker Wafer Prober Agent
-- **Support**: [CALL ME MAYBE]
-
----
-
-
-
-### Version 2.0 (December 2025)
-
-
----
-
-<div align="center">
-
-**[⬆ Back to Top](#-wafer-prober-agent-wp-agent)**
-
-Made with ❤️  | Powered by 
-
-</div>
+**Organization**: SVT SW Core Team  
+**Project**: Silicon Vertex Tracker Wafer Prober Agent
