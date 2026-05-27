@@ -120,8 +120,8 @@ def _label_to_coordinates(label: str):
             # Convert ITS3 to local coordinates
             converter = get_converter()
             if not converter.conversion_map:
-                _HERE
-                    import pathlibpathlib.Path(__file__).parent.parent  # WPAgent/
+                import  pathlib
+                _HERE= pathlib.Path(__file__).parent.parent  # WPAgent/
                 MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
                 converter.load_conversion_map(MAP_CONVERSION_PATH)
 
