@@ -48,21 +48,21 @@ class WaferProberAgent:
 
             if not is_alive:
                 if age == float("inf"):
-                    print(f"⚠️  WARNING: No listener detected!")
-                    print(f"   The listener is not running or not sending heartbeats.")
+                    print("⚠️  WARNING: No listener detected!")
+                    print("   The listener is not running or not sending heartbeats.")
                 else:
-                    print(f"⚠️  WARNING: Listener appears to be down!")
+                    print("⚠️  WARNING: Listener appears to be down!")
                     print(
                         f"   Last heartbeat was {age:.1f}s ago (timeout: {self.health_check.HEARTBEAT_TIMEOUT}s)"
                     )
 
                 print(f"\n❌ The command '{command}' may not execute.")
-                print(f"   Options:")
-                print(f"   1. Start the listener: python main.py listen <CONFIG_NAME>")
-                print(f"   2. Send anyway (may timeout): Continue")
-                print(f"   3. Cancel: Ctrl+C")
+                print("   Options:")
+                print("   1. Start the listener: python main.py listen <CONFIG_NAME>")
+                print("   2. Send anyway (may timeout): Continue")
+                print("   3. Cancel: Ctrl+C")
 
-                response = input(f"\n   Continue sending? (yes/no): ").strip().lower()
+                response = input("\n   Continue sending? (yes/no): ").strip().lower()
 
                 if response not in ["yes", "y"]:
                     print("❌ Command cancelled")
@@ -110,7 +110,7 @@ class WaferProberAgent:
         if not os.path.exists(config_path):
             raise FileNotFoundError(
                 f"Config file not found: {config_path}\n"
-                f"Please create configs/WPProbesConfigs.json"
+                "Please create configs/WPProbesConfigs.json"
             )
 
         with open(config_path, "r") as f:
@@ -163,7 +163,7 @@ class WaferProberAgent:
 
         # If we got DB config, merge with kafka_broker from file
         if db_config:
-            print(f"   ✅ Loaded machine info from database")
+            print("   ✅ Loaded machine info from database")
 
             # Add kafka_broker from file
             if kafka_broker:
@@ -174,7 +174,7 @@ class WaferProberAgent:
         if not os.path.exists(config_path):
             raise FileNotFoundError(
                 f"Config file not found: {config_path}\n"
-                f"Please create configs/WPProbesConfigs.json"
+                "Please create configs/WPProbesConfigs.json"
             )
 
         if not file_config:
@@ -353,13 +353,13 @@ class WaferProberAgent:
                     self.health_check = ListenerHealthCheck(
                         bootstrap_servers=kafka_broker
                     )
-                    print(f"   ✅ Health check initialized\n")
+                    print("   ✅ Health check initialized\n")
 
                     # WP Kafka client
-                    print(f"🔌 Initializing WP Kafka Client...")
+                    print("🔌 Initializing WP Kafka Client...")
                     print(f"   Broker: {kafka_broker}")
                     self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
-                    print(f"   ✅ WP Kafka client initialized\n")
+                    print("   ✅ WP Kafka client initialized\n")
 
                     # DB Kafka client
                     from services.WPDbKafkaClient import DBKafkaClient
@@ -372,14 +372,14 @@ class WaferProberAgent:
                             pass
                         DBKafkaClient._instance = None
 
-                    print(f"🔌 Initializing DB Kafka Client...")
+                    print("🔌 Initializing DB Kafka Client...")
                     print(f"   Broker: {kafka_broker}")
                     db_client = DBKafkaClient.get_instance(
                         bootstrap_servers=kafka_broker
                     )
-                    print(f"   ✅ DB Kafka client initialized\n")
+                    print("   ✅ DB Kafka client initialized\n")
                 else:
-                    print(f"⚠️  No kafka_broker in config, using defaults")
+                    print("⚠️  No kafka_broker in config, using defaults")
                     self.health_check = ListenerHealthCheck()
                     self.kafka = KafkaClient()
 
@@ -387,14 +387,14 @@ class WaferProberAgent:
                 init_success = self._auto_initialize_prober(config_name, config)
 
                 if not init_success:
-                    print(f"\n⚠️  Warning: Auto-initialization failed")
-                    print(f"   Continuing to start listener anyway...\n")
+                    print("\n⚠️  Warning: Auto-initialization failed")
+                    print("   Continuing to start listener anyway...\n")
 
             except (FileNotFoundError, KeyError) as e:
                 print(f"❌ Error loading config: {e}")
-                print(f"\n💡 Available options:")
-                print(f"   1. Create configs/WPProbesConfigs.json")
-                print(f"   2. Run without config: python main.py listen")
+                print("\n💡 Available options:")
+                print("   1. Create configs/WPProbesConfigs.json")
+                print("   2. Run without config: python main.py listen")
                 return
             except Exception as e:
                 print(f"❌ Unexpected error: {e}")
@@ -406,8 +406,8 @@ class WaferProberAgent:
             print(f"\n{'=' * 70}")
             print(f"  Starting WP Agent (no auto-config)")
             print(f"{'=' * 70}\n")
-            print(f"💡 Tip: Start with a config for auto-initialization:")
-            print(f"   python main.py listen CERN\n")
+            print("💡 Tip: Start with a config for auto-initialization:")
+            print("   python main.py listen CERN\n")
 
             if self.kafka is None:
                 self.kafka = KafkaClient()
@@ -416,7 +416,7 @@ class WaferProberAgent:
 
         # Start Kafka listener
         print(f"{'=' * 70}")
-        print(f"  Starting Kafka Listener")
+        print("  Starting Kafka Listener")
         print(f"{'=' * 70}\n")
         self.kafka.listen()
 
@@ -433,11 +433,11 @@ class WaferProberAgent:
             print(f"   Heartbeat topic: {self.health_check.HEARTBEAT_TOPIC}")
         else:
             if age == float("inf"):
-                print(f"❌ Listener is DOWN (no heartbeat found)")
+                print("❌ Listener is DOWN (no heartbeat found)")
             else:
                 print(f"❌ Listener is DOWN (last heartbeat: {age:.1f}s ago)")
-            print(f"\n💡 To start the listener, run:")
-            print(f"   python main.py listen <CONFIG_NAME>")
+            print("\n💡 To start the listener, run:")
+            print("   python main.py listen <CONFIG_NAME>")
 
         return is_alive
 

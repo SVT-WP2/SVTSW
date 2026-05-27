@@ -276,9 +276,7 @@ class KafkaClient:
                         },
                     }
                     print(f"⏱️  TIMEOUT: No response within {timeout}s")
-                    print(
-                        f"   Check if listener is running: python main.py check_listener_health"
-                    )
+                    print("   Check if listener is running: python main.py check_listener_health")
                     return error_response
 
             else:
