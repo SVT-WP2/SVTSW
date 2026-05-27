@@ -120,8 +120,8 @@ def _label_to_coordinates(label: str):
             # Convert ITS3 to local coordinates
             converter = get_converter()
             if not converter.conversion_map:
-                import  pathlib
-                _HERE= pathlib.Path(__file__).parent.parent  # WPAgent/
+                import pathlib
+                _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
                 MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
                 converter.load_conversion_map(MAP_CONVERSION_PATH)
 
@@ -195,12 +195,12 @@ def take_screenshot(
         # Get absolute path
         abs_path = os.path.abspath(filepath)
 
+        agentStateMachine.transition("TakeScreenshot")
         return ResponseBuilder.success("TakeScreenshotReply", f"Screenshot saved: {abs_path}")
 
     except RuntimeError as e:
         return ResponseBuilder.error("TakeScreenshotReply", str(e), 400)
 
-    except Exception as e:
         import traceback
 
         traceback.print_exc()
@@ -864,7 +864,7 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None, user=None,
 
 
 @validate_command
-def auto_focus(user=None, waferAgentName= None):
+def auto_focus(user=None, waferAgentName="CERN"):
     """Execute auto-focus"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -1464,7 +1464,7 @@ def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", t
     g.lock_for_testing(user, reason, testSequenceId)
 
     # Update state machine
-    agentStateMachine.force_state(WPAgentState.AtContact_Locked)
+    agentStateMachine.transition("TestingLock")
 
     return ResponseBuilder.success("TestingLockReply", f"WP Agent locked for testing by '{user}'")
 

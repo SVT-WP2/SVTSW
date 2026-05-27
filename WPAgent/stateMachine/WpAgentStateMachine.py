@@ -50,13 +50,15 @@ class WPAgentStateMachine:
             # From OpenedProject
             WPAgentState.OpenedProject: {
                 "AlignWafer": WPAgentState.Aligned,
+                "InitProbing": WPAgentState.Aligned,        # diagram: InitProbing also reaches Aligned from here
+                "ChangeProject": WPAgentState.OpenedProject,  # self-loop: swap active project
                 "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
                 "Error": WPAgentState.Error,
             },
             # From Aligned
             WPAgentState.Aligned: {
                 "UnloadWafer": WPAgentState.Unloaded,
-                "MoveChuckUnloaded": WPAgentState.ChuckUnloaded,
+                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
                 "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
@@ -81,10 +83,11 @@ class WPAgentStateMachine:
                 "LoadWafer": WPAgentState.UserLogged,
                 "Error": WPAgentState.Error,
             },
-            # From UserLogged — wafer is loaded, proceed with project/alignment workflow
+            # From UserLogged — wafer is loaded, must open project first
             WPAgentState.UserLogged: {
                 "OpenProject": WPAgentState.OpenedProject,
                 "AlignWafer": WPAgentState.Aligned,
+                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,  # unload if changed mind after loading
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide
@@ -300,7 +303,7 @@ class WPAgentStateMachine:
 _state_machine_instance = None
 
 
-def get_state_machine() -> WPAgentStateMachine:
+def get_state_machine() -> "WPAgentStateMachine":
     """Get the global state machine instance"""
     global _state_machine_instance
     if _state_machine_instance is None:
@@ -310,6 +313,4 @@ def get_state_machine() -> WPAgentStateMachine:
 
 def reset_state_machine():
     """Reset the global state machine"""
-    global _state_machine_instance
-    if _state_machine_instance is not None:
-        _state_machine_instance.reset()
+    global _s
