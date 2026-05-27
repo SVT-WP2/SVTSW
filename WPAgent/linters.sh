@@ -3,9 +3,9 @@
 # run_lint.sh  —  Run all linters on WPAgent
 #
 # Usage:
-#   ./run_lint.sh            flake8 + pylint
-#   ./run_lint.sh --all      + mypy type checking
-#   ./run_lint.sh --fix      auto-format with black first
+#   ./linters.sh            flake8 + pylint
+#   ./linters.sh --all      + mypy type checking
+#   ./linters.sh --fix      auto-format with black first
 # ─────────────────────────────────────────────
 set -euo pipefail
 
@@ -16,6 +16,7 @@ ERRORS=0
 # ── find Python ───────────────────────────────
 PY=""
 if command -v python3.12 &>/dev/null; then PY=python3.12
+elif command -v python3 &>/dev/null; then PY=python3
 elif command -v python &>/dev/null; then PY=python
 else
     echo "[ERROR] No Python found. Install Python 3.12 from https://python.org"
@@ -74,6 +75,15 @@ if [[ "${1:-}" == "--all" ]]; then
     echo ""
 fi
 
+# ── contract checker ──────────────────────────
+echo "========================================"
+echo " contract checks (naming + ResponseBuilder)"
+echo "========================================"
+if ! $PY check_contracts.py; then
+    ERRORS=1
+fi
+echo ""
+
 # ── summary ───────────────────────────────────
 echo "========================================"
 if [[ $ERRORS -eq 0 ]]; then
@@ -83,3 +93,4 @@ else
 fi
 echo "========================================"
 exit $ERRORS
+
