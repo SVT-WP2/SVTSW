@@ -66,7 +66,7 @@ def main():
     print("\nTest 2: Set test data...")
     g.reset()
     g.user = "test_user"
-    g.asic_serial_number = 12345
+    g.asicSerialNumber = 12345
     g.wp_machine_id = 1
     g.wpag_state = "WP_Idle"
     g.set_wafer_loaded(999, "North")

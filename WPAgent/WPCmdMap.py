@@ -1,4 +1,5 @@
 import actions.WPProjectActions as project_actions
+from utilities.WPResponseBuilder import ResponseBuilder
 import actions.WPSequencerActions as sequencer_actions
 import actions.WPDataBaseActions as database_actions
 from utilities.WPAgentLogger import WPAgentLogger, Severity
@@ -48,24 +49,19 @@ COMMAND_ROUTER = {
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help_command,
     "InitProbing": testing_actions.init_probing,
-
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
         filepath=get_filepath_param(data if data else None), executor=_exec_in_sequence
     ),
-
     # Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
-
     # User Login/Logout Actions
     "UserLogIn": user_actions.UserLogIn,
     "UserLogOut": user_actions.UserLogOut,
-
     # State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent_state,
     "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
-
     "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer,
     "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer,
     "MoveChuckAsic": testing_actions.move_chuck_asic,
@@ -79,13 +75,13 @@ COMMAND_ROUTER = {
     "TakeScreenshot": testing_actions.take_screenshot,
 }
 
-COMMAND_ROUTER["ListAvailableCommands"] = (
-    lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)
+COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(
+    COMMAND_ROUTER, **kwargs
 )
 
 # Instantiation of logger
 logger = WPAgentLogger()
-#health_check = ListenerHealthCheck()
+# health_check = ListenerHealthCheck()
 
 
 def _exec_in_sequence(message_type, data=None):
@@ -108,7 +104,7 @@ def _try_local_mode():
             prober = factory.get_prober(globals_.machineType, globals_.address)
             prober.local_mode()
             print("   🔓 Switched to local mode after error")
-    except:
+    except Exception:
         pass
 
 
@@ -174,19 +170,14 @@ def execute_command(message_type, data=None):
         "ListProbers",
         "ListChipTypes",
         "ListAvailableCommands",
-        "help"
+        "help",
     ]
 
     # Check if command exists
     if message_type not in COMMAND_ROUTER:
-        result = {"status": "error", "output": f"Unknown command: {message_type}"}
-        logger.log_command(
-            f"Unknown command: {message_type}",
-            Severity.ERROR,
-            message_type,
-            data,
-            result
-        )
+        msg = f"Unknown command: {message_type}"
+        result = ResponseBuilder.error(f"{message_type}Reply", msg, 404)
+        logger.log_command(msg, Severity.ERROR, message_type, data, result)
         return result
 
     # Check if command can be executed (unless bypass)
@@ -194,14 +185,12 @@ def execute_command(message_type, data=None):
         if not agentStateMachine.can_execute(message_type):
             available = agentStateMachine.get_available_commands()
             current_state = agentStateMachine.get_state_name()
-
-            result = {
-                "status": "error",
-                "output": f"Command '{message_type}' not allowed in state '{current_state}'. Available: {', '.join(available)}",
-            }
-            logger.log_command(
-                result["output"], Severity.WARNING, message_type, data, result
+            msg = (
+                f"Command '{message_type}' not allowed in state '{current_state}'. "
+                f"Available: {', '.join(available)}"
             )
+            result = ResponseBuilder.error(f"{message_type}Reply", msg, 409)
+            logger.log_command(msg, Severity.WARNING, message_type, data, result)
             return result
 
     try:
@@ -215,10 +204,8 @@ def execute_command(message_type, data=None):
             severity = Severity.INFO
         else:
             # Check if it's a parameter error (less severe)
-            error_msg = result.get("output", "").lower()
-            if any(
-                kw in error_msg for kw in ["missing", "invalid parameter", "required"]
-            ):
+            error_msg = result.get("error", {}).get("message", "").lower()
+            if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
                 severity = Severity.WARNING
             else:
                 severity = Severity.ERROR
@@ -229,7 +216,7 @@ def execute_command(message_type, data=None):
 
         traceback.print_exc()
 
-        result = {"status": "error", "output": str(e)}
+        result = ResponseBuilder.error("UnhandledErrorReply", str(e), 500)
         severity = Severity.ERROR
 
         # If command threw exception, put state machine in error state
@@ -238,7 +225,8 @@ def execute_command(message_type, data=None):
 
         _try_local_mode()  # Try to recover
 
-    # Log the command execution
-    logger.log_command(result.get("output", ""), severity, message_type, data, result)
+    # Log the command execution — read message from standard ResponseBuilder envelope
+    log_msg = result.get("error", {}).get("message", "")
+    logger.log_command(log_msg, severity, message_type, data, result)
 
     return result

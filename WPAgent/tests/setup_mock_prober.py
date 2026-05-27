@@ -69,7 +69,7 @@ def setup_mock_prober(address="mock-prober:35555", machineType="sentio"):
 
     # Step 6: Initialize complete state
     g.user = "test_operator"
-    g.asic_serial_number = 12345
+    g.asicSerialNumber = 12345
     g.wp_machine_id = 1
     g.wpag_state = "WP_Idle"  # Ready to execute commands
     g.set_wafer_loaded(999, "North")

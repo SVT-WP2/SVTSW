@@ -45,7 +45,7 @@ def setup_mock_prober():
 
     # Set initial state
     g.user = "test_user"
-    g.asic_serial_number = 99999
+    g.asicSerialNumber = 99999
     g.wp_machine_id = 999
     g.wpag_state = "ServiceOn"
     g.set_wafer_loaded(888, "North")

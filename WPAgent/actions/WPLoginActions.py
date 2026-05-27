@@ -7,8 +7,10 @@ from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPResponseBuilder import ResponseBuilder
 import actions.WPTestingActions as testingActions
 from drivers.WPFactory import get_current_prober
+import pathlib
 
-HIERARCHY_CONFIG_PATH = "configs/WPUserHierarchy.json"
+_HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
+HIERARCHY_CONFIG_PATH = str(_HERE / "configs" / "WPUserHierarchy.json")
 
 
 def _load_user_hierarchy() -> dict:
@@ -19,6 +21,7 @@ def _load_user_hierarchy() -> dict:
         print(
             f"Warning: {HIERARCHY_CONFIG_PATH} not found.  Make sure that config file exists."
         )
+        return {}  # returns None safely if file is not found
 
 
 def _get_user_hierarchy(user: str) -> str:
@@ -30,7 +33,7 @@ def _get_user_hierarchy(user: str) -> str:
 
 
 def UserLogIn(
-    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+        user: str, waferAgentName: str = None, address: str = None, machineType: str = None
 ) -> dict:
     """
     User login - sets state based on hierarchy
@@ -124,7 +127,7 @@ def UserLogIn(
 
 
 def UserLogOut(
-    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+        user: str, waferAgentName: str = None, address: str = None, machineType: str = None
 ) -> dict:
     """
     User logout - clears user and resets state
@@ -173,5 +176,4 @@ def UserLogOut(
             print(f"👤 User '{user}' logged out")
 
         return ResponseBuilder.success(
-            "UserLogOutReply", f"User '{user}' logged out successfully."
-        )
+            "UserLogOutReply", f"User '{user}' logged out successfully.")

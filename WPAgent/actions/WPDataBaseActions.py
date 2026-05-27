@@ -187,7 +187,7 @@ def get_loaded_wafer_from_db(
     try:
         # Use global if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
@@ -286,7 +286,7 @@ def get_installed_probe_card_from_db(
     try:
         # Use global if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
@@ -395,7 +395,7 @@ def update_wp_machine_loaded_wafer(
     try:
         # Use global values if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
@@ -468,7 +468,7 @@ def update_wp_machine_installed_probe_card(
     try:
         # Use global values if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
@@ -539,7 +539,7 @@ def get_loaded_wafer_info(
 
     try:
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             print("⚠️  WP Machine ID not set")
@@ -637,7 +637,7 @@ def get_installed_probe_card_info(
 
     try:
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             print("⚠️  WP Machine ID not set")

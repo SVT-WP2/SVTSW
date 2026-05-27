@@ -29,7 +29,7 @@ class SvtWPAagentGlobalParameters:
         self.userLoggedHierarchy = None
 
         # ASIC info
-        self.asic_serial_number = 0
+        self.asicSerialNumber = 0
 
         # Agent FSM State
         self.wpag_state = "ServiceOff"  # ServiceOn, WP_Idle, WP_Testing, WP_Error, etc.
@@ -268,7 +268,7 @@ class SvtWPAagentGlobalParameters:
 
         self.userLogged = None
         self.userLoggedHierarchy = None
-        self.asic_serial_number = 0
+        self.asicSerialNumber = 0
         self.wpag_state = "ServiceOff"
         self.loaded_wafer_id = None
         self.wafer_orientation = None

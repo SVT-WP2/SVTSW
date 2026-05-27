@@ -35,7 +35,7 @@ def setup_mock_environment():
 
     # Full state
     g.user = "test_operator"
-    g.asic_serial_number = 12345
+    g.asicSerialNumber = 12345
     g.wp_machine_id = 1
     g.set_wafer_loaded(999, "North")
     g.set_probe_card(456, "South")

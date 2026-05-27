@@ -176,7 +176,7 @@ class TestResponseBuilder:
 
         # Set up some test data
         g.user = "test_user"
-        g.asic_serial_number = 12345
+        g.asicSerialNumber = 12345
         g.wp_machine_id = 1
         g.wpag_state = "WP_Idle"
         g.set_wafer_loaded(999, "North")
@@ -359,7 +359,7 @@ class TestResponseBuilder:
         # Step 1: Initialize
         print("  1. Initialize...")
         g.user = "operator1"
-        g.asic_serial_number = 12345
+        g.asicSerialNumber = 12345
         g.wp_machine_id = 1
         g.wpag_state = "ServiceOn"
         g.set_project(100, "TestProject")

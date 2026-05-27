@@ -104,7 +104,7 @@ def svt_initialise_wp(
         # Update all payload fields
         if machine_id is not None:
             globals_.set_machine_id(machine_id)
-            globals_.wp_machine_id = machine_id
+            globals_.wpMachineId  = machine_id
 
         if machine_name:
             globals_.machine_name = machine_name
@@ -122,7 +122,7 @@ def svt_initialise_wp(
 
         # Set ASIC serial number if provided
         if serialNumber:
-            globals_.asic_serial_number = serialNumber
+            globals_.asicSerialNumber = serialNumber
 
         # Set agent state
         globals_.wpag_state = "ServiceOn"
@@ -295,7 +295,7 @@ def get_project_status(user=None, waferAgentName=None):
         parts = [
             f"Agent: {g.wpAgentName or 'Unknown'}",
             f"State: {g.wpag_state}",
-            f"User: {g.user or 'None'}",
+            f"User: {g.userLogged  or 'None'}",
             f"Project: {g.projectName or 'None'}",
         ]
 
@@ -368,8 +368,8 @@ def get_agent_state():
     """Get current agent state"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-    state = agentStateMachine.getState()
-    current_command = agentStateMachine.getCurrentCommand()
+    state = agentStateMachine.get_state()
+    current_command = agentStateMachine.get_current_command()
 
     message = f"Agent state: {state.name}"
     if current_command:

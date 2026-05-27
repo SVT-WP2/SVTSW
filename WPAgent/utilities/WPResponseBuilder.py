@@ -71,7 +71,7 @@ class ResponseBuilder:
             "status": "Success",
             "type": reply_type,
             "data": ResponseBuilder._build_data(),
-            "error": {"code": 0, "message": ""},
+            "error": {"code": 0, "message": message},
         }
 
     @staticmethod

@@ -81,6 +81,12 @@ class WPAgentStateMachine:
                 "LoadWafer": WPAgentState.UserLogged,
                 "Error": WPAgentState.Error,
             },
+            # From UserLogged — wafer is loaded, proceed with project/alignment workflow
+            WPAgentState.UserLogged: {
+                "OpenProject": WPAgentState.OpenedProject,
+                "AlignWafer": WPAgentState.Aligned,
+                "Error": WPAgentState.Error,
+            },
             # From OnDie_Wide
             WPAgentState.OnDie_Wide: {
                 "MoveChuckContact": WPAgentState.AtContact,
@@ -112,6 +118,16 @@ class WPAgentStateMachine:
                 "AutoFocus": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
+            # From OnDie_OffAxis_withPTPA — PTPA done; same moves as withoutPTPA but no RunPTPA again
+            WPAgentState.OnDie_OffAxis_withPTPA: {
+                "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
+                "MoveChuckWide": WPAgentState.OnDie_Wide_withPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withPTPA,
+                "AutoFocus": WPAgentState.OnDie_OffAxis_withPTPA,
+                "Error": WPAgentState.Error,
+            },
             # From OnDie_Wide_withPTPA
             WPAgentState.OnDie_Wide_withPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
@@ -138,8 +154,21 @@ class WPAgentStateMachine:
                 "ResetAgent": WPAgentState.UserLogged,
             },
             WPAgentState.UsedByDeveloper: {
-                # NOTE: In can_execute(),  allow ALL commands
-                "Error": WPAgentState.Error,
+                # NOTE: In can_execute(), ALL commands are allowed via is_developer_mode() bypass.
+                # These explicit entries cover developer-only free-movement commands that
+                # keep the state in UsedByDeveloper (via force_state in their action).
+                "MoveChuckXY":        WPAgentState.UsedByDeveloper,
+                "MoveChuckZ":         WPAgentState.UsedByDeveloper,
+                "MoveChuckCenter":    WPAgentState.UsedByDeveloper,
+                "MoveChuckHome":      WPAgentState.UsedByDeveloper,
+                "MoveChuckToWorkArea": WPAgentState.UsedByDeveloper,
+                "FindHome":           WPAgentState.UsedByDeveloper,
+                "SwitchCamera":       WPAgentState.UsedByDeveloper,
+                "SetOvertravel":      WPAgentState.UsedByDeveloper,
+                "DisableOvertravel":  WPAgentState.UsedByDeveloper,
+                "LocalMode":          WPAgentState.UsedByDeveloper,
+                "TakeScreenshot":     WPAgentState.UsedByDeveloper,
+                "Error":              WPAgentState.Error,
             },
         }
 
@@ -186,9 +215,7 @@ class WPAgentStateMachine:
 
         if command not in valid_transitions:
             print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
-            print(
-                f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}"
-            )
+            print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
             return False
 
         # run transition
