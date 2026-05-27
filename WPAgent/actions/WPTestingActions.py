@@ -1177,42 +1177,6 @@ def stress_open_project(
 
 
 @validate_command
-def change_project(projectName: str, user=None, waferAgentName=None):
-    """Change project"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from actions.WPDataBaseActions import get_project_id_by_name
-
-    error = _ensure_initialized()
-    if error:
-        return ResponseBuilder.error("ChangeProjectReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
-
-    try:
-        prober = get_current_prober()
-
-        project_path = os.path.join(str(g.projects_base_path), projectName)
-        prober.open_project(projectName)
-
-        # Update info
-        update_current_info(currentProber=prober)
-        prober.local_mode()
-
-        # Update project name (ID would need to come from DB)
-        g.projectName = projectName
-        g.set_project_name(projectName)
-
-        g.opened_project_id = get_project_id_by_name(projectName)
-
-        agentStateMachine.transition("ChangeProject")
-
-        return ResponseBuilder.success("ChangeProjectReply", f"Changed project: {project_path}")
-    except Exception as e:
-        agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("ChangeProjectReply", str(e), 500)
-
-
-@validate_command
 def switch_camera(mountPoint, user=None, waferAgentName=None):
     """Switch camera mount point"""
 

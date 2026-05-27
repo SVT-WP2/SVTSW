@@ -70,8 +70,6 @@ COMMAND_ROUTER = {
     "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
     "TestingLock": testing_actions.testing_lock,
     "TestingUnlock": testing_actions.testing_unlock,
-    "ChangeProject": testing_actions.change_project,
-    "ConnectProbeMachine": project_actions.connect_probe_machine,
     "TakeScreenshot": testing_actions.take_screenshot,
 }
 

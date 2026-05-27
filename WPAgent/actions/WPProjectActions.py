@@ -532,6 +532,3 @@ def help_command(command=None, user=None, waferAgentName=None):
 
     return response
 
-
-def connect_probe_machine():
-    pass
