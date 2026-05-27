@@ -18,7 +18,7 @@ PY=""
 if command -v python3.12 &>/dev/null; then PY=python3.12
 elif command -v python &>/dev/null; then PY=python
 else
-    echo "[ERROR] No Python found. Install Python 3 from https://python.org"
+    echo "[ERROR] No Python found. Install Python 3.12 from https://python.org"
     exit 1
 fi
 echo "Using: $($PY --version)"

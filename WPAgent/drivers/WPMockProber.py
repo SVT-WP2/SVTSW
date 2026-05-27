@@ -1,4 +1,3 @@
-
 import time
 import os
 import datetime
@@ -6,7 +5,7 @@ import datetime
 # Working-area constants (mirrors SENTIO position-hint values)
 AREA_PROBING = "Probing"
 AREA_OFFAXIS = "OffAxisCamera"
-AREA_WIDE    = "WideFieldCamera"
+AREA_WIDE = "WideFieldCamera"
 
 
 class MockProberImpl:
@@ -26,7 +25,7 @@ class MockProberImpl:
 
         # Chuck state
         self._chuck_xy = {"x": 0.0, "y": 0.0}
-        self._chuck_z  = 50.0           # 50 um = separation height
+        self._chuck_z = 50.0  # 50 um = separation height
         self._at_contact = False
         self._working_area = AREA_PROBING
 
@@ -38,15 +37,15 @@ class MockProberImpl:
 
         # Die map (10x10 mock map, 100 total / 100 good / 0 bad)
         self._total_dies = 100
-        self._good_dies  = 100
+        self._good_dies = 100
         self._current_die = {"col": 0, "row": 0, "subsite": 0}
-        self._die_index   = 0
+        self._die_index = 0
 
         # Camera
         self._camera = "TopCamera"
 
         # Overtravel
-        self._overtravel_gap     = 0.0
+        self._overtravel_gap = 0.0
         self._overtravel_enabled = False
 
         # PTPA
@@ -111,7 +110,11 @@ class MockProberImpl:
 
     def align_wafer(self, align_die_col: int, align_die_row: int, subsite: int = 0):
         time.sleep(1.0)
-        self._current_die = {"col": align_die_col, "row": align_die_row, "subsite": subsite}
+        self._current_die = {
+            "col": align_die_col,
+            "row": align_die_row,
+            "subsite": subsite,
+        }
         self._die_index = align_die_col * 10 + align_die_row
         print(f"[MockProber] Wafer aligned at die ({align_die_col}, {align_die_row})")
         return f"0,{align_die_col},{align_die_row},{subsite}"
@@ -133,7 +136,7 @@ class MockProberImpl:
     def move_chuck_home(self):
         time.sleep(0.5)
         self._chuck_xy = {"x": 0.0, "y": 0.0}
-        self._chuck_z  = 0.0
+        self._chuck_z = 0.0
         self._working_area = AREA_PROBING
         return "0,OK"
 
@@ -326,7 +329,7 @@ class MockProberImpl:
     def find_home(self):
         time.sleep(0.5)
         self._chuck_xy = {"x": 0.0, "y": 0.0}
-        self._chuck_z  = 0.0
+        self._chuck_z = 0.0
         return "0,OK"
 
     def local_mode(self):

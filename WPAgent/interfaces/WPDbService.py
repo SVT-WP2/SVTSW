@@ -1,4 +1,4 @@
-from typing import Protocol, List, Dict, Optional,Any
+from typing import Protocol, List, Dict, Optional, Any
 
 
 class IDBService(Protocol):

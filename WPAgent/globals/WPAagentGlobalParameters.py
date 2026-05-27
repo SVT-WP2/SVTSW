@@ -36,7 +36,9 @@ class SvtWPAagentGlobalParameters:
 
         # Loaded wafer
         self.loaded_wafer_id = None  # None = no wafer, or wafer ID
-        self.wafer_orientation = None  # "North", "East", "South", "West" - WAFER orientation
+        self.wafer_orientation = (
+            None  # "North", "East", "South", "West" - WAFER orientation
+        )
 
         # Installed probe card
         self.probe_card_id = None  # None = no probe card, or probe card ID
@@ -62,7 +64,9 @@ class SvtWPAagentGlobalParameters:
         self.total_dies_number = 0
 
         # Project paths for now its only Sentio machine
-        self.sentio_projects_base_path = "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+        self.sentio_projects_base_path = (
+            "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+        )
         self.projects_base_path = self.sentio_projects_base_path
 
         # Locker for testing
@@ -72,7 +76,12 @@ class SvtWPAagentGlobalParameters:
         self.lock_reason = None
         self.test_sequence_id = None  # ID of running test sequence
 
-    def lock_for_testing(self, user: str, reason: str = "Testing in progress", test_sequence_id: str = None):
+    def lock_for_testing(
+        self,
+        user: str,
+        reason: str = "Testing in progress",
+        test_sequence_id: str = None,
+    ):
         """Lock the agent for testing"""
         import time
 
@@ -95,11 +104,19 @@ class SvtWPAagentGlobalParameters:
     def get_lock_info(self):
         """Get current lock status"""
         if not self.is_locked_for_testing:
-            return {"is_locked": False, "locked_by": None, "locked_at": None, "reason": None, "test_sequence_id": None}
+            return {
+                "is_locked": False,
+                "locked_by": None,
+                "locked_at": None,
+                "reason": None,
+                "test_sequence_id": None,
+            }
 
         import time
 
-        locked_duration = time.time() - self.locked_at_timestamp if self.locked_at_timestamp else 0
+        locked_duration = (
+            time.time() - self.locked_at_timestamp if self.locked_at_timestamp else 0
+        )
 
         return {
             "is_locked": True,
@@ -174,7 +191,9 @@ class SvtWPAagentGlobalParameters:
     def set_initialization_mode(self, mode):
         """Set how the prober was initialized: 'manual' or 'database'"""
         if mode not in ["manual", "database"]:
-            raise ValueError(f"Invalid initialization mode: {mode}. Must be 'manual' or 'database'")
+            raise ValueError(
+                f"Invalid initialization mode: {mode}. Must be 'manual' or 'database'"
+            )
         self.initialization_mode = mode
 
     def get_info(self):
@@ -339,7 +358,9 @@ class SvtWPAagentGlobalParameters:
             position: Chuck position ("Contact", "Separation", "Unknown")
         """
         if position not in ["Contact", "Separation", "Unknown", "In Default"]:
-            print(f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'")
+            print(
+                f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'"
+            )
         self.chuck_z_position_state = position
 
     def clear_probe_card(self):
