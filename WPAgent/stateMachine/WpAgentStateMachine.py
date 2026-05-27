@@ -7,6 +7,7 @@ BYPASS_COMMANDS = {
     "Help",
     "AutoFocus",
     "Initialize",
+    "ResetAgent"
 }
 
 
@@ -49,10 +50,11 @@ class WPAgentStateMachine:
             },
             # From OpenedProject
             WPAgentState.OpenedProject: {
-                "AlignWafer": WPAgentState.Aligned,
                 "InitProbing": WPAgentState.Aligned,        # diagram: InitProbing also reaches Aligned from here
                 "ChangeProject": WPAgentState.OpenedProject,  # self-loop: swap active project
                 "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
+                "UnloadWafer": WPAgentState.Unloaded,
+                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
                 "Error": WPAgentState.Error,
             },
             # From Aligned
@@ -86,8 +88,8 @@ class WPAgentStateMachine:
             # From UserLogged — wafer is loaded, must open project first
             WPAgentState.UserLogged: {
                 "OpenProject": WPAgentState.OpenedProject,
-                "AlignWafer": WPAgentState.Aligned,
-                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,  # unload if changed mind after loading
+                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
+                "UnloadWafer": WPAgentState.ChuckUnloaded, # unload if changed mind after loading
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide
@@ -97,6 +99,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckOffAxis": WPAgentState.Aligned,
                 "Error": WPAgentState.Error,
             },
             # From AtContact
