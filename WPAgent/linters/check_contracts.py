@@ -31,7 +31,7 @@ from pathlib import Path
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent  # WPAgent/ root (this file lives in linters/)
 
 # Functions registered in COMMAND_ROUTER that are allowed to NOT return
 # ResponseBuilder (raw-dict returns, pass-throughs, etc.).

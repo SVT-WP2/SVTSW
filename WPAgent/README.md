@@ -30,7 +30,7 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 - ✅ **Database Integration**: Machine lookup and configuration via DB Kafka service
 - ✅ **Health Monitoring**: Built-in heartbeat and health checks
 - ✅ **Comprehensive Logging**: Full audit trail of operations
-- ✅ **Project Management**: Open and manage SENTIO project files
+- ✅ **Project Management**: Open SENTIO project files
 - ✅ **PTPA Support**: Pattern-to-pad alignment with state tracking
 
 ---
@@ -153,18 +153,35 @@ WPAgent/
 
 ```bash
 cd WPAgent
-pip install confluent-kafka fire
+pip install confluent-kafka fire sentio-prober-control
 ```
+### Install Dependencies for DEV
 
+```bash
+cd WPAgent
+pip install confluent-kafka fire sentio-prober-control pytest pytest-cov flake8 pylint mypy black
+```
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Start the Listener (Consumer side — runs on the hardware machine)
 
+The listener takes a **config name** that tells it which Kafka broker and prober to connect to. Configs are defined in `configs/WPProbesConfigs.json`.
+
 ```bash
-python3.12 main.py listen
+# Production (Kafka on svmithi02:9093)
+python3.12 main.py listen CERN
+
+# Developer / staging (Kafka on svmithi02:9096)
+python3.12 main.py listen CERN_DEV
+
+# Mock prober — for local testing without hardware
+python3.12 main.py listen MOCK
 ```
+
+> **Note:** The `CERN` production listener is normally run as a system service and does not need to be started manually. Use `CERN_DEV` for development and testing.
+
 
 ### 2. Send Commands (Producer side — runs anywhere with Kafka access)
 
@@ -227,7 +244,7 @@ Every command (except bypass commands) is validated against the current FSM stat
 
 ### Bypass Commands (work in any state)
 
-`UserLogIn`, `UserLogOut`, `Help`, `AutoFocus`, `Initialize`
+`UserLogIn`, `UserLogOut`, `Help`, `AutoFocus`
 
 ### State Transition Map
 
@@ -390,29 +407,51 @@ python3.12 main.py send ListProbers
 
 ## ⚙️ Configuration
 
-### Kafka
+### Named Probe Configs — `configs/WPProbesConfigs.json`
 
-Edit `WPKafkaClient.py` or use environment variables:
+This is the primary config file. Each entry maps a config name to a Kafka broker, prober address, and machine type. The config name is passed as the argument to `python3.12 main.py listen <name>`.
 
-```bash
-export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
-export KAFKA_REQUEST_TOPIC="svt.wp-agent.request"
-export KAFKA_REPLY_TOPIC="svt.wp-agent.reply"
-export KAFKA_HEARTBEAT_TOPIC="svt.wp-agent.heartbeat"
+```json
+{
+  "CERN": {
+    "machineId": 1,
+    "address": "wpmit01.cern.ch",
+    "port": 35555,
+    "machineType": "sentio",
+    "description": "CERN DSF Probe Station",
+    "kafka_broker": "svmithi02:9093"
+  },
+  "CERN_DEV": {
+    "machineId": 1,
+    "address": "wpmit01.cern.ch",
+    "port": 35555,
+    "machineType": "sentio",
+    "description": "CERN DSF Probe Station",
+    "kafka_broker": "svmithi02:9096"
+  },
+  "MOCK": {
+    "machineId": 167,
+    "address": "mock-prober",
+    "port": 35555,
+    "machineType": "mock",
+    "description": "Mock Probe Station for Testing"
+  }
+}
 ```
 
-### Database Kafka
-
-```bash
-export DB_KAFKA_BROKER="localhost:9095"
-export DB_REQUEST_TOPIC="svt.db-agent.request"
-export DB_REPLY_TOPIC="svt.db-agent.request.reply"
-```
+| Config | Kafka Broker | Purpose |
+|--------|-------------|---------|
+| `CERN` | `svmithi02:9093` | **Production** — normally runs as a system service |
+| `CERN_DEV` | `svmithi02:9096` | **Development / staging** — use for testing |
+| `MOCK` | — | Local testing without real hardware |
 
 ### SSH Tunnel (remote Kafka access)
 
+If you're sending commands from a machine outside the CERN network, create an SSH tunnel first:
+
+
 ```bash
-ssh -L 9092:localhost:9092 -L 9095:localhost:9095 user@remote-server
+ssh -L 9092:localhost:9096 -L 9096:localhost:9096 user@remote-server
 ```
 
 ### User Hierarchy
@@ -422,7 +461,7 @@ Edit `configs/WPUserHierarchy.json` to define which users are Developers, Operat
 ```json
 {
   "Developer": ["dev1", "dev2"],
-  "Operator": ["operator1"],
+  "Expert": ["operator1"],
   "User": ["user1", "user2"]
 }
 ```
@@ -544,8 +583,8 @@ You are calling a command that is not valid from the current FSM state. Check th
 ### Prober not initializing
 
 - Verify SENTIO software is running on the prober machine
-- Check IP address and port: `ping <prober-host>`
-- Use `ConnectProbeMachine` with a valid `wpMachineId` from the database, or `Initialize` with a direct `address`
+- Check IP address and port: `ping <prober-host>` if needed 
+
 
 ### Error state recovery
 
@@ -559,9 +598,6 @@ This returns the FSM to `UserLogged` so normal operations can resume.
 
 ---
 
-## 📄 License
-
-[Add your license here]
 
 ---
 
@@ -574,4 +610,4 @@ This returns the FSM to `UserLogged` so normal operations can resume.
 ---
 
 **Organization**: SVT SW Core Team  
-**Project**: Silicon Vertex Tracker Wafer Prober Agent
+**Project**: SVT Wafer Prober Agent

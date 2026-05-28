@@ -10,7 +10,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."   # run from WPAgent/ root so flake8/pylint/mypy scan the project
 ERRORS=0
 
 # ── find Python ───────────────────────────────
@@ -79,7 +79,16 @@ fi
 echo "========================================"
 echo " contract checks (naming + ResponseBuilder)"
 echo "========================================"
-if ! $PY check_contracts.py; then
+if ! $PY linters/check_contracts.py; then
+    ERRORS=1
+fi
+echo ""
+
+# ── Kafka convention checker ──────────────────
+echo "========================================"
+echo " Kafka conventions (topics/headers/status)"
+echo "========================================"
+if ! $PY linters/check_kafka_conventions.py --no-color; then
     ERRORS=1
 fi
 echo ""

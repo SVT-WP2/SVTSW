@@ -16,6 +16,7 @@ Strategy
 """
 import pytest
 from unittest.mock import patch, MagicMock
+import actions.WPTestingActions  # ensure submodule registers on the 'actions' package so patch() can resolve it
 
 
 # ─────────────────────────────────────────────────────────────

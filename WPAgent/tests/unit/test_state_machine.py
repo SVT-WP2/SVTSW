@@ -211,7 +211,7 @@ class TestStatePaths:
         sm.transition("OpenProject")
         assert sm.get_state() == WPAgentState.OpenedProject
 
-        sm.transition("AlignWafer")
+        sm.transition("InitProbing")
         assert sm.get_state() == WPAgentState.Aligned
 
         sm.transition("MoveChuckNextDie")

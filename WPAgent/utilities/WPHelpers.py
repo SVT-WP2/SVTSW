@@ -58,7 +58,7 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
     # Check if missing critical parameters
     if not address or not machineType:
         return {
-            "status": "error",
+            "status": "Error",
             "output": f"Missing required parameters: address={address}, machineType={machineType}",
         }
 
@@ -67,7 +67,7 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
         current_config = factory._current_config
         if current_config == (machineType.lower(), address):
             return {
-                "status": "success",
+                "status": "Success",
                 "output": f"Prober already initialized at {address}",
             }
 
@@ -75,11 +75,11 @@ def ensure_prober_initialized(address=None, machineType=None, projectName=None):
     try:
         prober = factory.get_prober(machineType, address)
         return {
-            "status": "success",
+            "status": "Success",
             "output": f"Prober initialized: {machineType} at {address}",
         }
     except Exception as e:
-        return {"status": "error", "output": f"Failed to initialize prober: {str(e)}"}
+        return {"status": "Error", "output": f"Failed to initialize prober: {str(e)}"}
 
 
 def check_prober_ready():

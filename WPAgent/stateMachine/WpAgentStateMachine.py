@@ -208,30 +208,31 @@ class WPAgentStateMachine:
             True if transition successful, False if invalid
         """
         self.current_command = command
-        if command in BYPASS_COMMANDS:
-            return True
-        # DEVELOPER BYPASS
+
+        # DEVELOPER BYPASS: all commands allowed, state stays UsedByDeveloper
         if self.is_developer_mode():
-            # State stays UsedByDeveloper
             self._sync_to_global_params()
             return True
 
-        # Check if transition is valid
+        # Check transition table first — even bypass commands can have explicit
+        # transitions (e.g. Error → ResetAgent → UserLogged).
         valid_transitions = self.transitions.get(self.current_state, {})
 
-        if command not in valid_transitions:
-            print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
-            print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
-            return False
+        if command in valid_transitions:
+            new_state = valid_transitions[command]
+            self.previous_state = self.current_state
+            self.current_state = new_state
+            self._sync_to_global_params()
+            return True
 
-        # run transition
-        new_state = valid_transitions[command]
-        self.previous_state = self.current_state
-        self.current_state = new_state
+        # Command not in transition table for this state — allow it if it is a
+        # bypass command (works in ANY state, no state change needed).
+        if command in BYPASS_COMMANDS:
+            return True
 
-        self._sync_to_global_params()
-
-        return True
+        print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
+        print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
+        return False
 
     def force_state(self, state: WPAgentState):
         """

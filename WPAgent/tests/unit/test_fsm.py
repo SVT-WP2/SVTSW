@@ -76,9 +76,17 @@ class TestBypassCommands:
     @pytest.mark.parametrize("state", ALL_STATES)
     @pytest.mark.parametrize("cmd", list(BYPASS_COMMANDS))
     def test_bypass_does_not_change_state(self, sm, state, cmd):
+        """
+        Bypass commands are always executable.  When the current state has an
+        explicit transition for the command (e.g. Error → ResetAgent → UserLogged),
+        the transition table wins and the state DOES change.  Otherwise the state
+        is left unchanged.
+        """
         sm.force_state(state)
+        # Compute expected outcome before the call
+        expected = sm.transitions.get(state, {}).get(cmd, state)
         sm.transition(cmd)
-        assert sm.get_state() == state
+        assert sm.get_state() == expected
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -97,9 +105,9 @@ class TestValidTransitions:
         assert sm.get_state() == WPAgentState.Error
 
     # OpenedProject
-    def test_opened_project_align_wafer(self, sm):
+    def test_opened_project_init_probing(self, sm):
         sm.force_state(WPAgentState.OpenedProject)
-        sm.transition("AlignWafer")
+        sm.transition("InitProbing")
         assert sm.get_state() == WPAgentState.Aligned
 
     def test_opened_project_move_chuck_safe(self, sm):
@@ -201,11 +209,6 @@ class TestValidTransitions:
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
         assert sm.get_state() == WPAgentState.OpenedProject
-
-    def test_user_logged_align_wafer(self, sm):
-        sm.force_state(WPAgentState.UserLogged)
-        sm.transition("AlignWafer")
-        assert sm.get_state() == WPAgentState.Aligned
 
     def test_user_logged_move_chuck_unload_wafer(self, sm):
         """Can unload wafer from UserLogged — changed mind after loading."""
@@ -439,8 +442,9 @@ class TestValidTransitions:
 
 class TestInvalidTransitions:
 
-    def test_cannot_align_from_service_on(self, sm):
-        assert sm.can_execute("AlignWafer") is False
+    def test_cannot_init_probing_from_service_on(self, sm):
+        """InitProbing requires an open project — not valid from ServiceOn."""
+        assert sm.can_execute("InitProbing") is False
 
     def test_cannot_init_probing_from_user_logged(self, sm):
         """Must open a project first before InitProbing."""
@@ -492,11 +496,11 @@ class TestInvalidTransitions:
         assert sm.can_execute("TestingLock") is False
 
     def test_invalid_transition_returns_false(self, sm):
-        result = sm.transition("AlignWafer")  # invalid from ServiceOn
+        result = sm.transition("InitProbing")  # invalid from ServiceOn (needs OpenedProject first)
         assert result is False
 
     def test_invalid_transition_does_not_change_state(self, sm):
-        sm.transition("AlignWafer")  # invalid from ServiceOn
+        sm.transition("InitProbing")  # invalid from ServiceOn
         assert sm.get_state() == WPAgentState.ServiceOn
 
     def test_unknown_command_rejected(self, sm):
@@ -518,7 +522,7 @@ class TestDeveloperMode:
 
     def test_developer_mode_allows_any_command(self, sm):
         sm.force_state(WPAgentState.UsedByDeveloper)
-        for cmd in ["MoveChuckContact", "AlignWafer", "OpenProject", "LoadWafer",
+        for cmd in ["MoveChuckContact", "InitProbing", "OpenProject", "LoadWafer",
                     "MoveChuckXY", "FindHome", "RunPTPA", "TestingLock"]:
             assert sm.can_execute(cmd) is True, f"{cmd} should be allowed in dev mode"
 
@@ -566,7 +570,7 @@ class TestErrorState:
         sm.force_state(WPAgentState.Error)
         assert sm.can_execute("ResetAgent") is True
         assert sm.can_execute("OpenProject") is False
-        assert sm.can_execute("AlignWafer") is False
+        assert sm.can_execute("InitProbing") is False
         assert sm.can_execute("MoveChuckXY") is False
 
     def test_reset_from_error_goes_to_user_logged(self, sm):
@@ -595,7 +599,7 @@ class TestStateTracking:
 
     def test_previous_state_chained(self, sm):
         sm.transition("OpenProject")   # ServiceOn → OpenedProject
-        sm.transition("AlignWafer")    # OpenedProject → Aligned
+        sm.transition("InitProbing")   # OpenedProject → Aligned
         assert sm.previous_state == WPAgentState.OpenedProject
         assert sm.get_state() == WPAgentState.Aligned
 
@@ -604,7 +608,7 @@ class TestStateTracking:
         assert sm.previous_state == WPAgentState.ServiceOn
 
     def test_invalid_transition_does_not_update_previous(self, sm):
-        sm.transition("AlignWafer")  # invalid from ServiceOn
+        sm.transition("InitProbing")  # invalid from ServiceOn
         assert sm.previous_state is None  # unchanged
 
     def test_get_current_command(self, sm):
@@ -650,7 +654,7 @@ class TestFullWorkflows:
         """Standard probe station workflow from login to contact."""
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject");         assert sm.get_state() == WPAgentState.OpenedProject
-        sm.transition("AlignWafer");          assert sm.get_state() == WPAgentState.Aligned
+        sm.transition("InitProbing");         assert sm.get_state() == WPAgentState.Aligned
         sm.transition("MoveChuckNextDie");    assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
         sm.transition("RunPTPA");             assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
         sm.transition("MoveChuckWide");       assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
@@ -663,7 +667,7 @@ class TestFullWorkflows:
         """MoveChuckAsic from Aligned goes directly to Wide_withPTPA."""
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
-        sm.transition("AlignWafer")
+        sm.transition("InitProbing")
         sm.transition("MoveChuckAsic");       assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
         sm.transition("MoveChuckContact");    assert sm.get_state() == WPAgentState.AtContact
 

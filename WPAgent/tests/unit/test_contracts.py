@@ -7,7 +7,7 @@ import pytest
 # Make sure check_contracts is importable from project root
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from check_contracts import (
+from linters.check_contracts import (
     EXEMPT_FUNCTIONS,
     ROOT,
     get_function_node,
