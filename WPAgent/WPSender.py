@@ -142,7 +142,7 @@ def main():
     port = resolve_port(data, args.port)
     bootstrap = f"{BROKER_HOST}:{port}"
 
-    print(f"\n📡 WP Agent Kafka Client")
+    print("\n📡 WP Agent Kafka Client")
     print(f"   Broker  : {bootstrap}")
     print(f"   Topic   : {REQUEST_TOPIC}")
     print(f"   Command : {command}")
@@ -201,7 +201,7 @@ def main():
     if display:
         print(f"   {display}")
 
-    print(f"\n📋 Full response:")
+    print("\n📋 Full response:")
     print(json.dumps(response, indent=2))
 
 

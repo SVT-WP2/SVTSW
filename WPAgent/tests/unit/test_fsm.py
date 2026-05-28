@@ -22,8 +22,8 @@ from stateMachine.WpAgentStateMachine import (
     BYPASS_COMMANDS,
 )
 
-
 # ─── fixture ────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def sm():
@@ -34,6 +34,7 @@ def sm():
 # ═══════════════════════════════════════════════════════════════════════════
 # 1. INITIAL STATE
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestInitialState:
 
@@ -56,6 +57,7 @@ class TestInitialState:
 # ═══════════════════════════════════════════════════════════════════════════
 # 2. BYPASS COMMANDS — allowed in every state
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestBypassCommands:
 
@@ -92,6 +94,7 @@ class TestBypassCommands:
 # ═══════════════════════════════════════════════════════════════════════════
 # 3. VALID TRANSITIONS — every entry in the transitions table
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestValidTransitions:
 
@@ -420,11 +423,22 @@ class TestValidTransitions:
         assert sm.get_state() == WPAgentState.UserLogged
 
     # UsedByDeveloper — explicit developer commands stay in dev mode
-    @pytest.mark.parametrize("cmd", [
-        "MoveChuckXY", "MoveChuckZ", "MoveChuckCenter", "MoveChuckHome",
-        "MoveChuckToWorkArea", "FindHome", "SwitchCamera",
-        "SetOvertravel", "DisableOvertravel", "LocalMode", "TakeScreenshot",
-    ])
+    @pytest.mark.parametrize(
+        "cmd",
+        [
+            "MoveChuckXY",
+            "MoveChuckZ",
+            "MoveChuckCenter",
+            "MoveChuckHome",
+            "MoveChuckToWorkArea",
+            "FindHome",
+            "SwitchCamera",
+            "SetOvertravel",
+            "DisableOvertravel",
+            "LocalMode",
+            "TakeScreenshot",
+        ],
+    )
     def test_developer_commands_stay_in_dev_mode(self, sm, cmd):
         sm.force_state(WPAgentState.UsedByDeveloper)
         sm.transition(cmd)
@@ -439,6 +453,7 @@ class TestValidTransitions:
 # ═══════════════════════════════════════════════════════════════════════════
 # 4. INVALID TRANSITIONS — commands rejected in wrong states
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestInvalidTransitions:
 
@@ -496,7 +511,9 @@ class TestInvalidTransitions:
         assert sm.can_execute("TestingLock") is False
 
     def test_invalid_transition_returns_false(self, sm):
-        result = sm.transition("InitProbing")  # invalid from ServiceOn (needs OpenedProject first)
+        result = sm.transition(
+            "InitProbing"
+        )  # invalid from ServiceOn (needs OpenedProject first)
         assert result is False
 
     def test_invalid_transition_does_not_change_state(self, sm):
@@ -514,6 +531,7 @@ class TestInvalidTransitions:
 # 5. DEVELOPER MODE
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class TestDeveloperMode:
 
     def test_force_state_to_developer(self, sm):
@@ -522,13 +540,23 @@ class TestDeveloperMode:
 
     def test_developer_mode_allows_any_command(self, sm):
         sm.force_state(WPAgentState.UsedByDeveloper)
-        for cmd in ["MoveChuckContact", "InitProbing", "OpenProject", "LoadWafer",
-                    "MoveChuckXY", "FindHome", "RunPTPA", "TestingLock"]:
+        for cmd in [
+            "MoveChuckContact",
+            "InitProbing",
+            "OpenProject",
+            "LoadWafer",
+            "MoveChuckXY",
+            "FindHome",
+            "RunPTPA",
+            "TestingLock",
+        ]:
             assert sm.can_execute(cmd) is True, f"{cmd} should be allowed in dev mode"
 
     def test_developer_transition_stays_in_dev_mode(self, sm):
         sm.force_state(WPAgentState.UsedByDeveloper)
-        sm.transition("MoveChuckContact")  # normally only valid from OnDie_Wide/WithPTPA
+        sm.transition(
+            "MoveChuckContact"
+        )  # normally only valid from OnDie_Wide/WithPTPA
         assert sm.get_state() == WPAgentState.UsedByDeveloper
 
     def test_developer_transition_records_command(self, sm):
@@ -542,8 +570,12 @@ class TestDeveloperMode:
         assert available == ["ALL COMMANDS ALLOWED (Developer Mode)"]
 
     def test_non_developer_is_not_dev_mode(self, sm):
-        for state in [WPAgentState.ServiceOn, WPAgentState.Aligned,
-                      WPAgentState.AtContact, WPAgentState.Error]:
+        for state in [
+            WPAgentState.ServiceOn,
+            WPAgentState.Aligned,
+            WPAgentState.AtContact,
+            WPAgentState.Error,
+        ]:
             sm.force_state(state)
             assert sm.is_developer_mode() is False
 
@@ -552,11 +584,16 @@ class TestDeveloperMode:
 # 6. ERROR STATE
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class TestErrorState:
 
     def test_enter_error_state_from_any_state(self, sm):
-        for state in [WPAgentState.ServiceOn, WPAgentState.Aligned,
-                      WPAgentState.AtContact, WPAgentState.UsedByDeveloper]:
+        for state in [
+            WPAgentState.ServiceOn,
+            WPAgentState.Aligned,
+            WPAgentState.AtContact,
+            WPAgentState.UsedByDeveloper,
+        ]:
             sm.force_state(state)
             sm.enter_error_state("test error")
             assert sm.get_state() == WPAgentState.Error
@@ -587,6 +624,7 @@ class TestErrorState:
 # 7. STATE TRACKING (previous_state, current_command)
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class TestStateTracking:
 
     def test_previous_state_updated_on_transition(self, sm):
@@ -598,8 +636,8 @@ class TestStateTracking:
         assert sm.current_command == "OpenProject"
 
     def test_previous_state_chained(self, sm):
-        sm.transition("OpenProject")   # ServiceOn → OpenedProject
-        sm.transition("InitProbing")   # OpenedProject → Aligned
+        sm.transition("OpenProject")  # ServiceOn → OpenedProject
+        sm.transition("InitProbing")  # OpenedProject → Aligned
         assert sm.previous_state == WPAgentState.OpenedProject
         assert sm.get_state() == WPAgentState.Aligned
 
@@ -619,6 +657,7 @@ class TestStateTracking:
 # ═══════════════════════════════════════════════════════════════════════════
 # 8. RESET
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestReset:
 
@@ -648,43 +687,61 @@ class TestReset:
 # 9. FULL WORKFLOWS
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class TestFullWorkflows:
 
     def test_normal_testing_workflow(self, sm):
         """Standard probe station workflow from login to contact."""
         sm.force_state(WPAgentState.UserLogged)
-        sm.transition("OpenProject");         assert sm.get_state() == WPAgentState.OpenedProject
-        sm.transition("InitProbing");         assert sm.get_state() == WPAgentState.Aligned
-        sm.transition("MoveChuckNextDie");    assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
-        sm.transition("RunPTPA");             assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
-        sm.transition("MoveChuckWide");       assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
-        sm.transition("MoveChuckContact");    assert sm.get_state() == WPAgentState.AtContact
-        sm.transition("TestingLock");         assert sm.get_state() == WPAgentState.AtContact_Locked
-        sm.transition("TestingUnlock");       assert sm.get_state() == WPAgentState.AtContact
-        sm.transition("MoveChuckSeparation"); assert sm.get_state() == WPAgentState.OnDie_Wide
+        sm.transition("OpenProject")
+        assert sm.get_state() == WPAgentState.OpenedProject
+        sm.transition("InitProbing")
+        assert sm.get_state() == WPAgentState.Aligned
+        sm.transition("MoveChuckNextDie")
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
+        sm.transition("RunPTPA")
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
+        sm.transition("MoveChuckWide")
+        assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
+        sm.transition("MoveChuckContact")
+        assert sm.get_state() == WPAgentState.AtContact
+        sm.transition("TestingLock")
+        assert sm.get_state() == WPAgentState.AtContact_Locked
+        sm.transition("TestingUnlock")
+        assert sm.get_state() == WPAgentState.AtContact
+        sm.transition("MoveChuckSeparation")
+        assert sm.get_state() == WPAgentState.OnDie_Wide
 
     def test_asic_shortcut_workflow(self, sm):
         """MoveChuckAsic from Aligned goes directly to Wide_withPTPA."""
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
         sm.transition("InitProbing")
-        sm.transition("MoveChuckAsic");       assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
-        sm.transition("MoveChuckContact");    assert sm.get_state() == WPAgentState.AtContact
+        sm.transition("MoveChuckAsic")
+        assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
+        sm.transition("MoveChuckContact")
+        assert sm.get_state() == WPAgentState.AtContact
 
     def test_unload_and_reload_workflow(self, sm):
         """Full wafer unload/reload cycle."""
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
-        sm.transition("MoveChuckSafePosition"); assert sm.get_state() == WPAgentState.ChuckSafePosition
-        sm.transition("UnloadWafer");           assert sm.get_state() == WPAgentState.Unloaded
-        sm.transition("LoadWafer");             assert sm.get_state() == WPAgentState.UserLogged
+        sm.transition("MoveChuckSafePosition")
+        assert sm.get_state() == WPAgentState.ChuckSafePosition
+        sm.transition("UnloadWafer")
+        assert sm.get_state() == WPAgentState.Unloaded
+        sm.transition("LoadWafer")
+        assert sm.get_state() == WPAgentState.UserLogged
 
     def test_chuck_unload_reload_cycle(self, sm):
         """Physical chuck unload/reload via chuck movement commands."""
         sm.force_state(WPAgentState.Aligned)
-        sm.transition("MoveChuckSafePosition");   assert sm.get_state() == WPAgentState.ChuckSafePosition
-        sm.transition("MoveChuckUnloadWafer");     assert sm.get_state() == WPAgentState.ChuckUnloaded
-        sm.transition("MoveChuckLoadedWafer");     assert sm.get_state() == WPAgentState.UserLogged
+        sm.transition("MoveChuckSafePosition")
+        assert sm.get_state() == WPAgentState.ChuckSafePosition
+        sm.transition("MoveChuckUnloadWafer")
+        assert sm.get_state() == WPAgentState.ChuckUnloaded
+        sm.transition("MoveChuckLoadedWafer")
+        assert sm.get_state() == WPAgentState.UserLogged
 
     def test_error_recovery_workflow(self, sm):
         """Error during testing → reset → resume from UserLogged."""

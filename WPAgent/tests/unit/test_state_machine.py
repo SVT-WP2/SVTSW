@@ -6,8 +6,13 @@ Unit tests for stateMachine/WpAgentStateMachine.py
 Each test creates its own WPAgentStateMachine instance so there is
 no shared state across tests.
 """
+
 import pytest
-from stateMachine.WpAgentStateMachine import WPAgentStateMachine, WPAgentState, BYPASS_COMMANDS
+from stateMachine.WpAgentStateMachine import (
+    WPAgentStateMachine,
+    WPAgentState,
+    BYPASS_COMMANDS,
+)
 
 
 @pytest.fixture
@@ -19,6 +24,7 @@ def sm():
 # ─────────────────────────────────────────────────────────────
 # Initial state
 # ─────────────────────────────────────────────────────────────
+
 
 class TestDefaults:
 
@@ -41,6 +47,7 @@ class TestDefaults:
 # ─────────────────────────────────────────────────────────────
 # force_state
 # ─────────────────────────────────────────────────────────────
+
 
 class TestForceState:
 
@@ -65,6 +72,7 @@ class TestForceState:
 # reset
 # ─────────────────────────────────────────────────────────────
 
+
 class TestReset:
 
     def test_reset_returns_to_service_on(self, sm):
@@ -87,6 +95,7 @@ class TestReset:
 # enter_error_state
 # ─────────────────────────────────────────────────────────────
 
+
 class TestEnterErrorState:
 
     def test_enter_error_state_sets_error(self, sm):
@@ -108,6 +117,7 @@ class TestEnterErrorState:
 # can_execute
 # ─────────────────────────────────────────────────────────────
 
+
 class TestCanExecute:
 
     def test_bypass_commands_always_allowed(self, sm):
@@ -118,12 +128,19 @@ class TestCanExecute:
         for state in [WPAgentState.Aligned, WPAgentState.AtContact, WPAgentState.Error]:
             sm.force_state(state)
             for cmd in BYPASS_COMMANDS:
-                assert sm.can_execute(cmd) is True, f"{cmd} should be allowed in {state}"
+                assert (
+                    sm.can_execute(cmd) is True
+                ), f"{cmd} should be allowed in {state}"
 
     def test_developer_mode_allows_all(self, sm):
         sm.force_state(WPAgentState.UsedByDeveloper)
-        for cmd in ["OpenProject", "LoadWafer", "MoveChuckContact",
-                    "TestingLock", "UnknownCommand123"]:
+        for cmd in [
+            "OpenProject",
+            "LoadWafer",
+            "MoveChuckContact",
+            "TestingLock",
+            "UnknownCommand123",
+        ]:
             assert sm.can_execute(cmd) is True
 
     def test_service_on_allows_open_project(self, sm):
@@ -158,6 +175,7 @@ class TestCanExecute:
 # ─────────────────────────────────────────────────────────────
 # transition
 # ─────────────────────────────────────────────────────────────
+
 
 class TestTransition:
 
@@ -203,6 +221,7 @@ class TestTransition:
 # ─────────────────────────────────────────────────────────────
 # Multi-step paths through the state machine
 # ─────────────────────────────────────────────────────────────
+
 
 class TestStatePaths:
 
@@ -251,6 +270,7 @@ class TestStatePaths:
 # ─────────────────────────────────────────────────────────────
 # get_available_commands
 # ─────────────────────────────────────────────────────────────
+
 
 class TestGetAvailableCommands:
 

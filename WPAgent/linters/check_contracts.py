@@ -49,10 +49,10 @@ def _c(code: str, text: str) -> str:
     return f"\033[{code}m{text}\033[0m" if _USE_COLOR else text
 
 
-OK   = lambda t: _c("32", t)   # green
-ERR  = lambda t: _c("31", t)   # red
-WARN = lambda t: _c("33", t)   # yellow
-DIM  = lambda t: _c("2",  t)   # dim
+OK = lambda t: _c("32", t)  # green
+ERR = lambda t: _c("31", t)  # red
+WARN = lambda t: _c("33", t)  # yellow
+DIM = lambda t: _c("2", t)  # dim
 
 # ── AST helpers ───────────────────────────────────────────────────────────────
 
@@ -157,6 +157,7 @@ def has_responsebuilder_return(func_node: ast.FunctionDef) -> bool:
 
 
 # ── Main checker ──────────────────────────────────────────────────────────────
+
 
 def run_checks(verbose: bool = False) -> int:
     """Run all checks. Returns 0 (pass) or 1 (fail)."""

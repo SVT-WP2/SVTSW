@@ -8,7 +8,6 @@ These tests verify the state machine behaves correctly for all operations.
 import pytest
 from drivers.WPMockProber import MockProberImpl
 
-
 # ──────────────────────────────────────────────────────────────
 # Construction / defaults
 # ──────────────────────────────────────────────────────────────
@@ -172,7 +171,7 @@ class TestChuckPositionQueries:
         result = mock_prober.get_dies_number()
         parts = result.split(",")
         assert len(parts) == 3
-        assert int(parts[0]) > 0      # total > 0
+        assert int(parts[0]) > 0  # total > 0
 
     def test_get_current_working_area_default(self, mock_prober):
         assert mock_prober.get_current_working_area() == "Probing"

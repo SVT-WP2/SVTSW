@@ -1,17 +1,10 @@
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
-from utilities.WPHelpers import (
-    resolve_project_parameters,
-    ensure_prober_initialized,
-    check_prober_ready,
-)
 from utilities.WPResponseBuilder import ResponseBuilder
 from services.WPDbKafkaClient import DBKafkaClient
 import actions.WPDataBaseActions
 import json
 import os
-
-from utilities.WPValidationDecorator import validate_command
 
 
 def _parse_die_position(die_string):
@@ -77,7 +70,7 @@ def svt_initialise_wp(
         # Detect mock mode
         is_mock = machine_type.lower() == "mock"
         if is_mock:
-            print(f"🎭 Mock mode detected - simulated prober")
+            print(" Mock mode detected - simulated prober")
 
         # ============================================================
         # INITIALIZE PROBER DIRECTLY VIA FACTORY
@@ -104,7 +97,7 @@ def svt_initialise_wp(
         # Update all payload fields
         if machine_id is not None:
             globals_.set_machine_id(machine_id)
-            globals_.wpMachineId  = machine_id
+            globals_.wpMachineId = machine_id
 
         if machine_name:
             globals_.machine_name = machine_name
@@ -159,7 +152,7 @@ def svt_initialise_wp(
                 else:
                     globals_.loaded_wafer_id = None
                     globals_.wafer_orientation = None
-                    print(f"ℹ️  No wafer loaded in DB")
+                    print("ℹ️  No wafer loaded in DB")
 
                 # Sync installed probe card
                 card_id = our_machine.get("installedProbeCardId")
@@ -176,7 +169,7 @@ def svt_initialise_wp(
                 else:
                     globals_.probe_card_id = None
                     globals_.probe_card_orientation = None
-                    print(f"ℹ️  No probe card installed in DB")
+                    print("ℹ️  No probe card installed in DB")
         else:
             print(f"⚠️  Machine ID {machine_id} not found in database")
 
@@ -531,4 +524,3 @@ def help_command(command=None, user=None, waferAgentName=None):
     }
 
     return response
-

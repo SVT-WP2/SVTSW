@@ -1,8 +1,4 @@
 from utilities.WPResponseBuilder import ResponseBuilder
-from sequencer.WPSequencer import WPSequencer
-from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
-
-from stateMachine.WpAgentStateMachine import WPAgentState
 
 
 def run_sequencer(filepath, user=None, waferAgentName=None, executor=None):

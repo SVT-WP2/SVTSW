@@ -68,6 +68,7 @@ def reset_globals():
 @pytest.fixture
 def globals_instance():
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
     return SvtWPAagentGlobalParameters.getInstance()
 
 
@@ -82,6 +83,7 @@ def logged_in_user(globals_instance):
 @pytest.fixture
 def mock_prober():
     from drivers.WPMockProber import MockProberImpl
+
     return MockProberImpl()
 
 

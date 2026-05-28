@@ -26,7 +26,9 @@ class TestResolveProjectParameters:
         assert machine == "sentio"
 
     def test_explicit_params_update_globals(self, globals_instance):
-        resolve_project_parameters(address="10.0.0.1", projectName="ProjA", machineType="mock")
+        resolve_project_parameters(
+            address="10.0.0.1", projectName="ProjA", machineType="mock"
+        )
         assert globals_instance.address == "10.0.0.1"
         assert globals_instance.projectName == "ProjA"
         assert globals_instance.machineType == "mock"
@@ -45,7 +47,9 @@ class TestResolveProjectParameters:
         globals_instance.set_address("172.16.0.1")
         globals_instance.set_machine_type("sentio")
 
-        address, project, machine = resolve_project_parameters(projectName="OverriddenProject")
+        address, project, machine = resolve_project_parameters(
+            projectName="OverriddenProject"
+        )
         assert address == "172.16.0.1"
         assert project == "OverriddenProject"
         assert machine == "sentio"

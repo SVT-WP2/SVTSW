@@ -1,4 +1,3 @@
-
 import sys
 from pathlib import Path
 
@@ -28,13 +27,12 @@ _all_commands = [cmd for cmd, _, _ in _entries]
 _checkable = [
     (cmd, alias, func)
     for cmd, alias, func in _entries
-    if func is not None
-    and func not in EXEMPT_FUNCTIONS
-    and alias is not None
+    if func is not None and func not in EXEMPT_FUNCTIONS and alias is not None
 ]
 
 
 # ── 1. PascalCase names ───────────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("cmd", _all_commands, ids=_all_commands)
 def test_command_name_is_pascal_case(cmd: str) -> None:
@@ -46,6 +44,7 @@ def test_command_name_is_pascal_case(cmd: str) -> None:
 
 
 # ── 2. ResponseBuilder returns ────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize(
     "cmd,alias,func_name",

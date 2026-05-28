@@ -73,8 +73,8 @@ COMMAND_ROUTER = {
     "TakeScreenshot": testing_actions.take_screenshot,
 }
 
-COMMAND_ROUTER["ListAvailableCommands"] = lambda **kwargs: command_actions.list_available_commands(
-    COMMAND_ROUTER, **kwargs
+COMMAND_ROUTER["ListAvailableCommands"] = (
+    lambda **kwargs: command_actions.list_available_commands(COMMAND_ROUTER, **kwargs)
 )
 
 # Instantiation of logger
@@ -203,7 +203,9 @@ def execute_command(message_type, data=None):
         else:
             # Check if it's a parameter error (less severe)
             error_msg = result.get("error", {}).get("message", "").lower()
-            if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
+            if any(
+                kw in error_msg for kw in ["missing", "invalid parameter", "required"]
+            ):
                 severity = Severity.WARNING
             else:
                 severity = Severity.ERROR

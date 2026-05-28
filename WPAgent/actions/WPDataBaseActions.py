@@ -479,7 +479,7 @@ def update_wp_machine_installed_probe_card(
 
         db_client = _get_db_client()
 
-        print(f"\n💾 Updating installed probe card in DB...")
+        print("\n💾 Updating installed probe card in DB...")
         print(f"   Machine ID: {wp_machine_id}")
         print(f"   Probe Card ID: {installed_probe_card_id}")
         print(f"   Orientation: {orientation}")
@@ -611,7 +611,7 @@ def get_asic_by_id(asic_id: int) -> dict:
     # Get first (and only) item
     asic_data = items[0]
 
-    print(f"✅ Found ASIC in database:")
+    print("✅ Found ASIC in database:")
     print(f"   ID: {asic_data.get('id')}")
     print(f"   Serial Number: {asic_data.get('serialNumber')}")
     print(f"   Family Type: {asic_data.get('familyType')}")

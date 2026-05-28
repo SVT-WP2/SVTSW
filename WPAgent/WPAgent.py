@@ -67,7 +67,7 @@ class WaferProberAgent:
                 if response not in ["yes", "y"]:
                     print("❌ Command cancelled")
                     return {
-                        "status": "cancelled",
+                        "status": "Error",
                         "output": "Command cancelled by user",
                     }
 
@@ -241,7 +241,7 @@ class WaferProberAgent:
 
             return config
 
-        except Exception as e:
+        except Exception:
             # Silently fail - will fallback to config file
             return None
 
@@ -301,7 +301,7 @@ class WaferProberAgent:
                 print(json.dumps(result, indent=2))
                 return False
 
-        except Exception as e:
+        except Exception:
             print("❌ Auto-initialization error: {str(e)}")
             import traceback
 
@@ -380,8 +380,10 @@ class WaferProberAgent:
                     print("   ✅ DB Kafka client initialized\n")
                 else:
                     print("⚠️  No kafka_broker in config, using defaults")
-                    self.health_check = ListenerHealthCheck()
-                    self.kafka = KafkaClient()
+                    self.health_check = ListenerHealthCheck(
+                        bootstrap_servers=kafka_broker
+                    )
+                    self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
 
                 # Auto-initialize prober
                 init_success = self._auto_initialize_prober(config_name, config)
@@ -404,7 +406,7 @@ class WaferProberAgent:
                 return
         else:
             print(f"\n{'=' * 70}")
-            print(f"  Starting WP Agent (no auto-config)")
+            print("  Starting WP Agent (no auto-config)")
             print(f"{'=' * 70}\n")
             print("💡 Tip: Start with a config for auto-initialization:")
             print("   python main.py listen CERN\n")

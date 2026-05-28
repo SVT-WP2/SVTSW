@@ -1,9 +1,6 @@
-from drivers.WPFactory import get_prober
-from utilities.WPHelpers import resolve_project_parameters
 from utilities.WPResponseBuilder import ResponseBuilder
 import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
-from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPValidationDecorator import validate_command
 from utilities.WPMapConverter import get_converter
 
@@ -21,7 +18,7 @@ def _ensure_initialized():
 
     is_ready, message = check_prober_ready()
     if not is_ready:
-        return {"status": "error", "output": message}
+        return {"status": "Error", "output": message}
     return None
 
 
@@ -39,12 +36,12 @@ def _parse_svt_label(label: str):
         "babyMOSAIX-3_2_ER2-W5"   → ("babyMOSAIX", 3, 2)
     """
     if label.startswith("babyMOSAIX-"):
-        remainder = label[len("babyMOSAIX-"):]  # "1_1_ER2-W1"
+        remainder = label[len("babyMOSAIX-") :]  # "1_1_ER2-W1"
         parts = remainder.split("_")  # ["1", "1", "ER2-W1"]
         return "babyMOSAIX", int(parts[0]), int(parts[1])
 
     elif label.startswith("MOSAIX-"):
-        remainder = label[len("MOSAIX-"):]  # "1_ER2-W1"
+        remainder = label[len("MOSAIX-") :]  # "1_ER2-W1"
         parts = remainder.split("_")  # ["1", "ER2-W1"]
         return "MOSAIX", int(parts[0]), 1  # column_svt always 1 for MOSAIX
 
@@ -99,6 +96,7 @@ def _label_to_coordinates(label: str):
             converter = get_converter()
             if not converter.conversion_map:
                 import pathlib
+
                 _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
                 MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
                 converter.load_conversion_map(MAP_CONVERSION_PATH)
@@ -106,9 +104,11 @@ def _label_to_coordinates(label: str):
             result = converter.svt_to_local(row_svt, column_svt, sn_prefix)
             if result:
                 row_local, col_local, _ = result
-                print(f"   📍 SVT label '{label}' → SVT({row_svt},{column_svt}) → Local({row_local},{col_local})")
-                return (col_local, row_local)
-        except (ValueError, IndexError) as e:
+                print(
+                    f"   📍 SVT label '{label}' → SVT({row_svt}, {column_svt}) → Local({row_local}, {col_local})"
+                )
+                return col_local, row_local
+        except (ValueError, IndexError):
             # Not SVT format, try ITS3
             pass
 
@@ -121,6 +121,7 @@ def _label_to_coordinates(label: str):
             converter = get_converter()
             if not converter.conversion_map:
                 import pathlib
+
                 _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
                 MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
                 converter.load_conversion_map(MAP_CONVERSION_PATH)
@@ -128,9 +129,11 @@ def _label_to_coordinates(label: str):
             result = converter.its3_to_local(id_its3, sn_prefix)
             if result:
                 row_local, col_local, _ = result
-                print(f"   📍 ITS3 label '{label}' → ID({id_its3}) → Local({row_local},{col_local})")
-                return (col_local, row_local)
-        except (ValueError, IndexError) as e:
+                print(
+                    f"   📍 ITS3 label '{label}' → ID({id_its3}) → Local({row_local}, {col_local})"
+                )
+                return col_local, row_local
+        except (ValueError, IndexError):
             # Not ITS3 format either
             pass
 
@@ -154,7 +157,9 @@ def update_current_info(currentProber=None):
     g.set_chuck_position(currentProber.get_chuck_position())
 
     # update working area
-    g.current_working_area = currentProber.get_current_working_area().removesuffix("Camera")
+    g.current_working_area = currentProber.get_current_working_area().removesuffix(
+        "Camera"
+    )
     g.camera_mount_point = currentProber.get_current_working_area()
 
 
@@ -164,17 +169,21 @@ def update_current_info(currentProber=None):
 
 
 def take_screenshot(
-        fileName=None, snapshot_type="CameraRaw", save_locally=True, outputDir="screenshots", user=None,
-        waferAgentName=None
+    fileName=None,
+    snapshot_type="CameraRaw",
+    save_locally=True,
+    outputDir="screenshots",
+    user=None,
+    waferAgentName=None,
 ):
     """
     Take a screenshot from prober camera
 
     Args:
-        filename: Optional filename (auto-generated if not provided)
+        fileName: Optional filename (auto-generated if not provided)
         snapshot_type: "CameraRaw", "Overlay", or "CameraProcessed"
         save_locally: True to save on WP Agent machine, False to save on prober
-        output_dir: Directory to save screenshots
+        outputDir: Directory to save screenshots
         user: User performing action
         waferAgentName: Agent name
 
@@ -189,22 +198,22 @@ def take_screenshot(
         prober = get_current_prober()
 
         filepath = prober.take_screenshot(
-            filename=fileName, snapshot_type=snapshot_type, save_locally=save_locally, output_dir=outputDir
+            filename=fileName,
+            snapshot_type=snapshot_type,
+            save_locally=save_locally,
+            output_dir=outputDir,
         )
 
         # Get absolute path
         abs_path = os.path.abspath(filepath)
 
         agentStateMachine.transition("TakeScreenshot")
-        return ResponseBuilder.success("TakeScreenshotReply", f"Screenshot saved: {abs_path}")
+        return ResponseBuilder.success(
+            "TakeScreenshotReply", f"Screenshot saved: {abs_path}"
+        )
 
     except RuntimeError as e:
         return ResponseBuilder.error("TakeScreenshotReply", str(e), 400)
-
-        import traceback
-
-        traceback.print_exc()
-        return ResponseBuilder.error("TakeScreenshotReply", str(e), 500)
 
 
 @validate_command
@@ -219,12 +228,10 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
         user: current user
         waferAgentName: current WP Agent Name
     """
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return error
-    g = SvtWPAagentGlobalParameters.getInstance()
     try:
         prober = get_current_prober()
         prober.move_chuck_xy(x, y, position)
@@ -234,7 +241,9 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("MoveChuckXY")
-        return ResponseBuilder.success("MoveChuckXYReply", f"Moved chuck to x={x}, y={y}")
+        return ResponseBuilder.success(
+            "MoveChuckXYReply", f"Moved chuck to x={x}, y={y}"
+        )
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
@@ -244,13 +253,10 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
 @validate_command
 def move_chuck_z(z, user=None, waferAgentName=None):
     """Move chuck to Z position"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("MoveChuckZReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -271,13 +277,10 @@ def move_chuck_z(z, user=None, waferAgentName=None):
 @validate_command
 def move_chuck_center(user=None, waferAgentName=None):
     """Move chuck to Center"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("MoveChuckCenterReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -298,13 +301,10 @@ def move_chuck_center(user=None, waferAgentName=None):
 @validate_command
 def move_chuck_home(user=None, waferAgentName=None):
     """Move chuck to home position"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("MoveChuckHomeReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -348,7 +348,9 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckToWorkArea")
 
-        return ResponseBuilder.success("MoveChuckToWorkAreaReply", f"Moved to {work_area} workarea")
+        return ResponseBuilder.success(
+            "MoveChuckToWorkAreaReply", f"Moved to {work_area} workarea"
+        )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -380,7 +382,9 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         agentStateMachine.transition("MoveChuckOffAxis")
 
-        return ResponseBuilder.success("MoveChuckOffAxisReply", "Probe station is in off-axis position")
+        return ResponseBuilder.success(
+            "MoveChuckOffAxisReply", "Probe station is in off-axis position"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckOffAxisReply", str(e), 500)
@@ -411,7 +415,9 @@ def move_chuck_wide(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         agentStateMachine.transition("MoveChuckWide")
 
-        return ResponseBuilder.success("MoveChuckWideReply", "Probe station is in wide position")
+        return ResponseBuilder.success(
+            "MoveChuckWideReply", "Probe station is in wide position"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckWideReply", str(e), 500)
@@ -452,7 +458,9 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         agentStateMachine.transition("MoveChuckSafePosition")
 
-        return ResponseBuilder.success("MoveChuckSafePositionReply", "Probe station is in safe position")
+        return ResponseBuilder.success(
+            "MoveChuckSafePositionReply", "Probe station is in safe position"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckSafePositionReply", str(e), 500)
@@ -482,7 +490,9 @@ def move_chuck_contact(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Contact"
         agentStateMachine.transition("MoveChuckContact")
 
-        return ResponseBuilder.success("MoveChuckContactReply", "Probe station is in contact")
+        return ResponseBuilder.success(
+            "MoveChuckContactReply", "Probe station is in contact"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckContactReply", str(e), 500)
@@ -511,7 +521,9 @@ def move_chuck_separation(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         agentStateMachine.transition("MoveChuckSeparation")
 
-        return ResponseBuilder.success("MoveChuckSeparationReply", "Probe station is in separation")
+        return ResponseBuilder.success(
+            "MoveChuckSeparationReply", "Probe station is in separation"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
@@ -523,7 +535,9 @@ def move_chuck_separation(user=None, waferAgentName=None):
 
 
 @validate_command
-def move_chuck_die(col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None):
+def move_chuck_die(
+    col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None
+):
     """
     Move to specific die using ANY coordinate system.
 
@@ -566,12 +580,16 @@ def move_chuck_die(col=None, row=None, label=None, subsite=0, user=None, waferAg
 
     if not has_coordinates and not has_label:
         return ResponseBuilder.error(
-            "MoveChuckRowColumnReply", "Must provide either (col, row) or label parameter", 400
+            "MoveChuckRowColumnReply",
+            "Must provide either (col, row) or label parameter",
+            400,
         )
 
     if has_coordinates and has_label:
         return ResponseBuilder.error(
-            "MoveChuckRowColumnReply", "Cannot provide both coordinates (col, row) and label. Choose one.", 400
+            "MoveChuckRowColumnReply",
+            "Cannot provide both coordinates (col, row) and label. Choose one.",
+            400,
         )
 
     # ==============================================================
@@ -588,7 +606,7 @@ def move_chuck_die(col=None, row=None, label=None, subsite=0, user=None, waferAg
             return ResponseBuilder.error(
                 "MoveChuckRowColumnReply",
                 f"Invalid label format: '{label}'\n\n"
-                f"Supported formats:\n"
+                "Supported formats:\n"
                 f"  SVT: 'babyMOSAIX-1_1_ER2-W1' or 'MOSAIX-1_ER2-W1'\n"
                 f"  ITS3: 'BAM00', 'BAM19', 'SEG0', 'SEG4'",
                 400,
@@ -635,13 +653,10 @@ def move_chuck_die(col=None, row=None, label=None, subsite=0, user=None, waferAg
 @validate_command
 def move_chuck_next_die(user=None, waferAgentName=None):
     """Step to next die"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("MoveChuckNextDieReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -653,7 +668,9 @@ def move_chuck_next_die(user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckNextDie")
 
-        return ResponseBuilder.success("MoveChuckNextDieReply", f"Stepped to next die: {result}")
+        return ResponseBuilder.success(
+            "MoveChuckNextDieReply", f"Stepped to next die: {result}"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("MoveChuckNextDieReply", str(e), 500)
@@ -662,13 +679,10 @@ def move_chuck_next_die(user=None, waferAgentName=None):
 @validate_command
 def move_chuck_previous_die(user=None, waferAgentName=None):
     """Move to previous die"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("MoveChuckPreviousDieReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -681,7 +695,9 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckPreviousDie")
 
-        return ResponseBuilder.success("MoveChuckPreviousDieReply", "Moved to previous die")
+        return ResponseBuilder.success(
+            "MoveChuckPreviousDieReply", "Moved to previous die"
+        )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -702,8 +718,6 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
     if error:
         return ResponseBuilder.error("SetPTPAReply", error["output"], 400)
 
-    g = SvtWPAagentGlobalParameters.getInstance()
-
     try:
         prober = get_current_prober()
         prober.set_ptpa(enable)
@@ -721,13 +735,10 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
 @validate_command
 def run_ptpa(user=None, waferAgentName=None):
     """Run PTPA alignment"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("RunPTPAReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -749,13 +760,10 @@ def run_ptpa(user=None, waferAgentName=None):
 @validate_command
 def init_probing(user=None, waferAgentName=None):
     """Sequence of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("InitProbingReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -782,13 +790,10 @@ def init_probing(user=None, waferAgentName=None):
 @validate_command
 def find_home(user=None, waferAgentName=None):
     """Find home position"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("FindHomeReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -808,7 +813,9 @@ def find_home(user=None, waferAgentName=None):
 
 
 @validate_command
-def align_wafer(align_die_col=None, align_die_row=None, subsite=None, user=None, waferAgentName=None):
+def align_wafer(
+    align_die_col=None, align_die_row=None, subsite=None, user=None, waferAgentName=None
+):
     """Perform wafer alignment"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
@@ -852,10 +859,9 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None, user=None,
 
         agentStateMachine.transition("AlignWafer")
 
-        g.wpag_state = "WP_Idle"
-
         return ResponseBuilder.success(
-            "AlignWaferReply", f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}"
+            "AlignWaferReply",
+            f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}",
         )
     except Exception as e:
 
@@ -864,22 +870,17 @@ def align_wafer(align_die_col=None, align_die_row=None, subsite=None, user=None,
 
 
 @validate_command
-def auto_focus(user=None, waferAgentName="CERN"):
+def auto_focus(user=None, waferAgentName=None):
     """Execute auto-focus"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("AutoFocusReply", error["output"], 400)
 
-    g = SvtWPAagentGlobalParameters.getInstance()
-
     try:
         prober = get_current_prober()
 
         prober.auto_focus()
-
-        g.wpAgentName = waferAgentName
 
         # Update info
         update_current_info(currentProber=prober)
@@ -887,7 +888,9 @@ def auto_focus(user=None, waferAgentName="CERN"):
 
         agentStateMachine.transition("AutoFocus")
 
-        return ResponseBuilder.success("AutoFocusReply", "Auto-focus command successfully executed")
+        return ResponseBuilder.success(
+            "AutoFocusReply", "Auto-focus command successfully executed"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("AutoFocusReply", str(e), 500)
@@ -974,7 +977,6 @@ def unload_wafer(user=None, waferAgentName=None):
 def move_chuck_loaded_wafer(user=None, waferAgentName=None):
     """Load same wafer Load + MoveChuckOffAxis"""
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from actions.WPDataBaseActions import get_loaded_wafer_from_db
 
     error = _ensure_initialized()
     if error:
@@ -997,7 +999,9 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "OffAxis"
 
-        return ResponseBuilder.success("MoveChuckLoadedWaferReply", "Wafer has been loaded")
+        return ResponseBuilder.success(
+            "MoveChuckLoadedWaferReply", "Wafer has been loaded"
+        )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -1016,7 +1020,9 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
     g = SvtWPAagentGlobalParameters.getInstance()
 
     if g.loaded_wafer_id is None:
-        return ResponseBuilder.error("MoveChuckUnloadWaferReply", "No wafer loaded", 400)
+        return ResponseBuilder.error(
+            "MoveChuckUnloadWaferReply", "No wafer loaded", 400
+        )
 
     try:
         prober = get_current_prober()
@@ -1072,7 +1078,9 @@ def open_project(projectName: str, user=None, waferAgentName=None):
 
         agentStateMachine.transition("OpenProject")
 
-        return ResponseBuilder.success("OpenProjectReply", f"Opened project: {project_path}")
+        return ResponseBuilder.success(
+            "OpenProjectReply", f"Opened project: {project_path}"
+        )
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
@@ -1121,13 +1129,16 @@ def stress_open_project(projectName: str, user=None, waferAgentName=None):
 
 @validate_command
 def stress_open_project(
-        projectNameFirst: str, projectNameSecond: str, iterations: int, delay: float = 0.0, user=None,
-        waferAgentName=None
+    projectNameFirst: str,
+    projectNameSecond: str,
+    iterations: int,
+    delay: float = 0.0,
+    user=None,
+    waferAgentName=None,
 ):
     """Open project"""
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from actions.WPDataBaseActions import get_project_id_by_name
 
     error = _ensure_initialized()
     if error:
@@ -1169,7 +1180,7 @@ def stress_open_project(
             print("Dif =====================> ")
             print(dif)
 
-        return ResponseBuilder.success("StressOpenProjectReply", f"Opened project: {current_project}")
+        return ResponseBuilder.success("StressOpenProjectReply", f"test is DONE")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
@@ -1199,7 +1210,9 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
 
         agentStateMachine.transition("SwitchCamera")
 
-        return ResponseBuilder.success("SwitchCameraReply", f"Switched camera to {mountPoint}")
+        return ResponseBuilder.success(
+            "SwitchCameraReply", f"Switched camera to {mountPoint}"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("SwitchCameraReply", str(e), 500)
@@ -1221,10 +1234,6 @@ def get_chuck_position(user=None, waferAgentName=None):
         return ResponseBuilder.success("GetChuckPositionReply", f"Chuck is {position}")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        try:
-            prober.local_mode()
-        except:
-            pass
         return ResponseBuilder.error("GetChuckPositionReply", str(e), 500)
 
 
@@ -1252,7 +1261,9 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
         agentStateMachine.transition("SetOverdrive")
 
-        return ResponseBuilder.success("SetOvertravelReply", "SetOvertravel command successfully executed")
+        return ResponseBuilder.success(
+            "SetOvertravelReply", "SetOvertravel command successfully executed"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
@@ -1282,7 +1293,9 @@ def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None)
 
         agentStateMachine.transition("DisableOvertravel")
 
-        return ResponseBuilder.success("DisableOvertravelReply", "DisableOvertravel command successfully executed")
+        return ResponseBuilder.success(
+            "DisableOvertravelReply", "DisableOvertravel command successfully executed"
+        )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
@@ -1291,13 +1304,10 @@ def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None)
 @validate_command
 def local_mode(user=None, waferAgentName=None):
     """Set prober to local mode"""
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return ResponseBuilder.error("LocalModeReply", error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
 
     try:
         prober = get_current_prober()
@@ -1334,16 +1344,22 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
     try:
         asic_data = get_asic_by_id(asicId)
     except Exception as e:
-        return ResponseBuilder.error("MoveChuckAsicReply", f"Failed to get ASIC from database: {e}", 400)
+        return ResponseBuilder.error(
+            "MoveChuckAsicReply", f"Failed to get ASIC from database: {e}", 400
+        )
 
     # Extract serial number
     serial_number = asic_data.get("serialNumber")
     if not serial_number:
-        return ResponseBuilder.error("MoveChuckAsicReply", f"ASIC ID {asicId} has no serial number", 400)
+        return ResponseBuilder.error(
+            "MoveChuckAsicReply", f"ASIC ID {asicId} has no serial number", 400
+        )
 
     currentAsicWaferId = asic_data.get("waferId")
     if currentAsicWaferId != g.loaded_wafer_id:
-        return ResponseBuilder.error("MoveChuckAsicReply", f"ASIC ID {asicId} not found on loaded wafer", 400)
+        return ResponseBuilder.error(
+            "MoveChuckAsicReply", f"ASIC ID {asicId} not found on loaded wafer", 400
+        )
 
     print(f"   Serial Number: {serial_number}")
 
@@ -1352,7 +1368,11 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
     result = _label_to_coordinates(serial_number)
 
     if result is None:
-        return ResponseBuilder.error("MoveChuckAsicReply", f"Cannot parse ASIC serial number '{serial_number}'", 400)
+        return ResponseBuilder.error(
+            "MoveChuckAsicReply",
+            f"Cannot parse ASIC serial number '{serial_number}'",
+            400,
+        )
 
     col, row = result
     print(f"   ✅ Converted: col={col}, row={row}")
@@ -1369,7 +1389,8 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
         prober.local_mode()
 
         return ResponseBuilder.success(
-            "MoveChuckAsicReply", f"Moved to ASIC ID {asicId} (serial: {serial_number}) at col={col}, row={row}"
+            "MoveChuckAsicReply",
+            f"Moved to ASIC ID {asicId} (serial: {serial_number}) at col={col}, row={row}",
         )
 
     except Exception as e:
@@ -1378,7 +1399,9 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
 
 @validate_command
-def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", testSequenceId=None):
+def testing_lock(
+    user=None, waferAgentName=None, reason="Testing in progress", testSequenceId=None
+):
     """
     Lock the WP Agent for testing to prevent interference from other users.
 
@@ -1386,7 +1409,7 @@ def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", t
         user: User who is locking the agent (REQUIRED)
         waferAgentName: Agent name
         reason: Reason for locking (default: "Testing in progress")
-        test_sequence_id: ID of test sequence being run
+        testSequenceId: ID of test sequence being run
 
     Returns:
         Success if locked, error if already locked by someone else
@@ -1401,7 +1424,9 @@ def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", t
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     if user is None:
-        return ResponseBuilder.error("TestingLockReply", "User parameter is required for locking", 400)
+        return ResponseBuilder.error(
+            "TestingLockReply", "User parameter is required for locking", 400
+        )
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1412,7 +1437,9 @@ def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", t
         # If locked by same user, allow re-lock (update reason/test_id)
         if g.locked_by_user == user:
             g.lock_for_testing(user, reason, testSequenceId)
-            return ResponseBuilder.success("TestingLockReply", f"Lock updated for user '{user}'")
+            return ResponseBuilder.success(
+                "TestingLockReply", f"Lock updated for user '{user}'"
+            )
 
         # Locked by different user - DENY
         return ResponseBuilder.error(
@@ -1430,7 +1457,9 @@ def testing_lock(user=None, waferAgentName=None, reason="Testing in progress", t
     # Update state machine
     agentStateMachine.transition("TestingLock")
 
-    return ResponseBuilder.success("TestingLockReply", f"WP Agent locked for testing by '{user}'")
+    return ResponseBuilder.success(
+        "TestingLockReply", f"WP Agent locked for testing by '{user}'"
+    )
 
 
 @validate_command
@@ -1458,7 +1487,9 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     if user is None:
-        return ResponseBuilder.error("TestingUnlockReply", "User parameter is required for unlocking", 400)
+        return ResponseBuilder.error(
+            "TestingUnlockReply", "User parameter is required for unlocking", 400
+        )
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1467,14 +1498,16 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
         return ResponseBuilder.success("TestingUnlockReply", "WP Agent is not locked")
 
     # Get user hierarchy
-    user_hierarchy = g.user_logged_hierarchy if hasattr(g, "user_logged_hierarchy") else None
+    user_hierarchy = (
+        g.user_logged_hierarchy if hasattr(g, "user_logged_hierarchy") else None
+    )
 
     # Check authorization
     can_unlock = (
-            user == g.locked_by_user  # User who locked it
-            or user_hierarchy == "Developer"  # Developer
-            or force
-            and user_hierarchy == "Developer"  # Forced by Developer
+        user == g.locked_by_user  # User who locked it
+        or user_hierarchy == "Developer"  # Developer
+        or force
+        and user_hierarchy == "Developer"  # Forced by Developer
     )
 
     if not can_unlock:
@@ -1494,5 +1527,3 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
 
     # Update state machine
     agentStateMachine.transition("TestingUnlock")
-
-    unlock_message = f"WP Agent unlocked by '{user}' (was locked by '{locked_by}' for {lock_info['locked_duration_seconds']:.0f} seconds)"

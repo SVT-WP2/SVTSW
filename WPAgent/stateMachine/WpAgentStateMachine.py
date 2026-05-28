@@ -7,7 +7,7 @@ BYPASS_COMMANDS = {
     "Help",
     "AutoFocus",
     "Initialize",
-    "ResetAgent"
+    "ResetAgent",
 }
 
 
@@ -50,7 +50,7 @@ class WPAgentStateMachine:
             },
             # From OpenedProject
             WPAgentState.OpenedProject: {
-                "InitProbing": WPAgentState.Aligned,        # diagram: InitProbing also reaches Aligned from here
+                "InitProbing": WPAgentState.Aligned,  # diagram: InitProbing also reaches Aligned from here
                 "ChangeProject": WPAgentState.OpenedProject,  # self-loop: swap active project
                 "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
                 "UnloadWafer": WPAgentState.Unloaded,
@@ -89,7 +89,7 @@ class WPAgentStateMachine:
             WPAgentState.UserLogged: {
                 "OpenProject": WPAgentState.OpenedProject,
                 "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
-                "UnloadWafer": WPAgentState.ChuckUnloaded, # unload if changed mind after loading
+                "UnloadWafer": WPAgentState.ChuckUnloaded,  # unload if changed mind after loading
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide
@@ -163,18 +163,18 @@ class WPAgentStateMachine:
                 # NOTE: In can_execute(), ALL commands are allowed via is_developer_mode() bypass.
                 # These explicit entries cover developer-only free-movement commands that
                 # keep the state in UsedByDeveloper (via force_state in their action).
-                "MoveChuckXY":        WPAgentState.UsedByDeveloper,
-                "MoveChuckZ":         WPAgentState.UsedByDeveloper,
-                "MoveChuckCenter":    WPAgentState.UsedByDeveloper,
-                "MoveChuckHome":      WPAgentState.UsedByDeveloper,
+                "MoveChuckXY": WPAgentState.UsedByDeveloper,
+                "MoveChuckZ": WPAgentState.UsedByDeveloper,
+                "MoveChuckCenter": WPAgentState.UsedByDeveloper,
+                "MoveChuckHome": WPAgentState.UsedByDeveloper,
                 "MoveChuckToWorkArea": WPAgentState.UsedByDeveloper,
-                "FindHome":           WPAgentState.UsedByDeveloper,
-                "SwitchCamera":       WPAgentState.UsedByDeveloper,
-                "SetOvertravel":      WPAgentState.UsedByDeveloper,
-                "DisableOvertravel":  WPAgentState.UsedByDeveloper,
-                "LocalMode":          WPAgentState.UsedByDeveloper,
-                "TakeScreenshot":     WPAgentState.UsedByDeveloper,
-                "Error":              WPAgentState.Error,
+                "FindHome": WPAgentState.UsedByDeveloper,
+                "SwitchCamera": WPAgentState.UsedByDeveloper,
+                "SetOvertravel": WPAgentState.UsedByDeveloper,
+                "DisableOvertravel": WPAgentState.UsedByDeveloper,
+                "LocalMode": WPAgentState.UsedByDeveloper,
+                "TakeScreenshot": WPAgentState.UsedByDeveloper,
+                "Error": WPAgentState.Error,
             },
         }
 
@@ -231,7 +231,9 @@ class WPAgentStateMachine:
             return True
 
         print(f"⚠  BAD transition: {self.current_state.name} --[{command}]--> ???")
-        print(f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}")
+        print(
+            f"   Valid transitions from {self.current_state.name}: {list(valid_transitions.keys())}"
+        )
         return False
 
     def force_state(self, state: WPAgentState):

@@ -33,7 +33,7 @@ def _get_user_hierarchy(user: str) -> str:
 
 
 def UserLogIn(
-        user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
 ) -> dict:
     """
     User login - sets state based on hierarchy
@@ -127,7 +127,7 @@ def UserLogIn(
 
 
 def UserLogOut(
-        user: str, waferAgentName: str = None, address: str = None, machineType: str = None
+    user: str, waferAgentName: str = None, address: str = None, machineType: str = None
 ) -> dict:
     """
     User logout - clears user and resets state
@@ -176,4 +176,5 @@ def UserLogOut(
             print(f"👤 User '{user}' logged out")
 
         return ResponseBuilder.success(
-            "UserLogOutReply", f"User '{user}' logged out successfully.")
+            "UserLogOutReply", f"User '{user}' logged out successfully."
+        )

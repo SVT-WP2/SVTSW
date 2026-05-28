@@ -69,9 +69,7 @@ class KafkaClient:
             "linger.ms": 0,
             "compression.type": "none",
             "client.id": f"wp-agent-producer-{uuid.uuid4().hex[:8]}",
-            # Disable localhost fallback
             "socket.timeout.ms": 10000,
-            #'api.version.request': True,
         }
         self.producer = KafkaProducer(producer_config)
 
@@ -276,7 +274,9 @@ class KafkaClient:
                         },
                     }
                     print(f"⏱️  TIMEOUT: No response within {timeout}s")
-                    print("   Check if listener is running: python main.py check_listener_health")
+                    print(
+                        "   Check if listener is running: python main.py check_listener_health"
+                    )
                     return error_response
 
             else:
@@ -399,7 +399,7 @@ class KafkaClient:
                 raw_status = (result or {}).get("status", "error")
                 output = (result or {}).get("output", "No output")
 
-                if raw_status == "success":
+                if raw_status == "Success":
                     reply_body = {
                         "status": SvtMessageStatus.Success,
                         "type": f"{command}Reply",

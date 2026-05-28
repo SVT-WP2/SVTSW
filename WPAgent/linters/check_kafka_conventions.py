@@ -43,8 +43,13 @@ ROOT = Path(__file__).parent.parent  # WPAgent/ root (this file lives in linters
 
 # Files to scan (relative to ROOT, globs supported)
 SCAN_DIRS = ["actions", "services", "utilities", "stateMachine", "globals"]
-SCAN_EXTRA = ["WPAgent.py", "WPCmdMap.py", "WPCommandHandler.py",
-              "WPKafkaClient.py", "main.py"]
+SCAN_EXTRA = [
+    "WPAgent.py",
+    "WPCmdMap.py",
+    "WPCommandHandler.py",
+    "WPKafkaClient.py",
+    "main.py",
+]
 
 # Files exempt from the header-literal check.
 # - WPKafkaClient.py  : constants are DEFINED here
@@ -55,11 +60,11 @@ HEADER_STRINGS_EXEMPT = {"WPKafkaClient.py", "WPKafkaHeaders.py", "WPDbKafkaClie
 
 # Files to exclude from all checks (dead code / pending deletion / non-listener code)
 SCAN_EXCLUDE = {
-    "WPMapConversionActions.py",    # not in COMMAND_ROUTER, not imported — dead code
-    "WPCommandActions.py",          # pending deletion
-    "WPInitializationService.py",   # producer-side interactive CLI, not a Kafka listener
-    "WPCacheHeartbeat.py",          # internal monitoring heartbeat, not a command response
-    "WPListenerHeartbeat.py",       # internal monitoring heartbeat, not a command response
+    "WPMapConversionActions.py",  # not in COMMAND_ROUTER, not imported — dead code
+    "WPCommandActions.py",  # pending deletion
+    "WPInitializationService.py",  # producer-side interactive CLI, not a Kafka listener
+    "WPCacheHeartbeat.py",  # internal monitoring heartbeat, not a command response
+    "WPListenerHeartbeat.py",  # internal monitoring heartbeat, not a command response
 }
 
 # Valid status values per SVT convention
@@ -73,9 +78,9 @@ KAFKA_HEADER_STRINGS = {
 }
 
 # camelCase: starts with lowercase letter, no underscores, allows digits
-_CAMEL_RE   = re.compile(r"^[a-z][a-zA-Z0-9]*$")
+_CAMEL_RE = re.compile(r"^[a-z][a-zA-Z0-9]*$")
 # Full topic: svt.<segment>(.<segment>)*
-_TOPIC_RE   = re.compile(r"^svt(\.[a-z][a-z0-9-]*)+$")
+_TOPIC_RE = re.compile(r"^svt(\.[a-z][a-z0-9-]*)+$")
 
 # Keys that are allowed to deviate from camelCase (enum-style identifiers)
 CAMEL_WHITELIST = {"WPAG_State"}
@@ -84,30 +89,38 @@ CAMEL_WHITELIST = {"WPAG_State"}
 
 _USE_COLOR = "--no-color" not in sys.argv
 
+
 def _c(code: str, text: str) -> str:
     return f"\033[{code}m{text}\033[0m" if _USE_COLOR else text
 
-OK   = lambda t: _c("32", t)
-ERR  = lambda t: _c("31", t)
+
+OK = lambda t: _c("32", t)
+ERR = lambda t: _c("31", t)
 WARN = lambda t: _c("33", t)
-DIM  = lambda t: _c("2",  t)
+DIM = lambda t: _c("2", t)
 
 # ── Issue dataclass ────────────────────────────────────────────────────────────
 
+
 @dataclass
 class Issue:
-    severity: str          # "error" | "warning"
+    severity: str  # "error" | "warning"
     check: str
     file: str
     line: int
     message: str
 
     def __str__(self) -> str:
-        tag = ERR(f"[{self.severity.upper()}]") if self.severity == "error" else WARN("[WARN]")
+        tag = (
+            ERR(f"[{self.severity.upper()}]")
+            if self.severity == "error"
+            else WARN("[WARN]")
+        )
         return f"  {tag}  {self.file}:{self.line}  {self.message}"
 
 
 # ── File collection ────────────────────────────────────────────────────────────
+
 
 def collect_files() -> list[Path]:
     files: list[Path] = []
@@ -118,8 +131,7 @@ def collect_files() -> list[Path]:
         if p.exists():
             files.append(p)
     return [
-        f for f in files
-        if "__pycache__" not in str(f) and f.name not in SCAN_EXCLUDE
+        f for f in files if "__pycache__" not in str(f) and f.name not in SCAN_EXCLUDE
     ]
 
 
@@ -132,6 +144,7 @@ def parse(filepath: Path) -> tuple[ast.Module, list[str]] | None:
 
 
 # ── Check 1: Topic name format ─────────────────────────────────────────────────
+
 
 def check_topic_names(files: list[Path]) -> list[Issue]:
     """All svt.* string literals must be valid dash-case topic names."""
@@ -149,20 +162,23 @@ def check_topic_names(files: list[Path]) -> list[Issue]:
             if not val.startswith("svt."):
                 continue
             if not _TOPIC_RE.match(val):
-                issues.append(Issue(
-                    severity="error",
-                    check="topic-name",
-                    file=fname,
-                    line=node.lineno,
-                    message=(
-                        f"Topic '{val}' violates dash-case convention. "
-                        "Expected: svt.<dash-case-segment>(.<dash-case-segment>)*"
+                issues.append(
+                    Issue(
+                        severity="error",
+                        check="topic-name",
+                        file=fname,
+                        line=node.lineno,
+                        message=(
+                            f"Topic '{val}' violates dash-case convention. "
+                            "Expected: svt.<dash-case-segment>(.<dash-case-segment>)*"
+                        ),
                     )
-                ))
+                )
     return issues
 
 
 # ── Check 2: Reply topic suffix ────────────────────────────────────────────────
+
 
 def check_reply_topics(files: list[Path]) -> list[Issue]:
     """
@@ -184,16 +200,18 @@ def check_reply_topics(files: list[Path]) -> list[Issue]:
                 if val.endswith(".reply"):
                     base = val[:-6]  # strip ".reply"
                     if base and not _TOPIC_RE.match(base):
-                        issues.append(Issue(
-                            severity="error",
-                            check="reply-topic",
-                            file=fname,
-                            line=node.lineno,
-                            message=(
-                                f"Reply topic '{val}' — base '{base}' "
-                                "is not a valid topic name."
+                        issues.append(
+                            Issue(
+                                severity="error",
+                                check="reply-topic",
+                                file=fname,
+                                line=node.lineno,
+                                message=(
+                                    f"Reply topic '{val}' — base '{base}' "
+                                    "is not a valid topic name."
+                                ),
                             )
-                        ))
+                        )
 
             # Variable assignment: name contains "reply_topic" → value must end in .reply
             # Skip ALL_CAPS names (those are header-key constants, not topic variables)
@@ -208,20 +226,23 @@ def check_reply_topics(files: list[Path]) -> list[Issue]:
                     ):
                         val = node.value.value
                         if not val.endswith(".reply"):
-                            issues.append(Issue(
-                                severity="error",
-                                check="reply-topic",
-                                file=fname,
-                                line=node.lineno,
-                                message=(
-                                    f"Variable '{target.id}' is assigned '{val}' "
-                                    "but reply topics must end in .reply"
+                            issues.append(
+                                Issue(
+                                    severity="error",
+                                    check="reply-topic",
+                                    file=fname,
+                                    line=node.lineno,
+                                    message=(
+                                        f"Variable '{target.id}' is assigned '{val}' "
+                                        "but reply topics must end in .reply"
+                                    ),
                                 )
-                            ))
+                            )
     return issues
 
 
 # ── Check 3: Kafka header string literals ──────────────────────────────────────
+
 
 def check_header_literals(files: list[Path]) -> list[Issue]:
     """
@@ -245,20 +266,23 @@ def check_header_literals(files: list[Path]) -> list[Issue]:
                 and isinstance(node.value, str)
                 and node.value in KAFKA_HEADER_STRINGS
             ):
-                issues.append(Issue(
-                    severity="warning",
-                    check="header-literal",
-                    file=fname,
-                    line=node.lineno,
-                    message=(
-                        f"Raw header string '{node.value}' should be referenced "
-                        f"via its constant (KAFKA_HEADER__{node.value.replace('kafka_', '').upper()})."
+                issues.append(
+                    Issue(
+                        severity="warning",
+                        check="header-literal",
+                        file=fname,
+                        line=node.lineno,
+                        message=(
+                            f"Raw header string '{node.value}' should be referenced "
+                            f"via its constant (KAFKA_HEADER__{node.value.replace('kafka_', '').upper()})."
+                        ),
                     )
-                ))
+                )
     return issues
 
 
 # ── Check 4: Status values ─────────────────────────────────────────────────────
+
 
 def check_status_values(files: list[Path]) -> list[Issue]:
     """
@@ -266,7 +290,9 @@ def check_status_values(files: list[Path]) -> list[Issue]:
     Also checks == / != comparisons where the literal is a candidate status value.
     """
     issues: list[Issue] = []
-    _status_like = re.compile(r"^(success|error|ok|fail|bad.?request|not.?found|unexpected).*$", re.I)
+    _status_like = re.compile(
+        r"^(success|error|ok|fail|bad.?request|not.?found|unexpected).*$", re.I
+    )
 
     for filepath in files:
         result = parse(filepath)
@@ -289,17 +315,21 @@ def check_status_values(files: list[Path]) -> list[Issue]:
                         if val not in VALID_STATUS:
                             # Wrong-casing of a valid status → error (easy to fix)
                             # Truly non-standard value → warning (may be intentional)
-                            is_wrong_case = val.lower() in {s.lower() for s in VALID_STATUS}
-                            issues.append(Issue(
-                                severity="error" if is_wrong_case else "warning",
-                                check="status-value",
-                                file=fname,
-                                line=v.lineno,
-                                message=(
-                                    f"Invalid status value '{val}'. "
-                                    f"Must be one of: {', '.join(sorted(VALID_STATUS))}"
+                            is_wrong_case = val.lower() in {
+                                s.lower() for s in VALID_STATUS
+                            }
+                            issues.append(
+                                Issue(
+                                    severity="error" if is_wrong_case else "warning",
+                                    check="status-value",
+                                    file=fname,
+                                    line=v.lineno,
+                                    message=(
+                                        f"Invalid status value '{val}'. "
+                                        f"Must be one of: {', '.join(sorted(VALID_STATUS))}"
+                                    ),
                                 )
-                            ))
+                            )
 
             # Comparison: flag if literal looks like a misspelled status
             if isinstance(node, ast.Compare):
@@ -310,21 +340,24 @@ def check_status_values(files: list[Path]) -> list[Issue]:
                         and _status_like.match(comp.value)
                         and comp.value not in VALID_STATUS
                     ):
-                        issues.append(Issue(
-                            severity="warning",
-                            check="status-value",
-                            file=fname,
-                            line=comp.lineno,
-                            message=(
-                                f"Status-like string '{comp.value}' in comparison "
-                                f"is not a valid status value. "
-                                f"Valid values: {', '.join(sorted(VALID_STATUS))}"
+                        issues.append(
+                            Issue(
+                                severity="warning",
+                                check="status-value",
+                                file=fname,
+                                line=comp.lineno,
+                                message=(
+                                    f"Status-like string '{comp.value}' in comparison "
+                                    f"is not a valid status value. "
+                                    f"Valid values: {', '.join(sorted(VALID_STATUS))}"
+                                ),
                             )
-                        ))
+                        )
     return issues
 
 
 # ── Check 5: Data key naming (camelCase) ───────────────────────────────────────
+
 
 def check_data_key_naming(files: list[Path]) -> list[Issue]:
     """
@@ -343,17 +376,19 @@ def check_data_key_naming(files: list[Path]) -> list[Issue]:
             if key in CAMEL_WHITELIST:
                 continue
             if not _CAMEL_RE.match(key):
-                found.append(Issue(
-                    severity="warning",
-                    check="data-key-naming",
-                    file=fname,
-                    line=k.lineno,
-                    message=(
-                        f"Data key '{key}' in {context} is not camelCase. "
-                        "Keys in Kafka message data must start with a lowercase letter "
-                        "and contain no underscores."
+                found.append(
+                    Issue(
+                        severity="warning",
+                        check="data-key-naming",
+                        file=fname,
+                        line=k.lineno,
+                        message=(
+                            f"Data key '{key}' in {context} is not camelCase. "
+                            "Keys in Kafka message data must start with a lowercase letter "
+                            "and contain no underscores."
+                        ),
                     )
-                ))
+                )
         return found
 
     for filepath in files:
@@ -384,15 +419,17 @@ def check_data_key_naming(files: list[Path]) -> list[Issue]:
                 for k in node.keys:
                     if isinstance(k, ast.Constant) and isinstance(k.value, str):
                         if k.value not in allowed_top and not _CAMEL_RE.match(k.value):
-                            issues.append(Issue(
-                                severity="warning",
-                                check="data-key-naming",
-                                file=fname,
-                                line=k.lineno,
-                                message=(
-                                    f"Message field '{k.value}' is not camelCase."
+                            issues.append(
+                                Issue(
+                                    severity="warning",
+                                    check="data-key-naming",
+                                    file=fname,
+                                    line=k.lineno,
+                                    message=(
+                                        f"Message field '{k.value}' is not camelCase."
+                                    ),
                                 )
-                            ))
+                            )
 
     return issues
 
@@ -401,10 +438,14 @@ def check_data_key_naming(files: list[Path]) -> list[Issue]:
 
 CHECKS = [
     ("1", "Topic name format        (dash-case, dot-separated)", check_topic_names),
-    ("2", "Reply topic suffix       (must end in .reply)",       check_reply_topics),
-    ("3", "Kafka header literals    (use constants, not strings)",check_header_literals),
-    ("4", "Status values            (valid enum set)",            check_status_values),
-    ("5", "Data key naming          (camelCase)",                 check_data_key_naming),
+    ("2", "Reply topic suffix       (must end in .reply)", check_reply_topics),
+    (
+        "3",
+        "Kafka header literals    (use constants, not strings)",
+        check_header_literals,
+    ),
+    ("4", "Status values            (valid enum set)", check_status_values),
+    ("5", "Data key naming          (camelCase)", check_data_key_naming),
 ]
 
 
@@ -434,7 +475,7 @@ def run_checks(verbose: bool = False) -> int:
     # ── Summary
     print()
     print("=" * 65)
-    total_err  = sum(1 for i in all_issues if i.severity == "error")
+    total_err = sum(1 for i in all_issues if i.severity == "error")
     total_warn = sum(1 for i in all_issues if i.severity == "warning")
     if total_err > 0:
         print(ERR(f" [FAIL]  {total_err} error(s), {total_warn} warning(s)"))
