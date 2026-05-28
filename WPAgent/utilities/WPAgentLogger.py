@@ -73,7 +73,12 @@ class WPAgentLogger:
             Severity.CRITICAL: self.logger.critical,
         }.get(severityLevel, self.logger.info)
 
-        log_method(f"{command or 'N/A'} - {messageOut}")
+        parts = [f"{command or 'N/A'} - {messageOut}"]
+        if data is not None:
+            parts.append(f"data={json.dumps(data)}")
+        if result is not None:
+            parts.append(f"result={json.dumps(result)}")
+        log_method(" | ".join(parts))
 
         # Build structured log
         log_entry = {
