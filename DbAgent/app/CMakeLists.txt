@@ -95,7 +95,8 @@ endif()
 FetchContent_Declare(
   magic_enum
   GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
-  GIT_TAG master
+  GIT_TAG v0.9.8 # pinned release (was: master) - keep reproducible builds
+  GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS NAMES magic_enum)
 FetchContent_MakeAvailable(magic_enum)
 

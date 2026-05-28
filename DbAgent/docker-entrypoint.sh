@@ -3,8 +3,8 @@ set -euo pipefail
 
 THIS_SCRIPT_PATH=$(cd -- "$(dirname "${BASH_SOURCE[0]:-0}")" &>/dev/null && pwd -P)
 APP_BIN="${THIS_SCRIPT_PATH}/svt-db-agent/bin/svt_db_agent"
-DEFAULT_CONFIG="${THIS_SCRIPT_PATH}/configs/SvtDbAgent_config-local.json"
-RUNTIME_CONFIG="${SVT_DB_AGENT_RUNTIME_CONFIG:-/tmp/SvtDbAgent_config-runtime.json}"
+DEFAULT_CONFIG="${THIS_SCRIPT_PATH}/configs/SvtDbAgent_config.example.json"
+RUNTIME_CONFIG="${SVT_DB_AGENT_RUNTIME_CONFIG:-/tmp/SvtDbAgent_config.runtime.json}"
 
 BASE_CONFIG="${SVT_DB_AGENT_CONFIG:-$DEFAULT_CONFIG}"
 if [[ ${1:-} == *.json ]]; then
@@ -37,12 +37,12 @@ jq \
   if $loggerFilePath != "" then .logger.filePath = $loggerFilePath else . end |
   if $loggerTermVerbosity != "" then .logger.termVerbosity = $loggerTermVerbosity else . end |
   if $loggerFileVerbosity != "" then .logger.fileVerbosity = $loggerFileVerbosity else . end |
-  if $dbHost != "" then .DataBase.psqlHost = $dbHost else . end |
-  if $dbPort != "" then .DataBase.psqlPort = $dbPort else . end |
-  if $dbUser != "" then .DataBase.psqlUser = $dbUser else . end |
-  if $dbPass != "" then .DataBase.psqlPass = $dbPass else . end |
-  if $dbName != "" then .DataBase.psqlDbName = $dbName else . end |
-  if $dbSchema != "" then .DataBase.psqlDbSchema = $dbSchema else . end |
+  if $dbHost != "" then .database.psqlHost = $dbHost else . end |
+  if $dbPort != "" then .database.psqlPort = $dbPort else . end |
+  if $dbUser != "" then .database.psqlUser = $dbUser else . end |
+  if $dbPass != "" then .database.psqlPass = $dbPass else . end |
+  if $dbName != "" then .database.psqlDbName = $dbName else . end |
+  if $dbSchema != "" then .database.psqlDbSchema = $dbSchema else . end |
   if $kafkaServer != "" then .kafka.server = $kafkaServer else . end |
   if $kafkaPort != "" then .kafka.port = $kafkaPort else . end
   ' "$RUNTIME_CONFIG" >"$RUNTIME_CONFIG.tmp"

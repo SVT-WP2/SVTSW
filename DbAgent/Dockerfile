@@ -25,8 +25,8 @@ RUN apt-get install git-core -y
 # KAFKA DEPS
 RUN apt install librdkafka-dev -y
 
-COPY ./.pgpass /root/.pgpass
-RUN chmod 0600 /root/.pgpass
+COPY ./.pgpass* /root/
+RUN chmod 0600 /root/
 
 COPY ./configs ./configs
 COPY ./docker-entrypoint.sh .
@@ -43,4 +43,3 @@ FROM db-agent-base AS db-agent
 COPY --from=db-agent-build /app/install /app/svt-db-agent
 RUN chmod +x ./docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["/app/configs/SvtDbAgent_config-local.json"]

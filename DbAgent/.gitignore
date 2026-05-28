@@ -4,3 +4,5 @@
 **/.git_tag
 **/install
 **/build
+configs/*
+!configs/SvtDbAgent_config.example.json
