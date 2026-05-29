@@ -131,7 +131,7 @@ class CacheHealthCheck:
                         ):
                             last_heartbeat_time = heartbeat_time
 
-                except Exception as e:
+                except Exception:
                     # Silently ignore parse errors
                     pass
 
@@ -183,6 +183,13 @@ class CacheHealthMonitor:
         self.running = False
         self._thread = None
 
+    def _get_logger(self):
+        try:
+            from utilities.WPAgentLogger import WPAgentLogger
+            return WPAgentLogger()
+        except Exception:
+            return None
+
     def start(self):
         import threading
 
@@ -199,9 +206,18 @@ class CacheHealthMonitor:
                     if self.on_heartbeat:  # ← call snapshot if provided
                         self.on_heartbeat()
 
+                    logger = self._get_logger()
+                    if logger:
+                        logger.log_heartbeat("Cache", is_alive=True)
+
                     time.sleep(self.cache_check.HEARTBEAT_INTERVAL)
                 except Exception as e:
                     print(f"⚠️ Cache Heartbeat error: {e}")
+                    logger = self._get_logger()
+                    if logger:
+                        logger.log_heartbeat(
+                            "Cache", is_alive=False, kafka_error=str(e)
+                        )
 
         self._thread = threading.Thread(target=heartbeat_loop, daemon=False)
         self._thread.start()

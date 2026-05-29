@@ -1,6 +1,7 @@
 # It is a singleton class so only one instance can be created at a time
 import logging
 import json
+import time
 from confluent_kafka import Producer as KafkaProducer
 
 
@@ -56,6 +57,8 @@ class WPAgentLogger:
             stream_handler.setFormatter(formatter)
             self.logger.addHandler(stream_handler)
 
+    # ── command logging ───────────────────────────────────────────────────────
+
     def log_command(
         self,
         messageOut,
@@ -64,7 +67,6 @@ class WPAgentLogger:
         data=None,
         result=None,
     ):
-        # Log to local logger
         log_method = {
             Severity.DEBUG: self.logger.debug,
             Severity.INFO: self.logger.info,
@@ -80,7 +82,7 @@ class WPAgentLogger:
             parts.append(f"result={json.dumps(result)}")
         log_method(" | ".join(parts))
 
-        # Build structured log
+        # Build structured log for Kafka
         log_entry = {
             "command": command,
             "messageOut": messageOut,
@@ -89,7 +91,6 @@ class WPAgentLogger:
             "result": result,
         }
 
-        # Send to Kafka if enabled and severity is above threshold
         if self.kafka_enabled and severityLevel >= self.severity_threshold:
             try:
                 self.kafka_producer.produce(
@@ -101,6 +102,58 @@ class WPAgentLogger:
                 self.kafka_producer.poll(0)
             except Exception as e:
                 self.logger.error(f"Kafka log delivery failed: {e}")
+
+    # ── heartbeat / health logging ────────────────────────────────────────────
+
+    def log_heartbeat(
+        self,
+        component: str,
+        is_alive: bool,
+        age_seconds: float = None,
+        kafka_error: str = None,
+    ):
+        """Log a heartbeat health event to the file.
+
+        Args:
+            component:    Human-readable name, e.g. "Listener" or "Cache".
+            is_alive:     True if a recent heartbeat was received.
+            age_seconds:  How old the last heartbeat was, in seconds.
+                          Pass float('inf') or None when no heartbeat seen at all.
+            kafka_error:  Non-None string when the Kafka produce/consume itself
+                          raised an exception (connectivity problem).
+        """
+        # ── build status string ───────────────────────────────────────────────
+        if kafka_error:
+            status = "KAFKA-ERROR"
+            age_str = f"error={kafka_error}"
+            severity = Severity.ERROR
+        elif is_alive:
+            status = "ALIVE"
+            age_str = f"age={age_seconds:.1f}s" if age_seconds is not None else ""
+            severity = Severity.INFO
+        else:
+            status = "DEAD"
+            if age_seconds is None or age_seconds == float("inf"):
+                age_str = "no heartbeat received"
+            else:
+                age_str = f"last seen {age_seconds:.1f}s ago"
+            severity = Severity.WARNING
+
+        parts = [f"[HEARTBEAT] {component}={status}"]
+        if age_str:
+            parts.append(age_str)
+
+        message = " | ".join(parts)
+
+        log_method = {
+            Severity.INFO: self.logger.info,
+            Severity.WARNING: self.logger.warning,
+            Severity.ERROR: self.logger.error,
+        }.get(severity, self.logger.info)
+
+        log_method(message)
+
+    # ── internal ──────────────────────────────────────────────────────────────
 
     def _delivery_report(self, err, msg):
         if err is not None:

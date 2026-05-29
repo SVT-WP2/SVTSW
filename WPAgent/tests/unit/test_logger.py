@@ -291,3 +291,80 @@ class TestSingleton:
                 os.unlink(path2)
             except PermissionError:
                 pass
+
+
+# ── log_heartbeat ─────────────────────────────────────────────────────────────
+
+class TestLogHeartbeat:
+
+    def test_alive_writes_info_with_age(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Listener", is_alive=True, age_seconds=1.5)
+        content = _read_log(log_file)
+        assert "[HEARTBEAT]" in content
+        assert "Listener=ALIVE" in content
+        assert "1.5s" in content
+
+    def test_alive_without_age(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Cache", is_alive=True)
+        content = _read_log(log_file)
+        assert "Cache=ALIVE" in content
+
+    def test_dead_with_age_writes_warning(self, log_file):
+        from utilities.WPAgentLogger import WPAgentLogger, Severity
+        WPAgentLogger._instance = None
+        _close_handlers()
+        # Route WARNING to file (default level is INFO so WARNING goes through)
+        logger = WPAgentLogger(name="TestWPAgent", log_file=log_file)
+        logger.log_heartbeat("Listener", is_alive=False, age_seconds=9.2)
+        content = _read_log(log_file)
+        assert "Listener=DEAD" in content
+        assert "9.2s ago" in content
+        assert "WARNING" in content
+
+    def test_dead_no_heartbeat_ever(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Cache", is_alive=False, age_seconds=None)
+        content = _read_log(log_file)
+        assert "Cache=DEAD" in content
+        assert "no heartbeat received" in content
+
+    def test_dead_inf_age_treated_as_no_heartbeat(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Listener", is_alive=False, age_seconds=float("inf"))
+        content = _read_log(log_file)
+        assert "no heartbeat received" in content
+
+    def test_kafka_error_writes_error_level(self, log_file):
+        from utilities.WPAgentLogger import WPAgentLogger
+        WPAgentLogger._instance = None
+        _close_handlers()
+        logger = WPAgentLogger(
+            name="TestWPAgent", log_file=log_file, level=logging.DEBUG
+        )
+        logger.log_heartbeat(
+            "Listener", is_alive=False,
+            kafka_error="[Errno 111] Connection refused"
+        )
+        content = _read_log(log_file)
+        assert "KAFKA-ERROR" in content
+        assert "Connection refused" in content
+        assert "ERROR" in content
+
+    def test_cache_and_listener_both_logged(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Listener", is_alive=True, age_seconds=1.0)
+        logger.log_heartbeat("Cache", is_alive=True, age_seconds=0.5)
+        content = _read_log(log_file)
+        assert "Listener=ALIVE" in content
+        assert "Cache=ALIVE" in content
+
+    def test_heartbeat_and_command_coexist(self, log_file):
+        logger = _fresh_logger(log_file)
+        logger.log_heartbeat("Listener", is_alive=True, age_seconds=2.1)
+        logger.log_command("chuck moved", command="MoveChuckContact",
+                           result={"status": "Success"})
+        content = _read_log(log_file)
+        assert "[HEARTBEAT]" in content
+        assert "MoveChuckContact" in content

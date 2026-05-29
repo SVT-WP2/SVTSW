@@ -133,7 +133,7 @@ class ListenerHealthCheck:
                         ):
                             last_heartbeat_time = heartbeat_time
 
-                except Exception as e:
+                except Exception:
                     # Silently ignore parse errors
                     pass
 
@@ -188,6 +188,13 @@ class ListenerHealthMonitor:
         self.running = False
         self._thread = None
 
+    def _get_logger(self):
+        try:
+            from utilities.WPAgentLogger import WPAgentLogger
+            return WPAgentLogger()
+        except Exception:
+            return None
+
     def start(self):
         """Start sending heartbeats"""
         import threading
@@ -202,9 +209,17 @@ class ListenerHealthMonitor:
             while self.running:
                 try:
                     self.health_check.send_heartbeat()
+                    logger = self._get_logger()
+                    if logger:
+                        logger.log_heartbeat("Listener", is_alive=True)
                     time.sleep(self.health_check.HEARTBEAT_INTERVAL)
                 except Exception as e:
                     print(f"⚠️ Heartbeat error: {e}")
+                    logger = self._get_logger()
+                    if logger:
+                        logger.log_heartbeat(
+                            "Listener", is_alive=False, kafka_error=str(e)
+                        )
 
         self._thread = threading.Thread(target=heartbeat_loop, daemon=False)
         self._thread.start()
