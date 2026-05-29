@@ -1,26 +1,5 @@
 #!/usr/bin/env python3
-"""
-WPAgent Contract Checker
-========================
-Statically verifies two code contracts without importing any project modules:
 
-  1. COMMAND_ROUTER keys (command names) must be PascalCase.
-       "TestingLock"         ✅
-       "testingLock"         ❌
-       "testing_lock"        ❌
-
-  2. Every function registered in COMMAND_ROUTER must contain at least one
-     return statement that calls ResponseBuilder.success() or
-     ResponseBuilder.error().
-
-     Add names to EXEMPT_FUNCTIONS when a registered function intentionally
-     returns something other than a ResponseBuilder response.
-
-Usage:
-    python check_contracts.py              # exits 0 if clean, 1 on issues
-    python check_contracts.py --verbose    # also prints every OK check
-    python check_contracts.py --no-color   # plain output (for CI)
-"""
 
 from __future__ import annotations
 

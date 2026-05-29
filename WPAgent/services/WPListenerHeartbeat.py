@@ -209,12 +209,8 @@ class ListenerHealthMonitor:
             while self.running:
                 try:
                     self.health_check.send_heartbeat()
-                    logger = self._get_logger()
-                    if logger:
-                        logger.log_heartbeat("Listener", is_alive=True)
                     time.sleep(self.health_check.HEARTBEAT_INTERVAL)
                 except Exception as e:
-                    print(f"⚠️ Heartbeat error: {e}")
                     logger = self._get_logger()
                     if logger:
                         logger.log_heartbeat(

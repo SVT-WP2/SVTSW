@@ -206,13 +206,8 @@ class CacheHealthMonitor:
                     if self.on_heartbeat:  # ← call snapshot if provided
                         self.on_heartbeat()
 
-                    logger = self._get_logger()
-                    if logger:
-                        logger.log_heartbeat("Cache", is_alive=True)
-
                     time.sleep(self.cache_check.HEARTBEAT_INTERVAL)
                 except Exception as e:
-                    print(f"⚠️ Cache Heartbeat error: {e}")
                     logger = self._get_logger()
                     if logger:
                         logger.log_heartbeat(

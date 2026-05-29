@@ -1,33 +1,5 @@
 #!/usr/bin/env python3
-"""
-WPAgent Kafka Convention Checker
-=================================
-Verifies SVT Kafka naming and structure conventions via static AST analysis.
 
-Checks:
-  1. Topic names     — must be dash-case with dot separators
-                       svt.service-name.action  (no uppercase, no underscores)
-                       valid:   svt.wp-agent.request
-                       invalid: svt.WPAgent.Request  /  svt.wp_agent_request
-
-  2. Reply topics    — any topic string used as a reply must end in .reply
-                       request topic X  =>  reply topic must be X.reply
-
-  3. Header literals — kafka_correlationId / kafka_replyTopic / kafka_replyPartition
-                       must not appear as raw string literals; use the defined constants
-                       KAFKA_HEADER__CORRELATION_ID etc. everywhere except the definition
-
-  4. Status values   — "status" key in a dict literal must be one of:
-                       Success | Error | BadRequest | NotFound | UnexpectedError
-
-  5. Data key naming — keys inside message "data" dicts must be camelCase
-                       (lowercase first letter, no underscores)
-
-Usage:
-    python check_kafka_conventions.py              # all checks
-    python check_kafka_conventions.py --verbose    # show every OK result too
-    python check_kafka_conventions.py --no-color   # plain output for CI
-"""
 
 from __future__ import annotations
 
@@ -52,10 +24,10 @@ SCAN_EXTRA = [
 ]
 
 # Files exempt from the header-literal check.
-# - WPKafkaClient.py  : constants are DEFINED here
-# - WPKafkaHeaders.py : alternate constants file (if present)
-# - WPDbKafkaClient.py: cannot import from WPKafkaClient without a circular import,
-#                       so inline header strings are the only safe option here
+# - WPKafkaClient.py  :
+# - WPKafkaHeaders.py :
+# - WPDbKafkaClient.py: ,
+#
 HEADER_STRINGS_EXEMPT = {"WPKafkaClient.py", "WPKafkaHeaders.py", "WPDbKafkaClient.py"}
 
 # Files to exclude from all checks (dead code / pending deletion / non-listener code)
@@ -213,8 +185,6 @@ def check_reply_topics(files: list[Path]) -> list[Issue]:
                             )
                         )
 
-            # Variable assignment: name contains "reply_topic" → value must end in .reply
-            # Skip ALL_CAPS names (those are header-key constants, not topic variables)
             if isinstance(node, ast.Assign):
                 for target in node.targets:
                     if (

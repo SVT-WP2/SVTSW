@@ -68,7 +68,7 @@ echo ========================================
 if errorlevel 1 set ERRORS=1
 echo.
 
-:: Kafka convention checker
+:: Kafka convention
 echo ========================================
 echo  Kafka conventions  (topics/headers/status)
 echo ========================================
