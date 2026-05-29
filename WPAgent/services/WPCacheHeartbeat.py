@@ -186,6 +186,7 @@ class CacheHealthMonitor:
     def _get_logger(self):
         try:
             from utilities.WPAgentLogger import WPAgentLogger
+
             return WPAgentLogger()
         except Exception:
             return None

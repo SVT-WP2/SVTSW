@@ -23,8 +23,8 @@ import tempfile
 import pytest
 from unittest.mock import patch, MagicMock
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 def _close_handlers(logger_name: str = "TestWPAgent") -> None:
     """Close and remove every handler attached to *logger_name*.
@@ -41,6 +41,7 @@ def _close_handlers(logger_name: str = "TestWPAgent") -> None:
 def _fresh_logger(log_path, kafka_enabled=False):
     """Return a WPAgentLogger backed by *log_path*, with the singleton reset."""
     from utilities.WPAgentLogger import WPAgentLogger
+
     WPAgentLogger._instance = None
     _close_handlers()
     return WPAgentLogger(
@@ -57,11 +58,13 @@ def _read_log(log_path):
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture(autouse=True)
 def reset_singleton():
     """Reset the singleton and close all handlers after every test."""
     yield
     from utilities.WPAgentLogger import WPAgentLogger
+
     WPAgentLogger._instance = None
     _close_handlers()
 
@@ -88,6 +91,7 @@ def log_file():
 
 
 # ── basic write ───────────────────────────────────────────────────────────────
+
 
 class TestFileLogging:
 
@@ -135,9 +139,9 @@ class TestFileLogging:
             result={"status": "Success", "position": "contact"},
         )
         content = _read_log(log_file)
-        assert "result" in content or "Success" in content, (
-            "result field is missing from the file log"
-        )
+        assert (
+            "result" in content or "Success" in content
+        ), "result field is missing from the file log"
 
     def test_log_command_data_and_result_together(self, log_file):
         """Both data and result must appear when both are provided."""
@@ -161,10 +165,12 @@ class TestFileLogging:
 
 # ── severity levels ───────────────────────────────────────────────────────────
 
+
 class TestSeverityLevels:
 
     def test_debug_level_writes_to_file(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger, Severity
+
         WPAgentLogger._instance = None
         _close_handlers()
         logger = WPAgentLogger(
@@ -177,12 +183,16 @@ class TestSeverityLevels:
 
     def test_warning_level_writes_to_file(self, log_file):
         from utilities.WPAgentLogger import Severity
+
         logger = _fresh_logger(log_file)
-        logger.log_command("warn msg", severityLevel=Severity.WARNING, command="WarnCmd")
+        logger.log_command(
+            "warn msg", severityLevel=Severity.WARNING, command="WarnCmd"
+        )
         assert "WarnCmd" in _read_log(log_file)
 
     def test_error_level_writes_to_file(self, log_file):
         from utilities.WPAgentLogger import Severity
+
         logger = _fresh_logger(log_file)
         logger.log_command("err msg", severityLevel=Severity.ERROR, command="ErrCmd")
         assert "ErrCmd" in _read_log(log_file)
@@ -194,6 +204,7 @@ class TestSeverityLevels:
 
 
 # ── multiple entries ──────────────────────────────────────────────────────────
+
 
 class TestMultipleEntries:
 
@@ -217,6 +228,7 @@ class TestMultipleEntries:
 
 # ── Kafka path ────────────────────────────────────────────────────────────────
 
+
 class TestKafkaPath:
 
     def test_kafka_disabled_no_producer_created(self, log_file):
@@ -225,6 +237,7 @@ class TestKafkaPath:
 
     def test_kafka_enabled_calls_produce(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger, Severity
+
         mock_producer = MagicMock()
         WPAgentLogger._instance = None
         _close_handlers()
@@ -245,6 +258,7 @@ class TestKafkaPath:
     def test_kafka_failure_does_not_suppress_file_log(self, log_file):
         """If Kafka produce() raises, the file log must still be intact."""
         from utilities.WPAgentLogger import WPAgentLogger, Severity
+
         mock_producer = MagicMock()
         mock_producer.produce.side_effect = Exception("broker unavailable")
         WPAgentLogger._instance = None
@@ -265,16 +279,19 @@ class TestKafkaPath:
 
 # ── singleton ─────────────────────────────────────────────────────────────────
 
+
 class TestSingleton:
 
     def test_same_instance_returned(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger
+
         a = _fresh_logger(log_file)
         b = WPAgentLogger()
         assert a is b
 
     def test_instance_reset_allows_new_creation(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger
+
         a = _fresh_logger(log_file)
         WPAgentLogger._instance = None
         _close_handlers()
@@ -295,6 +312,7 @@ class TestSingleton:
 
 # ── log_heartbeat ─────────────────────────────────────────────────────────────
 
+
 class TestLogHeartbeat:
 
     def test_alive_writes_info_with_age(self, log_file):
@@ -313,6 +331,7 @@ class TestLogHeartbeat:
 
     def test_dead_with_age_writes_warning(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger, Severity
+
         WPAgentLogger._instance = None
         _close_handlers()
         # Route WARNING to file (default level is INFO so WARNING goes through)
@@ -338,14 +357,14 @@ class TestLogHeartbeat:
 
     def test_kafka_error_writes_error_level(self, log_file):
         from utilities.WPAgentLogger import WPAgentLogger
+
         WPAgentLogger._instance = None
         _close_handlers()
         logger = WPAgentLogger(
             name="TestWPAgent", log_file=log_file, level=logging.DEBUG
         )
         logger.log_heartbeat(
-            "Listener", is_alive=False,
-            kafka_error="[Errno 111] Connection refused"
+            "Listener", is_alive=False, kafka_error="[Errno 111] Connection refused"
         )
         content = _read_log(log_file)
         assert "KAFKA-ERROR" in content
@@ -363,8 +382,9 @@ class TestLogHeartbeat:
     def test_heartbeat_and_command_coexist(self, log_file):
         logger = _fresh_logger(log_file)
         logger.log_heartbeat("Listener", is_alive=True, age_seconds=2.1)
-        logger.log_command("chuck moved", command="MoveChuckContact",
-                           result={"status": "Success"})
+        logger.log_command(
+            "chuck moved", command="MoveChuckContact", result={"status": "Success"}
+        )
         content = _read_log(log_file)
         assert "[HEARTBEAT]" in content
         assert "MoveChuckContact" in content
