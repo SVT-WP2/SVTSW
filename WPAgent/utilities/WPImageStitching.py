@@ -18,13 +18,16 @@ The new approach:
           simultaneously.  For a 5×5 grid: ~40 equations, 24 unknowns.
           Measurement noise averages out; the solution is self-consistent.
 
-  Step 3  Build one row composite per row using the globally-optimised
-          per-row x positions.  Seam cut = flattest column in incoming tile.
+  Step 3  Wavefront composition: iterate tiles in raster order, placing each
+          one directly onto the growing canvas.  Each tile sees BOTH its left
+          neighbour (V-seam) and its top neighbour (H-seam) simultaneously,
+          so interior tiles blend at two edges at once.  The corner region
+          uses a combined mask: canvas owns the top-left quadrant, tile owns
+          everything else.
 
-  Step 4  Stack row composites at the globally-optimised y positions.
-          Seam cut = flattest row in incoming strip.
-
-Result: a single, self-consistent output with no rows-vs-cols duality.
+Result: a single, self-consistent output; interior tiles reference real
+stitched content from both neighbours, eliminating corner artefacts that
+accumulate in the old row-composite + stack approach.
 
 Naming convention : 00_00.jpg  (row_col, zero-padded, underscore separator)
 Entry point       : stitch_images(folder=...)   — same call as before
@@ -52,6 +55,23 @@ _PYRAMID_LEVELS  = 4       # API compat, not used
 _FEATHER_PX      = 35      # half-width of blend band around cut (px)
 
 _CUT_MARGIN = 20           # min px from overlap edge for seam cut
+_EQUIV_COST_MARGIN = 0.05  # V-seam (left/right tiles): candidate cuts within 5 %
+                           # of min SAD are equivalent; smallest x_cut is chosen.
+_EQUIV_COST_MARGIN_H = 0.30 # H-seam (top/bottom tiles): wider 30 % window.
+                           # Periodic histology tissue creates multiple cost aliases
+                           # one tissue-period apart; the deepest (largest row) alias
+                           # within this window is chosen, placing the seam as close
+                           # to the physical tile boundary as possible.
+_DX_TOLERANCE_V = 20      # search range (px) for horizontal offset in vertical pairs
+                           # must be larger than _TOLERANCE_PX because no horizontal
+                           # stage command is issued between rows, so stage drift /
+                           # sample rotation can produce dx values of 10-15 px.
+_DY_TOLERANCE_V = 50      # search range (px) for vertical shift in vertical pairs.
+                           # The commanded step_y sets the nominal overlap; the actual
+                           # stage landing can differ by 40+ px on this microscope
+                           # (confirmed by brute-force SAD scan: true fdy ≈ −43 px,
+                           # well outside the _TOLERANCE_PX = 5 window).  Using
+                           # tolerance=5 returns a noise peak and gives the wrong dy.
 
 
 # ==============================================================================
@@ -92,19 +112,28 @@ def _normalize_orientations(images, tw, th):
 # PHASE CORRELATION
 # ==============================================================================
 
-def _phase_corr_peak(strip1, strip2, tolerance):
-    """Hann-windowed phase correlation; returns (fine_dx, fine_dy)."""
+def _phase_corr_peak(strip1, strip2, tolerance, tolerance_x=None):
+    """Hann-windowed phase correlation; returns (fine_dx, fine_dy).
+
+    tolerance   : search radius in y (rows).
+    tolerance_x : search radius in x (cols); defaults to tolerance.
+                  Pass a larger value (e.g. _DX_TOLERANCE_V) when measuring
+                  the horizontal offset of vertically-adjacent tiles where
+                  the true dx can exceed the normal ±5 px fine window.
+    """
     g1 = cv2.cvtColor(strip1, cv2.COLOR_BGR2GRAY).astype(np.float32)
     g2 = cv2.cvtColor(strip2, cv2.COLOR_BGR2GRAY).astype(np.float32)
-    sh, sw = g1.shape
+    sh, sw  = g1.shape
+    tol_y   = tolerance
+    tol_x   = tolerance_x if tolerance_x is not None else tolerance
     win  = np.outer(np.hanning(sh), np.hanning(sw)).astype(np.float32)
     g1  *= win;  g2 *= win
     R    = np.fft.fft2(g1) * np.conj(np.fft.fft2(g2))
     R   /= np.abs(R) + 1e-8
     corr = np.fft.ifft2(R).real
     mask = np.zeros_like(corr)
-    yi   = [d % sh for d in range(-tolerance, tolerance + 1)]
-    xi   = [d % sw for d in range(-tolerance, tolerance + 1)]
+    yi   = [d % sh for d in range(-tol_y, tol_y + 1)]
+    xi   = [d % sw for d in range(-tol_x, tol_x + 1)]
     mask[np.ix_(yi, xi)] = 1.0
     cm   = corr * mask
     p    = np.unravel_index(np.argmax(cm), corr.shape)
@@ -114,22 +143,38 @@ def _phase_corr_peak(strip1, strip2, tolerance):
 
 
 def _subwindow_dy(st, sb, tolerance):
-    """Median dy from near-square sub-windows of a short/wide Y overlap strip.
+    """Median dy (and dx) from near-square sub-windows of a short/wide Y overlap strip.
+
+    Each sub-window is roughly square so that both horizontal and vertical
+    phase-correlation peaks are well-conditioned.
+
+    The dx search uses a wider tolerance (_DX_TOLERANCE_V) because the
+    commanded stage movement between rows has no horizontal component, so
+    the total horizontal offset between tiles can exceed the fine ±tolerance
+    window used for dy.
 
     Returns (median_dy, n, std, raw_dys, x_centers).
+    The median dx across sub-windows is stored in _subwindow_dy.last_dx
+    so _measure_pair_v can retrieve it without a separate call.
     """
     sh, sw = st.shape[:2]
     n  = max(1, sw // sh)
-    raw, x_centers = [], []
+    raw_dy, raw_dx, x_centers = [], [], []
     for i in range(n):
         x0 = i * (sw // n)
         x1 = (i + 1) * (sw // n) if i < n - 1 else sw
-        raw.append(_phase_corr_peak(st[:, x0:x1], sb[:, x0:x1], tolerance)[1])
+        fdx, fdy = _phase_corr_peak(st[:, x0:x1], sb[:, x0:x1],
+                                    tolerance, tolerance_x=_DX_TOLERANCE_V)
+        raw_dy.append(fdy)
+        raw_dx.append(fdx)
         x_centers.append((x0 + x1) / 2.0)
-    raw       = np.array(raw,       dtype=np.float32)
+    raw_dy    = np.array(raw_dy,    dtype=np.float32)
+    raw_dx    = np.array(raw_dx,    dtype=np.float32)
     x_centers = np.array(x_centers, dtype=np.float32)
-    med = int(round(float(np.median(raw))))
-    return med, n, float(np.std(raw)), raw, x_centers
+    med_dy = int(round(float(np.median(raw_dy))))
+    med_dx = int(round(float(np.median(raw_dx))))
+    _subwindow_dy.last_dx = med_dx          # stash for caller
+    return med_dy, n, float(np.std(raw_dy)), raw_dy, x_centers
 
 
 def _subwindow_dx(sl, sr, tolerance):
@@ -149,33 +194,136 @@ def _subwindow_dx(sl, sr, tolerance):
 # SEAM-CUT FINDING
 # ==============================================================================
 
-def _best_hcut(st, sb, margin=_CUT_MARGIN):
-    """Best horizontal cut = row where the two overlap strips agree most.
+def _refine_shift_1d(a, b, axis, max_shift=8):
+    """Measure residual 1-D shift between already-roughly-aligned strips.
 
-    Uses minimum sum-of-absolute-differences between canvas (st) and incoming
-    strip (sb).  This naturally avoids cutting on features that are misaligned
-    between the two tiles — a bright grid line that sits 3 px off in the
-    incoming tile gives a HIGH diff, so it is never chosen as the cut row.
-    Between-feature dark regions give LOW diff on both sides → preferred.
+    axis=0 : shift along y (rows)  — used to fine-tune dy at V-seams.
+    axis=1 : shift along x (cols)  — used to fine-tune dx at H-seams.
+
+    Returns integer shift s such that b is shifted by s pixels relative to a
+    in the chosen axis direction (positive = b further down/right).
+    This matches the sign convention of dy / dx throughout this module.
+
+    Returns 0 if no reliable peak is found — specifically when:
+      • the best offset is right at the search-window boundary (the true peak
+        is likely outside the window, so the result would be biased), or
+      • the best offset is not a true local maximum (the correlation is
+        monotone in the window — common when sample periodicity ≈ overlap size).
+    """
+    h = min(a.shape[0], b.shape[0])
+    w = min(a.shape[1], b.shape[1])
+    ca = a[:h, :w];  cb = b[:h, :w]
+    if ca.ndim == 3:
+        ca = cv2.cvtColor(ca.astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(np.float32)
+        cb = cv2.cvtColor(cb.astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(np.float32)
+    # Project onto the axis of interest
+    pa = ca.mean(axis=1 - axis).astype(np.float64)
+    pb = cb.mean(axis=1 - axis).astype(np.float64)
+    pa -= pa.mean();  pb -= pb.mean()
+    n    = len(pa)
+    corr = np.correlate(pa, pb, mode='full')
+    center = n - 1
+    lo = max(0, center - max_shift);  hi = min(len(corr), center + max_shift + 1)
+    best_idx = int(np.argmax(corr[lo:hi])) + lo
+    best_off = best_idx - center
+
+    # Reject if best offset is at the boundary — unreliable, true peak is elsewhere.
+    if abs(best_off) >= max_shift:
+        return 0
+
+    # Reject if not a genuine local maximum (no clear peak shape).
+    peak_val  = corr[best_idx]
+    left_val  = corr[best_idx - 1] if best_idx > 0              else peak_val - 1
+    right_val = corr[best_idx + 1] if best_idx < len(corr) - 1  else peak_val - 1
+    if not (peak_val > left_val and peak_val > right_val):
+        return 0
+
+    return best_off
+
+
+def _best_hcut(st, sb, margin=_CUT_MARGIN):
+    """Best horizontal cut = deepest equivalent candidate in the overlap strip.
+
+    Row-by-row SAD
+    --------------
+    Compare each row of the two (already dy-aligned) overlap strips.  Rows where
+    the tissue features happen to line up give a low SAD; rows in the middle of a
+    bright grid-line / dense-stain band give a high SAD.
+
+    Search window
+    -------------
+    Only the top edge has a margin applied (to avoid the poorly-calibrated /
+    vignetting zone at the top of the incoming strip).  The bottom is searched
+    all the way to the last overlap row: the overlap bottom is in the interior
+    of the canvas tile where quality is good, and the best seam often lies near
+    the physical tile boundary.
+
+    With periodic tissue there are multiple cost aliases one tissue-period apart.
+    We find all candidates within _EQUIV_COST_MARGIN_H of the global minimum and
+    pick the **deepest** (largest row index), placing the seam as close as
+    possible to the physical boundary between the two tiles.  Rows with extreme
+    cost spikes (bright grid lines etc.) are naturally excluded by the threshold.
     """
     H  = min(st.shape[0], sb.shape[0])
-    lo = max(0, margin);  hi = max(lo + 1, H - margin)
+    lo = max(0, margin)       # top margin only
+    hi = H                    # search all the way to the overlap bottom
     diff      = np.abs(st[lo:hi].astype(np.float32) - sb[lo:hi].astype(np.float32))
     row_costs = diff.sum(axis=(1, 2))
-    y_cut     = lo + int(np.argmin(row_costs))
-    print(f"    H-cut at row {y_cut}/{H}  (cost {row_costs[y_cut - lo]:.0f})")
+    min_cost  = row_costs.min()
+    threshold = min_cost * (1.0 + _EQUIV_COST_MARGIN_H)
+    candidates = np.where(row_costs <= threshold)[0] + lo   # absolute row indices
+
+    # Pick the deepest equivalent candidate (closest to the physical tile boundary).
+    y_cut = int(candidates[-1])
+
+    print(f"    H-cut at row {y_cut}/{H}  (cost {row_costs[y_cut - lo]:.0f},"
+          f" {len(candidates)} equiv. candidates, deepest)")
     return y_cut
 
 
 def _best_vcut(sl, sr, margin=_CUT_MARGIN):
-    """Best vertical cut = column where the two overlap strips agree most."""
+    """Best vertical cut = column where the two overlap strips agree most.
+
+    Among all columns within _EQUIV_COST_MARGIN of the global minimum,
+    pick the one that gives the best-balanced blend zone:
+
+    • If the cost landscape has a clear minimum (few equivalent candidates),
+      the chosen column is close to the true best seam — keep it as-is, but
+      require at least `margin` pixels of overlap on BOTH sides so the
+      Laplacian pyramid has enough room to blend.
+
+    • If the landscape is flat (many equivalent candidates — periodic tissue),
+      there is no "best" column.  In this case pick the deepest equivalent
+      candidate that still satisfies the left-side margin requirement.  This
+      maximises the canvas contribution to the coarse pyramid levels, which
+      is what absorbs brightness offsets between the two tiles.
+    """
     H  = min(sl.shape[0], sr.shape[0])
     diff      = np.abs(sl[:H].astype(np.float32) - sr[:H].astype(np.float32))
     col_costs = diff.sum(axis=(0, 2))
     W  = col_costs.shape[0]
     lo = max(0, margin);  hi = max(lo + 1, W - margin)
-    x_cut = lo + int(np.argmin(col_costs[lo:hi]))
-    print(f"    V-cut at col {x_cut}/{W}  (cost {col_costs[x_cut]:.0f})")
+    costs_win = col_costs[lo:hi]
+    min_cost  = costs_win.min()
+    threshold = min_cost * (1.0 + _EQUIV_COST_MARGIN)
+    candidates = np.where(costs_win <= threshold)[0] + lo
+
+    # For a Laplacian pyramid blend to absorb a brightness step, the coarsest
+    # level must see pixels on BOTH sides of the seam.  With n=6 levels the
+    # coarsest cell is ~64 px wide, so we need at least 64 px of overlap on
+    # each side of x_cut.  If the cost landscape is flat (many candidates),
+    # this is free — we just slide the cut rightward until we have that margin.
+    # If the landscape has a clear minimum (few candidates), we accept x_cut
+    # even if it is closer to the edge (the SAD really is lower there).
+    _BLEND_MIN = 64          # min px of overlap on each side for pyramid
+    balanced = candidates[(candidates >= _BLEND_MIN) & (candidates <= W - _BLEND_MIN)]
+    if len(balanced) > 0:
+        x_cut = int(balanced[0])   # smallest valid (still minimises tile crop)
+    else:
+        x_cut = int(candidates[0])  # cost-driven minimum; accept unbalanced blend
+
+    print(f"    V-cut at col {x_cut}/{W}  (cost {col_costs[x_cut]:.0f},"
+          f" {len(candidates)} equiv. candidates)")
     return x_cut
 
 
@@ -239,65 +387,137 @@ def _pyramid_blend(img_a, img_b, mask, n_levels):
 # SEAM BLENDING  (pyramid-based)
 # ==============================================================================
 
-def _apply_vcut(canvas, tile, x_cut, x_ol, feather=None):
+def _apply_vcut(canvas, tile, x_cut, x_ol, dy=0, feather=None):
     """Extend canvas rightward with a vertical seam at x_cut.
 
-    Uses Laplacian pyramid blending: sharp at fine scales (no double-line),
-    smooth at coarse scales (absorbs brightness offset).
+    dy : vertical offset of tile relative to the canvas top (pixels).
+         dy > 0  → tile starts dy rows BELOW the canvas top.
+         dy < 0  → tile starts |dy| rows ABOVE the canvas top.
+         dy = 0  → tile and canvas share the same top edge (original behaviour).
+
+    Both the left (canvas) and right (tile) halves are placed at their correct
+    relative y positions so that horizontally-running features stay continuous
+    across the seam.  Uses Laplacian pyramid blending.
     `feather` is accepted but ignored (kept for API compatibility).
     """
-    Hc    = canvas.shape[0];  Ht = tile.shape[0];  H = max(Hc, Ht)
+    Hc = canvas.shape[0];  Ht = tile.shape[0]
     ow    = canvas.shape[1] - x_ol
     new_w = canvas.shape[1] + tile.shape[1] - ow
 
-    result = np.zeros((H, new_w, 3), np.uint8)
-    result[:Hc, :x_ol] = canvas[:, :x_ol]
+    # y offsets of canvas and tile in the combined result coordinate system
+    if dy >= 0:
+        cy0, ty0 = 0, dy
+    else:
+        cy0, ty0 = -dy, 0
 
-    Hol  = min(Hc, Ht)
-    c_ol = canvas[:Hol, x_ol:].astype(np.float32)
-    t_ol = tile[:Hol,   :ow].astype(np.float32)
+    new_h  = max(cy0 + Hc, ty0 + Ht)
+    result = np.zeros((new_h, new_w, 3), np.uint8)
 
-    # mask: 0 = canvas (left), 1 = tile (right), step at x_cut
-    mask = np.zeros((Hol, ow), np.float32)
-    mask[:, max(0, x_cut):] = 1.0
+    # ── Left part: canvas only ──────────────────────────────────────────────
+    result[cy0:cy0 + Hc, :x_ol] = canvas[:, :x_ol]
 
-    n_lev = max(1, min(4, int(np.log2(max(ow, 2))) - 1))
-    blended = _pyramid_blend(c_ol, t_ol, mask, n_lev)
+    # ── Overlap x-zone ──────────────────────────────────────────────────────
+    # Vertical region where both canvas and tile are present
+    ov_y0 = max(cy0, ty0)
+    ov_y1 = min(cy0 + Hc, ty0 + Ht)
+    Hol   = max(0, ov_y1 - ov_y0)
 
-    result[:Hol, x_ol:x_ol + ow] = blended.astype(np.uint8)
-    if Hc > Ht: result[Ht:Hc, x_ol:x_ol + ow] = canvas[Ht:, x_ol:]
-    elif Ht > Hc: result[Hc:Ht, x_ol:x_ol + ow] = tile[Hc:, :ow]
-    result[:Ht, x_ol + ow:] = tile[:, ow:]
+    # Canvas rows that are above the tile (no tile counterpart → paste canvas)
+    if cy0 < ov_y0:
+        result[cy0:ov_y0, x_ol:x_ol + ow] = canvas[:ov_y0 - cy0, x_ol:]
+
+    # Tile rows that are above the canvas (no canvas counterpart → paste tile)
+    if ty0 < ov_y0:
+        result[ty0:ov_y0, x_ol:x_ol + ow] = tile[:ov_y0 - ty0, :ow]
+
+    # Blended region where both are present
+    if Hol > 1:
+        c_ol = canvas[ov_y0 - cy0:ov_y1 - cy0, x_ol:].astype(np.float32)
+        t_ol = tile[ov_y0 - ty0:ov_y1 - ty0,    :ow].astype(np.float32)
+        mask = np.zeros((Hol, ow), np.float32)
+        mask[:, max(0, x_cut):] = 1.0
+        n_lev = max(1, min(4, int(np.log2(max(ow, 2))) - 1))
+        blended = _pyramid_blend(c_ol, t_ol, mask, n_lev)
+        result[ov_y0:ov_y1, x_ol:x_ol + ow] = blended.astype(np.uint8)
+
+    # Canvas rows below the tile (no tile counterpart → paste canvas)
+    if ov_y1 < cy0 + Hc:
+        result[ov_y1:cy0 + Hc, x_ol:x_ol + ow] = canvas[ov_y1 - cy0:, x_ol:]
+
+    # Tile rows below the canvas (no canvas counterpart → paste tile)
+    if ov_y1 < ty0 + Ht:
+        result[ov_y1:ty0 + Ht, x_ol:x_ol + ow] = tile[ov_y1 - ty0:, :ow]
+
+    # ── Right part: tile only ───────────────────────────────────────────────
+    result[ty0:ty0 + Ht, x_ol + ow:] = tile[:, ow:]
+
     return result
 
 
-def _apply_hcut(canvas, strip, y_cut, y_ol, feather=None):
+def _apply_hcut(canvas, strip, y_cut, y_ol, dx=0, feather=None):
     """Extend canvas downward with a horizontal seam at y_cut.
 
-    Uses Laplacian pyramid blending.
-    y_cut: int (straight cut) — per-column arrays no longer needed because
-    the global optimisation already places tiles at their correct positions.
+    dx : horizontal offset of strip relative to canvas left edge (pixels).
+         dx > 0 → strip starts dx px RIGHT of canvas left.
+         dx < 0 → strip starts |dx| px LEFT of canvas left.
+         dx = 0 → original behaviour.
+
+    Both the top (canvas) and bottom (strip) halves are placed at their correct
+    relative x positions so that vertically-running features stay continuous
+    across the seam.  Uses Laplacian pyramid blending.
     """
-    W     = min(canvas.shape[1], strip.shape[1])
+    Wc = canvas.shape[1];  Ws = strip.shape[1]
     oh    = canvas.shape[0] - y_ol
     new_h = canvas.shape[0] + strip.shape[0] - oh
 
-    result = np.empty((new_h, W, 3), np.uint8)
-    result[:y_ol, :] = canvas[:y_ol, :W]
+    # x offsets of canvas and strip in the combined result
+    if dx >= 0:
+        cx0, sx0 = 0, dx
+    else:
+        cx0, sx0 = -dx, 0
+    new_w = max(cx0 + Wc, sx0 + Ws)
 
-    c_ol = canvas[y_ol:, :W].astype(np.float32)
-    s_ol = strip[:oh,   :W].astype(np.float32)
+    result = np.zeros((new_h, new_w, 3), np.uint8)
 
-    # mask: 0 = canvas (top), 1 = strip (bottom), step at y_cut
-    yc   = int(round(float(np.atleast_1d(np.asarray(y_cut))[0])))
-    mask = np.zeros((oh, W), np.float32)
-    mask[max(0, yc):, :] = 1.0
+    # ── Top part: canvas only (rows 0..y_ol) ───────────────────────────────
+    result[:y_ol, cx0:cx0 + Wc] = canvas[:y_ol, :]
 
-    n_lev = max(1, min(4, int(np.log2(max(oh, 2))) - 1))
-    blended = _pyramid_blend(c_ol, s_ol, mask, n_lev)
+    # ── Overlap y-zone ──────────────────────────────────────────────────────
+    # Horizontal region where both canvas and strip are present
+    ov_x0 = max(cx0, sx0)
+    ov_x1 = min(cx0 + Wc, sx0 + Ws)
+    Wol   = max(0, ov_x1 - ov_x0)
 
-    result[y_ol:y_ol + oh, :] = blended.astype(np.uint8)
-    result[y_ol + oh:, :]     = strip[oh:, :W]
+    # Canvas-only cols to the left of the strip
+    if cx0 < ov_x0:
+        result[y_ol:y_ol + oh, cx0:ov_x0] = canvas[y_ol:, :ov_x0 - cx0]
+    # Strip-only cols to the left of the canvas
+    if sx0 < ov_x0:
+        result[y_ol:y_ol + oh, sx0:ov_x0] = strip[:oh, :ov_x0 - sx0]
+
+    # Blended region where both canvas and strip are present
+    if Wol > 1:
+        c_ol = canvas[y_ol:, ov_x0 - cx0:ov_x1 - cx0].astype(np.float32)
+        s_ol = strip[:oh,    ov_x0 - sx0:ov_x1 - sx0].astype(np.float32)
+        h    = min(c_ol.shape[0], s_ol.shape[0])
+        c_ol = c_ol[:h];  s_ol = s_ol[:h]
+        yc   = int(round(float(np.atleast_1d(np.asarray(y_cut))[0])))
+        mask = np.zeros((h, Wol), np.float32)
+        mask[max(0, yc):, :] = 1.0
+        n_lev   = max(1, min(4, int(np.log2(max(h, 2))) - 1))
+        blended = _pyramid_blend(c_ol, s_ol, mask, n_lev)
+        result[y_ol:y_ol + h, ov_x0:ov_x1] = blended.astype(np.uint8)
+
+    # Canvas-only cols to the right of the strip
+    if ov_x1 < cx0 + Wc:
+        result[y_ol:y_ol + oh, ov_x1:cx0 + Wc] = canvas[y_ol:, ov_x1 - cx0:]
+    # Strip-only cols to the right of the canvas
+    if ov_x1 < sx0 + Ws:
+        result[y_ol:y_ol + oh, ov_x1:sx0 + Ws] = strip[:oh, ov_x1 - sx0:]
+
+    # ── Bottom part: strip only ─────────────────────────────────────────────
+    result[y_ol + oh:, sx0:sx0 + Ws] = strip[oh:, :]
+
     return result
 
 
@@ -325,6 +545,13 @@ def _measure_pair_v(img_top, img_bot, step_y, tolerance):
 
     Uses subwindow approach for robust dy estimate.
     Returns (fdx, total_dy) where total_dy = step_y + fine correction.
+
+    The y-search always uses _DY_TOLERANCE_V (not the caller's `tolerance`)
+    because the true vertical landing of the stage can differ from step_y by
+    40+ px — far outside the ±5 px fine-tolerance window used for horizontal
+    pairs.  Using a tight tolerance here would lock onto a noise peak and
+    produce a wrong dy (confirmed: tol=5 gives fdy=+1, tol=50 gives fdy=−43,
+    and brute-force SAD confirms dy=1704 is the true alignment).
     """
     W  = min(img_top.shape[1], img_bot.shape[1])
     oh = img_top.shape[0] - step_y
@@ -332,9 +559,11 @@ def _measure_pair_v(img_top, img_bot, step_y, tolerance):
         return 0, step_y
     st               = img_top[img_top.shape[0] - oh:, :W]
     sb               = img_bot[:oh, :W]
-    fdy, n, spread, _, _ = _subwindow_dy(st, sb, tolerance)
-    # horizontal component of vertical-pair measurement
-    fdx, _, _        = _subwindow_dx(st, sb, tolerance)
+    fdy, n, spread, _, _ = _subwindow_dy(st, sb, _DY_TOLERANCE_V)
+    # dx is retrieved from the stash set inside _subwindow_dy — each sub-window
+    # already ran phase correlation with _DX_TOLERANCE_V (wider search) so that
+    # large horizontal offsets (10–15 px) are captured correctly.
+    fdx = _subwindow_dy.last_dx
     print(f"    dy={step_y + fdy:+d} px  "
           f"({n} sub-windows, spread ±{spread:.1f} px)  dx={fdx:+d}")
     return fdx, step_y + fdy
@@ -407,55 +636,70 @@ def _global_tile_positions(pair_offsets, rows, cols):
 # STEP 3 — ROW COMPOSITES  (using global x positions)
 # ==============================================================================
 
-def _build_row_composite(images, r, cols, positions, feather):
+def _build_row_composite(images, r, cols, positions, pair_offsets, feather):
     """Stitch all tiles in row r at their globally-optimised x positions.
 
     Before finding each vertical seam cut the incoming tile is aligned in Y
-    (using the global dy offset) so that horizontal features (grid lines, edges)
-    are coincident when the minimum-SAD column is chosen.  This eliminates the
-    step artefact that would otherwise appear when a horizontal pattern crosses
-    a vertical seam.
+    so that horizontal features (grid lines, edges) are coincident when the
+    minimum-SAD column is chosen.
 
-    Returns (composite_image, abs_x_origin) where abs_x_origin is the
-    absolute x-position (global canvas) of the composite's left edge.
+    dy is derived by chaining direct pairwise measurements (pair_offsets) for
+    horizontal adjacent tiles rather than using global-optimisation positions.
+    The global optimiser mixes horizontal and vertical constraints; on periodic
+    images the noisy vertical measurements can corrupt horizontal y-offsets by
+    several pixels, pushing the initial dy estimate outside the refinement
+    search window and causing false-peak lock-on.  Direct chaining is immune
+    to this because each step is the measured offset between adjacent tiles.
+
+    Returns (composite_image, abs_x_origin, abs_y_origin).
     """
     r_cols = [c for c in cols if (r, c) in images]
     if not r_cols:
-        return None, 0
+        return None, 0, 0
 
-    x_ref  = positions[(r, r_cols[0])][0]   # absolute x of first tile
-    y_ref  = positions[(r, r_cols[0])][1]   # absolute y of first tile (canvas top)
-    canvas = images[(r, r_cols[0])].copy()
+    x_ref          = positions[(r, r_cols[0])][0]   # absolute x of first tile
+    y_ref          = positions[(r, r_cols[0])][1]   # absolute y of canvas top (updated)
+    running_tile_y = y_ref                           # tracks curr tile y via direct chain
+    canvas         = images[(r, r_cols[0])].copy()
 
     for ci in range(1, len(r_cols)):
-        c    = r_cols[ci]
-        tile = images[(r, c)]
+        c      = r_cols[ci]
+        prev_c = r_cols[ci - 1]
+        tile   = images[(r, c)]
 
         # x of this tile relative to this row's canvas left edge
         x_tile = positions[(r, c)][0] - x_ref
         ow     = canvas.shape[1] - x_tile   # overlap width
         x_ol   = x_tile                     # overlap starts here in canvas coords
 
-        # Y-alignment: how many px this tile is shifted down vs the canvas top
-        dy = positions[(r, c)][1] - y_ref
+        # Y-alignment via direct pairwise chain (robust against global-opt drift).
+        pair_key = (r, prev_c, r, c)
+        if pair_key in pair_offsets:
+            running_tile_y += pair_offsets[pair_key][1]   # direct dy(prev→curr)
+        else:
+            running_tile_y = positions[(r, c)][1]          # fallback
+        dy = running_tile_y - y_ref
 
         if ow < 2:
-            # No meaningful overlap: extend canvas, hard-paste tile
+            # No meaningful overlap: extend canvas, hard-paste tile at correct y
+            if dy >= 0:
+                cy0, ty0 = 0, dy
+            else:
+                cy0, ty0 = -dy, 0
             new_w  = x_tile + tile.shape[1]
-            H      = max(canvas.shape[0], tile.shape[0])
-            result = np.zeros((H, new_w, 3), np.uint8)
-            result[:canvas.shape[0], :canvas.shape[1]] = canvas
-            result[:tile.shape[0],   x_tile:]           = tile
+            new_h  = max(cy0 + canvas.shape[0], ty0 + tile.shape[0])
+            result = np.zeros((new_h, new_w, 3), np.uint8)
+            result[cy0:cy0 + canvas.shape[0], :canvas.shape[1]] = canvas
+            result[ty0:ty0 + tile.shape[0],   x_tile:]          = tile
             canvas = result
+            y_ref += min(0, dy)   # canvas top may have moved up
             print(f"  [{r},{c}] x={positions[(r,c)][0]}  dy={dy:+d}  (gap — hard paste)")
         else:
-            H_ol = min(canvas.shape[0], tile.shape[0])
-
-            # Build Y-aligned overlap strips for seam-cut finding only.
+            # Build Y-aligned overlap strips for seam-cut finding.
             # canvas row i aligns with tile row (i - dy):
-            #   dy > 0  → tile shifted down  → canvas[dy:H_ol]  ↔  tile[0:H_ol-dy]
-            #   dy < 0  → tile shifted up    → canvas[0:H_ol+dy] ↔  tile[-dy:H_ol]
-            #   dy == 0 → no adjustment
+            #   dy > 0  → tile shifted down → canvas[dy:H_ol]   ↔  tile[0:H_ol-dy]
+            #   dy < 0  → tile shifted up   → canvas[0:H_ol+dy] ↔  tile[-dy:H_ol]
+            H_ol = min(canvas.shape[0], tile.shape[0])
             if dy > 0:
                 h_align = max(0, H_ol - dy)
                 if h_align > 2:
@@ -476,11 +720,21 @@ def _build_row_composite(images, r, cols, positions, feather):
                 sl = canvas[:H_ol, x_ol:]
                 sr = tile[:H_ol,   :ow]
 
-            x_cut = _best_vcut(sl, sr)
-            print(f"  [{r},{c}] x={positions[(r,c)][0]}  overlap={ow} px  dy={dy:+d}")
-            canvas = _apply_vcut(canvas, tile, x_cut, x_ol, feather=feather)
+            # Fine-tune dy: measure residual shift on the already-aligned strips
+            if sl.shape[0] > 4 and sl.shape[1] > 4:
+                dy_res = _refine_shift_1d(sl, sr, axis=0, max_shift=6)
+                if dy_res != 0:
+                    dy += dy_res
+                    print(f"    dy residual {dy_res:+d} → dy final {dy:+d}")
 
-    return canvas, x_ref
+            x_cut  = _best_vcut(sl, sr)
+            print(f"  [{r},{c}] x={positions[(r,c)][0]}  overlap={ow} px  dy={dy:+d}")
+            # Pass dy so _apply_vcut places both halves at correct y positions
+            canvas = _apply_vcut(canvas, tile, x_cut, x_ol, dy=dy, feather=feather)
+            # If tile was above canvas top, canvas top moved up by |dy|
+            y_ref += min(0, dy)
+
+    return canvas, x_ref, y_ref
 
 
 # ==============================================================================
@@ -519,41 +773,316 @@ def _stack_rows(row_composites, row_y, row_x_refs, feather):
               f"y={y_abs}  overlap={oh} px  dx={dx:+d}")
 
         if oh < 2:
+            if dx >= 0:
+                cx0, sx0 = 0, dx
+            else:
+                cx0, sx0 = -dx, 0
             new_h  = y_abs + strip.shape[0]
-            result = np.zeros((new_h, W, 3), np.uint8)
-            result[:canvas.shape[0], :W] = canvas[:, :W]
-            result[y_abs:,           :W] = strip[:, :W]
+            new_w  = max(cx0 + canvas.shape[1], sx0 + strip.shape[1])
+            result = np.zeros((new_h, new_w, 3), np.uint8)
+            result[:canvas.shape[0], cx0:cx0 + canvas.shape[1]] = canvas
+            result[y_abs:,           sx0:sx0 + strip.shape[1]]  = strip
             canvas = result
+            x_ref_base += min(0, dx)
         else:
             y_ol = canvas.shape[0] - oh
 
-            # Build X-aligned overlap strips for seam-cut finding only.
+            # Build X-aligned overlap strips for seam-cut finding.
             # canvas col j aligns with strip col (j - dx):
             #   dx > 0 → strip shifted right → canvas[y_ol:, dx:W] ↔ strip[:oh, 0:W-dx]
             #   dx < 0 → strip shifted left  → canvas[y_ol:, 0:W+dx] ↔ strip[:oh, -dx:W]
-            #   dx == 0 → no adjustment
             if dx > 0:
                 w_align = max(0, W - dx)
                 if w_align > 2:
                     st = canvas[y_ol:, dx:dx + w_align]
                     sb = strip[:oh,    0:w_align]
                 else:
-                    st = canvas[y_ol:, :W]
-                    sb = strip[:oh,    :W]
+                    st = canvas[y_ol:, :W];  sb = strip[:oh, :W]
             elif dx < 0:
                 w_align = max(0, W + dx)
                 if w_align > 2:
                     st = canvas[y_ol:, 0:w_align]
                     sb = strip[:oh,    -dx:-dx + w_align]
                 else:
-                    st = canvas[y_ol:, :W]
-                    sb = strip[:oh,    :W]
+                    st = canvas[y_ol:, :W];  sb = strip[:oh, :W]
             else:
-                st = canvas[y_ol:, :W]
-                sb = strip[:oh,    :W]
+                st = canvas[y_ol:, :W];  sb = strip[:oh, :W]
+
+            # NOTE: both dx and dy refinements via _refine_shift_1d are intentionally
+            # omitted here.
+            #
+            # dx (axis=1): the subwindow phase-correlation in _measure_pair_v already
+            # produces a reliable dx via 7 near-square sub-windows with a wide
+            # tolerance window.  A 1-D x-projection refinement on the overlap strips
+            # is unreliable for histology images which lack strong vertical-stripe
+            # structure.  Applying a spurious dx_res changes the strip trimming and
+            # distorts the SAD cost landscape, collapsing multiple equivalent seam
+            # candidates down to a single spurious minimum near the overlap edge.
+            #
+            # dy (axis=0): the global optimiser already gives a self-consistent dy.
+            # A 1-D y-projection refinement on the (already dx-trimmed) overlap
+            # strips shifts the overlap by a few rows; with periodic tissue this
+            # collapses the 5-candidate equivalent set to 1 isolated minimum near
+            # the overlap edge (row 34/308 instead of row 178/308).  The global-opt
+            # dy is the better estimate.
 
             y_cut  = _best_hcut(st, sb)
-            canvas = _apply_hcut(canvas, strip, y_cut, y_ol, feather=feather)
+            canvas = _apply_hcut(canvas, strip, y_cut, y_ol, dx=dx, feather=feather)
+            # If strip started left of canvas, canvas grew leftward
+            x_ref_base += min(0, dx)
+
+    return canvas
+
+
+# ==============================================================================
+# WAVEFRONT TILE COMPOSITOR
+# ==============================================================================
+
+def _apply_tile_wavefront(canvas, tile, tx, ty,
+                          left_ow=0, x_cut=None,
+                          top_oh=0,  y_cut=None):
+    """Place *tile* at canvas position (tx, ty), blending at up to two seams.
+
+    tx, ty    : tile top-left in current canvas coordinates (may be negative
+                if the tile extends the canvas to the left / upward).
+    left_ow   : width of the left-overlap zone (canvas cols tx..tx+left_ow-1
+                overlap the tile's leftmost left_ow columns).
+    x_cut     : V-seam column within the left overlap (0-based).
+                Tile wins for cols >= x_cut.  None → keep canvas.
+    top_oh    : height of the top-overlap zone (canvas rows ty..ty+top_oh-1
+                overlap the tile's topmost top_oh rows).
+    y_cut     : H-seam row within the top overlap (0-based).
+                Tile wins for rows >= y_cut.  None → keep canvas.
+
+    Divides the tile footprint into four non-overlapping zones:
+      A  corner (top_oh × left_ow)       — combined V + H mask
+      B  top-only (top_oh × (Wt-left_ow)) — H mask only
+      C  left-only ((Ht-top_oh) × left_ow) — V mask only
+      D  pure tile ((Ht-top_oh) × (Wt-left_ow)) — direct paste
+
+    Returns (new_canvas, shift_x, shift_y) where shift_x/shift_y are the
+    amounts the canvas origin shifted (negative = grew left/up).
+    """
+    Hc, Wc = canvas.shape[:2]
+    Ht, Wt = tile.shape[:2]
+
+    # Canvas may grow if tile extends beyond its current bounds.
+    shift_x = max(0, -tx)    # canvas shifts right if tile is left of origin
+    shift_y = max(0, -ty)    # canvas shifts down  if tile is above origin
+
+    cx0 = shift_x;  cy0 = shift_y          # canvas origin in new coords
+    tx_n = tx + shift_x;  ty_n = ty + shift_y   # tile origin in new coords (≥0)
+
+    new_w = max(cx0 + Wc, tx_n + Wt)
+    new_h = max(cy0 + Hc, ty_n + Ht)
+
+    # Start from canvas content; tile is pasted zone by zone below.
+    result = np.zeros((new_h, new_w, 3), np.uint8)
+    result[cy0:cy0 + Hc, cx0:cx0 + Wc] = canvas
+
+    # ------------------------------------------------------------------
+    # Helper: hard-cut a rectangular zone (no blending, pixel-accurate)
+    # ------------------------------------------------------------------
+    def _blend(r0_res, r1_res, c0_res, c1_res, r0_t, c0_t, make_mask):
+        h = r1_res - r0_res;  w = c1_res - c0_res
+        if h <= 0 or w <= 0:
+            return
+        h2 = min(h, tile.shape[0] - r0_t)
+        w2 = min(w, tile.shape[1] - c0_t)
+        if h2 <= 0 or w2 <= 0:
+            return
+        mask = make_mask(h2, w2)
+        # Hard cut: wherever mask >= 0.5 → use tile pixel; else keep canvas.
+        tile_part   = tile[r0_t:r0_t + h2, c0_t:c0_t + w2]
+        use_tile    = (mask >= 0.5)
+        if use_tile.ndim == 2:
+            use_tile = use_tile[:, :, np.newaxis]
+        region = result[r0_res:r0_res + h2, c0_res:c0_res + w2].copy()
+        region[use_tile.squeeze(-1)] = tile_part[use_tile.squeeze(-1)]
+        result[r0_res:r0_res + h2, c0_res:c0_res + w2] = region
+
+    # ------------------------------------------------------------------
+    # Zone D  — pure tile, no canvas overlap: direct paste
+    # ------------------------------------------------------------------
+    r0_d = ty_n + top_oh;  r1_d = ty_n + Ht
+    c0_d = tx_n + left_ow; c1_d = tx_n + Wt
+    if r1_d > r0_d and c1_d > c0_d:
+        result[r0_d:r1_d, c0_d:c1_d] = tile[top_oh:, left_ow:]
+
+    # ------------------------------------------------------------------
+    # Zone B  — top overlap only (cols beyond left overlap)
+    # ------------------------------------------------------------------
+    if top_oh > 0 and (tx_n + Wt) > (tx_n + left_ow):
+        if y_cut is not None:
+            def _mb(h, w):
+                m = np.zeros((h, w), np.float32)
+                m[max(0, y_cut):, :] = 1.0
+                return m
+            _blend(ty_n, ty_n + top_oh, tx_n + left_ow, tx_n + Wt,
+                   0, left_ow, _mb)
+        else:
+            # No seam computed — keep canvas (do nothing; canvas already there)
+            pass
+
+    # ------------------------------------------------------------------
+    # Zone C  — left overlap only (rows beyond top overlap)
+    # ------------------------------------------------------------------
+    if left_ow > 0 and (ty_n + Ht) > (ty_n + top_oh):
+        if x_cut is not None:
+            def _mc(h, w):
+                m = np.zeros((h, w), np.float32)
+                m[:, max(0, x_cut):] = 1.0
+                return m
+            _blend(ty_n + top_oh, ty_n + Ht, tx_n, tx_n + left_ow,
+                   top_oh, 0, _mc)
+        else:
+            pass  # keep canvas
+
+    # ------------------------------------------------------------------
+    # Zone A  — corner (both overlaps meet)
+    # ------------------------------------------------------------------
+    if top_oh > 0 and left_ow > 0:
+        def _ma(h, w):
+            if x_cut is not None and y_cut is not None:
+                # Canvas owns top-left quadrant (x < x_cut AND y < y_cut)
+                # Tile owns everything else  →  mask = (x≥x_cut) OR (y≥y_cut)
+                mx = np.zeros((h, w), np.float32);  mx[:, max(0, x_cut):] = 1.0
+                my = np.zeros((h, w), np.float32);  my[max(0, y_cut):, :] = 1.0
+                return np.maximum(mx, my)
+            elif x_cut is not None:
+                m = np.zeros((h, w), np.float32);  m[:, max(0, x_cut):] = 1.0
+                return m
+            elif y_cut is not None:
+                m = np.zeros((h, w), np.float32);  m[max(0, y_cut):, :] = 1.0
+                return m
+            else:
+                return np.zeros((h, w), np.float32)   # keep canvas
+        _blend(ty_n, ty_n + top_oh, tx_n, tx_n + left_ow, 0, 0, _ma)
+
+    return result, -shift_x, -shift_y
+
+
+def _compose_wavefront(images, positions, pair_offsets, rows, cols, feather):
+    """Assemble the grid tile-by-tile in raster order onto a single canvas.
+
+    Each tile is placed directly against the growing canvas, consulting both
+    its left neighbour (V-seam) and its top neighbour (H-seam) simultaneously.
+    Interior tiles (row > 0, col > 0) therefore blend at two edges at once,
+    which avoids the corner artefacts that arise when rows are first composited
+    independently and then stacked.
+
+    Algorithm per tile (r, c)
+    -------------------------
+    1.  Compute tile position (tx, ty) from global optimisation.
+    2.  If col > 0: extract left-overlap strips from canvas and tile,
+        find V-seam cut with _best_vcut.
+    3.  If row > 0: extract top-overlap strips from canvas and tile,
+        find H-seam cut with _best_hcut.
+    4.  Call _apply_tile_wavefront to blend zones A-D in one shot.
+    5.  Update canvas-origin bookkeeping if the canvas grew.
+    """
+    # Anchor: tile (rows[0], cols[0])
+    canvas  = images[(rows[0], cols[0])].copy()
+    # Global coordinates of canvas top-left corner
+    gx0 = positions[(rows[0], cols[0])][0]
+    gy0 = positions[(rows[0], cols[0])][1]
+
+    for ri, r in enumerate(rows):
+        for ci, c in enumerate(cols):
+            if ri == 0 and ci == 0:
+                continue
+            if (r, c) not in images:
+                continue
+
+            tile      = images[(r, c)]
+            Ht, Wt    = tile.shape[:2]
+            gx, gy    = positions[(r, c)]
+
+            # Tile position in current canvas coords
+            tx = gx - gx0
+            ty = gy - gy0
+
+            has_left = (ci > 0)
+            has_top  = (ri > 0)
+
+            # Overlap is determined by the DIRECT neighbour's position, not
+            # by the overall canvas extent.  The canvas may extend far beyond
+            # the actual physical overlap because earlier rows/cols are already
+            # merged into it.
+            if has_left:
+                gx_prev = positions[(r, cols[ci - 1])][0]
+                left_ow = max(0, min(gx_prev + Wt - gx, Wt))
+            else:
+                left_ow = 0
+
+            if has_top:
+                gy_prev = positions[(rows[ri - 1], c)][1]
+                top_oh  = max(0, min(gy_prev + Ht - gy, Ht))
+            else:
+                top_oh  = 0
+
+            x_cut = None
+            y_cut = None
+
+            # ── V-seam (left neighbour) ──────────────────────────────────
+            # Compare RAW tile edges, not the already-blended canvas.
+            # The canvas at the left-overlap columns for interior tiles has
+            # been processed by H-seam blending and may be a mix of two
+            # rows' content.  Comparing blended canvas vs raw tile inflates
+            # SAD by 40+ px/px and produces a flat cost landscape (all
+            # columns look equally bad) → x_cut is weakly determined.
+            # Using raw tile (r,c-1) right edge vs raw tile (r,c) left edge
+            # gives clean, unmodified pixel comparisons.
+            if left_ow > _CUT_MARGIN * 2:
+                left_tile    = images[(r, cols[ci - 1])]
+                gy_prev_col  = positions[(r, cols[ci - 1])][1]
+                # Clip to Y-range where both raw tiles are physically present,
+                # and skip the H-seam blend zone at the top for interior rows.
+                gy_v0 = max(gy, gy_prev_col)
+                gy_v1 = min(gy + Ht, gy_prev_col + Ht)
+                if ri > 0:
+                    gy_v0 = max(gy_v0, gy + top_oh)
+                if gy_v1 - gy_v0 > _CUT_MARGIN * 2:
+                    # Rows within each raw tile
+                    lt_r0 = gy_v0 - gy_prev_col;  lt_r1 = gy_v1 - gy_prev_col
+                    rt_r0 = gy_v0 - gy;           rt_r1 = gy_v1 - gy
+                    # Right edge of left tile  |  Left edge of right tile
+                    sl = left_tile[lt_r0:lt_r1, left_tile.shape[1] - left_ow:]
+                    sr = tile[rt_r0:rt_r1,      :left_ow]
+                    print(f"  [{r},{c}] V-seam  left_ow={left_ow}  "
+                          f"rows={gy_v0-gy}..{gy_v1-gy}  (raw tiles)", end="  ")
+                    x_cut = _best_vcut(sl, sr)
+
+            # ── H-seam (top neighbour) ───────────────────────────────────
+            # Same principle: compare raw tile (r-1,c) bottom edge vs raw
+            # tile (r,c) top edge.  This avoids any V-seam blend artefacts
+            # in the canvas columns and gives the cleanest possible y_cut.
+            if top_oh > _CUT_MARGIN * 2:
+                top_tile     = images[(rows[ri - 1], c)]
+                gx_prev_row  = positions[(rows[ri - 1], c)][0]
+                # Clip to X-range where both raw tiles are physically present.
+                gx_h0 = max(gx, gx_prev_row)
+                gx_h1 = min(gx + Wt, gx_prev_row + Wt)
+                if gx_h1 - gx_h0 > _CUT_MARGIN * 2:
+                    # Columns within each raw tile
+                    tt_c0 = gx_h0 - gx_prev_row;  tt_c1 = gx_h1 - gx_prev_row
+                    bt_c0 = gx_h0 - gx;           bt_c1 = gx_h1 - gx
+                    # Bottom edge of top tile  |  Top edge of bottom tile
+                    st = top_tile[top_tile.shape[0] - top_oh:, tt_c0:tt_c1]
+                    sb = tile[:top_oh,                          bt_c0:bt_c1]
+                    print(f"  [{r},{c}] H-seam  top_oh={top_oh}  "
+                          f"cols={gx_h0-gx}..{gx_h1-gx}  (raw tiles)", end="  ")
+                    y_cut = _best_hcut(st, sb)
+
+            # ── Place tile onto canvas ───────────────────────────────────
+            canvas, dsx, dsy = _apply_tile_wavefront(
+                canvas, tile, tx, ty,
+                left_ow=left_ow, x_cut=x_cut,
+                top_oh=top_oh,   y_cut=y_cut,
+            )
+            # Update global origin if canvas grew leftward / upward
+            gx0 += dsx
+            gy0 += dsy
 
     return canvas
 
@@ -661,29 +1190,10 @@ def stitch_images(
     positions = _global_tile_positions(pair_offsets, rows, cols)
 
     # ------------------------------------------------------------------
-    # Step 3: build row composites
+    # Step 3: wavefront composition  (tile-by-tile, raster order)
     # ------------------------------------------------------------------
-    print("\n=== Step 3: building row composites ===")
-    row_composites = {}
-    row_y          = {}
-    row_x_refs     = {}   # absolute x-origin of each row composite
-
-    for r in rows:
-        print(f"\n  -- Row {r} --")
-        comp, x_ref = _build_row_composite(images, r, cols, positions, feather_px)
-        if comp is not None:
-            row_composites[r] = comp
-            row_x_refs[r]     = x_ref
-            # Canonical y for this row = median y across its tiles
-            ys     = [positions[(r, c)][1] for c in cols if (r, c) in images]
-            row_y[r] = int(round(np.median(ys)))
-            _save(comp, f"row_{r:02d}.jpg")
-
-    # ------------------------------------------------------------------
-    # Step 4: stack rows into final image
-    # ------------------------------------------------------------------
-    print("\n=== Step 4: stacking rows ===")
-    full = _stack_rows(row_composites, row_y, row_x_refs, feather_px)
+    print("\n=== Step 3: wavefront tile composition ===")
+    full = _compose_wavefront(images, positions, pair_offsets, rows, cols, feather_px)
 
     output_path = os.path.join(folder, output_filename)
     cv2.imwrite(output_path, full, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])

@@ -7,7 +7,7 @@ from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
-from utilities.WPCommandConstants import BYPASS_COMMANDS
+import actions.WPImagingActions as imaging_actions
 
 
 COMMAND_ROUTER = {
@@ -69,8 +69,10 @@ COMMAND_ROUTER = {
     "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
     "TestingLock": testing_actions.testing_lock,
     "TestingUnlock": testing_actions.testing_unlock,
-    "TakeScreenshot": testing_actions.take_screenshot,
-    "TakeImage": testing_actions.take_image
+    "ChangeProject": testing_actions.change_project,
+    "ConnectProbeMachine": project_actions.connect_probe_machine,
+    "TakeScreenshot": imaging_actions.take_screenshot,
+    "TakeImage": imaging_actions.take_image
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = (
