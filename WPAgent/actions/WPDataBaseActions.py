@@ -43,7 +43,7 @@ def get_machine_by_location(location_name: str, timeout: float = 5.0):
         # Find machine by location
         for machine in machines:
             # Check if 'location' field matches
-            if machine.get('generalLocation') == location_name:
+            if machine.get("generalLocation") == location_name:
                 return machine
 
         return None
@@ -51,6 +51,7 @@ def get_machine_by_location(location_name: str, timeout: float = 5.0):
     except Exception as e:
         print(f"Error getting machine by location: {e}")
         return None
+
 
 def list_probers(timeout: float = 15.0, user=None, waferAgentName=None):
     """
@@ -68,13 +69,12 @@ def list_probers(timeout: float = 15.0, user=None, waferAgentName=None):
             return ResponseBuilder.error(
                 "ListProbersReply",
                 "No wafer probe machines found or database agent not responding",
-                404
+                404,
             )
 
         # Build response
         response = ResponseBuilder.success(
-            "ListProbersReply",
-            f"Found {len(machines)} prober(s)"
+            "ListProbersReply", f"Found {len(machines)} prober(s)"
         )
 
         # Add probers list to data
@@ -88,9 +88,7 @@ def list_probers(timeout: float = 15.0, user=None, waferAgentName=None):
     except Exception as e:
         print(f"✗ Error: {str(e)}")
         return ResponseBuilder.error(
-            "ListProbersReply",
-            f"Failed to retrieve probers: {str(e)}",
-            500
+            "ListProbersReply", f"Failed to retrieve probers: {str(e)}", 500
         )
 
 
@@ -104,15 +102,12 @@ def list_chip_types(timeout: float = 15.0, user=None, waferAgentName=None):
         # For now, return placeholder
         # You'll need to add this method to DBKafkaClient
         return ResponseBuilder.success(
-            "ListChipTypesReply",
-            "Chip types retrieval not yet implemented"
+            "ListChipTypesReply", "Chip types retrieval not yet implemented"
         )
 
     except Exception as e:
         return ResponseBuilder.error(
-            "ListChipTypesReply",
-            f"Failed to retrieve chip types: {str(e)}",
-            500
+            "ListChipTypesReply", f"Failed to retrieve chip types: {str(e)}", 500
         )
 
 
@@ -126,19 +121,18 @@ def list_orientations(timeout: float = 15.0, user=None, waferAgentName=None):
         # For now, return placeholder
         # You'll need to add this method to DBKafkaClient
         return ResponseBuilder.success(
-            "ListOrientationsReply",
-            "Orientations retrieval not yet implemented"
+            "ListOrientationsReply", "Orientations retrieval not yet implemented"
         )
 
     except Exception as e:
         return ResponseBuilder.error(
-            "ListOrientationsReply",
-            f"Failed to retrieve orientations: {str(e)}",
-            500
+            "ListOrientationsReply", f"Failed to retrieve orientations: {str(e)}", 500
         )
 
 
-def get_project_id_by_name(project_name, timeout: float = 15.0, user=None, waferAgentName=None):
+def get_project_id_by_name(
+    project_name, timeout: float = 15.0, user=None, waferAgentName=None
+):
     """
     Get project ID by project name.
 
@@ -157,15 +151,15 @@ def get_project_id_by_name(project_name, timeout: float = 15.0, user=None, wafer
         # Find project by name (case-insensitive)
         matching_project = None
         for project in projects:
-            if project.get('name', '').lower() == project_name.lower():
+            if project.get("name", "").lower() == project_name.lower():
                 matching_project = project
                 break
 
         if not matching_project:
-            print('No project')
+            print("No project")
             return None
 
-        project_id = matching_project.get('id')
+        project_id = matching_project.get("id")
 
         return project_id
 
@@ -173,7 +167,9 @@ def get_project_id_by_name(project_name, timeout: float = 15.0, user=None, wafer
         print(f"✗ Error: {str(e)}")
 
 
-def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
+def get_loaded_wafer_from_db(
+    wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None
+):
     """
     Get currently loaded wafer information from database.
 
@@ -191,13 +187,13 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=Non
     try:
         # Use global if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
                 "GetLoadedWaferReply",
                 "WP Machine ID not set. Initialize machine first.",
-                400
+                400,
             )
 
         db_client = _get_db_client()
@@ -209,15 +205,13 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=Non
 
         if not machines:
             return ResponseBuilder.error(
-                "GetLoadedWaferReply",
-                "Database agent not responding",
-                500
+                "GetLoadedWaferReply", "Database agent not responding", 500
             )
 
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == wp_machine_id:
+            if machine.get("id") == wp_machine_id:
                 our_machine = machine
                 break
 
@@ -225,18 +219,17 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=Non
             return ResponseBuilder.error(
                 "GetLoadedWaferReply",
                 f"Machine ID {wp_machine_id} not found in database",
-                404
+                404,
             )
 
         # Get loaded wafer info
-        loaded_wafer_id = our_machine.get('loadedWaferId')
-        wafer_orientation = our_machine.get('loadedWaferOrientation')
+        loaded_wafer_id = our_machine.get("loadedWaferId")
+        wafer_orientation = our_machine.get("loadedWaferOrientation")
 
         if not loaded_wafer_id:
             # No wafer loaded
             response = ResponseBuilder.success(
-                "GetLoadedWaferReply",
-                "No wafer currently loaded"
+                "GetLoadedWaferReply", "No wafer currently loaded"
             )
             response["data"]["hasWafer"] = False
             response["data"]["waferId"] = None
@@ -252,7 +245,7 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=Non
         # Wafer is loaded
         response = ResponseBuilder.success(
             "GetLoadedWaferReply",
-            f"Wafer {loaded_wafer_id} loaded with orientation {wafer_orientation}"
+            f"Wafer {loaded_wafer_id} loaded with orientation {wafer_orientation}",
         )
 
         response["data"]["hasWafer"] = True
@@ -269,13 +262,13 @@ def get_loaded_wafer_from_db(wp_machine_id=None, timeout: float = 15.0, user=Non
     except Exception as e:
         print(f"✗ Error: {str(e)}")
         return ResponseBuilder.error(
-            "GetLoadedWaferReply",
-            f"Failed to get loaded wafer: {str(e)}",
-            500
+            "GetLoadedWaferReply", f"Failed to get loaded wafer: {str(e)}", 500
         )
 
 
-def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
+def get_installed_probe_card_from_db(
+    wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None
+):
     """
     Get currently installed probe card information from database.
 
@@ -293,13 +286,13 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
     try:
         # Use global if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
                 "GetInstalledProbeCardReply",
                 "WP Machine ID not set. Initialize machine first.",
-                400
+                400,
             )
 
         db_client = _get_db_client()
@@ -311,15 +304,13 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
 
         if not machines:
             return ResponseBuilder.error(
-                "GetInstalledProbeCardReply",
-                "Database agent not responding",
-                500
+                "GetInstalledProbeCardReply", "Database agent not responding", 500
             )
 
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == wp_machine_id:
+            if machine.get("id") == wp_machine_id:
                 our_machine = machine
                 break
 
@@ -327,18 +318,17 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
             return ResponseBuilder.error(
                 "GetInstalledProbeCardReply",
                 f"Machine ID {wp_machine_id} not found in database",
-                404
+                404,
             )
 
         # Get probe card info
-        probe_card_id = our_machine.get('installedProbeCardId')
-        probe_card_orientation = our_machine.get('installedProbeCardOrientation')
+        probe_card_id = our_machine.get("installedProbeCardId")
+        probe_card_orientation = our_machine.get("installedProbeCardOrientation")
 
         if not probe_card_id:
             # No probe card installed
             response = ResponseBuilder.success(
-                "GetInstalledProbeCardReply",
-                "No probe card currently installed"
+                "GetInstalledProbeCardReply", "No probe card currently installed"
             )
             response["data"]["hasProbeCard"] = False
             response["data"]["probeCardId"] = None
@@ -354,7 +344,7 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
         # Probe card is installed
         response = ResponseBuilder.success(
             "GetInstalledProbeCardReply",
-            f"Probe card {probe_card_id} installed with orientation {probe_card_orientation}"
+            f"Probe card {probe_card_id} installed with orientation {probe_card_orientation}",
         )
 
         response["data"]["hasProbeCard"] = True
@@ -365,7 +355,7 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
 
         # Update local globals to match DB
         g.set_probe_card(probe_card_id, probe_card_orientation or "Unknown")
-        g.probe_card_id= probe_card_id
+        g.probe_card_id = probe_card_id
         g.probe_card_orientation = "West"
 
         return response
@@ -373,14 +363,18 @@ def get_installed_probe_card_from_db(wp_machine_id=None, timeout: float = 15.0, 
     except Exception as e:
         print(f"✗ Error: {str(e)}")
         return ResponseBuilder.error(
-            "GetInstalledProbeCardReply",
-            f"Failed to get probe card: {str(e)}",
-            500
+            "GetInstalledProbeCardReply", f"Failed to get probe card: {str(e)}", 500
         )
 
 
-def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, orientation=None, timeout: float = 15.0,
-                                   user=None, waferAgentName=None):
+def update_wp_machine_loaded_wafer(
+    wp_machine_id=None,
+    loaded_wafer_id=None,
+    orientation=None,
+    timeout: float = 15.0,
+    user=None,
+    waferAgentName=None,
+):
     """
     Update loaded wafer in database.
 
@@ -401,13 +395,13 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
     try:
         # Use global values if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
                 "UpdateWpMachineLoadedWaferReply",
                 "WP Machine ID not set. Initialize machine first.",
-                400
+                400,
             )
 
         db_client = _get_db_client()
@@ -417,14 +411,12 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
             wp_machine_id=wp_machine_id,
             wafer_id=loaded_wafer_id,
             orientation=orientation,
-            timeout=timeout
+            timeout=timeout,
         )
 
         if not result:
             return ResponseBuilder.error(
-                "UpdateWpMachineLoadedWaferReply",
-                "Failed to update database",
-                500
+                "UpdateWpMachineLoadedWaferReply", "Failed to update database", 500
             )
 
         # Update local globals
@@ -436,7 +428,7 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
         # Success
         return ResponseBuilder.success(
             "UpdateWpMachineLoadedWaferReply",
-            f"Wafer {'loaded' if loaded_wafer_id else 'unloaded'} successfully"
+            f"Wafer {'loaded' if loaded_wafer_id else 'unloaded'} successfully",
         )
 
     except Exception as e:
@@ -444,12 +436,18 @@ def update_wp_machine_loaded_wafer(wp_machine_id=None, loaded_wafer_id=None, ori
         return ResponseBuilder.error(
             "UpdateWpMachineLoadedWaferReply",
             f"Error updating loaded wafer: {str(e)}",
-            500
+            500,
         )
 
 
-def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_card_id=None, orientation=None,
-                                           timeout: float = 15.0, user=None, waferAgentName=None):
+def update_wp_machine_installed_probe_card(
+    wp_machine_id=None,
+    installed_probe_card_id=None,
+    orientation=None,
+    timeout: float = 15.0,
+    user=None,
+    waferAgentName=None,
+):
     """
     Update installed probe card in database.
 
@@ -470,18 +468,18 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
     try:
         # Use global values if not provided
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             return ResponseBuilder.error(
                 "UpdateWpMachineInstalledProbeCardReply",
                 "WP Machine ID not set. Initialize machine first.",
-                400
+                400,
             )
 
         db_client = _get_db_client()
 
-        print(f"\n💾 Updating installed probe card in DB...")
+        print("\n💾 Updating installed probe card in DB...")
         print(f"   Machine ID: {wp_machine_id}")
         print(f"   Probe Card ID: {installed_probe_card_id}")
         print(f"   Orientation: {orientation}")
@@ -491,14 +489,14 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
             wp_machine_id=wp_machine_id,
             probe_card_id=installed_probe_card_id,
             orientation=orientation,
-            timeout=timeout
+            timeout=timeout,
         )
 
         if not result:
             return ResponseBuilder.error(
                 "UpdateWpMachineInstalledProbeCardReply",
                 "Failed to update database",
-                500
+                500,
             )
 
         # Update local globals
@@ -512,7 +510,7 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
         # Success
         return ResponseBuilder.success(
             "UpdateWpMachineInstalledProbeCardReply",
-            f"Probe card {'installed' if installed_probe_card_id else 'removed'} successfully"
+            f"Probe card {'installed' if installed_probe_card_id else 'removed'} successfully",
         )
 
     except Exception as e:
@@ -520,11 +518,13 @@ def update_wp_machine_installed_probe_card(wp_machine_id=None, installed_probe_c
         return ResponseBuilder.error(
             "UpdateWpMachineInstalledProbeCardReply",
             f"Error updating probe card: {str(e)}",
-            500
+            500,
         )
 
 
-def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
+def get_loaded_wafer_info(
+    wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None
+):
     """
     Get loaded wafer ID and orientation from machine record
 
@@ -539,13 +539,14 @@ def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, 
 
     try:
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             print("⚠️  WP Machine ID not set")
             return (None, None)
 
         from services.WPDbKafkaClient import DBKafkaClient
+
         db_client = DBKafkaClient.get_instance()
 
         print(f"\n🔍 Getting loaded wafer for machine {wp_machine_id}...")
@@ -556,7 +557,7 @@ def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, 
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == wp_machine_id:
+            if machine.get("id") == wp_machine_id:
                 our_machine = machine
                 break
 
@@ -565,8 +566,8 @@ def get_loaded_wafer_info(wp_machine_id=None, timeout: float = 15.0, user=None, 
             return (None, None)
 
         # Extract wafer info directly from machine record
-        wafer_id = our_machine.get('loadedWaferId')
-        orientation = our_machine.get('loadedWaferOrientation')
+        wafer_id = our_machine.get("loadedWaferId")
+        orientation = our_machine.get("loadedWaferOrientation")
 
         if wafer_id:
             print(f"✓ Wafer loaded: ID={wafer_id}, orientation={orientation}")
@@ -597,7 +598,6 @@ def get_asic_by_id(asic_id: int) -> dict:
 
     db_client = DBKafkaClient.get_instance()
 
-
     # Use GetAllAsics with ID filter
     response = db_client.get_all_asic_by_id(asic_id)
     print(response)
@@ -611,7 +611,7 @@ def get_asic_by_id(asic_id: int) -> dict:
     # Get first (and only) item
     asic_data = items[0]
 
-    print(f"✅ Found ASIC in database:")
+    print("✅ Found ASIC in database:")
     print(f"   ID: {asic_data.get('id')}")
     print(f"   Serial Number: {asic_data.get('serialNumber')}")
     print(f"   Family Type: {asic_data.get('familyType')}")
@@ -619,7 +619,10 @@ def get_asic_by_id(asic_id: int) -> dict:
 
     return asic_data
 
-def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None):
+
+def get_installed_probe_card_info(
+    wp_machine_id=None, timeout: float = 15.0, user=None, waferAgentName=None
+):
     """
     Get installed probe card ID and orientation from machine record
 
@@ -634,13 +637,14 @@ def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, use
 
     try:
         if wp_machine_id is None:
-            wp_machine_id = g.wp_machine_id
+            wp_machine_id = g.wpMachineId
 
         if wp_machine_id == 0:
             print("⚠️  WP Machine ID not set")
             return (None, None)
 
         from services.WPDbKafkaClient import DBKafkaClient
+
         db_client = DBKafkaClient.get_instance()
 
         print(f"\n🔍 Getting installed probe card for machine {wp_machine_id}...")
@@ -651,7 +655,7 @@ def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, use
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == wp_machine_id:
+            if machine.get("id") == wp_machine_id:
                 our_machine = machine
                 break
 
@@ -660,11 +664,13 @@ def get_installed_probe_card_info(wp_machine_id=None, timeout: float = 15.0, use
             return (None, None)
 
         # Extract probe card info directly from machine record
-        probe_card_id = our_machine.get('installedProbeCardId')
-        orientation = our_machine.get('installedProbeCardOrientation')
+        probe_card_id = our_machine.get("installedProbeCardId")
+        orientation = our_machine.get("installedProbeCardOrientation")
 
         if probe_card_id:
-            print(f"✓ Probe card installed: ID={probe_card_id}, orientation={orientation}")
+            print(
+                f"✓ Probe card installed: ID={probe_card_id}, orientation={orientation}"
+            )
             return (probe_card_id, orientation)
         else:
             print("ℹ️  No probe card installed")

@@ -3,6 +3,7 @@ Kafka client specifically for DB Agent communication
 
 UPDATED: Accepts bootstrap_servers parameter for dynamic broker configuration
 """
+
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
 import json
@@ -32,7 +33,9 @@ class DBKafkaClient:
                               If None, uses default
         """
         if DBKafkaClient._instance is not None:
-            raise RuntimeError("DBKafkaClient is a singleton. Use get_instance() instead.")
+            raise RuntimeError(
+                "DBKafkaClient is a singleton. Use get_instance() instead."
+            )
 
         # ============================================================
         # NEW: Use provided broker or fallback to default
@@ -41,10 +44,10 @@ class DBKafkaClient:
             self.DB_BROKER = bootstrap_servers
             print(f"🔌 Using DB Kafka broker from config: {bootstrap_servers}")
         else:
-            #self.DB_BROKER = "svmithi02:9096"  # Default
-            #print(f"🔌 Using default DB Kafka broker: {self.DB_BROKER}")
+            # self.DB_BROKER = "svmithi02:9096"  # Default
+            # print(f"🔌 Using default DB Kafka broker: {self.DB_BROKER}")
             print("WARNING - Kafka broker not found")
-            
+
         # ============================================================
 
         self.DB_REQUEST_TOPIC = "svt.db-agent.request"
@@ -59,22 +62,26 @@ class DBKafkaClient:
         self._ensure_topics_exist()
 
         # Create producer
-        self.producer = KafkaProducer({
-            'bootstrap.servers': self.DB_BROKER,
-            'request.timeout.ms': 30000,
-            'socket.timeout.ms': 30000
-        })
+        self.producer = KafkaProducer(
+            {
+                "bootstrap.servers": self.DB_BROKER,
+                "request.timeout.ms": 30000,
+                "socket.timeout.ms": 30000,
+            }
+        )
 
         # Create consumer with stable group ID
-        self.consumer = KafkaConsumer({
-            'bootstrap.servers': self.DB_BROKER,
-            'group.id': 'wp-agent-db-consumer',
-            'auto.offset.reset': 'latest',
-            'enable.auto.commit': False,
-            'session.timeout.ms': 10000,
-            'heartbeat.interval.ms': 3000,
-            'max.poll.interval.ms': 120000
-        })
+        self.consumer = KafkaConsumer(
+            {
+                "bootstrap.servers": self.DB_BROKER,
+                "group.id": "wp-agent-db-consumer",
+                "auto.offset.reset": "latest",
+                "enable.auto.commit": False,
+                "session.timeout.ms": 10000,
+                "heartbeat.interval.ms": 3000,
+                "max.poll.interval.ms": 120000,
+            }
+        )
 
         # Subscribe to reply topic
         self.consumer.subscribe([self.DB_REPLY_TOPIC])
@@ -91,7 +98,7 @@ class DBKafkaClient:
 
     def _ensure_topics_exist(self):
         """Ensure required Kafka topics exist"""
-        admin = AdminClient({'bootstrap.servers': self.DB_BROKER})
+        admin = AdminClient({"bootstrap.servers": self.DB_BROKER})
 
         try:
             metadata = admin.list_topics(timeout=5)
@@ -100,18 +107,18 @@ class DBKafkaClient:
             topics_to_create = []
 
             if self.DB_REQUEST_TOPIC not in existing_topics:
-                topics_to_create.append(NewTopic(
-                    self.DB_REQUEST_TOPIC,
-                    num_partitions=1,
-                    replication_factor=1
-                ))
+                topics_to_create.append(
+                    NewTopic(
+                        self.DB_REQUEST_TOPIC, num_partitions=1, replication_factor=1
+                    )
+                )
 
             if self.DB_REPLY_TOPIC not in existing_topics:
-                topics_to_create.append(NewTopic(
-                    self.DB_REPLY_TOPIC,
-                    num_partitions=1,
-                    replication_factor=1
-                ))
+                topics_to_create.append(
+                    NewTopic(
+                        self.DB_REPLY_TOPIC, num_partitions=1, replication_factor=1
+                    )
+                )
 
             if topics_to_create:
                 fs = admin.create_topics(topics_to_create)
@@ -128,12 +135,12 @@ class DBKafkaClient:
             print(f"   ⚠️  Error checking topics: {e}")
 
     def request_reply(
-            self,
-            message_type: str,
-            data: Dict[str, Any],
-            reply_type: str,
-            timeout: float = 10.0,
-            use_requestId: bool = False
+        self,
+        message_type: str,
+        data: Dict[str, Any],
+        reply_type: str,
+        timeout: float = 10.0,
+        use_requestId: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """
         Send request and wait for reply using SVT Kafka conventions
@@ -152,16 +159,13 @@ class DBKafkaClient:
         correlation_id = str(uuid.uuid4())
 
         # Build payload (NO requestId in body)
-        payload = {
-            "type": message_type,
-            "data": data
-        }
+        payload = {"type": message_type, "data": data}
 
         # SVT Kafka headers
         headers = [
             ("kafka_correlationId", correlation_id.encode("utf-8")),
             ("kafka_replyTopic", self.DB_REPLY_TOPIC.encode("utf-8")),
-            ("kafka_replyPartition", b"0")
+            ("kafka_replyPartition", b"0"),
         ]
 
         # Send request
@@ -169,11 +173,13 @@ class DBKafkaClient:
             self.producer.produce(
                 self.DB_REQUEST_TOPIC,
                 value=json.dumps(payload).encode("utf-8"),
-                headers=headers
+                headers=headers,
             )
             self.producer.flush()
 
-            print(f"📤 Sent DB request: {message_type} (correlation: {correlation_id[:8]}...)")
+            print(
+                f"📤 Sent DB request: {message_type} (correlation: {correlation_id[:8]}...)"
+            )
 
         except Exception as e:
             print(f"❌ Failed to send request: {e}")
@@ -234,7 +240,7 @@ class DBKafkaClient:
             message_type="GetAllWaferProbeProjects",
             data={},
             reply_type="GetAllWaferProbeProjectsReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         if result and result.get("status") == "Success":
@@ -247,7 +253,7 @@ class DBKafkaClient:
             message_type="GetAllWaferProbeMachines",
             data={},
             reply_type="GetAllWaferProbeMachinesReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         if result and result.get("status") == "Success":
@@ -259,49 +265,47 @@ class DBKafkaClient:
         result = self.request_reply(
             message_type="GetAllAsics",
             data={
-                "filter": {
-                    "ids": [asicId]
-                },
-                "pager": {
-                    "limit": 1,  # Only need 1 result
-                    "offset": 0
-                }
+                "filter": {"ids": [asicId]},
+                "pager": {"limit": 1, "offset": 0},  # Only need 1 result
             },
             reply_type="GetAllAsicsReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         if result and result.get("status") == "Success":
             return result
         return []
 
-    def update_machine_loaded_wafer(self, wp_machine_id: int, wafer_id, orientation, timeout: float = 15.0):
+    def update_machine_loaded_wafer(
+        self, wp_machine_id: int, wafer_id, orientation, timeout: float = 15.0
+    ):
         """Update loaded wafer on machine"""
         result = self.request_reply(
             message_type="UpdateWpMachineLoadedWafer",
             data={
                 "wpMachineId": wp_machine_id,
                 "loadedWaferId": wafer_id,
-                "orientation": orientation
+                "orientation": orientation,
             },
             reply_type="UpdateWpMachineLoadedWaferReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         return result and result.get("status") == "Success"
 
-    def update_machine_installed_probe_card(self, wp_machine_id: int, probe_card_id, orientation,
-                                            timeout: float = 15.0):
+    def update_machine_installed_probe_card(
+        self, wp_machine_id: int, probe_card_id, orientation, timeout: float = 15.0
+    ):
         """Update installed probe card on machine"""
         result = self.request_reply(
             message_type="UpdateWpMachineInstalledProbeCard",
             data={
                 "wpMachineId": wp_machine_id,
                 "installedProbeCardId": probe_card_id,
-                "orientation": orientation
+                "orientation": orientation,
             },
             reply_type="UpdateWpMachineInstalledProbeCardReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         return result and result.get("status") == "Success"
@@ -314,7 +318,7 @@ class DBKafkaClient:
             message_type="GetAllWaferProbeMachines",
             data={"filter": {"ids": []}},
             reply_type="GetAllWaferProbeMachinesReply",
-            timeout=timeout
+            timeout=timeout,
         )
 
         if result:

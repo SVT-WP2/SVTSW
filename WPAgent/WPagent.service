@@ -1,18 +1,22 @@
 [Unit]
 Description=Wafer Prober agent
 Requires=kafka.service
+After=kafka.service
 
 [Service]
 Type=simple
 User=root
 
 WorkingDirectory=/data/SVTSoftware/SVTSW/WPAgent
-ExecStart=/usr/local/bin/python3.12 /data/SVTSoftware/SVTSW/WPAgent/main.py listen CERN
+
+ExecStart=/data/SVTSoftware/SVTSW/WPAgent/WPAgent.sh listen CERN
 
 Restart=always
-TimeoutStartSec=2
 RestartSec=2
-LimitMEMLock=infinity
+TimeoutStartSec=120
+
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONNOUSERSITE=1"
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

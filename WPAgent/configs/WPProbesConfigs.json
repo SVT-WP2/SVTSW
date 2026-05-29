@@ -20,6 +20,7 @@
     "address": "mock-prober",
     "port": 35555,
     "machineType": "mock",
-    "description": "Mock Probe Station for Testing"
+    "description": "Mock Probe Station for Testing",
+    "kafka_broker": "svmithi02:9096"
   }
 }

@@ -79,29 +79,49 @@ class TestResponseBuilder:
         g = SvtWPAagentGlobalParameters.getInstance()
 
         # Test new fields exist
-        self.assert_not_none(hasattr(g, 'user'), "user field exists")
-        self.assert_not_none(hasattr(g, 'asic_serial_number'), "asic_serial_number exists")
-        self.assert_not_none(hasattr(g, 'wp_machine_id'), "wp_machine_id exists")
-        self.assert_not_none(hasattr(g, 'wpag_state'), "wpag_state exists")
-        self.assert_not_none(hasattr(g, 'loaded_wafer_id'), "loaded_wafer_id exists")
-        self.assert_not_none(hasattr(g, 'wafer_orientation'), "wafer_orientation exists")
-        self.assert_not_none(hasattr(g, 'probe_card_id'), "probe_card_id exists")
-        self.assert_not_none(hasattr(g, 'probe_card_orientation'), "probe_card_orientation exists")
-        self.assert_not_none(hasattr(g, 'opened_project_id'), "opened_project_id exists")
-        self.assert_not_none(hasattr(g, 'overdrive'), "overdrive exists")
-        self.assert_not_none(hasattr(g, 'camera_mount_point'), "camera_mount_point exists")
-        self.assert_not_none(hasattr(g, 'current_working_area'), "current_working_area exists")
-        self.assert_not_none(hasattr(g, 'current_die_col'), "current_die_col exists")
-        self.assert_not_none(hasattr(g, 'current_die_row'), "current_die_row exists")
-        self.assert_not_none(hasattr(g, 'current_die_subsite'), "current_die_subsite exists")
-        self.assert_not_none(hasattr(g, 'chuck_z_position_state'), "chuck_z_position_state exists")
-        self.assert_not_none(hasattr(g, 'total_dies_number'), "total_dies_number exists")
+        self.assert_not_none(hasattr(g, "user"), "user field exists")
+        self.assert_not_none(
+            hasattr(g, "asic_serial_number"), "asic_serial_number exists"
+        )
+        self.assert_not_none(hasattr(g, "wp_machine_id"), "wp_machine_id exists")
+        self.assert_not_none(hasattr(g, "wpag_state"), "wpag_state exists")
+        self.assert_not_none(hasattr(g, "loaded_wafer_id"), "loaded_wafer_id exists")
+        self.assert_not_none(
+            hasattr(g, "wafer_orientation"), "wafer_orientation exists"
+        )
+        self.assert_not_none(hasattr(g, "probe_card_id"), "probe_card_id exists")
+        self.assert_not_none(
+            hasattr(g, "probe_card_orientation"), "probe_card_orientation exists"
+        )
+        self.assert_not_none(
+            hasattr(g, "opened_project_id"), "opened_project_id exists"
+        )
+        self.assert_not_none(hasattr(g, "overdrive"), "overdrive exists")
+        self.assert_not_none(
+            hasattr(g, "camera_mount_point"), "camera_mount_point exists"
+        )
+        self.assert_not_none(
+            hasattr(g, "current_working_area"), "current_working_area exists"
+        )
+        self.assert_not_none(hasattr(g, "current_die_col"), "current_die_col exists")
+        self.assert_not_none(hasattr(g, "current_die_row"), "current_die_row exists")
+        self.assert_not_none(
+            hasattr(g, "current_die_subsite"), "current_die_subsite exists"
+        )
+        self.assert_not_none(
+            hasattr(g, "chuck_z_position_state"), "chuck_z_position_state exists"
+        )
+        self.assert_not_none(
+            hasattr(g, "total_dies_number"), "total_dies_number exists"
+        )
 
         # Test initial values
         self.assert_equal(g.user, "default_user", "user default value")
         self.assert_equal(g.wpag_state, "ServiceOff", "wpag_state default value")
         self.assert_equal(g.loaded_wafer_id, None, "loaded_wafer_id default None")
-        self.assert_equal(g.chuck_z_position_state, "Unknown", "chuck_z default Unknown")
+        self.assert_equal(
+            g.chuck_z_position_state, "Unknown", "chuck_z default Unknown"
+        )
 
     def test_globals_helper_methods(self):
         """Test new helper methods"""
@@ -113,7 +133,9 @@ class TestResponseBuilder:
         # Test set_wafer_loaded
         g.set_wafer_loaded(999, "North")
         self.assert_equal(g.loaded_wafer_id, 999, "set_wafer_loaded sets ID")
-        self.assert_equal(g.wafer_orientation, "North", "set_wafer_loaded sets orientation")
+        self.assert_equal(
+            g.wafer_orientation, "North", "set_wafer_loaded sets orientation"
+        )
 
         # Test clear_wafer
         g.clear_wafer()
@@ -124,7 +146,9 @@ class TestResponseBuilder:
         # Test set_probe_card
         g.set_probe_card(456, "East")
         self.assert_equal(g.probe_card_id, 456, "set_probe_card sets ID")
-        self.assert_equal(g.probe_card_orientation, "East", "set_probe_card sets orientation")
+        self.assert_equal(
+            g.probe_card_orientation, "East", "set_probe_card sets orientation"
+        )
 
         # Test set_current_die
         g.set_current_die(5, 10, 2)
@@ -139,7 +163,9 @@ class TestResponseBuilder:
 
         # Test set_chuck_position
         g.set_chuck_position("Contact")
-        self.assert_equal(g.chuck_z_position_state, "Contact", "set_chuck_position sets state")
+        self.assert_equal(
+            g.chuck_z_position_state, "Contact", "set_chuck_position sets state"
+        )
 
     def test_response_builder_success(self):
         """Test ResponseBuilder success responses"""
@@ -150,7 +176,7 @@ class TestResponseBuilder:
 
         # Set up some test data
         g.user = "test_user"
-        g.asic_serial_number = 12345
+        g.asicSerialNumber = 12345
         g.wp_machine_id = 1
         g.wpag_state = "WP_Idle"
         g.set_wafer_loaded(999, "North")
@@ -175,18 +201,28 @@ class TestResponseBuilder:
         # Test data fields
         data = response["data"]
         self.assert_equal(data["user"], "test_user", "data.user correct")
-        self.assert_equal(data["asicSerialNumber"], 12345, "data.asicSerialNumber correct")
+        self.assert_equal(
+            data["asicSerialNumber"], 12345, "data.asicSerialNumber correct"
+        )
         self.assert_equal(data["wpMachineId"], 1, "data.wpMachineId correct")
         self.assert_equal(data["WPAG_State"], "WP_Idle", "data.WPAG_State correct")
 
         # Test loadedWafer object
         self.assert_not_none(data["loadedWafer"], "loadedWafer not null")
-        self.assert_equal(data["loadedWafer"]["waferId"], 999, "loadedWafer.waferId correct")
-        self.assert_equal(data["loadedWafer"]["orientation"], "North", "loadedWafer.orientation correct")
+        self.assert_equal(
+            data["loadedWafer"]["waferId"], 999, "loadedWafer.waferId correct"
+        )
+        self.assert_equal(
+            data["loadedWafer"]["orientation"],
+            "North",
+            "loadedWafer.orientation correct",
+        )
 
         # Test probe card object
         self.assert_not_none(data["instaledprobeCard"], "instaledprobeCard not null")
-        self.assert_equal(data["instaledprobeCard"]["probeCardId"], 456, "probeCard ID correct")
+        self.assert_equal(
+            data["instaledprobeCard"]["probeCardId"], 456, "probeCard ID correct"
+        )
 
         # Test project fields
         self.assert_equal(data["openedProjectId"], 789, "openedProjectId correct")
@@ -195,13 +231,21 @@ class TestResponseBuilder:
         # Test configuration fields
         self.assert_equal(data["overdrive"], 5, "overdrive correct")
         self.assert_equal(data["cameraMountPoint"], "Top", "cameraMountPoint correct")
-        self.assert_equal(data["currentWorkingArea"], "TestArea", "currentWorkingArea correct")
+        self.assert_equal(
+            data["currentWorkingArea"], "TestArea", "currentWorkingArea correct"
+        )
 
         # Test die position
-        self.assert_not_none(data["waferMapDiePosition"], "waferMapDiePosition not null")
+        self.assert_not_none(
+            data["waferMapDiePosition"], "waferMapDiePosition not null"
+        )
         self.assert_equal(data["waferMapDiePosition"]["colIndex"], 7, "die col correct")
-        self.assert_equal(data["waferMapDiePosition"]["rowIndex"], 12, "die row correct")
-        self.assert_equal(data["waferMapDiePosition"]["subsiteIndex"], 1, "die subsite correct")
+        self.assert_equal(
+            data["waferMapDiePosition"]["rowIndex"], 12, "die row correct"
+        )
+        self.assert_equal(
+            data["waferMapDiePosition"]["subsiteIndex"], 1, "die subsite correct"
+        )
 
         # Test chuck and dies
         self.assert_equal(data["chuckZPositionState"], "Separation", "chuckZ correct")
@@ -228,7 +272,11 @@ class TestResponseBuilder:
 
         # Test error object
         self.assert_equal(response["error"]["code"], 400, "error.code is 400")
-        self.assert_equal(response["error"]["message"], "Something went wrong", "error.message correct")
+        self.assert_equal(
+            response["error"]["message"],
+            "Something went wrong",
+            "error.message correct",
+        )
 
         self.print_json(response, "Error Response")
 
@@ -265,23 +313,37 @@ class TestResponseBuilder:
         # Initial state
         g.chuck_z_position_state = "Unknown"
         response1 = ResponseBuilder.success("Test1", "Initial")
-        self.assert_equal(response1["data"]["chuckZPositionState"], "Unknown", "Initial state Unknown")
+        self.assert_equal(
+            response1["data"]["chuckZPositionState"], "Unknown", "Initial state Unknown"
+        )
 
         # Change to Separation
         g.chuck_z_position_state = "Separation"
         response2 = ResponseBuilder.success("Test2", "After separation")
-        self.assert_equal(response2["data"]["chuckZPositionState"], "Separation", "State changed to Separation")
+        self.assert_equal(
+            response2["data"]["chuckZPositionState"],
+            "Separation",
+            "State changed to Separation",
+        )
 
         # Change to Contact
         g.chuck_z_position_state = "Contact"
         response3 = ResponseBuilder.success("Test3", "After contact")
-        self.assert_equal(response3["data"]["chuckZPositionState"], "Contact", "State changed to Contact")
+        self.assert_equal(
+            response3["data"]["chuckZPositionState"],
+            "Contact",
+            "State changed to Contact",
+        )
 
         # Change die position
         g.set_current_die(5, 10, 0)
         response4 = ResponseBuilder.success("Test4", "After die change")
-        self.assert_equal(response4["data"]["waferMapDiePosition"]["colIndex"], 5, "Die col updated")
-        self.assert_equal(response4["data"]["waferMapDiePosition"]["rowIndex"], 10, "Die row updated")
+        self.assert_equal(
+            response4["data"]["waferMapDiePosition"]["colIndex"], 5, "Die col updated"
+        )
+        self.assert_equal(
+            response4["data"]["waferMapDiePosition"]["rowIndex"], 10, "Die row updated"
+        )
 
         print("\n  State changes are reflected in real-time! ✓")
 
@@ -297,12 +359,14 @@ class TestResponseBuilder:
         # Step 1: Initialize
         print("  1. Initialize...")
         g.user = "operator1"
-        g.asic_serial_number = 12345
+        g.asicSerialNumber = 12345
         g.wp_machine_id = 1
         g.wpag_state = "ServiceOn"
         g.set_project(100, "TestProject")
         response = ResponseBuilder.success("InitializeReply", "Initialized")
-        self.assert_equal(response["data"]["WPAG_State"], "ServiceOn", "After init: ServiceOn")
+        self.assert_equal(
+            response["data"]["WPAG_State"], "ServiceOn", "After init: ServiceOn"
+        )
 
         # Step 2: Load Wafer
         print("  2. Load wafer...")
@@ -311,39 +375,63 @@ class TestResponseBuilder:
         g.wpag_state = "WP_Idle"
         g.chuck_z_position_state = "Separation"
         response = ResponseBuilder.success("LoadWaferReply", "Wafer loaded")
-        self.assert_not_none(response["data"]["loadedWafer"], "After load: wafer not null")
-        self.assert_equal(response["data"]["chuckZPositionState"], "Separation", "After load: Separation")
+        self.assert_not_none(
+            response["data"]["loadedWafer"], "After load: wafer not null"
+        )
+        self.assert_equal(
+            response["data"]["chuckZPositionState"],
+            "Separation",
+            "After load: Separation",
+        )
 
         # Step 3: Go to Die
         print("  3. Move to die 5,10...")
         g.set_current_die(5, 10, 0)
         g.wpag_state = "WP_Idle"
         response = ResponseBuilder.success("GoToDieReply", "Moved to die")
-        self.assert_equal(response["data"]["waferMapDiePosition"]["colIndex"], 5, "After move: die col 5")
+        self.assert_equal(
+            response["data"]["waferMapDiePosition"]["colIndex"],
+            5,
+            "After move: die col 5",
+        )
 
         # Step 4: Go to Contact
         print("  4. Go to contact...")
         g.chuck_z_position_state = "Contact"
         g.wpag_state = "WP_Testing"
         response = ResponseBuilder.success("GoToContactReply", "In contact")
-        self.assert_equal(response["data"]["chuckZPositionState"], "Contact", "After contact: Contact")
-        self.assert_equal(response["data"]["WPAG_State"], "WP_Testing", "After contact: Testing")
+        self.assert_equal(
+            response["data"]["chuckZPositionState"], "Contact", "After contact: Contact"
+        )
+        self.assert_equal(
+            response["data"]["WPAG_State"], "WP_Testing", "After contact: Testing"
+        )
 
         # Step 5: Go to Separation
         print("  5. Go to separation...")
         g.chuck_z_position_state = "Separation"
         g.wpag_state = "WP_Idle"
         response = ResponseBuilder.success("GoToSeparationReply", "In separation")
-        self.assert_equal(response["data"]["chuckZPositionState"], "Separation", "After separation: Separation")
-        self.assert_equal(response["data"]["WPAG_State"], "WP_Idle", "After separation: Idle")
+        self.assert_equal(
+            response["data"]["chuckZPositionState"],
+            "Separation",
+            "After separation: Separation",
+        )
+        self.assert_equal(
+            response["data"]["WPAG_State"], "WP_Idle", "After separation: Idle"
+        )
 
         # Step 6: Unload Wafer
         print("  6. Unload wafer...")
         g.clear_wafer()
         g.wpag_state = "WP_Idle"
         response = ResponseBuilder.success("UnloadWaferReply", "Wafer unloaded")
-        self.assert_equal(response["data"]["loadedWafer"], None, "After unload: wafer null")
-        self.assert_equal(response["data"]["waferMapDiePosition"], None, "After unload: die null")
+        self.assert_equal(
+            response["data"]["loadedWafer"], None, "After unload: wafer null"
+        )
+        self.assert_equal(
+            response["data"]["waferMapDiePosition"], None, "After unload: die null"
+        )
 
         print("\n  ✓ Complete workflow simulation passed!")
 
@@ -364,6 +452,7 @@ class TestResponseBuilder:
         except Exception as e:
             print(f"\n❌ TEST CRASHED: {str(e)}")
             import traceback
+
             traceback.print_exc()
             self.failed += 1
 

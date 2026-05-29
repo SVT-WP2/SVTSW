@@ -59,12 +59,16 @@ def validate_response_structure(response, expected_type, test_name):
     if "status" not in response:
         errors.append("Missing 'status' field")
     elif response["status"] not in ["Success", "Error"]:
-        errors.append(f"Invalid status: {response['status']} (should be 'Success' or 'Error')")
+        errors.append(
+            f"Invalid status: {response['status']} (should be 'Success' or 'Error')"
+        )
 
     if "type" not in response:
         errors.append("Missing 'type' field")
     elif response["type"] != expected_type:
-        errors.append(f"Wrong type: expected '{expected_type}', got '{response['type']}'")
+        errors.append(
+            f"Wrong type: expected '{expected_type}', got '{response['type']}'"
+        )
 
     if "data" not in response:
         errors.append("Missing 'data' field")
@@ -72,10 +76,20 @@ def validate_response_structure(response, expected_type, test_name):
         # Check data structure
         data = response["data"]
         required_fields = [
-            "user", "asicSerialNumber", "wpMachineId", "WPAG_State",
-            "loadedWafer", "instaledprobeCard", "openedProjectId", "projectName",
-            "overdrive", "cameraMountPoint", "currentWorkingArea",
-            "waferMapDiePosition", "chuckZPositionState", "totalDiesNumber"
+            "user",
+            "asicSerialNumber",
+            "wpMachineId",
+            "WPAG_State",
+            "loadedWafer",
+            "instaledprobeCard",
+            "openedProjectId",
+            "projectName",
+            "overdrive",
+            "cameraMountPoint",
+            "currentWorkingArea",
+            "waferMapDiePosition",
+            "chuckZPositionState",
+            "totalDiesNumber",
         ]
 
         for field in required_fields:
@@ -117,11 +131,15 @@ def test_move_chuck_xy():
         # Should be error (not initialized) or success
         # but we check structure
         if response["status"] == "Error":
-            valid = validate_response_structure(response, "MoveChuckXYReply", "move_chuck_xy (error)")
+            valid = validate_response_structure(
+                response, "MoveChuckXYReply", "move_chuck_xy (error)"
+            )
             print("\nNote: Got error response (expected if not initialized)")
             print(f"Error message: {response.get('error', {}).get('message', 'N/A')}")
         else:
-            valid = validate_response_structure(response, "MoveChuckXYReply", "move_chuck_xy (success)")
+            valid = validate_response_structure(
+                response, "MoveChuckXYReply", "move_chuck_xy (success)"
+            )
 
         print_json(response, "move_chuck_xy Response")
         return valid
@@ -129,6 +147,7 @@ def test_move_chuck_xy():
     except Exception as e:
         print(f"❌ move_chuck_xy - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -156,7 +175,8 @@ def test_go_to_die():
                     print("✓ Die position correctly updated in response")
                 else:
                     print(
-                        f"⚠️  Die position not updated: expected (5,10), got ({die_pos.get('colIndex')},{die_pos.get('rowIndex')})")
+                        f"⚠️  Die position not updated: expected (5,10), got ({die_pos.get('colIndex')},{die_pos.get('rowIndex')})"
+                    )
 
         print_json(response, "go_to_die Response")
         return valid
@@ -164,6 +184,7 @@ def test_go_to_die():
     except Exception as e:
         print(f"❌ go_to_die - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -177,7 +198,9 @@ def test_go_to_contact():
 
         response = move_chuck_contact()
 
-        valid = validate_response_structure(response, "GoToContactReply", "go_to_contact")
+        valid = validate_response_structure(
+            response, "GoToContactReply", "go_to_contact"
+        )
 
         # Check if Z position updated (if success)
         if response["status"] == "Success":
@@ -193,6 +216,7 @@ def test_go_to_contact():
     except Exception as e:
         print(f"❌ go_to_contact - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -206,7 +230,9 @@ def test_go_to_separation():
 
         response = Move_chuck_separation()
 
-        valid = validate_response_structure(response, "GoToSeparationReply", "go_to_separation")
+        valid = validate_response_structure(
+            response, "GoToSeparationReply", "go_to_separation"
+        )
 
         # Check if Z position updated (if success)
         if response["status"] == "Success":
@@ -222,6 +248,7 @@ def test_go_to_separation():
     except Exception as e:
         print(f"❌ go_to_separation - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -235,7 +262,9 @@ def test_switch_camera():
 
         response = switch_camera(mount_point="Top")
 
-        valid = validate_response_structure(response, "SwitchCameraReply", "switch_camera")
+        valid = validate_response_structure(
+            response, "SwitchCameraReply", "switch_camera"
+        )
 
         # Check if camera updated (if success)
         if response["status"] == "Success":
@@ -251,6 +280,7 @@ def test_switch_camera():
     except Exception as e:
         print(f"❌ switch_camera - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -272,6 +302,7 @@ def test_load_wafer():
     except Exception as e:
         print(f"❌ load_wafer - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -290,7 +321,9 @@ def test_unload_wafer():
         g.loaded_wafer_id = None
         response = unload_wafer()
 
-        valid = validate_response_structure(response, "UnloadWaferReply", "unload_wafer (no wafer)")
+        valid = validate_response_structure(
+            response, "UnloadWaferReply", "unload_wafer (no wafer)"
+        )
 
         if response["status"] == "Error":
             if "no wafer" in response.get("error", {}).get("message", "").lower():
@@ -300,7 +333,9 @@ def test_unload_wafer():
         g.set_wafer_loaded(999, "North")
         response2 = unload_wafer()
 
-        valid2 = validate_response_structure(response2, "UnloadWaferReply", "unload_wafer (with wafer)")
+        valid2 = validate_response_structure(
+            response2, "UnloadWaferReply", "unload_wafer (with wafer)"
+        )
 
         if response2["status"] == "Success":
             if response2.get("data", {}).get("loadedWafer") is None:
@@ -312,6 +347,7 @@ def test_unload_wafer():
     except Exception as e:
         print(f"❌ unload_wafer - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -333,6 +369,7 @@ def test_run_ptpa():
     except Exception as e:
         print(f"❌ run_ptpa - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -346,7 +383,9 @@ def test_get_chuck_position():
 
         response = get_chuck_position()
 
-        valid = validate_response_structure(response, "GetChuckPositionReply", "get_chuck_position")
+        valid = validate_response_structure(
+            response, "GetChuckPositionReply", "get_chuck_position"
+        )
 
         print_json(response, "get_chuck_position Response")
         return valid
@@ -354,6 +393,7 @@ def test_get_chuck_position():
     except Exception as e:
         print(f"❌ get_chuck_position - Exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -363,11 +403,12 @@ def check_all_functions_use_response_builder():
     print_header("Test 10: Check All Functions Use ResponseBuilder")
 
     try:
-        with open('../actions/WPTestingActions.py', 'r') as f:
+        with open("../actions/WPTestingActions.py", "r") as f:
             content = f.read()
 
         checks = {
-            "ResponseBuilder imported": "from utilities.WPResponseBuilder import ResponseBuilder" in content,
+            "ResponseBuilder imported": "from utilities.WPResponseBuilder import ResponseBuilder"
+            in content,
             "Uses ResponseBuilder.success": "ResponseBuilder.success" in content,
             "Uses ResponseBuilder.error": "ResponseBuilder.error" in content,
             "No old-style success": '{"status": "success"' not in content,
@@ -413,7 +454,9 @@ def main():
     results.append(("unload_wafer", test_unload_wafer()))
     results.append(("run_ptpa", test_run_ptpa()))
     results.append(("get_chuck_position", test_get_chuck_position()))
-    results.append(("ResponseBuilder check", check_all_functions_use_response_builder()))
+    results.append(
+        ("ResponseBuilder check", check_all_functions_use_response_builder())
+    )
 
     # Summary
     print_header("TEST SUMMARY")

@@ -64,7 +64,7 @@ def setup_hierarchy_config():
     hierarchy = {
         "Developer": ["developer", "dev1", "admin"],
         "Expert": ["expert1", "expert2", "alice"],
-        "User": ["user1", "user2", "bob"]
+        "User": ["user1", "user2", "bob"],
     }
     with open("configs/WPUserHierarchy.json", "w") as f:
         json.dump(hierarchy, f, indent=2)
@@ -111,16 +111,13 @@ def test_scenario_1_user_blocked():
     print("  set_chuck_overtravel(overtravelGap=50)\n")
     print("💡 UserLogged state does NOT allow SetOverdrive command")
 
-    result = set_chuck_overtravel(
-        overtravelGap=50,
-        address="localhost:35555"
-    )
+    result = set_chuck_overtravel(overtravelGap=50, address="localhost:35555")
 
     print_payload(result, "SET OVERTRAVEL RESPONSE")
 
     # Verify
     print("\n🔍 VERIFICATION:")
-    if result['status'] == 'Error':
+    if result["status"] == "Error":
         print("   ✅ CORRECT: Basic user blocked from restricted command")
         print(f"   Error message: {result['error']['message']}")
     else:
@@ -164,16 +161,13 @@ def test_scenario_2_expert_blocked():
     print("  set_chuck_overtravel(overtravelGap=50)\n")
     print("💡 Even Expert users are restricted by state machine")
 
-    result = set_chuck_overtravel(
-        overtravelGap=50,
-        address="localhost:35555"
-    )
+    result = set_chuck_overtravel(overtravelGap=50, address="localhost:35555")
 
     print_payload(result, "SET OVERTRAVEL RESPONSE")
 
     # Verify
     print("\n🔍 VERIFICATION:")
-    if result['status'] == 'Error':
+    if result["status"] == "Error":
         print("   ✅ CORRECT: Expert blocked (not Developer)")
         print(f"   Error message: {result['error']['message']}")
     else:
@@ -216,7 +210,9 @@ def test_scenario_3_developer_allowed():
     print("\n🔍 Checking developer privileges:")
     print(f"   State: {agentStateMachine.get_state_name()}")
     print(f"   Is developer mode: {agentStateMachine.is_developer_mode()}")
-    print(f"   Can execute SetOverdrive: {agentStateMachine.can_execute('SetOverdrive')}")
+    print(
+        f"   Can execute SetOverdrive: {agentStateMachine.can_execute('SetOverdrive')}"
+    )
 
     # Step 2: Set overtravel (should succeed)
     print("\nSTEP 2: Execute set_chuck_overtravel (SHOULD SUCCEED)")
@@ -226,20 +222,18 @@ def test_scenario_3_developer_allowed():
     # Mock prober
     mock_prober = setup_mock_prober()
 
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
-            result = set_chuck_overtravel(
-                overtravelGap=50,
-                address="localhost:35555"
-
-            )
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
+            result = set_chuck_overtravel(overtravelGap=50, address="localhost:35555")
 
     print_payload(result, "SET OVERTRAVEL RESPONSE")
 
     # Verify
     print("\n🔍 VERIFICATION:")
-    if result['status'] == 'Success':
+    if result["status"] == "Success":
         print("   ✅ CORRECT: Developer successfully executed command!")
         print(f"   Overdrive updated: {g.overdrive}")
         print(f"   State remains: {agentStateMachine.get_state_name()}")
@@ -253,14 +247,12 @@ def test_scenario_3_developer_allowed():
     print("\nSTEP 3: Execute another command to prove bypass")
     print("  set_chuck_overtravel(overtravelGap=75)\n")
 
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
-            result = set_chuck_overtravel(
-                overtravelGap=75,
-                address="localhost:35555"
-
-            )
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
+            result = set_chuck_overtravel(overtravelGap=75, address="localhost:35555")
 
     print_payload(result, "SECOND CALL RESPONSE")
     print(f"   Overdrive now: {g.overdrive}")
@@ -325,19 +317,18 @@ def test_scenario_4_takeover_from_user():
 
     mock_prober = setup_mock_prober()
 
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
-            result = set_chuck_overtravel(
-                overtravelGap=30,
-                address="localhost:35555"
-            )
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
+            result = set_chuck_overtravel(overtravelGap=30, address="localhost:35555")
 
     print_payload(result, "DEVELOPER EXECUTION")
 
     # Verify
     print("\n🔍 VERIFICATION:")
-    if result['status'] == 'Success':
+    if result["status"] == "Success":
         print("   ✅ Developer successfully executed after takeover!")
         print(f"   Overdrive: {g.overdrive}")
     else:
@@ -379,10 +370,7 @@ def test_scenario_5_takeover_from_expert():
     print("\nSTEP 2: Expert tries set_chuck_overtravel (BLOCKED)")
     print("  set_chuck_overtravel(overtravelGap=40)\n")
 
-    result = set_chuck_overtravel(
-        overtravelGap=40,
-        address="localhost:35555"
-    )
+    result = set_chuck_overtravel(overtravelGap=40, address="localhost:35555")
 
     print_payload(result, "EXPERT ATTEMPT")
     print(f"   Status: {result['status']} (should be Error)")
@@ -401,19 +389,18 @@ def test_scenario_5_takeover_from_expert():
 
     mock_prober = setup_mock_prober()
 
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
-            result = set_chuck_overtravel(
-                overtravelGap=40,
-                address="localhost:35555"
-            )
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
+            result = set_chuck_overtravel(overtravelGap=40, address="localhost:35555")
 
     print_payload(result, "DEVELOPER EXECUTION")
 
     # Verify
     print("\n🔍 VERIFICATION:")
-    if result['status'] == 'Success':
+    if result["status"] == "Success":
         print("   ✅ Developer successfully executed after takeover from Expert!")
         print(f"   Overdrive: {g.overdrive}")
     else:
@@ -454,15 +441,16 @@ def test_scenario_6_multiple_commands():
     for i, value in enumerate(overtravel_values, 1):
         print(f"\n   Call {i}: set_chuck_overtravel(overtravelGap={value})")
 
-        with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-            with patch('actions.WPTestingActions.resolve_project_parameters',
-                       return_value=("localhost:35555", None, "sentio")):
+        with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+            with patch(
+                "actions.WPTestingActions.resolve_project_parameters",
+                return_value=("localhost:35555", None, "sentio"),
+            ):
                 result = set_chuck_overtravel(
-                    overtravelGap=value,
-                    address="localhost:35555"
+                    overtravelGap=value, address="localhost:35555"
                 )
 
-        status = "✅" if result['status'] == 'Success' else "❌"
+        status = "✅" if result["status"] == "Success" else "❌"
         print(f"      {status} Status: {result['status']}")
         print(f"      Overdrive: {g.overdrive}")
         print(f"      State: {agentStateMachine.get_state_name()}")
@@ -495,7 +483,7 @@ def test_scenario_7_auto_sync():
     print("CHECK 1: Initial state")
     print(f"   State Machine: {agentStateMachine.get_state_name()}")
     print(f"   g.wpag_state: {g.wpag_state}")
-    match1 = (g.wpag_state == agentStateMachine.get_state_name())
+    match1 = g.wpag_state == agentStateMachine.get_state_name()
     print(f"   Match: {'✅' if match1 else '❌'}")
 
     # Check 2: After developer login
@@ -503,7 +491,7 @@ def test_scenario_7_auto_sync():
     UserLogIn(user="developer", waferAgentName="WP1")
     print(f"   State Machine: {agentStateMachine.get_state_name()}")
     print(f"   g.wpag_state: {g.wpag_state}")
-    match2 = (g.wpag_state == agentStateMachine.get_state_name())
+    match2 = g.wpag_state == agentStateMachine.get_state_name()
     print(f"   Match: {'✅' if match2 else '❌'}")
 
     # Check 3: After logout
@@ -511,7 +499,7 @@ def test_scenario_7_auto_sync():
     UserLogOut(user="developer", waferAgentName="WP1")
     print(f"   State Machine: {agentStateMachine.get_state_name()}")
     print(f"   g.wpag_state: {g.wpag_state}")
-    match3 = (g.wpag_state == agentStateMachine.get_state_name())
+    match3 = g.wpag_state == agentStateMachine.get_state_name()
     print(f"   Match: {'✅' if match3 else '❌'}")
 
     # Check 4: After User login
@@ -519,7 +507,7 @@ def test_scenario_7_auto_sync():
     UserLogIn(user="user1", waferAgentName="WP1")
     print(f"   State Machine: {agentStateMachine.get_state_name()}")
     print(f"   g.wpag_state: {g.wpag_state}")
-    match4 = (g.wpag_state == agentStateMachine.get_state_name())
+    match4 = g.wpag_state == agentStateMachine.get_state_name()
     print(f"   Match: {'✅' if match4 else '❌'}")
 
     # Cleanup
@@ -530,7 +518,7 @@ def test_scenario_7_auto_sync():
     UserLogIn(user="expert1", waferAgentName="WP1")
     print(f"   State Machine: {agentStateMachine.get_state_name()}")
     print(f"   g.wpag_state: {g.wpag_state}")
-    match5 = (g.wpag_state == agentStateMachine.get_state_name())
+    match5 = g.wpag_state == agentStateMachine.get_state_name()
     print(f"   Match: {'✅' if match5 else '❌'}")
 
     # Cleanup

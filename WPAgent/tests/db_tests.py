@@ -53,6 +53,7 @@ def test_connection():
     except Exception as e:
         print(f"\n❌ Connection test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -78,15 +79,19 @@ def test_get_machines(machine_id=1):
             print(f"{idx}. Machine ID: {machine.get('id')}")
             print(f"   Name: {machine.get('name')}")
             print(f"   Loaded Wafer ID: {machine.get('loadedWaferId')}")
-            print(f"   Loaded Wafer Orientation: {machine.get('loadedWaferOrientation')}")
+            print(
+                f"   Loaded Wafer Orientation: {machine.get('loadedWaferOrientation')}"
+            )
             print(f"   Probe Card ID: {machine.get('installedProbeCardId')}")
-            print(f"   Probe Card Orientation: {machine.get('installedProbeCardOrientation')}")
+            print(
+                f"   Probe Card Orientation: {machine.get('installedProbeCardOrientation')}"
+            )
             print()
 
         # Find specific machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == machine_id:
+            if machine.get("id") == machine_id:
                 our_machine = machine
                 break
 
@@ -100,6 +105,7 @@ def test_get_machines(machine_id=1):
     except Exception as e:
         print(f"❌ Error getting machines: {e}")
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -121,7 +127,7 @@ def test_get_loaded_wafer(machine_id=1):
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == machine_id:
+            if machine.get("id") == machine_id:
                 our_machine = machine
                 break
 
@@ -130,8 +136,8 @@ def test_get_loaded_wafer(machine_id=1):
             return None, None
 
         # Extract wafer info
-        wafer_id = our_machine.get('loadedWaferId')
-        wafer_orientation = our_machine.get('loadedWaferOrientation')
+        wafer_id = our_machine.get("loadedWaferId")
+        wafer_orientation = our_machine.get("loadedWaferOrientation")
 
         if wafer_id:
             print(f"✅ Loaded Wafer Found:")
@@ -145,6 +151,7 @@ def test_get_loaded_wafer(machine_id=1):
     except Exception as e:
         print(f"❌ Error getting loaded wafer: {e}")
         import traceback
+
         traceback.print_exc()
         return None, None
 
@@ -166,7 +173,7 @@ def test_get_probe_card(machine_id=1):
         # Find our machine
         our_machine = None
         for machine in machines:
-            if machine.get('id') == machine_id:
+            if machine.get("id") == machine_id:
                 our_machine = machine
                 break
 
@@ -175,8 +182,8 @@ def test_get_probe_card(machine_id=1):
             return None, None
 
         # Extract probe card info
-        card_id = our_machine.get('installedProbeCardId')
-        card_orientation = our_machine.get('installedProbeCardOrientation')
+        card_id = our_machine.get("installedProbeCardId")
+        card_orientation = our_machine.get("installedProbeCardOrientation")
 
         if card_id:
             print(f"✅ Installed Probe Card Found:")
@@ -190,6 +197,7 @@ def test_get_probe_card(machine_id=1):
     except Exception as e:
         print(f"❌ Error getting probe card: {e}")
         import traceback
+
         traceback.print_exc()
         return None, None
 
@@ -221,12 +229,12 @@ def test_get_project_id(project_name="TestProject"):
         # Find specific project
         matching_project = None
         for project in projects:
-            if project.get('name', '').lower() == project_name.lower():
+            if project.get("name", "").lower() == project_name.lower():
                 matching_project = project
                 break
 
         if matching_project:
-            project_id = matching_project.get('id')
+            project_id = matching_project.get("id")
             print(f"✅ Project '{project_name}' Found:")
             print(f"   Project ID: {project_id}")
             return project_id
@@ -240,6 +248,7 @@ def test_get_project_id(project_name="TestProject"):
     except Exception as e:
         print(f"❌ Error getting project: {e}")
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -266,8 +275,12 @@ def main():
         print("  1. DB Agent is running")
         print("  2. Kafka broker is running on localhost:9095")
         print("  3. Topics are created:")
-        print("     kafka-topics --create --topic svt.db-agent.request --bootstrap-server localhost:9095")
-        print("     kafka-topics --create --topic svt.db-agent.request.reply --bootstrap-server localhost:9095")
+        print(
+            "     kafka-topics --create --topic svt.db-agent.request --bootstrap-server localhost:9095"
+        )
+        print(
+            "     kafka-topics --create --topic svt.db-agent.request.reply --bootstrap-server localhost:9095"
+        )
         return False
 
     # Configuration
@@ -298,7 +311,7 @@ def main():
         ("Get Machines", machine is not None),
         ("Get Loaded Wafer", wafer_id is not None or "checked"),
         ("Get Probe Card", card_id is not None or "checked"),
-        ("Get Project ID", project_id is not None)
+        ("Get Project ID", project_id is not None),
     ]
 
     passed = sum(1 for _, result in results if result is True or result == "checked")

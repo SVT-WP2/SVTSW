@@ -81,6 +81,7 @@ def test_with_mock_prober():
 
     print("Importing ACTUAL function from actions.WPTestingActions...")
     from actions.WPTestingActions import set_chuck_overtravel
+
     print("✓ Import successful\n")
 
     print("BEFORE calling set_chuck_overtravel:")
@@ -96,15 +97,15 @@ def test_with_mock_prober():
     print("   (Using mocked prober - no real hardware needed)\n")
 
     # Patch get_prober to return our mock
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
         # Also patch resolve_project_parameters
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
             # Call the REAL function
             result = set_chuck_overtravel(
-                overtravelGap=50,
-                address="localhost:35555",
-                machine_type="sentio"
+                overtravelGap=50, address="localhost:35555", machine_type="sentio"
             )
 
     print_separator("RESULTS")
@@ -117,7 +118,9 @@ def test_with_mock_prober():
 
     print("\n🔍 VERIFICATION:")
     print(f"   ✓ Prober.set_overtravel called: {mock_prober.set_overtravel.called}")
-    print(f"   ✓ Prober.enable_overtravel called: {mock_prober.enable_overtravel.called}")
+    print(
+        f"   ✓ Prober.enable_overtravel called: {mock_prober.enable_overtravel.called}"
+    )
     print(f"   ✓ State machine state: {agentStateMachine.get_state_name()}")
     print(f"   ✓ g.wpag_state: {g.wpag_state}")
     print(f"   ✓ g.overdrive updated: {g.overdrive}")
@@ -153,9 +156,7 @@ def test_invalid_state():
     from actions.WPTestingActions import set_chuck_overtravel
 
     result = set_chuck_overtravel(
-        overtravelGap=25,
-        address="localhost:35555",
-        machine_type="sentio"
+        overtravelGap=25, address="localhost:35555", machine_type="sentio"
     )
 
     print("AFTER calling set_chuck_overtravel:")
@@ -165,7 +166,7 @@ def test_invalid_state():
     print(json.dumps(result, indent=2))
 
     print("\n🔍 VERIFICATION:")
-    if result.get('status') == 'Error':
+    if result.get("status") == "Error":
         print("   ✓ Correctly returned Error status")
         print(f"   ✓ Error message: {result['error']['message']}")
     else:
@@ -190,9 +191,11 @@ def test_multiple_calls():
     mock_prober.enable_overtravel = Mock(return_value=None)
     mock_prober.local_mode = Mock(return_value=None)
 
-    with patch('actions.WPTestingActions.get_prober', return_value=mock_prober):
-        with patch('actions.WPTestingActions.resolve_project_parameters',
-                   return_value=("localhost:35555", None, "sentio")):
+    with patch("actions.WPTestingActions.get_prober", return_value=mock_prober):
+        with patch(
+            "actions.WPTestingActions.resolve_project_parameters",
+            return_value=("localhost:35555", None, "sentio"),
+        ):
             print("CALL 1: Set overdrive to 25")
             result1 = set_chuck_overtravel(overtravelGap=25)
             print(f"   State: {agentStateMachine.get_state_name()}")

@@ -1,5 +1,3 @@
-
-
 import sys
 import os
 
@@ -37,9 +35,7 @@ def setup_mock_prober():
 
     # Register mock prober in factory
     # This makes the factory return our mock prober instead of trying to connect to real machine
-    factory._probers = {
-        ("sentio", mock_address): mock_prober
-    }
+    factory._probers = {("sentio", mock_address): mock_prober}
     factory._initialized = True
 
     # Set globals
@@ -49,7 +45,7 @@ def setup_mock_prober():
 
     # Set initial state
     g.user = "test_user"
-    g.asic_serial_number = 99999
+    g.asicSerialNumber = 99999
     g.wp_machine_id = 999
     g.wpag_state = "ServiceOn"
     g.set_wafer_loaded(888, "North")
@@ -82,25 +78,29 @@ def print_response(command_name, response):
     print(f"  Type: {response.get('type', 'MISSING')}")
 
     # Key state
-    if 'data' in response:
-        data = response['data']
+    if "data" in response:
+        data = response["data"]
         print(f"\n📊 Key State:")
         print(f"  WPAG_State: {data.get('WPAG_State', 'N/A')}")
         print(f"  Chuck Z: {data.get('chuckZPositionState', 'N/A')}")
 
-        wafer = data.get('loadedWafer')
+        wafer = data.get("loadedWafer")
         if wafer:
-            print(f"  Wafer: ID={wafer.get('waferId')}, Orientation={wafer.get('orientation')}")
+            print(
+                f"  Wafer: ID={wafer.get('waferId')}, Orientation={wafer.get('orientation')}"
+            )
 
-        die = data.get('waferMapDiePosition')
+        die = data.get("waferMapDiePosition")
         if die:
-            print(f"  Die: ({die.get('colIndex')}, {die.get('rowIndex')}, {die.get('subsiteIndex')})")
+            print(
+                f"  Die: ({die.get('colIndex')}, {die.get('rowIndex')}, {die.get('subsiteIndex')})"
+            )
 
         print(f"  Camera: {data.get('cameraMountPoint', 'N/A')}")
 
     # Error if present
-    error = response.get('error', {})
-    if error.get('code') != 0:
+    error = response.get("error", {})
+    if error.get("code") != 0:
         print(f"\n⚠️  Error: [{error.get('code')}] {error.get('message')}")
 
     print(f"\n{'─' * 70}\n")
@@ -143,31 +143,27 @@ def test_complete_workflow():
 
     # Import commands
     from actions.WPTestingActions import (
-        move_chuck_row_column, move_chuck_contact, Move_chuck_separation,
-        switch_camera, run_ptpa, move_chuck_xy,
-        load_wafer, unload_wafer
+        move_chuck_row_column,
+        move_chuck_contact,
+        Move_chuck_separation,
+        switch_camera,
+        run_ptpa,
+        move_chuck_xy,
+        load_wafer,
+        unload_wafer,
     )
 
     test_results = []
 
     # Test 1: Move chuck
     print("\n" + "🧪 TEST 1: Move Chuck XY")
-    response = simulate_command(
-        "MoveChuckXY",
-        move_chuck_xy,
-        x=100.5,
-        y=200.3
-    )
+    response = simulate_command("MoveChuckXY", move_chuck_xy, x=100.5, y=200.3)
     test_results.append(("MoveChuckXY", response.get("status") == "Success"))
 
     # Test 2: Go to die
     print("\n" + "🧪 TEST 2: Go to Die")
     response = simulate_command(
-        "GoToDie",
-        move_chuck_row_column,
-        col=5,
-        row=10,
-        subsite=0
+        "GoToDie", move_chuck_row_column, col=5, row=10, subsite=0
     )
     test_results.append(("GoToDie", response.get("status") == "Success"))
 
@@ -181,18 +177,12 @@ def test_complete_workflow():
 
     # Test 3: Run PTPA
     print("\n" + "🧪 TEST 3: Run PTPA")
-    response = simulate_command(
-        "RunPTPA",
-        run_ptpa
-    )
+    response = simulate_command("RunPTPA", run_ptpa)
     test_results.append(("RunPTPA", response.get("status") == "Success"))
 
     # Test 4: Go to contact
     print("\n" + "🧪 TEST 4: Go to Contact")
-    response = simulate_command(
-        "GoToContact",
-        move_chuck_contact
-    )
+    response = simulate_command("GoToContact", move_chuck_contact)
     test_results.append(("GoToContact", response.get("status") == "Success"))
 
     # Verify Z position updated
@@ -205,10 +195,7 @@ def test_complete_workflow():
 
     # Test 5: Go to separation
     print("\n" + "🧪 TEST 5: Go to Separation")
-    response = simulate_command(
-        "GoToSeparation",
-        Move_chuck_separation
-    )
+    response = simulate_command("GoToSeparation", Move_chuck_separation)
     test_results.append(("GoToSeparation", response.get("status") == "Success"))
 
     # Verify Z position updated
@@ -221,11 +208,7 @@ def test_complete_workflow():
 
     # Test 6: Switch camera
     print("\n" + "🧪 TEST 6: Switch Camera")
-    response = simulate_command(
-        "SwitchCamera",
-        switch_camera,
-        mount_point="Bottom"
-    )
+    response = simulate_command("SwitchCamera", switch_camera, mount_point="Bottom")
     test_results.append(("SwitchCamera", response.get("status") == "Success"))
 
     # Verify camera updated
@@ -238,10 +221,7 @@ def test_complete_workflow():
 
     # Test 7: Unload wafer
     print("\n" + "🧪 TEST 7: Unload Wafer")
-    response = simulate_command(
-        "UnloadWafer",
-        unload_wafer
-    )
+    response = simulate_command("UnloadWafer", unload_wafer)
     test_results.append(("UnloadWafer", response.get("status") == "Success"))
 
     # Verify wafer cleared
@@ -254,10 +234,7 @@ def test_complete_workflow():
 
     # Test 8: Try to unload again (should fail)
     print("\n" + "🧪 TEST 8: Unload Wafer Again (should error)")
-    response = simulate_command(
-        "UnloadWafer (error expected)",
-        unload_wafer
-    )
+    response = simulate_command("UnloadWafer (error expected)", unload_wafer)
     test_results.append(("UnloadWafer error", response.get("status") == "Error"))
 
     if response.get("status") == "Error":
@@ -315,22 +292,10 @@ def test_message_simulation():
 
     # Simulate incoming messages
     messages = [
-        {
-            "type": "GoToDie",
-            "data": {"col": 7, "row": 12, "subsite": 0}
-        },
-        {
-            "type": "GoToContact",
-            "data": {}
-        },
-        {
-            "type": "GoToSeparation",
-            "data": {}
-        },
-        {
-            "type": "SwitchCamera",
-            "data": {"mount_point": "Top"}
-        }
+        {"type": "GoToDie", "data": {"col": 7, "row": 12, "subsite": 0}},
+        {"type": "GoToContact", "data": {}},
+        {"type": "GoToSeparation", "data": {}},
+        {"type": "SwitchCamera", "data": {"mount_point": "Top"}},
     ]
 
     print("📨 Simulating message queue...\n")
@@ -343,7 +308,7 @@ def test_message_simulation():
         print(json.dumps(message, indent=2))
 
         # Execute command (this is what WPCmdMap does)
-        response = execute_command(message['type'], message.get('data', {}))
+        response = execute_command(message["type"], message.get("data", {}))
 
         print(f"\n📤 Outgoing response:")
         print(json.dumps(response, indent=2))
@@ -412,6 +377,7 @@ def main():
     except Exception as e:
         print(f"\n❌ TEST SUITE CRASHED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

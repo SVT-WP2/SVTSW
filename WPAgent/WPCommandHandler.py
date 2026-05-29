@@ -1,6 +1,6 @@
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 
-#Initialisation of the logger
+# Initialisation of the logger
 logger = WPAgentLogger()
 
 
@@ -21,4 +21,5 @@ class CommandHandler:
 
     def handleCommand(self, command, data=None):
         from WPCmdMap import execute_command
+
         return execute_command(command, data)

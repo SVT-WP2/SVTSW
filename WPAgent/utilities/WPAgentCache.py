@@ -5,7 +5,7 @@ from confluent_kafka import Producer as KafkaProducer
 from datetime import datetime
 from utilities.WPResponseBuilder import ResponseBuilder
 
-    
+
 class WPAgentCache:
     _instance = None
 
@@ -17,11 +17,11 @@ class WPAgentCache:
 
     def _initialize(
         self,
-        name='WPAgent',
-        cache_file='WPAgent.cache.json',
+        name="WPAgent",
+        cache_file="WPAgent.cache.json",
         kafka_enabled=False,
-        kafka_servers='svmithi02:9096',
-        kafka_topic='svt.wp-agent.cache',
+        kafka_servers="svmithi02:9096",
+        kafka_topic="svt.wp-agent.cache",
     ):
 
         self.cache_file = cache_file
@@ -35,11 +35,9 @@ class WPAgentCache:
         self.kafka_topic = kafka_topic
 
         if kafka_enabled:
-            self.kafka_producer = KafkaProducer({'bootstrap.servers': kafka_servers})
+            self.kafka_producer = KafkaProducer({"bootstrap.servers": kafka_servers})
         else:
             self.kafka_producer = None
-
-
 
     def cache_command(self, TITLE=None):
 
@@ -47,20 +45,20 @@ class WPAgentCache:
         cache_entry["lastUpdated"] = datetime.now().isoformat()
 
         # Rewrite the entire file each time
-        with open(self.cache_file, 'w') as f:
+        with open(self.cache_file, "w") as f:
             json.dump(cache_entry, f, indent=2)
         # Kafka publish if enabled
         if self.kafka_enabled:
             try:
                 self.kafka_producer.produce(
                     self.kafka_topic,
-                    value=json.dumps(cache_entry).encode('utf-8'),
-                    callback=self.delivery_report
+                    value=json.dumps(cache_entry).encode("utf-8"),
+                    callback=self.delivery_report,
                 )
                 self.kafka_producer.poll(0)
             except Exception as e:
                 self.cache.error(f"Kafka log delivery failed: {e}")
-                
+
     def initialize_cache(self):
         self.cache_command()
 
@@ -68,4 +66,6 @@ class WPAgentCache:
         if err is not None:
             self.cache.error(f"[Kafka] Delivery failed: {err}")
         else:
-            self.cache.debug(f"[Kafka] Cache delivered to {msg.topic()} [{msg.partition()}] offset {msg.offset()}")
+            self.cache.debug(
+                f"[Kafka] Cache delivered to {msg.topic()} [{msg.partition()}] offset {msg.offset()}"
+            )

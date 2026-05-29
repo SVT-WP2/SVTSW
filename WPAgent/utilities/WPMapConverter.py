@@ -55,7 +55,7 @@ class CoordinateConverter:
                 print(f"❌ Conversion map file not found: {filepath}")
                 return False
 
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 self.conversion_map = json.load(f)
 
             # Extract ASIC type from first entry
@@ -81,10 +81,7 @@ class CoordinateConverter:
             return False
 
     def global_to_local(
-            self,
-            row_global: int,
-            column_global: int,
-            sn_prefix: Optional[str] = None
+        self, row_global: int, column_global: int, sn_prefix: Optional[str] = None
     ) -> Optional[Tuple[int, int, str]]:
         """
         Convert global coordinates to local coordinates.
@@ -111,8 +108,10 @@ class CoordinateConverter:
         # Search for matching entry
         for entry in self.conversion_map:
             # Check if global coordinates match
-            if (entry.get("row_global") == row_global and
-                    entry.get("column_global") == column_global):
+            if (
+                entry.get("row_global") == row_global
+                and entry.get("column_global") == column_global
+            ):
 
                 # If SN prefix specified, must match
                 if sn_prefix and entry.get("SN_prefix") != sn_prefix:
@@ -128,10 +127,7 @@ class CoordinateConverter:
         return None
 
     def local_to_global(
-            self,
-            row_local: int,
-            column_local: int,
-            sn_prefix: str
+        self, row_local: int, column_local: int, sn_prefix: str
     ) -> Optional[Tuple[int, int]]:
         """
         Convert local coordinates to global coordinates.
@@ -161,9 +157,11 @@ class CoordinateConverter:
 
         # Search for matching entry
         for entry in self.conversion_map:
-            if (entry.get("row_local") == row_local and
-                    entry.get("column_local") == column_local and
-                    entry.get("SN_prefix") == sn_prefix):
+            if (
+                entry.get("row_local") == row_local
+                and entry.get("column_local") == column_local
+                and entry.get("SN_prefix") == sn_prefix
+            ):
                 row_global = entry.get("row_global")
                 column_global = entry.get("column_global")
 
@@ -173,10 +171,7 @@ class CoordinateConverter:
         return None
 
     def svt_to_local(
-            self,
-            row_svt: int,
-            column_svt: int,
-            sn_prefix: Optional[str] = None
+        self, row_svt: int, column_svt: int, sn_prefix: Optional[str] = None
     ) -> Optional[Tuple[int, int, str]]:
         """
         Convert SVT coordinates to local ASIC coordinates.
@@ -194,19 +189,22 @@ class CoordinateConverter:
             return None
 
         for entry in self.conversion_map:
-            if (entry.get("row_svt") == row_svt and
-                    entry.get("column_svt") == column_svt):
+            if (
+                entry.get("row_svt") == row_svt
+                and entry.get("column_svt") == column_svt
+            ):
                 if sn_prefix and entry.get("SN_prefix") != sn_prefix:
                     continue
-                return (entry.get("row_local"), entry.get("column_local"), entry.get("SN_prefix"))
+                return (
+                    entry.get("row_local"),
+                    entry.get("column_local"),
+                    entry.get("SN_prefix"),
+                )
 
         return None
 
     def local_to_svt(
-            self,
-            row_local: int,
-            column_local: int,
-            sn_prefix: str
+        self, row_local: int, column_local: int, sn_prefix: str
     ) -> Optional[Tuple[int, int]]:
         """
         Convert local ASIC coordinates to SVT coordinates.
@@ -228,17 +226,17 @@ class CoordinateConverter:
             return None
 
         for entry in self.conversion_map:
-            if (entry.get("row_local") == row_local and
-                    entry.get("column_local") == column_local and
-                    entry.get("SN_prefix") == sn_prefix):
+            if (
+                entry.get("row_local") == row_local
+                and entry.get("column_local") == column_local
+                and entry.get("SN_prefix") == sn_prefix
+            ):
                 return (entry.get("row_svt"), entry.get("column_svt"))
 
         return None
 
     def its3_to_local(
-            self,
-            id_its3: int,
-            sn_prefix: Optional[str] = None
+        self, id_its3: int, sn_prefix: Optional[str] = None
     ) -> Optional[Tuple[int, int, str]]:
         """
         Convert ITS3 die ID to local ASIC coordinates.
@@ -258,15 +256,16 @@ class CoordinateConverter:
             if entry.get("id_its3") == id_its3:
                 if sn_prefix and entry.get("SN_prefix") != sn_prefix:
                     continue
-                return (entry.get("row_local"), entry.get("column_local"), entry.get("SN_prefix"))
+                return (
+                    entry.get("row_local"),
+                    entry.get("column_local"),
+                    entry.get("SN_prefix"),
+                )
 
         return None
 
     def local_to_its3(
-            self,
-            row_local: int,
-            column_local: int,
-            sn_prefix: str
+        self, row_local: int, column_local: int, sn_prefix: str
     ) -> Optional[int]:
         """
         Convert local ASIC coordinates to ITS3 die ID.
@@ -288,9 +287,11 @@ class CoordinateConverter:
             return None
 
         for entry in self.conversion_map:
-            if (entry.get("row_local") == row_local and
-                    entry.get("column_local") == column_local and
-                    entry.get("SN_prefix") == sn_prefix):
+            if (
+                entry.get("row_local") == row_local
+                and entry.get("column_local") == column_local
+                and entry.get("SN_prefix") == sn_prefix
+            ):
                 return entry.get("id_its3")
 
         return None
@@ -319,22 +320,24 @@ class CoordinateConverter:
             return None
 
         # Filter entries for this ASIC
-        asic_entries = [e for e in self.conversion_map if e.get("SN_prefix") == sn_prefix]
+        asic_entries = [
+            e for e in self.conversion_map if e.get("SN_prefix") == sn_prefix
+        ]
 
         if not asic_entries:
             return None
 
         # Calculate bounds
         bounds = {
-            'row_local_min': min(e['row_local'] for e in asic_entries),
-            'row_local_max': max(e['row_local'] for e in asic_entries),
-            'col_local_min': min(e['column_local'] for e in asic_entries),
-            'col_local_max': max(e['column_local'] for e in asic_entries),
-            'row_global_min': min(e['row_global'] for e in asic_entries),
-            'row_global_max': max(e['row_global'] for e in asic_entries),
-            'col_global_min': min(e['column_global'] for e in asic_entries),
-            'col_global_max': max(e['column_global'] for e in asic_entries),
-            'total_dies': len(asic_entries)
+            "row_local_min": min(e["row_local"] for e in asic_entries),
+            "row_local_max": max(e["row_local"] for e in asic_entries),
+            "col_local_min": min(e["column_local"] for e in asic_entries),
+            "col_local_max": max(e["column_local"] for e in asic_entries),
+            "row_global_min": min(e["row_global"] for e in asic_entries),
+            "row_global_max": max(e["row_global"] for e in asic_entries),
+            "col_global_min": min(e["column_global"] for e in asic_entries),
+            "col_global_max": max(e["column_global"] for e in asic_entries),
+            "total_dies": len(asic_entries),
         }
 
         return bounds
@@ -367,10 +370,10 @@ class CoordinateConverter:
 
         return [
             {
-                'row_global': e['row_global'],
-                'column_global': e['column_global'],
-                'row_local': e['row_local'],
-                'column_local': e['column_local']
+                "row_global": e["row_global"],
+                "column_global": e["column_global"],
+                "row_local": e["row_local"],
+                "column_local": e["column_local"],
             }
             for e in self.conversion_map
             if e.get("SN_prefix") == sn_prefix
@@ -389,7 +392,9 @@ class CoordinateConverter:
 
         # Filter entries
         if sn_prefix:
-            entries = [e for e in self.conversion_map if e.get("SN_prefix") == sn_prefix]
+            entries = [
+                e for e in self.conversion_map if e.get("SN_prefix") == sn_prefix
+            ]
             print(f"\n📋 Conversion Table for {sn_prefix}")
         else:
             entries = self.conversion_map
@@ -452,14 +457,14 @@ if __name__ == "__main__":
     print("-" * 80)
     # (row_global, col_global) → expected (row_local, col_local, sn_prefix)
     test_global_to_local = [
-        ((3, 2),  (0,   0, "babyMOSAIX")),
-        ((6, 2),  (1,   1, "babyMOSAIX")),
-        ((6, 7),  (-4,  1, "babyMOSAIX")),
-        ((30, 3), (0,   9, "babyMOSAIX")),
+        ((3, 2), (0, 0, "babyMOSAIX")),
+        ((6, 2), (1, 1, "babyMOSAIX")),
+        ((6, 7), (-4, 1, "babyMOSAIX")),
+        ((30, 3), (0, 9, "babyMOSAIX")),
         ((33, 5), (-3, 10, "babyMOSAIX")),
-        ((16, 1), (0,   2, "MOSAIX")),
-        ((20, 1), (0,  -2, "MOSAIX")),
-        ((99, 99), None),                   # should NOT be found
+        ((16, 1), (0, 2, "MOSAIX")),
+        ((20, 1), (0, -2, "MOSAIX")),
+        ((99, 99), None),  # should NOT be found
     ]
     for (rg, cg), expected in test_global_to_local:
         result = converter.global_to_local(rg, cg)
@@ -471,14 +476,14 @@ if __name__ == "__main__":
     print("-" * 80)
     # (row_local, col_local, sn_prefix) → expected (row_global, col_global)
     test_local_to_global = [
-        ((0,   0, "babyMOSAIX"),  (3,  2)),
-        ((1,   1, "babyMOSAIX"),  (6,  2)),
-        ((-4,  1, "babyMOSAIX"),  (6,  7)),
-        ((0,   9, "babyMOSAIX"),  (30, 3)),
-        ((-3, 10, "babyMOSAIX"),  (33, 5)),
-        ((0,   2, "MOSAIX"),      (16, 1)),
-        ((0,  -2, "MOSAIX"),      (20, 1)),
-        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
+        ((0, 0, "babyMOSAIX"), (3, 2)),
+        ((1, 1, "babyMOSAIX"), (6, 2)),
+        ((-4, 1, "babyMOSAIX"), (6, 7)),
+        ((0, 9, "babyMOSAIX"), (30, 3)),
+        ((-3, 10, "babyMOSAIX"), (33, 5)),
+        ((0, 2, "MOSAIX"), (16, 1)),
+        ((0, -2, "MOSAIX"), (20, 1)),
+        ((99, 99, "babyMOSAIX"), None),  # should NOT be found
     ]
     for (rl, cl, sn), expected in test_local_to_global:
         result = converter.local_to_global(rl, cl, sn)
@@ -490,14 +495,14 @@ if __name__ == "__main__":
     print("-" * 80)
     # (row_svt, col_svt, sn_prefix) → expected (row_local, col_local, sn_prefix)
     test_svt_to_local = [
-        ((1, 1, "babyMOSAIX"),  (0,   0, "babyMOSAIX")),
-        ((2, 1, "babyMOSAIX"),  (1,   1, "babyMOSAIX")),
-        ((2, 6, "babyMOSAIX"),  (-4,  1, "babyMOSAIX")),
-        ((3, 2, "babyMOSAIX"),  (0,   9, "babyMOSAIX")),
-        ((4, 4, "babyMOSAIX"),  (-3, 10, "babyMOSAIX")),
-        ((1, 1, "MOSAIX"),      (0,   2, "MOSAIX")),
-        ((5, 1, "MOSAIX"),      (0,  -2, "MOSAIX")),
-        ((9, 9, "babyMOSAIX"),  None),      # should NOT be found
+        ((1, 1, "babyMOSAIX"), (0, 0, "babyMOSAIX")),
+        ((2, 1, "babyMOSAIX"), (1, 1, "babyMOSAIX")),
+        ((2, 6, "babyMOSAIX"), (-4, 1, "babyMOSAIX")),
+        ((3, 2, "babyMOSAIX"), (0, 9, "babyMOSAIX")),
+        ((4, 4, "babyMOSAIX"), (-3, 10, "babyMOSAIX")),
+        ((1, 1, "MOSAIX"), (0, 2, "MOSAIX")),
+        ((5, 1, "MOSAIX"), (0, -2, "MOSAIX")),
+        ((9, 9, "babyMOSAIX"), None),  # should NOT be found
     ]
     for (rs, cs, sn), expected in test_svt_to_local:
         result = converter.svt_to_local(rs, cs, sn)
@@ -509,14 +514,14 @@ if __name__ == "__main__":
     print("-" * 80)
     # (row_local, col_local, sn_prefix) → expected (row_svt, col_svt)
     test_local_to_svt = [
-        ((0,   0, "babyMOSAIX"),  (1, 1)),
-        ((1,   1, "babyMOSAIX"),  (2, 1)),
-        ((-4,  1, "babyMOSAIX"),  (2, 6)),
-        ((0,   9, "babyMOSAIX"),  (3, 2)),
-        ((-3, 10, "babyMOSAIX"),  (4, 4)),
-        ((0,   2, "MOSAIX"),      (1, 1)),
-        ((0,  -2, "MOSAIX"),      (5, 1)),
-        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
+        ((0, 0, "babyMOSAIX"), (1, 1)),
+        ((1, 1, "babyMOSAIX"), (2, 1)),
+        ((-4, 1, "babyMOSAIX"), (2, 6)),
+        ((0, 9, "babyMOSAIX"), (3, 2)),
+        ((-3, 10, "babyMOSAIX"), (4, 4)),
+        ((0, 2, "MOSAIX"), (1, 1)),
+        ((0, -2, "MOSAIX"), (5, 1)),
+        ((99, 99, "babyMOSAIX"), None),  # should NOT be found
     ]
     for (rl, cl, sn), expected in test_local_to_svt:
         result = converter.local_to_svt(rl, cl, sn)
@@ -528,14 +533,14 @@ if __name__ == "__main__":
     print("-" * 80)
     # (id_its3, sn_prefix) → expected (row_local, col_local, sn_prefix)
     test_its3_to_local = [
-        ((3,  "babyMOSAIX"),  (0,   0, "babyMOSAIX")),
-        ((9,  "babyMOSAIX"),  (1,   1, "babyMOSAIX")),
-        ((4,  "babyMOSAIX"),  (-4,  1, "babyMOSAIX")),
-        ((14, "babyMOSAIX"),  (0,   9, "babyMOSAIX")),
-        ((16, "babyMOSAIX"),  (-3, 10, "babyMOSAIX")),
-        ((0,  "MOSAIX"),      (0,   2, "MOSAIX")),
-        ((4,  "MOSAIX"),      (0,  -2, "MOSAIX")),
-        ((99, "babyMOSAIX"),  None),        # should NOT be found
+        ((3, "babyMOSAIX"), (0, 0, "babyMOSAIX")),
+        ((9, "babyMOSAIX"), (1, 1, "babyMOSAIX")),
+        ((4, "babyMOSAIX"), (-4, 1, "babyMOSAIX")),
+        ((14, "babyMOSAIX"), (0, 9, "babyMOSAIX")),
+        ((16, "babyMOSAIX"), (-3, 10, "babyMOSAIX")),
+        ((0, "MOSAIX"), (0, 2, "MOSAIX")),
+        ((4, "MOSAIX"), (0, -2, "MOSAIX")),
+        ((99, "babyMOSAIX"), None),  # should NOT be found
     ]
     for (id_i, sn), expected in test_its3_to_local:
         result = converter.its3_to_local(id_i, sn)
@@ -547,19 +552,21 @@ if __name__ == "__main__":
     print("-" * 80)
     # (row_local, col_local, sn_prefix) → expected id_its3
     test_local_to_its3 = [
-        ((0,   0, "babyMOSAIX"),  3),
-        ((1,   1, "babyMOSAIX"),  9),
-        ((-4,  1, "babyMOSAIX"),  4),
-        ((0,   9, "babyMOSAIX"),  14),
-        ((-3, 10, "babyMOSAIX"),  16),
-        ((0,   2, "MOSAIX"),      0),
-        ((0,  -2, "MOSAIX"),      4),
-        ((99, 99, "babyMOSAIX"),  None),    # should NOT be found
+        ((0, 0, "babyMOSAIX"), 3),
+        ((1, 1, "babyMOSAIX"), 9),
+        ((-4, 1, "babyMOSAIX"), 4),
+        ((0, 9, "babyMOSAIX"), 14),
+        ((-3, 10, "babyMOSAIX"), 16),
+        ((0, 2, "MOSAIX"), 0),
+        ((0, -2, "MOSAIX"), 4),
+        ((99, 99, "babyMOSAIX"), None),  # should NOT be found
     ]
     for (rl, cl, sn), expected in test_local_to_its3:
         result = converter.local_to_its3(rl, cl, sn)
         status = "✅" if result == expected else "❌"
-        print(f"{status} Local ({rl},{cl}) on {sn} → ITS3 id={result}  (expected {expected})")
+        print(
+            f"{status} Local ({rl},{cl}) on {sn} → ITS3 id={result}  (expected {expected})"
+        )
 
     # -------------------------------------------------------------------------
     print("\n📋 Conversion table for babyMOSAIX")
