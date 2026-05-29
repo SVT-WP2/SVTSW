@@ -1527,3 +1527,97 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
 
     # Update state machine
     agentStateMachine.transition("TestingUnlock")
+
+
+@validate_command
+def move_chuck_top_left(user=None, waferAgentName=None):
+
+    error = _ensure_initialized()
+    if error:
+        return error
+    try:
+        prober = get_current_prober()
+
+        position = 'Relative'
+        x = 20.0
+        y = -15.0
+        prober.move_chuck_xy(x, y, position)
+
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+
+        agentStateMachine.transition("MoveChuckTopLeft")
+        return ResponseBuilder.success("MoveChuckTopLeftReply", f"Moved chuck to Top Left corner")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckTopLeftReply", str(e), 500)
+
+@validate_command
+def move_chuck_top_right(user=None, waferAgentName=None):
+
+    error = _ensure_initialized()
+    if error:
+        return error
+    try:
+        prober = get_current_prober()
+
+        position = 'Relative'
+        x = -20.0
+        y = -15.0
+        prober.move_chuck_xy(x, y, position)
+
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+        agentStateMachine.transition("MoveChuckTopRight")
+        return ResponseBuilder.success("MoveChuckTopRightReply", f"Moved chuck to Top Right corner")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckTopRightReply", str(e), 500)
+
+@validate_command
+def move_chuck_bottom_left(user=None, waferAgentName=None):
+
+    error = _ensure_initialized()
+    if error:
+        return error
+    try:
+        prober = get_current_prober()
+
+        position = 'Relative'
+        x = 20.0
+        y = 15.0
+        prober.move_chuck_xy(x, y, position)
+
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+        agentStateMachine.transition("MoveChuckBottomLeft")
+        return ResponseBuilder.success("MoveChuckBottomLeftReply", f"Moved chuck to Bottom Left corner")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckBottomLeftReply", str(e), 500)
+
+@validate_command
+def move_chuck_bottom_right(user=None, waferAgentName=None):
+
+    error = _ensure_initialized()
+    if error:
+        return error
+    try:
+        prober = get_current_prober()
+
+        position = 'Relative'
+        x = -20.0
+        y = 15.0
+        prober.move_chuck_xy(x, y, position)
+
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+        agentStateMachine.transition("MoveChuckBottomRight")
+        return ResponseBuilder.success("MoveChuckBottomRightReply", f"Moved chuck to Bottom Right corner")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error("MoveChuckBottomRightReply", str(e), 500)

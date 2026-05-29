@@ -174,6 +174,10 @@ class WPAgentStateMachine:
                 "DisableOvertravel": WPAgentState.UsedByDeveloper,
                 "LocalMode": WPAgentState.UsedByDeveloper,
                 "TakeScreenshot": WPAgentState.UsedByDeveloper,
+                "MoveChuckTopLeft": WPAgentState.UsedByDeveloper,
+                "MoveChuckTopRight": WPAgentState.UsedByDeveloper,
+                "MoveChuckBottomLeft": WPAgentState.UsedByDeveloper,
+                "MoveChuckBottomRight": WPAgentState.UsedByDeveloper,
                 "Error": WPAgentState.Error,
             },
         }
