@@ -63,8 +63,8 @@ set(SVT_COMMON_CPP_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/svt-common")
 
 add_subdirectory(${SVT_COMMON_CPP_SOURCE_DIR} ${SVT_COMMON_CPP_BINARY_DIR})
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version/.git_tag" RAW_VERSION)
-string(STRIP "${RAW_VERSION}" VERSION)
+#file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version/.git_tag" RAW_VERSION)
+#string(STRIP "${RAW_VERSION}" VERSION)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version/version.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 

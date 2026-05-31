@@ -1,0 +1,30 @@
+services:
+  postgres-db:
+    image: postgres:17.7
+    container_name: postgres-db--local
+    restart: always
+    user: postgres
+    environment:
+      - "POSTGRES_PASSWORD=${DB_PASS:-postgres}"
+      - "POSTGRES_DB=${DB_NAME:-svt_sw_db}"
+    ports:
+      - "5500:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - svt-network--local
+
+volumes:
+  # docker volume create --name pg-data -d local
+  pg-data:
+    name: pg-data--local
+
+networks:
+  svt-network--local:
+    external: true
+    name: svt-network--local

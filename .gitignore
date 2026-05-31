@@ -5,3 +5,5 @@
 .pgpass
 /WPAgent/WPAgentLogger.log
 .claude
+./docker-compose*
+!./docker-compose.example.yml
