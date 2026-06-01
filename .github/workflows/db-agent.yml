@@ -23,8 +23,9 @@ on:
         options:
           - docker-build--manual
           - deploy-dev--manual
+          - deploy-prod--manual
       image_tag:
-        description: 'Image tag (defaults to short SHA). Used by deploy-dev--manual to pick an existing image; docker-build--manual always builds the short SHA.'
+        description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-build--manual (always builds short SHA).'
         required: false
         type: string
 
@@ -48,17 +49,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      # CMakeLists.txt reads app/version/.git_tag at configure time. The file
-      # is git-ignored; on CI we synthesize it from the commit/tag.
-      - name: Stamp version
+      - id: vars
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/svt-dbagent-* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/svt-dbagent-}"
+            echo "version=${GITHUB_REF#refs/tags/svt-dbagent-}" >> $GITHUB_OUTPUT
           else
-            VERSION="${GITHUB_SHA::8}"
+            echo "version=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
           fi
-          mkdir -p app/version
-          echo "${VERSION}" > app/version/.git_tag
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
@@ -66,6 +63,8 @@ jobs:
           file: DbAgent/Dockerfile
           target: db-agent-build
           push: false
+          build-args: |
+            VERSION=${{ steps.vars.outputs.version }}
           cache-from: type=gha,scope=db-agent
           cache-to: type=gha,mode=max,scope=db-agent
 
@@ -83,10 +82,6 @@ jobs:
       - uses: actions/checkout@v5
       - id: vars
         run: echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-      - name: Stamp version
-        run: |
-          mkdir -p app/version
-          echo "${{ steps.vars.outputs.short_sha }}" > app/version/.git_tag
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -99,6 +94,8 @@ jobs:
           file: DbAgent/Dockerfile
           target: db-agent
           push: true
+          build-args: |
+            VERSION=${{ steps.vars.outputs.short_sha }}
           cache-from: type=gha,scope=db-agent
           cache-to: type=gha,mode=max,scope=db-agent
           tags: |
@@ -123,10 +120,6 @@ jobs:
         run: |
           TAG="${GITHUB_REF#refs/tags/svt-dbagent-}"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
-      - name: Stamp version
-        run: |
-          mkdir -p app/version
-          echo "${{ steps.vars.outputs.tag }}" > app/version/.git_tag
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -139,6 +132,8 @@ jobs:
           file: DbAgent/Dockerfile
           target: db-agent
           push: true
+          build-args: |
+            VERSION=${{ steps.vars.outputs.tag }}
           cache-from: type=gha,scope=db-agent
           cache-to: type=gha,mode=max,scope=db-agent
           tags: |
@@ -192,57 +187,6 @@ jobs:
             -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
             -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
             -e SVT_DB_AGENT_LOGGER_FILE_PATH="/tmp/SvtDbAgent-dev" \
-            -e APP_VERSION="${SHORT_SHA}" \
-            "${IMAGE}"
-
-  # Manual approval enforced via `environment: prod` (configure Required
-  # reviewers in repo Settings -> Environments -> prod).
-  deploy-prod:
-    if: startsWith(github.ref, 'refs/tags/svt-dbagent-')
-    needs: docker-registry-create--release
-    runs-on: self-hosted
-    environment: prod
-    steps:
-      - name: Deploy
-        # Override the workflow-level `defaults.run.working-directory: DbAgent`
-        # — this step runs on the self-hosted runner with no checkout, so the
-        # DbAgent/ subdirectory doesn't exist. runner.temp is always defined
-        # and always exists.
-        working-directory: ${{ runner.temp }}
-        env:
-          IMAGE_TAG: ${{ needs['docker-registry-create--release'].outputs.image_tag }}
-          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
-          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
-          SVT_DB_HOST: ${{ vars.SVT_DB_HOST }}
-          SVT_DB_PORT: ${{ vars.SVT_DB_PORT }}
-          SVT_DB_USER: ${{ secrets.SVT_DB_USER }}
-          SVT_DB_PASS: ${{ secrets.SVT_DB_PASS }}
-          SVT_DB_NAME: ${{ secrets.SVT_DB_NAME }}
-          SVT_DB_SCHEMA: ${{ secrets.SVT_DB_SCHEMA }}
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-          echo "Deploying ${IMAGE} locally"
-          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
-          sudo docker pull "${IMAGE}"
-          sudo docker stop svt.db-agent || true
-          sudo docker rm svt.db-agent || true
-          sudo docker run -d \
-            --name svt.db-agent \
-            --restart unless-stopped \
-            --add-host=host.docker.internal:host-gateway \
-            -v /tmp:/tmp \
-            -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
-            -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
-            -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
-            -e SVT_DB_AGENT_DB_PASS="${SVT_DB_PASS}" \
-            -e SVT_DB_AGENT_DB_NAME="${SVT_DB_NAME}" \
-            -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
-            -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
-            -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            -e APP_VERSION="${IMAGE_TAG}" \
             "${IMAGE}"
 
   docker-build--manual:
@@ -255,10 +199,6 @@ jobs:
       - uses: actions/checkout@v5
       - id: vars
         run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-      - name: Stamp version
-        run: |
-          mkdir -p app/version
-          echo "${{ steps.vars.outputs.tag }}" > app/version/.git_tag
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -271,6 +211,8 @@ jobs:
           file: DbAgent/Dockerfile
           target: db-agent
           push: true
+          build-args: |
+            VERSION=${{ steps.vars.outputs.tag }}
           cache-from: type=gha,scope=db-agent
           cache-to: type=gha,mode=max,scope=db-agent
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
@@ -321,5 +263,59 @@ jobs:
             -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
             -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
             -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            -e APP_VERSION="${IMAGE_TAG}" \
+            "${IMAGE}"
+
+  # Manual production deploy. Triggered from the Actions UI after
+  # `docker-registry-create--release` has published a release image for a
+  # `svt-dbagent-*` tag. Requires `image_tag` input (the release version,
+  # e.g. 1.2.3) and the `environment: prod` approval gate (configure
+  # Required reviewers in repo Settings -> Environments -> prod).
+  deploy-prod--manual:
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'deploy-prod--manual'
+    runs-on: self-hosted
+    environment: prod
+    steps:
+      - name: Deploy
+        # Override the workflow-level `defaults.run.working-directory: DbAgent`
+        # — this step runs on the self-hosted runner with no checkout, so the
+        # DbAgent/ subdirectory doesn't exist. runner.temp is always defined
+        # and always exists.
+        working-directory: ${{ runner.temp }}
+        env:
+          INPUT_TAG: ${{ inputs.image_tag }}
+          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
+          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
+          SVT_DB_HOST: ${{ vars.SVT_DB_HOST }}
+          SVT_DB_PORT: ${{ vars.SVT_DB_PORT }}
+          SVT_DB_USER: ${{ secrets.SVT_DB_USER }}
+          SVT_DB_PASS: ${{ secrets.SVT_DB_PASS }}
+          SVT_DB_NAME: ${{ secrets.SVT_DB_NAME }}
+          SVT_DB_SCHEMA: ${{ secrets.SVT_DB_SCHEMA }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${INPUT_TAG}" ]]; then
+            echo "ERROR: image_tag input is required for deploy-prod--manual" >&2
+            exit 1
+          fi
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${INPUT_TAG}"
+          echo "Deploying ${IMAGE} locally"
+          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
+          sudo docker pull "${IMAGE}"
+          sudo docker stop svt.db-agent || true
+          sudo docker rm svt.db-agent || true
+          sudo docker run -d \
+            --name svt.db-agent \
+            --restart unless-stopped \
+            --add-host=host.docker.internal:host-gateway \
+            -v /tmp:/tmp \
+            -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
+            -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
+            -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
+            -e SVT_DB_AGENT_DB_PASS="${SVT_DB_PASS}" \
+            -e SVT_DB_AGENT_DB_NAME="${SVT_DB_NAME}" \
+            -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
+            -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
+            -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
             "${IMAGE}"

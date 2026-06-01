@@ -4,6 +4,8 @@ services:
     build:
       context: ../DbAgent
       dockerfile: Dockerfile
+      args:
+        VERSION: dev
     # Lets DB_HOST=host.docker.internal reach a native Postgres (needed on Linux).
     extra_hosts:
       - "host.docker.internal:host-gateway"
