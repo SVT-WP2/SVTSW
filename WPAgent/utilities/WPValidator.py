@@ -1,6 +1,8 @@
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from utilities.WPResponseBuilder import ResponseBuilder
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Optional, List, Tuple, Any
+from utilities.WPAgentTypes import AgentResponse
+from utilities.WPCommandConstants import BYPASS_COMMANDS as _GLOBAL_BYPASS_COMMANDS, USER_COMMANDS, EXPERT_COMMANDS
 import re
 
 
@@ -12,70 +14,8 @@ class UserHierarchy:
 
 class WPCommandValidator:
     # Command permissions by hierarchy level
-    USER_COMMANDS = {
-        "OpenProject",
-        "InitProbing",
-        "MoveChuckLoadedWafer",
-        "LoadWafer",
-        "MoveChuckUnloadWafer",
-        "UnloadWafer",
-        "MoveChuckAsic",
-        "MoveChuckSeparation",
-        "MoveChuckSafePosition",
-        "MoveChuckContact",
-        "ShowStatus",
-        "MoveChuckOffAxis",
-        "TestingLock",
-        "TestingUnlock",
-        "GetLockStatus",
-        "UserLogIn",
-        "UserLogOut",
-    }
-
-    EXPERT_COMMANDS = {
-        "MoveChuckWide",
-        "ChangeProject",
-        "MoveChuckNextDie",
-        "RunPTPA",
-        "SetPTPA",
-        "MoveChuckPreviousDie",
-        "SetOvertravel",
-        "DisableOvertravel",
-        "AutoFocus",
-        "MoveChuckRowColumn",
-    }
-
-    DEVELOPER_COMMANDS = {
-        # Developers can execute ALL commands - no restrictions!
-        "SwitchCamera",
-        "ListProbers",
-        "ListChipTypes",
-        "ListOrientations",
-        "RunSequencer",
-        "MoveChuckToWorkArea",
-        "FindHome",
-        "MoveChuckZ",
-        "ConnectProbeMachine",
-        "Initialize",
-        "ResetAgent",
-        "LocalMode",
-        "Help",
-        "MoveChuckXY",
-        "MoveChuckHome",
-        "AlignWafer",
-        "MoveChuckCenter",
-        "OpenProjectWithAsicSerialNumber",
-    }
-
-    # Commands that bypass all checks (system commands)
-    BYPASS_COMMANDS = {
-        "UserLogIn",
-        "UserLogOut",
-        "GetInfo",
-        "ShowProjectStatus",
-        "ShowStatus",
-        "Help",
-    }
+    # Commands that bypass all checks — single source of truth from WPCommandConstants
+    BYPASS_COMMANDS = _GLOBAL_BYPASS_COMMANDS
 
     # Commands that are EXEMPT from testing lock (READ-ONLY monitoring)
     LOCK_EXEMPT_COMMANDS = {
@@ -104,11 +44,11 @@ class WPCommandValidator:
     def validate_command(
         self,
         command: str,
-        params: Dict[str, Any],
+        params: dict,
         payload_user: Optional[str] = None,
         payload_agent_name: Optional[str] = None,
         reply_type: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[AgentResponse]:
         """
         Validate command execution
 
@@ -163,7 +103,7 @@ class WPCommandValidator:
 
     def _validate_agent_name(
         self, payload_agent_name: Optional[str], reply_type: str
-    ) -> Optional[Dict]:
+    ) -> Optional[AgentResponse]:
         """Validate agent name matches if provided"""
 
         if not self.g.wpAgentName:
@@ -184,7 +124,7 @@ class WPCommandValidator:
 
     def _validate_user_login(
         self, payload_user: Optional[str], reply_type: str
-    ) -> Optional[Dict]:
+    ) -> Optional[AgentResponse]:
         """Validate user is logged in"""
 
         # Check if user is logged in
@@ -205,7 +145,7 @@ class WPCommandValidator:
 
     def _validate_testing_lock(
         self, command: str, payload_user: Optional[str], reply_type: str
-    ) -> Optional[Dict]:
+    ) -> Optional[AgentResponse]:
         """
         Validate testing lock status.
 
@@ -268,7 +208,7 @@ class WPCommandValidator:
 
     def _validate_user_permission(
         self, command: str, reply_type: str
-    ) -> Optional[Dict]:
+    ) -> Optional[AgentResponse]:
         """Validate user has permission for this command"""
 
         if not self.g.userLoggedHierarchy:
@@ -287,7 +227,7 @@ class WPCommandValidator:
 
         # Expert has access to User + Expert commands
         if hierarchy == UserHierarchy.EXPERT:
-            if command in self.USER_COMMANDS or command in self.EXPERT_COMMANDS:
+            if command in USER_COMMANDS or command in EXPERT_COMMANDS:
                 return None
             else:
                 return ResponseBuilder.error(
@@ -298,9 +238,9 @@ class WPCommandValidator:
 
         # User has access to User commands only
         if hierarchy == UserHierarchy.USER:
-            if command in self.USER_COMMANDS:
+            if command in USER_COMMANDS:
                 return None
-            elif command in self.EXPERT_COMMANDS:
+            elif command in EXPERT_COMMANDS:
                 return ResponseBuilder.error(
                     reply_type,
                     f"Command '{command}' requires Expert access. Current level: User",
@@ -319,8 +259,8 @@ class WPCommandValidator:
         )
 
     def _validate_parameters(
-        self, command: str, params: Dict[str, Any], reply_type: str
-    ) -> Optional[Dict]:
+        self, command: str, params: dict, reply_type: str
+    ) -> Optional[AgentResponse]:
         """
         Validate command parameters
 
@@ -361,7 +301,7 @@ class WPCommandValidator:
 
         return None
 
-    def _get_parameter_schema(self, command: str) -> Optional[Dict]:
+    def _get_parameter_schema(self, command: str) -> Optional[AgentResponse]:
         """
         Get parameter schema for command
 
@@ -493,9 +433,9 @@ class WPCommandValidator:
             # Developer: ALL COMMANDS (no restrictions!)
             return ["ALL_COMMANDS_ALLOWED"]
         elif hierarchy == UserHierarchy.EXPERT:
-            return sorted(self.USER_COMMANDS | self.EXPERT_COMMANDS)
+            return sorted(USER_COMMANDS | EXPERT_COMMANDS)
         elif hierarchy == UserHierarchy.USER:
-            return sorted(self.USER_COMMANDS)
+            return sorted(USER_COMMANDS)
         else:
             return []
 
@@ -571,7 +511,7 @@ class WPCommandValidator:
         # No orientation found
         return (None, None)
 
-    def _validate_orientations(self, command: str, reply_type: str) -> Optional[Dict]:
+    def _validate_orientations(self, command: str, reply_type: str) -> Optional[AgentResponse]:
         """
         Validate probe card type and wafer/probe card orientations.
 

@@ -21,21 +21,21 @@ def _parse_die_position(die_string):
 
 
 def svt_initialise_wp(
-    address=None,
-    machine_type=None,
-    project_name=None,
-    alignment_die=None,
-    home_die=None,
-    force=False,
-    machine_id=None,
-    machine_name=None,
-    project_id=None,
-    asic_family=None,
-    orientation=None,
-    initialization_mode=None,
-    serialNumber=None,
-    user=None,
-    waferAgentName=None,
+        address=None,
+        machine_type=None,
+        project_name=None,
+        alignment_die=None,
+        home_die=None,
+        force=False,
+        machine_id=None,
+        machine_name=None,
+        project_id=None,
+        asic_family=None,
+        orientation=None,
+        initialization_mode=None,
+        serialNumber=None,
+        user=None,
+        waferAgentName=None,
 ):
     """
     Initialize the WP agent with prober connection and DB sync
@@ -272,7 +272,7 @@ def svt_initialise_wp(
         return ResponseBuilder.error("InitializeReply", error_msg, 500)
 
 
-def get_project_status(user=None, waferAgentName=None):
+def show_status(user=None, waferAgentName=None):
     """Get current project status"""
     try:
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -288,7 +288,7 @@ def get_project_status(user=None, waferAgentName=None):
         parts = [
             f"Agent: {g.wpAgentName or 'Unknown'}",
             f"State: {g.wpag_state}",
-            f"User: {g.userLogged  or 'None'}",
+            f"User: {g.userLogged or 'None'}",
             f"Project: {g.projectName or 'None'}",
         ]
 
@@ -338,7 +338,7 @@ def get_info():
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 
 
-def reset_agent_state(user=None, waferAgentName=None):
+def reset_agent(user=None, waferAgentName=None):
     """Reset the agent state machine to Idle"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
@@ -371,7 +371,7 @@ def get_agent_state():
     return ResponseBuilder.success("GetAgentStateReply", message)
 
 
-def help_command(command=None, user=None, waferAgentName=None):
+def help(command=None, user=None, waferAgentName=None):
     """Displ   Display help information for commands.
 
     Usage:

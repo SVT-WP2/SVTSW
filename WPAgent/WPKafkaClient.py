@@ -6,17 +6,21 @@ import json
 import time
 import ast
 import uuid
-from typing import Callable, Optional, Dict, Any, List
+from typing import Callable, Optional, List, Dict
+from utilities.WPAgentTypes import KafkaPayload
 
 from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
-from services.WPListenerHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
-from services.WPCacheHeartbeat import CacheHealthCheck, CacheHealthMonitor
+from services.WPHeartbeat import (
+    ListenerHealthCheck, ListenerHealthMonitor,
+    CacheHealthCheck, CacheHealthMonitor,
+)
+from utilities.WPMessagesStatus import WPMessagesStatus
 
 logger = WPAgentLogger(kafka_servers=None)
-cache = WPAgentCache(kafka_servers=None)
-cache.initialize_cache()
+# cache = WPAgentCache(kafka_servers=None)
+# cache.initialize_cache()
 
 # =========================
 # SVT Kafka Conventions
@@ -26,11 +30,7 @@ KAFKA_HEADER__REPLY_TOPIC = "kafka_replyTopic"
 KAFKA_HEADER__REPLY_PARTITION = "kafka_replyPartition"
 
 
-class SvtMessageStatus:
-    Success = "Success"
-    BadRequest = "BadRequest"
-    NotFound = "NotFound"
-    UnexpectedError = "UnexpectedError"
+
 
 
 def _headers_to_dict(headers) -> Dict[str, bytes]:
@@ -76,19 +76,7 @@ class KafkaClient:
         self.request_consumer = None
         self.reply_consumer = None
         self._initialize_reply_consumer()
-
-        # Initialize heartbeat monitoring with correct broker
-        self.health_check = ListenerHealthCheck(
-            bootstrap_servers=self.bootstrap_servers
-        )
-        self.heartbeat_monitor = ListenerHealthMonitor(self.health_check)
-
-        self.cache_health_check = CacheHealthCheck(
-            bootstrap_servers=self.bootstrap_servers
-        )
-        self.cache_heartbeat = CacheHealthMonitor(
-            self.cache_health_check, on_heartbeat=cache.cache_command
-        )
+        self.cache = None
 
     def _ensure_topic_exists(self, topic_name, num_partitions=1, replication_factor=1):
         admin_config = {
@@ -154,18 +142,18 @@ class KafkaClient:
         return converted
 
     def send(
-        self,
-        command,
-        params=None,
-        *,
-        data=None,
-        repeat=1,
-        delay=0,
-        wait_for_reply=True,
-        timeout=30.0,
+            self,
+            command,
+            params=None,
+            *,
+            data=None,
+            repeat=1,
+            delay=0,
+            wait_for_reply=True,
+            timeout=30.0,
     ):
 
-        print(self.bootstrap_servers)
+        # print(self.bootstrap_servers)
 
         if data is not None:
             params = data
@@ -254,7 +242,7 @@ class KafkaClient:
                         if isinstance(error_info, dict):
                             display_output = error_info.get("message", "")
 
-                    if status == SvtMessageStatus.Success:
+                    if status == WPMessagesStatus.Success:
                         print(f"✅ {status}: {rtype}")
                         if display_output:
                             print(display_output)
@@ -266,8 +254,9 @@ class KafkaClient:
                     return response
 
                 else:
+
                     error_response = {
-                        "status": SvtMessageStatus.UnexpectedError,
+                        "status": WPMessagesStatus.UnexpectedError,
                         "type": f"{command}Reply",
                         "error": {
                             "message": f"Timeout: No response received within {timeout}s. Listener may be down."
@@ -305,8 +294,24 @@ class KafkaClient:
 
         print(self.bootstrap_servers)
 
+        self.cache = WPAgentCache(kafka_servers=self.bootstrap_servers)
+        self.cache.initialize_cache()
+
         self.request_consumer = KafkaConsumer(consumer_config)
         self.request_consumer.subscribe([self.request_topic])
+
+        # Initialize heartbeat monitoring with correct broker only when listener started
+        health_check = ListenerHealthCheck(
+            bootstrap_servers=self.bootstrap_servers
+        )
+        heartbeat_monitor = ListenerHealthMonitor(health_check)
+
+        cache_health_check = CacheHealthCheck(
+            bootstrap_servers=self.bootstrap_servers
+        )
+        cache_heartbeat = CacheHealthMonitor(
+            cache_health_check, on_heartbeat=self.cache.cache_command
+        )
 
         executor = ThreadPoolExecutor(max_workers=4)
 
@@ -317,8 +322,8 @@ class KafkaClient:
             result=None,
         )
 
-        self.heartbeat_monitor.start()
-        self.cache_heartbeat.start()
+        heartbeat_monitor.start()
+        cache_heartbeat.start()
 
         try:
             while True:
@@ -342,8 +347,8 @@ class KafkaClient:
             pass
         finally:
             self.request_consumer.close()
-            self.heartbeat_monitor.stop()
-            self.cache_heartbeat.stop()
+            heartbeat_monitor.stop()
+            cache_heartbeat.stop()
             self.producer.flush(timeout=5.0)
             if self.reply_consumer:
                 self.reply_consumer.close()
@@ -390,6 +395,7 @@ class KafkaClient:
             result = execute_command(command, params)
             exec_end = time.time()
             exec_time_ms = (exec_end - exec_start) * 1000
+            self.cache.cache_command()  # update cache snapshot with current global state
 
             if result and "type" in result and "data" in result:
                 reply_body = result
@@ -401,13 +407,13 @@ class KafkaClient:
 
                 if raw_status == "Success":
                     reply_body = {
-                        "status": SvtMessageStatus.Success,
+                        "status": WPMessagesStatus.Success,
                         "type": f"{command}Reply",
                         "data": {"output": output, "executionTimeMs": exec_time_ms},
                     }
                 else:
                     reply_body = {
-                        "status": SvtMessageStatus.UnexpectedError,
+                        "status": WPMessagesStatus.UnexpectedError,
                         "type": f"{command}Reply",
                         "error": {"message": output},
                     }
@@ -457,7 +463,7 @@ class KafkaClient:
 
                 if reply_to and correlation_id:
                     error_reply = {
-                        "status": SvtMessageStatus.UnexpectedError,
+                        "status": WPMessagesStatus.UnexpectedError,
                         "type": f"{command if 'command' in locals() and command else 'Unknown'}Reply",
                         "error": {"message": f"Exception: {str(e)}"},
                     }
@@ -513,13 +519,13 @@ class KafkaClient:
             self.reply_consumer.subscribe(list(wanted))
 
     def request_reply(
-        self,
-        request_topic: str,
-        payload: Dict[str, Any],
-        timeout: float = 10.0,
-        reply_partition: int = 0,
-        match_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
-    ) -> Optional[Dict[str, Any]]:
+            self,
+            request_topic: str,
+            payload: KafkaPayload,
+            timeout: float = 10.0,
+            reply_partition: int = 0,
+            match_fn: Optional[Callable[[KafkaPayload], bool]] = None,
+    ) -> Optional[KafkaPayload]:
         """Generic request-reply for other services (like DB agent)"""
         reply_topic = f"{request_topic}.reply"
         self._ensure_topic_exists(request_topic)

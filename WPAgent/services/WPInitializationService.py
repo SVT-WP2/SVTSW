@@ -258,7 +258,7 @@ class WPInitializationService:
                 }
 
             # Display summary if successful
-            if result.get("status") == "success":
+            if result.get("status") == "Success":
                 print("\n" + "=" * 70)
                 print("✅ Initialization Complete!")
                 print("=" * 70)

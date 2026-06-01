@@ -9,10 +9,11 @@ When starting with: python main.py listen CERN
 """
 
 from WPKafkaClient import KafkaClient
-from services.WPListenerHeartbeat import ListenerHealthCheck
+from services.WPHeartbeat import ListenerHealthCheck
 import json
 import os
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+from utilities.WPResponseBuilder import ResponseBuilder
 
 
 class WaferProberAgent:
@@ -22,18 +23,20 @@ class WaferProberAgent:
         self.wp_agent_name = None
 
     def send(
-        self,
-        command,
-        data=None,
-        repeat=1,
-        delay=0,
-        check_health=True,
-        wait_for_reply=True,
-        timeout=30.0,
+            self,
+            command,
+            data=None,
+            repeat=1,
+            delay=0,
+            check_health=True,
+            wait_for_reply=True,
+            timeout=30.0,
     ):
         """
         Send a command via Kafka and wait for response.
         """
+        if not data or "waferAgentName" not in data:
+            return ResponseBuilder.error(f"{command}Reply", "'waferAgentName' is required in data", 400)
         wafer_agent_name = data["waferAgentName"]
         config = self._load_probe_config_with_db(wafer_agent_name)
         kafka_broker = config.get("kafka_broker")
@@ -284,7 +287,7 @@ class WaferProberAgent:
 
             result = svt_initialise_wp(**init_params)
 
-            if result.get("status", "").lower() == "success":
+            if result.get("status", "") == "Success":
                 msg = result.get("data", {}).get("message", "Initialized successfully")
                 print(f"✅ {msg}")
                 return True
@@ -301,8 +304,8 @@ class WaferProberAgent:
                 print(json.dumps(result, indent=2))
                 return False
 
-        except Exception:
-            print("❌ Auto-initialization error: {str(e)}")
+        except Exception as e:
+            print(f"❌ Auto-initialization error: {str(e)}")
             import traceback
 
             traceback.print_exc()
@@ -454,7 +457,7 @@ class WaferProberAgent:
         if self.kafka is None:
             self.kafka = KafkaClient()
 
-        print(f"⚠️  Sending '{command}' WITHOUT health check (forced)")
+        print(f"WARNING: Sending '{command}' WITHOUT health check (forced)")
         return self.kafka.send(
             command=command,
             data=data,

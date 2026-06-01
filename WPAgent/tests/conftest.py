@@ -96,4 +96,8 @@ def prober():
 @pytest.fixture
 def project_path():
     """Hardware test fixture - skipped automatically when no real prober is available."""
+
+@pytest.fixture
+def project_path():
+    """Hardware test fixture - skipped automatically when no real prober is present."""
     pytest.skip("Requires a live SENTIO prober connection (hardware not present)")

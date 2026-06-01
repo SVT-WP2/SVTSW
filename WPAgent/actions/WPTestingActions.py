@@ -1,7 +1,7 @@
 from utilities.WPResponseBuilder import ResponseBuilder
 import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
-from utilities.WPValidationDecorator import validate_command
+from utilities.WPValidationDecorator import validate_command, validate_command_with_name, get_reply_type
 from utilities.WPMapConverter import get_converter
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -18,7 +18,8 @@ def _ensure_initialized():
 
     is_ready, message = check_prober_ready()
     if not is_ready:
-        return {"status": "Error", "output": message}
+        from utilities.WPResponseBuilder import ResponseBuilder
+        return ResponseBuilder.error("NotInitializedReply", message, 503)
     return None
 
 
@@ -228,6 +229,7 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
         user: current user
         waferAgentName: current WP Agent Name
     """
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
@@ -242,21 +244,22 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckXY")
         return ResponseBuilder.success(
-            "MoveChuckXYReply", f"Moved chuck to x={x}, y={y}"
+            reply, f"Moved chuck to x={x}, y={y}"
         )
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckXYReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_z(z, user=None, waferAgentName=None):
     """Move chuck to Z position"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckZReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -267,20 +270,20 @@ def move_chuck_z(z, user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("MoveChuckZ")
-        return ResponseBuilder.success("MoveChuckZReply", f"Moved chuck to z={z}")
+        return ResponseBuilder.success(reply, f"Moved chuck to z={z}")
     except Exception as e:
-
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckZReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_center(user=None, waferAgentName=None):
     """Move chuck to Center"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckCenterReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -292,19 +295,20 @@ def move_chuck_center(user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("MoveChuckCenter")
-        return ResponseBuilder.success("MoveChuckCenterReply", f"Moved chuck to Center")
+        return ResponseBuilder.success(reply, f"Moved chuck to Center")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckCenterReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_home(user=None, waferAgentName=None):
     """Move chuck to home position"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckHomeReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -315,21 +319,22 @@ def move_chuck_home(user=None, waferAgentName=None):
         prober.local_mode()
         agentStateMachine.transition("MoveChuckHome")
 
-        return ResponseBuilder.success("MoveChuckHomeReply", "Chuck moved home")
+        return ResponseBuilder.success(reply, "Chuck moved home")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckHomeReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
     """Move chuck to specified work area"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckToWorkAreaReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -349,22 +354,23 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckToWorkArea")
 
         return ResponseBuilder.success(
-            "MoveChuckToWorkAreaReply", f"Moved to {work_area} workarea"
+            reply, f"Moved to {work_area} workarea"
         )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckToWorkAreaReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_offaxis(user=None, waferAgentName=None):
     """Move chuck to off-axis area"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckOffAxisReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -383,21 +389,22 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckOffAxis")
 
         return ResponseBuilder.success(
-            "MoveChuckOffAxisReply", "Probe station is in off-axis position"
+            reply, "Probe station is in off-axis position"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckOffAxisReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_wide(user=None, waferAgentName=None):
     """Move chuck to wide position"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckWideReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -416,16 +423,17 @@ def move_chuck_wide(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckWide")
 
         return ResponseBuilder.success(
-            "MoveChuckWideReply", "Probe station is in wide position"
+            reply, "Probe station is in wide position"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckWideReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_safe_position(user=None, waferAgentName=None):
     """Sequence MoveChuckOffAxis MoveChuckXY MoveChuckZ"""
+    reply = get_reply_type()
     # absolute_x = 183672.8
     # absolute_y = -33439.9
     # absolute_z = 10377.7
@@ -441,7 +449,7 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckSafePositionReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -459,21 +467,22 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckSafePosition")
 
         return ResponseBuilder.success(
-            "MoveChuckSafePositionReply", "Probe station is in safe position"
+            reply, "Probe station is in safe position"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckSafePositionReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_contact(user=None, waferAgentName=None):
     """Move probes to contact position"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckContactReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -491,21 +500,22 @@ def move_chuck_contact(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckContact")
 
         return ResponseBuilder.success(
-            "MoveChuckContactReply", "Probe station is in contact"
+            reply, "Probe station is in contact"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckContactReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_separation(user=None, waferAgentName=None):
     """Move probes to separation position"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckSeparationReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -522,11 +532,11 @@ def move_chuck_separation(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckSeparation")
 
         return ResponseBuilder.success(
-            "MoveChuckSeparationReply", "Probe station is in separation"
+            reply, "Probe station is in separation"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckSeparationReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 # ==============================================================================
@@ -567,6 +577,7 @@ def move_chuck_die(
         # ITS3 label
         move_chuck_die(label="BAM00")
     """
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     g = SvtWPAagentGlobalParameters.getInstance()
@@ -580,14 +591,14 @@ def move_chuck_die(
 
     if not has_coordinates and not has_label:
         return ResponseBuilder.error(
-            "MoveChuckRowColumnReply",
+            reply,
             "Must provide either (col, row) or label parameter",
             400,
         )
 
     if has_coordinates and has_label:
         return ResponseBuilder.error(
-            "MoveChuckRowColumnReply",
+            reply,
             "Cannot provide both coordinates (col, row) and label. Choose one.",
             400,
         )
@@ -604,7 +615,7 @@ def move_chuck_die(
         if result is None:
             # List available label formats to help user
             return ResponseBuilder.error(
-                "MoveChuckRowColumnReply",
+                reply,
                 f"Invalid label format: '{label}'\n\n"
                 "Supported formats:\n"
                 f"  SVT: 'babyMOSAIX-1_1_ER2-W1' or 'MOSAIX-1_ER2-W1'\n"
@@ -623,7 +634,7 @@ def move_chuck_die(
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckRowColumnReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -643,20 +654,21 @@ def move_chuck_die(
         else:
             message = f"Moved to die col={col}, row={row}"
 
-        return ResponseBuilder.success("MoveChuckRowColumnReply", message)
+        return ResponseBuilder.success(reply, message)
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckRowColumnReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_next_die(user=None, waferAgentName=None):
     """Step to next die"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckNextDieReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -669,20 +681,21 @@ def move_chuck_next_die(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckNextDie")
 
         return ResponseBuilder.success(
-            "MoveChuckNextDieReply", f"Stepped to next die: {result}"
+            reply, f"Stepped to next die: {result}"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckNextDieReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_previous_die(user=None, waferAgentName=None):
     """Move to previous die"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckPreviousDieReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -696,15 +709,15 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckPreviousDie")
 
         return ResponseBuilder.success(
-            "MoveChuckPreviousDieReply", "Moved to previous die"
+            reply, "Moved to previous die"
         )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckPreviousDieReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
-@validate_command
+@validate_command_with_name("SetPTPA")
 def set_ptpa(enable: bool, user=None, waferAgentName=None):
     """
     Enable or disable PTPA alignment
@@ -714,9 +727,10 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
         user: User performing action
         waferAgentName: Agent name
     """
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("SetPTPAReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -725,20 +739,21 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
 
         status = "enabled" if enable else "disabled"
-        return ResponseBuilder.success("SetPTPAReply", f"PTPA {status}")
+        return ResponseBuilder.success(reply, f"PTPA {status}")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("SetPTPAReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
-@validate_command
+@validate_command_with_name("RunPTPA")
 def run_ptpa(user=None, waferAgentName=None):
     """Run PTPA alignment"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("RunPTPAReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -750,20 +765,21 @@ def run_ptpa(user=None, waferAgentName=None):
 
         agentStateMachine.transition("RunPTPA")
 
-        return ResponseBuilder.success("RunPTPAReply", "PTPA executed")
+        return ResponseBuilder.success(reply, "PTPA executed")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("RunPTPAReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def init_probing(user=None, waferAgentName=None):
     """Sequence of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("InitProbingReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -781,19 +797,20 @@ def init_probing(user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("InitProbing")
-        return ResponseBuilder.success("InitProbingReply", f"Initialization complete")
+        return ResponseBuilder.success(reply, f"Initialization complete")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("InitProbingReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def find_home(user=None, waferAgentName=None):
     """Find home position"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("FindHomeReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -805,11 +822,11 @@ def find_home(user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("FindHome")
-        return ResponseBuilder.success("FindHomeReply", "Found home position")
+        return ResponseBuilder.success(reply, "Found home position")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("FindHomeReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
@@ -817,11 +834,12 @@ def align_wafer(
     align_die_col=None, align_die_row=None, subsite=None, user=None, waferAgentName=None
 ):
     """Perform wafer alignment"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("AlignWaferReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -838,7 +856,7 @@ def align_wafer(
             )
         else:
             return ResponseBuilder.error(
-                "AlignWaferReply",
+                reply,
                 "Alignment die not specified. Please provide align_die_col and align_die_row parameters, "
                 "or set alignment_die during initialization.",
                 400,
@@ -860,22 +878,23 @@ def align_wafer(
         agentStateMachine.transition("AlignWafer")
 
         return ResponseBuilder.success(
-            "AlignWaferReply",
+            reply,
             f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}",
         )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("AlignWaferReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def auto_focus(user=None, waferAgentName=None):
     """Execute auto-focus"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("AutoFocusReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -889,27 +908,28 @@ def auto_focus(user=None, waferAgentName=None):
         agentStateMachine.transition("AutoFocus")
 
         return ResponseBuilder.success(
-            "AutoFocusReply", "Auto-focus command successfully executed"
+            reply, "Auto-focus command successfully executed"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("AutoFocusReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None):
     """Load wafer onto chuck"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from actions.WPDataBaseActions import update_wp_machine_loaded_wafer
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("LoadWaferReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     if g.loaded_wafer_id is not None:
-        return ResponseBuilder.error("LoadWaferReply", "Wafer already loaded", 400)
+        return ResponseBuilder.error(reply, "Wafer already loaded", 400)
 
     try:
         prober = get_current_prober()
@@ -928,27 +948,28 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "OffAxis"
 
-        return ResponseBuilder.success("LoadWaferReply", "Wafer has been loaded")
+        return ResponseBuilder.success(reply, "Wafer has been loaded")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("LoadWaferReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def unload_wafer(user=None, waferAgentName=None):
     """Unload wafer from chuck"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from actions.WPDataBaseActions import update_wp_machine_loaded_wafer
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("UnloadWaferReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     if g.loaded_wafer_id is None:
-        return ResponseBuilder.error("UnloadWaferReply", "No wafer loaded", 400)
+        return ResponseBuilder.error(reply, "No wafer loaded", 400)
 
     try:
         prober = get_current_prober()
@@ -966,21 +987,22 @@ def unload_wafer(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "LoadPosition"
 
-        return ResponseBuilder.success("UnloadWaferReply", "Wafer unloaded")
+        return ResponseBuilder.success(reply, "Wafer unloaded")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("UnloadWaferReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_loaded_wafer(user=None, waferAgentName=None):
     """Load same wafer Load + MoveChuckOffAxis"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckLoadedWaferReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1000,28 +1022,29 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         g.current_working_area = "OffAxis"
 
         return ResponseBuilder.success(
-            "MoveChuckLoadedWaferReply", "Wafer has been loaded"
+            reply, "Wafer has been loaded"
         )
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckLoadedWaferReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
     """Unload wafer from chuck"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckUnloadWaferReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     if g.loaded_wafer_id is None:
         return ResponseBuilder.error(
-            "MoveChuckUnloadWaferReply", "No wafer loaded", 400
+            reply, "No wafer loaded", 400
         )
 
     try:
@@ -1038,23 +1061,24 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
         g.chuck_z_position_state = "Separation"
         g.current_working_area = "LoadPosition"
 
-        return ResponseBuilder.success("MoveChuckUnloadWaferReply", "Wafer unloaded")
+        return ResponseBuilder.success(reply, "Wafer unloaded")
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckUnloadWaferReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def open_project(projectName: str, user=None, waferAgentName=None):
     """Open project"""
+    reply = get_reply_type()
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from actions.WPDataBaseActions import get_project_id_by_name
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("OpenProjectReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1079,23 +1103,24 @@ def open_project(projectName: str, user=None, waferAgentName=None):
         agentStateMachine.transition("OpenProject")
 
         return ResponseBuilder.success(
-            "OpenProjectReply", f"Opened project: {project_path}"
+            reply, f"Opened project: {project_path}"
         )
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("OpenProjectReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 @validate_command
 def stress_open_project(projectName: str, user=None, waferAgentName=None):
     """Open project"""
+    reply = get_reply_type()
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     from actions.WPDataBaseActions import get_project_id_by_name
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("StressOpenProjectReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1120,11 +1145,11 @@ def stress_open_project(projectName: str, user=None, waferAgentName=None):
             update_current_info(currentProber=prober)
             prober.local_mode()
 
-        return ResponseBuilder.success("StressOpenProjectReply", f"Opened project: {project_path}")
+        return ResponseBuilder.success(reply, f"Opened project: {project_path}")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("StressOpenProjectReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
@@ -1142,7 +1167,7 @@ def stress_open_project(
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("StressOpenProjectReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1180,20 +1205,21 @@ def stress_open_project(
             print("Dif =====================> ")
             print(dif)
 
-        return ResponseBuilder.success("StressOpenProjectReply", f"test is DONE")
+        return ResponseBuilder.success(reply, f"test is DONE")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("StressOpenProjectReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def switch_camera(mountPoint, user=None, waferAgentName=None):
     """Switch camera mount point"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("SwitchCameraReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1211,19 +1237,20 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
         agentStateMachine.transition("SwitchCamera")
 
         return ResponseBuilder.success(
-            "SwitchCameraReply", f"Switched camera to {mountPoint}"
+            reply, f"Switched camera to {mountPoint}"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("SwitchCameraReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def get_chuck_position(user=None, waferAgentName=None):
     """Get current chuck position"""
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("GetChuckPositionReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -1231,20 +1258,21 @@ def get_chuck_position(user=None, waferAgentName=None):
         position = prober.get_chuck_position()
         prober.local_mode()
 
-        return ResponseBuilder.success("GetChuckPositionReply", f"Chuck is {position}")
+        return ResponseBuilder.success(reply, f"Chuck is {position}")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("GetChuckPositionReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
     """Set overtravel that includes setting actual gap and enable overtravel"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("SetOvertravelReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1259,24 +1287,25 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
         prober.local_mode()
 
-        agentStateMachine.transition("SetOverdrive")
+        agentStateMachine.transition("SetChuckOvertravel")
 
         return ResponseBuilder.success(
-            "SetOvertravelReply", "SetOvertravel command successfully executed"
+            reply, "SetOvertravel command successfully executed"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("SetOvertravelReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
-def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
+def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
     """Disable overtravel, set to 0"""
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("DisableOvertravelReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1294,20 +1323,21 @@ def disable_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None)
         agentStateMachine.transition("DisableOvertravel")
 
         return ResponseBuilder.success(
-            "DisableOvertravelReply", "DisableOvertravel command successfully executed"
+            reply, "DisableOvertravel command successfully executed"
         )
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("DisableOvertravelReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
 def local_mode(user=None, waferAgentName=None):
     """Set prober to local mode"""
+    reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("LocalModeReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -1318,10 +1348,10 @@ def local_mode(user=None, waferAgentName=None):
 
         agentStateMachine.transition("LocalMode")
 
-        return ResponseBuilder.success("LocalModeReply", "Local mode")
+        return ResponseBuilder.success(reply, "Local mode")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("LocalModeReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
@@ -1332,33 +1362,34 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
     Args:
         asicId: ASIC ID from database
     """
+    reply = get_reply_type()
     from actions.WPDataBaseActions import get_asic_by_id
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("MoveChuckAsicReply", error["output"], 400)
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     # Get ASIC from database
     try:
         asic_data = get_asic_by_id(asicId)
     except Exception as e:
         return ResponseBuilder.error(
-            "MoveChuckAsicReply", f"Failed to get ASIC from database: {e}", 400
+            reply, f"Failed to get ASIC from database: {e}", 400
         )
 
     # Extract serial number
     serial_number = asic_data.get("serialNumber")
     if not serial_number:
         return ResponseBuilder.error(
-            "MoveChuckAsicReply", f"ASIC ID {asicId} has no serial number", 400
+            reply, f"ASIC ID {asicId} has no serial number", 400
         )
 
     currentAsicWaferId = asic_data.get("waferId")
     if currentAsicWaferId != g.loaded_wafer_id:
         return ResponseBuilder.error(
-            "MoveChuckAsicReply", f"ASIC ID {asicId} not found on loaded wafer", 400
+            reply, f"ASIC ID {asicId} not found on loaded wafer", 400
         )
 
     print(f"   Serial Number: {serial_number}")
@@ -1369,7 +1400,7 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
     if result is None:
         return ResponseBuilder.error(
-            "MoveChuckAsicReply",
+            reply,
             f"Cannot parse ASIC serial number '{serial_number}'",
             400,
         )
@@ -1389,13 +1420,13 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
         prober.local_mode()
 
         return ResponseBuilder.success(
-            "MoveChuckAsicReply",
+            reply,
             f"Moved to ASIC ID {asicId} (serial: {serial_number}) at col={col}, row={row}",
         )
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckAsicReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 @validate_command
@@ -1421,11 +1452,12 @@ def testing_lock(
             test_sequence_id="TEST_SEQ_12345"
         )
     """
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     if user is None:
         return ResponseBuilder.error(
-            "TestingLockReply", "User parameter is required for locking", 400
+            reply, "User parameter is required for locking", 400
         )
 
     g = SvtWPAagentGlobalParameters.getInstance()
@@ -1438,12 +1470,12 @@ def testing_lock(
         if g.locked_by_user == user:
             g.lock_for_testing(user, reason, testSequenceId)
             return ResponseBuilder.success(
-                "TestingLockReply", f"Lock updated for user '{user}'"
+                reply, f"Lock updated for user '{user}'"
             )
 
         # Locked by different user - DENY
         return ResponseBuilder.error(
-            "TestingLockReply",
+            reply,
             f"Already locked by '{g.locked_by_user}'. "
             f"Reason: {g.lock_reason}. "
             f"Locked for {lock_info['locked_duration_seconds']:.0f} seconds. "
@@ -1458,7 +1490,7 @@ def testing_lock(
     agentStateMachine.transition("TestingLock")
 
     return ResponseBuilder.success(
-        "TestingLockReply", f"WP Agent locked for testing by '{user}'"
+        reply, f"WP Agent locked for testing by '{user}'"
     )
 
 
@@ -1484,18 +1516,19 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
         testing_unlock(user="TestAgent_User1")
         testing_unlock(user="DeveloperUser", force=True)
     """
+    reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     if user is None:
         return ResponseBuilder.error(
-            "TestingUnlockReply", "User parameter is required for unlocking", 400
+            reply, "User parameter is required for unlocking", 400
         )
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
     # Check if locked
     if not g.is_locked_for_testing:
-        return ResponseBuilder.success("TestingUnlockReply", "WP Agent is not locked")
+        return ResponseBuilder.success(reply, "WP Agent is not locked")
 
     # Get user hierarchy
     user_hierarchy = (
@@ -1512,7 +1545,7 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
 
     if not can_unlock:
         return ResponseBuilder.error(
-            "TestingUnlockReply",
+            reply,
             f"Not authorized to unlock. Locked by '{g.locked_by_user}'. "
             f"Only '{g.locked_by_user}' or a Developer can unlock.",
             403,  # HTTP 403 Forbidden
@@ -1532,6 +1565,7 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
 @validate_command
 def move_chuck_top_left(user=None, waferAgentName=None):
 
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
         return error
@@ -1547,15 +1581,16 @@ def move_chuck_top_left(user=None, waferAgentName=None):
         prober.local_mode()
 
         agentStateMachine.transition("MoveChuckTopLeft")
-        return ResponseBuilder.success("MoveChuckTopLeftReply", f"Moved chuck to Top Left corner")
+        return ResponseBuilder.success(reply, f"Moved chuck to Top Left corner")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckTopLeftReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 @validate_command
 def move_chuck_top_right(user=None, waferAgentName=None):
 
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
         return error
@@ -1570,11 +1605,11 @@ def move_chuck_top_right(user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
         prober.local_mode()
         agentStateMachine.transition("MoveChuckTopRight")
-        return ResponseBuilder.success("MoveChuckTopRightReply", f"Moved chuck to Top Right corner")
+        return ResponseBuilder.success(reply, f"Moved chuck to Top Right corner")
 
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckTopRightReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
 
 @validate_command
 def move_chuck_bottom_left(user=None, waferAgentName=None):
@@ -1593,31 +1628,25 @@ def move_chuck_bottom_left(user=None, waferAgentName=None):
         update_current_info(currentProber=prober)
         prober.local_mode()
         agentStateMachine.transition("MoveChuckBottomLeft")
-        return ResponseBuilder.success("MoveChuckBottomLeftReply", f"Moved chuck to Bottom Left corner")
-
+        return ResponseBuilder.success(reply, "Chuck moved to bottom-left")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckBottomLeftReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)
+
 
 @validate_command
 def move_chuck_bottom_right(user=None, waferAgentName=None):
-
+    """Move chuck to the bottom-right position of the wafer."""
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
     try:
         prober = get_current_prober()
-
-        position = 'Relative'
-        x = -20.0
-        y = 15.0
-        prober.move_chuck_xy(x, y, position)
-
+        prober.move_chuck_bottom_right()
         update_current_info(currentProber=prober)
-        prober.local_mode()
         agentStateMachine.transition("MoveChuckBottomRight")
-        return ResponseBuilder.success("MoveChuckBottomRightReply", f"Moved chuck to Bottom Right corner")
-
+        return ResponseBuilder.success(reply, "Chuck moved to bottom-right")
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error("MoveChuckBottomRightReply", str(e), 500)
+        return ResponseBuilder.error(reply, str(e), 500)

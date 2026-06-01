@@ -126,7 +126,7 @@ def main():
         "wpMachineId",
         "WPAG_State",
         "loadedWafer",
-        "instaledprobeCard",
+        "installedProbeCard",
         "openedProjectId",
         "projectName",
         "overdrive",

@@ -9,7 +9,7 @@ print(f"Python path: {parent_dir}")
 print(f"Current dir: {os.getcwd()}\n")
 
 # Now import
-from actions.WPProjectActions import help_command
+from actions.WPProjectActions import help
 import json
 
 
@@ -21,7 +21,7 @@ def test_help():
 
     print("\n1. Testing help with no parameters...")
     try:
-        result = help_command()
+        result = help()
 
         print(f"\n✓ Function returned successfully")
         print(f"Type: {type(result)}")
@@ -75,7 +75,7 @@ def test_help_with_command():
     print("=" * 70)
 
     try:
-        result = help_command(command="MoveChuckXY")
+        result = help(command="MoveChuckXY")
 
         print(f"\n✓ Function returned successfully")
         print(f"Status: {result.get('status')}")

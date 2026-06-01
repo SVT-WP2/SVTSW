@@ -9,7 +9,8 @@ from confluent_kafka.admin import AdminClient, NewTopic
 import json
 import uuid
 import time
-from typing import Optional, Dict, Any
+from typing import Optional
+from utilities.WPAgentTypes import KafkaPayload
 
 
 class DBKafkaClient:
@@ -137,11 +138,11 @@ class DBKafkaClient:
     def request_reply(
         self,
         message_type: str,
-        data: Dict[str, Any],
+        data: dict,
         reply_type: str,
         timeout: float = 10.0,
         use_requestId: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[KafkaPayload]:
         """
         Send request and wait for reply using SVT Kafka conventions
 

@@ -7,8 +7,8 @@ from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
+from utilities.WPCommandConstants import BYPASS_COMMANDS
 
-from services.WPListenerHeartbeat import ListenerHealthCheck
 
 COMMAND_ROUTER = {
     # Testing/Movement Commands
@@ -31,8 +31,8 @@ COMMAND_ROUTER = {
     "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
     "LocalMode": testing_actions.local_mode,
     "MoveChuckPreviousDie": testing_actions.move_chuck_previous_die,
-    "SetOvertravel": testing_actions.set_chuck_overtravel,
-    "DisableOvertravel": testing_actions.disable_chuck_overtravel,
+    "SetChuckOvertravel": testing_actions.set_chuck_overtravel,
+    "DisableOvertravel": testing_actions.disable_overtravel,
     "GetChuckPosition": testing_actions.get_chuck_position,
     "MoveChuckCenter": testing_actions.move_chuck_center,
     "StressOpenProject": testing_actions.stress_open_project,
@@ -44,9 +44,9 @@ COMMAND_ROUTER = {
 
     # Project Init
     "Initialize": project_actions.svt_initialise_wp,
-    "ShowStatus": project_actions.get_project_status,
+    "ShowStatus": project_actions.show_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
-    "Help": project_actions.help_command,
+    "Help": project_actions.help,
     "InitProbing": testing_actions.init_probing,
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
@@ -59,7 +59,7 @@ COMMAND_ROUTER = {
     "UserLogIn": user_actions.UserLogIn,
     "UserLogOut": user_actions.UserLogOut,
     # State management commands (bypass state check)
-    "ResetAgent": project_actions.reset_agent_state,
+    "ResetAgent": project_actions.reset_agent,
     "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
     "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer,
     "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer,
@@ -78,7 +78,6 @@ COMMAND_ROUTER["ListAvailableCommands"] = (
 
 # Instantiation of logger
 logger = WPAgentLogger()
-# health_check = ListenerHealthCheck()
 
 
 def _exec_in_sequence(message_type, data=None):
@@ -156,19 +155,7 @@ def execute_command(message_type, data=None):
         except Exception:
             data = {}
 
-    # Commands that bypass state check completely
-    BYPASS_STATE_CHECK = [
-        "ResetAgent",
-        "GetAgentState",
-        "UserLogIn",  # Login must work from any state
-        "UserLogOut",  # Logout must work from any state
-        "GetInfo",  # Info queries don't change state
-        "ShowProjectStatus",
-        "ListProbers",
-        "ListChipTypes",
-        "ListAvailableCommands",
-        "help",
-    ]
+
 
     # Check if command exists
     if message_type not in COMMAND_ROUTER:
@@ -178,7 +165,7 @@ def execute_command(message_type, data=None):
         return result
 
     # Check if command can be executed (unless bypass)
-    if message_type not in BYPASS_STATE_CHECK:
+    if message_type not in BYPASS_COMMANDS:
         if not agentStateMachine.can_execute(message_type):
             available = agentStateMachine.get_available_commands()
             current_state = agentStateMachine.get_state_name()
@@ -197,7 +184,7 @@ def execute_command(message_type, data=None):
         result = action(**data)
 
         # Determine severity based on result
-        if result.get("status", "").lower() == "success":
+        if result.get("status", "") == "Success":
             severity = Severity.INFO
         else:
             # Check if it's a parameter error (less severe)
@@ -219,7 +206,7 @@ def execute_command(message_type, data=None):
         severity = Severity.ERROR
 
         # If command threw exception, put state machine in error state
-        if message_type not in BYPASS_STATE_CHECK:
+        if message_type not in BYPASS_COMMANDS:
             agentStateMachine.enter_error_state(str(e))
 
         _try_local_mode()  # Try to recover
