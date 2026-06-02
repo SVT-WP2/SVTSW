@@ -1,0 +1,9 @@
+{
+  "name": "MOCK",
+  "machineId": 167,
+  "address": "mock-prober",
+  "port": 35555,
+  "machineType": "mock",
+  "description": "Mock Probe Station for Testing",
+  "kafka_broker": "svmithi02:9096"
+}
