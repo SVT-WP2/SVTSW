@@ -1,0 +1,17 @@
+# Keep this folder limited to the shared, canonical dev files.
+# Ignore everything by default...
+*
+# ...then re-include the files that SHOULD be tracked:
+!.gitignore
+!README.md
+!.env.example
+!docker-compose.kafka-local.yml
+!docker-compose.postgres.yml
+!docker-compose.swtsw.yml
+!db-example/
+db-example/*
+!db-example/*.dump
+
+# As a result, your personal files stay local and out of git:
+#   - .env
+#   - docker-compose.*.yml          (any personal subset/override copies)

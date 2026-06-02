@@ -36,7 +36,7 @@ COPY --from=build /app/dist/apps/epic-measure-ui/browser /usr/share/nginx/html
 # Copy nginx template and entrypoint
 COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 # Default environment variables
 ENV SVT_UI_PORT=8080

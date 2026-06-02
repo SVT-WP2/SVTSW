@@ -1,0 +1,74 @@
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: svt.kafka-broker--local
+    restart: unless-stopped
+    ports:
+      - "9084:9084"  # INSIDE (inter-container)
+      - "9085:9085"  # TUNNEL (ssh)
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    networks:
+      - svt-network--local
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9083
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9084,TUNNEL://0.0.0.0:9085,CONTROLLER://0.0.0.0:9083
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9084,TUNNEL://localhost:9085
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,TUNNEL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: "INFO"
+      KAFKA_TOOLS_LOG4J_LOGLEVEL: "INFO"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"  # fixed cluster ID for KRaft mode
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-logs:/var/log/kafka
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9084", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: svt.kafka-ui--local
+    depends_on:
+      - kafka
+    ports:
+      - "8087:8080"
+    restart: unless-stopped
+    networks:
+      - svt-network--local
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=dev
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9084
+
+volumes:
+  kafka-data:
+    name: svt-kafka-data--local
+  kafka-logs:
+    name: svt-kafka-logs--local
+
+networks:
+  svt-network--local:
+    name: svt-network--local
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1500

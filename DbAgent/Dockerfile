@@ -32,6 +32,8 @@ COPY ./configs ./configs
 COPY ./docker-entrypoint.sh .
 
 FROM db-agent-base AS db-agent-build
+ARG VERSION
+ENV VERSION=${VERSION}
 COPY ./common ./common
 COPY ./app ./app
 COPY ./compile.sh ./compile.sh
