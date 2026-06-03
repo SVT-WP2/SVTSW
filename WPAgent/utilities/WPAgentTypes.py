@@ -81,3 +81,21 @@ class HelpAgentData(AgentData, total=False):
     commandInfo: dict
     totalCommands: int
     categories: dict
+
+
+class LoadedWaferData(AgentData, total=False):
+    """Extended AgentData for wafer query responses."""
+    hasWafer: bool
+    waferId: int | None
+
+
+class InstalledProbeCardData(AgentData, total=False):
+    """Extended AgentData for probe card query responses."""
+    hasProbeCard: bool
+    probeCardId: int | None
+
+
+class ListProbersData(AgentData, total=False):
+    """Extended AgentData for list probers response."""
+    probers: list
+    count: int

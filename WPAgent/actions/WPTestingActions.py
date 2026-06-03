@@ -193,7 +193,7 @@ def take_screenshot(
     """
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("TakeScreenshotReply", error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -259,7 +259,7 @@ def move_chuck_z(z, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -283,7 +283,7 @@ def move_chuck_center(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -308,7 +308,7 @@ def move_chuck_home(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -334,7 +334,7 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -370,7 +370,7 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -404,7 +404,7 @@ def move_chuck_wide(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -449,7 +449,7 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -482,7 +482,7 @@ def move_chuck_contact(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -515,7 +515,7 @@ def move_chuck_separation(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -634,7 +634,7 @@ def move_chuck_die(
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -668,7 +668,7 @@ def move_chuck_next_die(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -695,7 +695,7 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -730,7 +730,7 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -753,7 +753,7 @@ def run_ptpa(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -779,7 +779,7 @@ def init_probing(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -810,7 +810,7 @@ def find_home(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -839,7 +839,7 @@ def align_wafer(
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -894,7 +894,7 @@ def auto_focus(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -924,7 +924,7 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -964,7 +964,7 @@ def unload_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1002,7 +1002,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1038,7 +1038,7 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1078,7 +1078,7 @@ def open_project(projectName: str, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1110,47 +1110,6 @@ def open_project(projectName: str, user=None, waferAgentName=None):
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
-@validate_command
-def stress_open_project(projectName: str, user=None, waferAgentName=None):
-    """Open project"""
-    reply = get_reply_type()
-
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-    from actions.WPDataBaseActions import get_project_id_by_name
-
-    error = _ensure_initialized()
-    if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
-
-    g = SvtWPAagentGlobalParameters.getInstance()
-
-    N = 100  # ← edit here
-
-    try:
-        for i in range(N):
-            prober = get_current_prober()
-
-            project_path = os.path.join(str(g.projects_base_path), projectName)
-
-            print(f"[{i+1}/{N}] {projectName}")
-
-            prober.open_project(projectName)
-
-            g.projectName = projectName
-            g.set_project_name(projectName)
-            g.opened_project_id = get_project_id_by_name(projectName)
-
-            prober.go_to_separation()
-
-            update_current_info(currentProber=prober)
-            prober.local_mode()
-
-        return ResponseBuilder.success(reply, f"Opened project: {project_path}")
-
-    except Exception as e:
-        agentStateMachine.enter_error_state(str(e))
-        return ResponseBuilder.error(reply, str(e), 500)
-
 
 @validate_command
 def stress_open_project(
@@ -1164,10 +1123,10 @@ def stress_open_project(
     """Open project"""
 
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1219,7 +1178,7 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1250,7 +1209,7 @@ def get_chuck_position(user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -1272,7 +1231,7 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1305,7 +1264,7 @@ def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1337,7 +1296,7 @@ def local_mode(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()
@@ -1369,7 +1328,7 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
 
     # Get ASIC from database
     try:
@@ -1562,6 +1521,9 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
     agentStateMachine.transition("TestingUnlock")
 
 
+    return ResponseBuilder.success(reply, f"WP Agent unlocked (was locked by '{locked_by}')")
+
+
 @validate_command
 def move_chuck_top_left(user=None, waferAgentName=None):
 
@@ -1613,7 +1575,7 @@ def move_chuck_top_right(user=None, waferAgentName=None):
 
 @validate_command
 def move_chuck_bottom_left(user=None, waferAgentName=None):
-
+    reply = get_reply_type()
     error = _ensure_initialized()
     if error:
         return error
@@ -1640,7 +1602,7 @@ def move_chuck_bottom_right(user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error(reply, error["output"], 400)
+        return error
     try:
         prober = get_current_prober()
         prober.move_chuck_bottom_right()

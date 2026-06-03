@@ -39,7 +39,8 @@ class WaferProberAgent:
             return ResponseBuilder.error(f"{command}Reply", "'waferAgentName' is required in data", 400)
         wafer_agent_name = data["waferAgentName"]
         config_path = f"configs/ProbeConfig{wafer_agent_name}.json"
-        config = self._load_probe_config_with_db(config_path)
+        # sender side: file config only — no DB query needed, avoids consumer group conflict
+        config = self._load_probe_config(config_path)
         kafka_broker = config.get("kafka_broker")
 
         # Ensure Kafka is initialized
@@ -145,9 +146,10 @@ class WaferProberAgent:
             kafka_broker = file_config["kafka_broker"]
             print(f"   ✅ Using kafka_broker from config file: {kafka_broker}")
 
-        # Try to enrich with DB data
+        # Try to enrich with DB data — match by machineId, not location name
+        machine_id = file_config.get("machineId")
         db_config = self._load_from_database(
-            config_name, kafka_broker=kafka_broker, timeout=5.0
+            machine_id, kafka_broker=kafka_broker, timeout=5.0
         )
 
         if db_config:
@@ -160,46 +162,40 @@ class WaferProberAgent:
         print("   ✅ Loaded from config file")
         return file_config
 
-    def _load_from_database(self, location_name, kafka_broker=None, timeout=5.0):
+    def _load_from_database(self, machine_id, kafka_broker=None, timeout=5.0):
         """
-        Load prober configuration from database (silent - no prints on failure)
+        Enrich config with DB data using machineId from the config file.
+        Matches by ID — not by location name — so there's no ambiguity
+        when multiple machines share the same generalLocation.
 
-        NOTE: Does NOT include kafka_broker - that always comes from config file
-
-        Args:
-            location_name: Location name (e.g., "CERN")
-            kafka_broker: Kafka broker to use for DB connection
-            timeout: Query timeout in seconds
+        NOTE: kafka_broker is NOT included in the result — always comes from config file.
 
         Returns:
             Config dict or None if not found/error
         """
-        try:
-            # Import here to avoid circular dependency
-            from actions.WPDataBaseActions import get_machine_by_location
+        if not machine_id or machine_id == 0:
+            return None
 
-            # Query database with correct broker
-            machine_data = get_machine_by_location(
-                location_name,
-                kafka_broker=kafka_broker,  # ← Pass broker!
-                timeout=timeout,
-            )
+        try:
+            from actions.WPDataBaseActions import _find_machine_by_id
+            from services.WPDbKafkaClient import DBKafkaClient
+
+            if kafka_broker and DBKafkaClient._instance is None:
+                DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
+
+            machine_data = _find_machine_by_id(machine_id, timeout=timeout)
 
             if not machine_data:
                 return None
 
-            # Construct address from name + hostName
             machine_name = machine_data.get("name", "").lower()
             host_name = machine_data.get("hostName", "localhost")
 
-            # Build full address: wp<n>01.<hostname>
             if machine_name and host_name and host_name != "localhost":
                 full_address = f"{machine_name}01.{host_name}"
             else:
                 full_address = host_name
 
-            # Convert DB format to config format
-            # NOTE: kafka_broker is NOT included - always from config file
             config = {
                 "address": full_address,
                 "port": machine_data.get("connectionPort", 35555),
@@ -339,9 +335,7 @@ class WaferProberAgent:
                     print("   ✅ DB Kafka client initialized\n")
                 else:
                     print("⚠️  No kafka_broker in config, using defaults")
-                    self.health_check = ListenerHealthCheck(
-                        bootstrap_servers=kafka_broker
-                    )
+                    self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker)
                     self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
 
                 init_success = self._auto_initialize_prober(agent_name, config)
