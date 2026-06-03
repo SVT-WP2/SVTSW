@@ -1395,7 +1395,7 @@ paths:
       tags:
         - SvtTestTemplate
       summary: Create an entry to the SvtTestTemplate
-      description: Returns the newly created entry to the SvtTestSvtTestTemplate in the reply message
+      description: Returns the newly created entry to the SvtTestTemplate in the reply message
       requestBody:
         content:
           application/json:
@@ -1452,6 +1452,131 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  # TEST_LIST
+  /svt.db-agent.request/GetAllSvtTest:
+    post:
+      tags:
+        - SvtTest
+      summary: Get all SvtTest
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestsMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestsReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTest:
+    post:
+      tags:
+        - SvtTest
+      summary: Create an entry to the SvtTest
+      description: Returns the newly created entry to the SvtTest in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestStart:
+    post:
+      tags:
+        - SvtTest
+      summary: Update entry to the SvtTest with test start info
+      description: Returns the updated entry to the SvtTest in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestStartMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestStartReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestFinish:
+    post:
+      tags:
+        - SvtTest
+      summary: Update entry to the SvtTest
+      description: Returns the updated entry to the SvtTest in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestFinishMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestFinishReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   # ENUMS
   /svt.db-agent.request/GetAllEnums:
     post:
@@ -1484,7 +1609,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
-#
+
 components:
   schemas:
     RequestMessage:
@@ -1557,6 +1682,10 @@ components:
               items:
                 type: string
             dutType:
+              type: array
+              items:
+                type: string
+            testDeviceType:
               type: array
               items:
                 type: string
@@ -2883,6 +3012,123 @@ components:
             entity:
               $ref: "#/components/schemas/SvtTestTemplateDto"
     #
+    # TEST :: LIST
+    #
+    GetAllSvtTestsMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTests"
+        data:
+          type: object
+          properties:
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: number
+                    description: SvtTest ids array. If array is empty / undefined => all test list will be returned.
+                testDeviceType:
+                  type: array
+                  items:
+                    type: string
+                    description: Test device type (Asic, Chip, ChipBlock).
+    GetAllSvtTestsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestsReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestDto"
+    #
+    # TEST :: Create
+    #
+    CreateSvtTestMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTest"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestCreateDto"
+    CreateSvtTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestDto"
+    #
+    # TEST :: Start :: Update
+    #
+    UpdateSvtTestStartMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestStart"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: Test template id.
+            update:
+              $ref: "#/components/schemas/SvtTestStartUpdateDto"
+    UpdateSvtTestStartReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestStartReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestDto"
+    #
+    # TEST :: End :: Update
+    #
+    UpdateSvtTestFinishMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestFinish"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: Test template id.
+            update:
+              $ref: "#/components/schemas/SvtTestFinishUpdateDto"
+    UpdateSvtTestFinishReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestFinishReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestDto"
+    #
     # DTOs
     #
     WaferTypeDto:
@@ -3750,6 +3996,79 @@ components:
       properties:
         isEnabled:
           type: boolean
+    # TEST :: DTO
+    SvtTestDto:
+      required:
+        - id
+        - testDeviceType
+        - deviceId
+        - testTypeConfigId
+        - testSetupConfigId
+        - createsAt
+        - startedAt
+        - finishedAt
+        - pathToResult
+        - testResultStatus
+      properties:
+        id:
+          type: number
+        testDeviceType:
+          type: string
+        deviceId:
+          type: number
+        testTypeConfig:
+          type: number
+        testSetupConfigId:
+          type: number
+        createsAt:
+          type: string
+          description: Date only in format `2025-06-03`
+        startedAt:
+          type: string
+          description: Date only in format `2025-06-03`
+        finishedAt:
+          type: string
+          description: Date only in format `2025-06-03`
+        pathToResult:
+          type: string
+        testResultStatus:
+          type: string
+    SvtTestCreateDto:
+      required:
+        - testDeviceType
+        - deviceId
+        - testTypeConfig
+        - testSetupConfigId
+      properties:
+        testDeviceType:
+          type: string
+        deviceId:
+          type: number
+        testTypeConfig:
+          type: number
+        testSetupConfigId:
+          type: number
+    SvtTestStartUpdateDto:
+      required:
+        - startedAt
+      properties:
+        startedAt:
+          type: string
+          description: Date only in format `2025-06-03`
+    SvtTestFinishUpdateDto:
+      required:
+        - finishedAt
+        - pathToResult
+        - testResultStatus
+      properties:
+        finishedAt:
+          type: string
+          description: Date only in format `2025-06-03`
+        pathToResult:
+          type: string
+        testResultStatus:
+          type: string
+
     # ENUM :: DTO
     SvtEnumName:
       type: string
@@ -3758,6 +4077,7 @@ components:
         - asicQuality
         - blockType
         - dutType
+        - testDeviceType
         - engineeringRun
         - foundryName
         - pcLocation

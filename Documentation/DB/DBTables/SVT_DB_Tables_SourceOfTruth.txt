@@ -273,6 +273,15 @@ Table main.SvtTestList {
   testResultStatus varchar(50)
 }
 
+Table main.SvtTestListToDeviceType
+{
+  testDeviceType main.TestDeviceType [not null]
+  testId integer [ref:> main.SvtTestList.id]
+  indexes {
+    (testDeviceType,testId) [pk]
+  }
+}
+
 Table main.SvtAsicTestList {
   asicId integer [ref:> main.Asic.id]
   testId integer [ref:> main.SvtTestList.id]
@@ -405,6 +414,12 @@ Enum main.dutType {
   MOSAIX
   BABYMOSAIX
   AncMPW2_SLDO
+}
+
+Enum main.TestDeviceType {
+  Asic
+  Chip
+  ChipBlock
 }
 
 Enum main.engineeringRun {
