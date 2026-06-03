@@ -96,6 +96,48 @@ class ProberFactory:
         self._current_config = None
         print("🔄 Prober factory reset")
 
+    def reconnect(self) -> bool:
+        """
+        Re-establish connection to the prober using stored config.
+        Called automatically when a connection error is detected.
+
+        Returns:
+            True if reconnection succeeded, False otherwise.
+        """
+        if not self._current_config:
+            print("❌ Cannot reconnect — no previous config stored")
+            return False
+
+        machine_type, address = self._current_config
+        print(f"🔄 Attempting to reconnect to {machine_type} at {address}...")
+
+        try:
+            self._prober = None
+            self._initialized = False
+
+            prober_class = prober_classes[machine_type]
+            self._prober = prober_class(address)
+            self._initialized = True
+            print(f"✅ Reconnected to {machine_type} at {address}")
+            return True
+        except Exception as e:
+            print(f"❌ Reconnection failed: {str(e)}")
+            self._prober = None
+            self._initialized = False
+            return False
+
+    @staticmethod
+    def is_connection_error(exception: Exception) -> bool:
+        """
+        Check if an exception indicates a lost connection to the prober
+        rather than a logic or command error.
+        """
+        msg = str(exception).lower()
+        return any(kw in msg for kw in [
+            "connection", "socket", "timeout", "refused",
+            "reset", "broken pipe", "eof", "disconnected", "tcpip"
+        ])
+
 
 # Convenience function to maintain backward compatibility
 def get_prober(machineType: str, address: str):

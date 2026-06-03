@@ -178,41 +178,50 @@ def execute_command(message_type, data=None):
             return result
 
     try:
-        # Execute the command
-        # NOTE: State transitions are now handled INSIDE each command function
         action = COMMAND_ROUTER[message_type]
         result = action(**data)
 
-        # Determine severity based on result
         if result.get("status", "") == "Success":
             severity = Severity.INFO
         else:
-            # Check if it's a parameter error (less severe)
             error_msg = result.get("error", {}).get("message", "").lower()
-            if any(
-                kw in error_msg for kw in ["missing", "invalid parameter", "required"]
-            ):
+            if any(kw in error_msg for kw in ["missing", "invalid parameter", "required"]):
                 severity = Severity.WARNING
             else:
                 severity = Severity.ERROR
-                _try_local_mode()  # Try to recover by going to local mode
+                _try_local_mode()
 
     except Exception as e:
         import traceback
+        from drivers.WPFactory import ProberFactory
+
+        # Check if this is a connection error — attempt one reconnect and retry
+        if ProberFactory.is_connection_error(e):
+            print(f"⚠️  Connection error detected: {str(e)}")
+            print("🔄 Attempting automatic reconnection...")
+            factory = ProberFactory.get_instance()
+
+            if factory.reconnect():
+                print(f"🔁 Retrying command '{message_type}' after reconnect...")
+                try:
+                    result = action(**data)
+                    severity = Severity.INFO if result.get("status", "") == "Success" else Severity.ERROR
+                    log_msg = result.get("error", {}).get("message", "")
+                    logger.log_command(log_msg, severity, message_type, data, result)
+                    return result
+                except Exception as retry_e:
+                    print(f"❌ Retry failed after reconnect: {str(retry_e)}")
+                    e = retry_e
+
+            print("❌ Reconnection failed — entering error state")
 
         traceback.print_exc()
-
         result = ResponseBuilder.error("UnhandledErrorReply", str(e), 500)
         severity = Severity.ERROR
 
-        # If command threw exception, put state machine in error state
         if message_type not in BYPASS_COMMANDS:
             agentStateMachine.enter_error_state(str(e))
 
-        _try_local_mode()  # Try to recover
+        _try_local_mode()
 
-    # Log the command execution — read message from standard ResponseBuilder envelope
-    log_msg = result.get("error", {}).get("message", "")
-    logger.log_command(log_msg, severity, message_type, data, result)
-
-    return result
+    # Log the command ex
