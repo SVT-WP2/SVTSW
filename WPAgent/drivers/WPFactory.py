@@ -96,6 +96,91 @@ class ProberFactory:
         self._current_config = None
         print("🔄 Prober factory reset")
 
+    def reconnect(self, max_wait: float = 30.0, poll_interval: float = 2.0) -> bool:
+        """
+        Re-establish connection to the prober using stored config.
+        Waits for Sentio to report Ready before returning so the
+        retry command doesn't fire before Sentio is fully initialized.
+
+        Args:
+            max_wait: Max seconds to wait for Sentio to become Ready.
+            poll_interval: Seconds between status polls.
+
+        Returns:
+            True if reconnection succeeded and prober is Ready, False otherwise.
+        """
+        import time
+
+        if not self._current_config:
+            print("❌ Cannot reconnect — no previous config stored")
+            return False
+
+        machine_type, address = self._current_config
+        print(f"🔄 Attempting to reconnect to {machine_type} at {address}...")
+
+        try:
+            self._prober = None
+            self._initialized = False
+
+            prober_class = prober_classes[machine_type]
+            self._prober = prober_class(address)
+            self._initialized = True
+            print(f"✅ TCP connection established to {machine_type} at {address}")
+        except Exception as e:
+            print(f"❌ Reconnection failed: {str(e)}")
+            self._prober = None
+            self._initialized = False
+            return False
+
+        # Poll until Sentio reports Ready (it may still be initializing)
+        start = time.time()
+        while time.time() - start < max_wait:
+            try:
+                status = self._prober.get_machine_status()
+                if status == "Ready":
+                    print(f"✅ Sentio is Ready — reconnect successful")
+                    return True
+                print(f"   ⏳ Sentio status: {status} — waiting...")
+            except Exception:
+                print(f"   ⏳ Sentio not responding yet — waiting...")
+            time.sleep(poll_interval)
+
+        print(f"❌ Sentio did not become Ready within {max_wait}s")
+        self._prober = None
+        self._initialized = False
+        return False
+
+    @staticmethod
+    def is_connection_error(exception: Exception) -> bool:
+        """
+        Check if an exception indicates a lost connection to the prober
+        rather than a logic or command error.
+        Covers:
+        - TCP/socket errors (broken pipe, connection reset, etc.)
+        - Empty/malformed Sentio responses (Sentio restarting mid-command)
+        """
+        msg = str(exception).lower()
+
+        # Standard TCP/socket connection errors
+        tcp_error = any(kw in msg for kw in [
+            "connection", "socket", "timeout", "refused",
+            "reset", "broken pipe", "eof", "disconnected", "tcpip"
+        ])
+        if tcp_error:
+            return True
+
+        # Sentio returned empty/malformed response — happens right after restart
+        # e.g. "invalid literal for int() with base 10: ''"
+        empty_response = (
+            isinstance(exception, ValueError)
+            and "invalid literal for int" in msg
+            and "''" in msg
+        )
+        if empty_response:
+            return True
+
+        return False
+
 
 # Convenience function to maintain backward compatibility
 def get_prober(machineType: str, address: str):

@@ -86,3 +86,11 @@ class AbstractProber(ABC):
     def enable_overtravel(self, overtravel: bool):
         """Enable overtravel"""
         pass
+
+    @abstractmethod
+    def get_machine_status(self) -> str:
+        """
+        Get Sentio machine status.
+        Returns: 'NotReady', 'Ready', 'Running', or 'Unknown'
+        """
+        pass

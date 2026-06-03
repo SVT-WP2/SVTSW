@@ -354,3 +354,7 @@ class MockProberImpl:
 
     def __str__(self):
         return f"Mock Prober at {self.address}"
+
+    def get_machine_status(self) -> str:
+        """Mock always returns Ready"""
+        return "Ready"
