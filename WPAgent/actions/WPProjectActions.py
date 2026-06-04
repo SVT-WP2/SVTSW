@@ -89,6 +89,7 @@ def _store_globals(globals_, address, machine_type, machine_id, machine_name,
 
     globals_.wpag_state = "ServiceOn"
 
+
 def _sync_from_db(globals_, machine_id, is_mock):
     """
     Sync loaded wafer and probe card state from the database.
@@ -99,7 +100,7 @@ def _sync_from_db(globals_, machine_id, is_mock):
 
     try:
         db_client = DBKafkaClient.get_instance()
-        machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
+        machines = db_client.get_all_wafer_probe_machines(timeout=5.0)
         our_machine = next((m for m in machines if m.get("id") == machine_id), None)
 
         if not our_machine:
@@ -151,7 +152,7 @@ def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mo
     elif machine_id and machine_id != 0:
         try:
             result = actions.WPDataBaseActions.get_project_id_by_name(
-                project_name, timeout=15.0
+                project_name, timeout=5.0
             )
             if result and result.get("status") == "Success":
                 proj_id = result.get("data", {}).get("projectId")

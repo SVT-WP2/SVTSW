@@ -193,7 +193,7 @@ def take_screenshot(
     """
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error("TakeScreenshotReply", error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -248,6 +248,9 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
         )
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -259,7 +262,7 @@ def move_chuck_z(z, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -272,6 +275,9 @@ def move_chuck_z(z, user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckZ")
         return ResponseBuilder.success(reply, f"Moved chuck to z={z}")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -283,7 +289,7 @@ def move_chuck_center(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -297,6 +303,9 @@ def move_chuck_center(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckCenter")
         return ResponseBuilder.success(reply, f"Moved chuck to Center")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -308,7 +317,7 @@ def move_chuck_home(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -322,6 +331,9 @@ def move_chuck_home(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, "Chuck moved home")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -334,7 +346,7 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -358,6 +370,9 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         )
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -370,7 +385,7 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -392,6 +407,9 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
             reply, "Probe station is in off-axis position"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -404,7 +422,7 @@ def move_chuck_wide(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -426,6 +444,9 @@ def move_chuck_wide(user=None, waferAgentName=None):
             reply, "Probe station is in wide position"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -449,7 +470,7 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -470,6 +491,9 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
             reply, "Probe station is in safe position"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -482,7 +506,7 @@ def move_chuck_contact(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -503,6 +527,9 @@ def move_chuck_contact(user=None, waferAgentName=None):
             reply, "Probe station is in contact"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -515,7 +542,7 @@ def move_chuck_separation(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -535,6 +562,9 @@ def move_chuck_separation(user=None, waferAgentName=None):
             reply, "Probe station is in separation"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -634,7 +664,7 @@ def move_chuck_die(
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -657,6 +687,9 @@ def move_chuck_die(
         return ResponseBuilder.success(reply, message)
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -668,7 +701,7 @@ def move_chuck_next_die(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -684,6 +717,9 @@ def move_chuck_next_die(user=None, waferAgentName=None):
             reply, f"Stepped to next die: {result}"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -695,7 +731,7 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -713,6 +749,9 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         )
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -730,7 +769,7 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -742,6 +781,9 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, f"PTPA {status}")
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -753,7 +795,7 @@ def run_ptpa(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -768,6 +810,9 @@ def run_ptpa(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, "PTPA executed")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -779,7 +824,7 @@ def init_probing(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -799,6 +844,9 @@ def init_probing(user=None, waferAgentName=None):
         agentStateMachine.transition("InitProbing")
         return ResponseBuilder.success(reply, f"Initialization complete")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -810,7 +858,7 @@ def find_home(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -825,6 +873,9 @@ def find_home(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, "Found home position")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -839,7 +890,7 @@ def align_wafer(
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -883,6 +934,9 @@ def align_wafer(
         )
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -894,7 +948,7 @@ def auto_focus(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -911,6 +965,9 @@ def auto_focus(user=None, waferAgentName=None):
             reply, "Auto-focus command successfully executed"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -924,7 +981,7 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -951,6 +1008,9 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
         return ResponseBuilder.success(reply, "Wafer has been loaded")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -964,7 +1024,7 @@ def unload_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -990,6 +1050,9 @@ def unload_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, "Wafer unloaded")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1002,7 +1065,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1026,6 +1089,9 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         )
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1038,7 +1104,7 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1064,6 +1130,9 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, "Wafer unloaded")
     except Exception as e:
 
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1078,7 +1147,7 @@ def open_project(projectName: str, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1107,6 +1176,9 @@ def open_project(projectName: str, user=None, waferAgentName=None):
         )
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1121,12 +1193,12 @@ def stress_open_project(
     waferAgentName=None,
 ):
     """Open project"""
-
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
     reply = get_reply_type()
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1167,6 +1239,9 @@ def stress_open_project(
         return ResponseBuilder.success(reply, f"test is DONE")
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1178,7 +1253,7 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1199,6 +1274,9 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
             reply, f"Switched camera to {mountPoint}"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1209,7 +1287,7 @@ def get_chuck_position(user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -1219,6 +1297,9 @@ def get_chuck_position(user=None, waferAgentName=None):
 
         return ResponseBuilder.success(reply, f"Chuck is {position}")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1231,7 +1312,7 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1252,6 +1333,9 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
             reply, "SetOvertravel command successfully executed"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1264,7 +1348,7 @@ def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -1285,6 +1369,9 @@ def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
             reply, "DisableOvertravel command successfully executed"
         )
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1296,7 +1383,7 @@ def local_mode(user=None, waferAgentName=None):
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     try:
         prober = get_current_prober()
@@ -1309,6 +1396,9 @@ def local_mode(user=None, waferAgentName=None):
 
         return ResponseBuilder.success(reply, "Local mode")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1328,7 +1418,7 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
 
     # Get ASIC from database
     try:
@@ -1384,6 +1474,9 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
         )
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1521,9 +1614,6 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
     agentStateMachine.transition("TestingUnlock")
 
 
-    return ResponseBuilder.success(reply, f"WP Agent unlocked (was locked by '{locked_by}')")
-
-
 @validate_command
 def move_chuck_top_left(user=None, waferAgentName=None):
 
@@ -1546,6 +1636,9 @@ def move_chuck_top_left(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, f"Moved chuck to Top Left corner")
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1570,6 +1663,9 @@ def move_chuck_top_right(user=None, waferAgentName=None):
         return ResponseBuilder.success(reply, f"Moved chuck to Top Right corner")
 
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1592,6 +1688,9 @@ def move_chuck_bottom_left(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckBottomLeft")
         return ResponseBuilder.success(reply, "Chuck moved to bottom-left")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
@@ -1602,7 +1701,7 @@ def move_chuck_bottom_right(user=None, waferAgentName=None):
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
-        return error
+        return ResponseBuilder.error(reply, error["output"], 400)
     try:
         prober = get_current_prober()
         prober.move_chuck_bottom_right()
@@ -1610,5 +1709,8 @@ def move_chuck_bottom_right(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckBottomRight")
         return ResponseBuilder.success(reply, "Chuck moved to bottom-right")
     except Exception as e:
+        from drivers.WPFactory import ProberFactory
+        if ProberFactory.is_connection_error(e):
+            raise  # let execute_command handle reconnect
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
