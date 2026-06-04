@@ -96,14 +96,21 @@ class ProberFactory:
         self._current_config = None
         print("🔄 Prober factory reset")
 
-    def reconnect(self) -> bool:
+    def reconnect(self, max_wait: float = 30.0, poll_interval: float = 2.0) -> bool:
         """
         Re-establish connection to the prober using stored config.
-        Called automatically when a connection error is detected.
+        Waits for Sentio to report Ready before returning so the
+        retry command doesn't fire before Sentio is fully initialized.
+
+        Args:
+            max_wait: Max seconds to wait for Sentio to become Ready.
+            poll_interval: Seconds between status polls.
 
         Returns:
-            True if reconnection succeeded, False otherwise.
+            True if reconnection succeeded and prober is Ready, False otherwise.
         """
+        import time
+
         if not self._current_config:
             print("❌ Cannot reconnect — no previous config stored")
             return False
@@ -118,13 +125,30 @@ class ProberFactory:
             prober_class = prober_classes[machine_type]
             self._prober = prober_class(address)
             self._initialized = True
-            print(f"✅ Reconnected to {machine_type} at {address}")
-            return True
+            print(f"✅ TCP connection established to {machine_type} at {address}")
         except Exception as e:
             print(f"❌ Reconnection failed: {str(e)}")
             self._prober = None
             self._initialized = False
             return False
+
+        # Poll until Sentio reports Ready (it may still be initializing)
+        start = time.time()
+        while time.time() - start < max_wait:
+            try:
+                status = self._prober.get_machine_status()
+                if status == "Ready":
+                    print(f"✅ Sentio is Ready — reconnect successful")
+                    return True
+                print(f"   ⏳ Sentio status: {status} — waiting...")
+            except Exception:
+                print(f"   ⏳ Sentio not responding yet — waiting...")
+            time.sleep(poll_interval)
+
+        print(f"❌ Sentio did not become Ready within {max_wait}s")
+        self._prober = None
+        self._initialized = False
+        return False
 
     @staticmethod
     def is_connection_error(exception: Exception) -> bool:

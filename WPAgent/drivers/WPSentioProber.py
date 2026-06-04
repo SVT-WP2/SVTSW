@@ -307,3 +307,15 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
+
+    def get_machine_status(self) -> str:
+        """Query Sentio machine status via remote command status:get_machine_status"""
+        try:
+            resp = self.prober.send_cmd("status:get_machine_status")
+            # Response format: "0,0,Ready" or "0,0,NotReady" etc.
+            parts = resp.split(",")
+            if len(parts) >= 3:
+                return parts[2].strip()
+            return "Unknown"
+        except Exception:
+            return "Unknown"

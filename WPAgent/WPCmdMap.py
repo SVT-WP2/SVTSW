@@ -224,4 +224,8 @@ def execute_command(message_type, data=None):
 
         _try_local_mode()
 
-    # Log the command ex
+    # Log the command execution result
+    log_msg = result.get("error", {}).get("message", "")
+    logger.log_command(log_msg, severity, message_type, data, result)
+
+    return result

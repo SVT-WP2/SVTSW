@@ -8,6 +8,14 @@ from utilities.WPResponseBuilder import ResponseBuilder
 from utilities.WPValidationDecorator import validate_command_with_name, get_reply_type
 import actions.WPTestingActions as testingActions
 from drivers.WPFactory import get_current_prober
+
+
+def _safe_update_info(prober):
+    """Update prober state — non-fatal if prober is still warming up after reconnect."""
+    try:
+        _safe_update_info(prober)
+    except Exception as e:
+        print(f"⚠️  Could not update prober info (non-fatal): {str(e)}")
 import pathlib
 
 _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
@@ -60,7 +68,7 @@ def UserLogIn(
             agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
         else:
             agentStateMachine.force_state(WPAgentState.UserLogged)
-        testingActions.update_current_info(currentProber=prober)
+        _safe_update_info(prober)
         return ResponseBuilder.success(
             reply,
             f"User '{user}' logged in successfully. Hierarchy: {user_hierarchy}",
@@ -68,7 +76,7 @@ def UserLogIn(
 
     # CASE 2: Different user trying to log in
     elif g_userLogged != user:
-        testingActions.update_current_info(currentProber=prober)
+        _safe_update_info(prober)
         if user_hierarchy == "Developer" and g_userLoggedHierarchy != "Developer":
             print(f"Developer '{user}' taking control from user '{g_userLogged}'")
             g.set_user(user, user_hierarchy)
@@ -78,14 +86,14 @@ def UserLogIn(
                 f"Developer '{user}' has taken control from '{g_userLogged}'.",
             )
         elif user_hierarchy == "Developer" and g_userLoggedHierarchy == "Developer":
-            testingActions.update_current_info(currentProber=prober)
+            _safe_update_info(prober)
             return ResponseBuilder.error(
                 reply,
                 f"Cannot take control: Developer '{g_userLogged}' is currently logged in.",
                 409,
             )
         else:
-            testingActions.update_current_info(currentProber=prober)
+            _safe_update_info(prober)
             return ResponseBuilder.error(
                 reply,
                 f"Another user is currently logged in: {g_userLogged}.",
@@ -94,7 +102,7 @@ def UserLogIn(
 
     # CASE 3: Same user already logged in
     else:
-        testingActions.update_current_info(currentProber=prober)
+        _safe_update_info(prober)
         return ResponseBuilder.success(
             reply, f"User '{user}' is already logged in."
         )
