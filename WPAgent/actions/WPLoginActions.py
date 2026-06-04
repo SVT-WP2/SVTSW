@@ -13,9 +13,11 @@ from drivers.WPFactory import get_current_prober
 def _safe_update_info(prober):
     """Update prober state — non-fatal if prober is still warming up after reconnect."""
     try:
-        _safe_update_info(prober)
+        testingActions.update_current_info(currentProber=prober)
     except Exception as e:
         print(f"⚠️  Could not update prober info (non-fatal): {str(e)}")
+
+
 import pathlib
 
 _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
