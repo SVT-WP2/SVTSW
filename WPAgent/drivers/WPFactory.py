@@ -155,12 +155,31 @@ class ProberFactory:
         """
         Check if an exception indicates a lost connection to the prober
         rather than a logic or command error.
+        Covers:
+        - TCP/socket errors (broken pipe, connection reset, etc.)
+        - Empty/malformed Sentio responses (Sentio restarting mid-command)
         """
         msg = str(exception).lower()
-        return any(kw in msg for kw in [
+
+        # Standard TCP/socket connection errors
+        tcp_error = any(kw in msg for kw in [
             "connection", "socket", "timeout", "refused",
             "reset", "broken pipe", "eof", "disconnected", "tcpip"
         ])
+        if tcp_error:
+            return True
+
+        # Sentio returned empty/malformed response — happens right after restart
+        # e.g. "invalid literal for int() with base 10: ''"
+        empty_response = (
+            isinstance(exception, ValueError)
+            and "invalid literal for int" in msg
+            and "''" in msg
+        )
+        if empty_response:
+            return True
+
+        return False
 
 
 # Convenience function to maintain backward compatibility
