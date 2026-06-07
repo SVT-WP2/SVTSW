@@ -1,0 +1,28 @@
+[Unit]
+Description=Kafka Stack for SVTSW Dev Environment
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+
+# Directory must exist (systemd chdir's here before ExecStart). The compose
+# file itself is passed explicitly with -f below, so its name need not be a default.
+WorkingDirectory=/opt/docker
+
+# -p pins the Compose project name so Dev and Prod stay isolated on a shared host
+# (see README). '-' prefix on pull => non-fatal: a registry hiccup won't block startup.
+ExecStartPre=-/bin/docker compose -p svt-kafka--dev -f /opt/docker/docker-compose-kafka-dev.yml pull
+
+ExecStart=/bin/docker compose -p svt-kafka--dev -f /opt/docker/docker-compose-kafka-dev.yml up -d --remove-orphans
+ExecStop=/bin/docker compose -p svt-kafka--dev -f /opt/docker/docker-compose-kafka-dev.yml down
+
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

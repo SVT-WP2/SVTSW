@@ -124,11 +124,11 @@ This needs a **`RELEASE_PAT`** secret (a tag pushed with `GITHUB_TOKEN` would no
 
 | `script` choice | `0.1.2` becomes | Tag (pushed) | Image (`ui.yml` builds on the tag) | 2nd commit (`[skip ci]`) |
 |---|---|---|---|---|
-| `next-major-version` | `1.0.0` | `svt-ui-1.0.0` | `svt-ui:1.0.0` | `svt-ui@1.1.0-SNAPSHOT.0` |
-| `next-minor-version` | `0.2.0` | `svt-ui-0.2.0` | `svt-ui:0.2.0` | `svt-ui@0.3.0-SNAPSHOT.0` |
-| `next-patch-version` | `0.1.3` | `svt-ui-0.1.3` | `svt-ui:0.1.3` | — |
-| `next-preminor-version` | `0.2.0-SNAPSHOT.0` | `svt-ui-0.2.0-SNAPSHOT.0` | `svt-ui:0.2.0-SNAPSHOT.0` + `:latest` | — |
-| `next-snapshot-version` | `0.1.3-SNAPSHOT.0` | `svt-ui-0.1.3-SNAPSHOT.0` | `svt-ui:0.1.3-SNAPSHOT.0` + `:latest` | — |
+| `next-major-version` | `1.0.0` | `svt-ui-1.0.0` | `svt-ui:1.0.0` + `:latest` | `svt-ui@1.1.0-SNAPSHOT.0` |
+| `next-minor-version` | `0.2.0` | `svt-ui-0.2.0` | `svt-ui:0.2.0` + `:latest` | `svt-ui@0.3.0-SNAPSHOT.0` |
+| `next-patch-version` | `0.1.3` | `svt-ui-0.1.3` | `svt-ui:0.1.3` + `:latest` | — |
+| `next-preminor-version` | `0.2.0-SNAPSHOT.0` | `svt-ui-0.2.0-SNAPSHOT.0` | `svt-ui:0.2.0-SNAPSHOT.0` | — |
+| `next-snapshot-version` | `0.1.3-SNAPSHOT.0` | `svt-ui-0.1.3-SNAPSHOT.0` | `svt-ui:0.1.3-SNAPSHOT.0` | — |
 
 ```mermaid
 flowchart TD
@@ -158,7 +158,8 @@ Key points:
   not the snapshot.
 - Every release **auto-deploys to dev**: after the image is built, `deploy-dev--release` runs it on the
   `svt.ui--dev` container (any release type, including SNAPSHOTs). Prod stays manual (Scenario 4).
-- `:latest` is moved only by the SNAPSHOT bumps (`next-preminor-version` / `next-snapshot-version`).
+- `:latest` is moved only by **stable** releases (`next-major-version` / `next-minor-version` /
+  `next-patch-version`); the SNAPSHOT bumps (`next-preminor-version` / `next-snapshot-version`) don't touch it.
 - Releases **skip CI**: the `svt-ui-*` tag build (`docker-registry-create--release` →
   `deploy-dev--release`) runs **without** install/lint/test/assemble — those already ran on `master`
   before the release was cut. The release commit's own master push is a no-op (all jobs skip `svt-ui@`

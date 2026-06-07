@@ -37,6 +37,7 @@ ENV VERSION=${VERSION}
 COPY ./common ./common
 COPY ./app ./app
 COPY ./compile.sh ./compile.sh
+COPY ./VERSION ./VERSION
 
 # Copy the source code into the container
 RUN /bin/bash ./compile.sh
