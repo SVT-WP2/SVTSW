@@ -1,0 +1,144 @@
+name: 'UI :: Manual'
+
+# Manual-only operations, run from the Actions UI (Run workflow → pick a job).
+# Extracted from ui.yml so that workflow stays automatic-only (push / PR / tag).
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Manual job to run'
+        required: true
+        default: 'deploy-dev--manual'
+        type: choice
+        options:
+          - docker-registry-create--manual
+          - deploy-dev--manual
+          - deploy-prod--manual
+      image_tag:
+        description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-registry-create--manual (always builds short SHA).'
+        required: false
+        type: string
+
+concurrency:
+  # Serialize manual ops (one at a time) so concurrent deploys can't clobber
+  # each other; never cancel an in-progress deploy.
+  group: ui-manual
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: svt-wp2/svt-ui
+
+defaults:
+  run:
+    working-directory: UI
+
+jobs:
+  docker-registry-create--manual:
+    if: inputs.job == 'docker-registry-create--manual'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.tag }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+
+  deploy-dev--manual:
+    if: inputs.job == 'deploy-dev--manual'
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - name: Deploy
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — this step runs on the self-hosted runner with no checkout, so the
+        # UI/ subdirectory doesn't exist. runner.temp is always defined and
+        # always exists.
+        working-directory: ${{ runner.temp }}
+        env:
+          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
+          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
+          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '8090' }}
+          INPUT_TAG: ${{ inputs.image_tag }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          IMAGE_TAG="${INPUT_TAG:-${GITHUB_SHA::8}}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+          echo "Deploying ${IMAGE} locally"
+          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
+          sudo docker pull "${IMAGE}"
+          sudo docker stop svt.ui--dev || true
+          sudo docker rm svt.ui--dev || true
+          sudo docker run -d \
+            --name svt.ui--dev \
+            --restart unless-stopped \
+            --network svt-network--dev \
+            --add-host=host.docker.internal:host-gateway \
+            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
+            -e SVT_UI_PORT="${SVT_UI_PORT}" \
+            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
+            -e APP_VERSION="${IMAGE_TAG}" \
+            -e NODE_ENV=production \
+            "${IMAGE}"
+
+  # Manual production deploy. Run from the Actions UI once a release image exists
+  # for a `svt-ui-*` tag. Requires `image_tag` input (the release version,
+  # e.g. 1.2.3) and the `environment: prod` approval gate (configure Required
+  # reviewers in repo Settings -> Environments -> prod).
+  deploy-prod--manual:
+    if: inputs.job == 'deploy-prod--manual'
+    runs-on: self-hosted
+    environment: prod
+    steps:
+      - name: Deploy
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — this step runs on the self-hosted runner with no checkout, so the
+        # UI/ subdirectory doesn't exist. runner.temp is always defined and
+        # always exists.
+        working-directory: ${{ runner.temp }}
+        env:
+          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
+          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
+          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '80' }}
+          INPUT_TAG: ${{ inputs.image_tag }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${INPUT_TAG}" ]]; then
+            echo "ERROR: image_tag input is required for deploy-prod--manual" >&2
+            exit 1
+          fi
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${INPUT_TAG}"
+          echo "Deploying ${IMAGE} locally"
+          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
+          sudo docker pull "${IMAGE}"
+          sudo docker stop svt.ui || true
+          sudo docker rm svt.ui || true
+          sudo docker run -d \
+            --name svt.ui \
+            --restart unless-stopped \
+            --add-host=host.docker.internal:host-gateway \
+            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
+            -e SVT_UI_PORT="${SVT_UI_PORT}" \
+            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
+            -e APP_VERSION="${INPUT_TAG}" \
+            -e NODE_ENV=production \
+            "${IMAGE}"
