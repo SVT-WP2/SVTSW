@@ -16,10 +16,10 @@ def take_image(
         snapshot_type="CameraRaw",
         save_locally=True,
         outputDir="screenshots",
-        num_columns=10,              #BAM: 28882x23475
-        num_rows=8,
-        column_spacing_um=-2967,
-        row_spacing_um=2476,
+        num_columns=5,              #BAM: 28882x23475 10columns 8rows
+        num_rows=5,
+        column_spacing_um=-2623,
+        row_spacing_um=2133,
         start_x_um=-21088,
         start_y_um=-27245,
         settle_time_s=1,
@@ -48,6 +48,7 @@ def take_image(
         os.makedirs(outputDir, exist_ok=True)
 
         prober.find_home()
+        prober.go_to_die(-3, 0)
         prober.move_chuck_xy(start_x_um, start_y_um, "Relative")
         prober.move_chuck_xy(column_spacing_um/4, -row_spacing_um/4, "Relative")
         time.sleep(settle_time_s)
