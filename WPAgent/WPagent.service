@@ -9,7 +9,7 @@ User=root
 
 WorkingDirectory=/data/SVTSoftware/SVTSW/WPAgent
 
-ExecStart=/data/SVTSoftware/SVTSW/WPAgent/WPAgent.sh listen CERN
+ExecStart=/data/SVTSoftware/SVTSW/WPAgent/WPAgent.sh listen configs/ProbeConfigCERN.json
 
 Restart=always
 RestartSec=2
