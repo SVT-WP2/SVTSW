@@ -243,10 +243,10 @@ class TestRunner:
 
     def test_project_status(self):
         """Test 8: Get project status"""
-        from actions.WPProjectActions import get_project_status
+        from actions.WPProjectActions import show_status
 
         print("\n8. Getting project status...")
-        result = get_project_status()
+        result = show_status()
         print(f"Result: {result}")
 
         self.assert_equal(result["status"], "success", "Status check failed")

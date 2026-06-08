@@ -79,7 +79,7 @@ fi
 echo "========================================"
 echo " contract checks (naming + ResponseBuilder)"
 echo "========================================"
-if ! $PY linters/check_contracts.py; then
+if ! $PY linters/CheckContracts.py; then
     ERRORS=1
 fi
 echo ""
@@ -88,7 +88,7 @@ echo ""
 echo "========================================"
 echo " Kafka conventions (topics/headers/status)"
 echo "========================================"
-if ! $PY linters/check_kafka_conventions.py --no-color; then
+if ! $PY linters/CheckKafkaConventions.py --no-color; then
     ERRORS=1
 fi
 echo ""

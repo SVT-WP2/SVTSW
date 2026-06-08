@@ -64,7 +64,7 @@ echo.
 echo ========================================
 echo  contracts  (naming + ResponseBuilder)
 echo ========================================
-%PY% linters\check_contracts.py
+%PY% linters\CheckContracts.py
 if errorlevel 1 set ERRORS=1
 echo.
 
@@ -72,7 +72,7 @@ echo.
 echo ========================================
 echo  Kafka conventions  (topics/headers/status)
 echo ========================================
-%PY% linters\check_kafka_conventions.py --no-color
+%PY% linters\CheckKafkaConventions.py --no-color
 if errorlevel 1 set ERRORS=1
 echo.
 

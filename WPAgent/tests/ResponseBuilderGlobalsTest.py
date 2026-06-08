@@ -5,12 +5,11 @@ Test ResponseBuilder and Global Parameters
 
 import sys
 import os
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from utilities.WPResponseBuilder import ResponseBuilder
 import json
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestResponseBuilder:
@@ -200,7 +199,7 @@ class TestResponseBuilder:
 
         # Test data fields
         data = response["data"]
-        self.assert_equal(data["user"], "test_user", "data.user correct")
+        self.assert_equal(data["userLogged"], "test_user", "data.user correct")
         self.assert_equal(
             data["asicSerialNumber"], 12345, "data.asicSerialNumber correct"
         )
@@ -219,9 +218,9 @@ class TestResponseBuilder:
         )
 
         # Test probe card object
-        self.assert_not_none(data["instaledprobeCard"], "instaledprobeCard not null")
+        self.assert_not_none(data["installedProbeCard"], "installedProbeCard not null")
         self.assert_equal(
-            data["instaledprobeCard"]["probeCardId"], 456, "probeCard ID correct"
+            data["installedProbeCard"]["probeCardId"], 456, "probeCard ID correct"
         )
 
         # Test project fields
@@ -298,7 +297,7 @@ class TestResponseBuilder:
 
         # Test null values
         self.assert_equal(data["loadedWafer"], None, "loadedWafer is null")
-        self.assert_equal(data["instaledprobeCard"], None, "probeCard is null")
+        self.assert_equal(data["installedProbeCard"], None, "probeCard is null")
         self.assert_equal(data["waferMapDiePosition"], None, "diePosition is null")
 
         self.print_json(data, "Data with Nulls")

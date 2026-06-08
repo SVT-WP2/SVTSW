@@ -1,14 +1,5 @@
 from enum import Enum, auto
-
-# Commands that work in ANY state
-BYPASS_COMMANDS = {
-    "UserLogIn",
-    "UserLogOut",
-    "Help",
-    "AutoFocus",
-    "Initialize",
-    "ResetAgent",
-}
+from utilities.WPCommandConstants import BYPASS_COMMANDS
 
 
 class WPAgentState(Enum):
@@ -137,7 +128,7 @@ class WPAgentStateMachine:
             # From OnDie_Wide_withPTPA
             WPAgentState.OnDie_Wide_withPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
-                "SetOverdrive": WPAgentState.OnDie_Wide_withPTPA,
+                "SetChuckOvertravel": WPAgentState.OnDie_Wide_withPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
@@ -147,7 +138,7 @@ class WPAgentStateMachine:
             # From OnDie_Wide_withoutPTPA
             WPAgentState.OnDie_Wide_withoutPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
-                "SetOverdrive": WPAgentState.OnDie_Wide_withoutPTPA,
+                "SetChuckOvertravel": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
                 "MoveChuckOffAxis": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
@@ -170,7 +161,7 @@ class WPAgentStateMachine:
                 "MoveChuckToWorkArea": WPAgentState.UsedByDeveloper,
                 "FindHome": WPAgentState.UsedByDeveloper,
                 "SwitchCamera": WPAgentState.UsedByDeveloper,
-                "SetOvertravel": WPAgentState.UsedByDeveloper,
+                "SetChuckOvertravel": WPAgentState.UsedByDeveloper,
                 "DisableOvertravel": WPAgentState.UsedByDeveloper,
                 "LocalMode": WPAgentState.UsedByDeveloper,
                 "TakeScreenshot": WPAgentState.UsedByDeveloper,

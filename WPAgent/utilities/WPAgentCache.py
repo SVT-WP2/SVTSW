@@ -53,7 +53,7 @@ class WPAgentCache:
                 self.kafka_producer.produce(
                     self.kafka_topic,
                     value=json.dumps(cache_entry).encode("utf-8"),
-                    callback=self.delivery_report,
+                    callback=self._delivery_report,
                 )
                 self.kafka_producer.poll(0)
             except Exception as e:
