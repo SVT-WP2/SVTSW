@@ -235,6 +235,18 @@ class WPAgentClient:
 
     def move_chuck_home(self) -> dict:
         return self.send("MoveChuckHome")
+    
+    def move_chuck_bottom_left(self) -> dict:
+        return self.send("MoveChuckBottomLeft")
+    
+    def move_chuck_bottom_right(self) -> dict:
+        return self.send("MoveChuckBottomRight")
+    
+    def move_chuck_top_left(self) -> dict:
+        return self.send("MoveChuckTopLeft")
+    
+    def move_chuck_top_right(self) -> dict:
+        return self.send("MoveChuckTopRight")
 
     def go_to_separation(self, timeout: float = 30.0) -> dict:
         return self.send("MoveChuckSeparation", timeout=timeout)
@@ -544,9 +556,13 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckWide: %s", resp.get("output", resp))
 
-        resp = wp.move_chuck_xy(x=15,y=15, position="Relative")
+        # resp = wp.move_chuck_xy(x=15,y=15, position="Relative")
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
+
+        resp = wp.move_chuck_bottom_left()
         if resp.get("status", "").lower() not in ("success", "ok"):
-            log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
+            log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
 
         resp = wp.move_chuck_contact()
         if resp.get("status", "").lower() not in ("success", "ok"):
@@ -574,9 +590,6 @@ class ITS3Runner:
         resp = wp.move_chuck_center()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckCenter failed: %s", resp.get("output", resp))
-        # resp = wp.move_chuck_xy(x=132980,y=-10106)  # hardcoded for SEG - TODO!!!
-        # if resp.get("status", "").lower() not in ("success", "ok"):
-        #     log.warning("MoveChuckXY to center failed: %s", resp.get("output", resp))
         resp = wp.auto_focus()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("AutoFocus failed: %s", resp.get("output", resp))
