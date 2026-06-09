@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
 
+# The build version comes from the DbAgent/VERSION file (bumped by the
+# DbAgent :: Release workflow) and is passed to CMake as -DVERSION=... by compile.sh; that is
+# what configure_file() stamps into version.h further below. The VERSION on the
+# project() line is only the nominal CMake project version (PROJECT_VERSION) and is
+# not used at build or runtime.
 project(
   svt-db-agent
-  VERSION 1.0.0
+  VERSION 0.0.0
   LANGUAGES CXX)
 
 include(FetchContent)

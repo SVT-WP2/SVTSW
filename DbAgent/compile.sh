@@ -12,24 +12,19 @@ EOF
 
 THIS_SCRIPT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]:-0}")" &>/dev/null && pwd -P)
 
-# Resolve the app version. In Docker builds the workflow passes VERSION as
-# a build arg, which the Dockerfile exports into the env. Locally we mirror
-# the GitHub workflow logic: if HEAD is exactly at a `svt-dbagent-*` tag,
-# strip the prefix (svt-dbagent-1.2.3 -> 1.2.3); otherwise use the short SHA.
+# Resolve the app version. CI/Docker pass VERSION as a build arg, which the
+# Dockerfile exports into the env, and it takes precedence. Otherwise fall back to
+# the DbAgent/VERSION file — the single source of truth (bumped by the DbAgent :: Release workflow).
 resolve_version() {
   if [[ -n "${VERSION:-}" ]]; then
     return 0
   fi
-  if ! command -v git >/dev/null 2>&1 \
-    || ! git -C "$THIS_SCRIPT_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo -e "${RED}ERROR: VERSION not set and not in a git repo${RESET}" >&2
-    exit 1
+  if [[ -f "$THIS_SCRIPT_PATH/VERSION" ]]; then
+    VERSION=$(tr -d '[:space:]' < "$THIS_SCRIPT_PATH/VERSION")
   fi
-  local tag
-  if tag=$(git -C "$THIS_SCRIPT_PATH" describe --tags --exact-match --match 'svt-dbagent-*' 2>/dev/null); then
-    VERSION="${tag#svt-dbagent-}"
-  else
-    VERSION=$(git -C "$THIS_SCRIPT_PATH" rev-parse --short=8 HEAD)
+  if [[ -z "${VERSION:-}" ]]; then
+    echo -e "${RED}ERROR: VERSION not set and $THIS_SCRIPT_PATH/VERSION not found${RESET}" >&2
+    exit 1
   fi
 }
 
