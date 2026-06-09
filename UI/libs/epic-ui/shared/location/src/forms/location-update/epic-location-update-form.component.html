@@ -1,0 +1,39 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>New Location</mat-label>
+            <mat-select [formControlName]="FormField.generalLocation">
+                @for (option of formGroup.controls[FormField.generalLocation].selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.generalLocation].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Location Change Date</mat-label>
+            <input [formControlName]="FormField.date" [matDatepicker]="datePicker" matInput>
+            <mat-datepicker-toggle [for]="datePicker" matIconSuffix/>
+            <mat-datepicker #datePicker/>
+            @if (formGroup.controls[FormField.date].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+            <mat-hint>Date Format: 2025-01-31</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Note</mat-label>
+            <textarea [formControlName]="FormField.note" matInput></textarea>
+        </mat-form-field>
+    </div>
+}

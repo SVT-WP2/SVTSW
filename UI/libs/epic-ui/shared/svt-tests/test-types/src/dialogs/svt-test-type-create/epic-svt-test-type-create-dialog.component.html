@@ -1,0 +1,41 @@
+﻿<epic-mat-dialog-header>
+    SVT Test Type - {{ !isUpdate ? 'Create' : 'Details' }}
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    @if (processingError?.length) {
+        <epic-alert class="mb-3 d-block" severity="error">
+            <epic-icon name="epic-info"/>
+            {{ processingError }}
+        </epic-alert>
+    }
+
+    <epic-svt-test-type-create-form [formData]="dialogData.formData"
+                                     [isEditMode]="!!dialogData.formData && !dialogData.isClone"
+                                     (formGroupReady$)="onFormGroupReady($event)"/>
+
+</mat-dialog-content>
+
+@if (!isUpdate) {
+    <mat-dialog-actions align="end">
+        <button [disabled]="isProcessing"
+                mat-dialog-close
+                mat-stroked-button>
+            {{ 'COMMON.CANCEL' | translate }}
+        </button>
+
+        <button [disabled]="!formGroup?.valid || isProcessing"
+                color="primary"
+                mat-flat-button
+                tabindex="-1"
+                (click)="onSubmitBtnClicked(formGroup)">
+            @if (!isProcessing) {
+                {{ (!isUpdate ? 'COMMON.CREATE' : 'COMMON.SAVE') | translate }}
+            } @else {
+                {{ 'COMMON.PROCESSING' | translate }}
+            }
+        </button>
+    </mat-dialog-actions>
+}
+

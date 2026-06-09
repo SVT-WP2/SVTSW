@@ -1,0 +1,74 @@
+<div class="p-3">
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            ID
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ wafer.id }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Serial No.
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ wafer.serialNumber }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Wafer Type
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ wafer.waferTypeId }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Batch #
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ wafer.batchNumber }}
+        </div>
+    </div>
+    <div class="row py-1">
+        <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+            Locations
+        </div>
+        <div class="col-lg-6 epic-font-label">
+            {{ wafer.generalLocation }}
+        </div>
+    </div>
+    @if (wafer.productionDate?.length) {
+        <div class="row py-1">
+            <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                Production Date
+            </div>
+            <div class="col-lg-6 epic-font-label">
+                {{ wafer.productionDate }}
+            </div>
+        </div>
+    }
+
+    @if (wafer.thinningDate?.length) {
+        <div class="row py-1">
+            <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                Thinning Date
+            </div>
+            <div class="col-lg-6 epic-font-label">
+                {{ wafer.thinningDate }}
+            </div>
+        </div>
+    }
+
+    @if (wafer.dicingDate?.length) {
+        <div class="row py-1">
+            <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                Dicing Date
+            </div>
+            <div class="col-lg-6 epic-font-label">
+                {{ wafer.dicingDate }}
+            </div>
+        </div>
+    }
+</div>

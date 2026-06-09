@@ -1,0 +1,18 @@
+@import 'vars';
+@import 'mixins';
+
+
+$header-top-border-width: 4px;
+$header-bg-color: $color-neutral-0;
+$header-label-height: 20px;
+$header-label-half-height: $header-label-height / 2;
+$header-bottom-color: $color-neutral-50;
+
+$header-top-border-color--primary: $color-primary;
+$header-label-bg-color--primary: $color-primary;
+
+$header-top-border-color--danger: $color-error-400;
+$header-label-bg-color--danger: $color-error-400;
+
+$dialog-sidebar-width: 233px;
+$dialog-side-padding: 16px;

@@ -1,0 +1,43 @@
+﻿@if (fetchDataProcessing().processing) {
+    <ng-container *ngTemplateOutlet="skeletonLoader" />
+} @else if (fetchDataProcessing().processingError) {
+    <epic-content-error>
+        {{ fetchDataProcessing().processingError | epicContentErrorMessage }}
+    </epic-content-error>
+} @else {
+    <ng-content></ng-content>
+
+    @if (noDataFound()) {
+        <epic-no-result size="small" />
+    }
+}
+
+@if (fetchMoreDataProcessing().processing) {
+    <ng-container *ngTemplateOutlet="skeletonLoader" />
+} @else if (fetchMoreDataProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ fetchMoreDataProcessing().processingError | epicContentErrorMessage }}
+    </epic-content-error>
+
+    <!-- RETRY BUTTON -->
+    @if (processRetry()) {
+        <div class="text-center">
+            <button mat-stroked-button
+                    (click)="onProcessRetry()">
+                <epic-icon name="epic-refresh" matButtonIcon/>
+                {{ 'COMMON.RETRY' | translate }}
+            </button>
+        </div>
+    }
+    <!-- ./RETRY BUTTON -->
+}
+
+<ng-template #skeletonLoader>
+    <div class="d-flex gap-2 w-100 flex-column">
+        <epic-skeleton-loader [size]="skeletonLoaderSize()" />
+        <epic-skeleton-loader [size]="skeletonLoaderSize()"/>
+        <epic-skeleton-loader [size]="skeletonLoaderSize()"/>
+        <epic-skeleton-loader [size]="skeletonLoaderSize()"/>
+        <epic-skeleton-loader [size]="skeletonLoaderSize()"/>
+    </div>
+</ng-template>

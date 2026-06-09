@@ -1,0 +1,44 @@
+﻿.epic-menu-light-submenu {
+
+    $self: &;
+    display: block;
+    max-width: $submenu-max-width !important;
+
+    &__backdrop {
+        opacity: 0 !important;
+
+        + .cdk-overlay-connected-position-bounding-box .cdk-overlay-pane {
+            transform: translate3d($sidebar-width + 12px, -$sidebar-item-size, 0);
+        }
+    }
+
+    &__item {
+        align-items: center;
+        display: flex;
+        position: relative;
+        width: 100%;
+
+        &:hover {
+            #{$self}__item-actions {
+                display: block;
+            }
+        }
+    }
+
+    &__item-label {
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    &__item-actions {
+        display: none;
+        margin-right: 0 !important;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+}

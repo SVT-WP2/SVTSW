@@ -1,0 +1,70 @@
+@import 'vars';
+// TODO: it should be moved to the level of epic-icon definition.
+@mixin epic-icon-style($size: $font-size-icon, $color: $color-neutral-900) {
+    color: $color;
+    font-size: $size;
+    height: $size;
+    width: $size;
+}
+
+@mixin epic-icon-size($size: $font-size-icon) {
+    font-size: $size;
+    height: $size;
+    width: $size;
+}
+
+@mixin icon-size($size: $font-size-icon) {
+    font-size: $size;
+    height: $size;
+    line-height: $size;
+    width: $size;
+
+    svg {
+        height: $size;
+        width: $size;
+    }
+}
+
+@mixin epic-icon-component-size($size: $font-size-icon) {
+    epic-icon {
+        @include icon-size($size);
+
+        .mat-icon {
+            @include icon-size($size);
+        }
+    }
+}
+
+@mixin epic-icon-component-self-size($size: $font-size-icon) {
+    @include icon-size($size);
+
+    .mat-icon {
+        @include icon-size($size);
+    }
+}
+
+@mixin any-icon-size($size: $font-size-icon) {
+    @include epic-icon-component-size($size);
+
+    mat-icon.mat-icon {
+        @include icon-size($size);
+    }
+}
+
+@mixin epic-icon-component-color($color) {
+    epic-icon {
+        color: $color;
+
+        .mat-icon {
+            color: $color;
+        }
+    }
+}
+
+@mixin epic-icon-component-self-color($color) {
+    color: $color;
+
+    .mat-icon {
+        color: $color;
+    }
+}

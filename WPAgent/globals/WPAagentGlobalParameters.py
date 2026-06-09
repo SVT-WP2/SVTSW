@@ -3,6 +3,7 @@ class SvtWPAagentGlobalParameters:
     Singleton class to store global parameters for the WP Agent.
     Supports both manual and database-driven configuration.
     """
+
     _instance = None
 
     def __init__(self):
@@ -28,14 +29,16 @@ class SvtWPAagentGlobalParameters:
         self.userLoggedHierarchy = None
 
         # ASIC info
-        self.asic_serial_number = 0
+        self.asicSerialNumber = 0
 
         # Agent FSM State
         self.wpag_state = "ServiceOff"  # ServiceOn, WP_Idle, WP_Testing, WP_Error, etc.
 
         # Loaded wafer
         self.loaded_wafer_id = None  # None = no wafer, or wafer ID
-        self.wafer_orientation = None  # "North", "East", "South", "West" - WAFER orientation
+        self.wafer_orientation = (
+            None  # "North", "East", "South", "West" - WAFER orientation
+        )
 
         # Installed probe card
         self.probe_card_id = None  # None = no probe card, or probe card ID
@@ -61,7 +64,9 @@ class SvtWPAagentGlobalParameters:
         self.total_dies_number = 0
 
         # Project paths for now its only Sentio machine
-        self.sentio_projects_base_path = "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+        self.sentio_projects_base_path = (
+            "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+        )
         self.projects_base_path = self.sentio_projects_base_path
 
         # Locker for testing
@@ -71,10 +76,15 @@ class SvtWPAagentGlobalParameters:
         self.lock_reason = None
         self.test_sequence_id = None  # ID of running test sequence
 
-    def lock_for_testing(self, user: str, reason: str = "Testing in progress",
-                         test_sequence_id: str = None):
+    def lock_for_testing(
+        self,
+        user: str,
+        reason: str = "Testing in progress",
+        test_sequence_id: str = None,
+    ):
         """Lock the agent for testing"""
         import time
+
         self.is_locked_for_testing = True
         self.locked_by_user = user
         self.locked_at_timestamp = time.time()
@@ -99,11 +109,14 @@ class SvtWPAagentGlobalParameters:
                 "locked_by": None,
                 "locked_at": None,
                 "reason": None,
-                "test_sequence_id": None
+                "test_sequence_id": None,
             }
 
         import time
-        locked_duration = time.time() - self.locked_at_timestamp if self.locked_at_timestamp else 0
+
+        locked_duration = (
+            time.time() - self.locked_at_timestamp if self.locked_at_timestamp else 0
+        )
 
         return {
             "is_locked": True,
@@ -111,7 +124,7 @@ class SvtWPAagentGlobalParameters:
             "locked_at": self.locked_at_timestamp,
             "locked_duration_seconds": locked_duration,
             "reason": self.lock_reason,
-            "test_sequence_id": self.test_sequence_id
+            "test_sequence_id": self.test_sequence_id,
         }
 
     @classmethod
@@ -178,7 +191,9 @@ class SvtWPAagentGlobalParameters:
     def set_initialization_mode(self, mode):
         """Set how the prober was initialized: 'manual' or 'database'"""
         if mode not in ["manual", "database"]:
-            raise ValueError(f"Invalid initialization mode: {mode}. Must be 'manual' or 'database'")
+            raise ValueError(
+                f"Invalid initialization mode: {mode}. Must be 'manual' or 'database'"
+            )
         self.initialization_mode = mode
 
     def get_info(self):
@@ -190,12 +205,12 @@ class SvtWPAagentGlobalParameters:
             "orientation": self.orientation,
             "projectName": self.projectName,
             "prober_status": self.prober_status,
-            "initialization_mode": self.initialization_mode
+            "initialization_mode": self.initialization_mode,
         }
 
         # Add database-specific info if available
-        if self.machine_id is not None:
-            info["machine_id"] = self.machine_id
+        if self.wpMachineId is not None:
+            info["machine_id"] = self.wpMachineId
         if self.machine_name is not None:
             info["machine_name"] = self.machine_name
 
@@ -216,7 +231,6 @@ class SvtWPAagentGlobalParameters:
         """
         self._apply_data(config)
         self.initialization_mode = config.get("initialization_mode", "manual")
-
 
     def _apply_data(self, data: dict):
         """
@@ -248,14 +262,13 @@ class SvtWPAagentGlobalParameters:
         self.orientation = None
         self.projectName = None
         self.prober_status = "available"
-        self.machine_id = None
+        self.wpMachineId = None
         self.machine_name = None
         self.initialization_mode = None
 
         self.userLogged = None
         self.userLoggedHierarchy = None
-        self.asic_serial_number = 0
-        self.wp_machine_id = 0
+        self.asicSerialNumber = 0
         self.wpag_state = "ServiceOff"
         self.loaded_wafer_id = None
         self.wafer_orientation = None
@@ -271,13 +284,9 @@ class SvtWPAagentGlobalParameters:
         self.chuck_z_position_state = "Unknown"
         self.total_dies_number = 0
 
-
     def is_initialized(self):
         """Check if core parameters are set"""
-        return (
-                self.address is not None and
-                self.machineType is not None
-        )
+        return self.address is not None and self.machineType is not None
 
     # ===  HELPER METHODS  ===
 
@@ -291,15 +300,6 @@ class SvtWPAagentGlobalParameters:
         """
         self.loaded_wafer_id = wafer_id
         self.wafer_orientation = orientation
-
-    def clear_wafer(self):
-        """Clear loaded wafer and reset related fields"""
-        self.loaded_wafer_id = None
-        self.wafer_orientation = None
-        self.current_die_col = 0
-        self.current_die_row = 0
-        self.current_die_subsite = 0
-        self.total_dies_number = 0
 
     def set_probe_card(self, probe_card_id, orientation):
         """
@@ -358,7 +358,9 @@ class SvtWPAagentGlobalParameters:
             position: Chuck position ("Contact", "Separation", "Unknown")
         """
         if position not in ["Contact", "Separation", "Unknown", "In Default"]:
-            print(f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'")
+            print(
+                f"⚠️ Warning: Invalid chuck position '{position}'. Use 'Contact', 'Separation', or 'Unknown'"
+            )
         self.chuck_z_position_state = position
 
     def clear_probe_card(self):

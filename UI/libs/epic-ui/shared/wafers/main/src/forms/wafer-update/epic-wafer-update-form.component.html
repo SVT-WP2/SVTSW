@@ -1,0 +1,160 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Serial Number</mat-label>
+            <input [formControlName]="FormField.serialNumber" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Wafer Type</mat-label>
+            <mat-select [formControlName]="FormField.waferType">
+                <mat-option>
+                    <ngx-mat-select-search
+                            [formControl]="waferTypeSearchTermControl"
+                            [placeholderLabel]="'Search ...'"
+                            [noEntriesFoundLabel]="''"/>
+                </mat-option>
+                @for (waferType of formGroup.controls[FormField.waferType].selectOptions | epicSearch: (waferTypeSearchTermControl.value || '') : 'name'; track waferType.id) {
+                    <mat-option [value]="waferType.id">
+                        {{ waferType.name }}
+                    </mat-option>
+                }
+                @empty {
+                    <epic-no-result size="small"/>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.waferType].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <div class="row g-3">
+            <div class="col-md-12">
+                <mat-form-field class="w-100">
+                    <mat-label>Batch Number</mat-label>
+                    <input [formControlName]="FormField.batchNumber" matInput min="0" type="number">
+                    @if (formGroup.controls[FormField.batchNumber].hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+        </div>
+        @if (!isEditMode) {
+            <mat-form-field class="w-100">
+                <mat-label>Location</mat-label>
+                <mat-select [formControlName]="FormField.generalLocation">
+                    @for (option of formGroup.controls[FormField.generalLocation].selectOptions; track option) {
+                        <mat-option [value]="option">
+                            {{ option }}
+                        </mat-option>
+                    }
+                </mat-select>
+                @if (formGroup.controls[FormField.generalLocation].hasError('required')) {
+                    <mat-error>Required Field</mat-error>
+                }
+            </mat-form-field>
+        }
+
+        <!-- PRODUCTION INFO -->
+        <mat-card appearance="outlined">
+            <mat-card-content>
+                <div class="d-flex w-100 justify-content-between">
+                    <div class="epic-font-title">
+                        Production Info
+                    </div>
+                    <mat-slide-toggle [formControlName]="FormField.allowProductionDate" labelPosition="before"/>
+                </div>
+                <div class="mt-3 epic-border-style-top--solid pt-3 px-3 mx--3"
+                     [hidden]="!formGroup.controls[FormField.allowProductionDate].value">
+                    <div class="row ">
+                        <div class="col-md-12">
+                            <mat-form-field class="w-100">
+                                <mat-label>Production Date</mat-label>
+                                <input [formControlName]="FormField.productionDate" [matDatepicker]="productionDatePicker" matInput>
+                                <mat-datepicker-toggle [for]="productionDatePicker" matIconSuffix/>
+                                <mat-datepicker #productionDatePicker/>
+                                @if (formGroup.controls[FormField.productionDate].hasError('required')) {
+                                    <mat-error>Required Field</mat-error>
+                                }
+                                <mat-hint>Date Format: 2025-01-31</mat-hint>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+
+            </mat-card-content>
+        </mat-card>
+        <!-- ./PRODUCTION INFO -->
+
+        <!-- THINNING INFO -->
+        <mat-card appearance="outlined">
+            <mat-card-content>
+                <div class="d-flex w-100 justify-content-between">
+                    <div class="epic-font-title">
+                        Thinning Info
+                    </div>
+                    <mat-slide-toggle [formControlName]="FormField.allowThinningDate" labelPosition="before"/>
+                </div>
+                <div class="mt-3 epic-border-style-top--solid pt-3 px-3 mx--3"
+                     [hidden]="!formGroup.controls[FormField.allowThinningDate].value">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <mat-form-field class="w-100">
+                                <mat-label>Thinning Date</mat-label>
+                                <input [formControlName]="FormField.thinningDate" [matDatepicker]="thinningDatePicker" matInput>
+                                <mat-datepicker-toggle [for]="thinningDatePicker" matIconSuffix/>
+                                <mat-datepicker #thinningDatePicker/>
+                                @if (formGroup.controls[FormField.thinningDate].hasError('required')) {
+                                    <mat-error>Required Field</mat-error>
+                                }
+                                <mat-hint>Date Format: 2025-01-31</mat-hint>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+
+            </mat-card-content>
+        </mat-card>
+        <!-- ./THINNING INFO -->
+
+        <!-- DICING INFO -->
+        <mat-card appearance="outlined">
+            <mat-card-content>
+                <div class="d-flex w-100 justify-content-between">
+                    <div class="epic-font-title">
+                        Dicing Info
+                    </div>
+                    <mat-slide-toggle [formControlName]="FormField.allowDicingDate" labelPosition="before" />
+                </div>
+                <div class="mt-3 epic-border-style-top--solid pt-3 px-3 mx--3"
+                     [hidden]="!formGroup.controls[FormField.allowDicingDate].value">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <mat-form-field class="w-100">
+                                <mat-label>Dicing Date</mat-label>
+                                <input [formControlName]="FormField.dicingDate" [matDatepicker]="dicingDatePicker" matInput>
+                                <mat-datepicker-toggle [for]="dicingDatePicker" matIconSuffix/>
+                                <mat-datepicker #dicingDatePicker/>
+                                @if (formGroup.controls[FormField.dicingDate].hasError('required')) {
+                                    <mat-error>Required Field</mat-error>
+                                }
+                                <mat-hint>Date Format: 2025-01-31</mat-hint>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+
+            </mat-card-content>
+        </mat-card>
+        <!-- ./DICING INFO -->
+
+    </div>
+}

@@ -1,0 +1,7 @@
+﻿<ag-grid-angular
+        class="ag-theme-alpine h-100"
+        [columnDefs]="colDefs"
+        [rowData]="entitiesList"
+        epicAgGridCellEvent
+        [gridOptions]="gridOptions"
+        (cellEvent$)="onCellEvent($event)"/>

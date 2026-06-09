@@ -1,0 +1,52 @@
+@import 'vars';
+@import 'mixins';
+
+.mat-calendar {
+    --mat-datepicker-calendar-header-text-color: #{$color-neutral-60};
+    --mat-datepicker-calendar-date-selected-state-background-color: #{$color-primary-300};
+    --mat-datepicker-toggle-active-state-icon-color: #{$color-primary-300};
+    --mat-datepicker-calendar-date-selected-disabled-state-background-color: #{$color-primary-400};
+    --mat-datepicker-calendar-date-focus-state-background-color: #{$color-primary-50};
+    --mat-datepicker-calendar-date-hover-state-background-color: #{$color-primary-50};
+    --mat-datepicker-calendar-date-in-range-state-background-color: #{$color-primary-50};
+    --mat-datepicker-calendar-header-divider-color: #{$color-neutral-40};
+    --mat-datepicker-calendar-date-today-outline-color: #{$color-neutral-40};
+    --mat-datepicker-calendar-date-text-color: #{$color-neutral-900};
+    --mat-datepicker-calendar-period-button-icon-color: #{$color-neutral-60};
+    width: 280px;
+
+    .mat-calendar-body-cell {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    .mat-calendar-body-label {
+        opacity: 0;
+    }
+
+    .mat-calendar-body-label[colspan='7'] {
+        display: none;
+    }
+
+    .mat-calendar-table-header th {
+        @include epic-font-label();
+    }
+
+    .mat-calendar-arrow {
+        vertical-align: middle !important;
+    }
+
+    .mat-calendar-header {
+        padding: 0;
+    }
+
+    .mat-calendar-period-button {
+        margin: 0;
+        padding: 0 8px;
+    }
+
+    .mat-calendar-controls {
+        margin: 0 0 16px;
+    }
+}

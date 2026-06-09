@@ -1,0 +1,62 @@
+﻿@if(initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Location</mat-label>
+            <mat-select [formControlName]="FormField.generalLocation">
+                @for (option of formGroup.controls.generalLocation.selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+
+            @if (formGroup.controls.generalLocation.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+        <div class="epic-border-style--solid epic-border-radius--300 p-3">
+            <div class="epic-font-title mb-4">
+                Default Config
+            </div>
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <mat-form-field class="w-100">
+                        <mat-label>Name</mat-label>
+                        <input [formControlName]="FormField.configName" matInput>
+                        <mat-error>Required Field</mat-error>
+                    </mat-form-field>
+                </div>
+                <div>
+                    <div class="epic-font-label mb-2">
+                        Config Schema *
+                    </div>
+                    <epic-file-picker [formControlName]="FormField.configBody" acceptFileExtensions=".json" />
+                </div>
+                <div>
+                    <mat-form-field class="w-100">
+                        <mat-label>Note</mat-label>
+                        <textarea [formControlName]="FormField.configNote" matInput></textarea>
+                    </mat-form-field>
+                </div>
+            </div>
+        </div>
+
+    </div>
+}
+
+

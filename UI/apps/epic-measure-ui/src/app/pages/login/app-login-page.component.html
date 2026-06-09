@@ -1,0 +1,40 @@
+﻿<div class="e2e-container epic-layout-light-system-page">
+    <div class="e2e-container__body-with-scroll">
+        <div class="d-xl-flex d-block flex-column flex-xl-row-reverse h-100">
+            <div class="content-image content-image--blue">
+                <img class="epic-image" alt="" src="./assets/images/epic-common.layout/epic-logo-v4.svg"/>
+            </div>
+            <div class="content-main">
+                <div class="d-flex flex-column gap-4 text-center text-sm-start">
+                    <div>
+                        <div class="mb-2">
+                            <h1 class="epic-color-neutral-900 mb-2 epic-font-display-lg">Welcome back</h1>
+                            <div class="epic-color-neutral-300">Login to your account below</div>
+                        </div>
+                    </div>
+                    <div>
+                        @if (!loginProcessing().processing && loginProcessing().processingError) {
+                            <epic-alert severity="error" class=" d-block mb-3">
+                                <epic-icon epicAlertIcon name="epic-info" />
+                                {{ loginProcessing().processingError.message }}
+                            </epic-alert>
+                        }
+                        <epic-auth-login-form #form (formGroupReady$)="onFormReady($event)"/>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3 w-100 justify-content-center justify-content-sm-start">
+                        <button [disabled]="(form?.formGroup?.touched && form?.formGroup?.invalid) || loginProcessing().processing"
+                                color="primary"
+                                epicFlatButton
+                                mat-button
+                                (click)="onLogin()">
+                            {{ loginProcessing().processing ? 'Processing ...' : 'Login' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,96 @@
+﻿<mat-form-field class="epic-chips-autocomplete-form-control"
+                [appearance]="appearance">
+    @if (label) {
+        <mat-label>
+            {{ label | translate }}
+        </mat-label>
+    }
+
+    <mat-chip-grid #chipList
+                   [formControl]="chipsFormControl">
+        @for (value of chipsFormControl.value; track value) {
+            <mat-chip-row [editable]="false"
+                        color="primary"
+                        (removed)="onRemoveChip(value)">
+                {{ value }}
+
+                <mat-icon [matTooltip]="'COMMON.REMOVE' | translate"
+                        matChipRemove>
+                    close
+                </mat-icon>
+            </mat-chip-row>
+        }
+
+        <input [formControl]="chipInputFormControl"
+               [matAutocomplete]="autocomplete"
+               [matChipInputFor]="chipList"
+               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+               [type]="inputType$ | async"
+               (blur)="onInputBlur($event)"
+               (matChipInputTokenEnd)="onAddChip($event.value)" />
+
+        <mat-autocomplete #autocomplete="matAutocomplete"
+                          (closed)="onAutocompletePanelClosed()"
+                          (optionSelected)="onOptionSelected($event)">
+            @if (!!(options$ | async)) {
+                @for (option of filteredOptions; track option) {
+                    <mat-option [value]="option"
+                                (mousedown)="$event.preventDefault()">
+                        {{ option }}
+                    </mat-option>
+                }
+
+                @if (!filteredOptions.length) {
+                    <epic-no-result size="small"/>
+                }
+
+                <!-- Empty option is needed to keep autocomplete open when there are no other options -->
+                <mat-option class="d-none" [disabled]="true" />
+
+                <!-- FOOTER -->
+                @if(isCustomValueAllowed && chipInputFormControl.value) {
+                    <div class="epic-chips-autocomplete-form-control__autocomplete-footer">
+                        <mat-option [value]="chipInputFormControl.value">
+                            <span class="me-1">
+                                {{ 'Custom Value' | translate }}
+                            </span>
+                            <epic-label>{{ chipInputFormControl.value }}</epic-label>
+                        </mat-option>
+                    </div>
+                }
+                <!-- ./FOOTER -->
+            }
+        </mat-autocomplete>
+    </mat-chip-grid>
+
+    @if (hint?.length) {
+        <mat-hint [innerHTML]="hint | translate"
+                  align="start">
+        </mat-hint>
+    }
+
+    @for (message of errorMessages; track message) {
+        <mat-error>{{ message | translate }}</mat-error>
+    }
+
+    @if (!!(options$ | async)) {
+        <button class="epic-chips-autocomplete-form-control__expand"
+                [disabled]="disabled"
+                mat-icon-button
+                epicButtonSize="small"
+                matSuffix
+                (click)="onAutocompleteOpenToggle(); $event.stopPropagation(); $event.preventDefault()">
+            <epic-icon name="epic-arrow-chevron-down" />
+        </button>
+    }
+
+    <ng-content/>
+
+<!--    <mat-error>Required Field</mat-error>-->
+
+    @if (matError) {
+        {{ matError }}
+    }
+
+
+</mat-form-field>

@@ -1,0 +1,41 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Location</mat-label>
+            <mat-select [formControlName]="FormField.generalLocation">
+                @for (option of formGroup.controls[FormField.generalLocation].selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.generalLocation].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <div>
+            <div class="epic-font-label-lg mb-2">
+                ASIC to Chip Map
+            </div>
+            <epic-alert severity="neutral" class="mb-3 d-block">
+                <div class="epic-font-body-sm epic-color-neutral-300">
+                    <b>File Format Requirements</b>
+                    <ul class=" mb-0 mt-2">
+                        <li>comma-delimited CSV</li>
+                        <li>no header</li>
+                        <li>2 columns: <b>ASIC ID, Chip Serial Number</b></li>
+                    </ul>
+                </div>
+            </epic-alert>
+            <epic-file-picker [formControlName]="FormField.asicToChipMap" acceptFileExtensions=".csv"/>
+        </div>
+    </div>
+}
+

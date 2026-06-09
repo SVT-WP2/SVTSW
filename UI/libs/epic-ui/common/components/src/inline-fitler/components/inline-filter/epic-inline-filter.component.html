@@ -1,0 +1,31 @@
+<button class="epic-inline-filter"
+        [disabled]="disabled"
+        [class.active]="isActive !== undefined ? isActive : !!selectedItemsNumber"
+        [class.mat-primary]="isActive !== undefined ? isActive : !!selectedItemsNumber"
+        mat-stroked-button>
+
+    @if (icon && isIconOnly) {
+        <epic-icon [name]="icon"/>
+    }
+    @else if (icon && !isIconOnly){
+        <epic-icon [name]="icon" matButtonIcon/>
+    }
+
+    @if (label?.length) {
+        {{ label | translate }}
+    }
+
+    <ng-content />
+
+    @if (selectedItemsNumber) {
+        @if (!isIconOnly) {
+            <epic-dot-divider [class.epic-color-inherit]="isActive !== undefined ? isActive : !!selectedItemsNumber"/>
+        }
+        {{ selectedItemsNumber }}
+    }
+
+    <epic-icon class="epic-inline-filter__expand-icon"
+              epicExpandIcon
+              iconPositionEnd
+              matButtonIcon/>
+</button>

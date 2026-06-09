@@ -1,0 +1,24 @@
+﻿@if (filterData()) {
+    <div class="d-flex align-items-center gap-2">
+        <epic-search-box [searchTerm]="filterValue().searchTerm"
+                        (search$)="onFilterChange('searchTerm', $event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'location_on' | epicIconMatOutlined"
+                [label]="'Location' + (filterValue().generalLocation ? (': ' + filterValue().generalLocation) : '')"
+                [multiple]="false"
+                [ngModel]="filterValue().generalLocation"
+                [selectOptions]="filterData()!.generalLocationSelectOptions"
+                (ngModelChange)="onFilterChange('generalLocation', $event)"/>
+
+        @if (!isFilterValueEmpty()) {
+            <mat-divider vertical class="mx-1"/>
+            <button epicStrokedButton
+                    mat-icon-button
+                    [matTooltip]="'COMMON.CLEAR' | translate"
+                    (click)="onClearFilter()">
+                <epic-icon [name]="'clear'"/>
+            </button>
+        }
+    </div>
+}

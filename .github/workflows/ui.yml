@@ -1,0 +1,262 @@
+name: UI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'UI/**'
+      - '.github/workflows/ui.yml'
+    tags:
+      - 'svt-ui-*'
+  pull_request:
+    paths:
+      - 'UI/**'
+      - '.github/workflows/ui.yml'
+
+concurrency:
+  group: ui-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: svt-wp2/svt-ui
+  NODE_VERSION: '20.19'
+
+defaults:
+  run:
+    working-directory: UI
+
+jobs:
+  install:
+    # Full CI on PRs and normal master pushes; skipped on tags and on release
+    # commits (svt-ui@...) — releases build & deploy straight from the svt-ui-* tag.
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: UI/package-lock.json
+      - run: npm ci --prefer-offline --force
+
+  lint:
+    # Full CI on PRs and normal master pushes; skipped on tags and on release
+    # commits (svt-ui@...) — releases build & deploy straight from the svt-ui-* tag.
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: UI/package-lock.json
+      - run: npm ci --prefer-offline --force
+      - run: npm run lint
+
+  test:
+    # Full CI on PRs and normal master pushes; skipped on tags and on release
+    # commits (svt-ui@...) — releases build & deploy straight from the svt-ui-* tag.
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: UI/package-lock.json
+      - run: npm ci --prefer-offline --force
+      - run: npm run test
+
+  assemble:
+    # Full CI on PRs and normal master pushes; skipped on tags and on release
+    # commits (svt-ui@...) — releases build & deploy straight from the svt-ui-* tag.
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: UI/package-lock.json
+      - run: npm ci --prefer-offline --force
+      - run: rm -rf .nx && npm run build::all
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: UI/dist
+          retention-days: 7
+
+  docker-registry-create:
+    # Skip version-bump/release commits (svt-ui@...): the release image is built
+    # by docker-registry-create--release from the svt-ui-* tag, not here. Normal
+    # dev commits (#NNN :: ...) still build & deploy to dev as usual.
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && !startsWith(github.event.head_commit.message, 'svt-ui@')
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.vars.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        run: echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.short_sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.short_sha }}
+
+  docker-registry-create--release:
+    if: startsWith(github.ref, 'refs/tags/svt-ui-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        # Strip the `svt-ui-` prefix so the image tag matches the semver
+        # (svt-ui-1.2.3 -> 1.2.3). SNAPSHOT releases also publish :latest.
+        run: |
+          TAG="${GITHUB_REF#refs/tags/svt-ui-}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+          if echo "$TAG" | grep -qi "SNAPSHOT"; then
+            TAGS="${TAGS}"$'\n'"${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.tag }}
+          tags: ${{ steps.vars.outputs.tags }}
+
+  deploy-dev:
+    # Same guard as docker-registry-create: don't deploy version-bump commits.
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && !startsWith(github.event.head_commit.message, 'svt-ui@')
+    needs: docker-registry-create
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - name: Deploy
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — this step runs on the self-hosted runner with no checkout, so the
+        # UI/ subdirectory doesn't exist. runner.temp is always defined and
+        # always exists.
+        working-directory: ${{ runner.temp }}
+        env:
+          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
+          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
+          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '8090' }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::8}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
+          echo "Deploying ${IMAGE} locally"
+          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
+          sudo docker pull "${IMAGE}"
+          sudo docker stop svt.ui--dev || true
+          sudo docker rm svt.ui--dev || true
+          sudo docker run -d \
+            --name svt.ui--dev \
+            --restart unless-stopped \
+            --network svt-network--dev \
+            --add-host=host.docker.internal:host-gateway \
+            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
+            -e SVT_UI_PORT="${SVT_UI_PORT}" \
+            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
+            -e APP_VERSION="${SHORT_SHA}" \
+            -e NODE_ENV=production \
+            "${IMAGE}"
+
+  # Auto-deploy a release image to dev as soon as it's built. Runs on every
+  # svt-ui-* tag (any release type), after docker-registry-create--release has
+  # pushed the image. Deploys the release-versioned image (svt-ui:<version>),
+  # replacing whatever the master-push deploy-dev last put on the dev container.
+  deploy-dev--release:
+    if: startsWith(github.ref, 'refs/tags/svt-ui-')
+    needs: docker-registry-create--release
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - name: Deploy
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — this step runs on the self-hosted runner with no checkout, so the
+        # UI/ subdirectory doesn't exist. runner.temp is always defined and
+        # always exists.
+        working-directory: ${{ runner.temp }}
+        env:
+          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
+          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
+          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '8090' }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/svt-ui-}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+          echo "Deploying ${IMAGE} locally"
+          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
+          sudo docker pull "${IMAGE}"
+          sudo docker stop svt.ui--dev || true
+          sudo docker rm svt.ui--dev || true
+          sudo docker run -d \
+            --name svt.ui--dev \
+            --restart unless-stopped \
+            --network svt-network--dev \
+            --add-host=host.docker.internal:host-gateway \
+            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
+            -e SVT_UI_PORT="${SVT_UI_PORT}" \
+            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
+            -e APP_VERSION="${VERSION}" \
+            -e NODE_ENV=production \
+            "${IMAGE}"

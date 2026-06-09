@@ -1,0 +1,83 @@
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: svt-zookeeper
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "2181:2181"
+    expose:
+      - "2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: svt-kafka-broker
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9095:9095"
+    expose:
+      - "9096"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:9096 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9096,OUTSIDE://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9096,OUTSIDE://0.0.0.0:9095
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_MESSAGE_MAX_BYTES: 20971520
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: svt-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8088:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9096
+
+  svt-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: svt-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8096:8096"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9393/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      SVT_UI_PORT: 8096
+      SVT_UI_API_PORT: 9393
+      KAFKA_BROKER: kafka:9096
+      NODE_ENV: production

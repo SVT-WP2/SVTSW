@@ -1,0 +1,77 @@
+﻿@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Serial Number</mat-label>
+            <input [formControlName]="FormField.serialNumber" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Wafer</mat-label>
+            <mat-select [formControlName]="FormField.waferId">
+                <mat-option>
+                    <ngx-mat-select-search
+                            [formControl]="waferSearchTermControl"
+                            [placeholderLabel]="'Search ...'"
+                            [noEntriesFoundLabel]="''"/>
+                </mat-option>
+                @for (option of (formGroup.controls[FormField.waferId].selectOptions || []) | epicSearch: (waferSearchTermControl.value || '') : 'serialNumber'; track option?.id) {
+                    <mat-option [value]="option.id">
+                        {{ option.serialNumber }}
+                    </mat-option>
+                }
+                @empty {
+                    <epic-no-result size="small"/>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.waferId].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Family Type</mat-label>
+            <mat-select [formControlName]="FormField.familyType">
+                @for (option of (formGroup.controls[FormField.familyType].selectOptions || []); track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.familyType].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+
+        <mat-form-field class="w-100">
+            <mat-label>Quality</mat-label>
+            <mat-select [formControlName]="FormField.quality">
+                @for (option of (formGroup.controls[FormField.quality].selectOptions || []); track option) {
+                    <mat-option [value]="option">
+                        {{ option }}
+                    </mat-option>
+                }
+            </mat-select>
+            @if (formGroup.controls[FormField.quality].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Global Position on Wafer</mat-label>
+            <input [formControlName]="FormField.waferMapPosition" matInput>
+            @if (formGroup.controls[FormField.waferMapPosition].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+    </div>
+}
+

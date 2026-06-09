@@ -1,0 +1,115 @@
+@use '@angular/material' as mat;
+@use 'sass:color';
+@import 'vars';
+@import 'mixins';
+
+:root {
+    --epic-chips-icon-size: #{$font-size-icon};
+    --epic-chips-spacing: 8px;
+    --epic-chips-trailing-action-offset: 0;
+
+    @include mat.chips-overrides((
+        container-shape-radius: 8px,
+        outline-width: 0,
+        elevated-container-color: #{$color-neutral-20},
+        elevated-disabled-container-color: #{$color-neutral-40},
+        label-text-color: #{$color-neutral-900},
+        label-text-weight: 400,
+        label-text-size: 16px, // TODO Use vars from fonts
+        disabled-label-text-color: #{$color-neutral-60},
+        with-icon-icon-color: #{$color-neutral-900},
+        with-trailing-icon-trailing-icon-color: #{$color-neutral-900},
+        container-height: 40px,
+        with-avatar-avatar-size: 0,
+        elevated-selected-container-color: #{$color-primary-50},
+        selected-label-text-color: #{$color-primary-300},
+        selected-trailing-icon-color: #{$color-primary-300},
+        selected-hover-state-layer-color: #{$color-primary-300},
+        selected-focus-state-layer-color: #{$color-primary-300},
+    ));
+}
+
+mat-chip-option.mat-mdc-chip.mat-mdc-chip-option {
+    border-radius: 8px;
+}
+
+.mat-mdc-chip.mat-mdc-standard-chip {
+    &.mat-accent {
+        @include mat.chips-overrides((
+            elevated-selected-container-color: #{$color-warning-50},
+            selected-label-text-color: #{$color-warning-300},
+            selected-trailing-icon-color: #{$color-warning-300},
+            selected-hover-state-layer-color: #{$color-warning-300},
+            selected-focus-state-layer-color: #{$color-warning-300},
+        ));
+    }
+
+    &.mat-warn {
+        @include mat.chips-overrides((
+            elevated-selected-container-color: #{$color-error-50},
+            selected-label-text-color: #{$color-error-300},
+            selected-trailing-icon-color: #{$color-error-300},
+            selected-hover-state-layer-color: #{$color-error-300},
+            selected-focus-state-layer-color: #{$color-error-300},
+        ));
+    }
+}
+
+mat-chip-option.mat-mdc-standard-chip {
+    &.mat-mdc-chip-selected {
+        @include mat.chips-overrides((
+            label-text-weight: 500,
+        ));
+    }
+
+    .mat-mdc-chip-action-label {
+        align-items: center;
+        display: inline-flex;
+        gap: var(--epic-chips-spacing);
+
+        > epic-icon {
+            @include epic-icon-component-self-size(var(--epic-chips-icon-size));
+        }
+
+        > mat-icon {
+            @include icon-size(var(--epic-chips-icon-size));
+        }
+    }
+
+    .mdc-evolution-chip__action--primary {
+        padding-left: var(--epic-chips-spacing);
+        padding-right: var(--epic-chips-spacing);
+    }
+
+    &.mdc-evolution-chip--with-primary-graphic {
+        .mdc-evolution-chip__action--primary {
+            padding-right: var(--epic-chips-spacing);
+        }
+
+        &.mdc-evolution-chip--with-trailing-action {
+            .mdc-evolution-chip__graphic {
+                padding-left: calc(var(--epic-chips-spacing) / 2);
+                padding-right: calc(var(--epic-chips-spacing) / 2);
+            }
+
+            .mdc-evolution-chip__action--trailing {
+                margin: 0 var(--epic-chips-trailing-action-offset);
+            }
+        }
+
+        .mdc-evolution-chip__graphic {
+            padding-left: calc(var(--epic-chips-spacing) / 2);
+            padding-right: calc(var(--epic-chips-spacing) / 2);
+        }
+    }
+
+    .mat-mdc-chip-trailing-icon {
+        > epic-icon {
+            @include epic-icon-component-self-size($font-size-icon--small);
+        }
+
+        > mat-icon {
+            @include icon-size($font-size-icon--small);
+        }
+    }
+}

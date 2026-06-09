@@ -1,0 +1,69 @@
+﻿@if(initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Serial Number</mat-label>
+            <input [formControlName]="FormField.serialNumber" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Vendor</mat-label>
+            <input [formControlName]="FormField.vendor" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Model</mat-label>
+            <input [formControlName]="FormField.model" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Type</mat-label>
+            <input [formControlName]="FormField.type" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Location</mat-label>
+            <input [formControlName]="FormField.location" matInput>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Vendor Cleaning Interval</mat-label>
+            <input [formControlName]="FormField.vendorCleaningInterval" matInput type="number" min="0" max="999999" step="1" >
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Production Date</mat-label>
+            <input [formControlName]="FormField.arriveDate" [matDatepicker]="arriveDatePicker" matInput>
+            <mat-datepicker-toggle [for]="arriveDatePicker" matIconSuffix/>
+            <mat-datepicker #arriveDatePicker/>
+            @if (formGroup.controls[FormField.arriveDate].hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+            <mat-hint>Date Format: 2025-01-31</mat-hint>
+        </mat-form-field>
+
+
+
+    </div>
+}
+
+

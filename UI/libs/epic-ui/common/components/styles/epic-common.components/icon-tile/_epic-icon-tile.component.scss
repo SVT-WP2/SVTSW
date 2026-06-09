@@ -1,0 +1,73 @@
+@use 'sass:math' as math;
+@import 'vars';
+@import 'mixins';
+
+epic-icon-tile {
+    @include any-icon-size(var(--epic-icon-tile-icon-size));
+    background: $color-neutral-30;
+    color: $color-neutral-900;
+    display: inline-block;
+    height: var(--epic-icon-tile-size);
+    justify-content: center;
+    padding: calc((var(--epic-icon-tile-size) - var(--epic-icon-tile-icon-size)) / 2);
+    vertical-align: top;
+    width: var(--epic-icon-tile-size);
+
+    > mat-icon {
+        vertical-align: top;
+    }
+
+    &.epic-icon-tile--small {
+        --epic-icon-tile-icon-size: #{$font-size-icon--small};
+        --epic-icon-tile-size: 24px;
+    }
+
+    &.epic-icon-tile--basic {
+        --epic-icon-tile-icon-size: #{$font-size-icon--small};
+        --epic-icon-tile-size: 32px;
+    }
+
+    &.epic-icon-tile--large {
+        --epic-icon-tile-icon-size: #{$font-size-icon};
+        --epic-icon-tile-size: 40px;
+    }
+
+    &.epic-icon-tile--xl {
+        --epic-icon-tile-icon-size: #{$font-size-icon};
+        --epic-icon-tile-size: 48px;
+    }
+
+    &.epic-icon-tile--xxl {
+        --epic-icon-tile-icon-size: #{$font-size-icon};
+        --epic-icon-tile-size: 56px;
+    }
+
+    &.epic-icon-tile--circle {
+        border-radius: 50%;
+    }
+
+    &.epic-icon-tile--square {
+        border-radius: 12px;
+    }
+}
+
+button.mat-mdc-button-base.mat-mdc-outlined-button [matButtonIcon] epic-icon-tile,
+button.mat-mdc-button-base.mat-mdc-outlined-button epic-icon-tile[matButtonIcon] {
+    @include epic-icon-component-size($font-size-icon--small);
+
+    margin-left: -4px;
+    margin-right: 8px;
+}
+
+.mat-mdc-menu-content .mat-mdc-menu-item epic-icon-tile {
+    margin-right: 8px;
+
+    epic-icon {
+        margin-right: 0;
+    }
+}
+
+.mat-mdc-menu-content .mat-mdc-menu-item epic-icon-tile .mat-icon,
+.mat-mdc-menu-content .mat-mdc-menu-item.active epic-icon-tile .mat-icon {
+    color: inherit;
+}

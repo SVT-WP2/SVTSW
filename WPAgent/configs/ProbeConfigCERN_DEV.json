@@ -1,0 +1,9 @@
+{
+  "name": "CERN_DEV",
+  "machineId": 1,
+  "address": "wpmit01.cern.ch",
+  "port": 35555,
+  "machineType": "sentio",
+  "description": "CERN DSF Probe Station",
+  "kafka_broker": "svmithi02:9096"
+}

@@ -1,0 +1,6 @@
+@if (isPlainText()) {
+    <div [innerHTML]="plainText() | epicSafeHtml"></div>
+}
+@else {
+    <ng-container #componentPlaceholderViewRef></ng-container>
+}

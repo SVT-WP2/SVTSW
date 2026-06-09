@@ -1,0 +1,16 @@
+<div class="nano-file-preview" (click)="onDownloadActionClicked()">
+
+    <epic-icon class="nano-file-preview__img"
+               [name]="iconName"></epic-icon>
+
+    <div class="nano-file-preview__name">
+        <epic-long-text [tooltip]="fileName | translate">{{ fileName | translate }}</epic-long-text>
+    </div>
+
+    <div class="nano-file-preview__actions">
+        <a class="fw-medium"
+           (click)="$event.preventDefault();">
+            {{ 'COMMON.DOWNLOAD_FILE' | translate }}
+        </a>
+    </div>
+</div>

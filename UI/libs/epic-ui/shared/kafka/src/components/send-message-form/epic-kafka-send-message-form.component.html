@@ -1,0 +1,19 @@
+<div [formGroup]="formGroup">
+    <mat-form-field class="w-100">
+        <mat-label>Topic Name</mat-label>
+        <input [formControlName]="FormField.topicName" matInput/>
+    </mat-form-field>
+
+    <mat-form-field class="w-100">
+        <mat-label>Message</mat-label>
+        <textarea [formControlName]="FormField.message" matInput></textarea>
+    </mat-form-field>
+    <div>
+        <button [disabled]="formGroup.invalid || isProcessing"
+                color="primary"
+                mat-flat-button
+                (click)="onSubmitBtnClicked()">
+            Send Message
+        </button>
+    </div>
+</div>

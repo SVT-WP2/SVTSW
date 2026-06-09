@@ -1,0 +1,23 @@
+@import 'vars';
+@import 'mixins';
+
+$epic-inline-filter-overlay-min-width: 280px !default;
+
+.epic-inline-filter-overlay {
+    &.mat-mdc-menu-panel.mat-mdc-menu-panel {
+        .mat-mdc-menu-content:not(:empty) {
+            padding: 0;
+        }
+    }
+
+    &__content-wrapper {
+        min-width: $epic-inline-filter-overlay-min-width;
+        overflow: auto;
+    }
+
+    &__footer-wrapper {
+        @include epic-border-style(top);
+        padding: 8px;
+    }
+}
+

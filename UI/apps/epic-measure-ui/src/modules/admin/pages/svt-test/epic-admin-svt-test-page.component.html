@@ -1,0 +1,20 @@
+﻿<div class="e2e-container flex-row">
+    <div class="epic-bg-color-neutral-0 epic-border-style-right--solid d-flex flex-column h-100 position-relative"
+         style="width: 280px">
+        <div class="e2e-container">
+            <div class="e2e-container__body-with-scroll px-3 pb-3 pt-2">
+                <epic-vertical-nav-tabs class="w-100"
+                                       [tabs]="navTabs | epicSearch: searchTerm : 'label'"/>
+            </div>
+        </div>
+    </div>
+    <div class="e2e-container__body-with-scroll">
+
+        <div class="container py-3 px-3">
+
+            <router-outlet></router-outlet>
+
+        </div>
+
+    </div>
+</div>

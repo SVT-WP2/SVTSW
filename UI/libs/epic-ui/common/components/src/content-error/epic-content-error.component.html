@@ -1,0 +1,17 @@
+﻿<div class="epic-content-error"
+     [class.epic-content-error--transparent-bg]="transparentBackground"
+     [class.epic-content-error--floating]="floating">
+
+    @if (showImage) {
+        <img class="epic-content-error__icon"
+             src="./assets/images/epic-common.components/content-error.png">
+    }
+
+    <div class="epic-content-error__title">
+        {{ title | translate }}
+    </div>
+    <div class="epic-content-error__content">
+        <ng-content></ng-content>
+    </div>
+
+</div>

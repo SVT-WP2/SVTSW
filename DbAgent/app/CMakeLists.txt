@@ -63,8 +63,12 @@ set(SVT_COMMON_CPP_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/svt-common")
 
 add_subdirectory(${SVT_COMMON_CPP_SOURCE_DIR} ${SVT_COMMON_CPP_BINARY_DIR})
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version/.git_tag" RAW_VERSION)
-string(STRIP "${RAW_VERSION}" VERSION)
+# VERSION is supplied at configure time via -DVERSION=... by compile.sh
+# (which resolves it from the VERSION env var in Docker builds, or
+# `git describe` for local builds).
+if(NOT DEFINED VERSION OR VERSION STREQUAL "")
+  message(FATAL_ERROR "VERSION not set. Pass -DVERSION=... or run via compile.sh.")
+endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version/version.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 
@@ -95,7 +99,8 @@ endif()
 FetchContent_Declare(
   magic_enum
   GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
-  GIT_TAG master
+  GIT_TAG v0.9.8 # pinned release (was: master) - keep reproducible builds
+  GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS NAMES magic_enum)
 FetchContent_MakeAvailable(magic_enum)
 

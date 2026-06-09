@@ -1,0 +1,15 @@
+@import 'vars';
+@import 'mixins';
+
+.epic-mat-menu-header {
+    padding: 12px 8px;
+
+    &__header {
+        @include epic-font-title-lg();
+    }
+
+    &__subheader {
+        @include epic-font-body-lg();
+        color: $color-neutral-50;
+    }
+}

@@ -34,7 +34,8 @@ FetchContent_Declare(
 FetchContent_Declare(
   modern_cpp_kafka
   GIT_REPOSITORY https://github.com/morganstanley/modern-cpp-kafka.git
-  GIT_TAG main
+  GIT_TAG v2024.07.03 # pinned release (was: main) - keep reproducible builds
+  GIT_SHALLOW TRUE
 )
 
 FetchContent_MakeAvailable(nlohmann_json modern_cpp_kafka)

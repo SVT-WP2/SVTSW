@@ -1,0 +1,25 @@
+@mixin e2e-container() {
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    left: 0;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+@mixin e2e-container-body() {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+@mixin e2e-container-body-with-scroll() {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+

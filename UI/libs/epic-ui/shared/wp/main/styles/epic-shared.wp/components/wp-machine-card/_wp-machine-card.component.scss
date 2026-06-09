@@ -1,0 +1,35 @@
+﻿@import 'vars';
+
+
+.epic-wp-machine-card {
+    $self: &;
+
+    &:hover {
+        @include shadow-hover();
+        cursor: pointer;
+    }
+
+    &__select-icon {
+        color: $color-neutral-300;
+    }
+
+    &__select--active {
+        &.mat-mdc-form-field .mat-mdc-text-field-wrapper.mdc-text-field--filled {
+            --mat-select-enabled-trigger-text-color: #{$color-primary-300};
+            background-color: $color-primary-50;
+            border-color: $color-primary-50;
+
+            .mat-mdc-select-arrow-wrapper > .mat-mdc-select-arrow {
+                background-color: $color-primary-300;
+            }
+
+            &:not(.mdc-text-field--disabled) .mdc-floating-label {
+                color: $color-primary-300;
+            }
+        }
+
+        #{$self}__select-icon {
+            color: $color-primary-300;
+        }
+    }
+}

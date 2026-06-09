@@ -1,0 +1,80 @@
+worker_processes auto;
+pid /tmp/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+    large_client_header_buffers 4 32k;
+    client_max_body_size 50m;
+
+    # ── Gzip compression ──────────────────────────────────────────────────────
+    gzip                on;
+    gzip_vary           on;       # Adds "Vary: Accept-Encoding" header so CDNs/proxies cache both versions
+    gzip_proxied        any;      # Compress responses for proxied requests too
+    gzip_comp_level     6;        # 1 (fastest) – 9 (best ratio); 6 is a good balance
+    gzip_min_length     1024;     # Don't bother compressing tiny responses (< 1 KB)
+    gzip_buffers        16 8k;
+    gzip_http_version   1.1;
+    gzip_types
+        text/plain
+        text/css
+        text/javascript
+        text/xml
+        text/x-component
+        application/javascript
+        application/json
+        application/xml
+        application/rss+xml
+        application/atom+xml
+        application/vnd.ms-fontobject
+        font/truetype
+        font/opentype
+        image/svg+xml
+        image/x-icon;
+    # NOTE: image/png, image/jpeg, image/gif, image/webp are intentionally omitted —
+    # these formats are already compressed and gzipping them wastes CPU with no gain.
+    # ─────────────────────────────────────────────────────────────────────────
+
+    server {
+        listen       ${SVT_UI_PORT};
+        server_name  localhost;
+
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+
+        # Angular app served under /app
+        location ~* ^/app(.*) {
+            rewrite ^/app/(.*)$ /$1 last;
+            rewrite ^/app$ / last;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy /api to the NestJS backend
+        location /api/ {
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_pass http://127.0.0.1:${SVT_UI_API_PORT}/api/;
+        }
+
+        # Fallback for SPA routing
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            root /usr/share/nginx/html;
+        }
+    }
+}

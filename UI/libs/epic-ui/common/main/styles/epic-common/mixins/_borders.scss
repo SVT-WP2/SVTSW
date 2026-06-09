@@ -1,0 +1,43 @@
+@use 'sass:list';
+@use 'sass:map';
+
+@import 'vars';
+
+
+$border-side: top, bottom, left, right, all;
+$border-style-default-settings: (style: solid, color: $color-neutral-40, width: 1px);
+
+@mixin epic-border-style($side, $settings: $border-style-default-settings) {
+    @if not list.index($border-side, $side) {
+        @error '#{$side} is not a valid side. Expected one of #{$border-side}.';
+    }
+
+    $border-side-alias: get-border-side-alias($side);
+
+    #{$border-side-alias}-width: get-border-setting($settings, width);
+    #{$border-side-alias}-style: get-border-setting($settings, style);
+    #{$border-side-alias}-color: get-border-setting($settings, color);
+}
+
+@function get-border-setting($settings, $setting-name) {
+
+    @if(not map.has-key($border-style-default-settings, $setting-name)) {
+        @error 'Unknown setting name "' + $setting-name + '". Available settings are: ' + map.keys($border-style-default-settings);
+    }
+
+    @if(map.has-key($settings, $setting-name)) {
+        @return map.get($settings, $setting-name); }
+
+    @return map.get($settings, $border-style-default-settings); }
+
+@function get-border-side-alias($side) {
+    @if not list.index($border-side, $side) {
+        @error '#{$side} is not a valid side. Expected one of #{$border-side}.';
+    }
+
+    @if $side == all {
+        @return border;
+    }
+
+    @return border-#{$side};
+}

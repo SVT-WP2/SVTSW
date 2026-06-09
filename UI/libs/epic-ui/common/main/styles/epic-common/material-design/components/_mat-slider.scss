@@ -1,0 +1,12 @@
+@use '@angular/material' as mat;
+@import 'vars';
+
+
+:root {
+    @include mat.slider-overrides((
+        inactive-track-height: 8px,
+        active-track-height: 8px,
+        active-track-shape: 4px,
+        inactive-track-color: $color-neutral-40,
+    ));
+}

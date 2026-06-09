@@ -1,0 +1,32 @@
+﻿<div class="epic-mat-dialog-header">
+
+    <div class="epic-mat-dialog-header__content">
+        <epic-icon *ngIf="headerIconName"
+                  class="epic-mat-dialog-header__icon"
+                  [name]="headerIconName">
+        </epic-icon>
+
+        <div class="epic-mat-dialog-header__title">
+            <ng-content></ng-content>
+            <ng-content select="epic-mat-dialog-header-subtitle"></ng-content>
+        </div>
+
+        <div>
+            <ng-content select="[epicMatDialogHeaderActions]"></ng-content>
+        </div>
+
+        <div *ngIf="showCloseButton"
+             class="epic-mat-dialog-header__close-btn">
+            <button [matTooltip]="'COMMON.CLOSE' | translate"
+                    mat-dialog-close
+                    mat-icon-button>
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <div class="epic-mat-dialog-header__bottom">
+        <ng-content select="[epicMatDialogHeaderBottom]"></ng-content>
+    </div>
+
+</div>

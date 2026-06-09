@@ -1,0 +1,45 @@
+﻿@import 'vars';
+@import 'mixins';
+@import './epic-mat-dialog-shared';
+
+
+.epic-mat-dialog-header {
+    $self: &;
+    border-bottom: 1px solid $color-neutral-40;
+    padding: $dialog-side-padding / 2 $dialog-side-padding;
+    position: relative;
+
+    &__content {
+        align-items: center;
+        display: flex;
+        min-height: 48px;
+    }
+
+    &__bottom:not(:empty) {
+        padding: 8px 0;
+    }
+
+    &__icon {
+        margin-inline-end: 1rem;
+    }
+
+    &__title {
+        @include epic-font-title-lg();
+        flex: 1;
+    }
+
+    &__close-btn {
+        align-items: center;
+        display: flex;
+        height: 100%;
+
+        .mat-mdc-icon-button {
+            margin-left: 8px;
+        }
+    }
+}
+
+// TODO: do we need that?
+.mat-mdc-dialog-title .epic-mat-dialog-header {
+    margin: -24px -24px 24px;
+}

@@ -1,0 +1,23 @@
+﻿<ng-content select="epic-mat-dialog-content-sidebar"></ng-content>
+
+<div class="epic-mat-dialog-content"
+     [class.epic-mat-dialog-content--with-sidebar]="sidebarChildren.length > 0">
+
+    <div class="e2e-container">
+
+        <div class="e2e-container__body-with-scroll epic-mat-dialog-content__inner">
+            <ng-content></ng-content>
+        </div>
+
+        <div *ngIf="footerTemplatesRef || footerActionsTemplatesRef" class="epic-mat-dialog-content__footer">
+
+            <div class="epic-mat-dialog-content__footer-actions" *ngIf="footerActionsTemplatesRef">
+                <ng-container *ngTemplateOutlet="footerActionsTemplatesRef"></ng-container>
+            </div>
+
+            <ng-container *ngTemplateOutlet="footerTemplatesRef"></ng-container>
+
+        </div>
+    </div>
+
+</div>

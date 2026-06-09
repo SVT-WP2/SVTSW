@@ -25,7 +25,7 @@ def requires_state(*required_states):
                 return ResponseBuilder.error(
                     f"{func.__name__.title()}Reply",
                     f"Command requires state {', '.join(required_names)}. Current state: {current.name}",
-                    400
+                    400,
                 )
 
             return func(*args, **kwargs)
@@ -53,7 +53,7 @@ def transitions_to(target_state: WPAgentState):
             result = func(*args, **kwargs)
 
             # Only transition if command succeeded
-            if result.get('status') == 'Success':
+            if result.get("status") == "Success":
                 sm = get_state_machine()
                 sm.force_state(target_state)
 
@@ -86,20 +86,20 @@ def with_state_transition(command_name: str):
                 available = sm.get_available_commands()
                 return ResponseBuilder.error(
                     f"{command_name}Reply",
-                    f"Cannot execute {command_name} in state {sm.get_state_name()}. " +
-                    f"Available commands: {', '.join(available)}",
-                    400
+                    f"Cannot execute {command_name} in state {sm.get_state_name()}. "
+                    + f"Available commands: {', '.join(available)}",
+                    400,
                 )
 
             # Execute command
             result = func(*args, **kwargs)
 
             # Transition state if successful
-            if result.get('status') == 'Success':
+            if result.get("status") == "Success":
                 sm.transition(command_name)
             else:
                 # Enter error state on failure
-                sm.enter_error_state(result.get('error', {}).get('message'))
+                sm.enter_error_state(result.get("error", {}).get("message"))
 
             return result
 
@@ -115,7 +115,7 @@ def get_current_state_info():
         "current_state": sm.get_state_name(),
         "previous_state": sm.previous_state.name if sm.previous_state else None,
         "available_commands": sm.get_available_commands(),
-        "current_command": sm.get_current_command()
+        "current_command": sm.get_current_command(),
     }
 
 
@@ -132,6 +132,8 @@ def check_state_allows(command: str) -> tuple[bool, str]:
         return (True, "")
     else:
         available = sm.get_available_commands()
-        error_msg = f"Cannot execute '{command}' in state '{sm.get_state_name()}'. " + \
-                    f"Available: {', '.join(available)}"
+        error_msg = (
+            f"Cannot execute '{command}' in state '{sm.get_state_name()}'. "
+            + f"Available: {', '.join(available)}"
+        )
         return (False, error_msg)

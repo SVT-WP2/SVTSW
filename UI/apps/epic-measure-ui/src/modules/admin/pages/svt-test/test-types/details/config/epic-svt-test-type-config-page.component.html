@@ -1,0 +1,77 @@
+﻿<mat-card class="d-flex h-100 w-100" appearance="outlined">
+    <mat-card-header>
+        <div class="flex-1">
+            <mat-card-title>
+                {{ testTypeConfig()?.name }}
+            </mat-card-title>
+        </div>
+    </mat-card-header>
+    <mat-card-content class="d-flex h-100 w-100 overflow-auto position-relative pb-3">
+        <div class="e2e-container">
+            <div class="p-3">
+                <div class="epic-border-radius--300 epic-border-style--solid p-3">
+                    <div class="d-flex gap-5 flex-wrap">
+                        <!-- ID -->
+                        <div class="d-flex gap-1 flex flex-column">
+                            <div class="epic-color-neutral-300 epic-font-body-sm">ID</div>
+                            <div class="epic-font-label">{{ testTypeConfig()?.id }}</div>
+                        </div>
+                        <!-- ./ID -->
+                        <!-- CREATED AT -->
+                        <div class="d-flex gap-1 flex flex-column">
+                            <div class="epic-color-neutral-300 epic-font-body-sm">Created At</div>
+                            <div class="epic-font-label">{{ testTypeConfig()?.createdAt | date : 'dd.MM.YYYY - HH:mm:ss' }}</div>
+                        </div>
+                        <!-- ./CREATED AT -->
+                        <!-- NOTE -->
+                        @if (testTypeConfig()?.note?.length) {
+                            <div class="d-flex gap-1 flex flex-column">
+                                <div class="epic-color-neutral-300 epic-font-body-sm">Note</div>
+                                <div class="epic-font-label">{{ testTypeConfig()?.note }}</div>
+                            </div>
+                        }
+                        <!-- ./NOTE -->
+                        <!-- ASIC FAMILY TYPES -->
+                        <div class="d-flex gap-1 flex flex-column flex-1">
+                            <div class="epic-color-neutral-300 epic-font-body-sm">DUT Types</div>
+                            <div class="epic-font-label">{{ testType()?.dutTypes.join(', ') }}</div>
+                        </div>
+                        <!-- ASIC FAMILY TYPES -->
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center w-100 px-3">
+                <div class="epic-font-title-sm flex-1">Config Schema</div>
+                @if (!testTypeConfigBodyResource.isLoading() && !testTypeConfigBodyResource.error()) {
+                    <div class="d-flex gap-2">
+                        <button epicSmallButton mat-stroked-button (click)="onCopyToClipboard()">
+                            <epic-icon [name]="'epic-copy'" matMenuItemIcon/>
+                            Copy JSON
+                        </button>
+                        <button epicSmallButton mat-stroked-button (click)="onDownloadJson()">
+                            <epic-icon [name]="'download'" matMenuItemIcon/>
+                            Download JSON
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="e2e-container__body-with-scroll p-3 pt-2">
+                @if (testTypeConfigBodyResource.isLoading()) {
+                    <epic-loader/>
+                } @else if (testTypeConfigBodyResource.error()) {
+                    <epic-content-error>
+                        {{ testTypeConfigBodyResource.error() | epicContentErrorMessage }}
+                    </epic-content-error>
+                } @else {
+                    <ace class="h-100 w-100 epic-border-radius--300 overflow-hidden epic-border-style--solid"
+                         [config]="{fontSize: '16px'}"
+                         [disabled]="true"
+                         [mode]="'hjson'"
+                         [theme]="'ace/theme/github'"
+                         [value]="testTypeConfigBody() | json">
+                    </ace>
+                }
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

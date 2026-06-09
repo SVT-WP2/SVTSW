@@ -1,0 +1,17 @@
+﻿@if (initProcessing?.processing) {
+    <epic-loader/>
+} @else if (initProcessing?.processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing?.processingError }}
+    </epic-content-error>
+} @else {
+    <ag-grid-angular
+            class="ag-theme-alpine"
+            [columnDefs]="colDefs"
+            [rowData]="data"
+            epicAgGridCellEvent
+            [gridOptions]="gridOptions"/>
+}
+
+
+

@@ -1,19 +1,16 @@
 from drivers.WPSentioProber import SentioProberImpl
 from drivers.WPMockProber import MockProberImpl
 
-prober_classes = {
-    "sentio": SentioProberImpl,
-    "mock": MockProberImpl
-}
+prober_classes = {"sentio": SentioProberImpl, "mock": MockProberImpl}
 
 
 class ProberFactory:
     """Singleton factory that maintains a single prober instance per configuration"""
+
     _instance = None
     _prober = None
     _initialized = False
     _current_config = None
-
 
     @classmethod
     def get_instance(cls):
@@ -35,7 +32,11 @@ class ProberFactory:
         config = (machineType.lower(), address)
 
         # Return existing prober if configuration matches and it's initialized
-        if self._initialized and self._current_config == config and self._prober is not None:
+        if (
+            self._initialized
+            and self._current_config == config
+            and self._prober is not None
+        ):
             return self._prober
 
         # Create new prober instance

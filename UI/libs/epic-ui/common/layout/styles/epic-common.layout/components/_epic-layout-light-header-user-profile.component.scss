@@ -1,0 +1,26 @@
+﻿@import 'vars';
+@import 'mixins';
+
+$user-profile-size: 48px;
+
+.epic-layout-light-header-user-profile {
+    $this: &;
+    @include square-size($user-profile-size);
+    border-radius: 50%;
+    cursor: pointer;
+
+    &__menu {
+        #{$this}__app-version {
+            color: $color-neutral-50;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 0.75rem;
+        }
+
+        #{$this}__sign-out {
+            font-weight: 700;
+            min-height: 48px;
+        }
+    }
+}
+

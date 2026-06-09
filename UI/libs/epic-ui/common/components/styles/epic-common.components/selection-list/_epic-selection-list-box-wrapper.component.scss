@@ -1,0 +1,53 @@
+@use 'sass:math';
+@import 'vars';
+@import 'mixins';
+
+
+epic-selection-list-box-wrapper {
+    display: block;
+}
+
+.epic-selection-list-box-wrapper {
+    $self: &;
+
+    &__body {
+        padding-inline: 8px;
+        position: relative;
+    }
+
+    [epicSelectionListBoxHeader] {
+        padding: 8px 8px 0;
+    }
+
+    [epicSelectionListBoxFooter] {
+        @include epic-border-style(top);
+        margin-top: 8px;
+        padding: 8px;
+    }
+
+    &--sticky-header {
+        @include e2e-container();
+
+        mat-selection-list {
+            height: 100%;
+        }
+
+        #{$self}__body {
+            @include e2e-container-body-with-scroll();
+            margin-top: 8px;
+
+            .mdc-list {
+                padding: 0;
+            }
+        }
+    }
+
+    cdk-virtual-scroll-viewport {
+        height: 100%;
+    }
+
+    .cdk-virtual-scroll-content-wrapper {
+        max-width: 100%;
+    }
+
+}

@@ -1,0 +1,46 @@
+<div [formGroup]="formGroup">
+    <mat-form-field class="w-100">
+        <mat-label>IP Address</mat-label>
+        <input [formControlName]="FormField.ipAddress" matInput/>
+    </mat-form-field>
+
+    <mat-form-field class="w-100">
+        <mat-label>Port Number</mat-label>
+        <input [formControlName]="FormField.portNumber" matInput type="number" min="0" step="1"/>
+    </mat-form-field>
+
+    <mat-form-field class="w-100">
+        <mat-label>Message</mat-label>
+        <textarea [formControlName]="FormField.message" matInput rows="5"></textarea>
+    </mat-form-field>
+    <div class="d-flex gap-2">
+        <button [disabled]="formGroup.invalid || isProcessing"
+                color="primary"
+                mat-flat-button
+                (click)="onSendAndReadBtnClicked()">
+            Send And Read
+        </button>
+<!--        <button [disabled]="formGroup.invalid || isProcessing"-->
+<!--                color="primary"-->
+<!--                mat-flat-button-->
+<!--                (click)="onSendBtnClicked()">-->
+<!--            Send-->
+<!--        </button>-->
+        <button [disabled]="isProcessing || (formGroup.controls[FormField.ipAddress].invalid || formGroup.controls[FormField.portNumber].invalid)"
+                color="primary"
+                mat-flat-button
+                (click)="onReadBtnClicked()">
+            Read
+        </button>
+
+        @if (isProcessing) {
+            <mat-divider [vertical]="true" />
+
+            <button color="warn"
+                    mat-flat-button
+                    (click)="onCancelBtnClicked()">
+                Cancel
+            </button>
+        }
+    </div>
+</div>

@@ -1,0 +1,72 @@
+﻿@if (dataFetchingProcessing()?.processing) {
+    <epic-loader [fillAllSection]="true"/>
+} @else if (dataFetchingProcessing()?.processingError) {
+    <epic-content-error>
+        {{ dataFetchingProcessing()?.processingError?.message }}
+    </epic-content-error>
+} @else {
+    <cdk-virtual-scroll-viewport [itemSize]="40"
+                                 epicInfiniteScrolling
+                                 [dataSource]="scrollingDataSource"
+                                 [initAutoFetchData]="false"
+                                 class="w-100 h-100">
+        <div class="container py-3 over">
+            <epic-infinite-scroll-content [skeletonLoaderSize]="'xl'" [epicScrollingDataSource]="scrollingDataSource">
+                <ng-container *cdkVirtualFor="let item of asicsList()">
+                    <mat-card class="mb-2 overflow-hidden epic-shadow-hover epic-cursor-pointer"
+                              appearance="outlined"
+                              [routerLink]="[ '/asics/details', item.id]">
+                        <mat-card-content matRipple>
+                            <div class="d-flex gap-3 align-items-center w-100">
+                                <epic-icon-tile
+                                        class="epic-bg-color-primary-50 epic-color-primary-300"
+                                        [iconName]="'layers' | epicIconMatOutlined"
+                                        size="xl"
+                                        shape="square"/>
+                                <div class="d-flex gap-3 align-items-center overflow-x-auto">
+                                    <div style="min-width: 80px">
+                                        <div class="epic-font-label-sm epic-color-neutral-60">ID</div>
+                                        {{ item.id }}
+                                    </div>
+                                    <div style="min-width: 120px">
+                                        <div class="epic-font-label-sm epic-color-neutral-60">Serial No.</div>
+                                        {{ item.serialNumber }}
+                                    </div>
+                                    <div style="min-width: 200px">
+                                        <div class="epic-font-label-sm epic-color-neutral-60">Family Type</div>
+                                        {{ item.familyType }}
+                                    </div>
+                                    <div style="min-width: 200px" class="d-none d-sm-block">
+                                        <div class="epic-font-label-sm epic-color-neutral-60">Quality</div>
+                                        {{ item.quality }}
+                                    </div>
+                                    @if (showWaferInfo()) {
+                                        <div class="d-none d-md-block" style="min-width: 80px">
+                                            <div class="epic-font-label-sm epic-color-neutral-60">Wafer ID</div>
+                                            {{ item.waferId }}
+                                        </div>
+                                    }
+                                    @if (item.chipId) {
+                                        <div class="d-none d-md-block" style="min-width: 80px">
+                                            <div class="epic-font-label-sm epic-color-neutral-60">Chip ID</div>
+                                            {{ item.chipId }}
+                                        </div>
+                                    }
+                                </div>
+                                <div class="d-flex align-items-center gap-2 justify-content-end flex-1">
+                                    <a [routerLink]="[ '/asics/details', item.id]">
+                                        <button epicStrokedButton mat-icon-button [matTooltip]="'COMMON.DETAILS' | translate">
+                                            <epic-icon name="epic-eye-open" matButtonIcon/>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                </ng-container>
+            </epic-infinite-scroll-content>
+        </div>
+
+    </cdk-virtual-scroll-viewport>
+}
+

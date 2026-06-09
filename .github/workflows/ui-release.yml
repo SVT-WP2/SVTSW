@@ -1,0 +1,132 @@
+name: 'UI :: Release'
+
+# Manual-only release. Pick a version bump from the `script` dropdown; the job
+# bumps UI/package.json, commits it as svt-ui@<version>, tags svt-ui-<version>,
+# and pushes the commit + tag. It does NOT build Docker images — pushing the
+# svt-ui-* tag triggers ui.yml's `docker-registry-create--release`, which builds
+# and pushes the release image.
+#
+# Pushing uses a PAT (RELEASE_PAT): a tag pushed with the default GITHUB_TOKEN
+# does NOT trigger other workflows, so without a PAT the tag would never start
+# the release build in ui.yml. Create it under
+# Settings -> Secrets and variables -> Actions (classic PAT with `repo`, or a
+# fine-grained PAT with Contents: Read and write).
+#
+# next-major-version / next-minor-version additionally open the next SNAPSHOT
+# dev cycle. That is done as a SECOND, separate push whose commit carries a
+# `[skip ci]` line, so it triggers neither a build nor a deploy (and it is not
+# tagged, so no release image either).
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'Version bump to release (npm script from UI/package.json)'
+        required: true
+        default: next-minor-version
+        type: choice
+        options:
+          - next-major-version
+          - next-minor-version
+          - next-patch-version
+          - next-preminor-version
+          - next-snapshot-version
+
+concurrency:
+  # One release at a time, so concurrent runs can't race on the version bump /
+  # commit / tag / push.
+  group: ui-release
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20.19'
+  TAG_PREFIX: 'svt-ui-'
+  COMMIT_PREFIX: 'svt-ui@'
+
+defaults:
+  run:
+    working-directory: UI
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # push the version-bump commit(s) and the release tag
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # PAT required: a tag pushed with GITHUB_TOKEN does NOT trigger
+          # ui.yml's release build. Falls back to GITHUB_TOKEN so the workflow
+          # still runs, but then the tag won't start the build until RELEASE_PAT
+          # is set.
+          token: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump release version
+        id: bump
+        env:
+          NPM_SCRIPT: ${{ inputs.script }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_TYPE}" != "branch" ]; then
+            echo "ERROR: run this from a branch, not a ${GITHUB_REF_TYPE} (${GITHUB_REF_NAME})." >&2
+            exit 1
+          fi
+          # Run the prepared npm script but suppress npm's own commit/tag
+          # (--no-git-tag-version); the steps below make the commit and tag with
+          # the svt-ui@ / svt-ui- formats instead of npm's defaults.
+          npm run "$NPM_SCRIPT" -- --no-git-tag-version
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag release
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          git add package.json package-lock.json
+          git commit -m "${COMMIT_PREFIX}${VERSION}"
+          git tag "${TAG_PREFIX}${VERSION}"
+
+      - name: Push release commit, tag and release branch
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          SCRIPT: ${{ inputs.script }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_PREFIX}${VERSION}"
+          # Push #1: the stable release commit + tag. The tag triggers ui.yml's
+          # docker-registry-create--release (needs RELEASE_PAT). For major/minor
+          # also create a release/svt-ui/<version> branch at this same (release)
+          # commit — done now, before master advances to the SNAPSHOT below. That
+          # branch does not trigger ui.yml, which only watches master.
+          REFS=("HEAD:refs/heads/${GITHUB_REF_NAME}" "refs/tags/${TAG}")
+          if [ "$SCRIPT" = "next-major-version" ] || [ "$SCRIPT" = "next-minor-version" ]; then
+            REFS+=("HEAD:refs/heads/release/svt-ui/${VERSION}")
+          fi
+          # --atomic: all refs land together or not at all.
+          git push --atomic origin "${REFS[@]}"
+          echo "Released ${TAG} to ${GITHUB_REF_NAME}; ui.yml will build the image from the tag."
+
+      - name: Open next development cycle
+        # Major/minor only: bump to the next SNAPSHOT and push it as a SECOND,
+        # separate push. The commit carries `[skip ci]` (on its own line, so it
+        # stays out of the one-line log) and is NOT tagged — so it triggers no
+        # build and no deploy.
+        if: ${{ inputs.script == 'next-major-version' || inputs.script == 'next-minor-version' }}
+        run: |
+          set -euo pipefail
+          npm run next-preminor-version -- --no-git-tag-version
+          DEV_VERSION="$(node -p "require('./package.json').version")"
+          git add package.json package-lock.json
+          git commit -m "${COMMIT_PREFIX}${DEV_VERSION}" -m "[skip ci]"
+          # Push #2: the dev-cycle commit only (no tag).
+          git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          echo "Opened next dev cycle ${DEV_VERSION} ([skip ci] — no build/deploy)."

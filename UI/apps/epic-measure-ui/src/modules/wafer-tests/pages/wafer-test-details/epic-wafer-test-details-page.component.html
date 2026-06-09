@@ -1,0 +1,82 @@
+﻿<epic-layout-light-header-title>
+    <div class="d-flex align-items-center">
+        <epic-breadcrumbs [size]="'large'" [breadcrumbs]="breadcrumbs()"/>
+    </div>
+</epic-layout-light-header-title>
+
+@if (waferTestFetchProcessing()?.processing) {
+    <epic-loader [fillAllSection]="true"/>
+} @else if (waferTestFetchProcessing()?.processingError) {
+    <epic-content-error>
+        {{ waferTestFetchProcessing().processingError.message | epicContentErrorMessage }}
+    </epic-content-error>
+} @else if (waferTest()) {
+    <div class="h-100 d-flex w-100">
+        <div class="e2e-container flex-row">
+            <div style="width: 320px" class="epic-bg-color-neutral-0 overflow-auto epic-border-style-right--solid position-relative pb-5">
+                <div class="d-flex justify-content-between align-items-center p-3 pb-0">
+                    <div class="epic-font-title">
+                        {{ waferTest().name }}
+                    </div>
+                    <button [matMenuTriggerFor]="menu" epicStrokedButton mat-icon-button>
+                        <epic-icon name="more_vert"/>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="onEdit()">
+                            <epic-icon [name]="'epic-pencil'" matMenuItemIcon/>
+                            Edit
+                        </button>
+                    </mat-menu>
+                </div>
+                <epic-wafer-test-progress-widget [progressPercentage]="60" />
+                <epic-wafer-test-extended-info [entity]="waferTest()" />
+                @if ([EpicWaferTestStatus.None, EpicWaferTestStatus.Processing].includes(waferTest().status)) {
+                    <div class="position-absolute bottom-0 epic-bg-color-neutral-0 w-100">
+                        <mat-divider/>
+                        <div class="p-2 px-3">
+                            @if (waferTest()?.status === EpicWaferTestStatus.None) {
+                                <button mat-flat-button class="w-100" color="primary">
+                                    <epic-icon [name]="'play_circle' | epicIconMatOutlined" matButtonIcon />
+                                    Start
+                                </button>
+                            }
+                            @if (waferTest()?.status === EpicWaferTestStatus.Processing) {
+                                <button mat-flat-button class="w-100" color="warn">
+                                    <epic-icon [name]="'stop'" matButtonIcon />
+                                    Stop
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="e2e-container__body p-3">
+                @if (asicTestsFetchProcessing().processing) {
+                    <epic-loader [fillAllSection]="true"/>
+                } @else if (asicTestsFetchProcessing().processingError) {
+                    <epic-content-error>
+                        {{ asicTestsFetchProcessing().processingError | epicContentErrorMessage }}
+                    </epic-content-error>
+                } @else {
+                    <div class="e2e-container">
+<!--                        <div class="p-3 pb-0">-->
+<!--                            <div class="row">-->
+<!--                                <div class="col-xl-4">-->
+<!--                                    <epic-wafer-test-progress-widget [progressPercentage]="60" />-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+                        <div class="e2e-container__body p-3">
+                            <epic-wafer-asic-tests-list [entitiesList]="waferAsicTests()" class="w-100 h-100" />
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+
+

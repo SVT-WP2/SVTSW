@@ -1,0 +1,37 @@
+@import 'vars';
+
+@import './shared';
+
+.nano-file-picker-drop-area {
+    border: 1px dashed $color-neutral-40;
+    border-radius: $nano-file-picker-border-radius;
+    color: $color-neutral-60;
+    cursor: pointer;
+    height: $nano-file-picker-height;
+
+    &__placeholder {
+        align-items: center;
+        display: flex;
+        font-size: 14px;
+        padding: 24px;
+    }
+
+    &__placeholder-text {
+        align-items: center;
+        display: flex;
+        flex: 1;
+
+        &,
+        > * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    &__placeholder-action {
+        color: $color-primary-300;
+        font-weight: 500;
+        padding-inline-start: 16px;
+    }
+}

@@ -1,0 +1,42 @@
+services:
+  svt-db-agent:
+    container_name: svt.db-agent
+    build:
+      context: ../DbAgent
+      dockerfile: Dockerfile
+      args:
+        VERSION: dev
+    # Lets DB_HOST=host.docker.internal reach a native Postgres (needed on Linux).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # DB connection. Defaults target the containerised Postgres
+      # (docker-compose.postgres.yml). For a native host Postgres, set
+      # DB_HOST=host.docker.internal and DB_PASS=... in your .env file.
+      - "SVT_DB_AGENT_DB_HOST=${DB_HOST:-postgres-db--local}"
+      - "SVT_DB_AGENT_DB_PORT=${DB_PORT:-5432}"
+      - "SVT_DB_AGENT_DB_USER=${DB_USER:-postgres}"
+      - "SVT_DB_AGENT_DB_PASS=${DB_PASS:-postgres}"
+      - "SVT_DB_AGENT_DB_NAME=${DB_NAME:-svt_sw_db}"
+      - "SVT_DB_AGENT_KAFKA_SERVER=${KAFKA_SERVER:-kafka}"
+      - "SVT_DB_AGENT_KAFKA_PORT=${KAFKA_PORT:-9084}"
+    networks:
+      - svt-network--local
+
+  svt-ui:
+    container_name: svt.ui
+    build:
+      context: ../UI
+      dockerfile: Dockerfile
+    environment:
+      - "SVT_UI_PORT=${UI_PORT:-7575}"
+      - "KAFKA_BROKER=${KAFKA_SERVER:-kafka}:${KAFKA_PORT:-9084}"
+    ports:
+      - "${UI_PORT:-7575}:${UI_PORT:-7575}"
+    networks:
+      - svt-network--local
+
+networks:
+  svt-network--local:
+    external: true
+    name: svt-network--local

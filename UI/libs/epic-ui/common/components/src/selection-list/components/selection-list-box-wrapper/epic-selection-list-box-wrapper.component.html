@@ -1,0 +1,10 @@
+<div class="epic-selection-list-box-wrapper" [class.epic-selection-list-box-wrapper--sticky-header]="stickyHeader">
+
+    <ng-content select="[epicSelectionListBoxHeader]"></ng-content>
+
+    <div class="epic-selection-list-box-wrapper__body">
+        <ng-content />
+    </div>
+
+    <ng-content select="[epicSelectionListBoxFooter]"></ng-content>
+</div>

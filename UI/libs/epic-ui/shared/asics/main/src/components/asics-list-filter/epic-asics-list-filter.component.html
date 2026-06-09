@@ -1,0 +1,42 @@
+﻿@if (this.filterData()) {
+    <div class="d-flex align-items-center gap-2">
+        <epic-search-box [searchTerm]="filterValue().searchTerm"
+                        (search$)="onFilterChange('searchTerm', $event)"/>
+
+        @if (showWaferFilter) {
+            <epic-inline-filter-selection-list
+                    [icon]="'epic-dashboard'"
+                    [label]="'Wafer' + (selectedWafer() ? (': ' + selectedWafer()!.serialNumber) : '')"
+                    [multiple]="false"
+                    [ngModel]="filterValue().waferId"
+                    [selectOptions]="filterData().waferSelectOptions"
+                    (ngModelChange)="onFilterChange('waferId', $event)"/>
+        }
+
+        <epic-inline-filter-selection-list
+                [icon]="'memory'"
+                [label]="'Family Type' + (filterValue().asicFamilyType ? (': ' + filterValue().asicFamilyType) : '')"
+                [multiple]="false"
+                [ngModel]="filterValue().asicFamilyType"
+                [selectOptions]="filterData().asicFamilyTypeSelectOptions"
+                (ngModelChange)="onFilterChange('asicFamilyType', $event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'checklist'"
+                [label]="'Quality' + (filterValue().asicQuality ? (': ' + filterValue().asicQuality) : '')"
+                [multiple]="false"
+                [ngModel]="filterValue().asicQuality"
+                [selectOptions]="filterData().asicQualitySelectOptions"
+                (ngModelChange)="onFilterChange('asicQuality', $event)"/>
+
+        @if (!isFilterValueEmpty()) {
+            <mat-divider vertical class="mx-1"/>
+            <button epicStrokedButton
+                    mat-icon-button
+                    [matTooltip]="'COMMON.CLEAR' | translate"
+                    (click)="onClearFilter()">
+                <epic-icon [name]="'clear'"/>
+            </button>
+        }
+    </div>
+}

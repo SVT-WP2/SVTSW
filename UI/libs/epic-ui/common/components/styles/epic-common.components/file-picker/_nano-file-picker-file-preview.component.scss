@@ -1,0 +1,43 @@
+@import 'vars';
+@import './shared';
+
+
+.nano-file-picker-file-preview {
+    align-items: center;
+    background: $color-info-50;
+    border-radius: $nano-file-picker-border-radius;
+    display: flex;
+    height: $nano-file-picker-height;
+    overflow: hidden;
+    padding: $nano-file-picker-padding;
+    width: 100%;
+
+    &__img {
+        color: $color-primary-300;
+        display: flex;
+    }
+
+    &__name {
+        color: $color-neutral-900;
+        cursor: pointer;
+        flex: 1;
+        font-weight: 500;
+        padding-inline-start: 16px;
+
+        &,
+        > * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__actions {
+        margin-inline-end: -.5rem;
+    }
+
+}

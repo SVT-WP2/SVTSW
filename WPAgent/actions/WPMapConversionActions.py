@@ -1,23 +1,32 @@
 from utilities.WPMapConverter import get_converter
 import os
 
+
 def _ensure_map_loaded(converter, conversion_map=None):
     """Load conversion map if not already loaded."""
     if conversion_map:
         if not converter.load_conversion_map(conversion_map):
-            return {"status": "error", "output": f"Failed to load conversion map from {conversion_map}"}
+            return {
+                "status": "error",
+                "output": f"Failed to load conversion map from {conversion_map}",
+            }
 
     if not converter.conversion_map:
         default_map = "configs/WPMapConversion.json"
         if os.path.exists(default_map):
             converter.load_conversion_map(default_map)
         else:
-            return {"status": "error", "output": "No conversion map loaded. Use 'conversion_map' parameter to specify path."}
+            return {
+                "status": "error",
+                "output": "No conversion map loaded. Use 'conversion_map' parameter to specify path.",
+            }
 
     return None  # No error
 
-def convert_global_to_local(row_global=None, column_global=None, sn_prefix=None,
-                            conversion_map=None):
+
+def convert_global_to_local(
+    row_global=None, column_global=None, sn_prefix=None, conversion_map=None
+):
     """
     Convert global die coordinates to local ASIC coordinates.
 
@@ -50,7 +59,10 @@ def convert_global_to_local(row_global=None, column_global=None, sn_prefix=None,
     """
 
     if row_global is None or column_global is None:
-        return {"status": "error", "output": "Missing required parameters: row_global and column_global"}
+        return {
+            "status": "error",
+            "output": "Missing required parameters: row_global and column_global",
+        }
 
     try:
         converter = get_converter()
@@ -70,22 +82,23 @@ def convert_global_to_local(row_global=None, column_global=None, sn_prefix=None,
                     "column_global": column_global,
                     "row_local": row_local,
                     "column_local": column_local,
-                    "sn_prefix": found_sn_prefix
-                }
+                    "sn_prefix": found_sn_prefix,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for global coordinates ({row_global},{column_global})" +
-                          (f" with SN prefix '{sn_prefix}'" if sn_prefix else "")
+                "output": f"No mapping found for global coordinates ({row_global},{column_global})"
+                + (f" with SN prefix '{sn_prefix}'" if sn_prefix else ""),
             }
 
     except Exception as e:
         return {"status": "error", "output": f"Coordinate conversion failed: {str(e)}"}
 
 
-def convert_local_to_global(row_local=None, column_local=None, sn_prefix=None,
-                            conversion_map=None):
+def convert_local_to_global(
+    row_local=None, column_local=None, sn_prefix=None, conversion_map=None
+):
     """
     Convert local ASIC coordinates to global die coordinates.
 
@@ -122,14 +135,11 @@ def convert_local_to_global(row_local=None, column_local=None, sn_prefix=None,
     if row_local is None or column_local is None:
         return {
             "status": "error",
-            "output": "Missing required parameters: row_local and column_local"
+            "output": "Missing required parameters: row_local and column_local",
         }
 
     if not sn_prefix:
-        return {
-            "status": "error",
-            "output": "Missing required parameter: sn_prefix"
-        }
+        return {"status": "error", "output": "Missing required parameter: sn_prefix"}
 
     try:
         # Get converter instance
@@ -140,7 +150,7 @@ def convert_local_to_global(row_local=None, column_local=None, sn_prefix=None,
             if not converter.load_conversion_map(conversion_map):
                 return {
                     "status": "error",
-                    "output": f"Failed to load conversion map from {conversion_map}"
+                    "output": f"Failed to load conversion map from {conversion_map}",
                 }
 
         # Check if map is loaded
@@ -152,7 +162,7 @@ def convert_local_to_global(row_local=None, column_local=None, sn_prefix=None,
             else:
                 return {
                     "status": "error",
-                    "output": "No conversion map loaded. Use 'conversion_map' parameter to specify path."
+                    "output": "No conversion map loaded. Use 'conversion_map' parameter to specify path.",
                 }
 
         # Perform conversion
@@ -169,20 +179,17 @@ def convert_local_to_global(row_local=None, column_local=None, sn_prefix=None,
                     "column_local": column_local,
                     "row_global": row_global,
                     "column_global": column_global,
-                    "sn_prefix": sn_prefix
-                }
+                    "sn_prefix": sn_prefix,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}"
+                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}",
             }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "output": f"Coordinate conversion failed: {str(e)}"
-        }
+        return {"status": "error", "output": f"Coordinate conversion failed: {str(e)}"}
 
 
 def load_conversion_map(conversion_map=None):
@@ -204,7 +211,7 @@ def load_conversion_map(conversion_map=None):
     if not conversion_map:
         return {
             "status": "error",
-            "output": "Missing required parameter: conversion_map"
+            "output": "Missing required parameter: conversion_map",
         }
 
     try:
@@ -218,20 +225,17 @@ def load_conversion_map(conversion_map=None):
                 "data": {
                     "total_entries": len(converter.conversion_map),
                     "asic_type": converter.asic_type,
-                    "asic_prefixes": asics
-                }
+                    "asic_prefixes": asics,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"Failed to load conversion map from {conversion_map}"
+                "output": f"Failed to load conversion map from {conversion_map}",
             }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "output": f"Failed to load conversion map: {str(e)}"
-        }
+        return {"status": "error", "output": f"Failed to load conversion map: {str(e)}"}
 
 
 def list_coordinate_asics(conversion_map=None):
@@ -256,10 +260,7 @@ def list_coordinate_asics(conversion_map=None):
             converter.load_conversion_map(conversion_map)
 
         if not converter.conversion_map:
-            return {
-                "status": "error",
-                "output": "No conversion map loaded"
-            }
+            return {"status": "error", "output": "No conversion map loaded"}
 
         asics = converter.list_asics()
 
@@ -268,30 +269,28 @@ def list_coordinate_asics(conversion_map=None):
         for sn_prefix in asics:
             bounds = converter.get_asic_bounds(sn_prefix)
             if bounds:
-                asic_info.append({
-                    "sn_prefix": sn_prefix,
-                    "total_dies": bounds['total_dies'],
-                    "global_range": f"({bounds['row_global_min']}-{bounds['row_global_max']}, {bounds['col_global_min']}-{bounds['col_global_max']})",
-                    "local_range": f"({bounds['row_local_min']}-{bounds['row_local_max']}, {bounds['col_local_min']}-{bounds['col_local_max']})"
-                })
+                asic_info.append(
+                    {
+                        "sn_prefix": sn_prefix,
+                        "total_dies": bounds["total_dies"],
+                        "global_range": f"({bounds['row_global_min']}-{bounds['row_global_max']}, {bounds['col_global_min']}-{bounds['col_global_max']})",
+                        "local_range": f"({bounds['row_local_min']}-{bounds['row_local_max']}, {bounds['col_local_min']}-{bounds['col_local_max']})",
+                    }
+                )
 
         return {
             "status": "success",
             "output": f"Found {len(asics)} ASIC(s) in conversion map",
-            "data": {
-                "asic_type": converter.asic_type,
-                "asics": asic_info
-            }
+            "data": {"asic_type": converter.asic_type, "asics": asic_info},
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "output": f"Failed to list ASICs: {str(e)}"
-        }
+        return {"status": "error", "output": f"Failed to list ASICs: {str(e)}"}
 
-def convert_svt_to_local(row_svt=None, column_svt=None, sn_prefix=None,
-                          conversion_map=None):
+
+def convert_svt_to_local(
+    row_svt=None, column_svt=None, sn_prefix=None, conversion_map=None
+):
     """
     Convert SVT coordinates to local ASIC coordinates.
 
@@ -311,7 +310,10 @@ def convert_svt_to_local(row_svt=None, column_svt=None, sn_prefix=None,
         }'
     """
     if row_svt is None or column_svt is None:
-        return {"status": "error", "output": "Missing required parameters: row_svt and column_svt"}
+        return {
+            "status": "error",
+            "output": "Missing required parameters: row_svt and column_svt",
+        }
 
     try:
         converter = get_converter()
@@ -331,21 +333,26 @@ def convert_svt_to_local(row_svt=None, column_svt=None, sn_prefix=None,
                     "column_svt": column_svt,
                     "row_local": row_local,
                     "column_local": column_local,
-                    "sn_prefix": found_sn_prefix
-                }
+                    "sn_prefix": found_sn_prefix,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for SVT coordinates ({row_svt},{column_svt})" +
-                          (f" with SN prefix '{sn_prefix}'" if sn_prefix else "")
+                "output": f"No mapping found for SVT coordinates ({row_svt},{column_svt})"
+                + (f" with SN prefix '{sn_prefix}'" if sn_prefix else ""),
             }
 
     except Exception as e:
-        return {"status": "error", "output": f"SVT to local conversion failed: {str(e)}"}
+        return {
+            "status": "error",
+            "output": f"SVT to local conversion failed: {str(e)}",
+        }
 
-def convert_local_to_svt(row_local=None, column_local=None, sn_prefix=None,
-                          conversion_map=None):
+
+def convert_local_to_svt(
+    row_local=None, column_local=None, sn_prefix=None, conversion_map=None
+):
     """
     Convert local ASIC coordinates to SVT coordinates.
 
@@ -359,7 +366,10 @@ def convert_local_to_svt(row_local=None, column_local=None, sn_prefix=None,
         dict with status, output, and data keys
     """
     if row_local is None or column_local is None:
-        return {"status": "error", "output": "Missing required parameters: row_local and column_local"}
+        return {
+            "status": "error",
+            "output": "Missing required parameters: row_local and column_local",
+        }
     if not sn_prefix:
         return {"status": "error", "output": "Missing required parameter: sn_prefix"}
 
@@ -381,17 +391,21 @@ def convert_local_to_svt(row_local=None, column_local=None, sn_prefix=None,
                     "column_local": column_local,
                     "row_svt": row_svt,
                     "column_svt": column_svt,
-                    "sn_prefix": sn_prefix
-                }
+                    "sn_prefix": sn_prefix,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}"
+                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}",
             }
 
     except Exception as e:
-        return {"status": "error", "output": f"Local to SVT conversion failed: {str(e)}"}
+        return {
+            "status": "error",
+            "output": f"Local to SVT conversion failed: {str(e)}",
+        }
+
 
 def convert_its3_to_local(id_its3=None, sn_prefix=None, conversion_map=None):
     """
@@ -430,21 +444,26 @@ def convert_its3_to_local(id_its3=None, sn_prefix=None, conversion_map=None):
                     "id_its3": id_its3,
                     "row_local": row_local,
                     "column_local": column_local,
-                    "sn_prefix": found_sn_prefix
-                }
+                    "sn_prefix": found_sn_prefix,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for ITS3 id={id_its3}" +
-                          (f" with SN prefix '{sn_prefix}'" if sn_prefix else "")
+                "output": f"No mapping found for ITS3 id={id_its3}"
+                + (f" with SN prefix '{sn_prefix}'" if sn_prefix else ""),
             }
 
     except Exception as e:
-        return {"status": "error", "output": f"ITS3 to local conversion failed: {str(e)}"}
+        return {
+            "status": "error",
+            "output": f"ITS3 to local conversion failed: {str(e)}",
+        }
 
-def convert_local_to_its3(row_local=None, column_local=None, sn_prefix=None,
-                           conversion_map=None):
+
+def convert_local_to_its3(
+    row_local=None, column_local=None, sn_prefix=None, conversion_map=None
+):
     """
     Convert local ASIC coordinates to ITS3 die ID.
 
@@ -458,7 +477,10 @@ def convert_local_to_its3(row_local=None, column_local=None, sn_prefix=None,
         dict with status, output, and data keys
     """
     if row_local is None or column_local is None:
-        return {"status": "error", "output": "Missing required parameters: row_local and column_local"}
+        return {
+            "status": "error",
+            "output": "Missing required parameters: row_local and column_local",
+        }
     if not sn_prefix:
         return {"status": "error", "output": "Missing required parameter: sn_prefix"}
 
@@ -478,14 +500,17 @@ def convert_local_to_its3(row_local=None, column_local=None, sn_prefix=None,
                     "row_local": row_local,
                     "column_local": column_local,
                     "sn_prefix": sn_prefix,
-                    "id_its3": result
-                }
+                    "id_its3": result,
+                },
             }
         else:
             return {
                 "status": "error",
-                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}"
+                "output": f"No mapping found for local coordinates ({row_local},{column_local}) on {sn_prefix}",
             }
 
     except Exception as e:
-        return {"status": "error", "output": f"Local to ITS3 conversion failed: {str(e)}"}
+        return {
+            "status": "error",
+            "output": f"Local to ITS3 conversion failed: {str(e)}",
+        }

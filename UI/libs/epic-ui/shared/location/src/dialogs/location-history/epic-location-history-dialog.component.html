@@ -1,0 +1,26 @@
+﻿<epic-mat-dialog-header>
+    {{ dialogData.dialogTitle }}
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    @if(initProcessing.processing) {
+        <epic-loader />
+    } @else if (initProcessing.processingError) {
+        <epic-content-error [floating]="false">
+            {{ initProcessing.processingError.message }}
+        </epic-content-error>
+    } @else {
+        <epic-location-history-grid [data]="historyRecords" />
+    }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-dialog-close
+            mat-stroked-button>
+        {{ 'COMMON.CLOSE' | translate }}
+    </button>
+</mat-dialog-actions>
+
+

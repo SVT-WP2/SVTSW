@@ -1,0 +1,20 @@
+{
+    "name": "epic-ui/common",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/epic-ui/common/main/src",
+    "prefix": "lib",
+    "projectType": "library",
+    "tags": ["ui"],
+    "targets": {
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/epic-ui/common/main/jest.config.ts"
+            }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint"
+        }
+    }
+}

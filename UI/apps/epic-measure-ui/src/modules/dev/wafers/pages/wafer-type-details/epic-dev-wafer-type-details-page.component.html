@@ -1,0 +1,16 @@
+<div class="container">
+    <mat-card>
+        <mat-card-header>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <mat-card-title>Create Form</mat-card-title>
+                <button color="primary" mat-flat-button (click)="onOpenDialog()">
+                    Open Dialog
+                </button>
+            </div>
+
+        </mat-card-header>
+        <mat-card-content class="py-3">
+            <epic-wafer-type-info [entity]="waferType" />
+        </mat-card-content>
+    </mat-card>
+</div>

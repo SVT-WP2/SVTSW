@@ -1,0 +1,45 @@
+@use '@angular/material' as mat;
+@import 'vars';
+@import 'mixins';
+
+$_checkbox-size: 16px;
+$checkbox-container-size: 32px;
+
+:root {
+    @include mat.checkbox-overrides((
+        state-layer-size: $checkbox-container-size,
+        unselected-icon-color: $color-neutral-60,
+        unselected-focus-icon-color: $color-neutral-60,
+        unselected-hover-icon-color: $color-neutral-60,
+        disabled-unselected-icon-color: $color-neutral-40,
+        disabled-selected-icon-color: $color-neutral-40,
+    ));
+}
+
+.mat-mdc-checkbox .mdc-checkbox__background {
+    border-radius: 4px;
+    height: $_checkbox-size;
+    left: calc((var(--mdc-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
+    top: calc((var(--mdc-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
+    width: $_checkbox-size;
+}
+
+.mat-mdc-checkbox.mat-primary {
+    --mdc-checkbox-selected-checkmark-color: #{$color-neutral-0};
+}
+
+.mat-mdc-checkbox {
+    .mat-mdc-checkbox-touch-target {
+        height: $checkbox-container-size;
+        width: $checkbox-container-size;
+    }
+
+    .mat-internal-form-field > label.mdc-label {
+        padding-left: 4px;
+
+        &:empty {
+            padding-left: 0;
+        }
+    }
+}
+
