@@ -18,7 +18,7 @@
 
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",
-  "output": "eos",
+  "output": "staging",
   "remove_daq_status_file": true,
   "daq_status_file": ".daq_status.json",
 
@@ -28,5 +28,7 @@
 
   "Sequence": [
 "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
-"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"]
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output} --reset-tile-status",
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_hsch_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output} --reset-hs-status"
+]
 }
