@@ -1,0 +1,46 @@
+# TakeImageSequenceBAM.yaml
+params:
+  user:
+  waferAgentName:
+  dies: []
+
+  column_spacing_um: -2623
+  row_spacing_um: 2133
+  start_x_um=: 21088
+  start_y_um=: 27245
+
+
+steps:
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckCenter
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: AutoFocus
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - foreach: $dies
+    as: die
+    steps:
+      - command: MoveChuckRowColumn
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $die
+
+      - command: MoveChuckXY
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $die
+          x: $start_x_um
+          y: $start_y_um
+          position: "Relative"

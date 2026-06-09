@@ -1,6 +1,7 @@
 import actions.WPProjectActions as project_actions
 from utilities.WPResponseBuilder import ResponseBuilder
 import actions.WPSequencerActions as sequencer_actions
+from actions.WPSequencerActionsYAML import run_sequencer_yaml
 import actions.WPDataBaseActions as database_actions
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
@@ -54,6 +55,12 @@ COMMAND_ROUTER = {
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
         filepath=get_filepath_param(data if data else None), executor=_exec_in_sequence
     ),
+    "RunSequencerYAML": lambda **data: run_sequencer_yaml(
+        filepath=get_filepath_param(data if data else None),
+        executor=_exec_in_sequence,
+        **{k: v for k, v in data.items() if k != "filepath"}
+    ),
+
     # Database Actions
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
