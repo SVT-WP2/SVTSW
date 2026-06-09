@@ -100,7 +100,7 @@ jobs:
             --restart unless-stopped \
             --network svt-network--dev \
             --add-host=host.docker.internal:host-gateway \
-            -v /tmp:/tmp \
+            -v /var/log/svt-db-agent/dev:/var/log/svt-db-agent \
             -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
             -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
             -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
@@ -148,14 +148,14 @@ jobs:
           echo "Deploying ${IMAGE} locally"
           echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
           sudo docker pull "${IMAGE}"
-          sudo docker stop svt.db-agent || true
-          sudo docker rm svt.db-agent || true
+          sudo docker stop svt.db-agent--prod || true
+          sudo docker rm svt.db-agent--prod || true
           sudo docker run -d \
-            --name svt.db-agent \
+            --name svt.db-agent--prod \
             --restart unless-stopped \
             --network svt-network--prod \
             --add-host=host.docker.internal:host-gateway \
-            -v /tmp:/tmp \
+            -v /var/log/svt-db-agent/prod:/var/log/svt-db-agent \
             -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
             -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
             -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \

@@ -184,7 +184,7 @@ jobs:
             --restart unless-stopped \
             --network svt-network--dev \
             --add-host=host.docker.internal:host-gateway \
-            -v /tmp:/tmp \
+            -v /var/log/svt-db-agent/dev:/var/log/svt-db-agent \
             -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
             -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
             -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
@@ -193,7 +193,6 @@ jobs:
             -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
             -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
             -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            -e SVT_DB_AGENT_LOGGER_FILE_PATH="/tmp/SvtDbAgent-dev" \
             "${IMAGE}"
 
   # Auto-deploy a release image to dev as soon as it's built. Runs on every
@@ -238,7 +237,7 @@ jobs:
             --restart unless-stopped \
             --network svt-network--dev \
             --add-host=host.docker.internal:host-gateway \
-            -v /tmp:/tmp \
+            -v /var/log/svt-db-agent/dev:/var/log/svt-db-agent \
             -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
             -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
             -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
@@ -247,5 +246,4 @@ jobs:
             -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
             -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
             -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            -e SVT_DB_AGENT_LOGGER_FILE_PATH="/tmp/SvtDbAgent-dev" \
             "${IMAGE}"

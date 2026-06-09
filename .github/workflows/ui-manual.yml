@@ -130,10 +130,10 @@ jobs:
           echo "Deploying ${IMAGE} locally"
           echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
           sudo docker pull "${IMAGE}"
-          sudo docker stop svt.ui || true
-          sudo docker rm svt.ui || true
+          sudo docker stop svt.ui--prod || true
+          sudo docker rm svt.ui--prod || true
           sudo docker run -d \
-            --name svt.ui \
+            --name svt.ui--prod \
             --restart unless-stopped \
             --network svt-network--prod \
             --add-host=host.docker.internal:host-gateway \

@@ -4,7 +4,11 @@ set -euo pipefail
 THIS_SCRIPT_PATH=$(cd -- "$(dirname "${BASH_SOURCE[0]:-0}")" &>/dev/null && pwd -P)
 APP_BIN="${THIS_SCRIPT_PATH}/svt-db-agent/bin/svt_db_agent"
 DEFAULT_CONFIG="${THIS_SCRIPT_PATH}/configs/SvtDbAgent_config.example.json"
-RUNTIME_CONFIG="${SVT_DB_AGENT_RUNTIME_CONFIG:-/tmp/SvtDbAgent_config.runtime.json}"
+# Keep the runtime config on the container's OWN filesystem (never a shared or
+# bind-mounted path). It holds the injected DB password, so it must not be
+# visible on the host, and each container needs its own copy so the dev and prod
+# containers can't clobber each other. It is chmod 600 once written (see below).
+RUNTIME_CONFIG="${SVT_DB_AGENT_RUNTIME_CONFIG:-${THIS_SCRIPT_PATH}/SvtDbAgent_config.runtime.json}"
 
 BASE_CONFIG="${SVT_DB_AGENT_CONFIG:-$DEFAULT_CONFIG}"
 if [[ ${1:-} == *.json ]]; then
@@ -48,5 +52,17 @@ jq \
   ' "$RUNTIME_CONFIG" >"$RUNTIME_CONFIG.tmp"
 
 mv "$RUNTIME_CONFIG.tmp" "$RUNTIME_CONFIG"
+
+# The runtime config holds the injected DB password — keep it private.
+chmod 600 "$RUNTIME_CONFIG"
+
+# The logger opens its file directly and does NOT create parent directories, so a
+# missing log dir silently disables file logging. Ensure it exists: in deploys
+# it's the bind-mount point (/var/log/svt-db-agent); this also covers un-mounted
+# local runs. Derived from the runtime config so it tracks any env override.
+LOG_FILE_PREFIX="$(jq -r '.logger.filePath // empty' "$RUNTIME_CONFIG")"
+if [[ -n "$LOG_FILE_PREFIX" ]]; then
+  mkdir -p "$(dirname "$LOG_FILE_PREFIX")"
+fi
 
 exec "$APP_BIN" "$RUNTIME_CONFIG" "$@"
