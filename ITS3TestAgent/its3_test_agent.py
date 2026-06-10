@@ -29,7 +29,7 @@ from pathlib import Path
 import time
 import uuid
 
-from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
+from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer, TopicPartition
 from confluent_kafka.admin import AdminClient
 from tqdm import tqdm
 
@@ -142,12 +142,14 @@ class WPAgentClient:
             "session.timeout.ms": 60 * 1000,
             "max.poll.interval.ms": 1 * 60 * 60 * 1000,  # 1 hour
         })
-        self.consumer.subscribe([self.REPLY_TOPIC])
-        # wait until the partition is actually assigned before any send,
-        # otherwise a fast reply lands before we're positioned and is missed
-        deadline = time.time() + 10.0
-        while not self.consumer.assignment() and time.time() < deadline:
-            self.consumer.poll(0.1)
+        # manual assign — no consumer-group rebalance, so the partition is
+        # available immediately and we can position deterministically
+        reply_tp = TopicPartition(self.REPLY_TOPIC, 0)
+        self.consumer.assign([reply_tp])
+        # start at the end: only replies produced after we're ready, no history replay
+        self.consumer.poll(0.1)  # let the assignment take effect
+        _low, high = self.consumer.get_watermark_offsets(reply_tp, timeout=5.0)
+        self.consumer.seek(TopicPartition(self.REPLY_TOPIC, 0, high))
 
         log.info("WPAgent Kafka client ready")
 
@@ -272,12 +274,9 @@ class WPAgentClient:
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
         })
-        hb_consumer.subscribe([self.HEARTBEAT_TOPIC])
-        # wait for partition assignment before the read window below,
-        # otherwise the rebalance eats the timeout and we see no heartbeat
-        assign_deadline = time.time() + 10.0
-        while not hb_consumer.assignment() and time.time() < assign_deadline:
-            hb_consumer.poll(0.1)
+        # manual assign at offset -2 (OFFSET_BEGINNING): read the last retained
+        # beats (topic retains ~60s) with no consumer-group rebalance delay
+        hb_consumer.assign([TopicPartition(self.HEARTBEAT_TOPIC, 0, -2)])
 
         start = time.time()
         now = time.time()
