@@ -79,7 +79,12 @@ COMMAND_ROUTER = {
     "TestingLock": testing_actions.testing_lock,
     "TestingUnlock": testing_actions.testing_unlock,
     "TakeScreenshot": imaging_actions.take_screenshot,
-    "TakeImage": imaging_actions.take_image
+    "TakeImage": imaging_actions.take_image,
+    "GenerateRasterSteps": lambda **data: imaging_actions.generate_raster_steps(**data),
+    "StitchImages":        lambda **data: imaging_actions.stitch_images_for_die(**data),
+    "CleanupRasterImages": lambda **data: imaging_actions.cleanup_raster_images(**data),
+    "Sleep": lambda **data: imaging_actions.sleep(**data),
+    "StitchImagesFull": lambda **data: imaging_actions.stitch_images_large_for_wafer(**data),
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = (

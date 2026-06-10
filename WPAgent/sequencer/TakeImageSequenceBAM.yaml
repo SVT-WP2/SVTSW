@@ -2,15 +2,25 @@
 params:
   user:
   waferAgentName:
-  dies: []
-
+  bams: ["BAM00","BAM01","BAM02","BAM03","BAM04","BAM05","BAM06","BAM07","BAM08","BAM09","BAM10","BAM11","BAM12","BAM13","BAM14","BAM15","BAM16","BAM17","BAM18","BAM19"]
+  segs: ["SEG00","SEG01","SEG02","SEG03","SEG04"]
+  num_columns: 1
+  num_rows: 10
   column_spacing_um: -2623
   row_spacing_um: 2133
-  start_x_um=: 21088
-  start_y_um=: 27245
-
+  start_x_um: -21088
+  start_y_um: -27245
+  settle_time_s: 1
+  snapshot_type: "CameraRaw"
+  save_locally: true
 
 steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
 
   - command: FindHome
     params:
@@ -27,20 +37,152 @@ steps:
       user: $user
       waferAgentName: $waferAgentName
 
-  - foreach: $dies
+  - foreach: $bams
     as: die
     steps:
+
       - command: MoveChuckRowColumn
         params:
           user: $user
           waferAgentName: $waferAgentName
           label: $die
 
-      - command: MoveChuckXY
+      - command: GenerateRasterSteps
+        as: raster
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          num_columns: $num_columns
+          num_rows: $num_rows
+          column_spacing_um: $column_spacing_um
+          row_spacing_um: $row_spacing_um
+          start_x_um: $start_x_um
+          start_y_um: $start_y_um
+
+      - foreach: $raster.steps
+        as: rs
+        steps:
+
+          - command: MoveChuckXY
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              x: $rs.x
+              y: $rs.y
+              position: "Relative"
+            when: "$rs.action == move"
+
+          - command: Sleep
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              seconds: $rs.settle
+            when: "$rs.action == move"
+            
+          - command: TakeScreenshot
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              fileName: $rs.filename
+              outputDir: $die
+              snapshot_type: $snapshot_type
+              save_locally: $save_locally
+            when: "$rs.action == snapshot"
+
+      - command: StitchImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $die
+
+      - command: CleanupRasterImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $die
+
+
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckCenter
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: AutoFocus
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - foreach: $segs
+    as: die
+    steps:
+
+      - command: MoveChuckRowColumn
         params:
           user: $user
           waferAgentName: $waferAgentName
           label: $die
-          x: $start_x_um
-          y: $start_y_um
-          position: "Relative"
+
+      - command: GenerateRasterSteps
+        as: raster
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          num_columns: $num_columns
+          num_rows: $num_rows
+          column_spacing_um: $column_spacing_um
+          row_spacing_um: $row_spacing_um
+          start_x_um: $start_x_um
+          start_y_um: $start_y_um
+
+      - foreach: $raster.steps
+        as: rs
+        steps:
+
+          - command: MoveChuckXY
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              x: $rs.x
+              y: $rs.y
+              position: "Relative"
+            when: "$rs.action == move"
+
+          - command: Sleep
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              seconds: $rs.settle
+            when: "$rs.action == move"
+            
+          - command: TakeScreenshot
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              fileName: $rs.filename
+              outputDir: $die
+              snapshot_type: $snapshot_type
+              save_locally: $save_locally
+            when: "$rs.action == snapshot"
+
+      - command: StitchImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $die
+
+      - command: CleanupRasterImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $die

@@ -28,6 +28,24 @@ from pathlib import Path
 
 
 # ==============================================================================
+# FULL WAFER
+# ==============================================================================
+
+def stitch_images_large_for_wafer(folder, user=None, waferAgentName=None, **kwargs):
+    try:
+        from utilities.WPImageStitchingFull import stitch_images_large
+        from datetime import datetime
+        name      = os.path.basename(os.path.normpath(folder))
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        stitched  = stitch_images_large(folder=folder,
+                                        output_filename=f"{timestamp}_{name}.webp")
+        return ResponseBuilder.success("StitchImagesReply", f"Stitched -> {stitched}")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return ResponseBuilder.error("StitchImagesReply", str(e), 500)
+
+# ==============================================================================
 # DEFAULT CONFIG  (override via function arguments)
 # ==============================================================================
 
@@ -592,6 +610,25 @@ def _compose_wavefront(images, positions, rows, cols, geo, seam_cuts):
 
     return canvas
 
+def _crop_to_content(image, inset_x=100, inset_y=100):
+    """
+    Crop a fixed inset from all four edges to remove stitching zigzags.
+    """
+    H, W = image.shape[:2]
+
+    top    = inset_y
+    bottom = H - inset_y
+    left   = inset_x
+    right  = W - inset_x
+
+    cropped = image[top:bottom, left:right]
+
+    print(f"  Crop: inset {inset_x}x{inset_y}px  "
+          f"original {W}x{H}  "
+          f"cropped {cropped.shape[1]}x{cropped.shape[0]}")
+
+    return cropped
+
 
 # ==============================================================================
 # PUBLIC API
@@ -607,6 +644,8 @@ def stitch_images(
         image_height_px=_IMAGE_HEIGHT_PX,
         tolerance_px=_TOLERANCE_PX,
         jpeg_quality=_JPEG_QUALITY,
+        crop_inset_x=100,
+        crop_inset_y=100,
 ):
     """
     Stitch a grid of microscope images into a single output JPEG.
@@ -684,6 +723,10 @@ def stitch_images(
 
     full = _compose_wavefront(images, positions, rows, cols, geo, seam_log)
 
+    # ── crop ragged edges ──────────────────────────────────────────────
+    full = _crop_to_content(full, inset_x=crop_inset_x, inset_y=crop_inset_y)
+    # ──────────────────────────────────────────────────────────────────
+    
     # Seam quality summary
     print("\n=== Seam quality summary ===")
     print("  mismatch px/px at the chosen cut  |  GOOD<15  SOFT<30  HARD≥30\n")
@@ -709,10 +752,18 @@ def stitch_images(
         print(line)
     print("  (G=GOOD  S=SOFT  H=HARD)\n")
 
-    output_path = os.path.join(folder, output_filename)
-    cv2.imwrite(output_path, full, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+# ── output ────────────────────────────────────────────────────────
+    # Full quality JPEG (reference, ~18 MB) — uncomment to keep:
+    # full_path = os.path.join(folder, output_filename.replace(".jpg", "_full.jpg"))
+    # cv2.imwrite(full_path, full, [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+    # WebP 75 — good quality, ~half the size
+    output_path = os.path.join(folder, output_filename.replace(".jpg", ".webp"))
+    cv2.imwrite(output_path, full, [cv2.IMWRITE_WEBP_QUALITY, 75])
     mb = os.path.getsize(output_path) / 1e6
-    print(f"  -> {output_filename}  ({full.shape[1]}x{full.shape[0]} px, {mb:.1f} MB)")
+    print(f"  -> {output_path}  ({full.shape[1]}x{full.shape[0]} px, {mb:.1f} MB)")
+    # ──────────────────────────────────────────────────────────────────
+
     print("\n=== All done ===")
     return os.path.abspath(output_path)
 

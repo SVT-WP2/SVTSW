@@ -14,19 +14,27 @@ def run_sequencer_yaml(filepath, user=None, waferAgentName=None, executor=None, 
         with open(filepath, "r", encoding="utf-8") as f:
             doc = yaml.safe_load(f)
 
-        context  = doc.get("params", {})
+        context = doc.get("params", {})
         sequence = doc.get("steps", [])
 
-        if user:
+        context.update(kwargs)          # runtime fields first (dies, etc.)
+        if user:                        # named params always win
             context["user"] = user
         if waferAgentName:
             context["waferAgentName"] = waferAgentName
 
-        context.update(kwargs)  # dies, or any other future runtime field
-
         def resolve(value):
             if isinstance(value, str) and value.startswith("$"):
-                return context.get(value[1:], value)
+                key = value[1:]
+                # dot notation: $step.x → context["step"]["x"]
+                parts = key.split(".")
+                result = context.get(parts[0], value)
+                for part in parts[1:]:
+                    if isinstance(result, dict):
+                        result = result.get(part, value)
+                    else:
+                        return value
+                return result
             if isinstance(value, dict):
                 return {k: resolve(v) for k, v in value.items()}
             if isinstance(value, list):
@@ -46,8 +54,21 @@ def run_sequencer_yaml(filepath, user=None, waferAgentName=None, executor=None, 
                             return error
                     continue
 
-                command = step["command"]
-                data    = resolve(step.get("params", {}))
+                command  = step["command"]
+                data     = resolve(step.get("params", {}))
+                store_as = step.get("as")
+
+                # ── conditional execution ──────────────────────────────────────
+                when = step.get("when")
+                if when:
+                    parts = when.strip().split("==")
+                    if len(parts) == 2:
+                        left  = resolve(parts[0].strip())
+                        right = parts[1].strip().strip('"')   # ← strip quotes from right side
+                        print(f"   🔍 when: '{left}' == '{right}' → {str(left) == right}")
+                        if str(left) != right:
+                            continue
+                # ──────────────────────────────────────────────────────────────
 
                 print(f"\n[Step {i}/{len(steps)}] Executing: {command}")
                 print(f"   Parameters: {data}")
@@ -63,6 +84,10 @@ def run_sequencer_yaml(filepath, user=None, waferAgentName=None, executor=None, 
                     error_msg = result.get("error", {}).get("message", "Unknown error")
                     print(f"   ❌ Failed: {error_msg}")
                     return ResponseBuilder.error(reply, f"Step {i} '{command}' failed: {error_msg}", 500)
+
+                if store_as:
+                    context[store_as] = {"steps": result.get("steps", [])}
+                    print(f"   📦 Stored '{store_as}': {len(context[store_as]['steps'])} steps")
 
             return None
 

@@ -1,7 +1,7 @@
 [Unit]
 Description=Wafer Prober agent
-Requires=kafka.service
-After=kafka.service
+Requires=docker.service
+After=docker.service
 
 [Service]
 Type=simple
