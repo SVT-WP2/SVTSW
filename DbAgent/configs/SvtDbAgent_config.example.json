@@ -1,6 +1,6 @@
 {
   "logger": {
-    "filePath": "/tmp/SvtDbAgent-main",
+    "filePath": "/var/log/svt-db-agent/SvtDbAgent",
     "termVerbosity": "PRODUCTION",
     "fileVerbosity": "STANDARD"
   },
