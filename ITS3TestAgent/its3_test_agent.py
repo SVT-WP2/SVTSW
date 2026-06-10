@@ -137,14 +137,16 @@ class WPAgentClient:
             "bootstrap.servers": self.bootstrap_servers,
             "broker.address.family": self.ip_family,
             "group.id": f"its3-runner-{uuid.uuid4()}",
-            "auto.offset.reset": "latest",
+            "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
             "session.timeout.ms": 60 * 1000,
             "max.poll.interval.ms": 1 * 60 * 60 * 1000,  # 1 hour
         })
         self.consumer.subscribe([self.REPLY_TOPIC])
-        # warm-up
-        for _ in range(20):
+        # wait until the partition is actually assigned before any send,
+        # otherwise a fast reply lands before we're positioned and is missed
+        deadline = time.time() + 10.0
+        while not self.consumer.assignment() and time.time() < deadline:
             self.consumer.poll(0.1)
 
         log.info("WPAgent Kafka client ready")
@@ -271,6 +273,11 @@ class WPAgentClient:
             "enable.auto.commit": False,
         })
         hb_consumer.subscribe([self.HEARTBEAT_TOPIC])
+        # wait for partition assignment before the read window below,
+        # otherwise the rebalance eats the timeout and we see no heartbeat
+        assign_deadline = time.time() + 10.0
+        while not hb_consumer.assignment() and time.time() < assign_deadline:
+            hb_consumer.poll(0.1)
 
         start = time.time()
         now = time.time()
