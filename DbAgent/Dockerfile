@@ -44,5 +44,13 @@ RUN /bin/bash ./compile.sh
 
 FROM db-agent-base AS db-agent
 COPY --from=db-agent-build /app/install /app/svt-db-agent
+
+# Default environment variables
+ENV SVT_DB_AGENT_KAFKA_SERVER=localhost
+ENV SVT_DB_AGENT_KAFKA_PORT=9095
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+    CMD svt-db-agent/bin/svt-db-agent-healthcheck -b ${SVT_DB_AGENT_KAFKA_SERVER}:${SVT_DB_AGENT_KAFKA_PORT} || exit 1
+
 RUN chmod +x ./docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
