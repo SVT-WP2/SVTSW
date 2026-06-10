@@ -2,7 +2,7 @@
   "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
   "build_dir": "build",
   "run_list": "run_list.csv",
-  "kafka_broker": "svmithi02:9093",
+  "kafka_broker": "svmithi02:9092",
   "kafka_ip_family": "v4",
   "wp_user": "user1",
   "wp_agent_name": "CERN",
