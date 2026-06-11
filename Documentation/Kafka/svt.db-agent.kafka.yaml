@@ -1919,8 +1919,6 @@ components:
             filter:
               type: object
               properties:
-                waferId:
-                  type: number
                 familyTypes:
                   type: array
                   description: AsicFamilType values array. If array is empty / undefined => all Chips will be returned.
@@ -2067,8 +2065,6 @@ components:
             filter:
               type: object
               properties:
-                waferId:
-                  type: number
                 blockTypes:
                   type: array
                   description: ChipBlockType values array. If array is empty / undefined => all ChipBlocks will be returned.
@@ -3104,14 +3100,11 @@ components:
       type: object
       required:
         - id
-        - waferId
         - serialNumber
         - familyType
         - generalLocation
       properties:
         id:
-          type: number
-        waferId:
           type: number
         serialNumber:
           type: string
@@ -3190,15 +3183,12 @@ components:
       required:
         - id
         - chipId
-        - waferId
         - blockType
         - serialNumber
       properties:
         id:
           type: integer
         chipId:
-          type: integer
-        waferId:
           type: integer
         blockType:
           type: string
