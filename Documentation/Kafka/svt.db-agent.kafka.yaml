@@ -1552,7 +1552,7 @@ components:
               type: array
               items:
                 type: string
-            blockType:
+            chipBlockType:
               type: array
               items:
                 type: string
@@ -1847,14 +1847,17 @@ components:
             filter:
               type: object
               properties:
+                familyTypes:
+                  type: array
+                  description: AsicFamilType values array. If array is empty / undefined => all Asics will be returned.
+                  items:
+                    type: number
                 waferId:
                   type: number
                   description: Optional filter used to fetch all ASICs for the particular wafer
                 chipId:
                   type: number
                   description: Optional filter used to fetch ASIC related
-                familyType:
-                  type: string
                 quality:
                   type: string
                 serialNumber:
@@ -1916,6 +1919,13 @@ components:
             filter:
               type: object
               properties:
+                waferId:
+                  type: number
+                familyTypes:
+                  type: array
+                  description: AsicFamilType values array. If array is empty / undefined => all Chips will be returned.
+                  items:
+                    type: number
                 generalLocation:
                   type: string
                 serialNumber:
@@ -2057,6 +2067,13 @@ components:
             filter:
               type: object
               properties:
+                waferId:
+                  type: number
+                blockTypes:
+                  type: array
+                  description: ChipBlockType values array. If array is empty / undefined => all ChipBlocks will be returned.
+                  items:
+                    type: number
                 chipId:
                   type: integer
                 ids:
@@ -3087,12 +3104,18 @@ components:
       type: object
       required:
         - id
+        - waferId
         - serialNumber
+        - familyType
         - generalLocation
       properties:
         id:
           type: number
+        waferId:
+          type: number
         serialNumber:
+          type: string
+        familyType:
           type: string
         generalLocation:
           type: string
@@ -3167,12 +3190,15 @@ components:
       required:
         - id
         - chipId
+        - waferId
         - blockType
         - serialNumber
       properties:
         id:
           type: integer
         chipId:
+          type: integer
+        waferId:
           type: integer
         blockType:
           type: string
@@ -3756,7 +3782,7 @@ components:
       enum:
         - asicFamilyType
         - asicQuality
-        - blockType
+        - chipBlockType
         - dutType
         - engineeringRun
         - foundryName
