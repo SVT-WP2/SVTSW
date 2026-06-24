@@ -32,18 +32,34 @@ from pathlib import Path
 # ==============================================================================
 
 def stitch_images_large_for_wafer(folder, user=None, waferAgentName=None, **kwargs):
+    """Wafer-agent wrapper around the large-grid stitcher.
+
+    NOTE: `ResponseBuilder` must be importable in the deployment environment
+    (it was previously referenced without an import -> guaranteed NameError).
+    If it is not available, the plain output path / exception is returned
+    so the function still works standalone.
+    """
     try:
-        from utilities.WPImageStitchingFull import stitch_images_large
+        try:
+            from utilities.WPImageStitchingFull import stitch_images_large
+        except ImportError:
+            from WPImageStitchingFull import stitch_images_large
         from datetime import datetime
         name      = os.path.basename(os.path.normpath(folder))
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         stitched  = stitch_images_large(folder=folder,
-                                        output_filename=f"{timestamp}_{name}.webp")
-        return ResponseBuilder.success("StitchImagesReply", f"Stitched -> {stitched}")
+                                        output_filename=f"{timestamp}_{name}.jpg")
+        try:
+            return ResponseBuilder.success("StitchImagesReply", f"Stitched -> {stitched}")
+        except NameError:
+            return stitched
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return ResponseBuilder.error("StitchImagesReply", str(e), 500)
+        try:
+            return ResponseBuilder.error("StitchImagesReply", str(e), 500)
+        except NameError:
+            raise
 
 # ==============================================================================
 # DEFAULT CONFIG  (override via function arguments)
@@ -52,25 +68,38 @@ def stitch_images_large_for_wafer(folder, user=None, waferAgentName=None, **kwar
 _IMAGE_WIDTH_PX  = 2464
 _IMAGE_HEIGHT_PX = 2056
 _UM_PER_PX       = 1.417
-_STAGE_MOVE_X_UM = 2623   # ~25% X overlap
-_STAGE_MOVE_Y_UM = 2133   # ~25% Y overlap
-_TOLERANCE_PX    = 5
+_STAGE_MOVE_X_UM = 2968   # ~15% X overlap  (was 2623 / ~25%)
+_STAGE_MOVE_Y_UM = 2476   # ~15% Y overlap  (was 2133 / ~27%)
+_TOLERANCE_PX    = 25     # dx search range for horizontal pairs (px), around step_x.
+                          # Was ±5: too tight for long rows — thermal drift or X-step
+                          # calibration error beyond ±7 um clamps the measurement and
+                          # bends the whole mosaic.  ±25 px = ±35 um.
 _JPEG_QUALITY    = 95
 
 _CUT_MARGIN          = 20   # min px from overlap edge for seam cut
 _EQUIV_COST_MARGIN_H = 0.30  # H-seam: wider 30% window (periodic tissue has aliases)
 
-_DY_TOLERANCE_H = 20   # dy search range for horizontal pairs (px).
-                        # Stage drift / sample tilt can shift tiles by more than
-                        # ±_TOLERANCE_PX vertically even though no vertical command
-                        # is issued between columns.  Measurements sitting exactly at
-                        # the ±5 boundary are a sign of clamping; this wider window
-                        # recovers the true offset for the global optimiser.
-_DX_TOLERANCE_V = 20   # dx search range for vertical pairs (px).
-                        # No horizontal command between rows; drift can reach 10-15 px.
-_DY_TOLERANCE_V = 50   # dy search range for vertical pairs (px).
-                        # The stage landing can differ from step_y by 40+ px on this
-                        # microscope; ±5 locks onto a noise peak and gives the wrong dy.
+# Search windows for phase correlation.  Measurements landing exactly on a
+# window edge are CLAMPED (and flagged '!! at window edge' in the log).
+# Drawback of wider windows: if the sample has a periodic structure with a
+# pitch smaller than the window, the correlation can lock onto the wrong
+# period copy — keep windows below the device pitch where possible.
+_DY_TOLERANCE_H = 60    # dy search range for horizontal pairs (px).
+                        # Stage drift / camera-stage rotation shifts tiles
+                        # vertically even with no vertical command (~4 px/col
+                        # observed); ±60 px = ±85 um headroom.
+_DX_TOLERANCE_V = 15    # dx search range for vertical pairs (px).
+                        # The stage does NOT move X between rows, so true
+                        # X-drift is empirically <10 px.  The device array
+                        # has a cell period of ~48 px in X; a wider window
+                        # (we tried ±50) lets phase correlation lock onto
+                        # the alias peak at ±48, corrupting BOTH dx and dy.
+                        # ±15 is safely below the alias and above real drift.
+                        # Raise only if '!! dx at window edge' appears AND
+                        # the device period is confirmed to be >30 px.
+_DY_TOLERANCE_V = 50    # dy search range for vertical pairs (px).
+                        # Stage landing can differ from step_y by 40+ px;
+                        # ±50 px = ±71 um.  Raise if flagged at the edge.
 
 
 # ==============================================================================
@@ -79,7 +108,9 @@ _DY_TOLERANCE_V = 50   # dy search range for vertical pairs (px).
 
 def _load_grid_images(folder):
     images = {}
-    for fp in Path(folder).glob("*.jp*g"):
+    for fp in sorted(Path(folder).iterdir()):
+        if fp.suffix.lower() not in (".jpg", ".jpeg"):
+            continue
         parts = fp.stem.split("_")
         if len(parts) == 2:
             try:
@@ -137,30 +168,31 @@ def _phase_corr_peak(strip1, strip2, tolerance, tolerance_x=None):
     return fdx, fdy
 
 
-def _subwindow_dy(st, sb, tolerance):
+def _subwindow_dy(st, sb, tolerance, dx_tolerance=None):
     """Median dy (and dx) from near-square sub-windows of a short/wide Y overlap strip.
 
     Each sub-window is roughly square so phase-correlation peaks are well-conditioned.
     The dx search uses _DX_TOLERANCE_V (wider) because large horizontal offsets
     (10-15 px) can occur between rows even with no horizontal stage command.
 
-    Returns (median_dy, n, std).
-    The median dx is stashed in _subwindow_dy.last_dx for the caller.
+    Returns (median_dy, median_dx, n, std).
     """
     sh, sw = st.shape[:2]
     n      = max(1, sw // sh)
+    dx_tol = _DX_TOLERANCE_V if dx_tolerance is None else dx_tolerance
     raw_dy, raw_dx = [], []
     for i in range(n):
         x0 = i * (sw // n)
         x1 = (i + 1) * (sw // n) if i < n - 1 else sw
         fdx, fdy = _phase_corr_peak(st[:, x0:x1], sb[:, x0:x1],
-                                    tolerance, tolerance_x=_DX_TOLERANCE_V)
+                                    tolerance, tolerance_x=dx_tol)
         raw_dy.append(fdy)
         raw_dx.append(fdx)
     raw_dy = np.array(raw_dy, dtype=np.float32)
     raw_dx = np.array(raw_dx, dtype=np.float32)
-    _subwindow_dy.last_dx = int(round(float(np.median(raw_dx))))
-    return int(round(float(np.median(raw_dy)))), n, float(np.std(raw_dy))
+    return (int(round(float(np.median(raw_dy)))),
+            int(round(float(np.median(raw_dx)))),
+            n, float(np.std(raw_dy)))
 
 
 # ==============================================================================
@@ -177,7 +209,7 @@ def _best_hcut(st, sb, margin=_CUT_MARGIN):
     """
     H  = min(st.shape[0], sb.shape[0])
     lo = max(0, margin)
-    hi = H
+    hi = max(lo + 1, H - margin)   # keep margin at BOTH edges of the overlap
     st_f = st[lo:hi].astype(np.float32);  st_f -= st_f.mean(axis=1, keepdims=True)
     sb_f = sb[lo:hi].astype(np.float32);  sb_f -= sb_f.mean(axis=1, keepdims=True)
     diff      = np.abs(st_f - sb_f)
@@ -252,41 +284,83 @@ def _graph_cut_vseam(sl, sr, margin=_CUT_MARGIN, max_slope=2):
 # STEP 1 — MEASURE ALL ADJACENT PAIRS
 # ==============================================================================
 
-def _measure_pair_h(img_left, img_right, step_x, tolerance):
+def _measure_pair_h(img_left, img_right, step_x, tolerance, dy_tolerance=None):
     """Phase-correlate horizontally adjacent tiles; returns (total_dx, fdy).
 
-    dx uses the narrow `tolerance` (stage X is well-calibrated).
-    dy uses _DY_TOLERANCE_H (wider) because vertical drift between columns
-    can exceed ±tolerance even with no vertical stage command.
+    dx searches ±tolerance around step_x; dy searches ±dy_tolerance
+    (default _DY_TOLERANCE_H).  Results at a window edge are clamped and
+    flagged in the log by the caller.
     """
+    dy_tol = _DY_TOLERANCE_H if dy_tolerance is None else dy_tolerance
     H  = min(img_left.shape[0], img_right.shape[0])
     ow = img_left.shape[1] - step_x
     if ow < 4:
         return step_x, 0
     sl = img_left[:H,  img_left.shape[1] - ow:]
     sr = img_right[:H, :ow]
-    fdx, fdy = _phase_corr_peak(sl, sr, _DY_TOLERANCE_H, tolerance_x=tolerance)
+    fdx, fdy = _phase_corr_peak(sl, sr, dy_tol, tolerance_x=tolerance)
+    if abs(fdx) >= tolerance or abs(fdy) >= dy_tol:
+        print("!! at window edge ", end="")
     return step_x + fdx, fdy
 
 
-def _measure_pair_v(img_top, img_bot, step_y, tolerance):
-    """Phase-correlate vertically adjacent tiles; returns (fdx, total_dy).
+def _measure_pair_v(img_top, img_bot, step_y, tolerance,
+                    dx_tolerance=None, dy_tolerance=None):
+    """Phase-correlate vertically adjacent tiles; returns (fdx, total_dy, conf).
 
-    Uses sub-windows for a robust dy estimate.  The y-search uses
-    _DY_TOLERANCE_V (not `tolerance`) because the stage landing can differ
-    from step_y by 40+ px on this microscope.
+    Primary measurement: ONE phase correlation over the FULL-WIDTH overlap
+    strip with a tight dx search (±_DX_TOLERANCE_V, default 15 px).  Keeping
+    the X window narrow is critical: the device array has a cell period of
+    ~48 px in X, and a wider window lets the correlation lock onto the alias
+    peak at ±48 px, corrupting BOTH dx and dy.
+
+    Sub-windows (4 equally-spaced columns of the strip) provide a secondary
+    confidence estimate: if they all agree, the measurement is reliable; if
+    they scatter widely the content is periodic/low-texture and the result
+    may be an alias in Y as well.  The confidence (0..1) is returned so the
+    global solver can down-weight unreliable pairs.
+
+    dy searches ±dy_tolerance (default _DY_TOLERANCE_V, not `tolerance`);
+    dx searches ±dx_tolerance (default _DX_TOLERANCE_V).  Results at a
+    window edge are clamped and flagged.
     """
+    dx_tol = _DX_TOLERANCE_V if dx_tolerance is None else dx_tolerance
+    dy_tol = _DY_TOLERANCE_V if dy_tolerance is None else dy_tolerance
     W  = min(img_top.shape[1], img_bot.shape[1])
     oh = img_top.shape[0] - step_y
     if oh < 4:
-        return 0, step_y
+        return 0, step_y, 1.0
     st  = img_top[img_top.shape[0] - oh:, :W]
     sb  = img_bot[:oh, :W]
-    fdy, n, spread = _subwindow_dy(st, sb, _DY_TOLERANCE_V)
-    fdx = _subwindow_dy.last_dx
-    print(f"    dy={step_y + fdy:+d} px  "
-          f"({n} sub-windows, spread ±{spread:.1f} px)  dx={fdx:+d}")
-    return fdx, step_y + fdy
+
+    # primary measurement: single full-width strip with tight dx window
+    fdx, fdy = _phase_corr_peak(st, sb, dy_tol, tolerance_x=dx_tol)
+
+    # secondary: sub-window spread as confidence proxy
+    _, _, n, spread = _subwindow_dy(st, sb, dy_tol, dx_tolerance=dx_tol)
+
+    # confidence: degrade progressively with spread
+    # (spread < 8 → 1.0; spread 8-20 → 0.7; spread 20-35 → 0.4; > 35 → 0.2)
+    if spread < 8:
+        conf = 1.0
+    elif spread < 20:
+        conf = 0.7
+    elif spread < 35:
+        conf = 0.4
+    else:
+        conf = 0.2
+
+    edge = ""
+    if abs(fdx) >= dx_tol:
+        edge += "  !! dx at window edge"
+        conf = min(conf, 0.2)     # alias probable — further down-weight
+    if abs(fdy) >= dy_tol:
+        edge += "  !! dy at window edge"
+    periodic = "  !! periodic/low-texture content" if spread > 8 else ""
+    print(f"    dy={step_y + fdy:+d} px  dx={fdx:+d}  "
+          f"(full strip; {n} sub-windows spread ±{spread:.1f} px  conf={conf:.1f})"
+          f"{periodic}{edge}")
+    return fdx, step_y + fdy, conf
 
 
 # ==============================================================================
@@ -296,7 +370,11 @@ def _measure_pair_v(img_top, img_bot, step_y, tolerance):
 def _global_tile_positions(pair_offsets, rows, cols):
     """Solve for all tile positions by least squares over all pairwise offsets.
 
-    pair_offsets : {(r1,c1,r2,c2): (dx, dy)}  — position(r2,c2) − position(r1,c1).
+    pair_offsets : {(r1,c1,r2,c2): (dx, dy)}  or  {…: (dx, dy, conf)}
+                   position(r2,c2) − position(r1,c1).
+                   Optional third element `conf` (0..1) seeds the IRLS weights
+                   so confidently-wrong V-pair measurements (periodic-content
+                   aliases) are down-weighted from the very first iteration.
     Returns      : {(r,c): (x_px, y_px)}  — tile (0,0) is reference at (0,0).
     """
     n_r = len(rows);  n_c = len(cols);  n = n_r * n_c
@@ -306,37 +384,165 @@ def _global_tile_positions(pair_offsets, rows, cols):
     def idx(r, c): return ri[r] * n_c + ci[c]
 
     eqs_x, eqs_y = [], []
-    for (r1, c1, r2, c2), (dx, dy) in pair_offsets.items():
-        i, j = idx(r1, c1), idx(r2, c2)
-        eqs_x.append((i, j, float(dx)))
-        eqs_y.append((i, j, float(dy)))
+    for (r1, c1, r2, c2), val in pair_offsets.items():
+        dx, dy = val[0], val[1]
+        conf   = float(val[2]) if len(val) > 2 else 1.0
+        i, j   = idx(r1, c1), idx(r2, c2)
+        eqs_x.append((i, j, float(dx), conf))
+        eqs_y.append((i, j, float(dy), conf))
 
-    def _solve(eqs):
-        ne = len(eqs)
-        if ne == 0:
-            return np.zeros(n)
-        A = np.zeros((ne, n), dtype=np.float64)
-        b = np.zeros(ne,      dtype=np.float64)
-        for k, (i, j, off) in enumerate(eqs):
-            A[k, i] = -1.0;  A[k, j] = +1.0;  b[k] = off
-        pos_rest, _, _, _ = np.linalg.lstsq(A[:, 1:], b, rcond=None)
-        return np.concatenate([[0.0], pos_rest])
+    # Extract optional per-equation confidence seeds
+    def _conf_weights(eqs):
+        if eqs and len(eqs[0]) > 3:
+            return np.array([e[3] for e in eqs], dtype=np.float64)
+        return None
 
-    xpos = _solve(eqs_x);  xpos -= xpos.min()
-    ypos = _solve(eqs_y);  ypos -= ypos.min()
+    xpos = _solve_offset_robust(eqs_x, n, axis="x",
+                                 init_weights=_conf_weights(eqs_x))
+    xpos -= xpos.min()
+    ypos = _solve_offset_robust(eqs_y, n, axis="y",
+                                 init_weights=_conf_weights(eqs_y))
+    ypos -= ypos.min()
 
     positions = {(r, c): (int(round(xpos[idx(r, c)])), int(round(ypos[idx(r, c)])))
                  for r in rows for c in cols}
 
-    print("\n  Globally-optimised tile positions (x, y):")
-    for r in rows:
-        line = f"    row {r}: "
-        for c in cols:
-            x, y = positions[(r, c)]
-            line += f"({x:5d},{y:4d}) "
-        print(line)
+    # Residual report: pairs whose measurement disagrees with the global
+    # solution (typically periodic-content mismeasurements; they were
+    # down-weighted, listed here for diagnosis).
+    bad = []
+    for (r1, c1, r2, c2), val in pair_offsets.items():
+        dx, dy = val[0], val[1]
+        rx = positions[(r2, c2)][0] - positions[(r1, c1)][0] - int(dx)
+        ry = positions[(r2, c2)][1] - positions[(r1, c1)][1] - int(dy)
+        if abs(rx) > 10 or abs(ry) > 10:
+            bad.append((max(abs(rx), abs(ry)), (r1, c1, r2, c2), rx, ry))
+    if bad:
+        bad.sort(key=lambda t: -t[0])
+        print(f"\n  !! {len(bad)}/{len(pair_offsets)} pair measurement(s) "
+              f"inconsistent with the global solution (>10 px, down-weighted):")
+        for _, (r1, c1, r2, c2), rx, ry in bad[:20]:
+            print(f"     ({r1},{c1})->({r2},{c2}): residual x={rx:+d}  y={ry:+d}")
+        if len(bad) > 20:
+            print(f"     ... and {len(bad) - 20} more")
+
+    if n_r <= 30 and n_c <= 30:
+        print("\n  Globally-optimised tile positions (x, y):")
+        for r in rows:
+            line = f"    row {r}: "
+            for c in cols:
+                x, y = positions[(r, c)]
+                line += f"({x:5d},{y:4d}) "
+            print(line)
+    else:
+        print(f"\n  Globally-optimised positions for {n} tiles "
+              f"(table suppressed for grids > 30x30)")
 
     return positions
+
+
+def _solve_offset_robust(eqs, n, n_iter=3, axis="", init_weights=None):
+    """Robust (IRLS / Huber) version of the global position solve.
+
+    Solves ordinary least squares first, then iteratively down-weights
+    equations whose residual exceeds ~3 robust sigma — so a handful of
+    confidently-wrong pair measurements (periodic-content aliases, blank
+    overlaps) no longer bend the whole mosaic.  The grid has ~2x redundancy
+    (every interior tile is constrained by 4 pairs), which is what makes
+    this work.
+
+    init_weights : optional array of per-equation confidence seeds (0..1).
+                   Seeds the very first iteration so known-bad V-pair
+                   measurements don't pull the initial solution off-track
+                   before IRLS can identify them as outliers.
+    """
+    if not eqs:
+        return np.zeros(n)
+    I   = np.array([e[0] for e in eqs], dtype=np.int64)
+    J   = np.array([e[1] for e in eqs], dtype=np.int64)
+    OFF = np.array([e[2] for e in eqs], dtype=np.float64)
+
+    x = _solve_offset_lsq(eqs, n, weights=init_weights)
+    t = None
+    for _ in range(n_iter):
+        res = x[J] - x[I] - OFF
+        mad = np.median(np.abs(res - np.median(res)))
+        t   = max(6.0, 3.0 * 1.4826 * mad)      # Huber threshold, >= 6 px
+        absr = np.abs(res)
+        w   = np.where(absr <= t, 1.0, t / np.maximum(absr, 1e-9))
+        if (w < 1.0).sum() == 0:
+            return x
+        x = _solve_offset_lsq(eqs, n, weights=w)
+
+    # final pass: hard-reject clear outliers (near-zero weight keeps the
+    # graph connected even if a node would otherwise lose all equations)
+    res  = x[J] - x[I] - OFF
+    absr = np.abs(res)
+    w    = np.where(absr <= t, 1.0, 1e-4)
+    n_rej = int((w < 0.5).sum())
+    if n_rej:
+        x = _solve_offset_lsq(eqs, n, weights=w)
+        print(f"  Robust solve [{axis}]: {n_rej}/{len(eqs)} outlier pair(s) "
+              f"rejected (residual > ~{t:.0f} px)")
+    return x
+
+
+def _solve_offset_lsq(eqs, n, weights=None):
+    """Least-squares node positions from pairwise offsets, node 0 anchored at 0.
+
+    eqs : list of (i, j, off) meaning  pos[j] - pos[i] = off.
+    weights : optional per-equation weights (IRLS).
+
+    Solves the normal equations  L p = b  (L = weighted graph Laplacian) with
+    a matrix-free conjugate gradient: O(edges) memory, exact same minimiser
+    as the previous dense `np.linalg.lstsq` formulation.  The dense version
+    built an (n_eqs x n) matrix — ~3.3 GB and hours of SVD for a 120x120
+    grid; this runs in milliseconds-to-seconds for any realistic grid size.
+
+    Nodes with no equations (missing tiles) are left at 0.
+    """
+    if not eqs:
+        return np.zeros(n)
+    I   = np.array([e[0] for e in eqs], dtype=np.int64)
+    J   = np.array([e[1] for e in eqs], dtype=np.int64)
+    OFF = np.array([e[2] for e in eqs], dtype=np.float64)
+    W   = np.ones(len(eqs)) if weights is None else np.asarray(weights, np.float64)
+
+    deg = (np.bincount(I, weights=W, minlength=n)
+           + np.bincount(J, weights=W, minlength=n))
+    b   = (np.bincount(J, weights=W * OFF, minlength=n)
+           - np.bincount(I, weights=W * OFF, minlength=n))
+    b[0] = 0.0   # anchor node 0 at position 0
+
+    def Lmul(x):
+        s  = deg * x
+        s -= np.bincount(I, weights=W * x[J], minlength=n)
+        s -= np.bincount(J, weights=W * x[I], minlength=n)
+        s[0] = 0.0   # anchored row
+        return s
+
+    x  = np.zeros(n, dtype=np.float64)
+    r  = b.copy()
+    p  = r.copy()
+    rs = float(r @ r)
+    if rs == 0.0:
+        return x
+    tol2     = max(rs * 1e-20, 1e-12)
+    max_iter = max(200, 4 * n)
+    for _ in range(max_iter):
+        Ap    = Lmul(p)
+        denom = float(p @ Ap)
+        if denom <= 0.0:
+            break
+        alpha = rs / denom
+        x    += alpha * p
+        r    -= alpha * Ap
+        rs_new = float(r @ r)
+        if rs_new < tol2:
+            break
+        p  = r + (rs_new / rs) * p
+        rs = rs_new
+    return x
 
 
 # ==============================================================================
@@ -462,9 +668,11 @@ def _tile_geometry(images, positions, rows, cols):
             Ht, Wt = images[(r, c)].shape[:2]
             gx, gy = positions[(r, c)]
             left_ow = top_oh = 0
-            if ci > 0:
+            # Only use a neighbour's position if its image actually exists:
+            # missing tiles get garbage positions from the optimiser.
+            if ci > 0 and (r, cols[ci-1]) in images:
                 left_ow = max(0, min(positions[(r, cols[ci-1])][0] + Wt - gx, Wt))
-            if ri > 0:
+            if ri > 0 and (rows[ri-1], c) in images:
                 top_oh  = max(0, min(positions[(rows[ri-1], c)][1] + Ht - gy, Ht))
             geo[(r, c)] = (left_ow, top_oh)
     return geo
@@ -621,6 +829,10 @@ def _crop_to_content(image, inset_x=100, inset_y=100):
     left   = inset_x
     right  = W - inset_x
 
+    if bottom - top < 1 or right - left < 1:
+        print(f"  Crop: inset {inset_x}x{inset_y}px too large for {W}x{H}, skipped")
+        return image
+
     cropped = image[top:bottom, left:right]
 
     print(f"  Crop: inset {inset_x}x{inset_y}px  "
@@ -628,6 +840,43 @@ def _crop_to_content(image, inset_x=100, inset_y=100):
           f"cropped {cropped.shape[1]}x{cropped.shape[0]}")
 
     return cropped
+
+
+# Hard per-side pixel limits of the encoders (format specifications).
+_WEBP_MAX_PX = 16383
+_JPEG_MAX_PX = 65500
+
+
+def _save_image(path, img, jpeg_quality=80, webp_quality=75):
+    """Write `img` to `path`, honouring format size limits and checking success.
+
+    WebP cannot exceed 16383 px per side; if the image is bigger the file is
+    silently truncated/failed by OpenCV, so we fall back to JPEG (<= 65500 px).
+    Returns the actual path written.
+    """
+    h, w = img.shape[:2]
+    base, ext = os.path.splitext(path)
+    ext = ext.lower()
+
+    if ext == ".webp" and max(h, w) > _WEBP_MAX_PX:
+        print(f"  !! {w}x{h} exceeds WebP limit ({_WEBP_MAX_PX} px/side) "
+              f"-> falling back to JPEG")
+        ext, path = ".jpg", base + ".jpg"
+    if ext in (".jpg", ".jpeg") and max(h, w) > _JPEG_MAX_PX:
+        raise ValueError(
+            f"Image {w}x{h} exceeds JPEG limit ({_JPEG_MAX_PX} px/side). "
+            "Reduce the output scale (see final_max_px in stitch_images_large).")
+
+    if ext == ".webp":
+        params = [cv2.IMWRITE_WEBP_QUALITY, webp_quality]
+    elif ext in (".jpg", ".jpeg"):
+        params = [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality]
+    else:
+        params = []
+
+    if not cv2.imwrite(path, img, params):
+        raise IOError(f"cv2.imwrite failed for {path} ({w}x{h})")
+    return path
 
 
 # ==============================================================================
@@ -644,6 +893,7 @@ def stitch_images(
         image_height_px=_IMAGE_HEIGHT_PX,
         tolerance_px=_TOLERANCE_PX,
         jpeg_quality=_JPEG_QUALITY,
+        webp_quality=75,
         crop_inset_x=100,
         crop_inset_y=100,
 ):
@@ -705,8 +955,9 @@ def stitch_images(
             if (r, c) not in images or (rn, c) not in images:
                 continue
             print(f"  [{r},{c}] -> [{rn},{c}]:  ", end="", flush=True)
-            dx, dy = _measure_pair_v(images[(r, c)], images[(rn, c)], step_y, tolerance_px)
-            pair_offsets[(r, c, rn, c)] = (dx, dy)
+            dx, dy, conf = _measure_pair_v(images[(r, c)], images[(rn, c)],
+                                           step_y, tolerance_px)
+            pair_offsets[(r, c, rn, c)] = (dx, dy, conf)
 
     # Step 2: global least-squares optimisation
     print("\n=== Step 2: global position optimisation ===")
@@ -754,12 +1005,14 @@ def stitch_images(
 
 # ── output ────────────────────────────────────────────────────────
     # Full quality JPEG (reference, ~18 MB) — uncomment to keep:
-    # full_path = os.path.join(folder, output_filename.replace(".jpg", "_full.jpg"))
-    # cv2.imwrite(full_path, full, [cv2.IMWRITE_JPEG_QUALITY, 95])
+    # _save_image(os.path.join(folder, output_filename.replace(".jpg", "_full.jpg")),
+    #             full, jpeg_quality=95)
 
-    # WebP 75 — good quality, ~half the size
+    # WebP — good quality, ~half the JPEG size (auto-falls back to JPEG
+    # if the stitch exceeds WebP's 16383 px/side format limit)
     output_path = os.path.join(folder, output_filename.replace(".jpg", ".webp"))
-    cv2.imwrite(output_path, full, [cv2.IMWRITE_WEBP_QUALITY, 75])
+    output_path = _save_image(output_path, full,
+                              jpeg_quality=jpeg_quality, webp_quality=webp_quality)
     mb = os.path.getsize(output_path) / 1e6
     print(f"  -> {output_path}  ({full.shape[1]}x{full.shape[0]} px, {mb:.1f} MB)")
     # ──────────────────────────────────────────────────────────────────

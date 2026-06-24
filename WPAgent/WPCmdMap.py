@@ -80,11 +80,19 @@ COMMAND_ROUTER = {
     "TestingUnlock": testing_actions.testing_unlock,
     "TakeScreenshot": imaging_actions.take_screenshot,
     "TakeImage": imaging_actions.take_image,
+
+    #Sequencer Specific
     "GenerateRasterSteps": lambda **data: imaging_actions.generate_raster_steps(**data),
-    "StitchImages":        lambda **data: imaging_actions.stitch_images_for_die(**data),
     "CleanupRasterImages": lambda **data: imaging_actions.cleanup_raster_images(**data),
     "Sleep": lambda **data: imaging_actions.sleep(**data),
     "StitchImagesFull": lambda **data: imaging_actions.stitch_images_large_for_wafer(**data),
+    "ArchiveImaging": lambda **data: imaging_actions.archive_imaging(**data),
+    "BuildFlatfield": lambda **data: imaging_actions.build_flatfield_for_folder(**data),
+    "DeleteImagingFolder": lambda **data: imaging_actions.delete_imaging_folder(**data),
+    "GetChuckXY": lambda **data: imaging_actions.get_chuck_xy(**data),
+    "MoveChuckXYPrecise": lambda **data: imaging_actions.move_chuck_xy_precise(**data),
+    "ComputeCouplingConstants": lambda **data: imaging_actions.compute_coupling_constants(**data),
+    "CropImage": lambda **data: imaging_actions.crop_stitched_image(**data)
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = (

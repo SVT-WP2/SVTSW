@@ -1,0 +1,131 @@
+# DebugWaferEdges.yaml
+# Verify full-wafer scan bounds by moving to the 4 cardinal edge points of
+# the circle mask.  At each point the wafer edge should be visible and
+# roughly centred in the microscope FOV.
+
+params:
+  user:
+  waferAgentName:
+  pause_s: 5
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckRowColumn
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: SEG4
+
+  # ── BOTTOM CENTER  (-154347, +73536) ─────────────────────────────────────
+  - command: MoveChuckXY
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: -154347
+      y: 73536
+      position: "Relative"
+
+  - command: Sleep
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      seconds: $pause_s
+
+  - command: MoveChuckXY      # return to SEG4
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: 154347
+      y: -73536
+      position: "Relative"
+
+  # ── RIGHT CENTER  (-4430, -76104) ────────────────────────────────────────
+  - command: MoveChuckXY
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: -4430
+      y: -76104
+      position: "Relative"
+
+  - command: Sleep
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      seconds: $pause_s
+
+  - command: MoveChuckXY      # return to SEG4
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: 4430
+      y: 76104
+      position: "Relative"
+
+  # ── TOP CENTER  (-154356, -225728) ───────────────────────────────────────
+  - command: MoveChuckXY
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: -154356
+      y: -225728
+      position: "Relative"
+
+  - command: Sleep
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      seconds: $pause_s
+
+  - command: MoveChuckXY      # return to SEG4
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: 154356
+      y: 225728
+      position: "Relative"
+
+  # ── LEFT CENTER  (-303682, -76101) ───────────────────────────────────────
+  - command: MoveChuckXY
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: -303682
+      y: -76101
+      position: "Relative"
+
+  - command: Sleep
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      seconds: $pause_s
+
+  - command: MoveChuckXY      # return to SEG4
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      x: 303682
+      y: 76101
+      position: "Relative"

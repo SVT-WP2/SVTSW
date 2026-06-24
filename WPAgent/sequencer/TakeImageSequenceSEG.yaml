@@ -2,10 +2,9 @@
 params:
   user:
   waferAgentName:
-  #bams: ["BAM00","BAM01","BAM02","BAM03","BAM04","BAM05","BAM06","BAM07","BAM08","BAM09","BAM10","BAM11","BAM12","BAM13","BAM14","BAM15","BAM16","BAM17","BAM18","BAM19"]
-  bams: ["BAM00"]
-  num_columns: 10
-  num_rows: 9
+  segs: ["SEG4"]
+  num_columns: 91 #91
+  num_rows: 43 #9
   column_spacing_um: -2968
   row_spacing_um: 2476
   start_x_um: -21088
@@ -16,24 +15,30 @@ params:
   # Output base folder: images go to  Imaging/<wafer>/<die>/
   # Override at runtime: --data='{"wafer":"Wafer25", ...}'
   wafer: "Wafer"
-  bam_save_jpg: false
-  bam_save_tif: true
+  seg_save_jpg: true
+  seg_save_tif: true
   tif_quality: 85
 
 steps:
 
-  - command: OpenProject
-    params:
-      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
-      user: $user
-      waferAgentName: $waferAgentName
+  # - command: OpenProject
+  #   params:
+  #     projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+  #     user: $user
+  #     waferAgentName: $waferAgentName
 
-  - command: InitProbing
-    params:
-      user: $user
-      waferAgentName: $waferAgentName
+  # - command: InitProbing
+  #   params:
+  #     user: $user
+  #     waferAgentName: $waferAgentName
 
-  - foreach: $bams
+  # - command: OpenProject
+  #   params:
+  #     projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+  #     user: $user
+  #     waferAgentName: $waferAgentName
+
+  - foreach: $segs
     as: die
     steps:
 
@@ -80,7 +85,7 @@ steps:
               user: $user
               waferAgentName: $waferAgentName
               fileName: $rs.filename
-              outputDir: $die
+              outputDir: "SEG"
               wafer: $wafer
               snapshot_type: $snapshot_type
               save_locally: $save_locally
@@ -90,19 +95,19 @@ steps:
         params:
           user: $user
           waferAgentName: $waferAgentName
-          folder: $die
+          folder: "SEG"
           wafer: $wafer
-          save_overview_jpg: $bam_save_jpg
-          pyramid_tiff: $bam_save_tif
+          save_overview_jpg: $seg_save_jpg
+          pyramid_tiff: $seg_save_tif
           tiff_quality: $tif_quality
 
       - command: CleanupRasterImages
         params:
           user: $user
           waferAgentName: $waferAgentName
-          folder: $die
+          folder: "SEG"
           wafer: $wafer
-      
+
       - command: ArchiveImaging
         params:
         user: $user

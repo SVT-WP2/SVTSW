@@ -1,0 +1,121 @@
+# BrightnessCorrection.yaml
+# Dedicated sequence to estimate the illumination flatfield correction.
+#
+# Workflow:
+#   1. Go to wafer centre
+#   2. Capture a small grid of tiles (default 5x5)
+#   3. Build the flatfield model from those tiles (luminance median + smooth)
+#   4. Clean up the tile images — only flatfield.npy is kept
+#
+# The flatfield is saved to Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy.
+# Reference it in subsequent stitching sequences via:
+#   flatfield: "Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy"
+
+params:
+  user:
+  waferAgentName:
+  flatfield_die: "CALIBRATION_COLOR"
+  num_columns: 5
+  num_rows: 5
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+  start_x_um: -21088
+  start_y_um: -27245
+  col_settle_time_s: 0.2
+  row_settle_time_s: 1
+  snapshot_type: "CameraRaw"
+  save_locally: true
+  wafer: "Wafer"
+  # Gaussian sigma (px) for smoothing the median — keep large relative to
+  # device feature size so only the slow illumination gradient is captured.
+  flatfield_sigma: 300
+  # Output filename (saved inside Imaging/<wafer>/<flatfield_die>/)
+  flatfield_output: "flatfield.npy"
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckCenter
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  # ── Capture calibration grid at wafer centre ────────────────────────
+  - command: GenerateRasterSteps
+    as: raster
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      num_columns: $num_columns
+      num_rows: $num_rows
+      column_spacing_um: $column_spacing_um
+      row_spacing_um: $row_spacing_um
+      start_x_um: $start_x_um
+      start_y_um: $start_y_um
+      col_settle_time_s: $col_settle_time_s
+      row_settle_time_s: $row_settle_time_s
+      wafer: $wafer
+      y_col_correction_um: 0.0
+      x_row_correction_um: 0.0
+
+  - foreach: $raster.steps
+    as: rs
+    steps:
+
+      - command: MoveChuckXY
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          x: $rs.x
+          y: $rs.y
+          position: "Relative"
+        when: "$rs.action == move"
+
+      - command: Sleep
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          seconds: $rs.settle
+        when: "$rs.action == move"
+
+      - command: TakeScreenshot
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          fileName: $rs.filename
+          outputDir: $flatfield_die
+          wafer: $wafer
+          snapshot_type: $snapshot_type
+          save_locally: $save_locally
+        when: "$rs.action == snapshot"
+
+  # ── Build flatfield from the captured tiles ─────────────────────────
+  # Samples all tiles, computes luminance median, smooths, normalises.
+  # Output: Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy
+  - command: BuildFlatfield
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $flatfield_die
+      wafer: $wafer
+      sample_n: 25
+      sigma: $flatfield_sigma
+      output: $flatfield_output
+
+  # ── Remove calibration tiles, keep only the flatfield model ─────────
+  - command: CleanupRasterImages
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $flatfield_die
+      wafer: $wafer
