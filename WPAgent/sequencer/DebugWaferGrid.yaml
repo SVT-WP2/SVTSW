@@ -1,0 +1,99 @@
+# DebugWaferGrid.yaml
+
+# Use this to confirm:
+#   - The circle mask correctly covers the 300 mm wafer.
+#   - Left/right wafer edges appear in the expected columns at every latitude.
+#   - MoveChuckXYPrecise positioning is correct across the full grid height.
+
+params:
+  user:
+  waferAgentName:
+
+  # ── Grid (identical to FullWaferImaging.yaml) ────────────────────────────────
+  num_columns: 103
+  num_rows: 123
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+  start_x_um: -2688
+  start_y_um: 75281
+
+  col_settle_time_s: 0.1
+  row_settle_time_s: 0.1
+  snapshot_type: "CameraRaw"
+  save_locally: true
+  wafer: "Wafer"
+
+  # ── Circular mask (identical to FullWaferImaging.yaml) ───────────────────────
+  wafer_radius_um: 151000
+  wafer_center_x_um: -154056
+  wafer_center_y_um: -76096
+
+  # ── Output ───────────────────────────────────────────────────────────────────
+  output_folder: "WaferGridDebug"
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+  
+  - command: MoveChuckRowColumn
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: SEG4
+
+  - command: GenerateRasterSteps
+    as: raster
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      num_columns: $num_columns
+      num_rows: $num_rows
+      column_spacing_um: $column_spacing_um
+      row_spacing_um: $row_spacing_um
+      start_x_um: $start_x_um
+      start_y_um: $start_y_um
+      col_settle_time_s: $col_settle_time_s
+      row_settle_time_s: $row_settle_time_s
+      wafer_radius_um: $wafer_radius_um
+      wafer_center_x_um: $wafer_center_x_um
+      wafer_center_y_um: $wafer_center_y_um
+      wafer: $wafer
+      y_col_correction_um: 0
+      x_row_correction_um: 0
+      debug_edge_cols_only: true    # the only difference from FullWaferImaging
+
+  - foreach: $raster.steps
+    as: rs
+    steps:
+
+      - command: MoveChuckXYPrecise
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          x: $rs.x
+          y: $rs.y
+          position: "Relative"
+          precision_um: 0.15
+          max_iterations: 100
+          correction_settle_s: 0.1
+        when: "$rs.action == move"

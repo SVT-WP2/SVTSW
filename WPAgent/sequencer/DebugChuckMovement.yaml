@@ -1,0 +1,121 @@
+# DebugChuckMovement.yaml
+# Diagnostic sequence: move through a small raster and log the ACTUAL chuck
+# position after every step so to compare commanded vs real coordinates.
+#
+# Output: chuck_xy_log.csv  (written in the working directory)
+#   columns: label, x_um, y_um
+#   label format: "R<row>C<col>_move" or "R<row>C<col>_snap"
+#
+# Usage:
+#   Run this before tuning y_col_correction_um / x_row_correction_um.
+#   Then open chuck_xy_log.csv and compare rows for:
+#     - Y drift within a row  (between consecutive C_move labels)
+#     - X offset at row start (between R<n>C00 and R<n+1>C00 labels)
+#
+# Defaults: 5 cols x 4 rows with the same BAM spacing.
+# Set y_col_correction_um: 0 and x_row_correction_um: 0 on a first pass to
+# see the raw drift, then adjust to compensate.
+
+params:
+  user:
+  waferAgentName:
+  wafer: "Wafer"
+
+  num_columns: 5
+  num_rows: 4
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+  start_x_um: -21088
+  start_y_um: -27245
+  col_settle_time_s: 0.5
+  row_settle_time_s: 2
+
+  # Always run with zero corrections so the raw drift is recorded.
+  # ComputeCouplingConstants (last step) reads the CSV and writes
+  # Imaging/<wafer>/CALIBRATION_MOVEMENT/coupling_constants.json from the measured data.
+  y_col_correction_um: 0.0
+  x_row_correction_um: 0.0
+
+  log_file: "chuck_xy_log.csv"
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckRowColumn
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: BAM00
+
+  # Log home position as baseline
+  - command: GetChuckXY
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      log_file: $log_file
+      label: "HOME"
+
+  - command: GenerateRasterSteps
+    as: raster
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      wafer: $wafer
+      num_columns: $num_columns
+      num_rows: $num_rows
+      column_spacing_um: $column_spacing_um
+      row_spacing_um: $row_spacing_um
+      start_x_um: $start_x_um
+      start_y_um: $start_y_um
+      col_settle_time_s: $col_settle_time_s
+      row_settle_time_s: $row_settle_time_s
+      y_col_correction_um: $y_col_correction_um
+      x_row_correction_um: $x_row_correction_um
+
+  - foreach: $raster.steps
+    as: rs
+    steps:
+
+      - command: MoveChuckXY
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          x: $rs.x
+          y: $rs.y
+          position: "Relative"
+        when: "$rs.action == move"
+
+      - command: Sleep
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          seconds: $rs.settle
+        when: "$rs.action == move"
+
+      # Log actual position immediately after settle
+      - command: GetChuckXY
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          log_file: $log_file
+          label: $rs.filename
+        when: "$rs.action == snapshot"
+
+  # Analyse the log and save coupling constants to Imaging/<wafer>/CALIBRATION_MOVEMENT/coupling_constants.json.
+  # These are loaded automatically by GenerateRasterSteps in all other sequences.
+  - command: ComputeCouplingConstants
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      log_file: $log_file
+      wafer: $wafer

@@ -1,75 +1,133 @@
 import actions.WPProjectActions as project_actions
 from utilities.WPResponseBuilder import ResponseBuilder
 import actions.WPSequencerActions as sequencer_actions
+from actions.WPSequencerActionsYAML import run_sequencer_yaml
 import actions.WPDataBaseActions as database_actions
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
+import actions.WPImagingActions as imaging_actions
+
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 
+def _yaml_command(yaml_path):
+    """Returns a handler that runs a fixed YAML file via the sequencer."""
+    def _handler(**data):
+        return run_sequencer_yaml(
+            filepath=yaml_path,
+            executor=_exec_in_sequence,
+            **{k: v for k, v in data.items() if k != "filepath"}
+        )
+    return _handler
 
 COMMAND_ROUTER = {
-    # Testing/Movement Commands
-    "MoveChuckXY": testing_actions.move_chuck_xy,
-    "MoveChuckZ": testing_actions.move_chuck_z,
-    "RunPTPA": testing_actions.run_ptpa,
-    "SetPTPA": testing_actions.set_ptpa,
-    "MoveChuckNextDie": testing_actions.move_chuck_next_die,
-    "MoveChuckRowColumn": testing_actions.move_chuck_die,
-    "OpenProject": testing_actions.open_project,
-    "FindHome": testing_actions.find_home,
-    "SwitchCamera": testing_actions.switch_camera,
-    "MoveChuckHome": testing_actions.move_chuck_home,
-    "UnloadWafer": testing_actions.unload_wafer,
-    "AlignWafer": testing_actions.align_wafer,
-    "MoveChuckContact": testing_actions.move_chuck_contact,
-    "MoveChuckSeparation": testing_actions.move_chuck_separation,
-    "AutoFocus": testing_actions.auto_focus,
-    "LoadWafer": testing_actions.load_wafer,
-    "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
+
+    # Database
+    "ListProbers": database_actions.list_probers,
+    "ListChipTypes": database_actions.list_chip_types,
+
+    # User Login/Logout
+    "UserLogIn": user_actions.UserLogIn,
+    "UserLogOut": user_actions.UserLogOut,
+
+    # General
+    "Initialize": project_actions.svt_initialise_wp,
+    "ShowStatus": project_actions.show_status,
+    "GetInfo": project_actions.get_info,  # !! irrelevant
+    "Help": project_actions.help,
     "LocalMode": testing_actions.local_mode,
-    "MoveChuckPreviousDie": testing_actions.move_chuck_previous_die,
-    "SetChuckOvertravel": testing_actions.set_chuck_overtravel,
-    "DisableOvertravel": testing_actions.disable_overtravel,
-    "GetChuckPosition": testing_actions.get_chuck_position,
-    "MoveChuckCenter": testing_actions.move_chuck_center,
+
+    # Loading/Unloading
+    "LoadWafer": testing_actions.load_wafer,
+    "UnloadWafer": testing_actions.unload_wafer,
+    "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer,
+    "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer,
+
+    # Project
+    "OpenProject": testing_actions.open_project,
     "StressOpenProject": testing_actions.stress_open_project,
 
+    # Optical
+    "FindHome": testing_actions.find_home,
+    "AutoFocus": testing_actions.auto_focus,
+    "AlignWafer": testing_actions.align_wafer,
+    "SwitchCamera": testing_actions.switch_camera,
+
+    # Movement
+    "MoveChuckCenter": testing_actions.move_chuck_center,
+    "MoveChuckXY": testing_actions.move_chuck_xy,
+    "MoveChuckZ": testing_actions.move_chuck_z,
+    "MoveChuckRowColumn": testing_actions.move_chuck_die,
+    "MoveChuckAsic": testing_actions.move_chuck_asic,
+    "MoveChuckNextDie": testing_actions.move_chuck_next_die,
+    "MoveChuckPreviousDie": testing_actions.move_chuck_previous_die,
+    "MoveChuckHome": testing_actions.move_chuck_home,
+    "MoveChuckToWorkArea": testing_actions.move_chuck_work_area,
+    "MoveChuckContact": testing_actions.move_chuck_contact,
+    "MoveChuckSeparation": testing_actions.move_chuck_separation,
+    "MoveChuckSafePosition": testing_actions.move_chuck_safe_position,
+    "InitProbing": testing_actions.init_probing,
+    "GetChuckPosition": testing_actions.get_chuck_position,
+
+    # Pad Offset Movement
     "MoveChuckTopLeft": testing_actions.move_chuck_top_left,
     "MoveChuckTopRight": testing_actions.move_chuck_top_right,
     "MoveChuckBottomLeft": testing_actions.move_chuck_bottom_left,
     "MoveChuckBottomRight": testing_actions.move_chuck_bottom_right,
 
-    # Project Init
-    "Initialize": project_actions.svt_initialise_wp,
-    "ShowStatus": project_actions.show_status,
-    "GetInfo": project_actions.get_info,  # !! irrelevant
-    "Help": project_actions.help,
-    "InitProbing": testing_actions.init_probing,
+    # PTPA
+    "RunPTPA": testing_actions.run_ptpa,
+    "SetPTPA": testing_actions.set_ptpa,
+    "SetChuckOvertravel": testing_actions.set_chuck_overtravel,
+    "DisableOvertravel": testing_actions.disable_overtravel,
+    "MoveChuckWide": testing_actions.move_chuck_wide,
+    "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
+
+    # Imaging
+    "TakeScreenshot": imaging_actions.take_screenshot,
+    "TakeImage": imaging_actions.take_image,
+    "TakeImageWafer":  _yaml_command("sequencer/TakeImageWafer.yaml"),
+    "TakeImageBAM":    _yaml_command("sequencer/TakeImageBAM.yaml"),
+    "TakeImageSEG":    _yaml_command("sequencer/TakeImageSEG.yaml"),
+    "TakeImageLEC":    _yaml_command("sequencer/TakeImageLEC.yaml"),
+    "TakeImageL2":    _yaml_command("sequencer/TakeImageL2.yaml"),
+    "TakeImageL1_0-3":    _yaml_command("sequencer/TakeImageL1_0-3.yaml"),
+    "TakeImageL1_1-4":    _yaml_command("sequencer/TakeImageL1_1-4.yaml"),
+    "TakeImageL0_0-2":    _yaml_command("sequencer/TakeImageL0_0-2.yaml"),
+    "TakeImageL0_1-3":    _yaml_command("sequencer/TakeImageL0_1-3.yaml"),
+    "TakeImageL0_2-4":    _yaml_command("sequencer/TakeImageL0_2-4.yaml"),
+    "BrightnessCorrection": _yaml_command("sequencer/BrightnessCorrection.yaml"),
+
+    # FSM State management commands (bypass state check)
+    "ResetAgent": project_actions.reset_agent,
+    "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
+    "TestingLock": testing_actions.testing_lock,
+    "TestingUnlock": testing_actions.testing_unlock,
+
     # Sequencer
     "RunSequencer": lambda **data: sequencer_actions.run_sequencer(
         filepath=get_filepath_param(data if data else None), executor=_exec_in_sequence
     ),
-    # Database Actions
-    "ListProbers": database_actions.list_probers,
-    "ListChipTypes": database_actions.list_chip_types,
-    # User Login/Logout Actions
-    "UserLogIn": user_actions.UserLogIn,
-    "UserLogOut": user_actions.UserLogOut,
-    # State management commands (bypass state check)
-    "ResetAgent": project_actions.reset_agent,
-    "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
-    "MoveChuckLoadedWafer": testing_actions.move_chuck_loaded_wafer,
-    "MoveChuckUnloadWafer": testing_actions.move_chuck_unloaded_wafer,
-    "MoveChuckAsic": testing_actions.move_chuck_asic,
-    "MoveChuckSafePosition": testing_actions.move_chuck_safe_position,
-    "MoveChuckWide": testing_actions.move_chuck_wide,
-    "MoveChuckOffAxis": testing_actions.move_chuck_offaxis,
-    "TestingLock": testing_actions.testing_lock,
-    "TestingUnlock": testing_actions.testing_unlock,
-    "TakeScreenshot": testing_actions.take_screenshot,
+    "RunSequencerYAML": lambda **data: run_sequencer_yaml(
+        filepath=get_filepath_param(data if data else None),
+        executor=_exec_in_sequence,
+        **{k: v for k, v in data.items() if k != "filepath"}
+    ),
+
+    # Sequencer Specific
+    "ComputeCouplingConstants": imaging_actions.compute_coupling_constants,
+    "GetChuckXY": imaging_actions.get_chuck_xy,
+    "BuildFlatfield": imaging_actions.build_flatfield_for_folder,
+    "GenerateRasterSteps": imaging_actions.generate_raster_steps,
+    "MoveChuckXYPrecise": imaging_actions.move_chuck_xy_precise,
+    "Sleep": imaging_actions.sleep,
+    "StitchImagesFull": imaging_actions.stitch_images_large_for_wafer,
+    "CropImage": imaging_actions.crop_stitched_image,
+    "CleanupRasterImages": imaging_actions.cleanup_raster_images,
+    "ArchiveImaging": imaging_actions.archive_imaging,
+    "DeleteImagingFolder": imaging_actions.delete_imaging_folder,
 }
 
 COMMAND_ROUTER["ListAvailableCommands"] = (
@@ -78,7 +136,6 @@ COMMAND_ROUTER["ListAvailableCommands"] = (
 
 # Instantiation of logger
 logger = WPAgentLogger()
-
 
 def _exec_in_sequence(message_type, data=None):
     """

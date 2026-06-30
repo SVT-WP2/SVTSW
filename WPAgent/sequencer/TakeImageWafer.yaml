@@ -1,0 +1,166 @@
+# TakeImageWafer.yaml
+#
+# Full 300 mm wafer mosaic using a square grid with circular mask.
+#
+# Grid: 101 cols × 121 rows — symmetric odd grid, centre row/col at wafer centre.
+# Outermost row/col centres are ~1070–1230 µm inside the wafer edge; their FOVs
+# extend ~170–260 µm past the edge, so the physical wafer boundary is always
+# visible in the first/last row and column images (matches DebugWaferEdges view).
+
+params:
+  user:
+  waferAgentName:
+  num_columns: 103
+  num_rows: 123
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+
+  start_x_um: -2688
+  start_y_um: 75281
+
+  col_settle_time_s: 0.1
+  row_settle_time_s: 0.1
+  snapshot_type: "CameraRaw"
+  save_locally: true
+  wafer: "Wafer"
+
+  # ── Circular mask ───────────────────────────────────────────────────────────
+  wafer_radius_um: 151000
+  wafer_center_x_um: -154056
+  wafer_center_y_um: -76096
+
+  # ── Output ──────────────────────────────────────────────────────────────────
+  output_folder: "Wafer"
+  save_jpg: false
+  save_tif: true
+  tif_quality: 85
+
+  # Flatfield correction map produced by BrightnessCorrection.yaml.
+  # Set to the path of flatfield.npy, e.g.: "Imaging/Wafer/CALIBRATION_COLOR/flatfield.npy"
+  flatfield: ""  # auto-discovered from Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy
+  # Correction strength: 1.0 = full correction, 0.5 = half, 0.0 = off.
+  flatfield_strength: 1.0
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+  
+  - command: MoveChuckRowColumn
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: SEG4
+
+  # ── Capture ─────────────────────────────────────────────────────────────────
+  - command: GenerateRasterSteps
+    as: raster
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      num_columns: $num_columns
+      num_rows: $num_rows
+      column_spacing_um: $column_spacing_um
+      row_spacing_um: $row_spacing_um
+      start_x_um: $start_x_um
+      start_y_um: $start_y_um
+      col_settle_time_s: $col_settle_time_s
+      row_settle_time_s: $row_settle_time_s
+      wafer_radius_um: $wafer_radius_um
+      wafer_center_x_um: $wafer_center_x_um
+      wafer_center_y_um: $wafer_center_y_um
+      wafer: $wafer
+      # Drift corrections disabled: MoveChuckXYPrecise handles positioning
+      # in closed-loop, so pre-computed coupling offsets are not needed.
+      y_col_correction_um: 0
+      x_row_correction_um: 0
+
+  - foreach: $raster.steps
+    as: rs
+    steps:
+
+      # - command: MoveChuckXY
+      #   params:
+      #     user: $user
+      #     waferAgentName: $waferAgentName
+      #     x: $rs.x
+      #     y: $rs.y
+      #     position: "Relative"
+      #   when: "$rs.action == move"
+
+      - command: MoveChuckXYPrecise
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          x: $rs.x
+          y: $rs.y
+          position: "Relative"
+          precision_um: 0.15
+          max_iterations: 100
+          correction_settle_s: 0.1
+        when: "$rs.action == move"
+
+      - command: Sleep
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          seconds: $rs.settle
+        when: "$rs.action == move"
+
+      - command: TakeScreenshot
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          fileName: $rs.filename
+          outputDir: $output_folder
+          wafer: $wafer
+          snapshot_type: $snapshot_type
+          save_locally: $save_locally
+        when: "$rs.action == snapshot"
+
+  # ── Optional stitch ─────────────────────────────────────────────────────────
+
+  - command: StitchImagesFull
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $output_folder
+      wafer: $wafer
+      save_overview_jpg: $save_jpg
+      pyramid_tiff: $save_tif
+      tiff_quality: $tif_quality
+      flatfield: $flatfield
+      flatfield_strength: $flatfield_strength
+
+  - command: CleanupRasterImages
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $output_folder
+      wafer: $wafer
+
+  - command: ArchiveImaging
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      source_dir: "Imaging"
+      dest_dir: "/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging"

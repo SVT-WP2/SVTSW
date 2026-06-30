@@ -164,59 +164,6 @@ def update_current_info(currentProber=None):
     g.camera_mount_point = currentProber.get_current_working_area()
 
 
-# ==============================================================================
-# SCREENSHOT
-# ==============================================================================
-
-
-def take_screenshot(
-    fileName=None,
-    snapshot_type="CameraRaw",
-    save_locally=True,
-    outputDir="screenshots",
-    user=None,
-    waferAgentName=None,
-):
-    """
-    Take a screenshot from prober camera
-
-    Args:
-        fileName: Optional filename (auto-generated if not provided)
-        snapshot_type: "CameraRaw", "Overlay", or "CameraProcessed"
-        save_locally: True to save on WP Agent machine, False to save on prober
-        outputDir: Directory to save screenshots
-        user: User performing action
-        waferAgentName: Agent name
-
-    Returns:
-        Response with screenshot path
-    """
-    error = _ensure_initialized()
-    if error:
-        return error
-
-    try:
-        prober = get_current_prober()
-
-        filepath = prober.take_screenshot(
-            filename=fileName,
-            snapshot_type=snapshot_type,
-            save_locally=save_locally,
-            output_dir=outputDir,
-        )
-
-        # Get absolute path
-        abs_path = os.path.abspath(filepath)
-
-        agentStateMachine.transition("TakeScreenshot")
-        return ResponseBuilder.success(
-            "TakeScreenshotReply", f"Screenshot saved: {abs_path}"
-        )
-
-    except RuntimeError as e:
-        return ResponseBuilder.error("TakeScreenshotReply", str(e), 400)
-
-
 @validate_command
 def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
     """
