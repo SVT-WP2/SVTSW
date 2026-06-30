@@ -261,3 +261,10 @@ steps:
           waferAgentName: $waferAgentName
           folder: $die
           wafer: $wafer
+
+      - command: ArchiveImaging
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          source_dir: "Imaging"
+          dest_dir: "/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging"

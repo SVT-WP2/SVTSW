@@ -1,0 +1,162 @@
+# TakeImageL0_1-3.yaml
+
+params:
+  user:
+  waferAgentName:
+  segs: ["SEG3"]
+  num_columns: 91
+  num_rows: 25
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+  start_x_um: -21100
+  start_y_um: -27250
+  col_settle_time_s: 0.1
+  row_settle_time_s: 0.1
+  snapshot_type: "CameraRaw"
+  save_locally: true
+  # Output base folder: images go to  Imaging/<wafer>/<die>/
+  output_folder: "L0"
+  wafer: "Wafer"
+  seg_save_jpg: false
+  seg_save_tif: true
+  tif_quality: 85
+
+  # Flatfield correction map produced by BrightnessCorrection.yaml.
+  # Set to the path of flatfield.npy, e.g.: "Imaging/Wafer/CALIBRATION_COLOR/flatfield.npy"
+  flatfield: ""  # auto-discovered from Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy
+  # Correction strength: 1.0 = full correction, 0.5 = half, 0.0 = off.
+  flatfield_strength: 1.0
+
+steps:
+  
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckCenter
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: AutoFocus
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - foreach: $segs
+    as: die
+    steps:
+
+      - command: MoveChuckRowColumn
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $die
+
+      - command: GenerateRasterSteps
+        as: raster
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          wafer: $wafer
+          num_columns: $num_columns
+          num_rows: $num_rows
+          column_spacing_um: $column_spacing_um
+          row_spacing_um: $row_spacing_um
+          start_x_um: $start_x_um
+          start_y_um: $start_y_um
+          col_settle_time_s: $col_settle_time_s
+          row_settle_time_s: $row_settle_time_s
+          # Drift corrections disabled: MoveChuckXYPrecise handles positioning
+          # in closed-loop, so pre-computed coupling offsets are not needed.
+          y_col_correction_um: 0
+          x_row_correction_um: 0
+
+      - foreach: $raster.steps
+        as: rs
+        steps:
+
+          # - command: MoveChuckXY
+          #   params:
+          #     user: $user
+          #     waferAgentName: $waferAgentName
+          #     x: $rs.x
+          #     y: $rs.y
+          #     position: "Relative"
+          #   when: "$rs.action == move"
+
+          - command: MoveChuckXYPrecise
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              x: $rs.x
+              y: $rs.y
+              position: "Relative"
+              precision_um: 0.15
+              max_iterations: 100
+              correction_settle_s: 0.1
+            when: "$rs.action == move"
+
+          - command: Sleep
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              seconds: $rs.settle
+            when: "$rs.action == move"
+
+          - command: TakeScreenshot
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              fileName: $rs.filename
+              outputDir: $output_folder
+              wafer: $wafer
+              snapshot_type: $snapshot_type
+              save_locally: $save_locally
+            when: "$rs.action == snapshot"
+
+      - command: StitchImagesFull
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $output_folder
+          wafer: $wafer
+          save_overview_jpg: $seg_save_jpg
+          pyramid_tiff: $seg_save_tif
+          tiff_quality: $tif_quality
+          flatfield: $flatfield
+          flatfield_strength: $flatfield_strength
+          
+      # - command: CropImage
+      #   params:
+      #     user: $user
+      #     waferAgentName: $waferAgentName
+      #     folder: $output_folder
+      #     wafer: $wafer
+      #     x_px: 1120              # left edge from bottom-left corner
+      #     y_px: 940               # bottom edge from bottom-left corner
+      #     width_px: 188550        # 0 = extend to right edge
+      #     height_px: 73300        # 0 = extend to top edge
+      #     # source: ""            # leave empty → auto-picks latest .tif/.jpg in the folder
+      #     # output: ""            # leave empty → overwrites source in-place
+
+      - command: CleanupRasterImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $output_folder
+          wafer: $wafer
+
+      - command: ArchiveImaging
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          source_dir: "Imaging"
+          dest_dir: "/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging"

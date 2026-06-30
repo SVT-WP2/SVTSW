@@ -1,7 +1,7 @@
 """
-WPImageStitching_fixed.py  —  v4  (Global Position Optimisation)
+WPImageStitching.py
 =================================================================
-Stitch a grid of microscope tiles (named RR_CC.jpg) into a single JPEG.
+Stitch a grid of microscope tiles (named RR_CC.jpg) into a single TIF / JPEG.
 
 Algorithm
 ---------
@@ -1026,7 +1026,7 @@ def stitch_images(
 # ==============================================================================
 #
 # Usage:
-#   python WPImageStitching_fixed.py  <folder>  [options]
+#   python WPImageStitching.py  <folder>  [options]
 #
 # The folder must contain images named  RR_CC.jpg  (row_col, zero-padded).
 # Run with --help to see all flags.

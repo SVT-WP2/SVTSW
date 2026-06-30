@@ -1,5 +1,6 @@
 # WPSequencerYAML.py
 import yaml
+import time
 from WPSequencer import WPSequencer
 
 
@@ -54,6 +55,6 @@ class WPSequencerYAML(WPSequencer):
             if result.get("status") != "success":
                 return result
 
-            import time; time.sleep(delay)
+            time.sleep(delay)
 
         return {"status": "success"}

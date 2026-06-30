@@ -855,7 +855,7 @@ def delete_imaging_folder(wafer="", user=None, waferAgentName=None, **kwargs):
         import traceback
         traceback.print_exc()
         return ResponseBuilder.error("DeleteImagingFolderReply", str(e), 500)
-        
+
 def take_image(
         snapshot_type="CameraRaw",
         save_locally=True,
