@@ -1,0 +1,4 @@
+{
+  "name": "MOCK",
+  "kafka_broker": "localhost:9085"
+}

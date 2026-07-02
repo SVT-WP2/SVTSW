@@ -84,7 +84,7 @@ class ProberFactory:
         if not self._initialized or self._prober is None:
             raise RuntimeError(
                 "No prober is currently initialized. "
-                "Please start the listener with a config: python3.12 main.py listen <CONFIG_NAME>"
+                "Please start the listener with a config: python3.12 main.py listen --config=configs/ProbeConfigCERN.json"
             )
 
         return self._prober

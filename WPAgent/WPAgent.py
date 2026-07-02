@@ -15,9 +15,26 @@ import os
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from utilities.WPResponseBuilder import ResponseBuilder
 
+# Kafka broker that identifies the DEV environment.
+# Any config using this broker gets "_DEV" appended to its agent name,
+# so listeners and senders automatically resolve e.g. "WPMIT_DEV".
+_DEV_BROKER = "pcmitpx01:9096"
+
+
+def _effective_agent_name(config: dict) -> str:
+    """
+    Return the agent name that this config should advertise / respond to.
+    Appends '_DEV' when the config's kafka_broker is the DEV broker.
+    """
+    name = config.get("name", "")
+    if config.get("kafka_broker", "") == _DEV_BROKER:
+        return f"{name}_DEV"
+    return name
+
 
 class WaferProberAgent:
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = config  # Path to config file, set via --config=
         self.kafka = None  # Initialize later with config
         self.health_check = None  # Initialize later with config
         self.wp_agent_name = None
@@ -35,12 +52,21 @@ class WaferProberAgent:
         """
         Send a command via Kafka and wait for response.
         """
+        if isinstance(data, str):
+            raw = data.strip("'")
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                # Windows CMD strips double quotes from args, leaving unquoted keys.
+                # YAML is a superset of JSON and handles unquoted keys/values.
+                import yaml
+                data = yaml.safe_load(raw)
         if not data or "waferAgentName" not in data:
             return ResponseBuilder.error(f"{command}Reply", "'waferAgentName' is required in data", 400)
         wafer_agent_name = data["waferAgentName"]
-        config_path = f"configs/ProbeConfig{wafer_agent_name}.json"
-        # sender side: file config only — no DB query needed, avoids consumer group conflict
-        config = self._load_probe_config(config_path)
+        # sender side: scan all ProbeConfig files and match by 'name' field,
+        # so ProbeConfigLocalMOCK.json with name="MOCK" is found correctly.
+        config = self._find_config_by_agent_name(wafer_agent_name)
         kafka_broker = config.get("kafka_broker")
 
         # Ensure Kafka is initialized
@@ -118,72 +144,102 @@ class WaferProberAgent:
         with open(config_path, "r") as f:
             config = json.load(f)
 
-        if "name" not in config:
-            raise KeyError(
-                f"Config file '{config_path}' is missing required 'name' field."
+        return config
+
+    def _find_config_by_agent_name(self, agent_name):
+        """
+        Scan all configs/ProbeConfig*.json files and return the one
+        whose 'name' field matches agent_name (waferAgentName).
+        If multiple match, the last one found wins (Local* variants override generic ones).
+        Raises FileNotFoundError if none match.
+        """
+        import glob
+        matches = []
+        # Sort so generic ProbeConfig{Name}.json comes first,
+        # longer/more specific names (e.g. ProbeConfigLocal*) come last and win.
+        for path in sorted(glob.glob("configs/ProbeConfig*.json"), key=len):
+            try:
+                with open(path, "r") as f:
+                    cfg = json.load(f)
+                if _effective_agent_name(cfg).upper() == agent_name.upper():
+                    matches.append((path, cfg))
+            except Exception:
+                continue
+
+        if not matches:
+            raise FileNotFoundError(
+                f"No config file found with name='{agent_name}' in configs/ProbeConfig*.json"
             )
 
-        return config
+        if len(matches) > 1:
+            paths = [p for p, _ in matches]
+            print(f"⚠️  Multiple configs found for '{agent_name}': {paths} — using {paths[-1]}")
+
+        return matches[-1][1]
 
     def _load_probe_config_with_db(self, config_path, kafka_broker=None):
         """
-        Load probe station config from file, then enrich with DB data if available.
+        Load probe station config from file (name + kafka_broker),
+        then fetch connection details from DB by name (waferAgentName).
 
         Args:
-            config_path: Path to config JSON file (e.g., "configs/ProbeConfigCERN.json")
+            config_path: Path to config JSON file (e.g., "configs/ProbeConfigCERN_DEV.json")
             kafka_broker: Override kafka_broker (optional)
 
         Returns:
             dict: Config with name, machineId, address, port, machineType, kafka_broker
         """
         file_config = self._load_probe_config(config_path)
-        config_name = file_config["name"]
+        config_name = file_config.get("name")
+        if not config_name:
+            raise KeyError(
+                f"Config file '{config_path}' is missing required 'name' field."
+            )
 
         print(f"🔍 Loading configuration for '{config_name}' from {config_path}...")
 
-        # Get kafka_broker from file config
+        # kafka_broker always comes from config file
         if file_config.get("kafka_broker"):
             kafka_broker = file_config["kafka_broker"]
             print(f"   ✅ Using kafka_broker from config file: {kafka_broker}")
 
-        # Try to enrich with DB data — match by machineId, not location name
-        machine_id = file_config.get("machineId")
-        db_config = self._load_from_database(
-            machine_id, kafka_broker=kafka_broker, timeout=5.0
+        # Fetch connection details from DB by waferAgentName
+        db_config = self._load_from_database_by_name(
+            config_name, kafka_broker=kafka_broker, timeout=5.0
         )
 
         if db_config:
             print("   ✅ Loaded machine info from database")
-            if kafka_broker:
-                db_config["kafka_broker"] = kafka_broker
+            db_config["kafka_broker"] = kafka_broker
             db_config["name"] = config_name
             return db_config
 
-        print("   ✅ Loaded from config file")
+        print("   ⚠️  DB lookup failed, falling back to config file values")
         return file_config
 
-    def _load_from_database(self, machine_id, kafka_broker=None, timeout=5.0):
+    def _load_from_database_by_name(self, agent_name, kafka_broker=None, timeout=5.0):
         """
-        Enrich config with DB data using machineId from the config file.
-        Matches by ID — not by location name — so there's no ambiguity
-        when multiple machines share the same generalLocation.
+        Fetch machine connection details from DB by waferAgentName (name field in DB).
 
-        NOTE: kafka_broker is NOT included in the result — always comes from config file.
+        Args:
+            agent_name: The name from the config file (e.g., "CERN_DEV") — becomes waferAgentName
+            kafka_broker: Kafka broker address needed to reach the DB agent
+            timeout: Seconds to wait for DB response
 
         Returns:
-            Config dict or None if not found/error
+            Config dict with address/port/machineType/machineId or None if not found/error
         """
-        if not machine_id or machine_id == 0:
+        if not agent_name:
             return None
 
         try:
-            from actions.WPDataBaseActions import _find_machine_by_id
+            from actions.WPDataBaseActions import _find_machine_by_name
             from services.WPDbKafkaClient import DBKafkaClient
 
             if kafka_broker and DBKafkaClient._instance is None:
                 DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
 
-            machine_data = _find_machine_by_id(machine_id, timeout=timeout)
+            machine_data = _find_machine_by_name(agent_name, timeout=timeout)
 
             if not machine_data:
                 return None
@@ -196,7 +252,7 @@ class WaferProberAgent:
             else:
                 full_address = host_name
 
-            config = {
+            return {
                 "address": full_address,
                 "port": machine_data.get("connectionPort", 35555),
                 "machineType": machine_data.get("software", "sentio"),
@@ -204,10 +260,8 @@ class WaferProberAgent:
                 "description": machine_data.get("generalLocation", ""),
             }
 
-            return config
-
         except Exception:
-            # Silently fail - will fallback to config file
+            # Silently fail — will fallback to config file values
             return None
 
     def _auto_initialize_prober(self, config_name, config):
@@ -273,11 +327,12 @@ class WaferProberAgent:
             traceback.print_exc()
             return False
 
-    def listen(self, config_path=None):
+    def listen(self):
         """
-        Start the listener service with optional auto-initialization.
-        Usage: python main.py listen configs/ProbeConfigCERN.json
+        Start the listener service with auto-initialization.
+        Usage: python main.py --config=configs/ProbeConfigCERN_DEV.json listen
         """
+        config_path = self.config
         if config_path:
             sep = '=' * 70
             print(f"\n{sep}")
@@ -286,7 +341,7 @@ class WaferProberAgent:
 
             try:
                 config = self._load_probe_config_with_db(config_path)
-                agent_name = config["name"]
+                agent_name = _effective_agent_name(config)
                 self.wp_agent_name = agent_name
 
                 print(f"\n📋 Loaded config for '{agent_name}':")
@@ -345,7 +400,7 @@ class WaferProberAgent:
 
             except (FileNotFoundError, KeyError) as e:
                 print(f"❌ Error loading config: {e}")
-                print("\n💡 Usage: python main.py listen configs/ProbeConfigCERN.json")
+                print("\n💡 Usage: python main.py --config=configs/ProbeConfigCERN_DEV.json listen")
                 return
             except Exception as e:
                 print(f"❌ Unexpected error: {e}")
@@ -358,7 +413,7 @@ class WaferProberAgent:
             print("  Starting WP Agent (no auto-config)")
             print(f"{sep}\n")
             print("💡 Tip: Start with a config for auto-initialization:")
-            print("   python main.py listen configs/ProbeConfigCERN.json\n")
+            print("   python main.py --config=configs/ProbeConfigCERN_DEV.json listen\n")
 
             if self.kafka is None:
                 self.kafka = KafkaClient()

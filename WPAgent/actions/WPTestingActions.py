@@ -731,6 +731,7 @@ def init_probing(user=None, waferAgentName=None):
     try:
         prober = get_current_prober()
         # Sequence
+        prober.go_to_separation()
         prober.move_chuck_offaxis_area()
         prober.move_chuck_center()
         prober.auto_focus()
