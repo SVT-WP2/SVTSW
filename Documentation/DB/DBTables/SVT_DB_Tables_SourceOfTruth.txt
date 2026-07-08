@@ -270,7 +270,7 @@ Table main.SvtTestList {
   startedAt timestamp [default: null]
   finishedAt timestamp [default: null]
   pathToResult text [default: null]
-  testResultStatus varchar(50)
+  testResultStatus main.testResultStatus
 }
 
 Table main.SvtTestListToDeviceType
@@ -523,8 +523,12 @@ Enum main.wpVendor {
   FormFactor
 }
 
-
-
+Enum main.testResultStatus {
+  SUCCESS
+  PARTIAL_SUCCESS
+  FAILURE
+  ERROR
+}
 
 // Enum main.contactMechanicalQuality {
 //   Good
