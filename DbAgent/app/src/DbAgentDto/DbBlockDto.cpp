@@ -20,5 +20,6 @@ namespace dbagent
     addColName("serialNumber");
 
     addValidFilter("chipId");
+    addValidFilter("blockTypes", "blockType");
   }
 }  // namespace dbagent

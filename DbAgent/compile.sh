@@ -20,7 +20,7 @@ resolve_version() {
     return 0
   fi
   if [[ -f "$THIS_SCRIPT_PATH/VERSION" ]]; then
-    VERSION=$(tr -d '[:space:]' < "$THIS_SCRIPT_PATH/VERSION")
+    VERSION=$(tr -d '[:space:]' <"$THIS_SCRIPT_PATH/VERSION")
   fi
   if [[ -z "${VERSION:-}" ]]; then
     echo -e "${RED}ERROR: VERSION not set and $THIS_SCRIPT_PATH/VERSION not found${RESET}" >&2
@@ -46,5 +46,10 @@ done
 resolve_version
 
 [[ -z "${UPDATE}" ]] &&
-  cmake -B build -S ./app -DVERSION="${VERSION}" -DCMAKE_INSTALL_PREFIX=install -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-[[ -n "$BUILD" ]] && cmake --build build -j"$(nproc)" --target install || exit 0
+  cmake -B build -S ./app -DVERSION="${VERSION}" \
+    -DCMAKE_INSTALL_PREFIX="${THIS_SCRIPT_PATH}/install" \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+if [[ -n "$BUILD" ]]; then
+  cmake --build build -j"$(nproc)" --target install
+fi

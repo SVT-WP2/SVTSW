@@ -26,11 +26,13 @@ namespace dbagent
 
     addColName("id");
     addColName("asicId");
+    addColName("asicFamilyType", false);
     addColName("serialNumber");
     addColName("generalLocation");
 
     addValidFilter("generalLocation");
     addValidFilter("serialNumber");
+    addValidFilter("familyTypes", "familyType");
 
     createAllRequest();
   }
@@ -62,6 +64,20 @@ namespace dbagent
     addRequest("GetChipLocationHistory",
                std::bind(&DbChipDto::getLocationHistory, this,
                          std::placeholders::_1, std::placeholders::_2));
+  }
+
+  //========================================================================+
+  bool DbChipDto::getAllEntriesFromDB(std::vector<DbEntry> &entries,
+                                      const std::string &,
+                                      const DbEntry &filters,
+                                      const std::string &orderBy, const bool orderDec)
+  {
+    std::string queryString = "";
+    queryString += "SELECT T0.*, T1.\"familyType\" AS \"familyType\"";
+    queryString += " FROM main.\"Chip\" AS T0";
+    queryString += " LEFT JOIN main.\"Asic\" AS T1 ON T0.\"asicId\" = T1.\"id\"";
+
+    return this->DbBaseDto::getAllEntriesFromDB(entries, queryString, filters, orderBy, orderDec);
   }
 
   //========================================================================+
