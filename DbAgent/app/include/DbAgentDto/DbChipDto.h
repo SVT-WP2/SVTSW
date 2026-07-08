@@ -26,6 +26,10 @@ namespace dbagent
     DbAsicFamilyTypeBlockList *asicFamilyTypeBlockListDto = SvtUtils::Singleton<DbAsicFamilyTypeBlockList>::instance();
 
     //! request DTO funcions
+    virtual bool getAllEntriesFromDB(std::vector<DbEntry> &entries,
+                                     const std::string &,
+                                     const DbEntry &filters,
+                                     const std::string &orderBy = "", const bool orderDec = "") final;
     virtual void createManyEntries(const SvtKafka::SvtKafkaMessage &msg,
                                    SvtKafka::SvtKafkaReplyMsg &replyMsg);
     virtual void createEntry(const SvtKafka::SvtKafkaMessage &msg,

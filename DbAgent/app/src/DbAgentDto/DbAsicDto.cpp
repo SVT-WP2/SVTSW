@@ -28,7 +28,7 @@ namespace dbagent
     addValidFilter("waferId");
     addValidFilter("chipId");
     addValidFilter("serialNumber");
-    addValidFilter("familyType");
+    addValidFilter("familyTypes", "familyType");
     addValidFilter("quality");
 
     createAllRequest();
