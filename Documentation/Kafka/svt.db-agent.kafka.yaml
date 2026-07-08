@@ -1980,7 +1980,7 @@ components:
                   type: array
                   description: AsicFamilType values array. If array is empty / undefined => all Asics will be returned.
                   items:
-                    type: number
+                    type: string
                 waferId:
                   type: number
                   description: Optional filter used to fetch all ASICs for the particular wafer
@@ -2052,7 +2052,7 @@ components:
                   type: array
                   description: AsicFamilType values array. If array is empty / undefined => all Chips will be returned.
                   items:
-                    type: number
+                    type: string
                 generalLocation:
                   type: string
                 serialNumber:
@@ -2198,7 +2198,7 @@ components:
                   type: array
                   description: ChipBlockType values array. If array is empty / undefined => all ChipBlocks will be returned.
                   items:
-                    type: number
+                    type: string
                 chipId:
                   type: integer
                 ids:
@@ -4108,3 +4108,4 @@ components:
         - wpGeneralLocation
         - wpSwType
         - wpVendor
+        - testResultStatus
