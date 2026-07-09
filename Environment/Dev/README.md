@@ -17,6 +17,30 @@ docker compose -p svt-kafka--dev -f docker-compose-kafka-dev.yml down
 
 Kafka UI is then available on port **8087**.
 
+## Large Kafka messages
+
+Kafka caps a single message at **1 MB** by default, which list replies (wafers,
+chips, ...) exceed - the producer then fails with:
+
+> The request included a message larger than the max message size the server will accept
+
+The broker is configured for **50 MiB** instead (`KAFKA_MESSAGE_MAX_BYTES` and
+friends in the compose file). Keep the value in sync with
+[`../Prod`](../Prod/docker-compose-kafka-prod.yml) and `Dev/docker-compose.kafka-local.yml`
+at the repo root - a payload that works locally must work here too.
+
+Topics auto-created without an explicit override inherit the broker default, so
+they pick up the new limit on restart. To check one - or to fix a topic that
+*does* carry an override:
+
+```bash
+docker exec svt.kafka-broker--dev kafka-configs --bootstrap-server localhost:9094 --entity-type topics --entity-name svt.db-agent.request.reply --describe
+```
+
+```bash
+docker exec svt.kafka-broker--dev kafka-configs --bootstrap-server localhost:9094 --entity-type topics --entity-name svt.db-agent.request.reply --alter --add-config max.message.bytes=52428800
+```
+
 ## Deploy as a systemd service (RHEL)
 
 The unit runs `docker compose` as a `oneshot` service that stays active

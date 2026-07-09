@@ -32,6 +32,16 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # --- Large payloads (50 MiB) ------------------------------------------
+      # Kafka's default cap is 1 MB, which list replies (wafers, chips, ...)
+      # blow past. message.max.bytes is the broker-wide default for a topic's
+      # max.message.bytes; replica.fetch.max.bytes must be >= it or replication
+      # stalls silently. The two ceilings below just need headroom.
+      # Keep in sync with Dev and with Dev/docker-compose.kafka-local.yml.
+      KAFKA_MESSAGE_MAX_BYTES: 52428800
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 52428800
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 209715200
+      KAFKA_FETCH_MAX_BYTES: 209715200
       KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: "INFO"

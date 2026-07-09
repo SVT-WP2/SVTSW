@@ -3,12 +3,14 @@ import { MessagePattern, Payload } from '@nestjs/microservices'
 import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaAsics,
+    SvtDbAgentKafkaChipBlocks,
     SvtDbAgentKafkaChips,
     SvtDbAgentKafkaEnums,
     SvtDbAgentKafkaEquipment,
     SvtDbAgentKafkaEquipmentTypes,
     SvtDbAgentKafkaSvtTestSetupConfigs,
     SvtDbAgentKafkaSvtTestSetups,
+    SvtDbAgentKafkaSvtTests,
     SvtDbAgentKafkaSvtTestTemplates,
     SvtDbAgentKafkaSvtTestTypeConfigs,
     SvtDbAgentKafkaSvtTestTypes,
@@ -22,12 +24,14 @@ import { map } from 'rxjs'
 
 import {
     EpicDbAgentAsicsService,
+    EpicDbAgentChipBlocksService,
     EpicDbAgentChipsService,
     EpicDbAgentEnumsService,
     EpicDbAgentEquipmentService,
     EpicDbAgentEquipmentTypesService,
     EpicDbAgentSvtTestSetupConfigsService,
     EpicDbAgentSvtTestSetupService,
+    EpicDbAgentSvtTestsService,
     EpicDbAgentSvtTestTemplatesService,
     EpicDbAgentSvtTestTypeConfigsService,
     EpicDbAgentSvtTestTypesService,
@@ -51,12 +55,14 @@ export class EpicDbAgentWafersController {
         private readonly epicDbAgentEquipmentTypesService: EpicDbAgentEquipmentTypesService,
         private readonly epicDbAgentEquipmentService: EpicDbAgentEquipmentService,
         private readonly epicDbAgentChipsService: EpicDbAgentChipsService,
+        private readonly epicDbAgentChipBlocksService: EpicDbAgentChipBlocksService,
         private readonly epicDbAgentEnumsService: EpicDbAgentEnumsService,
         private readonly epicDbAgentSvtTestSetupService: EpicDbAgentSvtTestSetupService,
         private readonly epicDbAgentSvtTestSetupConfigsService: EpicDbAgentSvtTestSetupConfigsService,
         private readonly epicDbAgentSvtTestTypesService: EpicDbAgentSvtTestTypesService,
         private readonly epicDbAgentSvtTestTypeConfigsService: EpicDbAgentSvtTestTypeConfigsService,
         private readonly epicDbAgentSvtTestTemplatesService: EpicDbAgentSvtTestTemplatesService,
+        private readonly epicDbAgentSvtTestsService: EpicDbAgentSvtTestsService,
         private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService) {
     }
 
@@ -65,10 +71,12 @@ export class EpicDbAgentWafersController {
         @Payload() message: SvtDbAgentKafkaWafers.Message | SvtDbAgentKafkaAsics.Message
             | SvtDbAgentKafkaWaferTypes.Message | SvtDbAgentKafkaWpMachines.Message | SvtDbAgentKafkaEnums.Message
             | SvtDbAgentKafkaWpProbeCards.Message | SvtDbAgentKafkaWpProjects.Message | SvtDbAgentKafkaChips.Message
+            | SvtDbAgentKafkaChipBlocks.Message
             | SvtDbAgentKafkaEquipmentTypes.Message | SvtDbAgentKafkaEquipment.Message | SvtDbAgentKafkaSvtTestSetups.Message
             | SvtDbAgentKafkaSvtTestSetupConfigs.Message | SvtDbAgentKafkaSvtTestTypes.Message
             | SvtDbAgentKafkaSvtTestTypeConfigs.Message
-            | SvtDbAgentKafkaSvtTestTemplates.Message) {
+            | SvtDbAgentKafkaSvtTestTemplates.Message
+            | SvtDbAgentKafkaSvtTests.Message) {
         switch (message.type) {
             // WAFERS
             case SvtDbAgentKafkaWafers.MessageType.GetAllWafers:
@@ -124,6 +132,13 @@ export class EpicDbAgentWafersController {
                 return this.epicDbAgentChipsService.createMany(message.data.create)
                     .pipe(
                         map(items => JSON.stringify(new SvtDbAgentKafkaChips.CreateManyChipsReplyMessage({ items }))),
+                    )
+
+            // CHIP BLOCKS
+            case SvtDbAgentKafkaChipBlocks.MessageType.GetAllChipBlocks:
+                return this.epicDbAgentChipBlocksService.getAll(message.data.filter)
+                    .pipe(
+                        map(items => JSON.stringify(new SvtDbAgentKafkaChipBlocks.GetAllChipBlocksReplyMessage({ items }))),
                     )
 
             // CHIP LOCATION
@@ -337,6 +352,19 @@ export class EpicDbAgentWafersController {
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaSvtTestTemplates.UpdateSvtTestTemplateReplyMessage({ entity }))),
                     )
+
+            // SVT TESTS
+            case SvtDbAgentKafkaSvtTests.MessageType.GetAllSvtTests:
+                return this.epicDbAgentSvtTestsService.getAll(message.data.filter)
+                    .pipe(
+                        map(items => JSON.stringify(new SvtDbAgentKafkaSvtTests.GetAllSvtTestsReplyMessage({ items }))),
+                    )
+            case SvtDbAgentKafkaSvtTests.MessageType.CreateSvtTest:
+                return this.epicDbAgentSvtTestsService.create(message.data.create)
+                    .pipe(
+                        map(entity => JSON.stringify(new SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessage({ entity }))),
+                    )
+
             default:
                 throw new Error('Unknown request')
         }

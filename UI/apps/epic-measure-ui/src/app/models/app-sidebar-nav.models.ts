@@ -7,6 +7,12 @@ export namespace AppSidebarNav {
     export function getSidebarMenu(): EpicMenuLightItem[] {
         return [
             {
+                label: 'SVT Tests',
+                icon:  'epic-experiment',
+                routerLink: '/svt-tests',
+                routerUrlPattern: '^/svt-tests',
+            },
+            {
                 label: 'WPM',
                 icon:  'epic-machine',
                 routerLink: '/wp-machines',

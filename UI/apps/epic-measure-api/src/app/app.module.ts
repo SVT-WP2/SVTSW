@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
 import { EpicAsicsModule } from '../modules/asics'
+import { EpicChipBlocksModule } from '../modules/chip-blocks'
 import { EpicChipsModule } from '../modules/chips'
 import { EpicEnumsModule } from '../modules/enums'
 import { EpicEquipmentsModule } from '../modules/equipment'
@@ -27,6 +28,7 @@ import { EpicWpModule } from '../modules/wp'
         EpicWpModule,
         EpicEnumsModule,
         EpicChipsModule,
+        EpicChipBlocksModule,
         EpicEquipmentsModule,
         EpicSvtTestModule,
     ],

@@ -132,6 +132,9 @@
             ],
             "epic-ui/shared/svt-test/test-templates": [
                 "libs/epic-ui/shared/svt-tests/test-templates/src/index.ts"
+            ],
+            "epic-ui/shared/svt-test/tests": [
+                "libs/epic-ui/shared/svt-tests/tests/src/index.ts"
             ]
         },
         "useDefineForClassFields": false,

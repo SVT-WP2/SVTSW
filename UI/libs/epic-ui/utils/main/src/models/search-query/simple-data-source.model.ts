@@ -91,6 +91,7 @@ export abstract class SimpleDataSource<TData, TFilter extends Record<string, any
 
         return this.getDataObserver(filterValue, force)
             .pipe(
+                takeUntil(this.disconnected$),
                 catchError((error) => {
                     this.loadingFinish(error)
                     return of(null)

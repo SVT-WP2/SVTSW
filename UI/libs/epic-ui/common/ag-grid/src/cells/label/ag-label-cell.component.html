@@ -1,0 +1,16 @@
+@if (state() !== null) {
+    <div class="epic-ag-label-cell epic-ag-cell--vertical-centered">
+        @let value = state().value;
+        @if (value !== undefined && value !== null) {
+            <epic-label [iconName]="state().iconName"
+                        [matTooltip]="state().tooltip! | translate : state().tooltipI18nParams"
+                        [matTooltipDisabled]="!state().tooltip"
+                        [style.background-color]="state().bgColor"
+                        [style.color]="state().color">
+                {{ value | translate }}
+            </epic-label>
+        }
+    </div>
+
+}
+

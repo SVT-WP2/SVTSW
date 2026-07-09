@@ -6,6 +6,15 @@ This is UI for EpicMeasure project. Project represents **2 services**: front-end
 - **Front-end** part use **Angular** framework. 
 - **Back-end** part use **NestJS** framework.
 
+## Project Documentation
+
+| Document | What's in it |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The map — apps, libs, the Kafka layer, request lifecycle, state patterns, ports |
+| [docs/RECIPES.md](docs/RECIPES.md) | Step-by-step checklists: new entity end-to-end, new list page, new lib, NgRx store, dialogs, running locally |
+| [CLAUDE.md](CLAUDE.md) | Conventions and gotchas (also auto-loaded by Claude Code) |
+| This file | Environment, commands, CI/CD and the release process |
+
 ## Environment Requirements
 
 - [Node.js](https://nodejs.org/en/]sdcsdscsdc) ^20.19.0 (20.19@latest is good enough)

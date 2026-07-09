@@ -1,6 +1,10 @@
+export * from './query'
+export * from './epic-svt-test.models'
 export * from './epic-svt-test-setup.models'
 export * from './epic-svt-test-setup-config.models'
 export * from './epic-svt-test-type-config.models'
 export * from './epic-svt-test-type.models'
 export * from './epic-svt-test-template.models'
+export * from './epic-svt-test-status.models'
+export * from './epic-svt-test-result-status.models'
 

@@ -11,7 +11,7 @@ import { EpicLabel } from '../../models'
 export class EpicLabelComponent {
 
     @Input() size: EpicLabel.LabelSize = EpicLabel.LabelSize.basic
-    @Input() iconName: string
+    @Input() iconName: string | undefined
 
     @HostBinding('class.epic-label--small')
     get isSmall(): boolean {
