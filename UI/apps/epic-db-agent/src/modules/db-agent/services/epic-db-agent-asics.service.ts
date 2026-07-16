@@ -23,7 +23,7 @@ export class EpicDbAgentAsicsService {
             ? this.asics.filter(item => {
                 const fulfilWaferIdFilter = !queryFilter.waferId || (queryFilter.waferId === item.waferId)
                 const fulfilAsicIdFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
-                const fulfilFamilyTypeFilter = !queryFilter.familyType || (queryFilter.familyType === item.familyType)
+                const fulfilFamilyTypeFilter = !queryFilter.familyTypes || (queryFilter.familyTypes.includes(item.familyType))
                 const fulfilQualityTypeFilter = !queryFilter.quality || (queryFilter.quality === item.quality)
                 const fulfilSerialNumberFilter = !queryFilter.serialNumber || (item.serialNumber.includes(queryFilter.serialNumber))
 

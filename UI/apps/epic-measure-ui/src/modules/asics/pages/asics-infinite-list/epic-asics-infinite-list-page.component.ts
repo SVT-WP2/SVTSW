@@ -65,10 +65,10 @@ export class EpicAsicsInfiniteListPageComponent extends BaseComponent implements
         const headerFilterValue = this.headerFilterValue()
         return {
             waferId: headerFilterValue?.waferId || null,
-            asicFamilyType: headerFilterValue?.asicFamilyType || null,
+            asicFamilyTypes: headerFilterValue?.asicFamilyType ? [headerFilterValue?.asicFamilyType] : null,
             asicQuality: headerFilterValue?.asicQuality || null,
             serialNumber: headerFilterValue?.searchTerm?.length ? headerFilterValue.searchTerm : null,
-        }
+        } satisfies EpicAsicsScrollingDsFilter
     })
 
     readonly fetchFilterDataProcessing$: Observable<ProcessingStore.EventProcessingState>
@@ -88,7 +88,7 @@ export class EpicAsicsInfiniteListPageComponent extends BaseComponent implements
 
     onReload(): void {
         this.epicAsicsListFilterDataSource.load(true)
-        this.epicAsicsListContainerComponent().reload()
+        this.epicAsicsListContainerComponent()?.reload()
     }
 
     onCreateAsic(): void {

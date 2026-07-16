@@ -47,7 +47,7 @@ export class EpicAsicsApiClientMock extends EpicAsicsApiClient {
             ? this.asicsList.filter(item => {
                 const fulfilWaferIdFilter = (queryFilter.waferId === item.waferId) || !queryFilter.waferId
                 const fulfilAsicIdFilter = (queryFilter.asicId === item.id) || !queryFilter.asicId
-                const fulfilFamilyTypeFilter = (queryFilter.familyType === item.familyType) || !queryFilter.familyType
+                const fulfilFamilyTypeFilter = !queryFilter.familyTypes || (queryFilter.familyTypes.includes(item.familyType))
                 const fulfilQualityTypeFilter = (queryFilter.quality === item.quality) || !queryFilter.quality
                 return fulfilAsicIdFilter && fulfilWaferIdFilter && fulfilFamilyTypeFilter && fulfilQualityTypeFilter
             })

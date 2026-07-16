@@ -14,13 +14,27 @@ export namespace QueryHelpers {
         }
 
         return Object.keys(queryParams)
-            .reduce(
+            .reduce<HttpParams>(
                 (accHttpParams, key) => {
+                    const raw = queryParams[key]
 
-                    const value = (TypeHelpers.isObject(queryParams[key]))
-                        ? Object.keys(queryParams[key]).length > 0 ? JSON.stringify(queryParams[key]) : null
-                        : queryParams[key]
+                    if (raw === null || raw === undefined) {
+                        return accHttpParams
+                    }
 
+                    if (TypeHelpers.isArray(raw)) {
+                        if ((raw as unknown[]).length === 0) {
+                            return accHttpParams
+                        }
+                        return (raw as unknown[]).reduce<HttpParams>(
+                            (acc, item) => acc.append(key, item as string),
+                            accHttpParams,
+                        )
+                    }
+
+                    const value = TypeHelpers.isObject(raw)
+                        ? Object.keys(raw).length > 0 ? JSON.stringify(raw) : null
+                        : raw
 
                     if (value === null || value === undefined) {
                         return accHttpParams

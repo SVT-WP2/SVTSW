@@ -32,7 +32,7 @@ export class EpicAsicsService implements OnModuleInit {
                 ...(queryFilter.waferId ? { waferId: queryFilter.waferId } : {}),
                 ...(queryFilter.ids ? { ids: queryFilter.ids } : {}),
                 ...(queryFilter.chipId ? { asicId: queryFilter.chipId } : {}),
-                ...(queryFilter.familyType ? { familyType: queryFilter.familyType } : {}),
+                ...(queryFilter.familyTypes ? { familyTypes: queryFilter.familyTypes } : {}),
                 ...(queryFilter.quality ? { quality: queryFilter.quality } : {}),
                 ...(queryFilter.serialNumber ? { serialNumber: queryFilter.serialNumber } : {}),
             },

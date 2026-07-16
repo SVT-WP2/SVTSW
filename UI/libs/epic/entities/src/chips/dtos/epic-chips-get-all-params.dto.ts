@@ -18,8 +18,13 @@ export class EpicChipsGetAllParamsDto implements EpicGetAllChipsQueryFilter {
 
     @IsArray()
     @IsOptional()
-    @ApiProperty({ isArray: true, items: { type: 'number'} })
+    @ApiProperty({ isArray: true, items: { type: 'number' } })
     ids: number[]
+
+    @IsString({ each: true })
+    @IsOptional()
+    @ApiProperty({ isArray: true, items: { type: 'string' } })
+    asicFamilyTypes: string[]
 
     @IsNumber()
     @ApiProperty({ type: 'number', default: 40 })
