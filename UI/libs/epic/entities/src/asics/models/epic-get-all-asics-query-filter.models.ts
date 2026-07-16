@@ -2,7 +2,7 @@ export type EpicGetAllAsicsQueryFilter = {
     waferId?: number
     ids?: number[]
     chipId?: number
-    familyType?: string
+    familyTypes?: string[]
     quality?: string
     serialNumber?: string
 }

@@ -18,4 +18,8 @@ export class EpicChipDto implements EpicChipEntity {
     @ApiProperty({ type: 'string' })
     generalLocation: string
 
+    @IsString()
+    @ApiProperty({ type: 'string', description: 'Enum value asicFamilyType' })
+    familyType: string
+
 }

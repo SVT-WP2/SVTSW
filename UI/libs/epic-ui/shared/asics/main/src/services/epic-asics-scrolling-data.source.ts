@@ -6,7 +6,7 @@ import { map, Observable } from 'rxjs'
 
 export type EpicAsicsScrollingDsFilter = {
     waferId: number | null | undefined
-    asicFamilyType: string | null
+    asicFamilyTypes: string[] | null
     asicQuality: string | null
     serialNumber: string | null
 }

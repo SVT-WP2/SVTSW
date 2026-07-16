@@ -35,6 +35,7 @@ export class EpicChipsController {
                     ids: params.ids ? params.ids : undefined,
                     generalLocation: params.generalLocation ? params.generalLocation : undefined,
                     serialNumber: params.serialNumber && !!params.serialNumber.length ? params.serialNumber : undefined,
+                    familyTypes: params.asicFamilyTypes ? params.asicFamilyTypes : undefined,
                 },
                 {
                     limit: params.limit,

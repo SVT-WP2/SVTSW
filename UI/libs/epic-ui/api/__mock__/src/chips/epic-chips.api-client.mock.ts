@@ -54,6 +54,7 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
             id: this.entities.length ? this.entities[this.entities.length - 1].id + 1 : 1,
             generalLocation: payload.generalLocation,
             serialNumber: payload.serialNumber,
+            familyType: EpicEnumsMock.getEnumsCollection().asicFamilyType[Math.random() > 0.5 ? 0 : 1],
         }
         this.entities.push(newEntity)
 
@@ -133,6 +134,7 @@ export function generateMockChips(totalCount: number, idStartsFrom = 0): EpicChi
             id: i,
             serialNumber: `chip-${i}`,
             generalLocation: EpicEnumsMock.getEnumsCollection().wpGeneralLocation[Math.random() > 0.5 ? 0 : 1],
+            familyType: EpicEnumsMock.getEnumsCollection().asicFamilyType[Math.random() > 0.5 ? 0 : 1],
         })
     }
 

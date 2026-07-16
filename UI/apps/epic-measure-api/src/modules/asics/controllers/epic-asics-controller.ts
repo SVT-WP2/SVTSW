@@ -30,7 +30,7 @@ export class EpicAsicsController {
                 {
                     waferId: params.waferId ? +params.waferId : undefined,
                     chipId: params.chipId ? +params.chipId : undefined,
-                    familyType: params.asicFamilyType ? params.asicFamilyType : undefined,
+                    familyTypes: params.asicFamilyTypes ? params.asicFamilyTypes : undefined,
                     quality: params.asicQuality ? params.asicQuality : undefined,
                     serialNumber: params.serialNumber && !!params.serialNumber.length ? params.serialNumber : undefined,
                 },

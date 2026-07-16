@@ -11,6 +11,7 @@ import {
 import moment from 'moment/moment'
 import { concat, delay, map, Observable, of, zipAll } from 'rxjs'
 
+import { EpicDbAgentAsicsService } from './epic-db-agent-asics.service'
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 
 
@@ -35,9 +36,20 @@ export class EpicDbAgentChipsService {
             {},
         )
 
-    getAllChips(filter?: EpicGetAllChipsQueryFilter, pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
-        const filteredData = filter?.ids
-            ? this.chips.filter(item => filter.ids.includes(item.id))
+    constructor(private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService) {
+    }
+
+    getAllChips(queryFilter?: EpicGetAllChipsQueryFilter, pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
+        const filteredData = queryFilter
+            ? this.chips.filter(item => {
+                const fulfilAsicIdFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
+                const fulfilFamilyTypeFilter = !queryFilter.familyTypes || (queryFilter.familyTypes.includes(item.familyType))
+                const fulfilSerialNumberFilter = !queryFilter.serialNumber || (item.serialNumber.includes(queryFilter.serialNumber))
+
+                return fulfilAsicIdFilter
+                    && fulfilFamilyTypeFilter
+                    && fulfilSerialNumberFilter
+            })
             : this.chips
 
         const pageData = pager
@@ -61,14 +73,26 @@ export class EpicDbAgentChipsService {
     }
 
     createChip(createRequest: EpicChipCreateEntity): Observable<EpicChipEntity> {
-        const newChip = {
-            id: (this.chips[this.chips.length - 1]?.id || 0) + 1,
-            ...createRequest,
-        }
+        return this.epicDbAgentAsicsService.getAllAsics({ ids: [createRequest.asicId] })
+            .pipe(
+                map(list => {
+                    if (!list.items.length) {
+                        throw new Error(`Asic does not exist: ${createRequest.asicId}`)
+                    }
 
-        this.chips.push(newChip)
+                    const refAsic = list[0]
 
-        return of(newChip)
+                    const newChip: EpicChipEntity = {
+                        id: (this.chips[this.chips.length - 1]?.id || 0) + 1,
+                        ...createRequest,
+                        familyType: refAsic.familyType,
+                    }
+
+                    this.chips.push(newChip)
+
+                    return newChip
+                }),
+            )
             .pipe(
                 delay(50),
             )
@@ -146,6 +170,7 @@ export function generateChips(totalCount: number, idStartsFrom = 1): EpicChipEnt
             id: i,
             serialNumber: `chip-${i}`,
             generalLocation: getEnumsCollection().wpGeneralLocation[0],
+            familyType: getEnumsCollection().asicFamilyType[0],
         })
     }
 

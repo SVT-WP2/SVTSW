@@ -19,10 +19,10 @@ export class EpicAsicsGetAllParamsDto {
     @ApiProperty({ type: 'string' })
     asicQuality: string
 
-    @IsString()
+    @IsString({ each: true })
     @IsOptional()
-    @ApiProperty({ type: 'string' })
-    asicFamilyType: string
+    @ApiProperty({isArray: true, items: { type: 'string'}})
+    asicFamilyTypes: string[]
 
     @IsString()
     @IsOptional()

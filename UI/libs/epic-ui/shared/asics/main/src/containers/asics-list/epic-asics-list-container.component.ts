@@ -76,7 +76,7 @@ export class EpicAsicsListContainerComponent extends BaseComponent implements On
             if (headerFilterValue) {
                 const dsFilter: EpicAsicsScrollingDsFilter = {
                     waferId: headerFilterValue?.waferId || null,
-                    asicFamilyType: headerFilterValue?.asicFamilyType || null,
+                    asicFamilyTypes: headerFilterValue?.asicFamilyTypes?.length ? headerFilterValue.asicFamilyTypes : null,
                     asicQuality: headerFilterValue?.asicQuality || null,
                     serialNumber: headerFilterValue?.serialNumber?.length ? headerFilterValue.serialNumber : null,
                 }

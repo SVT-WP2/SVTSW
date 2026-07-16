@@ -21,7 +21,6 @@
         "lint:ts:fix": "eslint \"apps/**/src/**/*.ts\" \"apps/**/src/**/*.component.html\" \"libs/**/*.ts\" \"libs/**/*.component.html\" --quiet --fix",
         "lint:styles": "stylelint \"apps/**/src/**/*.scss\" \"libs/**/*.scss\"",
         "lint:styles:fix": "stylelint \"apps/**/src/**/*.scss\" \"libs/**/*.scss\" --fix",
-        "pre-pull-request": "npm run lint && npm run test",
         "install-deps": "npm i --force",
         "prepare": "cd .. && husky ./UI/.husky",
         "next-preminor-version": "npm version preminor --preid=SNAPSHOT",
@@ -29,7 +28,8 @@
         "next-major-version": "npm version major",
         "next-minor-version": "npm version minor",
         "next-patch-version": "npm version patch",
-        "version": "echo $npm_package_version"
+        "version": "echo $npm_package_version",
+        "pre-pull-request": "npm run lint && npm run test"
     },
     "private": true,
     "dependencies": {
