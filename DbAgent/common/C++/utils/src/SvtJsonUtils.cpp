@@ -230,3 +230,14 @@ bool SvtUtils::readStringVector(const json &config, const std::string &key,
 
   return false;
 }
+
+//========================================================================+
+bool SvtUtils::keyExists(const json &j, const std::string_view &key)
+{
+  if (!j.contains(key))
+  {
+    THROW_RUNTIME_ERROR("Object " + std::string(key) + " id was found");
+    return false;
+  }
+  return true;
+}

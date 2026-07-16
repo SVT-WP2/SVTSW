@@ -134,10 +134,8 @@ namespace dbagent
       SvtKafkaReplyMsg &replyMsg)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("create"))
-    {
-      THROW_RUNTIME_ERROR("Non object create was found");
-    }
+    if (!SvtUtils::keyExists(msgData, "create"))
+      return;
 
     DbEntry chipEntry;
     if (!createChip(msgData["create"], chipEntry))
@@ -156,25 +154,18 @@ namespace dbagent
       SvtKafkaReplyMsg &replyMsg)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("create"))
-    {
-      THROW_RUNTIME_ERROR("Non object create was found");
+    if (!SvtUtils::keyExists(msgData, "create"))
       return;
-    }
 
     const auto &msgCreate = msgData["create"];
-    if (!msgCreate.contains("generalLocation"))
-    {
-      THROW_RUNTIME_ERROR("Required field generalLocation was not found");
+    if (!SvtUtils::keyExists(msgCreate, "generalLocation"))
       return;
-    }
+
     const auto location = msgCreate["generalLocation"].get<std::string>();
 
-    if (!msgCreate.contains("items"))
-    {
-      THROW_RUNTIME_ERROR("Required field items was not found");
+    if (!SvtUtils::keyExists(msgData, "items"))
       return;
-    }
+
     const auto &items = msgCreate["items"];
 
     nlohmann::json filters = nlohmann::json::array();

@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "SvtJsonUtils.h"
 #include "SvtLogger.h"
 #include "nlohmann/json_fwd.hpp"
 
@@ -135,10 +136,8 @@ namespace dbagent
                               SvtKafkaReplyMsg &replyMsg)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("create"))
-    {
-      THROW_RUNTIME_ERROR("Object item create was found");
-    }
+    if (!SvtUtils::keyExists(msgData, "create"))
+      return;
     createEntryAndReply(msgData["create"], replyMsg);
   }
 
@@ -196,14 +195,10 @@ namespace dbagent
                               SvtKafkaReplyMsg &replyMsg)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("id"))
-    {
-      THROW_RUNTIME_ERROR("Object item id was found");
-    }
-    if (!msgData.contains("update"))
-    {
-      THROW_RUNTIME_ERROR("Object item update was found");
-    }
+    if (!SvtUtils::keyExists(msgData, "id"))
+      return;
+    if (!SvtUtils::keyExists(msgData, "update"))
+      return;
 
     updateEntryAndReply(msgData["id"], msgData["update"], replyMsg);
   }
@@ -240,14 +235,10 @@ namespace dbagent
                                              SvtKafkaReplyMsg &replyMsg)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("id"))
-    {
-      THROW_RUNTIME_ERROR("Object item id was found");
-    }
-    if (!msgData.contains("update"))
-    {
-      THROW_RUNTIME_ERROR("Object item update was found");
-    }
+    if (!SvtUtils::keyExists(msgData, "id"))
+      return;
+    if (!SvtUtils::keyExists(msgData, "update"))
+      return;
 
     int id = msgData["id"];
     if (!relationDto->updateRelationEntryInDB(id, msgData["update"][relationDto->getProps().colName]))

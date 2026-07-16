@@ -23,4 +23,6 @@ namespace SvtUtils
   bool readDoubleVector(const json &config, const std::string &key,
                         std::vector<double> &var, bool log = true);
   bool recursive_erase_key(json &j, const std::string_view &key);
+
+  bool keyExists(const json &j, const std::string_view &key);
 }  // namespace SvtUtils
