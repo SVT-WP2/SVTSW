@@ -1,4 +1,18 @@
 {
+  "Reconnect": {
+    "description": "Reconnect to the prober using the existing connection parameters. Use when the connection was lost without restarting the listener.",
+    "category": "Setup",
+    "data": {
+      "user": {
+        "required": false,
+        "type": "string",
+        "description": "User performing the reconnect (optional)"
+      }
+    },
+    "example": "python main.py send Reconnect --data='{\"user\":\"user1\",\"waferAgentName\":\"MOCK\"}'",
+    "execution_time": "3-10 seconds",
+    "notes": "Requires the agent to have been initialized at least once. Re-uses the stored address and machine type. Also re-syncs wafer and probe card state from the database."
+  },
   "Initialize": {
   "description": "Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)",
   "category": "Setup",

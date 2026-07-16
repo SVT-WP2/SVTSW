@@ -278,6 +278,57 @@ def svt_initialise_wp(
         return ResponseBuilder.error("InitializeReply", f"Initialization failed: {str(e)}", 500)
 
 
+def reconnect_prober(user=None, waferAgentName=None):
+    """
+    Reconnect to the prober using the existing global parameters.
+    Use when the connection was lost without restarting the listener.
+    """
+    globals_ = SvtWPAagentGlobalParameters.getInstance()
+    factory = ProberFactory.get_instance()
+
+    address = globals_.address
+    machine_type = globals_.machineType
+    machine_id = globals_.wpMachineId
+
+    if not address or not machine_type:
+        return ResponseBuilder.error(
+            "ReconnectReply",
+            "No previous connection found. Run Initialize first.",
+            400,
+        )
+
+    print(f"\n🔄 Reconnecting to prober at {address} (type: {machine_type})...")
+
+    try:
+        # Force-reset the factory so a fresh connection is established
+        factory.reset()
+
+        prober, err = _connect_prober(factory, globals_, machine_type, address, force=True)
+        if err:
+            err["type"] = "ReconnectReply"
+            return err
+
+        # Restore state
+        globals_.set_prober_status("initialized")
+        globals_.wpag_state = "ServiceOn"
+
+        # Re-sync wafer/probe-card state from DB
+        is_mock = machine_type.lower() == "mock"
+        _sync_from_db(globals_, machine_id, is_mock)
+
+        print(f"✅ Reconnected to {address}")
+        return ResponseBuilder.success(
+            "ReconnectReply",
+            f"Reconnected to {address} ({machine_type})",
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        globals_.wpag_state = "WP_Error"
+        return ResponseBuilder.error("ReconnectReply", f"Reconnect failed: {str(e)}", 500)
+
+
 def show_status(user=None, waferAgentName=None):
     """Get current project status"""
     try:

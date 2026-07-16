@@ -12,6 +12,7 @@ BYPASS_COMMANDS: set[str] = {
     "UserLogOut",
     # System control
     "Initialize",
+    "Reconnect",
     "ResetAgent",
     # Read-only queries — never change state
     "Help",
