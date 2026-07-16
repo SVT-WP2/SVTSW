@@ -322,6 +322,10 @@ class MockProberImpl:
         print("[MockProber] PTPA alignment complete")
         return "0,OK"
 
+    def get_vacuum_status(self) -> bool:
+        """Mock: vacuum is always ON."""
+        return True
+
     # ------------------------------------------------------------------
     # Home / local / clean
     # ------------------------------------------------------------------

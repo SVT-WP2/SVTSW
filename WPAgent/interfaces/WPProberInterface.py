@@ -86,3 +86,8 @@ class AbstractProber(ABC):
     def enable_overtravel(self, overtravel: bool):
         """Enable overtravel"""
         pass
+
+    @abstractmethod
+    def get_vacuum_status(self) -> bool:
+        """Return True if vacuum is ON, False if vacuum is lost."""
+        pass

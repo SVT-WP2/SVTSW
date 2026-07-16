@@ -12,6 +12,7 @@ BYPASS_COMMANDS: set[str] = {
     "UserLogOut",
     # System control
     "Initialize",
+    "Reconnect",
     "ResetAgent",
     # Read-only queries — never change state
     "Help",
@@ -24,6 +25,30 @@ BYPASS_COMMANDS: set[str] = {
     "ListAvailableCommands",
     # Hardware ops allowed in any state
     "AutoFocus",
+}
+
+
+# Commands that skip the vacuum safety check.
+# These are either pure queries, auth operations, or system-recovery commands
+# that must work even when vacuum is already lost.
+VACUUM_SAFE_COMMANDS: set[str] = {
+    # Auth
+    "UserLogIn",
+    "UserLogOut",
+    # Read-only queries
+    "Help",
+    "GetAgentState",
+    "ShowStatus",
+    "GetInfo",
+    "GetChuckPosition",
+    "ListProbers",
+    "ListChipTypes",
+    "ListAvailableCommands",
+    # System / recovery — must work even after vacuum loss
+    "Initialize",
+    "Reconnect",
+    "ResetAgent",
+    "LocalMode",
 }
 
 

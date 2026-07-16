@@ -62,7 +62,21 @@ class SentioProberImpl(AbstractProber):
         resp = self.prober.send_cmd(f"vis:compensation:enable Both, {enable}")
         return resp
 
+    def get_vacuum_status(self) -> bool:
+        """
+        Returns True if vacuum is ON, False if vacuum is lost.
+        Sends 'get_vacuum_status' to Sentio — response value is 1 (on) or 0 (off).
+        Fails open (returns True) if the query itself errors, to avoid blocking commands
+        due to a bad vacuum check rather than a real vacuum loss.
+        """
+        try:
+            resp = self.prober.send_cmd("get_vacuum_status")
+            return str(resp.message()).strip() == "1"
+        except Exception:
+            return True  # fail open
+
     def run_ptpa(self):
+        import time
         resp = self.prober.send_cmd(
             "vis:compensation:start_execute OffAxis, BothWithProbeTips, True"
         )
@@ -70,7 +84,29 @@ class SentioProberImpl(AbstractProber):
         if not resp.ok():
             raise Exception(f"PTPA failed: {resp.message()}")
 
-        self.prober.wait_complete(resp.cmd_id())
+        cmd_id = resp.cmd_id()
+        print(f"   PTPA running (cmd_id={cmd_id}), polling vacuum every 1s...")
+
+        # Poll vacuum + command status instead of blocking wait_complete.
+        # This allows us to abort PTPA immediately if vacuum is lost.
+        while True:
+            time.sleep(1.0)
+
+            # 1. Check vacuum first — safety takes priority
+            if not self.get_vacuum_status():
+                self.prober.send_cmd(f"abort_command {cmd_id}")
+                raise Exception(
+                    "VacuumFailed: Vacuum lost during PTPA — operation aborted"
+                )
+
+            # 2. Check if PTPA is still running
+            stat_resp = self.prober.send_cmd(f"query_command_status {cmd_id}")
+            errc = stat_resp.errc() if hasattr(stat_resp, "errc") else 0
+            if errc == 30:  # CommandPending — still running
+                continue
+            if not stat_resp.ok():
+                raise Exception(f"PTPA failed: {stat_resp.message()}")
+            break  # Done successfully
 
     def step_next_die(self):
         return self.prober.map.step_next_die()

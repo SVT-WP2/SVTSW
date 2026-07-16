@@ -10,7 +10,7 @@ import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
 import actions.WPImagingActions as imaging_actions
 
-from utilities.WPCommandConstants import BYPASS_COMMANDS
+from utilities.WPCommandConstants import BYPASS_COMMANDS, VACUUM_SAFE_COMMANDS
 
 def _yaml_command(yaml_path):
     """Returns a handler that runs a fixed YAML file via the sequencer."""
@@ -34,6 +34,7 @@ COMMAND_ROUTER = {
 
     # General
     "Initialize": project_actions.svt_initialise_wp,
+    "Reconnect": project_actions.reconnect_prober,
     "ShowStatus": project_actions.show_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help,
@@ -145,6 +146,25 @@ def _exec_in_sequence(message_type, data=None):
     return execute_command(message_type, data)
 
 
+def _check_vacuum() -> bool:
+    """
+    Returns True if vacuum is OK (or prober not yet initialized).
+    Returns False if vacuum is confirmed lost — command should be blocked.
+    Fails open: if the check itself errors, returns True to avoid false blocks.
+    """
+    try:
+        from drivers.WPFactory import ProberFactory
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        factory = ProberFactory.get_instance()
+        if not factory.is_initialized():
+            return True
+        g = SvtWPAagentGlobalParameters.getInstance()
+        prober = factory.get_prober(g.machineType, g.address)
+        return prober.get_vacuum_status()
+    except Exception:
+        return True  # fail open
+
+
 def _try_local_mode():
     """Try to set prober to local mode after error"""
     try:
@@ -232,6 +252,14 @@ def execute_command(message_type, data=None):
             )
             result = ResponseBuilder.error(f"{message_type}Reply", msg, 409)
             logger.log_command(msg, Severity.WARNING, message_type, data, result)
+            return result
+
+    # Vacuum safety check — block any physical operation if vacuum is lost
+    if message_type not in VACUUM_SAFE_COMMANDS:
+        if not _check_vacuum():
+            msg = f"Vacuum lost — '{message_type}' blocked for safety. Restore vacuum before continuing."
+            result = ResponseBuilder.error(f"{message_type}Reply", msg, 503)
+            logger.log_command(msg, Severity.ERROR, message_type, data, result)
             return result
 
     try:
