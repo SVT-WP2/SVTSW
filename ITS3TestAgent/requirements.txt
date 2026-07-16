@@ -1,3 +1,5 @@
 confluent-kafka
 tqdm
 json5
+pydantic
+pyyaml

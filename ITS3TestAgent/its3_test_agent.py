@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 from pathlib import Path
 import time
 import uuid
@@ -32,6 +33,8 @@ import uuid
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer, TopicPartition
 from confluent_kafka.admin import AdminClient
 from tqdm import tqdm
+
+from run_state import ChipResult, ChipState, RunState, RunStatus
 
 log = logging.getLogger("its3")
 
@@ -314,10 +317,19 @@ class WPAgentClient:
 
 class ITS3Runner:
     def __init__(self, config: dict, config_dir: Path,
-                 wafer: str, dry_run: bool = False):
+                 wafer: str, dry_run: bool = False,
+                 status: RunStatus | None = None,
+                 cancel: threading.Event | None = None,
+                 progress_bar: bool = True):
         self.cfg = config
         self.config_dir = config_dir
         self.dry_run = dry_run
+
+        # Optional service-layer hooks.  When run from the CLI both are None
+        # and the runner behaves exactly as before.
+        self.status = status
+        self.cancel = cancel
+        self.progress_bar = progress_bar
 
         self.mosaix_root = Path(config["mosaix_root"])
         self.build_dir   = config.get("build_dir", "build")
@@ -347,6 +359,43 @@ class ITS3Runner:
 
         # track which project type is currently loaded ("BAM" or "SEG")
         self._current_project_type: str | None = None
+
+    # ------------------------------------------------------------------
+    # Status / cancellation hooks (no-ops when run from the CLI)
+    # ------------------------------------------------------------------
+
+    def _cancelled(self) -> bool:
+        return self.cancel is not None and self.cancel.is_set()
+
+    def _set_state(self, state: RunState, error: str | None = None) -> None:
+        if self.status is not None:
+            self.status.set_state(state, error)
+
+    def _start_chip(self, chip_name: str) -> None:
+        if self.status is not None:
+            self.status.start_chip(chip_name)
+
+    def _finish_chip(self, chip_name: str, state: ChipState,
+                     error: str | None = None) -> None:
+        if self.status is not None:
+            self.status.finish_chip(chip_name, state, error)
+
+    def _terminate_on_cancel(self, proc: subprocess.Popen) -> None:
+        """Watchdog: kill the running command as soon as a stop is requested.
+
+        Without this a stop would only take effect between chips, which can be
+        many minutes for a full sequence.
+        """
+        while proc.poll() is None:
+            if self.cancel.wait(0.5):
+                log.warning("Stop requested — terminating running command ...")
+                proc.terminate()
+                try:
+                    proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    log.warning("Command did not exit in 10s — killing it")
+                    proc.kill()
+                return
 
     # ------------------------------------------------------------------
 
@@ -490,6 +539,9 @@ class ITS3Runner:
             cwd=str(self.mosaix_root), env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         )
+        if self.cancel is not None:
+            threading.Thread(target=self._terminate_on_cancel, args=(proc,),
+                             daemon=True).start()
         for line in proc.stdout:
             text = line.decode("utf-8", errors="replace").rstrip("\n")
             if show_output:
@@ -671,15 +723,32 @@ class ITS3Runner:
         for chip in skip_chips:
             log.info("SKIP %s  (TEST=no)", build_chip_name(chip["die"], self.wafer))
 
+        # register the full run list (tested + skipped) in the status snapshot
+        if self.status is not None:
+            self.status.set_chips([
+                ChipResult(
+                    die=chip["die"],
+                    chip_name=build_chip_name(chip["die"], self.wafer),
+                    wp=chip["wp"],
+                    state=ChipState.PENDING if chip["test"] else ChipState.SKIP,
+                )
+                for chip in chips
+            ])
+
         pbar = tqdm(test_chips, desc="Chips", unit="chip",
                     bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-                    file=sys.stderr)
+                    file=sys.stderr, disable=not self.progress_bar)
 
         for chip in pbar:
             # time.sleep(0.5)  # small delay to make sure logs appear in order with progress bar
+            if self._cancelled():
+                log.warning("Stop requested — aborting the chip loop")
+                break
+
             chip_name = build_chip_name(chip["die"], self.wafer)
             pbar.set_postfix_str(chip_name)
             done += 1
+            self._start_chip(chip_name)
 
             log.info("-" * 60)
             log.info("CHIP %d/%d: %s   WP=%s", done, total, chip_name, chip["wp"])
@@ -697,10 +766,14 @@ class ITS3Runner:
                         resp=self._wp_initialize()
                         if not resp:
                             log.error("WPAgent re-initialization failed after project switch failure, skipping chip")
+                            self._finish_chip(chip_name, ChipState.FAIL,
+                                              "WPAgent re-initialization failed after project switch failure")
                             continue
                         resp = self._change_wp_project(chip_type, new_project)
                         if not resp:
                             log.error("Failed to switch to %s project on retry, skipping chip", chip_type)
+                            self._finish_chip(chip_name, ChipState.FAIL,
+                                              f"Failed to switch to {chip_type} project")
                             continue
                 self._current_project_type = chip_type
 
@@ -708,16 +781,22 @@ class ITS3Runner:
             chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
             if not self._wp_move_to_die(chip["wp"], chip_type):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
+                self._finish_chip(chip_name, ChipState.FAIL, "Failed to move to die")
                 continue
-            
+
             log.info("Running set_daq before test sequence commands...")
             if not self.run_set_daq():  # ensure DAQ is set for each chip (in case it gets reset midnight)
                 log.error("Failed to set DAQ for %s, skipping chip", chip_name)
+                self._finish_chip(chip_name, ChipState.FAIL, "set_daq failed")
                 continue
 
             # --- run sequence commands ---
+            failed_steps = 0
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
+                if self._cancelled():
+                    log.warning("Stop requested — skipping remaining steps for %s", chip_name)
+                    break
                 if self.cfg.get("remove_daq_status_file", False):
                     self._remove_daq_status_file()
                 cmd = cmd_template.format(**tvars)
@@ -725,7 +804,17 @@ class ITS3Runner:
                 if rc != 0:
                     # log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
                     # break
+                    failed_steps += 1
                     log.error("Sequence step failed for %s, continuing anyway...", chip_name)
+
+            if self._cancelled():
+                self._finish_chip(chip_name, ChipState.FAIL,
+                                  "Run stopped before this chip completed")
+            elif failed_steps:
+                self._finish_chip(chip_name, ChipState.FAIL,
+                                  f"{failed_steps} sequence step(s) failed")
+            else:
+                self._finish_chip(chip_name, ChipState.PASS)
 
         pbar.close()
         log.info("Done. %d/%d chips processed.", done, total)
@@ -733,11 +822,16 @@ class ITS3Runner:
     # ------------------------------------------------------------------
 
     def run(self) -> int:
+        self._set_state(RunState.INITIALIZING)
         if not self.run_initialization():
+            self._set_state(RunState.FAILED, "Initialization failed")
             return 1
         try:
+            self._set_state(RunState.RUNNING)
             self.run_sequence()
         finally:
+            if self._cancelled():
+                self._set_state(RunState.STOPPING)
             log.info("=" * 60)
             log.info("CLEANUP")
             log.info("=" * 60)
@@ -761,11 +855,30 @@ class ITS3Runner:
                 log.info("UserLogOut OK")
             else:
                 log.warning("UserLogOut: %s", resp)
+        self._set_state(RunState.DONE)
         return 0
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
+def run_cli(wafer: str, config: str = "its3_test_agent_config.json",
+            log_file: str | None = None, dry_run: bool = False) -> int:
+    """One-shot run.  Shared by this script's CLI and ``main.py run``."""
+    setup_logging(log_file)
+
+    config_path = Path(config).expanduser().resolve()
+    if not config_path.exists():
+        log.error("Config not found: %s", config_path)
+        return 2
+
+    with open(config_path) as f:
+        cfg = json.load(f)
+
+    runner = ITS3Runner(cfg, config_dir=config_path.parent,
+                        wafer=wafer, dry_run=dry_run)
+    return runner.run()
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="ITS3 TestInterface runner")
@@ -778,19 +891,7 @@ def main() -> int:
                         help="Print commands without executing them")
     args = parser.parse_args()
 
-    setup_logging(args.log_file)
-
-    config_path = Path(args.config).expanduser().resolve()
-    if not config_path.exists():
-        log.error("Config not found: %s", config_path)
-        return 2
-
-    with open(config_path) as f:
-        config = json.load(f)
-
-    runner = ITS3Runner(config, config_dir=config_path.parent,
-                        wafer=args.wafer, dry_run=args.dry_run)
-    return runner.run()
+    return run_cli(args.wafer, args.config, args.log_file, args.dry_run)
 
 
 if __name__ == "__main__":
