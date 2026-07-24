@@ -1,0 +1,42 @@
+{
+  "_model"                  : "Keysight/Agilent DSA91204A (Infiniium 90000 series)",
+  "_driver"                 : "scopes/dsa91204a_utils.py",
+
+  "visa_address"            : "TCPIP0::128.141.63.145::5025::SOCKET",
+  "timeout_ms"              : 15000,
+
+  "channel"                 : "CHANnel2",
+  "channel_scale_v"         : 0.4,
+  "amplitude_window_v"      : null,
+  "channel_offset_v"        : 0.0,
+  "channel_coupling"        : "DC",
+
+  "sample_rate_sps"         : 4.0e10,
+  "acquire_points"          : 1000000,
+
+  "trigger_source"          : null,
+  "trigger_level_v"         : 0.0,
+  "trigger_slope"           : "POSitive",
+  "force_trigger"           : true,
+  "acquisition_timeout_s"   : 30.0,
+
+  "reset"                   : true,
+  "autoscale"               : false,
+
+  "output_dir"              : "data",
+
+  "_notes": {
+    "visa_address"        : "Raw socket on port 5025 (fastest), or TCPIP0::<ip>::inst0::INSTR for VXI-11.",
+    "channel"             : "CHANnel1 .. CHANnel4.",
+    "channel_coupling"    : "Sent as :CHANnel<N>:INPut. DC | DC50 | AC | LFR1 | LFR2. DSA91204A front end is 50 ohm only.",
+    "channel_scale_v"     : "Vertical scale in V/div (8 divisions -> full window = 8 x scale).",
+    "amplitude_window_v"  : "Total vertical window in V, sent directly as :CHANnel<N>:RANGe. If set (non-null), overrides channel_scale_v.",
+    "sample_rate_sps"     : "4.0e10 = 40 GSa/s via :ACQuire:SRATe. null = AUTO.",
+    "acquire_points"      : "Memory depth via :ACQuire:POINts. 0/null = AUTO; timebase range is set to points/rate when both are given.",
+    "trigger_source"      : "e.g. 'CHANnel2'. null = leave the scope's current trigger source.",
+    "trigger_slope"       : "POSitive | NEGative | EITHer.",
+    "force_trigger"       : "true = :TRIGger:SWEep AUTO (self-triggers without signal); false = triggered sweep, :DIGitize waits for a real edge.",
+    "reset"               : "true = *RST during initialize.",
+    "autoscale"           : "false recommended: autoscale fights the explicit vertical/sample-rate configuration."
+  }
+}

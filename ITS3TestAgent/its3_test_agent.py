@@ -25,9 +25,22 @@ import os
 import re
 import subprocess
 import sys
+import threading
 from pathlib import Path
 import time
 import uuid
+
+# Ported scope data-taking + scope-mode handshake client (oscilloscope/).
+# Import is lightweight and pyvisa-free until a capture actually runs, so this
+# never breaks the agent on a machine without the scope dependencies installed.
+try:
+    from oscilloscope import ScopeCaptureConfig, ScopeModeWatcher, ensure_scope_network
+    _SCOPE_AVAILABLE = True
+    _SCOPE_IMPORT_ERROR = None
+except Exception as _exc:  # noqa: BLE001
+    ScopeCaptureConfig = ScopeModeWatcher = ensure_scope_network = None  # type: ignore
+    _SCOPE_AVAILABLE = False
+    _SCOPE_IMPORT_ERROR = _exc
 
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer, TopicPartition
 from confluent_kafka.admin import AdminClient
@@ -342,6 +355,21 @@ class ITS3Runner:
         # environment captured from `source setup.sh load` (populated once)
         self._env: dict[str, str] | None = None
 
+        # --- scope data-taking (oscilloscope-automation port) ---
+        # When enabled, a background watcher runs alongside each matching mosaix
+        # command: it watches the scope-mode handshake files that a mosaix_test
+        # scope_mode pattern/lpgbt test publishes and captures a waveform per
+        # driven channel, ending the drive early once captured.
+        self.scope_cfg_raw = config.get("scope_capture", {}) or {}
+        self.scope_enabled = bool(self.scope_cfg_raw.get("enabled", False)) and not dry_run
+        if self.scope_enabled and not _SCOPE_AVAILABLE:
+            log.warning("scope_capture enabled but the oscilloscope package failed "
+                        "to import (%s) — scope capture disabled", _SCOPE_IMPORT_ERROR)
+            self.scope_enabled = False
+        # Run the scope network setup at most once per agent run (lazily, only
+        # when the first real scope capture is about to happen).
+        self._scope_network_done = False
+
         # WPAgent Kafka client (lazy init)
         self._wp: WPAgentClient | None = None
 
@@ -471,7 +499,7 @@ class ITS3Runner:
 
     # ------------------------------------------------------------------
 
-    def _run_cmd(self, cmd: str, label: str = "") -> int:
+    def _run_cmd(self, cmd: str, label: str = "", scope_label: str = "") -> int:
         if label:
             log.info("[%s]  $ %s", label, cmd)
         else:
@@ -483,6 +511,10 @@ class ITS3Runner:
         # write cmd output to log file only (skip terminal handler to avoid duplicates)
         file_handlers = [h for h in logging.root.handlers
                          if isinstance(h, logging.FileHandler)]
+
+        # If this command drives a scope_mode pattern, run a watcher alongside it
+        # that captures waveforms via the scope-mode handshake (see _run_scope_watcher).
+        scope_ctx = self._maybe_start_scope_watcher(cmd, scope_label or label)
 
         env = self._source_setup()
         proc = subprocess.Popen(
@@ -502,7 +534,122 @@ class ITS3Runner:
         proc.wait()
         if proc.returncode != 0:
             log.error("Command exited with code %d", proc.returncode)
+
+        # Signal the watcher that the mosaix process is gone and collect it.
+        self._finish_scope_watcher(scope_ctx)
         return proc.returncode
+
+    # ------------------------------------------------------------------
+    # Scope data-taking (oscilloscope-automation port)
+    # ------------------------------------------------------------------
+
+    def _scope_should_attach(self, cmd: str) -> bool:
+        """Decide whether *cmd* should have a scope watcher attached.
+
+        If ``scope_capture.trigger_when_cmd_contains`` is set (a string or list
+        of substrings), only commands containing one of them are watched. If it
+        is absent, every command is watched — harmless, since the watcher just
+        idles (never touches VISA) unless a scope_mode handshake goes "driving".
+        """
+        if not self.scope_enabled:
+            return False
+        triggers = self.scope_cfg_raw.get("trigger_when_cmd_contains")
+        if triggers is None:
+            return True
+        if isinstance(triggers, str):
+            triggers = [triggers]
+        return any(t in cmd for t in triggers)
+
+    def _ensure_scope_network_once(self) -> None:
+        """Configure the scope USB-ethernet link (192.168.0.1/24) before the
+        first real capture, if ``scope_capture.network.ensure`` is set. Ported
+        from the oscilloscope-automation host setup scripts. Warn-only: a failed
+        setup never aborts the test (the watcher's own preflight also warns)."""
+        if self._scope_network_done:
+            return
+        self._scope_network_done = True  # attempt at most once, even on failure
+
+        net = self.scope_cfg_raw.get("network") or {}
+        if not net.get("ensure", False):
+            return
+        if not _SCOPE_AVAILABLE:
+            return
+
+        result = ensure_scope_network(
+            ip_cidr=net.get("ip", "192.168.0.1/24"),
+            iface=net.get("iface") or None,
+            use_sudo=bool(net.get("use_sudo", True)),
+        )
+        if result["ok"]:
+            log.info("scope: network ready — %s", result["message"])
+        else:
+            log.warning("scope: network setup incomplete — %s "
+                        "(capture may fail; configure the adapter manually)",
+                        result["message"])
+
+    def _maybe_start_scope_watcher(self, cmd: str, label: str):
+        """Start a background scope watcher for *cmd* if applicable.
+
+        Returns an opaque context (thread + event + watcher) to hand to
+        _finish_scope_watcher, or None when no watcher was started.
+        """
+        if not self._scope_should_attach(cmd):
+            return None
+
+        sc = self.scope_cfg_raw
+        # Ensure the scope USB link is configured before the first real capture.
+        if not bool(sc.get("dry_run", False)):
+            self._ensure_scope_network_once()
+        scope_config = sc.get("scope_config")
+        if scope_config and not os.path.isabs(scope_config):
+            scope_config = str((self.config_dir / scope_config).resolve())
+        output_dir = sc.get("output_dir", "scope_data")
+        if not os.path.isabs(output_dir):
+            output_dir = str((self.config_dir / output_dir).resolve())
+
+        cap_cfg = ScopeCaptureConfig(
+            model=sc.get("model", "labmaster_mcm"),
+            scope_config=scope_config,
+            overrides=sc.get("overrides", {}) or {},
+            points=int(sc.get("points", -1)),
+            output_dir=output_dir,
+            label=label,
+            dry_run=bool(sc.get("dry_run", False)),
+            skip_setup=bool(sc.get("skip_setup", False)),
+            connect_attempts=int(sc.get("connect_attempts", 3)),
+            connect_backoff_s=float(sc.get("connect_backoff_s", 1.0)),
+        )
+        watcher = ScopeModeWatcher(cap_cfg)
+        stop_event = threading.Event()
+        timeout_s = float(sc.get("timeout_s", 3600.0))
+        summary: dict = {}
+
+        def _run():
+            try:
+                summary.update(watcher.run(timeout_s, stop_event=stop_event))
+            except Exception as exc:  # noqa: BLE001 — never kill the test on scope error
+                log.error("scope watcher crashed: %s", exc)
+
+        thread = threading.Thread(target=_run, name="scope-watcher", daemon=True)
+        log.info("scope: attaching watcher (model=%s%s) for [%s]",
+                 cap_cfg.model, ", dry-run" if cap_cfg.dry_run else "", label or "cmd")
+        thread.start()
+        return {"thread": thread, "stop_event": stop_event, "summary": summary}
+
+    def _finish_scope_watcher(self, scope_ctx) -> None:
+        if not scope_ctx:
+            return
+        scope_ctx["stop_event"].set()
+        join_timeout = float(self.scope_cfg_raw.get("join_timeout_s", 120.0))
+        scope_ctx["thread"].join(timeout=join_timeout)
+        if scope_ctx["thread"].is_alive():
+            log.warning("scope: watcher did not finish within %.0fs (still capturing?)",
+                        join_timeout)
+        else:
+            s = scope_ctx["summary"]
+            if s:
+                log.info("scope: watcher done — %d capture(s), driving seen: %s (%s)",
+                         s.get("captures", 0), s.get("saw_driving", False), s.get("ended"))
 
     # ------------------------------------------------------------------
 

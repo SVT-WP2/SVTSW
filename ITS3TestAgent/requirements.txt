@@ -1,3 +1,6 @@
 confluent-kafka
 tqdm
 json5
+# scope data-taking (oscilloscope/ port) — only needed when scope_capture is used
+pyvisa
+pyvisa-py
