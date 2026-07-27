@@ -365,6 +365,268 @@ class TestRunPTPA:
 
 
 # ─────────────────────────────────────────────────────────────
+# TestPTPA (with screenshots)
+# ─────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def mock_mss():
+    """
+    Fake mss module with a context-manager-compatible mss() call.
+
+    The real code does:
+        with mss.MSS() as sct:
+            monitor = sct.monitors[0]
+            sct.shot(mon=0, output=filename)
+
+    We provide a MagicMock sct whose .monitors list and .shot() are
+    controllable so we can verify screenshot behaviour without a display.
+    """
+    from unittest.mock import MagicMock
+
+    sct = MagicMock()
+    sct.monitors = [{"top": 0, "left": 0, "width": 1920, "height": 1080}]
+
+    cm = MagicMock()
+    cm.__enter__ = MagicMock(return_value=sct)
+    cm.__exit__ = MagicMock(return_value=False)
+
+    mss_mod = MagicMock()
+    mss_mod.MSS.return_value = cm
+
+    return mss_mod, sct
+
+
+class TestTestPTPA:
+    """
+    Tests for test_ptpa().
+
+    Strategy:
+    - mss is mocked so no real screen capture happens (works headlessly).
+    - MockProberImpl.run_ptpa() sleeps 1 s, giving the screenshot loop
+      enough time to fire at least once.
+    - prober fixture patches _ensure_initialized and get_current_prober.
+    """
+
+    def test_returns_success(self, prober, mock_mss, tmp_path):
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, _ = mock_mss
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            result = test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+        assert _status(result) == "success"
+
+    def test_output_mentions_screenshot_count(self, prober, mock_mss, tmp_path):
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, _ = mock_mss
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            result = test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+        # The success message reports "Captured N screenshots"
+        assert "screenshot" in result["error"]["message"].lower()
+
+    def test_calls_run_ptpa_on_prober(self, prober, mock_mss, tmp_path):
+        """PTPA must actually be called on the hardware (mock) prober."""
+        from unittest.mock import MagicMock
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, _ = mock_mss
+        original_run = prober.run_ptpa
+        prober.run_ptpa = MagicMock(side_effect=original_run)
+
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+
+        prober.run_ptpa.assert_called_once()
+
+    def test_captures_at_least_two_screenshots(self, prober, mock_mss, tmp_path):
+        """
+        MockProberImpl.run_ptpa() sleeps 1 s.
+        With interval=0.4 s we expect ≥1 mid-run shot + 1 final "done" shot.
+        """
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, sct = mock_mss
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            test_ptpa(
+                screenshot_interval=0.4,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+
+        assert sct.shot.call_count >= 2
+
+    def test_returns_error_when_ptpa_fails(self, prober, mock_mss, tmp_path):
+        """If PTPA raises, test_ptpa must return an error response."""
+        from unittest.mock import MagicMock
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, _ = mock_mss
+        prober.run_ptpa = MagicMock(side_effect=Exception("hardware timeout"))
+
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            result = test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+
+        assert _status(result) == "unexpectederror"
+        assert "hardware timeout" in result["error"]["message"]
+
+    def test_error_message_includes_duration(self, prober, mock_mss, tmp_path):
+        """Even on failure, the elapsed time should appear in the message."""
+        from unittest.mock import MagicMock
+        from actions.WPTestingActions import test_ptpa
+
+        mss_mod, _ = mock_mss
+        prober.run_ptpa = MagicMock(side_effect=Exception("boom"))
+
+        with patch.dict("sys.modules", {"mss": mss_mod, "mss.tools": MagicMock()}):
+            result = test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+
+        assert "s" in result["error"]["message"]  # e.g. "0.1s"
+
+    def test_missing_mss_returns_error(self, prober, tmp_path):
+        """If mss is not installed, test_ptpa must return a helpful error."""
+        from actions.WPTestingActions import test_ptpa
+
+        # Setting sys.modules["mss"] = None causes `import mss` to raise ImportError
+        with patch.dict("sys.modules", {"mss": None, "mss.tools": None}):
+            result = test_ptpa(
+                screenshot_interval=0.5,
+                output_dir=str(tmp_path / "ptpa_out"),
+                user="user1",
+                waferAgentName="TestAgent",
+            )
+
+        assert _status(result) == "unexpectederror"
+        assert "mss" in result["error"]["message"].lower()
+
+
+# ─────────────────────────────────────────────────────────────
+# TestPTPA — real screenshots, no real machine
+# ─────────────────────────────────────────────────────────────
+
+
+class TestTestPTPARealScreenshots:
+    """
+    Run test_ptpa with a real mss screen capture but MockProberImpl instead
+    of a live SENTIO machine.
+
+    MockProberImpl.run_ptpa() sleeps 1 s, giving mss enough time to capture
+    at least one frame.  The test verifies that PNG files are actually written
+    to disk and are non-empty valid images.
+
+    Skip automatically if mss cannot open a display (e.g. CI with no monitor).
+    """
+
+    @pytest.fixture
+    def real_prober(self):
+        from drivers.WPMockProber import MockProberImpl
+
+        mp = MockProberImpl("mock:35555")
+        with patch(
+            "actions.WPTestingActions._ensure_initialized", return_value=None
+        ), patch("actions.WPTestingActions.get_current_prober", return_value=mp):
+            yield mp
+
+    def test_real_screenshots_written_to_disk(self, real_prober, tmp_path):
+        """PNG files must exist on disk and be non-empty after test_ptpa."""
+        try:
+            import mss
+        except ImportError:
+            pytest.skip("mss not installed")
+
+        # Verify mss can actually open a display before running
+        try:
+            with mss.MSS() as sct:
+                _ = sct.monitors
+        except Exception as e:
+            pytest.skip(f"No display available for mss: {e}")
+
+        from actions.WPTestingActions import test_ptpa
+        import os
+
+        out_dir = os.path.join(os.path.dirname(__file__), "ptpa_test_screenshots")
+        result = test_ptpa(
+            screenshot_interval=0.4,
+            output_dir=out_dir,
+            user="user1",
+            waferAgentName="TestAgent",
+        )
+
+        print(f"\n📸 Screenshots saved to: {os.path.abspath(out_dir)}")
+        assert _status(result) == "success"
+
+        screenshots = [f for f in os.listdir(out_dir) if f.endswith(".png")]
+        assert len(screenshots) >= 2, f"Expected ≥2 screenshots, got {screenshots}"
+
+        for fname in screenshots:
+            path = os.path.join(out_dir, fname)
+            assert os.path.getsize(path) > 0, f"{fname} is empty"
+
+    def test_real_screenshots_are_valid_images(self, real_prober):
+        """Each captured PNG in tests/unit/ptpa_test_screenshots/ must have non-zero dimensions."""
+        try:
+            import mss
+        except ImportError:
+            pytest.skip("mss not installed")
+
+        try:
+            from PIL import Image
+        except ImportError:
+            pytest.skip("Pillow not installed")
+
+        try:
+            with mss.MSS() as sct:
+                _ = sct.monitors
+        except Exception as e:
+            pytest.skip(f"No display available for mss: {e}")
+
+        from actions.WPTestingActions import test_ptpa
+        import os
+
+        out_dir = os.path.join(os.path.dirname(__file__), "ptpa_test_screenshots")
+        test_ptpa(
+            screenshot_interval=0.4,
+            output_dir=out_dir,
+            user="user1",
+            waferAgentName="TestAgent",
+        )
+
+        for fname in os.listdir(out_dir):
+            if not fname.endswith(".png"):
+                continue
+            img = Image.open(os.path.join(out_dir, fname))
+            w, h = img.size
+            assert w > 0 and h > 0, f"{fname} has invalid dimensions {w}x{h}"
+            print(f"  ✓ {fname}  {w}×{h}")
+
+
+# ─────────────────────────────────────────────────────────────
 # get_chuck_position
 # ─────────────────────────────────────────────────────────────
 

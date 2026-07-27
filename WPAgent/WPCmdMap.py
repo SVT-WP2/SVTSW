@@ -80,6 +80,7 @@ COMMAND_ROUTER = {
     # PTPA
     "RunPTPA": testing_actions.run_ptpa,
     "SetPTPA": testing_actions.set_ptpa,
+    "TestPTPA": testing_actions.test_ptpa,
     "SetChuckOvertravel": testing_actions.set_chuck_overtravel,
     "DisableOvertravel": testing_actions.disable_overtravel,
     "MoveChuckWide": testing_actions.move_chuck_wide,

@@ -15,3 +15,4 @@ tifffile==2024.8.30
 imagecodecs==2024.12.30
 scipy==1.14.1
 Pillow==11.2.1
+mss==9.0.2

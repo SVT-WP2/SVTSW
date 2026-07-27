@@ -664,6 +664,113 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         return ResponseBuilder.error(reply, str(e), 500)
 
 
+@validate_command_with_name("TestPTPA")
+def test_ptpa(
+    screenshot_interval: float = 2.0,
+    output_dir: str = "ptpa_test_screenshots",
+    user=None,
+    waferAgentName=None,
+):
+    """
+    Run PTPA alignment while capturing periodic screenshots of the screen.
+
+    PTPA is an async command that blocks the Sentio TCP connection via
+    wait_complete(). This means we CANNOT call Sentio's snap_image during
+    PTPA — it would try to send on the same blocked socket.
+
+    Instead, we use `mss` (pure Python, reads the OS framebuffer) in the
+    main thread while PTPA runs in a background thread. No interference.
+
+    Args:
+        screenshot_interval: Seconds between screenshots (default 2.0)
+        output_dir: Folder to save screenshots
+        user: Current user
+        waferAgentName: Agent name
+
+    Returns:
+        Success with screenshot count, paths, and PTPA duration.
+    """
+    import threading
+    import datetime
+    import os as _os
+
+    reply = get_reply_type()
+
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    try:
+        import mss
+        import mss.tools
+    except ImportError:
+        return ResponseBuilder.error(
+            reply,
+            "Missing dependency: install 'mss' (pip install mss)",
+            500,
+        )
+
+    _os.makedirs(output_dir, exist_ok=True)
+
+    # ── State shared between threads ─────────────────────────────────────────
+    ptpa_result: dict = {"error": None, "done": False}
+
+    def _run_ptpa():
+        try:
+            prober = get_current_prober()
+            prober.run_ptpa()
+            prober.local_mode()
+            update_current_info(currentProber=prober)
+            agentStateMachine.transition("RunPTPA")
+        except Exception as exc:
+            ptpa_result["error"] = str(exc)
+        finally:
+            ptpa_result["done"] = True
+
+    # ── Launch PTPA in background ────────────────────────────────────────────
+    ptpa_thread = threading.Thread(target=_run_ptpa, daemon=True)
+    t_start = time.time()
+    ptpa_thread.start()
+
+    # ── Capture screenshots while PTPA runs ──────────────────────────────────
+    saved_files = []
+    with mss.MSS() as sct:
+        monitor = sct.monitors[0]  # full virtual screen
+        while not ptpa_result["done"]:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+            filename = _os.path.join(output_dir, f"ptpa_{timestamp}.png")
+            sct.shot(mon=0, output=filename)
+            saved_files.append(filename)
+            # Wait for next interval (or bail early if PTPA just finished)
+            deadline = time.time() + float(screenshot_interval)
+            while time.time() < deadline and not ptpa_result["done"]:
+                time.sleep(0.1)
+
+    # Take one final screenshot at completion
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+    filename = _os.path.join(output_dir, f"ptpa_{timestamp}_done.png")
+    with mss.MSS() as sct:
+        sct.shot(mon=0, output=filename)
+    saved_files.append(filename)
+
+    ptpa_thread.join(timeout=5)
+    duration = round(time.time() - t_start, 1)
+
+    if ptpa_result["error"]:
+        agentStateMachine.enter_error_state(ptpa_result["error"])
+        return ResponseBuilder.error(
+            reply,
+            f"PTPA failed after {duration}s: {ptpa_result['error']}",
+            500,
+        )
+
+    return ResponseBuilder.success(
+        reply,
+        f"PTPA completed in {duration}s. "
+        f"Captured {len(saved_files)} screenshots → {output_dir}",
+    )
+
+
 @validate_command_with_name("SetPTPA")
 def set_ptpa(enable: bool, user=None, waferAgentName=None):
     """
