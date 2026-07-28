@@ -34,7 +34,7 @@ COMMAND_ROUTER = {
 
     # General
     "Initialize": project_actions.svt_initialise_wp,
-    "Reconnect": project_actions.reconnect_prober,
+    # "Reconnect": project_actions.reconnect_prober,
     "ShowStatus": project_actions.show_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help,
