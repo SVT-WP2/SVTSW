@@ -160,6 +160,7 @@ def _check_vacuum() -> bool:
             return True
         g = SvtWPAagentGlobalParameters.getInstance()
         prober = factory.get_prober(g.machineType, g.address)
+        print(prober.get_vacuum_status())
         return prober.get_vacuum_status()
     except Exception:
         return True  # fail open
