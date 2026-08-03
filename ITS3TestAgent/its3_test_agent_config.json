@@ -20,6 +20,7 @@
   "fpga_program_setup": "prober_mit",
   "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.11.0.bit",
   "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.11.0.bit",
+  "fpga_link_test_trigger": "wafer_prbs_seq",
 
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",

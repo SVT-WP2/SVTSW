@@ -843,6 +843,12 @@ class ITS3Runner:
         chips = load_run_list(str(self.run_list_path))
         seq_templates = self.cfg.get("Sequence", [])
 
+        # sequence steps containing one of these substrings run on the
+        # link_test firmware; everything else uses test_system
+        link_test_triggers = self.cfg.get("fpga_link_test_trigger", "wafer_prbs_seq")
+        if isinstance(link_test_triggers, str):
+            link_test_triggers = [link_test_triggers]
+
         total = sum(1 for c in chips if c["test"])
         done = 0
 
@@ -903,9 +909,9 @@ class ITS3Runner:
             # --- run sequence commands ---
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
-                # wafer_prbs_seq needs the link_test firmware; everything else
-                # runs on the standard test_system firmware
-                fw_key = "link_test" if "wafer_prbs_seq" in cmd_template else "test_system"
+                fw_key = ("link_test"
+                          if any(t in cmd_template for t in link_test_triggers)
+                          else "test_system")
                 if not self._program_fpga(fw_key):
                     log.error("FPGA programming failed for %s, skipping step", chip_name)
                     continue
