@@ -1,0 +1,40 @@
+{
+  "_model"                  : "LabMaster MCM Zi-A / 10-36Zi-A",
+  "_driver"                 : "scopes/labmaster_mcm_utils.py",
+
+  "visa_address"            : "TCPIP0::192.168.0.11::inst0::INSTR",
+  "timeout_ms"              : 60000,
+
+  "channel"                 : "C4",
+  "channel_scale_v"         : 0.4,
+  "amplitude_window_v"      : null,
+  "channel_offset_v"        : 0.0,
+  "channel_coupling"        : "DC",
+
+  "sample_rate_sps"         : 8.0e10,
+  "acquire_points"          : 1000000,
+
+  "trigger_source"          : "C4",
+  "trigger_level_v"         : 0.0,
+  "trigger_slope"           : "Positive",
+  "force_trigger"           : true,
+  "acquisition_timeout_s"   : 60.0,
+
+  "default_setup"           : true,
+
+  "output_dir"              : "data",
+
+  "_notes": {
+    "visa_address"        : "VXI-11 format: TCPIP0::<ip>::inst0::INSTR. Replace IP as needed.",
+    "channel"             : "C1..C4 (single module) or C1..C16 (MCM with multiple modules).",
+    "channel_coupling"    : "D50 = DC 50 ohm | D1M = DC 1 Mohm | A1M = AC 1 Mohm | GND.",
+    "channel_scale_v"     : "Vertical scale in V/div (8 divisions -> full window = 8 x scale).",
+    "amplitude_window_v"  : "Total vertical amplitude window in V (= 8 divisions). If set (non-null), overrides channel_scale_v.",
+    "sample_rate_sps"     : "8.0e10 = 80 GSa/s. Forced via Maximize='FixedSampleRate'. 80 GSa/s requires <= 2 active channels (interleaved ADCs).",
+    "acquire_points"      : "Samples to acquire and export. 0 = don't constrain memory, export all acquired points.",
+    "trigger_source"      : "e.g. 'C1'. null = leave the scope's current trigger source.",
+    "trigger_slope"       : "Positive | Negative | Either.",
+    "force_trigger"       : "true = software-force a trigger if none arrives within acquisition_timeout_s.",
+    "default_setup"       : "true = recall factory default setup during initialize."
+  }
+}
