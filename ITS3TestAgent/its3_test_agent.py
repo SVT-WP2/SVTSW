@@ -373,6 +373,9 @@ class ITS3Runner:
         # WPAgent Kafka client (lazy init)
         self._wp: WPAgentClient | None = None
 
+        # firmware currently loaded on the FPGA (path), None = unknown
+        self._current_firmware: str | None = None
+
         # track which project type is currently loaded ("BAM" or "SEG")
         self._current_project_type: str | None = None
 
@@ -499,7 +502,8 @@ class ITS3Runner:
 
     # ------------------------------------------------------------------
 
-    def _run_cmd(self, cmd: str, label: str = "", scope_label: str = "") -> int:
+    def _run_cmd(self, cmd: str, label: str = "", scope_label: str = "",
+                 cwd: str | Path | None = None) -> int:
         if label:
             log.info("[%s]  $ %s", label, cmd)
         else:
@@ -519,7 +523,7 @@ class ITS3Runner:
         env = self._source_setup()
         proc = subprocess.Popen(
             cmd, shell=True, executable="/bin/bash",
-            cwd=str(self.mosaix_root), env=env,
+            cwd=str(cwd or self.mosaix_root), env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         )
         for line in proc.stdout:
@@ -652,6 +656,34 @@ class ITS3Runner:
                          s.get("captures", 0), s.get("saw_driving", False), s.get("ended"))
 
     # ------------------------------------------------------------------
+    # FPGA programming
+    # ------------------------------------------------------------------
+
+    def _program_fpga(self, fw_key: str) -> bool:
+        """Program the FPGA with the firmware configured as ``fpga_firmware_<fw_key>``.
+
+        Skips when the key is not configured or that firmware is already loaded.
+        """
+        fw_path = self.cfg.get(f"fpga_firmware_{fw_key}", "")
+        if not fw_path:
+            return True
+        if self._current_firmware == fw_path:
+            return True
+
+        prog_dir = self.cfg.get("fpga_program_dir",
+                                "/home/its3/mosaix_testing/software/fx3_tools")
+        setup = self.cfg.get("fpga_program_setup", "prober_mit")
+        cmd = f"./program_mts.py {setup} {fw_path}"
+
+        log.info("Programming FPGA with %s firmware: %s", fw_key, fw_path)
+        rc = self._run_cmd(cmd, label=f"fpga:{fw_key}", cwd=prog_dir)
+        if rc != 0:
+            log.error("FPGA programming with %s firmware failed (exit %d)", fw_key, rc)
+            return False
+        self._current_firmware = fw_path
+        return True
+
+    # ------------------------------------------------------------------
 
     def _wp_move_to_die(self, wp_coord: str, chip_type: str) -> bool:
         """Full per-chip sequence:
@@ -778,7 +810,13 @@ class ITS3Runner:
         if not self._wp_initialize():
             return False
 
-        # 2. Run mosaix init commands (set_daq etc.)
+        # 2. Program the FPGA with the default (test_system) firmware
+        log.info("--- FPGA programming ---")
+        if not self._program_fpga("test_system"):
+            log.error("FPGA programming failed, aborting.")
+            return False
+
+        # 3. Run mosaix init commands (set_daq etc.)
         log.info("--- Mosaix setup commands ---")
         for cmd_template in self.cfg.get("Initialization", []):
             cmd = cmd_template.format(**self.template_vars)
@@ -865,6 +903,12 @@ class ITS3Runner:
             # --- run sequence commands ---
             tvars = {**self.template_vars, "chip_name": chip_name, "die": chip["die"]}
             for cmd_template in seq_templates:
+                # wafer_prbs_seq needs the link_test firmware; everything else
+                # runs on the standard test_system firmware
+                fw_key = "link_test" if "wafer_prbs_seq" in cmd_template else "test_system"
+                if not self._program_fpga(fw_key):
+                    log.error("FPGA programming failed for %s, skipping step", chip_name)
+                    continue
                 if self.cfg.get("remove_daq_status_file", False):
                     self._remove_daq_status_file()
                 cmd = cmd_template.format(**tvars)
@@ -873,6 +917,10 @@ class ITS3Runner:
                     # log.error("Sequence step failed for %s, skipping remaining steps", chip_name)
                     # break
                     log.error("Sequence step failed for %s, continuing anyway...", chip_name)
+
+            # restore the standard firmware if a step switched to link_test
+            if not self._program_fpga("test_system"):
+                log.error("Failed to restore test_system firmware after %s", chip_name)
 
         pbar.close()
         log.info("Done. %d/%d chips processed.", done, total)

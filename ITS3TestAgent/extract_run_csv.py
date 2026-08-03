@@ -19,14 +19,14 @@ DEFAULT_PROBER_SUBDIR = "cern_prober_mit"
 # NOTE: WaferTileTestingSequenceMinimal must precede WaferTileTestingSequence in the
 # alternations so the longer name wins (regex alternation is ordered, leftmost-first).
 PATH_PATTERN = re.compile(
-    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence)"
-    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence))/"
+    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence)"
+    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence))/"
 )
 
 # Old-format fallback: command invocation line.
 # e.g.  2026-04-23 04:02:28 [INFO] [SEG0_L1W06_S4]  $ ./build/RunSequence .../wafer_primary_seq.json5 ...
 INVOKE_PATTERN = re.compile(
-    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq)\.json5"
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq|wafer_prbs_seq)\.json5"
 )
 
 # New-format: overall sequence result line.
@@ -44,10 +44,12 @@ SEQ_LABEL = {
     "WaferTileTestingSequence": "wafer_tile_seq",
     "WaferHschTestingSequence": "wafer_hsch_seq",
     "WaferTileTestingSequenceMinimal": "wafer_tile_seq_min",
+    "WaferPRBSTestingSequence": "wafer_prbs_seq",
     "wafer_primary_seq": "wafer_primary_seq",
     "wafer_tile_seq": "wafer_tile_seq",
     "wafer_hsch_seq": "wafer_hsch_seq",
     "wafer_tile_seq_min": "wafer_tile_seq_min",
+    "wafer_prbs_seq": "wafer_prbs_seq",
 }
 
 SEQ_FOLDER_SUFFIX = {
@@ -55,6 +57,7 @@ SEQ_FOLDER_SUFFIX = {
     "wafer_tile_seq": "WaferTileTestingSequence",
     "wafer_hsch_seq": "WaferHschTestingSequence",
     "wafer_tile_seq_min": "WaferTileTestingSequenceMinimal",
+    "wafer_prbs_seq": "WaferPRBSTestingSequence",
 }
 
 
