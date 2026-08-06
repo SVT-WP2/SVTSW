@@ -1,0 +1,84 @@
+# SVTSW application stack - DEV environment.
+#
+# Lives in git at Environment/Dev/, deployed to /opt/docker/svtsw/dev/ on the
+# server (every CI deploy re-syncs the server copy). Everything environment-
+# specific comes from two env files that sit NEXT to this file on the server
+# and are NOT in git:
+#
+#   .env          - config + secrets (DB credentials, hosts, ports).
+#                   Admin-managed; template: .env.example
+#   versions.env  - the image tag of every service in this environment.
+#                   CI-managed (one line rewritten per deploy);
+#                   template: versions.env.example
+#
+# Manual usage (from /opt/docker/svtsw/dev):
+#   docker compose -p svt-svtsw--dev --env-file .env --env-file versions.env \
+#     -f docker-compose-svtsw-dev.yml up -d
+#
+# Normally you don't run this by hand: the svt.svtsw--dev systemd unit brings
+# the stack up on boot, and CI deploys recreate single services inside the
+# same compose project (see ../deploy-service.sh).
+#
+# Interpolation conventions:
+#   ${VAR:?message} - required: compose aborts with `message` when unset/empty
+#   ${VAR:-default} - optional, default matches this environment
+
+# Pin the Compose project name: CI deploys, the systemd unit and manual runs
+# must all address the same project, or they would manage separate stacks.
+name: svt-svtsw--dev
+
+services:
+  svt-ui:
+    image: ghcr.io/svt-wp2/svt-ui:${SVT_UI_VERSION:?missing - set it in versions.env}
+    container_name: svt.ui--dev
+    restart: unless-stopped
+    networks:
+      - svt-network--dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${SVT_UI_PORT:-8090}:${SVT_UI_PORT:-8090}"
+    environment:
+      SVT_UI_PORT: "${SVT_UI_PORT:-8090}"
+      KAFKA_BROKER: "${SVT_KAFKA_HOST:-kafka}:${SVT_KAFKA_PORT:-9094}"
+      # The UI reports its own version; keep it in lockstep with the image tag.
+      APP_VERSION: "${SVT_UI_VERSION}"
+      NODE_ENV: production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  svt-db-agent:
+    image: ghcr.io/svt-wp2/svt-db-agent:${SVT_DB_AGENT_VERSION:?missing - set it in versions.env}
+    container_name: svt.db-agent--dev
+    restart: unless-stopped
+    networks:
+      - svt-network--dev
+    # Lets SVT_DB_HOST=host.docker.internal reach a native Postgres on the host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/log/svt-db-agent/dev:/var/log/svt-db-agent
+    environment:
+      SVT_DB_AGENT_DB_HOST: "${SVT_DB_HOST:?missing - set it in .env}"
+      SVT_DB_AGENT_DB_PORT: "${SVT_DB_PORT:-5432}"
+      SVT_DB_AGENT_DB_USER: "${SVT_DB_USER:?missing - set it in .env}"
+      SVT_DB_AGENT_DB_PASS: "${SVT_DB_PASS:?missing - set it in .env}"
+      SVT_DB_AGENT_DB_NAME: "${SVT_DB_NAME:?missing - set it in .env}"
+      SVT_DB_AGENT_DB_SCHEMA: "${SVT_DB_SCHEMA:?missing - set it in .env}"
+      SVT_DB_AGENT_KAFKA_SERVER: "${SVT_KAFKA_HOST:-kafka}"
+      SVT_DB_AGENT_KAFKA_PORT: "${SVT_KAFKA_PORT:-9094}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+# The network is created and owned by the Kafka stack
+# (docker-compose-kafka-dev.yml) - start that stack first.
+networks:
+  svt-network--dev:
+    external: true
+    name: svt-network--dev

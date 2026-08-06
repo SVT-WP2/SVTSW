@@ -1,0 +1,46 @@
+[Unit]
+Description=SVTSW Application Stack for Dev Environment (svt-ui, svt-db-agent)
+Requires=docker.service
+# Kafka first: the kafka stack owns the svt-network--dev network these
+# containers join. Wants= (not Requires=) so a flapping kafka unit doesn't
+# take the apps down with it once the network exists.
+Wants=network-online.target svt.kafka--dev.service
+After=docker.service network-online.target svt.kafka--dev.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+
+# Everything for this environment lives here: the compose files (synced from
+# git by CI deploys), .env (config + secrets, admin-managed) and versions.env
+# (image pins, CI-managed). On boot this unit restores exactly the versions
+# the last deploys pinned in versions.env.
+WorkingDirectory=/opt/docker/svtsw/dev
+
+# -p pins the Compose project name; it must match `name:` in the compose file —
+# CI deploys recreate single services inside this same project with
+# `up -d --no-deps <service>`.
+# '-' prefix on pull => non-fatal: the pinned images are already on the host
+# after a normal CI deploy, so a registry/auth hiccup must not block boot.
+ExecStartPre=-/bin/docker compose -p svt-svtsw--dev \
+    --env-file /opt/docker/svtsw/dev/.env \
+    --env-file /opt/docker/svtsw/dev/versions.env \
+    -f /opt/docker/svtsw/dev/docker-compose-svtsw-dev.yml pull
+
+ExecStart=/bin/docker compose -p svt-svtsw--dev \
+    --env-file /opt/docker/svtsw/dev/.env \
+    --env-file /opt/docker/svtsw/dev/versions.env \
+    -f /opt/docker/svtsw/dev/docker-compose-svtsw-dev.yml up -d --remove-orphans
+
+ExecStop=/bin/docker compose -p svt-svtsw--dev \
+    --env-file /opt/docker/svtsw/dev/.env \
+    --env-file /opt/docker/svtsw/dev/versions.env \
+    -f /opt/docker/svtsw/dev/docker-compose-svtsw-dev.yml down
+
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

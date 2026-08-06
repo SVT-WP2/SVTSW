@@ -9,16 +9,28 @@ Type=oneshot
 RemainAfterExit=yes
 User=root
 
-# Directory must exist (systemd chdir's here before ExecStart). The compose
-# file itself is passed explicitly with -f below, so its name need not be a default.
-WorkingDirectory=/opt/docker
+# Everything for this environment lives here: the compose files (synced from
+# git by CI deploys), .env (config + secrets, admin-managed) and versions.env
+# (image pins, CI-managed).
+WorkingDirectory=/opt/docker/svtsw/prod
 
-# -p pins the Compose project name so Dev and Prod stay isolated on a shared host
-# (see README). '-' prefix on pull => non-fatal: a registry hiccup won't block startup.
-ExecStartPre=-/bin/docker compose -p svt-kafka--prod -f /opt/docker/docker-compose-kafka-prod.yml pull
+# -p pins the Compose project name; it must match `name:` in the compose file
+# so this unit, CI deploys and manual runs all manage the same project.
+# '-' prefix on pull => non-fatal: a registry hiccup won't block startup.
+ExecStartPre=-/bin/docker compose -p svt-kafka--prod \
+    --env-file /opt/docker/svtsw/prod/.env \
+    --env-file /opt/docker/svtsw/prod/versions.env \
+    -f /opt/docker/svtsw/prod/docker-compose-kafka-prod.yml pull
 
-ExecStart=/bin/docker compose -p svt-kafka--prod -f /opt/docker/docker-compose-kafka-prod.yml up -d --remove-orphans
-ExecStop=/bin/docker compose -p svt-kafka--prod -f /opt/docker/docker-compose-kafka-prod.yml down
+ExecStart=/bin/docker compose -p svt-kafka--prod \
+    --env-file /opt/docker/svtsw/prod/.env \
+    --env-file /opt/docker/svtsw/prod/versions.env \
+    -f /opt/docker/svtsw/prod/docker-compose-kafka-prod.yml up -d --remove-orphans
+
+ExecStop=/bin/docker compose -p svt-kafka--prod \
+    --env-file /opt/docker/svtsw/prod/.env \
+    --env-file /opt/docker/svtsw/prod/versions.env \
+    -f /opt/docker/svtsw/prod/docker-compose-kafka-prod.yml down
 
 Restart=on-failure
 RestartSec=10s

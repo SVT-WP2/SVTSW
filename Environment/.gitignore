@@ -1,0 +1,4 @@
+# Real environment files live ONLY on the server (/opt/docker/svtsw/<env>/).
+# Never commit them - the committed *.example files are the templates.
+**/.env
+**/versions.env

@@ -63,53 +63,32 @@ jobs:
           cache-to: type=gha,mode=max,scope=db-agent
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
 
+  # Deploys pin the image version in /opt/docker/svtsw/<env>/versions.env and
+  # recreate ONLY this service inside the svt-svtsw--<env> compose project (see
+  # Environment/README.md). App config + secrets live in the server-side .env,
+  # not in GitHub.
   deploy-dev--manual:
     if: inputs.job == 'deploy-dev--manual'
     runs-on: self-hosted
     environment: dev
     steps:
-      - name: Deploy
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-db-agent to dev
         # Override the workflow-level `defaults.run.working-directory: DbAgent`
-        # — this step runs on the self-hosted runner with no checkout, so the
-        # DbAgent/ subdirectory doesn't exist. runner.temp is always defined
-        # and always exists.
-        working-directory: ${{ runner.temp }}
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
         env:
           INPUT_TAG: ${{ inputs.image_tag }}
-          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
-          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
-          SVT_DB_HOST: ${{ vars.SVT_DB_HOST }}
-          SVT_DB_PORT: ${{ vars.SVT_DB_PORT }}
-          SVT_DB_USER: ${{ secrets.SVT_DB_USER }}
-          SVT_DB_PASS: ${{ secrets.SVT_DB_PASS }}
-          SVT_DB_NAME: ${{ secrets.SVT_DB_NAME }}
-          SVT_DB_SCHEMA: ${{ secrets.SVT_DB_SCHEMA }}
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           IMAGE_TAG="${INPUT_TAG:-${GITHUB_SHA::8}}"
-          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-          echo "Deploying ${IMAGE} locally"
-          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
-          sudo docker pull "${IMAGE}"
-          sudo docker stop svt.db-agent--dev || true
-          sudo docker rm svt.db-agent--dev || true
-          sudo docker run -d \
-            --name svt.db-agent--dev \
-            --restart unless-stopped \
-            --network svt-network--dev \
-            --add-host=host.docker.internal:host-gateway \
-            -v /var/log/svt-db-agent/dev:/var/log/svt-db-agent \
-            -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
-            -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
-            -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
-            -e SVT_DB_AGENT_DB_PASS="${SVT_DB_PASS}" \
-            -e SVT_DB_AGENT_DB_NAME="${SVT_DB_NAME}" \
-            -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
-            -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
-            -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            "${IMAGE}"
+          bash Environment/deploy-service.sh dev svt-db-agent "${IMAGE_TAG}"
 
   # Manual production deploy. Run from the Actions UI once a release image exists
   # for a `svt-db-agent-*` tag. Requires `image_tag` input (the release version,
@@ -120,22 +99,17 @@ jobs:
     runs-on: self-hosted
     environment: prod
     steps:
-      - name: Deploy
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-db-agent to prod
         # Override the workflow-level `defaults.run.working-directory: DbAgent`
-        # — this step runs on the self-hosted runner with no checkout, so the
-        # DbAgent/ subdirectory doesn't exist. runner.temp is always defined
-        # and always exists.
-        working-directory: ${{ runner.temp }}
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
         env:
           INPUT_TAG: ${{ inputs.image_tag }}
-          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
-          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
-          SVT_DB_HOST: ${{ vars.SVT_DB_HOST }}
-          SVT_DB_PORT: ${{ vars.SVT_DB_PORT }}
-          SVT_DB_USER: ${{ secrets.SVT_DB_USER }}
-          SVT_DB_PASS: ${{ secrets.SVT_DB_PASS }}
-          SVT_DB_NAME: ${{ secrets.SVT_DB_NAME }}
-          SVT_DB_SCHEMA: ${{ secrets.SVT_DB_SCHEMA }}
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -144,24 +118,4 @@ jobs:
             echo "ERROR: image_tag input is required for deploy-prod--manual" >&2
             exit 1
           fi
-          IMAGE="${REGISTRY}/${IMAGE_NAME}:${INPUT_TAG}"
-          echo "Deploying ${IMAGE} locally"
-          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
-          sudo docker pull "${IMAGE}"
-          sudo docker stop svt.db-agent--prod || true
-          sudo docker rm svt.db-agent--prod || true
-          sudo docker run -d \
-            --name svt.db-agent--prod \
-            --restart unless-stopped \
-            --network svt-network--prod \
-            --add-host=host.docker.internal:host-gateway \
-            -v /var/log/svt-db-agent/prod:/var/log/svt-db-agent \
-            -e SVT_DB_AGENT_DB_HOST="${SVT_DB_HOST}" \
-            -e SVT_DB_AGENT_DB_PORT="${SVT_DB_PORT}" \
-            -e SVT_DB_AGENT_DB_USER="${SVT_DB_USER}" \
-            -e SVT_DB_AGENT_DB_PASS="${SVT_DB_PASS}" \
-            -e SVT_DB_AGENT_DB_NAME="${SVT_DB_NAME}" \
-            -e SVT_DB_AGENT_DB_SCHEMA="${SVT_DB_SCHEMA}" \
-            -e SVT_DB_AGENT_KAFKA_SERVER="${SVT_KAFKA_HOST}" \
-            -e SVT_DB_AGENT_KAFKA_PORT="${SVT_KAFKA_PORT}" \
-            "${IMAGE}"
+          bash Environment/deploy-service.sh prod svt-db-agent "${INPUT_TAG}"

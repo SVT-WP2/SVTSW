@@ -1,12 +1,35 @@
+# Kafka stack (KRaft broker + Kafka UI) - PROD environment.
+#
+# Deployed to /opt/docker/svtsw/prod/ on the server. Optional overrides come
+# from the two env files next to it (all defaults below already match this
+# environment, so the stack also runs with empty env files):
+#
+#   .env          - KAFKA_ADVERTISED_HOST, host ports, cluster id
+#   versions.env  - KAFKA_VERSION, KAFKA_UI_VERSION image pins
+#
+# Manual usage (from /opt/docker/svtsw/prod):
+#   docker compose -p svt-kafka--prod --env-file .env --env-file versions.env \
+#     -f docker-compose-kafka-prod.yml up -d
+#
+# This stack OWNS the svt-network--prod network; the application stack
+# (docker-compose-svtsw-prod.yml) joins it as external - start Kafka first.
+
+# Pin the Compose project name so Dev and Prod stay isolated on a shared host
+# (without it, --remove-orphans from one stack would delete the other's
+# containers when both run from the same directory name).
+name: svt-kafka--prod
+
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.4.0
+    image: confluentinc/cp-kafka:${KAFKA_VERSION:-7.4.0}
     container_name: svt.kafka-broker--prod
     restart: unless-stopped
+    # Host-side ports are overridable; the container-side listener ports are
+    # fixed (they are baked into KAFKA_LISTENERS below).
     ports:
-      - "9090:9094"  # INSIDE (inter-container)
-      - "9091:9095"  # TUNNEL (ssh)
-      - "9092:9096"  # OUTSIDE (external network) - public port
+      - "${KAFKA_PORT_INSIDE:-9090}:9094"   # INSIDE (inter-container)
+      - "${KAFKA_PORT_TUNNEL:-9091}:9095"   # TUNNEL (ssh)
+      - "${KAFKA_PORT_OUTSIDE:-9092}:9096"  # OUTSIDE (external network) - public port
     deploy:
       resources:
         limits:
@@ -25,7 +48,9 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9094,TUNNEL://0.0.0.0:9095,OUTSIDE://0.0.0.0:9096,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9094,TUNNEL://localhost:9091,OUTSIDE://128.141.22.7:9092
+      # TUNNEL/OUTSIDE advertise the HOST-side ports; OUTSIDE advertises the
+      # public address of this host (override KAFKA_ADVERTISED_HOST in .env).
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9094,TUNNEL://localhost:${KAFKA_PORT_TUNNEL:-9091},OUTSIDE://${KAFKA_ADVERTISED_HOST:-128.141.22.7}:${KAFKA_PORT_OUTSIDE:-9092}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,TUNNEL:PLAINTEXT,OUTSIDE:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -46,7 +71,9 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: "INFO"
       KAFKA_TOOLS_LOG4J_LOGLEVEL: "INFO"
-      CLUSTER_ID: "UHJvZEthZmthQ2x1c3RyMQ"  # fixed cluster ID for KRaft mode (must differ from dev)
+      # Fixed cluster ID for KRaft mode - must stay stable for the lifetime of
+      # the data volume, and must differ between dev and prod.
+      CLUSTER_ID: "${KAFKA_CLUSTER_ID:-UHJvZEthZmthQ2x1c3RyMQ}"
     volumes:
       - kafka-data:/var/lib/kafka/data
       - kafka-logs:/var/log/kafka
@@ -58,12 +85,12 @@ services:
       start_period: 30s
 
   kafka-ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION:-latest}
     container_name: svt.kafka-ui--prod
     depends_on:
       - kafka
     ports:
-      - "8088:8080"
+      - "${KAFKA_UI_PORT:-8088}:8080"
     restart: unless-stopped
     networks:
       - svt-network--prod

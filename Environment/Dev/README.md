@@ -1,21 +1,28 @@
 # Dev Environment
 
-Docker Compose stacks for the SVTSW **development** environment.
+Docker Compose stacks for the SVTSW **development** environment, deployed to
+`/opt/docker/svtsw/dev/` on the server. Shared concepts (the `.env` /
+`versions.env` model, deployment flow, first-time setup, day-2 commands) live
+in [`../README.md`](../README.md) — this page only lists what is dev-specific.
 
 | File | Purpose |
 | ---- | ------- |
-| [`docker-compose-kafka-dev.yml`](docker-compose-kafka-dev.yml) | Kafka broker (KRaft) + Kafka UI |
-| [`svt.kafka--dev.service`](svt.kafka--dev.service) | systemd unit that runs the Kafka stack |
+| [`docker-compose-kafka-dev.yml`](docker-compose-kafka-dev.yml) | Kafka broker (KRaft) + Kafka UI; owns `svt-network--dev` |
+| [`docker-compose-svtsw-dev.yml`](docker-compose-svtsw-dev.yml) | App services: `svt-ui`, `svt-db-agent` |
+| [`svt.kafka--dev.service`](svt.kafka--dev.service) | systemd unit for the Kafka stack |
+| [`svt.svtsw--dev.service`](svt.svtsw--dev.service) | systemd unit for the app stack |
+| [`.env.example`](.env.example) | Template for `/opt/docker/svtsw/dev/.env` (config + secrets) |
+| [`versions.env.example`](versions.env.example) | Template for `/opt/docker/svtsw/dev/versions.env` (image pins) |
 
-## Run with Docker Compose
+## Dev-specific values
 
-```bash
-docker compose -p svt-kafka--dev -f docker-compose-kafka-dev.yml up -d
-docker compose -p svt-kafka--dev -f docker-compose-kafka-dev.yml ps
-docker compose -p svt-kafka--dev -f docker-compose-kafka-dev.yml down
-```
-
-Kafka UI is then available on port **8087**.
+- Compose projects: `svt-kafka--dev`, `svt-svtsw--dev`; network `svt-network--dev`.
+- Kafka host ports: **9094** (INSIDE), **9095** (TUNNEL), **9096** (OUTSIDE);
+  Kafka UI on **8087**.
+- UI on port **8090** (`SVT_UI_PORT` in `.env`).
+- App containers reach the broker at `kafka:9094` (in-network INSIDE listener).
+- Deploys to dev happen automatically on every master push touching a service,
+  on every release tag, or manually via the `:: Manual` workflows.
 
 ## Large Kafka messages
 
@@ -41,48 +48,18 @@ docker exec svt.kafka-broker--dev kafka-configs --bootstrap-server localhost:909
 docker exec svt.kafka-broker--dev kafka-configs --bootstrap-server localhost:9094 --entity-type topics --entity-name svt.db-agent.request.reply --alter --add-config max.message.bytes=52428800
 ```
 
-## Deploy as a systemd service (RHEL)
+## Quick commands
 
-The unit runs `docker compose` as a `oneshot` service that stays active
-(`RemainAfterExit=yes`). Paths in the unit are absolute, so they must match
-where the compose file actually lives on the host.
+```bash
+cd /opt/docker/svtsw/dev
 
-1. **Copy the compose file** to the path referenced by the unit:
+# Kafka stack
+docker compose -p svt-kafka--dev --env-file .env --env-file versions.env \
+  -f docker-compose-kafka-dev.yml ps
 
-   ```bash
-   sudo mkdir -p /opt/docker
-   sudo cp docker-compose-kafka-dev.yml /opt/docker/
-   ```
+# App stack
+docker compose -p svt-svtsw--dev --env-file .env --env-file versions.env \
+  -f docker-compose-svtsw-dev.yml ps
+```
 
-   > If you deploy to a different directory, update `WorkingDirectory` and the
-   > two `-f /opt/docker/...` paths in `svt.kafka--dev.service` to match.
-
-2. **Install the unit** and enable it:
-
-   ```bash
-   sudo cp svt.kafka--dev.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable --now svt.kafka--dev.service
-   ```
-
-3. **Check status / logs:**
-
-   ```bash
-   sudo systemctl status svt.kafka--dev.service
-   sudo journalctl -xeu svt.kafka--dev.service
-   ```
-
-### Notes
-
-- `WorkingDirectory` must be a **directory** (systemd `chdir`s into it before
-  starting). The compose file is selected explicitly via `-f`, so its non-default
-  name (`docker-compose-kafka-dev.yml`) is fine.
-- `-p svt-kafka--dev` pins the Compose **project name**. Without it the project
-  defaults to the working-dir name (`docker`), which Prod would share — and
-  `--remove-orphans` from one stack would then delete the other's containers. See
-  [`../Prod/README.md`](../Prod/README.md) for the full same-host coexistence notes.
-- Verify the Docker CLI path with `command -v docker`. The unit uses `/bin/docker`
-  (on RHEL `/bin` is a symlink to `/usr/bin`); adjust if yours differs.
-- After editing the unit, re-run `sudo systemctl daemon-reload`. If it had been
-  failing, clear the restart counter with
-  `sudo systemctl reset-failed svt.kafka--dev.service`.
+Full setup and operations: [`../README.md`](../README.md).
