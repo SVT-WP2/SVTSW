@@ -47,6 +47,11 @@ export const routes: Routes = [
             //         () => import('../modules/chips/epic-chips.module').then(m => m.EpicChipsModule),
             // },
             {
+                path: 'svt-tests',
+                loadChildren:
+                    () => import('../modules/svt-tests/epic-svt-tests.routing').then(m => m.routes),
+            },
+            {
                 path: 'iv-mnt',
                 loadChildren:
                     () => import('../modules/iv-mnt/epic-iv-mnt.module').then(m => m.EpicIvMntModule),

@@ -6,12 +6,14 @@ import { EpicDbAgentWafersController } from './controllers'
 import { EpicDbAgent } from './epic-db-agent.models'
 import {
     EpicDbAgentAsicsService,
+    EpicDbAgentChipBlocksService,
     EpicDbAgentChipsService,
     EpicDbAgentEnumsService,
     EpicDbAgentEquipmentService,
     EpicDbAgentEquipmentTypesService,
     EpicDbAgentSvtTestSetupConfigsService,
     EpicDbAgentSvtTestSetupService,
+    EpicDbAgentSvtTestsService,
     EpicDbAgentSvtTestTemplatesService,
     EpicDbAgentSvtTestTypeConfigsService,
     EpicDbAgentSvtTestTypesService,
@@ -55,6 +57,7 @@ import {
         EpicDbAgentWpProbeCardsService,
         EpicDbAgentWpProjectsService,
         EpicDbAgentChipsService,
+        EpicDbAgentChipBlocksService,
         EpicDbAgentEquipmentTypesService,
         EpicDbAgentEquipmentService,
         EpicDbAgentSvtTestSetupService,
@@ -62,6 +65,7 @@ import {
         EpicDbAgentSvtTestTypesService,
         EpicDbAgentSvtTestTypeConfigsService,
         EpicDbAgentSvtTestTemplatesService,
+        EpicDbAgentSvtTestsService,
     ],
     controllers: [EpicDbAgentWafersController],
 })

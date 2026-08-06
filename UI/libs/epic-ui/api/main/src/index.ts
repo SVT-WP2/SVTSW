@@ -1,6 +1,7 @@
 export * from './asics'
 export * from './enums'
 export * from './chips'
+export * from './chip-blocks'
 export * from './common/public-api'
 export * from './kafka/public-api'
 export * from './tcp/public-api'

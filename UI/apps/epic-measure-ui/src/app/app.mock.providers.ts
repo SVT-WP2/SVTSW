@@ -2,10 +2,12 @@ import { Provider } from '@angular/core'
 import {
     EpicAsicsApiClient,
     EpicAsicTestTypesApiClient,
+    EpicChipBlocksApiClient,
     EpicChipsApiClient,
     EpicEnumsApiClient,
     EpicEquipmentApiClient,
     EpicEquipmentTypesApiClient,
+    EpicSvtTestsApiClient,
     EpicSvtTestSetupConfigsApiClient,
     EpicSvtTestSetupsApiClient,
     EpicSvtTestTemplatesApiClient,
@@ -20,10 +22,12 @@ import {
 } from 'epic-ui/api'
 import {
     EpicAsicsApiClientMock,
+    EpicChipBlocksApiClientMock,
     EpicChipsApiClientMock,
     EpicEnumsApiClientMock,
     EpicEquipmentApiClientMock,
     EpicEquipmentTypesApiClientMock,
+    EpicSvtTestsApiClientMock,
     EpicSvtTestSetupConfigsApiClientMock,
     EpicSvtTestSetupsApiClientMock,
     EpicSvtTestTemplatesApiClientMock,
@@ -82,6 +86,10 @@ export function provideMockData(): Provider[] {
             useClass: EpicChipsApiClientMock,
         },
         {
+            provide: EpicChipBlocksApiClient,
+            useClass: EpicChipBlocksApiClientMock,
+        },
+        {
             provide: EpicEquipmentTypesApiClient,
             useClass: EpicEquipmentTypesApiClientMock,
         },
@@ -108,6 +116,10 @@ export function provideMockData(): Provider[] {
         {
             provide: EpicSvtTestTemplatesApiClient,
             useClass: EpicSvtTestTemplatesApiClientMock,
+        },
+        {
+            provide: EpicSvtTestsApiClient,
+            useClass: EpicSvtTestsApiClientMock,
         },
     ]
 }

@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { Transport } from '@nestjs/microservices'
+import { CompressionTypes } from 'kafkajs'
 
 import { AppModule } from './app/app.module'
 
@@ -14,6 +15,14 @@ async function bootstrap() {
             },
             consumer: {
                 groupId: 'epic-ui.fake-db-agent',
+                // Kafka's 1 MB defaults are too small for list replies.
+                maxBytesPerPartition: 10 * 1024 * 1024,
+                maxBytes: 50 * 1024 * 1024,
+            },
+            // Broker limits apply to the *compressed* batch, and these replies
+            // are JSON - gzip keeps them well under the ceiling.
+            send: {
+                compression: CompressionTypes.GZIP,
             },
         },
     })

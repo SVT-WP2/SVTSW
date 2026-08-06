@@ -1,5 +1,6 @@
 export * from './asics'
 export * from './chips'
+export * from './chip-blocks'
 export * from './enums'
 export * from './wafers'
 export * from './wafer-types'

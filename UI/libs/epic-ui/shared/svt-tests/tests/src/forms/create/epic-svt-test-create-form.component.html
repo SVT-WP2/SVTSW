@@ -1,0 +1,142 @@
+@if (initProcessing().processing) {
+    <epic-loader />
+}
+@else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+}
+@else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+
+        <mat-form-field class="w-100">
+            <mat-label>Test Setup</mat-label>
+            <mat-select [formControlName]="FormField.testSetupId">
+                @for (option of formGroup.controls.testSetupId.selectOptions; track option.id) {
+                    <mat-option [value]="option.id">
+                        {{ option.name }}
+                    </mat-option>
+                }
+            </mat-select>
+
+            @if (formGroup.controls.testSetupId.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Test Setup Config</mat-label>
+            <mat-select [formControlName]="FormField.testSetupConfigId">
+                @for (option of formGroup.controls.testSetupConfigId.selectOptions; track option.id) {
+                    <mat-option [value]="option.id">
+                        {{ option.name }}
+                    </mat-option>
+                }
+            </mat-select>
+
+            @if (formGroup.controls.testSetupConfigId.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>DUT Entity Type</mat-label>
+            <mat-select [formControlName]="FormField.dutEntityName" placeholder="Select DUT Entity Type">
+                @for (option of formGroup.controls.dutEntityName.selectOptions; track option) {
+                    <mat-option [value]="option">
+                        {{ dutEntityNameLabel[option] }}
+                    </mat-option>
+                }
+            </mat-select>
+
+            @if (formGroup.controls.dutEntityName.hasError('required')) {
+                <mat-error>Required Field</mat-error>
+            }
+        </mat-form-field>
+
+        @if (formGroup.controls.dutEntityName.value; as dutEntityName) {
+            @if (dutIdControl; as dutControl) {
+                <mat-form-field class="w-100">
+                    <mat-label>{{ dutEntityNameLabel[dutEntityName] }}</mat-label>
+                    <!-- [formControl] and not [formControlName]: the bound control switches with the DUT entity
+                         type, and FormControlName never rebinds when only its name input changes -->
+                    <mat-select [formControl]="dutControl"
+                                placeholder="Select {{ dutEntityNameLabel[dutEntityName] }}"
+                                (opened)="onDutSelectOpened()"
+                                (closed)="onDutSelectClosed()">
+                        <mat-option>
+                            <!-- clearSearchInput off: the component owns the reset, so closing the panel cannot
+                                 kick off a fetch for a list that is no longer on screen -->
+                            <ngx-mat-select-search [formControl]="dutSearchControl"
+                                                   [searching]="isDutSearching()"
+                                                   [clearSearchInput]="false"
+                                                   [noEntriesFoundLabel]="''"
+                                                   placeholderLabel="Search by serial number" />
+                        </mat-option>
+
+                        <!-- Hidden, and deliberately outside the list below: mat-select only renders a trigger
+                             label while some option carries its value, but the selection is not a hit for the
+                             current search — listing it would also stop "no results" from ever showing. -->
+                        @if (unlistedSelectedDutOption; as selectedDutOption) {
+                            <mat-option class="d-none" [value]="selectedDutOption.id">
+                                {{ selectedDutOption.serialNumber }}
+                            </mat-option>
+                        }
+
+                        @if (isDutSearching()) {
+                            <div class="px-2">
+                                <epic-skeleton-loader class="mb-1"/>
+                                <epic-skeleton-loader class="mb-1"/>
+                                <epic-skeleton-loader class="mb-1"/>
+                            </div>
+                        } @else {
+                            @for (option of dutControl.selectOptions; track option.id) {
+                                <mat-option [value]="option.id">
+                                    {{ option.serialNumber }}
+                                </mat-option>
+                            } @empty {
+                                @if (!isDutSearching()) {
+                                    <epic-no-result size="small"/>
+                                }
+                            }
+                        }
+                    </mat-select>
+
+                    @if (dutControl.hasError('required')) {
+                        <mat-error>Required Field</mat-error>
+                    }
+                </mat-form-field>
+            }
+        }
+
+        @if (formGroup.controls.testTemplateId.enabled) {
+            <mat-form-field class="w-100">
+                <mat-label>Test Template</mat-label>
+                <mat-select [formControlName]="FormField.testTemplateId" placeholder="Select Test Template">
+                    <mat-option>
+                        <ngx-mat-select-search [formControl]="testTemplateSearchTermControl"
+                                               [noEntriesFoundLabel]="''"
+                                               placeholderLabel="Search by test type or config" />
+                    </mat-option>
+
+                    @for (option of formGroup.controls.testTemplateId.selectOptions
+                            | epicSearch: (testTemplateSearchTermControl.value || '') : 'searchLabel'; track option.id) {
+                        <mat-option [value]="option.id">
+                            {{ option.testTypeName }} &ndash; {{ option.testTypeConfigName }}
+                        </mat-option>
+                    } @empty {
+                        <epic-no-result size="small"/>
+                    }
+                </mat-select>
+
+                @if (formGroup.controls.testTemplateId.hasError('noMatchingTestTemplate')) {
+                    <mat-error>No test template matches the selected DUT family type</mat-error>
+                }
+                @else if (formGroup.controls.testTemplateId.hasError('required')) {
+                    <mat-error>Required Field</mat-error>
+                }
+            </mat-form-field>
+        }
+
+    </div>
+}

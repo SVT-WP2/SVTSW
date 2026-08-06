@@ -5,6 +5,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices'
 import {
     EpicSvtTestSetupConfigsController,
     EpicSvtTestSetupsController,
+    EpicSvtTestsController,
     EpicSvtTestTemplatesController,
     EpicSvtTestTypeConfigsController,
     EpicSvtTestTypesController,
@@ -13,6 +14,7 @@ import { EpicSvtTestSvc } from './models'
 import {
     EpicSvtTestSetupConfigsService,
     EpicSvtTestSetupsService,
+    EpicSvtTestsService,
     EpicSvtTestTemplatesService,
     EpicSvtTestTypeConfigsService,
     EpicSvtTestTypesService,
@@ -48,6 +50,7 @@ import {
         EpicSvtTestTypesService,
         EpicSvtTestTypeConfigsService,
         EpicSvtTestTemplatesService,
+        EpicSvtTestsService,
     ],
     controllers: [
         EpicSvtTestSetupsController,
@@ -55,6 +58,7 @@ import {
         EpicSvtTestTypesController,
         EpicSvtTestTypeConfigsController,
         EpicSvtTestTemplatesController,
+        EpicSvtTestsController,
     ],
 })
 export class EpicSvtTestModule {

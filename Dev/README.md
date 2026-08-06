@@ -115,6 +115,40 @@ Postgres on `localhost:5500`.
 Containerised Postgres defaults: database `svt_sw_db`, user `postgres`, password
 `postgres` (all driven by `.env`).
 
+## Large Kafka messages
+
+Kafka caps a single message at **1 MB** by default, which list replies (wafers,
+chips, ...) exceed - the producer then fails with:
+
+> The request included a message larger than the max message size the server will accept
+
+The local broker is configured for **50 MiB** instead, via `KAFKA_MAX_MESSAGE_BYTES`
+in `.env`. Change the value there and recreate the broker:
+
+```powershell
+docker compose -f docker-compose.kafka-local.yml up -d --force-recreate kafka
+```
+
+Topics that were auto-created without an explicit override inherit the broker
+default, so they pick up the new limit on restart. To check one - or to fix a
+topic that *does* carry an override:
+
+```powershell
+docker exec svt.kafka-broker--local kafka-configs --bootstrap-server localhost:9084 --entity-type topics --entity-name svt.db-agent.request.reply --describe
+```
+
+```powershell
+docker exec svt.kafka-broker--local kafka-configs --bootstrap-server localhost:9084 --entity-type topics --entity-name svt.db-agent.request.reply --alter --add-config max.message.bytes=52428800
+```
+
+Client-side limits live with the services: the UI's `epic-db-agent` gzips its
+replies and both Nest apps raise their consumer fetch sizes in `src/main.ts`.
+
+The deployed brokers in [`../Environment/Dev`](../Environment/Dev) and
+[`../Environment/Prod`](../Environment/Prod) carry the same 50 MiB settings,
+hardcoded (they have no `.env` - the compose file is copied to the host on its
+own). Change the limit here and you must change it there too.
+
 ## Stopping & cleanup
 
 Tear down in reverse order (apps and DB first, Kafka last, since Kafka owns the

@@ -23,6 +23,9 @@ async function bootstrap() {
             },
             consumer: {
                 groupId: 'epic-ui',
+                // Kafka's 1 MB defaults are too small for list replies.
+                maxBytesPerPartition: 10 * 1024 * 1024,
+                maxBytes: 50 * 1024 * 1024,
             },
         },
     })

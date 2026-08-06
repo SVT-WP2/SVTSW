@@ -1,7 +1,7 @@
 ﻿<div class="epic-label">
     <!-- ICON -->
     <ng-content select="epic-icon:not([epicLabelAction])"></ng-content>
-    <epic-icon *ngIf="iconName?.length" [name]="iconName"></epic-icon>
+    <epic-icon *ngIf="iconName?.length" [name]="iconName!"></epic-icon>
     <!-- ./ICON -->
 
     <!-- CONTENT -->

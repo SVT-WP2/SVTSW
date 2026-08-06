@@ -1,0 +1,19 @@
+import { ApiProperty } from '@nestjs/swagger'
+import { IsArray, IsOptional } from 'class-validator'
+
+import { EpicSvtTestsGetAllParams } from '../models'
+
+
+export class EpicSvtTestsGetAllParamsDto implements EpicSvtTestsGetAllParams {
+
+    @IsArray()
+    @ApiProperty({ type: 'number', isArray: true, required: false })
+    @IsOptional()
+    ids?: number[]
+
+    @IsArray()
+    @ApiProperty({ type: 'string', isArray: true, required: false })
+    @IsOptional()
+    dutEntityNames?: string[]
+
+}
