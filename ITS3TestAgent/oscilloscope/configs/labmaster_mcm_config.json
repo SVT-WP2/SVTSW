@@ -6,7 +6,7 @@
   "timeout_ms"              : 60000,
 
   "channel"                 : "C4",
-  "channel_scale_v"         : 0.4,
+  "channel_scale_v"         : 0.5,
   "amplitude_window_v"      : null,
   "channel_offset_v"        : 0.0,
   "channel_coupling"        : "DC",

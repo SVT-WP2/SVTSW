@@ -10,11 +10,19 @@
   "wp_project_seg": "ER2_MOSAIX_Vertical_V0_NotchW_ArrowW",
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
+  "ptpa_chips_bam": ["ALL"],
+  "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
   "re_enable_ptpa": true,
 
-  "log_cmd_output": true,
+  "log_cmd_output": false,
   "show_cmd_output": true,
+
+  "fpga_program_dir": "/home/its3/mosaix_testing/software/fx3_tools",
+  "fpga_program_setup": "prober_mit",
+  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.11.0.bit",
+  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.11.0.bit",
+  "fpga_link_test_trigger": "pattern_prbs31_10gbps_scope_scan",
 
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",
@@ -26,7 +34,8 @@
     "enabled": true,
     "model": "labmaster_mcm",
     "scope_config": "oscilloscope/configs/labmaster_mcm_config.json",
-    "output_dir": "/home/its3/scope_data",
+    "output_dir": "/home/its3/scope_data/12",
+    
     "points": 1000000,
     "dry_run": false,
     "timeout_s": 3600,
@@ -45,6 +54,7 @@
   ],
 
   "Sequence": [
+    "./{build_dir}/RunTest Configs/TestConfigs/MassTesting/WaferHsch/hs_channel_bandgap_trim.json5 {setup_config} -c {chip_name} -p {power_profile} -o staging",
     "./{build_dir}/RunTest Configs/TestConfigs/HsChannel/pattern_prbs31_10gbps_scope_scan.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
   ]
 }

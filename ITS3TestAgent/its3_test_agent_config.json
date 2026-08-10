@@ -10,6 +10,8 @@
   "wp_project_seg": "ER2_MOSAIX_Vertical_V0_NotchW_ArrowW",
   "run_ptpa_bam": true,
   "run_ptpa_seg": true,
+  "ptpa_chips_bam": ["ALL"],
+  "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
   "re_enable_ptpa": true,
 

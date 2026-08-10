@@ -2,11 +2,11 @@ DIE,"WP[col,row]",TEST
 SEG0,"[0,2]",no
 SEG1,"[0,1]",no
 SEG2,"[0,0]",no
-SEG3,"[0,-1]",no
+SEG3,"[0,-1]",yes
 SEG4,"[0,-2]",no
-BAM00,"[-3,0]",yes
-BAM01,"[-2,0]",yes
-BAM02,"[-1,0]",yes
+BAM00,"[-3,0]",no
+BAM01,"[-2,0]",no
+BAM02,"[-1,0]",no
 BAM03,"[0,0]",no
 BAM04,"[-4,1]",no
 BAM05,"[-3,1]",no

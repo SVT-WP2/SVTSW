@@ -394,6 +394,27 @@ class ITS3Runner:
         )
         return self._wp
 
+    def _should_run_ptpa(self, chip_type: str, die: str) -> bool:
+        ptpa_key = f"run_ptpa_{chip_type.lower()}"
+        if not self.cfg.get(ptpa_key, False):
+            return False
+
+        selection = self.cfg.get(f"ptpa_chips_{chip_type.lower()}", "ALL")
+
+        # normalize: treat a single-element ["ALL"] list the same as "ALL"
+        if isinstance(selection, list) and len(selection) == 1:
+            selection = selection[0]
+
+        if isinstance(selection, str):
+            return selection.strip().upper() == "ALL"
+
+        if isinstance(selection, list):
+            return die in selection
+
+        log.warning("Invalid ptpa_chips_%s value (%r), defaulting to no PTPA",
+                    chip_type.lower(), selection)
+        return False
+
     # ------------------------------------------------------------------
 
     def _wp_initialize(self) -> bool:
@@ -685,7 +706,7 @@ class ITS3Runner:
 
     # ------------------------------------------------------------------
 
-    def _wp_move_to_die(self, wp_coord: str, chip_type: str) -> bool:
+    def _wp_move_to_die(self, wp_coord: str, chip_type: str, run_ptpa: bool) -> bool:
         """Full per-chip sequence:
         MoveChuckSeparation -> MoveChuckOffAxis -> MoveChuckRowColumn ->
         RunPTPA (optional) -> MoveChuckWide -> MoveChuckContact
@@ -716,8 +737,7 @@ class ITS3Runner:
             log.error("MoveChuckRowColumn failed: %s", resp.get("output", resp))
             return False
 
-        ptpa_key = f"run_ptpa_{chip_type.lower()}"
-        if self.cfg.get(ptpa_key, False):
+        if run_ptpa:
             if self.cfg.get("re_enable_ptpa", False):
                 resp = wp.disable_ptpa()
                 if resp.get("status", "").lower() not in ("success", "ok"):
@@ -897,7 +917,8 @@ class ITS3Runner:
 
             # --- move prober to die ---
             chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
-            if not self._wp_move_to_die(chip["wp"], chip_type):
+            run_ptpa = self._should_run_ptpa(chip_type, chip["die"])
+            if not self._wp_move_to_die(chip["wp"], chip_type, run_ptpa):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
                 continue
             
