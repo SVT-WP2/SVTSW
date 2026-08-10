@@ -1,0 +1,15 @@
+services:
+  wp-agent:
+    image: svt-wp-agent:prod
+    build:
+      # WPAgent lives two levels up from Environment/Prod
+      context: ../../WPAgent
+      dockerfile: Dockerfile
+    container_name: svt.wp-agent--prod
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    command: ["listen", "--config=configs/ProbeConfigCERN.json"]

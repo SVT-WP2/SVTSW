@@ -1,0 +1,34 @@
+[Unit]
+Description=Wafer Prober Agent for SVTSW Dev Environment
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+
+# Unlike the Kafka unit, this service builds its image from source
+# (build.context: ../../WPAgent in the compose file), so it needs the actual
+# repo checked out on the host - not just this one compose file copied to
+# /opt/docker. Deploy the whole SVTSW repo (or at least Environment/ + WPAgent/,
+# keeping their relative layout) and point WorkingDirectory at Environment/Dev
+# inside that checkout, e.g.:
+#   git clone <repo> /opt/svtsw
+WorkingDirectory=/opt/svtsw/Environment/Dev
+
+# -p pins the Compose project name, separate from svt-kafka--dev, so
+# --remove-orphans never touches the Kafka stack (or vice versa).
+# No ExecStartPre pull here (unlike the Kafka unit): this image is built
+# locally from source, not pulled from a registry, so --build on ExecStart
+# does the equivalent job (and skips it entirely if nothing changed).
+ExecStart=/bin/docker compose -p svt-wp-agent--dev -f docker-compose-wp-agent-dev.yml up -d --build --remove-orphans
+ExecStop=/bin/docker compose -p svt-wp-agent--dev -f docker-compose-wp-agent-dev.yml down
+
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

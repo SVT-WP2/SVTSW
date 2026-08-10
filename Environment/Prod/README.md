@@ -6,6 +6,8 @@ Docker Compose stacks for the SVTSW **production** environment.
 | ---- | ------- |
 | [`docker-compose-kafka-prod.yml`](docker-compose-kafka-prod.yml) | Kafka broker (KRaft) + Kafka UI |
 | [`svt.kafka--prod.service`](svt.kafka--prod.service) | systemd unit that runs the Kafka stack |
+| [`docker-compose-wp-agent-prod.yml`](docker-compose-wp-agent-prod.yml) | WPAgent, built from source, pointed at the `CERN` prober config |
+| [`svt.wp-agent--prod.service`](svt.wp-agent--prod.service) | systemd unit that runs WPAgent |
 
 ## Run with Docker Compose
 
@@ -16,6 +18,21 @@ docker compose -p svt-kafka--prod -f docker-compose-kafka-prod.yml down
 ```
 
 Kafka UI is then available on port **8088**.
+
+## WPAgent
+
+`docker-compose-wp-agent-prod.yml` builds the WPAgent image from `../../WPAgent`
+and runs `listen --config=configs/ProbeConfigCERN.json`. That config's `kafka_broker` is
+`svmithi02:9092` - Kafka's OUTSIDE listener - because WPAgent normally runs on a
+machine near the prober hardware, not colocated with the Kafka broker's Docker
+host. The compose file deliberately does not join `svt-network--prod`; default
+bridge networking is all it needs to reach Kafka and the prober over the LAN.
+
+```bash
+docker compose -p svt-wp-agent--prod -f docker-compose-wp-agent-prod.yml up -d --build
+docker compose -p svt-wp-agent--prod -f docker-compose-wp-agent-prod.yml logs -f
+docker compose -p svt-wp-agent--prod -f docker-compose-wp-agent-prod.yml down
+```
 
 ## Large Kafka messages
 
@@ -75,6 +92,32 @@ where the compose file actually lives on the host.
    sudo journalctl -xeu svt.kafka--prod.service
    ```
 
+### WPAgent unit
+
+`svt.wp-agent--prod.service` differs from the Kafka unit in one important way:
+it **builds an image from source** (`build.context: ../../WPAgent`), so copying
+just the compose file to `/opt/docker` isn't enough - the file needs the real
+`WPAgent/` folder two levels above it. Deploy the whole repo instead:
+
+```bash
+sudo git clone <repo-url> /opt/svtsw
+```
+
+The unit's `WorkingDirectory` already points at `/opt/svtsw/Environment/Prod` to
+match. Then:
+
+```bash
+sudo cp svt.wp-agent--prod.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now svt.wp-agent--prod.service
+sudo systemctl status svt.wp-agent--prod.service
+sudo journalctl -xeu svt.wp-agent--prod.service
+```
+
+To pick up code changes later, `git pull` in `/opt/svtsw` and
+`sudo systemctl restart svt.wp-agent--prod.service` (the `--build` in the unit's
+`ExecStart` rebuilds automatically).
+
 ## Running Dev and Prod on the same host
 
 The two environments are designed to coexist on one machine. Everything that
@@ -83,17 +126,18 @@ could clash is namespaced:
 - **Containers / volumes / network:** suffixed `--prod` vs `--dev`.
 - **Host ports:** Kafka `9090-9092` (prod) vs `9094-9096` (dev); UI `8088` vs `8087`.
 - **KRaft cluster ID:** distinct per environment (a shared ID corrupts metadata).
-- **Compose project name:** `-p svt-kafka--prod` vs `-p svt-kafka--dev`. Without
-  this both default to the working-dir name (`docker`), and `--remove-orphans`
-  from one stack would delete the other's containers.
+- **Compose project name:** `-p svt-kafka--prod` / `-p svt-wp-agent--prod` vs
+  `-p svt-kafka--dev` / `-p svt-wp-agent--dev`. Without this, projects default
+  to the working-dir name, and `--remove-orphans` from one stack would delete
+  another's containers.
 
 ### Notes
 
 - `WorkingDirectory` must be a **directory** (systemd `chdir`s into it before
-  starting). The compose file is selected explicitly via `-f`, so its non-default
-  name (`docker-compose-kafka-prod.yml`) is fine.
-- Verify the Docker CLI path with `command -v docker`. The unit uses `/bin/docker`
+  starting). The Kafka compose file is selected explicitly via `-f`, so its
+  non-default name (`docker-compose-kafka-prod.yml`) is fine.
+- Verify the Docker CLI path with `command -v docker`. The units use `/bin/docker`
   (on RHEL `/bin` is a symlink to `/usr/bin`); adjust if yours differs.
-- After editing the unit, re-run `sudo systemctl daemon-reload`. If it had been
+- After editing a unit, re-run `sudo systemctl daemon-reload`. If it had been
   failing, clear the restart counter with
-  `sudo systemctl reset-failed svt.kafka--prod.service`.
+  `sudo systemctl reset-failed <unit-name>`.

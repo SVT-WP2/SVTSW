@@ -1,0 +1,9 @@
+{
+  "name": "MOCK_LOCAL",
+  "machineId": 2,
+  "address": "mock-prober",
+  "port": 35555,
+  "machineType": "mock",
+  "description": "Mock Probe Station for Testing (Dev stack)",
+  "kafka_broker": "kafka:9084"
+}
