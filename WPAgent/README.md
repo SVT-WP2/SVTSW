@@ -149,20 +149,23 @@ WPAgent/
 - SENTIO prober control software (for hardware control)
 - Network access to prober equipment
 
-### Install Dependencies
+## Install Dependencies
+
+All required Python packages and their versions are listed in `requirements.txt`.
+
+Use the setup script to automatically install all dependencies:
 
 ```bash
 cd WPAgent
-pip install confluent-kafka fire sentio-prober-control
+./WPAgent.sh
 ```
-### Install Dependencies for DEV
 
-```bash
-cd WPAgent
-pip install confluent-kafka fire sentio-prober-control pytest pytest-cov flake8 pylint mypy black
-```
+The script will:
+
+* Create and configure the Python environment
+* Install all required dependencies from `requirements.txt`
+
 ---
-
 ## 🚀 Quick Start
 
 ### 1. Start the Listener (Consumer side — runs on the hardware machine)
@@ -170,17 +173,20 @@ pip install confluent-kafka fire sentio-prober-control pytest pytest-cov flake8 
 The listener takes a **config name** that tells it which Kafka broker and prober to connect to. Configs are defined in `configs/WPProbesConfigs.json`.
 
 ```bash
-# Production (Kafka on svmithi02:9093)
-python3.12 main.py listen CERN
+# Command to run WPAgent 
+python3.12 main.py listen  --config=<path to config file >
 
-# Developer / staging (Kafka on svmithi02:9096)
-python3.12 main.py listen CERN_DEV
-
-# Mock prober — for local testing without hardware
-python3.12 main.py listen MOCK
 ```
+Example of config file:
+```bash
+{
+  "machineId": 1,
+  "kafka_broker": "svmithi02:9092"
+}
+```
+Note: Depending on which Kafka broker is specified in the config file, WPAgent will run in either development or production mode.
 
-> **Note:** The `CERN` production listener is normally run as a system service and does not need to be started manually. Use `CERN_DEV` for development and testing.
+> **Note:** The `CERN` production listener is normally run as a system service and does not need to be started manually. Use specified kafka broker for development and testing.
 
 
 ### 2. Send Commands (Producer side — runs anywhere with Kafka access)
