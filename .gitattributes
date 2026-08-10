@@ -1,3 +1,10 @@
 # Force LF line endings for shell scripts so they work in Linux containers
 # regardless of the contributor's core.autocrlf setting.
 *.sh text eol=lf
+
+# Server-side files (systemd units, compose files, env templates) are consumed
+# on Linux; CRLF would embed \r into unit directives and env values when copied
+# from a Windows checkout.
+*.service text eol=lf
+Environment/**/*.yml text eol=lf
+Environment/**/*.example text eol=lf

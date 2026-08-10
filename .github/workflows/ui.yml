@@ -176,6 +176,10 @@ jobs:
             APP_VERSION=${{ steps.vars.outputs.tag }}
           tags: ${{ steps.vars.outputs.tags }}
 
+  # Deploys pin the image version in /opt/docker/svtsw/dev/versions.env and
+  # recreate ONLY this service inside the svt-svtsw--dev compose project (see
+  # Environment/README.md). App config + secrets live in the server-side .env,
+  # not in GitHub.
   deploy-dev:
     # Same guard as docker-registry-create: don't deploy version-bump commits.
     if: >-
@@ -185,78 +189,46 @@ jobs:
     runs-on: self-hosted
     environment: dev
     steps:
-      - name: Deploy
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-ui to dev
         # Override the workflow-level `defaults.run.working-directory: UI`
-        # — this step runs on the self-hosted runner with no checkout, so the
-        # UI/ subdirectory doesn't exist. runner.temp is always defined and
-        # always exists.
-        working-directory: ${{ runner.temp }}
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
         env:
-          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
-          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
-          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '8090' }}
+          IMAGE_TAG: ${{ needs.docker-registry-create.outputs.image_tag }}
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          SHORT_SHA="${GITHUB_SHA::8}"
-          IMAGE="${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
-          echo "Deploying ${IMAGE} locally"
-          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
-          sudo docker pull "${IMAGE}"
-          sudo docker stop svt.ui--dev || true
-          sudo docker rm svt.ui--dev || true
-          sudo docker run -d \
-            --name svt.ui--dev \
-            --restart unless-stopped \
-            --network svt-network--dev \
-            --add-host=host.docker.internal:host-gateway \
-            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
-            -e SVT_UI_PORT="${SVT_UI_PORT}" \
-            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
-            -e APP_VERSION="${SHORT_SHA}" \
-            -e NODE_ENV=production \
-            "${IMAGE}"
+          bash Environment/deploy-service.sh dev svt-ui "${IMAGE_TAG}"
 
   # Auto-deploy a release image to dev as soon as it's built. Runs on every
   # svt-ui-* tag (any release type), after docker-registry-create--release has
   # pushed the image. Deploys the release-versioned image (svt-ui:<version>),
-  # replacing whatever the master-push deploy-dev last put on the dev container.
+  # replacing whatever the master-push deploy-dev last pinned for the service.
   deploy-dev--release:
     if: startsWith(github.ref, 'refs/tags/svt-ui-')
     needs: docker-registry-create--release
     runs-on: self-hosted
     environment: dev
     steps:
-      - name: Deploy
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-ui to dev
         # Override the workflow-level `defaults.run.working-directory: UI`
-        # — this step runs on the self-hosted runner with no checkout, so the
-        # UI/ subdirectory doesn't exist. runner.temp is always defined and
-        # always exists.
-        working-directory: ${{ runner.temp }}
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
         env:
-          SVT_KAFKA_HOST: ${{ vars.SVT_KAFKA_HOST }}
-          SVT_KAFKA_PORT: ${{ vars.SVT_KAFKA_PORT }}
-          SVT_UI_PORT: ${{ vars.SVT_UI_PORT || '8090' }}
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF#refs/tags/svt-ui-}"
-          IMAGE="${REGISTRY}/${IMAGE_NAME}:${VERSION}"
-          echo "Deploying ${IMAGE} locally"
-          echo "${REGISTRY_TOKEN}" | sudo docker login "${REGISTRY}" -u "${REGISTRY_USER}" --password-stdin
-          sudo docker pull "${IMAGE}"
-          sudo docker stop svt.ui--dev || true
-          sudo docker rm svt.ui--dev || true
-          sudo docker run -d \
-            --name svt.ui--dev \
-            --restart unless-stopped \
-            --network svt-network--dev \
-            --add-host=host.docker.internal:host-gateway \
-            -p "${SVT_UI_PORT}:${SVT_UI_PORT}" \
-            -e SVT_UI_PORT="${SVT_UI_PORT}" \
-            -e KAFKA_BROKER="${SVT_KAFKA_HOST}:${SVT_KAFKA_PORT}" \
-            -e APP_VERSION="${VERSION}" \
-            -e NODE_ENV=production \
-            "${IMAGE}"
+          bash Environment/deploy-service.sh dev svt-ui "${VERSION}"
