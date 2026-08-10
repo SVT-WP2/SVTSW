@@ -1,0 +1,1038 @@
+openapi: 3.0.3
+info:
+  title: SVT Test Agent API
+  version: 1.0.0
+  description: |
+    API contract for submitting SVT test-agent commands and receiving replies.
+
+    Kafka routing:
+    - Input request messages are consumed from svt.test-agent.request.
+    - Final reply and error messages are published to svt.test-agent.request.reply.
+    - Heartbeat messages are published to svt.test-agent.heartbeat.
+
+tags:
+  - name: Run Test
+    description: Commands for executing tests through the SVT test agent.
+
+paths:
+  /svt.test-agent.request/RunTest:
+    post:
+      tags:
+        - Run Test
+      operationId: runTest
+      summary: Execute a single test
+      description: |
+        Executes one test using the specified test ID.
+      requestBody:
+        $ref: "#/components/requestBodies/RunTestRequest"
+      responses:
+        "102":
+          $ref: '#/components/responses/HeartbeatRunTest'
+        "200":
+          $ref: "#/components/responses/RunTestReply"
+        default:
+          $ref: "#/components/responses/RunTestErrorReply"
+
+  /svt.test-agent.request/RunTestLoop:
+    post:
+      tags:
+        - Run Test
+      operationId: runTestLoop
+      summary: Execute a test multiple times
+      description: |
+        Executes one test for the requested number of iterations.
+      requestBody:
+        $ref: "#/components/requestBodies/RunTestLoopRequest"
+      responses:
+        "102":
+          $ref: '#/components/responses/HeartbeatRunTestLoop'
+        "200":
+          $ref: "#/components/responses/RunTestLoopReply"
+        default:
+          $ref: '#/components/responses/RunTestLoopErrorReply'
+
+  /svt.test-agent.request/RunTestSequence:
+    post:
+      tags:
+        - Run Test
+      operationId: runTestSequence
+      summary: Execute a test sequence
+      description: |
+        Executes an ordered sequence of test steps.
+      requestBody:
+        $ref: "#/components/requestBodies/RunTestSequenceRequest"
+      responses:
+        "102":
+          $ref: '#/components/responses/HeartbeatRunTestSeq'
+        "200":
+          $ref: "#/components/responses/RunTestSequenceReply"
+        default:
+          $ref: '#/components/responses/RunTestSequenceErrorReply'
+
+components:
+  requestBodies:
+    RunTestRequest:
+      description: RunTest input message consumed from svt.test-agent.request.
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/RequestMessage"
+              - $ref: "#/components/schemas/RunTestMessage"
+          examples:
+            default:
+              value:
+                command: RunTest
+                data:
+                  testId: 0
+
+    RunTestLoopRequest:
+      description: RunTestLoop input message consumed from svt.test-agent.request.
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/RequestMessage"
+              - $ref: "#/components/schemas/RunTestLoopMessage"
+          examples:
+            default:
+              value:
+                command: "RunTest:Loop"
+                data:
+                  testId: 0
+                  iterations: "integer"
+
+    RunTestSequenceRequest:
+      description: RunTestSequence input message consumed from svt.test-agent.request.
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/RequestMessage"
+              - $ref: "#/components/schemas/RunTestSequenceMessage"
+          examples:
+            default:
+              value:
+                command: "RunTest:Sequence"
+                data:
+                  planName: "string"
+                  steps:
+                    - testId: 0
+                      iterations: "integer"
+                    - testId: 1
+
+  responses:
+    RunTestReply:
+      description: Final reply message for a single test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ReplyMessage"
+              - $ref: "#/components/schemas/RunTestReplyMessage"
+          examples:
+            successful:
+              value:
+                type: "RunTestReply"
+                testId: 0
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+
+    RunTestLoopReply:
+      description: Final reply message for a looped test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ReplyMessage"
+              - $ref: "#/components/schemas/RunTestLoopReplyMessage"
+          examples:
+            successful:
+              value:
+                type: "RunTestLoopReply"
+                testId: 0
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+                data:
+                  completed: "integer"
+                  failed: "integer"
+                  total: "integer"
+
+    RunTestSequenceReply:
+      description: Final reply message for a test sequence. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ReplyMessage"
+              - $ref: "#/components/schemas/RunTestSequenceReplyMessage"
+          examples:
+            successful:
+              value:
+                type: "RunTestSequenceReply"
+                planName: "string"
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+                data:
+                  completed: "integer"
+                  failed: "integer"
+                  total: "integer"
+
+    RunTestErrorReply:
+      description: Unexpected error reply for a single test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReplyMessage"
+          examples:
+            runTestFailed:
+              value:
+                type: "RunTestReply"
+                testId: 0
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+                data:
+                  category: "string"
+                  code: "string"
+                  details: "string"
+    RunTestLoopErrorReply:
+      description: Unexpected error reply for a looped test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReplyMessage"
+          examples:
+            runTestLoopFailed:
+              value:
+                type: "RunTestLoopReply"
+                testId: 0
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+                data:
+                  category: "string"
+                  code: "string"
+                  details: "string"
+    RunTestSequenceErrorReply:
+      description: Unexpected error reply for a test sequence. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReplyMessage"
+          examples:
+            runTestSequenceFailed:
+              value:
+                type: "RunTestSequenceReply"
+                planName: "string"
+                testId: 0
+                event: "Finished"
+                testResultStatus: "string"
+                finishedAt: "string"
+                outputLocation: "string"
+                data:
+                  category: "string"
+                  code: "string"
+                  details: "string"
+    
+    HeartbeatRunTest:
+      description: Intermediate heartbeat message emitted while a RunTest request is running. Published to svt.test-agent.heartbeat.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HeartbeatMessage"
+          examples:
+            runTestStarted:
+              $ref: "#/components/examples/RunTestStartedHeartbeat"
+            runTestRunning:
+              $ref: "#/components/examples/RunTestRunningHeartbeat"
+    HeartbeatRunTestLoop:
+      description: Intermediate heartbeat message emitted while a RunTestLoop request is running. Published to svt.test-agent.heartbeat.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HeartbeatMessage"
+          examples:
+            runTestLoopStarted:
+              $ref: "#/components/examples/RunTestLoopStartedHeartbeat"
+            runTestLoopIterationStarted:
+              $ref: '#/components/examples/RunTestLoopIterationStartedHeartbeat'
+            runTestLoopRunning:
+              $ref: "#/components/examples/RunTestLoopRunningHeartbeat"
+            runTestLoopFailHeartbeat:
+              $ref: "#/components/examples/RunTestLoopFailHeartbeat"
+
+    HeartbeatRunTestSeq:
+      description: Intermediate heartbeat message emitted while a RunTestSequence request is running. Published to svt.test-agent.heartbeat.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HeartbeatMessage"
+          examples:
+            runTestSequenceStarted:
+              $ref: "#/components/examples/RunTestSequenceStartedHeartbeat"
+            runTestSequenceStepStartHeartbeat:
+              $ref: '#/components/examples/RunTestSequenceStepStartHeartbeat'
+            runTestSequenceStepItaStartHeartbeat:
+              $ref: '#/components/examples/RunTestSequenceStepItaStartHeartbeat'
+            runTestSequenceRunning:
+              $ref: "#/components/examples/RunTestSequenceRunningHeartbeat"
+            runTestSequenceStepFailedHeartbeat:
+              $ref: "#/components/examples/RunTestSequenceStepFailedHeartbeat"
+
+  examples:
+    RunTestStartedHeartbeat:
+      summary: RunTest started heartbeat
+      value:
+        type: "RunTestHeartbeat"
+        event: "Started"
+        testId: 0
+        startedAt: "string"
+
+    RunTestRunningHeartbeat:
+      summary: RunTest running heartbeat
+      value:
+        type: "RunTestHeartbeat"
+        event: "Running"
+        testId: 0
+
+    
+    RunTestLoopStartedHeartbeat:
+      summary: RunTestLoop started heartbeat
+      value:
+        type: "RunTestLoopHeartbeat"
+        event: "LoopStarted"
+        testId: 0
+        startedAt: "string"
+        data:
+          iterations: "integer"
+
+    RunTestLoopIterationStartedHeartbeat:
+      summary: RunTestLoop new iteration started heartbeat
+      value:
+        type: "RunTestLoopHeartbeat"
+        event: "IterationStarted"
+        testId: 0
+        data:
+          iteration: "integer"
+          iterations: "integer"
+
+    RunTestLoopRunningHeartbeat:
+      summary: RunTestLoop running heartbeat
+      value:
+        type: "RunTestLoopHeartbeat"
+        event: "Running"
+        testId: 0
+        data:
+          iteration: "integer"
+          iterations: "integer"
+    RunTestLoopFailHeartbeat:
+      summary: RunTestLoop failed heartbeat
+      value:
+        type: "RunTestLoopHeartbeat"
+        event: "RunningError"
+        testId: 0
+        data:
+          category: "string"
+          code: "string"
+          loop:
+            iteration: "integer"
+            iterations: "integer"
+
+    RunTestSequenceStartedHeartbeat:
+      summary: RunTestSequence started heartbeat
+      value:
+        type: "RunTestSequenceHeartbeat"
+        event: "Started"
+        planName: "string"
+        data:
+          steps: "integrer"
+
+    RunTestSequenceStepStartHeartbeat:
+      summary: RunTestSequence step start heartbeat
+      value:
+        type: "RunTestSequenceHeartbeat"
+        event: "StepStarted"
+        planName: "string"
+        startedAt: "string"
+        data:
+          step:
+            index: "integer"
+            testId: 0
+            iterations: "integer"
+          progress:
+            completed: "integer"
+            failed: "integrer"
+            total: "integrer"
+    RunTestSequenceStepItaStartHeartbeat:
+      summary: RunTestSequence iteration within a step start heartbeat
+      value:
+        type: "RunTestSequenceHeartbeat"
+        event: "IterationStarted"
+        planName: "string"
+        data:
+          step:
+            index: "integer"
+            testId: 0
+            iteration: "integer"
+            iterations: "integer"
+          progress:
+            completed: "integer"
+            failed: "integrer"
+            total: "integrer"
+
+    RunTestSequenceRunningHeartbeat:
+      summary: RunTestSequence running heartbeat
+      value:
+        type: "RunTestSequenceHeartbeat"
+        event: "Running"
+        planName: "string"
+        data:
+          step:
+            index: "integer"
+            testId: 0
+            iteration: "integer"
+            iterations: "integer"
+          progress:
+            completed: "integer"
+            failed: "integrer"
+            total: "integrer"
+    RunTestSequenceStepFailedHeartbeat:
+      summary: RunTestSequence step loop failure heartbeat
+      value:
+        type: "RunTestSequenceHeartbeat"
+        event: "RunningError"
+        planName: "string"
+        data:
+          category: "string"
+          code: "string"
+          step:
+            index: "integer"
+            testId: 0
+            iteration: "integer"
+            iterations: "integer"
+
+  schemas:
+    RequestMessage:
+      type: object
+      description: Base request envelope consumed from svt.test-agent.request. Final replies are published to svt.test-agent.request.reply and heartbeats are published to svt.test-agent.heartbeat.
+      required:
+        - command
+        - data
+      properties:
+        command:
+          type: string
+          description: Command name handled by the test agent.
+        data:
+          type: object
+          description: Command-specific payload.
+      additionalProperties: false
+
+    RunTestMessage:
+      type: object
+      properties:
+        command:
+          type: string
+          enum:
+            - RunTest
+          default: RunTest
+        data:
+          $ref: "#/components/schemas/RunTestData"
+
+    RunTestLoopMessage:
+      type: object
+      properties:
+        command:
+          type: string
+          enum:
+            - "RunTest:Loop"
+          default: "RunTest:Loop"
+        data:
+          $ref: "#/components/schemas/RunTestLoopData"
+
+    RunTestSequenceMessage:
+      type: object
+      properties:
+        command:
+          type: string
+          enum:
+            - "RunTest:Sequence"
+          default: "RunTest:Sequence"
+        data:
+          $ref: "#/components/schemas/RunTestSequenceData"
+
+    RunTestData:
+      type: object
+      required:
+        - testId
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 1
+      additionalProperties: false
+
+    RunTestLoopData:
+      type: object
+      required:
+        - testId
+        - iterations
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 1
+        iterations:
+          type: integer
+          format: int32
+          minimum: 1
+      additionalProperties: false
+
+    RunTestSequenceData:
+      type: object
+      required:
+        - planName
+        - steps
+      properties:
+        planName:
+          type: string
+          minLength: 1
+        steps:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/RunTestSequenceStep"
+      additionalProperties: false
+
+    RunTestSequenceStep:
+      type: object
+      required:
+        - testId
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 1
+        iterations:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+      additionalProperties: false
+
+    ReplyMessage:
+      type: object
+      description: Base final reply envelope published to svt.test-agent.request.reply.
+      required:
+        - type
+        - command
+        - event
+        - testResultStatus
+        - requestId
+        - timestamp
+        - data
+      properties:
+        type:
+          type: string
+        command:
+          type: string
+          enum:
+            - RunTest
+            - "RunTest:Loop"
+            - "RunTest:Sequence"
+        event:
+          type: string
+          enum:
+            - Started
+            - Running
+            - Completed
+            - Failed
+        testResultStatus:
+          type: string
+          enum:
+            - Running
+            - Successful
+            - Failed
+        requestId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        outputLocation:
+          type: string
+          description: Output folder for artifacts produced by the run.
+        data:
+          type: object
+      additionalProperties: false
+
+    RunTestReplyMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestReply
+        command:
+          type: string
+          enum:
+            - RunTest
+        event:
+          type: string
+          enum:
+            - Completed
+            - Failed
+        testResultStatus:
+          type: string
+          enum:
+            - Successful
+            - Failed
+        data:
+          anyOf:
+            - $ref: "#/components/schemas/RunTestResult"
+            - $ref: "#/components/schemas/ErrorData"
+
+    RunTestLoopReplyMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - "RunTest:LoopReply"
+        command:
+          type: string
+          enum:
+            - "RunTest:Loop"
+        event:
+          type: string
+          enum:
+            - Completed
+            - Failed
+        testResultStatus:
+          type: string
+          enum:
+            - Successful
+            - Failed
+        data:
+          anyOf:
+            - $ref: "#/components/schemas/RunTestLoopResult"
+            - $ref: "#/components/schemas/ErrorData"
+
+    RunTestSequenceReplyMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - "RunTest:SequenceReply"
+        command:
+          type: string
+          enum:
+            - "RunTest:Sequence"
+        event:
+          type: string
+          enum:
+            - Completed
+            - Failed
+        testResultStatus:
+          type: string
+          enum:
+            - Successful
+            - Failed
+        data:
+          anyOf:
+            - $ref: "#/components/schemas/RunTestSequenceResult"
+            - $ref: "#/components/schemas/ErrorData"
+
+    HeartbeatMessage:
+      description: Heartbeat envelope published to svt.test-agent.heartbeat.
+      x-kafkapic: "svt.test-agent.heartbeat"
+      anyOf:
+        - $ref: "#/components/schemas/RunTestStartedHeartbeatMessage"
+        - $ref: "#/components/schemas/RunTestRunningHeartbeatMessage"
+        - $ref: "#/components/schemas/RunTestLoopStartedHeartbeatMessage"
+        - $ref: "#/components/schemas/RunTestLoopRunningHeartbeatMessage"
+        - $ref: "#/components/schemas/RunTestSequenceStartedHeartbeatMessage"
+        - $ref: "#/components/schemas/RunTestSequenceRunningHeartbeatMessage"
+
+    RunTestStartedHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - testId
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestHeartbeat
+        event:
+          type: string
+          enum:
+            - Started
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestStartedProgress"
+      additionalProperties: false
+
+    RunTestRunningHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - testId
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestHeartbeat
+        event:
+          type: string
+          enum:
+            - Running
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestProgress"
+      additionalProperties: false
+
+    RunTestLoopStartedHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - testId
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestLoopHeartbeat
+        event:
+          type: string
+          enum:
+            - Started
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestLoopStartedProgress"
+      additionalProperties: false
+
+    RunTestLoopRunningHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - testId
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestLoopHeartbeat
+        event:
+          type: string
+          enum:
+            - Running
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestLoopProgress"
+      additionalProperties: false
+
+    RunTestSequenceStartedHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - planName
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestSequenceHeartbeat
+        event:
+          type: string
+          enum:
+            - Started
+        planName:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestSequenceStartedProgress"
+      additionalProperties: false
+
+    RunTestSequenceRunningHeartbeatMessage:
+      type: object
+      required:
+        - type
+        - event
+        - planName
+        - startedAt
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTestSequenceHeartbeat
+        event:
+          type: string
+          enum:
+            - Running
+        planName:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/RunTestSequenceProgress"
+      additionalProperties: false
+
+    ErrorReplyMessage:
+      allOf:
+        - $ref: "#/components/schemas/ReplyMessage"
+        - type: object
+          properties:
+            event:
+              type: string
+              enum:
+                - Failed
+            testResultStatus:
+              type: string
+              enum:
+                - Failed
+            data:
+              $ref: "#/components/schemas/ErrorData"
+
+    RunTestResult:
+      type: object
+      properties:
+        message:
+          type: string
+      additionalProperties: true
+
+    RunTestLoopResult:
+      type: object
+      required:
+        - completed
+        - total
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+        message:
+          type: string
+      additionalProperties: true
+
+    RunTestSequenceResult:
+      type: object
+      required:
+        - completed
+        - failed
+        - total
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+      additionalProperties: true
+
+    RunTestStartedProgress:
+      type: object
+      required:
+        - progress
+      properties:
+        progress:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+          additionalProperties: false
+      additionalProperties: false
+
+    RunTestProgress:
+      type: object
+      required:
+        - progress
+        - progressMessage
+      properties:
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        progressMessage:
+          type: string
+      additionalProperties: false
+
+    RunTestLoopStartedProgress:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+      additionalProperties: false
+
+    RunTestLoopProgress:
+      type: object
+      required:
+        - iteration
+        - iterations
+        - progress
+        - progressMessage
+      properties:
+        iteration:
+          type: integer
+          minimum: 1
+        iterations:
+          type: integer
+          minimum: 1
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        progressMessage:
+          type: string
+      additionalProperties: false
+
+    RunTestSequenceStartedProgress:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+      additionalProperties: false
+
+    RunTestSequenceProgress:
+      type: object
+      properties:
+        planName:
+          type: string
+        step:
+          $ref: "#/components/schemas/RunTestSequenceProgressStep"
+        progress:
+          $ref: "#/components/schemas/RunTestSequenceProgressSummary"
+        message:
+          type: string
+      additionalProperties: true
+
+    RunTestSequenceProgressStep:
+      type: object
+      properties:
+        index:
+          type: integer
+          minimum: 1
+        testTypeConfigId:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        currentIteration:
+          type: integer
+          minimum: 1
+        totalIterations:
+          type: integer
+          minimum: 1
+        iterationPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        progressMessage:
+          type: string
+        testResultStatus:
+          type: string
+          enum:
+            - Running
+            - Completed
+      additionalProperties: true
+
+    RunTestSequenceProgressSummary:
+      type: object
+      required:
+        - completed
+        - total
+        - percent
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+      additionalProperties: false
+
+    ErrorData:
+      type: object
+      required:
+        - category
+        - code
+        - details
+      properties:
+        category:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+        location:
+          type: string
+      additionalProperties: true
