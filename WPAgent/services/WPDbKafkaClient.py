@@ -78,7 +78,8 @@ class DBKafkaClient:
         while time.time() - start < timeout:
             self.consumer.poll(0.1)
             if self.consumer.assignment():
-                print(f"   ✅ Consumer assigned to partition(s): {self.consumer.assignment()}")
+                parts = [f"{p.topic}[{p.partition}]" for p in self.consumer.assignment()]
+                print(f"   ✅ Consumer assigned to partition(s): {', '.join(parts)}")
                 return True
         print(f"   ⚠️  Consumer not assigned within {timeout}s — replies may be missed")
         return False

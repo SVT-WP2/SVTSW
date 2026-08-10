@@ -21,6 +21,15 @@ def _find_machine_by_id(wp_machine_id, timeout: float = 15.0):
     return next((m for m in (machines or []) if m.get("id") == wp_machine_id), None)
 
 
+def _find_machine_by_name(agent_name: str, timeout: float = 15.0):
+    """Shared helper — fetch all machines and return the one matching name (waferAgentName), or None."""
+    machines = _get_db_client().get_all_wafer_probe_machines(timeout=timeout)
+    return next(
+        (m for m in (machines or []) if m.get("name", "").upper() == agent_name.upper()),
+        None,
+    )
+
+
 # =============================================================================
 # Machine lookup
 # =============================================================================
