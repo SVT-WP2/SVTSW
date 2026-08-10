@@ -60,7 +60,7 @@ COMMAND_ROUTER = {
 
     # Project
     "OpenProject": testing_actions.open_project,
-    "ChangeProject": testing_actions.open_project,
+    "ChangeProject": testing_actions.change_project,
 
     "StressOpenProject": testing_actions.stress_open_project,
 

@@ -235,7 +235,7 @@ def _router_keys():
 
 # Known, pre-existing inconsistencies. A NEW one makes the tests below fail;
 # fixing one of these also fails the test, which forces removing it from here.
-KNOWN_DEAD_CLASSIFIED = {"GetLockStatus", "ChangeProject", "ListAvailableCommands", "ShowProjectStatus"}
+KNOWN_DEAD_CLASSIFIED = {"GetLockStatus", "ListAvailableCommands", "ShowProjectStatus"}
 KNOWN_UNREACHABLE_FOR_NON_DEV = {"DisableOvertravel", "SetPTPA"}
 
 
@@ -252,7 +252,7 @@ class TestStructuralConsistency:
     def test_transition_commands_exist_in_router(self):
         router = _router_keys()
         used = {c for tab in WPAgentStateMachine().transitions.values() for c in tab} - {"Error"}
-        assert used - router == {"ChangeProject"}  # known (documented) leftover
+        assert used - router == set()
 
     def test_classified_commands_exist_in_router(self):
         router = _router_keys()

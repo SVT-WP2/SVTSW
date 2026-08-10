@@ -1,0 +1,13 @@
+.idea
+.mypy_cache
+.pytest_cache
+__pycache__
+**/__pycache__
+*.pyc
+venv/
+tests/
+README.md
+WPAgentLogger.log
+WPAgent.cache.json
+.git
+.gitignore
