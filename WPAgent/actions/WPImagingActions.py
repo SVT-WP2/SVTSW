@@ -21,6 +21,30 @@ def sleep(seconds=1, user=None, waferAgentName=None, **kwargs):
     return ResponseBuilder.success("SleepReply", f"Slept {seconds}s")
 
 
+def generate_repeat_indices(count=1, user=None, waferAgentName=None, **kwargs):
+    """Turn a repeat count into a plain list of 1-based indices for a `foreach` loop.
+
+    Sequencer helper only — the YAML engine's `foreach` needs an actual list
+    already sitting in context; this is the minimal way to turn a runtime
+    `repeat_count` parameter into one. Deliberately returns the list under a
+    "steps" key (like GenerateRasterSteps) so it works with the existing
+    `store_as` extraction in WPSequencerActionsYAML.run_steps() with no
+    engine changes:
+
+        - command: GenerateRepeatIndices
+          as: reps
+          params:
+            count: $repeat_count
+
+        - foreach: $reps.steps
+          as: rep
+          steps: [...]
+    """
+    count = int(count)
+    print(f"   🔁 GenerateRepeatIndices: {count} repeat(s)")
+    return {"status": "Success", "steps": list(range(1, count + 1))}
+
+
 def get_chuck_xy(log_file="chuck_xy_log.csv", label="", user=None, waferAgentName=None, **kwargs):
     """Query the actual chuck XY position and append it to a CSV log file.
 

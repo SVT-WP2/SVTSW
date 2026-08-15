@@ -1,0 +1,199 @@
+# StudyContactRepeatabilitySEG.yaml
+#
+# Contact repeatability / endurance study on a SINGLE SEG die.
+# SEG labels live on the full MOSAIX reticle (not babyMOSAIX), so this
+# opens the babyMOSAIX project first for InitProbing/alignment, then
+# switches to the MOSAIX project and re-homes before selecting the die —
+# same project-switch sequence TakeImageLEC.yaml uses for its SEG loop.
+#
+# Repeats the following cycle `repeat_count` times on the same die:
+#   RunPTPA -> MoveChuckWide -> MoveChuckContact -> MoveChuckSeparation ->
+#   MoveChuckOffAxis -> back to the die -> LEC raster capture + stitch
+#
+# Images are kept LOCAL ONLY (no ArchiveImaging step) so they can be
+# inspected/compared side by side after the run.
+#
+# Output per repeat: Imaging/<wafer>/<dieLabel>/<timestamp>_<dieLabel>_LEC.jpg (+ .tif)
+# (StitchImagesFull stamps the real capture timestamp + die name into the
+# filename automatically — nothing extra to configure here.)
+#
+# Usage:
+#   python3.12 main.py send StudyContactRepeatabilitySEG \
+#     --data='{"user":"dev1","waferAgentName":"CERN","dieLabel":"SEG2","repeat_count":10}'
+
+params:
+  user:
+  waferAgentName:
+  dieLabel: "SEG0"
+  repeat_count: 5
+
+  # LEC raster geometry — same per-die block as TakeImageLEC.yaml's SEG loop.
+  num_columns: 1
+  num_rows: 9
+  column_spacing_um: -2968
+  row_spacing_um: 2476
+  start_x_um: -21100
+  start_y_um: -27250
+  col_settle_time_s: 0.1
+  row_settle_time_s: 0.1
+  snapshot_type: "CameraRaw"
+  save_locally: true
+  wafer: "Wafer"
+  seg_save_jpg: false
+  seg_save_tif: true
+  tif_quality: 85
+  name_suffix: "_LEC"
+
+  # Flatfield correction map produced by BrightnessCorrection.yaml.
+  # Set to the path of flatfield.npy, e.g.: "Imaging/Wafer/CALIBRATION_COLOR/flatfield.npy"
+  flatfield: ""  # auto-discovered from Imaging/<wafer>/CALIBRATION_COLOR/flatfield.npy
+  # Correction strength: 1.0 = full correction, 0.5 = half, 0.0 = off.
+  flatfield_strength: 1.0
+
+steps:
+
+  - command: OpenProject
+    params:
+      projectName: ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: InitProbing
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: OpenProject
+    params:
+      projectName: ER2_MOSAIX_Vertical_V0_NotchW_ArrowW
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: GenerateRepeatIndices
+    as: reps
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      count: $repeat_count
+
+  - foreach: $reps.steps
+    as: rep
+    steps:
+
+      - command: MoveChuckRowColumn
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $dieLabel
+
+      - command: RunPTPA
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+
+      - command: MoveChuckWide
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+
+      - command: MoveChuckContact
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+
+      - command: MoveChuckSeparation
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+
+      - command: MoveChuckOffAxis
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+
+      # Back on the die — MoveChuckOffAxis returns the FSM to the generic
+      # "Aligned" state (not a per-die state), so we have to re-select the
+      # die before imaging even though the chuck never moved off it in X/Y.
+      - command: MoveChuckRowColumn
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $dieLabel
+
+      - command: GenerateRasterSteps
+        as: raster
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          wafer: $wafer
+          num_columns: $num_columns
+          num_rows: $num_rows
+          column_spacing_um: $column_spacing_um
+          row_spacing_um: $row_spacing_um
+          start_x_um: $start_x_um
+          start_y_um: $start_y_um
+          col_settle_time_s: $col_settle_time_s
+          row_settle_time_s: $row_settle_time_s
+          # Drift corrections disabled: MoveChuckXYPrecise handles positioning
+          # in closed-loop, so pre-computed coupling offsets are not needed.
+          y_col_correction_um: 0
+          x_row_correction_um: 0
+
+      - foreach: $raster.steps
+        as: rs
+        steps:
+
+          - command: MoveChuckXYPrecise
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              x: $rs.x
+              y: $rs.y
+              position: "Relative"
+              precision_um: 0.15
+              max_iterations: 100
+              correction_settle_s: 0.1
+            when: "$rs.action == move"
+
+          - command: Sleep
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              seconds: $rs.settle
+            when: "$rs.action == move"
+
+          - command: TakeScreenshot
+            params:
+              user: $user
+              waferAgentName: $waferAgentName
+              fileName: $rs.filename
+              outputDir: $dieLabel
+              wafer: $wafer
+              snapshot_type: $snapshot_type
+              save_locally: $save_locally
+            when: "$rs.action == snapshot"
+
+      - command: StitchImagesFull
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $dieLabel
+          wafer: $wafer
+          save_overview_jpg: $seg_save_jpg
+          pyramid_tiff: $seg_save_tif
+          tiff_quality: $tif_quality
+          name_suffix: $name_suffix
+          flatfield: $flatfield
+          flatfield_strength: $flatfield_strength
+
+      - command: CleanupRasterImages
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $dieLabel
+          wafer: $wafer

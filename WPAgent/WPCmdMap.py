@@ -99,6 +99,8 @@ COMMAND_ROUTER = {
     "TakeImageL0_1-3":    _yaml_command("sequencer/TakeImageL0_1-3.yaml"),
     "TakeImageL0_2-4":    _yaml_command("sequencer/TakeImageL0_2-4.yaml"),
     "BrightnessCorrection": _yaml_command("sequencer/BrightnessCorrection.yaml"),
+    "StudyContactRepeatabilityBAM": _yaml_command("sequencer/StudyContactRepeatabilityBAM.yaml"),
+    "StudyContactRepeatabilitySEG": _yaml_command("sequencer/StudyContactRepeatabilitySEG.yaml"),
 
     # FSM State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent,
@@ -121,6 +123,7 @@ COMMAND_ROUTER = {
     "GetChuckXY": imaging_actions.get_chuck_xy,
     "BuildFlatfield": imaging_actions.build_flatfield_for_folder,
     "GenerateRasterSteps": imaging_actions.generate_raster_steps,
+    "GenerateRepeatIndices": imaging_actions.generate_repeat_indices,
     "MoveChuckXYPrecise": imaging_actions.move_chuck_xy_precise,
     "Sleep": imaging_actions.sleep,
     "StitchImagesFull": imaging_actions.stitch_images_large_for_wafer,
