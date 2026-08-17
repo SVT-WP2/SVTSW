@@ -1,7 +1,8 @@
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
-#from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
+# from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
 # from sentio_prober_control.Sentio import Enumerations
-from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, SnapshotType, SnapshotLocation, LoadPosition, DieNumber, SnapshotType, SnapshotLocation
+from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea, ChuckXYReference, ChuckZReference, \
+    SnapshotType, SnapshotLocation, LoadPosition, DieNumber, SnapshotType, SnapshotLocation, RemoteCommandError
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
 
@@ -72,6 +73,84 @@ class SentioProberImpl(AbstractProber):
             raise Exception(f"PTPA failed: {resp.message()}")
 
         self.prober.wait_complete(resp.cmd_id())
+
+    def run_ptpa_with_screenshots(
+            self,
+            poll_interval: float = 2.0,
+            timeout: float = 300.0,
+            capture_screenshots: bool = True,
+            output_dir: str = "ptpa_test_screenshots",
+    ):
+        """
+        Run PTPA and wait for completion by polling query_command_status()
+        instead of the blocking wait_complete().
+
+        wait_complete() holds a single blocking read on the one TCP socket
+        we have open to Sentio, so nothing else can be sent while it's
+        pending. Sentio's remote protocol explicitly allows other commands
+        to be sent while an async command (like PTPA) is still running --
+        query_command_status() is documented for exactly this: polling an
+        async command's status while issuing other commands in between.
+
+        That lets us call vision.snap_image() between polls to grab a real
+        screenshot from the PROBER'S OWN CAMERA over the network — no local
+        display/X11 needed at all, so this works fine from a headless or
+        SSH-only host.
+
+        Args:
+            poll_interval: Seconds between status polls / screenshots.
+            timeout: Max seconds to wait for PTPA to finish.
+            capture_screenshots: Set False to just poll without screenshots.
+            output_dir: Folder to save screenshots to (local machine).
+
+        Returns:
+            (final Response, list of saved screenshot paths)
+        """
+        import os as _os
+        import time as _time
+
+        resp = self.prober.send_cmd(
+            "vis:compensation:start_execute OffAxis, BothWithProbeTips, True"
+        )
+        if not resp.ok():
+            raise Exception(f"PTPA failed: {resp.message()}")
+
+        cmd_id = resp.cmd_id()
+        saved_files = []
+        if capture_screenshots:
+            _os.makedirs(output_dir, exist_ok=True)
+
+        deadline = _time.time() + timeout
+        status = resp
+        while True:
+            if capture_screenshots:
+                try:
+                    fname = _os.path.join(
+                        output_dir, f"ptpa_{int(_time.time() * 1000)}.jpg"
+                    )
+                    self.prober.vision.snap_image(
+                        file=fname,
+                        what=SnapshotType.CameraRaw,
+                        where=SnapshotLocation.Local,
+                    )
+                    saved_files.append(fname)
+                except Exception:
+                    # A failed/slow snapshot should never abort PTPA itself.
+                    pass
+
+            status = self.prober.query_command_status(cmd_id)
+            if status.errc() != RemoteCommandError.CommandPending:
+                break
+
+            if _time.time() > deadline:
+                raise Exception(f"PTPA timed out after {timeout}s")
+
+            _time.sleep(poll_interval)
+
+        if not status.ok():
+            raise Exception(f"PTPA failed: {status.message()}")
+
+        return status, saved_files
 
     def step_next_die(self):
         return self.prober.map.step_next_die()
@@ -228,29 +307,29 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
-            
 
     def take_image(
-        self,
-        snapshot_type : str = "CameraRaw",
-        save_locally : bool =True,
-        outputDir : str = "screenshots",
-        num_columns : int = 5,
-        num_rows : int = 5,
-        column_spacing_um : int = -2967,
-        row_spacing_um : int = 2476,
-        start_x_um : int = 500,
-        start_y_um : int = 110000,
-        settle_time_s : float = 1,
+            self,
+            snapshot_type: str = "CameraRaw",
+            save_locally: bool = True,
+            outputDir: str = "screenshots",
+            num_columns: int = 5,
+            num_rows: int = 5,
+            column_spacing_um: int = -2967,
+            row_spacing_um: int = 2476,
+            start_x_um: int = 500,
+            start_y_um: int = 110000,
+            settle_time_s: float = 1,
     ):
-        self.prober.take_image(snapshot_type, save_locally, outputDir, num_columns, num_rows, column_spacing_um, row_spacing_um, start_x_um, start_y_um, settle_time_s)
+        self.prober.take_image(snapshot_type, save_locally, outputDir, num_columns, num_rows, column_spacing_um,
+                               row_spacing_um, start_x_um, start_y_um, settle_time_s)
 
     def take_screenshot(
-        self,
-        filename: str = None,
-        snapshot_type: str = "CameraRaw",
-        save_locally: bool = True,
-        output_dir: str = "screenshotsSVT",
+            self,
+            filename: str = None,
+            snapshot_type: str = "CameraRaw",
+            save_locally: bool = True,
+            output_dir: str = "screenshotsSVT",
     ):
         """
         Take a screenshot from the prober camera.
@@ -266,7 +345,7 @@ class SentioProberImpl(AbstractProber):
         """
         import datetime
         import os
-        
+
         # Map string to enum — only two valid values exist
         type_map = {
             "CameraRaw": SnapshotType.CameraRaw,

@@ -668,107 +668,79 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
 def test_ptpa(
     screenshot_interval: float = 2.0,
     output_dir: str = "ptpa_test_screenshots",
+    capture_screenshots: bool = True,
     user=None,
     waferAgentName=None,
 ):
     """
-    Run PTPA alignment while capturing periodic screenshots of the screen.
+    Run PTPA alignment, optionally capturing periodic screenshots from the
+    PROBER'S OWN CAMERA (via Sentio's `vision.snap_image` remote command) —
+    not a capture of this host's local screen.
 
-    PTPA is an async command that blocks the Sentio TCP connection via
-    wait_complete(). This means we CANNOT call Sentio's snap_image during
-    PTPA — it would try to send on the same blocked socket.
+    PTPA is an async Sentio command. The library's `wait_complete()` blocks
+    our single TCP socket with a blocking read until PTPA finishes, so
+    nothing else can be sent on that connection in the meantime. Sentio's
+    protocol does, however, support polling an async command's status with
+    `query_command_status()` while sending other commands in between — see
+    `SentioProberImpl.run_ptpa_with_screenshots()`. So instead of blocking,
+    we poll for completion and grab a real camera snapshot at each poll.
 
-    Instead, we use `mss` (pure Python, reads the OS framebuffer) in the
-    main thread while PTPA runs in a background thread. No interference.
+    Because the screenshot comes from the prober over the network (not a
+    local screen grab), this works fine from a headless host / plain SSH
+    session with no $DISPLAY — there's no local-display dependency at all
+    anymore.
 
     Args:
-        screenshot_interval: Seconds between screenshots (default 2.0)
+        screenshot_interval: Seconds between screenshots / status polls (default 2.0)
         output_dir: Folder to save screenshots
+        capture_screenshots: Set False to run PTPA without taking screenshots
         user: Current user
         waferAgentName: Agent name
 
     Returns:
         Success with screenshot count, paths, and PTPA duration.
     """
-    import threading
-    import datetime
-    import os as _os
-
     reply = get_reply_type()
 
     error = _ensure_initialized()
     if error:
         return error
 
-    try:
-        import mss
-        import mss.tools
-    except ImportError:
-        return ResponseBuilder.error(
-            reply,
-            "Missing dependency: install 'mss' (pip install mss)",
-            500,
-        )
-
-    _os.makedirs(output_dir, exist_ok=True)
-
-    # ── State shared between threads ─────────────────────────────────────────
-    ptpa_result: dict = {"error": None, "done": False}
-
-    def _run_ptpa():
-        try:
-            prober = get_current_prober()
-            prober.run_ptpa()
-            prober.local_mode()
-            update_current_info(currentProber=prober)
-            agentStateMachine.transition("RunPTPA")
-        except Exception as exc:
-            ptpa_result["error"] = str(exc)
-        finally:
-            ptpa_result["done"] = True
-
-    # ── Launch PTPA in background ────────────────────────────────────────────
-    ptpa_thread = threading.Thread(target=_run_ptpa, daemon=True)
+    prober = get_current_prober()
     t_start = time.time()
-    ptpa_thread.start()
-
-    # ── Capture screenshots while PTPA runs ──────────────────────────────────
     saved_files = []
-    with mss.MSS() as sct:
-        monitor = sct.monitors[0]  # full virtual screen
-        while not ptpa_result["done"]:
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-            filename = _os.path.join(output_dir, f"ptpa_{timestamp}.png")
-            sct.shot(mon=0, output=filename)
-            saved_files.append(filename)
-            # Wait for next interval (or bail early if PTPA just finished)
-            deadline = time.time() + float(screenshot_interval)
-            while time.time() < deadline and not ptpa_result["done"]:
-                time.sleep(0.1)
 
-    # Take one final screenshot at completion
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-    filename = _os.path.join(output_dir, f"ptpa_{timestamp}_done.png")
-    with mss.MSS() as sct:
-        sct.shot(mon=0, output=filename)
-    saved_files.append(filename)
+    try:
+        if hasattr(prober, "run_ptpa_with_screenshots"):
+            _status, saved_files = prober.run_ptpa_with_screenshots(
+                poll_interval=screenshot_interval,
+                capture_screenshots=capture_screenshots,
+                output_dir=output_dir,
+            )
+        else:
+            # Driver doesn't support polling + screenshots (e.g. MockProber)
+            # — just run PTPA normally without screenshots.
+            prober.run_ptpa()
 
-    ptpa_thread.join(timeout=5)
+        prober.local_mode()
+        update_current_info(currentProber=prober)
+        agentStateMachine.transition("RunPTPA")
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error(reply, str(e), 500)
+
     duration = round(time.time() - t_start, 1)
 
-    if ptpa_result["error"]:
-        agentStateMachine.enter_error_state(ptpa_result["error"])
-        return ResponseBuilder.error(
-            reply,
-            f"PTPA failed after {duration}s: {ptpa_result['error']}",
-            500,
+    if capture_screenshots and saved_files:
+        message = (
+            f"PTPA completed in {duration}s. "
+            f"Captured {len(saved_files)} screenshots → {output_dir}"
         )
+    else:
+        message = f"PTPA completed in {duration}s."
 
-    return ResponseBuilder.success(
-        reply,
-        f"PTPA completed in {duration}s. "
-        f"Captured {len(saved_files)} screenshots → {output_dir}",
-    )
+    return ResponseBuilder.success(reply, message)
 
 
 @validate_command_with_name("SetPTPA")
