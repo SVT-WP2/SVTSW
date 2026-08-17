@@ -5,6 +5,7 @@ from sentio_prober_control.Sentio.Enumerations import CameraMountPoint, WorkArea
     SnapshotType, SnapshotLocation, LoadPosition, DieNumber, SnapshotType, SnapshotLocation, RemoteCommandError
 from interfaces.WPProberInterface import AbstractProber
 from sentio_prober_control.Sentio import Response
+import logging
 
 
 class SentioProberImpl(AbstractProber):
@@ -104,10 +105,13 @@ class SentioProberImpl(AbstractProber):
             output_dir: Folder to save screenshots to (local machine).
 
         Returns:
-            (final Response, list of saved screenshot paths)
+            (final Response, list of saved screenshot paths, list of
+             screenshot error strings encountered along the way)
         """
         import os as _os
         import time as _time
+
+        logger = logging.getLogger("WPAgent")
 
         resp = self.prober.send_cmd(
             "vis:compensation:start_execute OffAxis, BothWithProbeTips, True"
@@ -117,13 +121,16 @@ class SentioProberImpl(AbstractProber):
 
         cmd_id = resp.cmd_id()
         saved_files = []
+        screenshot_errors = []
         if capture_screenshots:
             _os.makedirs(output_dir, exist_ok=True)
 
         deadline = _time.time() + timeout
         status = resp
+        attempt = 0
         while True:
             if capture_screenshots:
+                attempt += 1
                 try:
                     fname = _os.path.join(
                         output_dir, f"ptpa_{int(_time.time() * 1000)}.jpg"
@@ -134,9 +141,16 @@ class SentioProberImpl(AbstractProber):
                         where=SnapshotLocation.Local,
                     )
                     saved_files.append(fname)
-                except Exception:
-                    # A failed/slow snapshot should never abort PTPA itself.
-                    pass
+                except Exception as exc:
+                    # A failed/slow snapshot should never abort PTPA itself,
+                    # but we DO want the failure visible instead of silently
+                    # swallowed -- log it and remember it for the caller.
+                    msg = str(exc)
+                    logger.warning(
+                        "TestPTPA: screenshot attempt %d failed: %s", attempt, msg
+                    )
+                    if msg not in screenshot_errors:
+                        screenshot_errors.append(msg)
 
             status = self.prober.query_command_status(cmd_id)
             if status.errc() != RemoteCommandError.CommandPending:
@@ -150,7 +164,7 @@ class SentioProberImpl(AbstractProber):
         if not status.ok():
             raise Exception(f"PTPA failed: {status.message()}")
 
-        return status, saved_files
+        return status, saved_files, screenshot_errors
 
     def step_next_die(self):
         return self.prober.map.step_next_die()

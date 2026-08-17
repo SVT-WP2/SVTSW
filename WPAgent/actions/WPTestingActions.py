@@ -709,10 +709,11 @@ def test_ptpa(
     prober = get_current_prober()
     t_start = time.time()
     saved_files = []
+    screenshot_errors = []
 
     try:
         if hasattr(prober, "run_ptpa_with_screenshots"):
-            _status, saved_files = prober.run_ptpa_with_screenshots(
+            _status, saved_files, screenshot_errors = prober.run_ptpa_with_screenshots(
                 poll_interval=screenshot_interval,
                 capture_screenshots=capture_screenshots,
                 output_dir=output_dir,
@@ -736,6 +737,14 @@ def test_ptpa(
         message = (
             f"PTPA completed in {duration}s. "
             f"Captured {len(saved_files)} screenshots → {output_dir}"
+        )
+    elif capture_screenshots and screenshot_errors:
+        # PTPA itself succeeded, but every screenshot attempt failed — surface
+        # why instead of silently reporting success with an empty folder.
+        message = (
+            f"PTPA completed in {duration}s. "
+            f"0 screenshots saved — every snap_image attempt failed: "
+            f"{'; '.join(screenshot_errors[:3])}"
         )
     else:
         message = f"PTPA completed in {duration}s."
