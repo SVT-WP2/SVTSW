@@ -33,42 +33,6 @@ paths:
         default:
           $ref: "#/components/responses/RunTestErrorReply"
 
-  /svt.test-agent.request/RunTestLoop:
-    post:
-      tags:
-        - Run Test
-      operationId: runTestLoop
-      summary: Execute a test multiple times
-      description: |
-        Executes one test for the requested number of iterations.
-      requestBody:
-        $ref: "#/components/requestBodies/RunTestLoopRequest"
-      responses:
-        "102":
-          $ref: '#/components/responses/HeartbeatRunTestLoop'
-        "200":
-          $ref: "#/components/responses/RunTestLoopReply"
-        default:
-          $ref: '#/components/responses/RunTestLoopErrorReply'
-
-  /svt.test-agent.request/RunTestSequence:
-    post:
-      tags:
-        - Run Test
-      operationId: runTestSequence
-      summary: Execute a test sequence
-      description: |
-        Executes an ordered sequence of test steps.
-      requestBody:
-        $ref: "#/components/requestBodies/RunTestSequenceRequest"
-      responses:
-        "102":
-          $ref: '#/components/responses/HeartbeatRunTestSeq'
-        "200":
-          $ref: "#/components/responses/RunTestSequenceReply"
-        default:
-          $ref: '#/components/responses/RunTestSequenceErrorReply'
-
 components:
   requestBodies:
     RunTestRequest:
@@ -85,39 +49,6 @@ components:
                 data:
                   testId: 1
 
-    RunTestLoopRequest:
-      description: RunTestLoop input message consumed from svt.test-agent.request.
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/RequestMessage"
-          examples:
-            default:
-              value:
-                type: "RunTestLoop"
-                data:
-                  testId: 1
-                  iterations: "integer"
-
-    RunTestSequenceRequest:
-      description: RunTestSequence input message consumed from svt.test-agent.request.
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/RequestMessage"
-          examples:
-            default:
-              value:
-                type: "RunTestSequence"
-                data:
-                  planName: "string"
-                  steps:
-                    - testId: 0
-                      iterations: "integer"
-                    - testId: 1
-
   responses:
     RunTestReply:
       description: Final reply message for a single test run. Published to svt.test-agent.request.reply.
@@ -130,46 +61,6 @@ components:
               value:
                 status: "Success"
                 type: "RunTest"
-                data:
-                  testId: 1
-                  event: "Completed"
-                  finishedAt: "string"
-                  outputLocation: "string"
-                error:
-                  code: 0
-                  message: "string"
-
-    RunTestLoopReply:
-      description: Final reply message for a looped test run. Published to svt.test-agent.request.reply.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ReplyMessage"
-          examples:
-            successful:
-              value:
-                status: "Success"
-                type: "RunTestLoop"
-                data:
-                  testId: 1
-                  event: "Completed"
-                  finishedAt: "string"
-                  outputLocation: "string"
-                error:
-                  code: 0
-                  message: "string"
-
-    RunTestSequenceReply:
-      description: Final reply message for a test sequence. Published to svt.test-agent.request.reply.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ReplyMessage"
-          examples:
-            successful:
-              value:
-                status: "Success"
-                type: "RunTestSequence"
                 data:
                   testId: 1
                   event: "Completed"
@@ -198,45 +89,6 @@ components:
                 error:
                   code: 1
                   message: "string"
-    RunTestLoopErrorReply:
-      description: Unexpected error reply for a looped test run. Published to svt.test-agent.request.reply.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ReplyMessage"
-          examples:
-            runTestLoopFailed:
-              value:
-                status: "Failed"
-                type: "RunTestLoop"
-                data:
-                  testId: 1
-                  event: "Completed"
-                  finishedAt: "string"
-                  outputLocation: "string"
-                error:
-                  code: 1
-                  message: "string"
-    RunTestSequenceErrorReply:
-      description: Unexpected error reply for a test sequence. Published to svt.test-agent.request.reply.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ReplyMessage"
-          examples:
-            runTestSequenceFailed:
-              value:
-                status: "Failed"
-                type: "RunTestSequence"
-                data:
-                  testId: 1
-                  event: "Completed"
-                  finishedAt: "string"
-                  outputLocation: "string"
-                error:
-                  code: 1
-                  message: "string"
-    
     HeartbeatRunTest:
       description: Intermediate heartbeat message emitted while a RunTest request is running. Published to svt.test-agent.heartbeat.
       content:
@@ -248,40 +100,6 @@ components:
               $ref: "#/components/examples/RunTestStartedHeartbeat"
             runTestRunning:
               $ref: "#/components/examples/RunTestRunningHeartbeat"
-    HeartbeatRunTestLoop:
-      description: Intermediate heartbeat message emitted while a RunTestLoop request is running. Published to svt.test-agent.heartbeat.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HeartbeatMessage"
-          examples:
-            runTestLoopStarted:
-              $ref: "#/components/examples/RunTestLoopStartedHeartbeat"
-            runTestLoopIterationStarted:
-              $ref: '#/components/examples/RunTestLoopIterationStartedHeartbeat'
-            runTestLoopRunning:
-              $ref: "#/components/examples/RunTestLoopRunningHeartbeat"
-            runTestLoopFailHeartbeat:
-              $ref: "#/components/examples/RunTestLoopFailHeartbeat"
-
-    HeartbeatRunTestSeq:
-      description: Intermediate heartbeat message emitted while a RunTestSequence request is running. Published to svt.test-agent.heartbeat.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HeartbeatMessage"
-          examples:
-            runTestSequenceStarted:
-              $ref: "#/components/examples/RunTestSequenceStartedHeartbeat"
-            runTestSequenceStepStartHeartbeat:
-              $ref: '#/components/examples/RunTestSequenceStepStartHeartbeat'
-            runTestSequenceStepItaStartHeartbeat:
-              $ref: '#/components/examples/RunTestSequenceStepItaStartHeartbeat'
-            runTestSequenceRunning:
-              $ref: "#/components/examples/RunTestSequenceRunningHeartbeat"
-            runTestSequenceStepFailedHeartbeat:
-              $ref: "#/components/examples/RunTestSequenceStepFailedHeartbeat"
-
   examples:
     RunTestStartedHeartbeat:
       summary: RunTest started heartbeat
@@ -307,112 +125,6 @@ components:
           code: 0
           message: "string"
 
-    
-    RunTestLoopStartedHeartbeat:
-      summary: RunTestLoop started heartbeat
-      value:
-        status: "Running"
-        type: "RunTestLoopHeartbeat"
-        data:
-          testId: 1
-          event: "LoopStarted"
-        error:
-          code: 0
-          message: "string"
-
-    RunTestLoopIterationStartedHeartbeat:
-      summary: RunTestLoop new iteration started heartbeat
-      value:
-        status: "Running"
-        type: "RunTestLoopHeartbeat"
-        data:
-          testId: 1
-          event: "IterationStarted"
-        error:
-          code: 0
-          message: "string"
-
-    RunTestLoopRunningHeartbeat:
-      summary: RunTestLoop running heartbeat
-      value:
-        status: "Running"
-        type: "RunTestLoopHeartbeat"
-        data:
-          testId: 1
-          event: "Running"
-        error:
-          code: 0
-          message: "string"
-    RunTestLoopFailHeartbeat:
-      summary: RunTestLoop failed heartbeat
-      value:
-        status: "Running"
-        type: "RunTestLoopHeartbeat"
-        data:
-          testId: 1
-          event: "RunningError"
-        error:
-          code: 0
-          message: "string"
-
-    RunTestSequenceStartedHeartbeat:
-      summary: RunTestSequence started heartbeat
-      value:
-        status: "Running"
-        type: "RunTestSequenceHeartbeat"
-        data:
-          testId: 1
-          event: "Started"
-        error:
-          code: 0
-          message: "string"
-
-    RunTestSequenceStepStartHeartbeat:
-      summary: RunTestSequence step start heartbeat
-      value:
-        status: "Running"
-        type: "RunTestSequenceHeartbeat"
-        data:
-          testId: 1
-          event: "StepStarted"
-        error:
-          code: 0
-          message: "string"
-    RunTestSequenceStepItaStartHeartbeat:
-      summary: RunTestSequence iteration within a step start heartbeat
-      value:
-        status: "Running"
-        type: "RunTestSequenceHeartbeat"
-        data:
-          testId: 1
-          event: "IterationStarted"
-        error:
-          code: 0
-          message: "string"
-
-    RunTestSequenceRunningHeartbeat:
-      summary: RunTestSequence running heartbeat
-      value:
-        status: "Running"
-        type: "RunTestSequenceHeartbeat"
-        data:
-          testId: 1
-          event: "Running"
-        error:
-          code: 0
-          message: "string"
-    RunTestSequenceStepFailedHeartbeat:
-      summary: RunTestSequence step loop failure heartbeat
-      value:
-        status: "Running"
-        type: "RunTestSequenceHeartbeat"
-        data:
-          testId: 1
-          event: "RunningError"
-        error:
-          code: 0
-          message: "string"
-
   schemas:
     RequestMessage:
       type: object
@@ -425,8 +137,6 @@ components:
           type: string
           enum:
             - RunTest
-            - RunTestLoop
-            - RunTestSequence
           description: Message type handled by the test agent.
         data:
           $ref: "#/components/schemas/RequestData"
@@ -440,29 +150,6 @@ components:
           type: integer
           format: int64
           minimum: 0
-        iterations:
-          type: integer
-          format: int32
-          minimum: 1
-        planName:
-          type: string
-        steps:
-          type: array
-          minItems: 1
-          items:
-            type: object
-            required:
-              - testId
-            properties:
-              testId:
-                type: integer
-                format: int64
-                minimum: 0
-              iterations:
-                type: integer
-                format: int32
-                minimum: 1
-            additionalProperties: false
       additionalProperties: false
 
     ReplyMessage:
@@ -484,8 +171,6 @@ components:
           type: string
           enum:
             - RunTest
-            - RunTestLoop
-            - RunTestSequence
         data:
           $ref: "#/components/schemas/FinalReplyData"
         error:
@@ -509,8 +194,6 @@ components:
           type: string
           enum:
             - RunTestHeartbeat
-            - RunTestLoopHeartbeat
-            - RunTestSequenceHeartbeat
         data:
           $ref: "#/components/schemas/HeartbeatData"
         error:
@@ -531,11 +214,7 @@ components:
           type: string
           enum:
             - Started
-            - LoopStarted
             - Running
-            - IterationStarted
-            - RunningError
-            - StepStarted
       additionalProperties: false
 
     FinalReplyData:
