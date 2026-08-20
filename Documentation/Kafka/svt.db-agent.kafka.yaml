@@ -4032,7 +4032,7 @@ components:
           type: string
         dutId:
           type: number
-        testTypeConfig:
+        testTypeConfigId:
           type: number
         testSetupConfigId:
           type: number
@@ -4053,14 +4053,14 @@ components:
       required:
         - dutEntityName
         - dutId
-        - testTypeConfig
+        - testTypeConfigId
         - testSetupConfigId
       properties:
         dutEntityName:
           type: string
         dutId:
           type: number
-        testTypeConfig:
+        testTypeConfigId:
           type: number
         testSetupConfigId:
           type: number
