@@ -265,7 +265,7 @@ Table main.SvtTestTemplate {
 Table main.SvtTestList {
   id integer [pk, increment]
   testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
-  testSetupConfigId integer
+  testSetupConfigId integer [ref:> main.SvtTestSetupConfig.id, not null]
   createsAt timestamp [default: `CURRENT_TIMESTAMP`]
   startedAt timestamp [default: null]
   finishedAt timestamp [default: null]
@@ -273,36 +273,13 @@ Table main.SvtTestList {
   testResultStatus main.testResultStatus
 }
 
-Table main.SvtTestListToDeviceType
+Table main.SvtTestListToEntityName
 {
-  testDeviceType main.TestDeviceType [not null]
   testId integer [ref:> main.SvtTestList.id]
+  dutEntityName main.dutEntityName [not null]
+  dutId integer
   indexes {
-    (testDeviceType,testId) [pk]
-  }
-}
-
-Table main.SvtAsicTestList {
-  asicId integer [ref:> main.Asic.id]
-  testId integer [ref:> main.SvtTestList.id]
-  indexes {
-    (asicId, testId) [pk]
-  }
-}
-
-Table main.SvtChipTestList {
-  chipId integer [ref:> main.Chip.id]
-  testId integer [ref:> main.SvtTestList.id]
-  indexes {
-    (chipId, testId) [pk]
-  }
-}
-
-Table main.SvtChipBlockTestList {
-  blockId integer [ref:> main.ChipBlock.id]
-  testId integer [ref:> main.SvtTestList.id]
-  indexes {
-    (blockId, testId) [pk]
+    (dutEntityName, testId) [pk]
   }
 }
 
@@ -416,7 +393,7 @@ Enum main.dutType {
   AncMPW2_SLDO
 }
 
-Enum main.TestDeviceType {
+Enum main.dutEntityName {
   Asic
   Chip
   ChipBlock
