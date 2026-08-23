@@ -20,7 +20,7 @@ export class EpicSvtTestDto implements EpicSvtTestResolvedEntity {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })
-    testTypeConfig: number
+    testTypeConfigId: number
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

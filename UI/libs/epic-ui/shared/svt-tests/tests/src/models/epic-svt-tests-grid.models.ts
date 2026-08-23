@@ -14,7 +14,7 @@ export namespace EpicSvtTestsGrid {
         testResultStatus = 'testResultStatus',
         dutEntityName = 'dutEntityName',
         dutId = 'dutId',
-        testTypeConfig = 'testTypeConfig',
+        testTypeConfigId = 'testTypeConfigId',
         testSetupConfigId = 'testSetupConfigId',
         createdAt = 'createdAt',
         startedAt = 'startedAt',
@@ -88,7 +88,7 @@ export namespace EpicSvtTestsGrid {
                 minWidth: 100,
             },
             {
-                field: ColId.testTypeConfig,
+                field: ColId.testTypeConfigId,
                 headerName: 'Test Type Config',
                 flex: 1,
                 minWidth: 160,
