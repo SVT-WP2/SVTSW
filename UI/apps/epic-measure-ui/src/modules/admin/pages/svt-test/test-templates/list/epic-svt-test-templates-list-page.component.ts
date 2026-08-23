@@ -82,10 +82,6 @@ export class EpicSvtTestTemplatesListPageComponent extends BaseComponent impleme
         this.processRowEditAction(entity)
     }
 
-    onRowClicked(entity: EpicSvtTestTemplate): void {
-        this.processRowEditAction(entity)
-    }
-
     private processRowEditAction(entity: EpicSvtTestTemplate): void {
         this.epicSvtTestTemplateUpdateDialogService.openDialog(entity, {
             onSuccess: () => this.dataSource.load(true),

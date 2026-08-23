@@ -63,10 +63,6 @@ export class EpicAdminWpMachinesListPageComponent extends BaseComponent {
         )
     }
 
-    onRowClicked(rowData: EpicWpMachine) {
-        this.openDetailsDialog(rowData)
-    }
-
     onRowDetails(rowData: EpicWpMachine): void {
         this.openDetailsDialog(rowData)
     }

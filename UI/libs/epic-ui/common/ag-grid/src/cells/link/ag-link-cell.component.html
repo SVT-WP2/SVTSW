@@ -1,0 +1,20 @@
+<div class="epic-ag-link-cell epic-ag-cell--vertical-centered">
+    @let value = state().value;
+    @if (value !== undefined && value !== null && value !== '') {
+        @if (state().routerLink && !state().disabled) {
+            <a class="epic-ag-link-cell__link"
+               [matTooltip]="state().tooltip! | translate : state().tooltipI18nParams"
+               [matTooltipDisabled]="!state().tooltip"
+               [queryParams]="state().queryParams"
+               [routerLink]="state().routerLink"
+               [target]="state().target || '_self'"
+               (click)="$event.stopPropagation()">
+                {{ value }}
+            </a>
+        } @else {
+            <span class="epic-ag-link-cell__text">{{ value }}</span>
+        }
+    } @else {
+        <span class="epic-ag-link-cell__text">{{ state().emptyValuePlaceholder }}</span>
+    }
+</div>

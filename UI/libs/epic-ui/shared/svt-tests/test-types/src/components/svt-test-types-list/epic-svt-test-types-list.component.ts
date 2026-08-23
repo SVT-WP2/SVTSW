@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
-import { RowClickedEvent } from 'ag-grid-community'
-import { EpicSvtTestType } from 'epic-ui/api'
+import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-ui/api'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
 
@@ -23,14 +22,16 @@ export class EpicSvtTestTypesListComponent extends BaseComponent {
 
     @Input({ required: true }) entitiesList!: EpicSvtTestType[]
 
-    @Output() rowClicked$ = new EventEmitter<EpicSvtTestType>()
     @Output() details$ = new EventEmitter<EpicSvtTestType>()
 
-    readonly colDefs = EpicSvtTestTypesGrid.getColDefs()
+    colDefs = EpicSvtTestTypesGrid.getColDefs()
+
     readonly gridOptions = EpicSvtTestTypesGrid.getGridOptions()
 
-    onRowClicked(event: RowClickedEvent<EpicSvtTestType>) {
-        this.rowClicked$.emit(event.data)
+    // the details link points at one of the test type configs, so the name column is rebuilt once they arrive
+    @Input({ required: true })
+    set testTypeConfigs(value: EpicSvtTestTypeConfig[]) {
+        this.colDefs = EpicSvtTestTypesGrid.getColDefs(value)
     }
 
     onCellEvent(event: EpicAgGridCell.CellRendererEvent<EpicSvtTestTypesGrid.CellEventEvent, any, EpicSvtTestType>): void {

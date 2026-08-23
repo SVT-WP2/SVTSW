@@ -2,13 +2,13 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, OnDestroy, Signal } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { MatCardModule } from '@angular/material/card'
-import { MatRipple } from '@angular/material/core'
 import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
 import { TranslatePipe } from '@ngx-translate/core'
 import { EpicAsic } from 'epic-ui/api'
 import {
     EpicButtonModule,
+    EpicContentErrorModule,
     EpicIconComponent,
     EpicIconMatOutlinedPipe,
     EpicIconTileComponent,
@@ -16,7 +16,6 @@ import {
     EpicLoaderComponent,
     EpicScrollingDataSourceInfiniteScrollContentDirective,
     EpicScrollingDataSourceVirtualScrollViewportDirective,
-    EpicContentErrorModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -45,7 +44,6 @@ import { EpicAsicsScrollingDataSource, EpicAsicsScrollingDsFilter } from '../../
         EpicIconMatOutlinedPipe,
         TranslatePipe,
         EpicIconTileComponent,
-        MatRipple,
         FormsModule,
         RouterLink,
     ],

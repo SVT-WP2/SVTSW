@@ -41,6 +41,7 @@ import StoreActions = EpicSvtTestTypesActions
 export class EpicSvtTestTypesListPageComponent extends BaseComponent implements OnDestroy {
 
     readonly entitiesList: Signal<EpicSvtTestTypesGrid.RowEntity[]>
+    readonly allTestTypeConfigs: Signal<EpicSvtTestTypeConfig[]>
     readonly dataFetchingProcessing: Signal<ProcessingStore.EventProcessingState>
 
     // DI
@@ -49,12 +50,10 @@ export class EpicSvtTestTypesListPageComponent extends BaseComponent implements 
     protected readonly activatedRoute = inject(ActivatedRoute)
     protected readonly epicSvtTestTypeCreateDialogService = inject(EpicSvtTestTypeCreateDialogService)
 
-    private readonly allTestSetupConfigs: Signal<EpicSvtTestTypeConfig[]>
-
     constructor() {
         super()
         this.entitiesList = this.store.selectSignal(StoreSelectors.selectAllTestTypes)
-        this.allTestSetupConfigs = this.store.selectSignal(StoreSelectors.selectAllTestTypeConfigs)
+        this.allTestTypeConfigs = this.store.selectSignal(StoreSelectors.selectAllTestTypeConfigs)
         this.dataFetchingProcessing = this.store.selectSignal(StoreSelectors.selectFetchAllProcessing)
         const isAllDataFetched = this.store.selectSignal(StoreSelectors.selectIsAllDataFetched)
 
@@ -82,17 +81,11 @@ export class EpicSvtTestTypesListPageComponent extends BaseComponent implements 
         this.epicSvtTestTypeCreateDialogService.openDialog()
     }
 
-    onRowClicked(rowData: EpicSvtTestType): void {
-        this.navigateToDetailsPage(rowData)
-    }
-
     onRowDetailsAction(rowData: EpicSvtTestType): void {
-        this.navigateToDetailsPage(rowData)
-    }
-
-    private navigateToDetailsPage(rowData: EpicSvtTestType): void {
-        const refConfig = this.allTestSetupConfigs().find((item) => item.testTypeId === rowData.id)
-        void this.router.navigate(['../details', rowData.id, 'config', refConfig?.id ?? 0], { relativeTo: this.activatedRoute })
+        void this.router.navigate(
+            EpicSvtTestTypesGrid.getDetailsRouterLink(rowData, this.allTestTypeConfigs()),
+            { relativeTo: this.activatedRoute },
+        )
     }
 
 }
