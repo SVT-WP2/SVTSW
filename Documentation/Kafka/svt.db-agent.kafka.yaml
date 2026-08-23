@@ -2194,13 +2194,16 @@ components:
             filter:
               type: object
               properties:
-                blockTypes:
+                chipBlockTypes:
                   type: array
                   description: ChipBlockType values array. If array is empty / undefined => all ChipBlocks will be returned.
                   items:
                     type: string
                 chipId:
                   type: integer
+                serialNumber:
+                  type: string
+                  description: Optional filter used to fetch ChipBlock with particular serial number
                 ids:
                   type: array
                   description: Chip ids array. If array is empty / undefined => all Chip will be returned.
@@ -2218,6 +2221,8 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/ChipBlockDto"
+            totalCount:
+              type: number
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -2229,6 +2234,15 @@ components:
         data:
           type: object
           properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
             filter:
               type: object
               properties:
