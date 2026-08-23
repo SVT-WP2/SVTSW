@@ -16,7 +16,7 @@ export class EpicSvtTestCreateDto implements EpicSvtTestCreateEntity {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })
-    testTypeConfig: number
+    testTypeConfigId: number
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

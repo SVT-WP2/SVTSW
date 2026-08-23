@@ -6,7 +6,7 @@ export type EpicSvtTest = {
     id: number
     dutEntityName: EpicSvtDutEntityName // enum
     dutId: number
-    testTypeConfig: number
+    testTypeConfigId: number
     testSetupConfigId: number
     createdAt: string
     startedAt: string
@@ -19,7 +19,7 @@ export type EpicSvtTest = {
 export type EpicSvtTestCreate = {
     dutEntityName: EpicSvtDutEntityName // enum
     dutId: number
-    testTypeConfig: number
+    testTypeConfigId: number
     testSetupConfigId: number
 }
 

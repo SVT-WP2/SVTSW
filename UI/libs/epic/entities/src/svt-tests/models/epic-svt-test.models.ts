@@ -14,7 +14,7 @@ export type EpicSvtTestEntity = {
     id: number
     dutEntityName: EpicSvtDutEntityName
     dutId: number
-    testTypeConfig: number
+    testTypeConfigId: number
     testSetupConfigId: number
     createdAt: EpicDateTimeString
     startedAt: EpicDateTimeString
@@ -34,7 +34,7 @@ export type EpicSvtTestResolvedEntity = EpicSvtTestEntity & {
 export type EpicSvtTestCreateEntity = {
     dutEntityName: EpicSvtDutEntityName
     dutId: number
-    testTypeConfig: number
+    testTypeConfigId: number
     testSetupConfigId: number
 }
 

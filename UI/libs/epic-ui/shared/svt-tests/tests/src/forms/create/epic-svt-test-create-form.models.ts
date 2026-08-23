@@ -168,7 +168,7 @@ export namespace EpicSvtTestCreateForm {
         return {
             dutEntityName: formData.dutEntityName!,
             dutId: getDutId(formData)!,
-            testTypeConfig: formData.testTypeConfigId!,
+            testTypeConfigId: formData.testTypeConfigId!,
             testSetupConfigId: formData.testSetupConfigId!,
         }
     }
