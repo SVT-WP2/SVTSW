@@ -4,7 +4,7 @@ import { Observable, of, tap } from 'rxjs'
 
 
 @Injectable({ providedIn: 'root' })
-export class EpicSvtTestSetupConfigsDataFacade {
+export class EpicSvtTestSetupConfigBodyDataFacade {
 
     protected cache: { [testSetupConfigId: number]: EpicSvtTestSetupConfigBody } = {}
 

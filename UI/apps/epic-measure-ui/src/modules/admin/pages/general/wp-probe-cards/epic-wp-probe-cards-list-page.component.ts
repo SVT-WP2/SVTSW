@@ -63,10 +63,6 @@ export class EpicWpProbeCardsListPageComponent extends BaseComponent {
         )
     }
 
-    onRowClicked(rowData: EpicWpProbeCard) {
-        this.openDetailsDialog(rowData)
-    }
-
     onRowDetails(rowData: EpicWpProbeCard): void {
         this.openDetailsDialog(rowData)
     }

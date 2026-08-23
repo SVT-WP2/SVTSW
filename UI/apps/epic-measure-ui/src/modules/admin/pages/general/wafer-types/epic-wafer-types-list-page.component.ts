@@ -65,10 +65,6 @@ export class EpicWaferTypesListPageComponent extends BaseComponent {
         )
     }
 
-    onRowClicked(rowData: EpicWaferType) {
-        this.openDetailsDialog(rowData)
-    }
-
     onRowDetails(rowData: EpicWaferType): void {
         this.openDetailsDialog(rowData)
     }

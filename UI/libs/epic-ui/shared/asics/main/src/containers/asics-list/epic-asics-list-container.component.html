@@ -13,10 +13,9 @@
         <div class="container py-3 over">
             <epic-infinite-scroll-content [skeletonLoaderSize]="'xl'" [epicScrollingDataSource]="scrollingDataSource">
                 <ng-container *cdkVirtualFor="let item of asicsList()">
-                    <mat-card class="mb-2 overflow-hidden epic-shadow-hover epic-cursor-pointer"
-                              appearance="outlined"
-                              [routerLink]="[ '/asics/details', item.id]">
-                        <mat-card-content matRipple>
+                    <mat-card class="mb-2 overflow-hidden epic-shadow-hover"
+                              appearance="outlined">
+                        <mat-card-content>
                             <div class="d-flex gap-3 align-items-center w-100">
                                 <epic-icon-tile
                                         class="epic-bg-color-primary-50 epic-color-primary-300"
@@ -30,7 +29,7 @@
                                     </div>
                                     <div style="min-width: 120px">
                                         <div class="epic-font-label-sm epic-color-neutral-60">Serial No.</div>
-                                        {{ item.serialNumber }}
+                                        <a [routerLink]="[ '/asics/details', item.id]">{{ item.serialNumber }}</a>
                                     </div>
                                     <div style="min-width: 200px">
                                         <div class="epic-font-label-sm epic-color-neutral-60">Family Type</div>

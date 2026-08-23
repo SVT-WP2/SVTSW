@@ -23,8 +23,8 @@
             <epic-svt-test-types-list
                     class="d-flex h-100 w-100"
                     [entitiesList]="entitiesList()"
-                    (details$)="onRowDetailsAction($event)"
-                    (rowClicked$)="onRowClicked($event)"/>
+                    [testTypeConfigs]="allTestTypeConfigs()"
+                    (details$)="onRowDetailsAction($event)"/>
         }
     </div>
 </div>

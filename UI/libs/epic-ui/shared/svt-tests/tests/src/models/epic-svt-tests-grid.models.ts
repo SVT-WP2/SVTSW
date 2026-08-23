@@ -1,6 +1,14 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicSvtTest, EpicSvtTestResultStatus, EpicSvtTestStatus } from 'epic-ui/api'
-import { AgIconActionsCell, AgIconActionsCellComponent, AgLabelCell, AgLabelCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicSvtTest, EpicSvtTestResultStatus, EpicSvtTestSetupConfig, EpicSvtTestStatus, EpicSvtTestTypeConfig } from 'epic-ui/api'
+import {
+    AgIconActionsCell,
+    AgIconActionsCellComponent,
+    AgLabelCell,
+    AgLabelCellFactory,
+    AgLinkCell,
+    AgLinkCellFactory,
+    EpicAgGrid,
+} from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'
 import moment from 'moment'
@@ -14,8 +22,8 @@ export namespace EpicSvtTestsGrid {
         testResultStatus = 'testResultStatus',
         dutEntityName = 'dutEntityName',
         dutId = 'dutId',
-        testTypeConfigId = 'testTypeConfigId',
-        testSetupConfigId = 'testSetupConfigId',
+        testTypeConfig = 'testTypeConfig.name',
+        testSetupConfig = 'testSetupConfig.name',
         createdAt = 'createdAt',
         startedAt = 'startedAt',
         finishedAt = 'finishedAt',
@@ -23,7 +31,13 @@ export namespace EpicSvtTestsGrid {
         actions = 'actions',
     }
 
-    export type RowEntity = EpicSvtTest
+    export type RowEntity =
+        & EpicSvtTest
+        &
+        {
+            testTypeConfig: EpicSvtTestTypeConfig | null
+            testSetupConfig: EpicSvtTestSetupConfig | null
+        }
 
     export enum CellEventEvent {
         Details = 'Details',
@@ -58,72 +72,94 @@ export namespace EpicSvtTestsGrid {
         }
     }
 
+    export function getTestTypeConfigLinkConfig(testTypeConfig: EpicSvtTestTypeConfig | null): AgLinkCell.Config {
+        return {
+            routerLink: testTypeConfig
+                ? ['/admin/svt-test/test-types/details', testTypeConfig.testTypeId, 'config', testTypeConfig.id]
+                : undefined,
+            tooltip: testTypeConfig ? 'Open Test Type Config' : undefined,
+        }
+    }
+
+    export function getTestSetupConfigLinkConfig(testSetupConfig: EpicSvtTestSetupConfig | null): AgLinkCell.Config {
+        return {
+            routerLink: testSetupConfig
+                ? ['/admin/svt-test/test-setups/details', testSetupConfig.setupId, 'config', testSetupConfig.id]
+                : undefined,
+            tooltip: testSetupConfig ? 'Open Test Setup Config' : undefined,
+        }
+    }
+
     export function getColDefs(): ColDef<RowEntity>[] {
         return [
             {
                 field: ColId.id,
                 headerName: 'ID',
                 minWidth: 80,
+                width: 80,
                 sort: 'desc',
             },
             {
                 ...AgLabelCellFactory.createCellSchema<RowEntity, EpicSvtTestStatus>({
                     config: ({ rowData }) => getStatusLabelConfig(rowData.status),
                 }),
+                filter: false,
                 field: ColId.status,
                 headerName: 'Status',
-                flex: 1,
-                minWidth: 140,
+                minWidth: 120,
+                width: 120,
             },
             {
                 field: ColId.dutEntityName,
                 headerName: 'DUT Entity',
-                flex: 1,
-                minWidth: 140,
+                minWidth: 120,
             },
             {
                 field: ColId.dutId,
                 headerName: 'DUT ID',
-                flex: 1,
-                minWidth: 100,
+                minWidth: 80,
             },
             {
-                field: ColId.testTypeConfigId,
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => getTestTypeConfigLinkConfig(rowData.testTypeConfig),
+                }),
+                filter: false,
+                field: ColId.testTypeConfig,
                 headerName: 'Test Type Config',
                 flex: 1,
-                minWidth: 160,
+                minWidth: 220,
             },
             {
-                field: ColId.testSetupConfigId,
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => getTestSetupConfigLinkConfig(rowData.testSetupConfig),
+                }),
+                filter: false,
+                field: ColId.testSetupConfig,
                 headerName: 'Test Setup Config',
                 flex: 1,
-                minWidth: 160,
+                minWidth: 220,
             },
             {
                 field: ColId.createdAt,
                 headerName: 'Created At',
-                filter: 'agDateColumnFilter',
                 minWidth: 200,
                 valueFormatter: (params) => params.value ? moment(params.value).format('DD.MM.YY - HH:mm:ss') : '-',
             },
             {
                 field: ColId.startedAt,
                 headerName: 'Started At',
-                filter: 'agDateColumnFilter',
                 minWidth: 200,
                 valueFormatter: (params) => params.value ? moment(params.value).format('DD.MM.YY - HH:mm:ss') : '-',
             },
             {
                 field: ColId.finishedAt,
                 headerName: 'Finished At',
-                filter: 'agDateColumnFilter',
                 minWidth: 200,
                 valueFormatter: (params) => params.value ? moment(params.value).format('DD.MM.YY - HH:mm:ss') : '-',
             },
             {
                 field: ColId.pathToResult,
                 headerName: 'Path To Result',
-                flex: 1,
                 minWidth: 200,
                 valueFormatter: ({ value }) => (value as string) || '-',
             },
@@ -157,11 +193,21 @@ export namespace EpicSvtTestsGrid {
     }
 
     export function getGridOptions(): GridOptions<RowEntity> {
+        const defaultGridOptions = EpicAgGrid.getDefaultGridOptions<RowEntity>()
+
         return {
-            ...EpicAgGrid.getDefaultGridOptions<RowEntity>(),
+            ...defaultGridOptions,
             rowSelection: undefined,
+            // the list is filtered / ordered by the API — no client side sorting or filtering here
+            defaultColDef: {
+                ...defaultGridOptions.defaultColDef,
+                sortable: false,
+                filter: false,
+                floatingFilter: false,
+            },
             getRowId: ({ data }) => data.id.toString(),
         }
     }
+
 
 }

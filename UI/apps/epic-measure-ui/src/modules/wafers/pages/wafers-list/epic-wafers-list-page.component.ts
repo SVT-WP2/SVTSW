@@ -1,6 +1,5 @@
 import { Component, inject, OnDestroy, OnInit, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { ActivatedRoute, Router } from '@angular/router'
 import { EpicWafer } from 'epic-ui/api'
 import { EpicWaferCreateDialogService, EpicWaferDeleteDialogService, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -18,8 +17,6 @@ export class EpicWafersListPageComponent extends BaseComponent implements OnDest
 
     // DI
     protected readonly store = inject(EpicWafersStoreFacade)
-    protected readonly router = inject(Router)
-    protected readonly activatedRoute = inject(ActivatedRoute)
     protected readonly epicWaferDeleteDialogService = inject(EpicWaferDeleteDialogService)
     protected readonly epicWaferCreateDialogService = inject(EpicWaferCreateDialogService)
 
@@ -39,16 +36,6 @@ export class EpicWafersListPageComponent extends BaseComponent implements OnDest
 
     onReload(): void {
         this.store.actionFetchAll({ force: true })
-    }
-
-    onRowClicked(rowData: EpicWafer) {
-        void this.router.navigate(
-            ['../details', rowData.id],
-            {
-                relativeTo: this.activatedRoute,
-            },
-
-        )
     }
 
     onRowDelete(rowData: EpicWafer): void {

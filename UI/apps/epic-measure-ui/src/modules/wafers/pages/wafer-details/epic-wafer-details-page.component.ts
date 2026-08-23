@@ -123,10 +123,6 @@ export class EpicWaferDetailsPageComponent extends BaseComponent {
         this.asicsStore.actionFetchAll({ waferId: this.waferId, force: true })
     }
 
-    onAsicRowClicked(rowData: EpicAsic): void {
-        void this.router.navigate(['/asics/details', rowData.id])
-    }
-
     onAsicClone(rowData: EpicAsic): void {
         this.epicAsicCreateDialogService.openDialog({
             asic: rowData,

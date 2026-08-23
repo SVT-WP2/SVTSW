@@ -47,6 +47,7 @@ a,
 a:not([href]):not([class]) {
     color: $color-primary-300;
     text-decoration: underline;
+    text-underline-offset: 4px;
 }
 
 a:hover,
@@ -55,6 +56,7 @@ a:active,
 a:not([href]):not([class]):hover {
     color: $color-primary-400;
     text-decoration: underline;
+    text-underline-offset: 4px;
 }
 
 a.link-no-decoration {

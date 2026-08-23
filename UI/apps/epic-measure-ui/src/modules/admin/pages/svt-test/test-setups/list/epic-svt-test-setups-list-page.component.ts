@@ -79,16 +79,11 @@ export class EpicSvtTestSetupsListPageComponent extends BaseComponent implements
         this.epicSvtTestSetupCreateDialogService.openDialog()
     }
 
-    onRowClicked(rowData: EpicSvtTestSetup): void {
-        this.navigateToDetailsPage(rowData)
-    }
-
     onRowDetailsAction(rowData: EpicSvtTestSetup): void {
-        this.navigateToDetailsPage(rowData)
-    }
-
-    private navigateToDetailsPage(rowData: EpicSvtTestSetup): void {
-        void this.router.navigate(['../details', rowData.id, 'config', rowData.defaultConfigId], { relativeTo: this.activatedRoute })
+        void this.router.navigate(
+            EpicSvtTestSetupsGrid.getDetailsRouterLink(rowData),
+            { relativeTo: this.activatedRoute },
+        )
     }
 
 }

@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
 import { EpicSvtTestSetup } from 'epic-ui/api'
-import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
 export namespace EpicSvtTestSetupsGrid {
@@ -21,6 +21,11 @@ export namespace EpicSvtTestSetupsGrid {
         // Delete = 'Delete',
     }
 
+    // a test setup is always opened on one of its configs — the default one
+    export function getDetailsRouterLink(rowData: RowEntity): (string | number)[] {
+        return ['../details', rowData.id, 'config', rowData.defaultConfigId]
+    }
+
     export function getColDefs(): ColDef[] {
         return [
             {
@@ -29,6 +34,12 @@ export namespace EpicSvtTestSetupsGrid {
                 minWidth: 80,
             },
             {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => ({
+                        routerLink: getDetailsRouterLink(rowData),
+                        tooltip: 'Details',
+                    }),
+                }),
                 field: ColId.name,
                 headerName: 'Name',
                 flex: 1,

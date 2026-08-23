@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
 import { EpicAsic } from 'epic-ui/api'
-import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
 export namespace EpicWaferAsicsGrid {
@@ -32,6 +32,12 @@ export namespace EpicWaferAsicsGrid {
                 minWidth: 80,
             },
             {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => ({
+                        routerLink: ['/asics/details', rowData.id],
+                        tooltip: 'Details',
+                    }),
+                }),
                 field: ColId.serialNumber,
                 headerName: 'Serial No.',
                 flex: 1,

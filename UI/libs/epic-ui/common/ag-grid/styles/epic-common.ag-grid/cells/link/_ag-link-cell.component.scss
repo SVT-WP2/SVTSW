@@ -1,0 +1,24 @@
+@import 'vars';
+@import 'mixins';
+
+.epic-ag-link-cell {
+    overflow: hidden;
+
+    &__link,
+    &__text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__link {
+        color: $color-primary;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+
+        &:hover {
+            color: $color-primary--hover;
+        }
+    }
+}

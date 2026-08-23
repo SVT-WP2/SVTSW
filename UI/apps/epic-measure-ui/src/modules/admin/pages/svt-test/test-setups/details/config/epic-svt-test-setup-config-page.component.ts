@@ -18,7 +18,7 @@ import {
     EpicTabsModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
-import { EpicSvtTestSetupConfigsDataFacade, EpicSvtTestSetupsActions, EpicSvtTestSetupsSelectors } from 'epic-ui/shared/svt-tests'
+import { EpicSvtTestSetupConfigBodyDataFacade, EpicSvtTestSetupsActions, EpicSvtTestSetupsSelectors } from 'epic-ui/shared/svt-tests'
 import { BaseComponent, FileHelpers } from 'epic-ui/utils'
 import { AceModule } from 'ngx-ace-wrapper'
 import { takeUntil } from 'rxjs'
@@ -60,7 +60,7 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
     protected readonly document = inject(DOCUMENT)
     protected readonly router = inject(Router)
     protected readonly activatedRoute = inject(ActivatedRoute)
-    protected readonly epicSvtTestSetupConfigsDataFacade = inject(EpicSvtTestSetupConfigsDataFacade)
+    protected readonly epicSvtTestSetupConfigBodyDataFacade = inject(EpicSvtTestSetupConfigBodyDataFacade)
     protected readonly clipboard = inject(Clipboard)
 
     constructor() {
@@ -84,7 +84,7 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
 
         this.testSetupConfigBodyResource = rxResource<EpicSvtTestSetupConfigBody, { testSetupConfigId: number }>({
             request: () => ({ testSetupConfigId: +this.testSetupConfigId() }),
-            loader: ({ request }) => this.epicSvtTestSetupConfigsDataFacade.fetchData(request.testSetupConfigId),
+            loader: ({ request }) => this.epicSvtTestSetupConfigBodyDataFacade.fetchData(request.testSetupConfigId),
         })
 
         // on config created, navigate to config details

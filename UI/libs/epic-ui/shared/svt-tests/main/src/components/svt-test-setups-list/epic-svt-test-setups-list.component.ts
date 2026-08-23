@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
-import { RowClickedEvent } from 'ag-grid-community'
 import { EpicSvtTestSetup } from 'epic-ui/api'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
@@ -23,15 +22,10 @@ export class EpicSvtTestSetupsListComponent extends BaseComponent {
 
     @Input({ required: true }) entitiesList!: EpicSvtTestSetup[]
 
-    @Output() rowClicked$ = new EventEmitter<EpicSvtTestSetup>()
     @Output() details$ = new EventEmitter<EpicSvtTestSetup>()
 
     readonly colDefs = EpicSvtTestSetupsGrid.getColDefs()
     readonly gridOptions = EpicSvtTestSetupsGrid.getGridOptions()
-
-    onRowClicked(event: RowClickedEvent<EpicSvtTestSetup>) {
-        this.rowClicked$.emit(event.data)
-    }
 
     onCellEvent(event: EpicAgGridCell.CellRendererEvent<EpicSvtTestSetupsGrid.CellEventEvent, any, EpicSvtTestSetup>): void {
         switch (event.eventName) {

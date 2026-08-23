@@ -4,13 +4,6 @@
     </button>
 </epic-layout-light-header-actions>
 
-<!--<epic-layout-light-header-actions>-->
-<!--    <button color="primary" mat-flat-button (click)="onCreate()">-->
-<!--        <epic-icon [name]="'add'" matButtonIcon/>-->
-<!--        Create New-->
-<!--    </button>-->
-<!--</epic-layout-light-header-actions>-->
-
 <div class="e2e-container h-100 d-flex w-100">
     <div class="e2e-container__body p-3">
         @if (dataFetchingProcessing().processing) {
@@ -26,7 +19,6 @@
                     (clone$)="onRowClone($event)"
                     (details$)="onRowDetails($event)"
                     (edit$)="onRowEdit($event)"
-                    (rowClicked$)="onRowClicked($event)"
             />
         }
     </div>

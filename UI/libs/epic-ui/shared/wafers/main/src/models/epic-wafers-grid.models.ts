@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
 import { EpicWafer } from 'epic-ui/api'
-import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid, EpicAgGridFilter } from 'epic-ui/common/ag-grid'
+import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid, EpicAgGridFilter } from 'epic-ui/common/ag-grid'
 
 
 export namespace EpicWafersGrid {
@@ -34,6 +34,12 @@ export namespace EpicWafersGrid {
                 minWidth: 80,
             },
             {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => ({
+                        routerLink: ['../details', rowData.id],
+                        tooltip: 'Details',
+                    }),
+                }),
                 field: ColId.serialNumber,
                 headerName: 'Serial No.',
                 flex: 1,

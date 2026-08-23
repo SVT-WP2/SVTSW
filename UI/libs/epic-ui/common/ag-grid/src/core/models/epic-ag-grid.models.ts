@@ -21,6 +21,7 @@ export namespace EpicAgGrid {
             },
             pagination: true,
             rowSelection: 'multiple',
+            suppressDragLeaveHidesColumns: true,
             suppressCellFocus: true,
             cellSelection: false,
             animateRows: false,

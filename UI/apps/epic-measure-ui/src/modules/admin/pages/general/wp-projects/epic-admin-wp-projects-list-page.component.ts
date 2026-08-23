@@ -63,10 +63,6 @@ export class EpicAdminWpProjectsListPageComponent extends BaseComponent {
         )
     }
 
-    onRowClicked(rowData: EpicWpProject) {
-        this.openDetailsDialog(rowData)
-    }
-
     onRowDetails(rowData: EpicWpProject): void {
         this.openDetailsDialog(rowData)
     }
