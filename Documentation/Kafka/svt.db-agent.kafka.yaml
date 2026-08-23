@@ -3035,6 +3035,15 @@ components:
         data:
           type: object
           properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
             filter:
               type: object
               properties:
@@ -3048,6 +3057,32 @@ components:
                   items:
                     type: string
                     description: Test device type (Asic, Chip, ChipBlock).
+                dutId:
+                  type: number
+                  description: Optional filter used to fetch tests of the particular DUT. DUT ids are unique per DUT entity only, so it is meant to be combined with dutEntityNames.
+                testResultStatuses:
+                  type: array
+                  description: TestResultStatus values array. If array is empty / undefined => tests with any result status will be returned.
+                  items:
+                    type: string
+                createdAtFrom:
+                  type: string
+                  description: Optional lower bound of the createdAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
+                createdAtTo:
+                  type: string
+                  description: Optional upper bound of the createdAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
+                startedAtFrom:
+                  type: string
+                  description: Optional lower bound of the startedAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
+                startedAtTo:
+                  type: string
+                  description: Optional upper bound of the startedAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
+                finishedAtFrom:
+                  type: string
+                  description: Optional lower bound of the finishedAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
+                finishedAtTo:
+                  type: string
+                  description: Optional upper bound of the finishedAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
     GetAllSvtTestsReplyMessage:
       properties:
         type:
@@ -3060,6 +3095,8 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/SvtTestDto"
+            totalCount:
+              type: number
     #
     # TEST :: Create
     #
