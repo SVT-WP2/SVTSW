@@ -2045,6 +2045,15 @@ components:
         data:
           type: object
           properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
             filter:
               type: object
               properties:
@@ -2074,6 +2083,8 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/ChipDto"
+            totalCount:
+              type: number
     #
     # CHIPS :: CREATE
     #
