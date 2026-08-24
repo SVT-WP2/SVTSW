@@ -22,18 +22,19 @@ namespace dbagent
 
    private:
     std::shared_ptr<DbBaseListDto> dutEntityName;
+    std::shared_ptr<DbBaseListDto> dutId;
 
-    // virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &,
-    //                            SvtKafka::SvtKafkaReplyMsg &);
-    //
-    // virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
-    //                          SvtKafka::SvtKafkaReplyMsg &) final;
+    virtual void getAllEntries(const SvtKafka::SvtKafkaMessage &,
+                               SvtKafka::SvtKafkaReplyMsg &);
+
+    virtual void createEntry(const SvtKafka::SvtKafkaMessage &,
+                             SvtKafka::SvtKafkaReplyMsg &) final;
 
     virtual void updateSvtTestStart(const SvtKafka::SvtKafkaMessage &,
-                                    SvtKafka::SvtKafkaReplyMsg &) final {};
+                                    SvtKafka::SvtKafkaReplyMsg &) final;
 
     virtual void updateSvtTestFinish(const SvtKafka::SvtKafkaMessage &,
-                                     SvtKafka::SvtKafkaReplyMsg &) final {};
+                                     SvtKafka::SvtKafkaReplyMsg &) final;
 
     virtual void createAllRequest() final;
   };
