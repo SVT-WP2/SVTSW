@@ -5,10 +5,10 @@ import {
     EpicAsicsApiClient,
     EpicChip,
     EpicChipBlock,
+    EpicChipBlocksApiClient,
     EpicChipsApiClient,
     EpicSvtDutEntityName,
 } from 'epic-ui/api'
-import { EpicChipBlocksFacade } from 'epic-ui/shared'
 import { map, Observable } from 'rxjs'
 
 import { EpicSvtTestCreateForm } from './epic-svt-test-create-form.models'
@@ -28,7 +28,7 @@ export class EpicSvtTestDutSearchService {
     // DI
     protected readonly epicAsicsApiClient = inject(EpicAsicsApiClient)
     protected readonly epicChipsApiClient = inject(EpicChipsApiClient)
-    protected readonly epicChipBlocksFacade = inject(EpicChipBlocksFacade)
+    protected readonly epicChipBlocksApiClient = inject(EpicChipBlocksApiClient)
 
     search(dutEntityName: EpicSvtDutEntityName, searchTerm?: string | null): Observable<Form.DutOption[]> {
 
@@ -41,7 +41,7 @@ export class EpicSvtTestDutSearchService {
             case EpicSvtDutEntityName.Chip:
                 return this.searchChips(serialNumber, pager)
             case EpicSvtDutEntityName.ChipBlock:
-                return this.searchChipBlocks(serialNumber)
+                return this.searchChipBlocks(serialNumber, pager)
         }
     }
 
@@ -59,21 +59,10 @@ export class EpicSvtTestDutSearchService {
             )
     }
 
-    /**
-     * Unlike ASICs and chips, chip blocks cannot be searched or paged server side — the `GetAllChipBlocks`
-     * Kafka contract exposes no serial number filter. The facade fetches the list once and caches it; the
-     * search term is applied here.
-     */
-    protected searchChipBlocks(serialNumber: string | null): Observable<Form.DutOption[]> {
-        const searchTerm = serialNumber?.toLowerCase()
-
-        return this.epicChipBlocksFacade.fetchAll()
+    protected searchChipBlocks(serialNumber: string | null, pager: EpicApiPager): Observable<Form.DutOption[]> {
+        return this.epicChipBlocksApiClient.fetchList({ serialNumber }, pager)
             .pipe(
-                map(chipBlocks => chipBlocks
-                    .filter(item => !searchTerm || item.serialNumber.toLowerCase().includes(searchTerm))
-                    .slice(0, EpicSvtTestDutSearchService.SEARCH_RESULT_LIMIT)
-                    .map(chipBlockToDutOption),
-                ),
+                map(response => response.items.map(chipBlockToDutOption)),
             )
     }
 

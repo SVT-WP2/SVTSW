@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core'
-import { EpicChipBlock, EpicChipBlocksApiClient, EpicChipBlocksListQuery } from 'epic-ui/api'
+import {
+    EpicApiPager,
+    EpicApiPageResponse,
+    EpicChipBlock,
+    EpicChipBlocksApiClient,
+    EpicChipBlocksListQuery,
+    getDefaultEpicApiPager,
+} from 'epic-ui/api'
 import { delay, Observable, of, throwError } from 'rxjs'
 
 import { EpicEnumsMock } from '../enums'
@@ -27,14 +34,33 @@ export class EpicChipBlocksApiClientMock extends EpicChipBlocksApiClient {
 
     protected entities: EpicChipBlock[] = [...generateMockChipBlocks(2 * 1000)]
 
-    override fetchList(queryFilter: EpicChipBlocksListQuery.QueryFilter = {}): Observable<EpicChipBlock[]> {
-        const filteredData = this.entities.filter(item =>
-            (!queryFilter.ids?.length || queryFilter.ids.includes(item.id))
-            && (!queryFilter.chipId || queryFilter.chipId === item.chipId)
-            && (!queryFilter.blockTypes?.length || queryFilter.blockTypes.includes(item.chipBlockType)),
-        )
+    override fetchList(
+        queryFilter?: Partial<EpicChipBlocksListQuery.QueryFilter>,
+        pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicChipBlock>> {
 
-        return of(filteredData)
+        const filteredData = queryFilter
+            ? this.entities.filter(item => {
+                const fulfilIdsFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
+                const fulfilChipIdFilter = !queryFilter.chipId || (queryFilter.chipId === item.chipId)
+                const fulfilChipBlockTypeFilter = !queryFilter.chipBlockTypes?.length
+                    || (queryFilter.chipBlockTypes.includes(item.chipBlockType))
+                const fulfilSerialNumberFilter = !queryFilter.serialNumber
+                    || (item.serialNumber.toLowerCase().includes(queryFilter.serialNumber.toLowerCase()))
+
+                return fulfilIdsFilter
+                    && fulfilChipIdFilter
+                    && fulfilChipBlockTypeFilter
+                    && fulfilSerialNumberFilter
+            })
+            : this.entities
+
+        const pagerDto = { ...getDefaultEpicApiPager(), ...(pager || {}) }
+        const pageData = filteredData.slice(pagerDto.offset, pagerDto.offset + pagerDto.limit)
+
+        return of({
+            items: pageData,
+            totalCount: filteredData.length,
+        })
             .pipe(
                 delay(500),
             )

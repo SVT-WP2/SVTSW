@@ -8,5 +8,6 @@ export type EpicChipBlockEntity = {
 export type EpicGetAllChipBlocksQueryFilter = {
     ids?: number[]
     chipId?: number
-    blockTypes?: string[]
+    chipBlockTypes?: string[]
+    serialNumber?: string
 }

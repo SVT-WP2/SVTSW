@@ -141,6 +141,7 @@
                         "libs/epic-ui/shared/iv-mnt/main/styles",
                         "libs/epic-ui/shared/wp/main/styles",
                         "libs/epic-ui/shared/chips/main/styles",
+                        "libs/epic-ui/shared/chip-blocks/main/styles",
                         "libs/epic-ui/shared/equipment-types/main/styles",
                         "libs/epic-ui/shared/equipment/main/styles",
                         "libs/epic-ui/shared/svt-tests/main/styles"

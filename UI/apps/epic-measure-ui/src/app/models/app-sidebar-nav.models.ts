@@ -25,6 +25,12 @@ export namespace AppSidebarNav {
                 routerUrlPattern: '^/chips',
             },
             {
+                label: 'Chip Blocks',
+                icon: toEpicMatOutlinedIcon('grid_view'),
+                routerLink: '/chip-blocks',
+                routerUrlPattern: '^/chip-blocks',
+            },
+            {
                 label: 'Wafers',
                 icon: 'epic-dashboard',
                 routerLink: '/wafers',
