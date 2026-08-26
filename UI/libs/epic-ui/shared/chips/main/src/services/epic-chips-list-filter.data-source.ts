@@ -17,6 +17,8 @@ export class EpicChipsListFilterDataSource extends SimpleDataSource<EpicChipsLis
         return this.epicEnumsFacade.fetchData(force)
             .pipe(
                 map((enumsCollection) => ({
+                    familyTypeSelectOptions: enumsCollection[EpicEnumName.asicFamilyType]
+                        .map(item => ({ value: item, label: item })),
                     generalLocationSelectOptions: enumsCollection[EpicEnumName.wpGeneralLocation]
                         .map(item => ({ value: item, label: item })),
                 })),

@@ -33,9 +33,10 @@ export class EpicChipsService implements OnModuleInit {
         pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
         const data: SvtDbAgentKafkaChips.GetAllChipsMessageData = {
             filter: {
-                ...(queryFilter.ids ? { ids: queryFilter.ids } : {}),
-                ...(queryFilter.generalLocation ? { quality: queryFilter.generalLocation } : {}),
-                ...(queryFilter.serialNumber ? { serialNumber: queryFilter.serialNumber } : {}),
+                ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
+                ...(queryFilter?.familyTypes ? { familyTypes: queryFilter.familyTypes } : {}),
+                ...(queryFilter?.generalLocation ? { generalLocation: queryFilter.generalLocation } : {}),
+                ...(queryFilter?.serialNumber ? { serialNumber: queryFilter.serialNumber } : {}),
             },
             pager: {
                 limit: 20,

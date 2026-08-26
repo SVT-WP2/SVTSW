@@ -15,10 +15,9 @@
                                           [noResultSize]="'basic'"
                                           [epicScrollingDataSource]="scrollingDataSource">
                 <ng-container *cdkVirtualFor="let item of chipsList()">
-                    <mat-card class="mb-2 overflow-hidden epic-shadow-hover epic-cursor-pointer"
-                              appearance="outlined"
-                              [routerLink]="[ '/asics/details', item.id]">
-                        <mat-card-content matRipple>
+                    <mat-card class="mb-2 overflow-hidden epic-shadow-hover"
+                              appearance="outlined">
+                        <mat-card-content>
                             <div class="d-flex gap-3 align-items-center w-100">
                                 <epic-icon-tile
                                         class="epic-bg-color-primary-50 epic-color-primary-300"
@@ -32,19 +31,19 @@
                                     </div>
                                     <div style="min-width: 120px">
                                         <div class="epic-font-label-sm epic-color-neutral-60">Serial No.</div>
-                                        {{ item.serialNumber }}
+                                        <a [routerLink]="[ '/chips/details', item.id]">{{ item.serialNumber }}</a>
+                                    </div>
+                                    <div style="min-width: 200px">
+                                        <div class="epic-font-label-sm epic-color-neutral-60">Family Type</div>
+                                        {{ item.familyType }}
                                     </div>
                                     <div style="min-width: 200px">
                                         <div class="epic-font-label-sm epic-color-neutral-60">Location</div>
                                         {{ item.generalLocation }}
                                     </div>
-                                    <div class="d-none d-md-block" style="min-width: 40px">
-                                        <div class="epic-font-label-sm epic-color-neutral-60">ASIC ID</div>
-                                        {{ item.asicId }}
-                                    </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 justify-content-end flex-1">
-                                    <a [routerLink]="[ '/asics/details', item.asicId]">
+                                    <a [routerLink]="[ '/chips/details', item.id]">
                                         <button epicStrokedButton mat-icon-button [matTooltip]="'COMMON.DETAILS' | translate">
                                             <epic-icon name="epic-eye-open" matButtonIcon/>
                                         </button>

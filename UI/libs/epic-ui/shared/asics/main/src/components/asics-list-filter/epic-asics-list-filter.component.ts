@@ -10,7 +10,7 @@ import {
     EpicIconComponent,
     EpicInlineFilterSelectionListComponent,
     EpicContentErrorModule,
-    EpicSearchBoxComponent,
+    EpicSearchBoxComponent, EpicIconMatOutlinedPipe,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent } from 'epic-ui/utils'
@@ -38,6 +38,7 @@ import {
         EpicSearchBoxComponent,
         MatDivider,
         FormsModule,
+        EpicIconMatOutlinedPipe,
     ],
 })
 export class EpicAsicsListFilterComponent extends BaseComponent implements OnDestroy {

@@ -1,5 +1,4 @@
-﻿import { HttpErrorResponse } from '@angular/common/module.d-CnjH8Dlt'
-import { Component, computed, effect, inject, signal, Signal } from '@angular/core'
+﻿import { Component, computed, effect, inject, signal, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { ActivatedRoute, Router } from '@angular/router'
 import { EpicAsic, EpicChip, EpicChipsApiClient, EpicIvMnt, EpicWafer } from 'epic-ui/api'
@@ -10,11 +9,7 @@ import {
     EpicAsicIvMntDialogService,
     EpicAsicsStoreFacade,
 } from 'epic-ui/shared/asics'
-import {
-    EpicChipCreateDialogService,
-    EpicChipLocationHistoryDialogService,
-    EpicChipLocationUpdateDialogService,
-} from 'epic-ui/shared/chips'
+import { EpicChipCreateDialogService } from 'epic-ui/shared/chips'
 import { EpicWaferRef, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { catchError, filter, first, switchMap, takeUntil, tap, throwError } from 'rxjs'
@@ -84,8 +79,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
     protected readonly activatedRoute = inject(ActivatedRoute)
     protected readonly epicAsicDeleteDialogService = inject(EpicAsicDeleteDialogService)
     protected readonly epicAsicCreateDialogService = inject(EpicAsicCreateDialogService)
-    protected readonly epicAsicLocationHistoryDialogService = inject(EpicChipLocationHistoryDialogService)
-    protected readonly epicChipLocationUpdateDialogService = inject(EpicChipLocationUpdateDialogService)
     protected readonly epicChipsApiClient = inject(EpicChipsApiClient)
     protected readonly asicsStore = inject(EpicAsicsStoreFacade)
     protected readonly wafersStore = inject(EpicWafersStoreFacade)
@@ -161,19 +154,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
         throw new Error('Method not implemented.')
     }
 
-    onUpdateLocation(): void {
-        this.epicChipLocationUpdateDialogService.openDialog(
-            this.asic().chipId,
-            {
-                onSuccess: (chip) => this.chip.set(chip),
-            },
-        )
-    }
-
-    onOpenLocationHistory(): void {
-        void this.epicAsicLocationHistoryDialogService.openDialog(this.asic().chipId)
-    }
-
     onCreateChip(): void {
         void this.epicChipCreateDialogService.openDialog({
             asicId: this.asic().id,
@@ -192,7 +172,7 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
         this.epicChipsApiClient.fetchOne(chipId)
             .pipe(
                 takeUntil(this.destroyed$),
-                catchError((error: HttpErrorResponse) => {
+                catchError((error: Error) => {
                     this.epicNotificationService.error(
                         error.message,
                         'Unable to Fetch Chip Info',

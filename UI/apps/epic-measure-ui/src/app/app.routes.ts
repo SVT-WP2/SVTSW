@@ -41,11 +41,11 @@ export const routes: Routes = [
                 loadChildren:
                     () => import('../modules/asics/epic-asics.module').then(m => m.EpicAsicsModule),
             },
-            // {
-            //     path: 'chips',
-            //     loadChildren:
-            //         () => import('../modules/chips/epic-chips.module').then(m => m.EpicChipsModule),
-            // },
+            {
+                path: 'chips',
+                loadChildren:
+                    () => import('../modules/chips/epic-chips.module').then(m => m.EpicChipsModule),
+            },
             {
                 path: 'svt-tests',
                 loadChildren:

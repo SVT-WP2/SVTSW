@@ -29,8 +29,9 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
                 const fulfilSerialNumberFilter = !queryFilter.serialNumber
                     || (item.serialNumber.toLowerCase().includes(queryFilter.serialNumber.toLowerCase()))
                 const fulfilChipIdFilter = !queryFilter.chipId || (queryFilter.chipId === item.id)
+                const fulfilFamilyTypeFilter = !queryFilter.familyTypes?.length || (queryFilter.familyTypes.includes(item.familyType))
                 const fulfilGeneralLocationFilter = !queryFilter.generalLocation || (queryFilter.generalLocation === item.generalLocation)
-                return fulfilSerialNumberFilter && fulfilGeneralLocationFilter && fulfilChipIdFilter
+                return fulfilSerialNumberFilter && fulfilFamilyTypeFilter && fulfilGeneralLocationFilter && fulfilChipIdFilter
             })
             : this.entities
 

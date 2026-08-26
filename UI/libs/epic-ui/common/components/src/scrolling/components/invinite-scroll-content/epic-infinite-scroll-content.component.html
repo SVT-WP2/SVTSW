@@ -6,10 +6,11 @@
     </epic-content-error>
 } @else {
     <ng-content></ng-content>
-
+    <!-- NO DATA FOUND-->
     @if (noDataFound()) {
-        <epic-no-result size="small" />
+        <epic-no-result [size]="noResultSize()" />
     }
+    <!-- ./NO DATA FOUND-->
 }
 
 @if (fetchMoreDataProcessing().processing) {

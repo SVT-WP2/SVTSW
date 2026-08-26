@@ -14,7 +14,7 @@
         }
 
         <epic-inline-filter-selection-list
-                [icon]="'memory'"
+                [icon]="'type_specimen' | epicIconMatOutlined"
                 [label]="'Family Type' + (filterValue().asicFamilyType ? (': ' + filterValue().asicFamilyType) : '')"
                 [multiple]="false"
                 [ngModel]="filterValue().asicFamilyType"

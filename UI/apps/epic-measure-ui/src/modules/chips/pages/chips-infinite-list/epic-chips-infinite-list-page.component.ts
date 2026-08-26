@@ -54,6 +54,7 @@ export class EpicChipsInfiniteListPageComponent extends BaseComponent implements
     readonly dsFilterValue = computed<EpicChipsScrollingDsFilter>(() => {
         const headerFilterValue = this.headerFilterValue()
         return {
+            familyTypes: headerFilterValue?.familyType ? [headerFilterValue.familyType] : null,
             generalLocation: headerFilterValue?.generalLocation || null,
             serialNumber: headerFilterValue?.searchTerm?.length ? headerFilterValue.searchTerm : null,
         }
