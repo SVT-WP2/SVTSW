@@ -5,6 +5,7 @@ import { map, Observable } from 'rxjs'
 
 
 export type EpicChipsScrollingDsFilter = {
+    familyTypes: string[] | null
     generalLocation: string | null
     serialNumber: string | null
 }

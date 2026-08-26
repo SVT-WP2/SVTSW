@@ -119,7 +119,7 @@ export class EpicDbAgentWafersController {
                     )
             // CHIP
             case SvtDbAgentKafkaChips.MessageType.GetAllChips:
-                return this.epicDbAgentChipsService.getAllChips(message.data.filter)
+                return this.epicDbAgentChipsService.getAllChips(message.data?.filter, message.data?.pager)
                     .pipe(
                         map(result => JSON.stringify(new SvtDbAgentKafkaChips.GetAllChipsReplyMessage(result))),
                     )

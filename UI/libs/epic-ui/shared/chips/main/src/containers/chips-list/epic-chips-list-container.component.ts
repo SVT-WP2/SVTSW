@@ -2,13 +2,13 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, OnDestroy, Signal } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { MatCardModule } from '@angular/material/card'
-import { MatRipple } from '@angular/material/core'
 import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
 import { TranslatePipe } from '@ngx-translate/core'
 import { EpicChip } from 'epic-ui/api'
 import {
     EpicButtonModule,
+    EpicContentErrorModule,
     EpicIconComponent,
     EpicIconMatOutlinedPipe,
     EpicIconTileComponent,
@@ -16,7 +16,6 @@ import {
     EpicLoaderComponent,
     EpicScrollingDataSourceInfiniteScrollContentDirective,
     EpicScrollingDataSourceVirtualScrollViewportDirective,
-    EpicContentErrorModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -45,7 +44,6 @@ import { EpicChipsScrollingDataSource, EpicChipsScrollingDsFilter } from '../../
         EpicIconMatOutlinedPipe,
         TranslatePipe,
         EpicIconTileComponent,
-        MatRipple,
         FormsModule,
         RouterLink,
     ],
@@ -75,6 +73,7 @@ export class EpicChipsListContainerComponent extends BaseComponent implements On
             const headerFilterValue = this.filterValue()
             if (headerFilterValue) {
                 const dsFilter: EpicChipsScrollingDsFilter = {
+                    familyTypes: headerFilterValue?.familyTypes?.length ? headerFilterValue.familyTypes : null,
                     generalLocation: headerFilterValue?.generalLocation || null,
                     serialNumber: headerFilterValue?.serialNumber?.length ? headerFilterValue.serialNumber : null,
                 }

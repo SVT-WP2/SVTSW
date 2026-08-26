@@ -42,12 +42,15 @@ export class EpicDbAgentChipsService {
     getAllChips(queryFilter?: EpicGetAllChipsQueryFilter, pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
         const filteredData = queryFilter
             ? this.chips.filter(item => {
-                const fulfilAsicIdFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
-                const fulfilFamilyTypeFilter = !queryFilter.familyTypes || (queryFilter.familyTypes.includes(item.familyType))
+                const fulfilIdsFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
+                const fulfilFamilyTypeFilter = !queryFilter.familyTypes?.length || (queryFilter.familyTypes.includes(item.familyType))
+                const fulfilGeneralLocationFilter = !queryFilter.generalLocation
+                    || (queryFilter.generalLocation === item.generalLocation)
                 const fulfilSerialNumberFilter = !queryFilter.serialNumber || (item.serialNumber.includes(queryFilter.serialNumber))
 
-                return fulfilAsicIdFilter
+                return fulfilIdsFilter
                     && fulfilFamilyTypeFilter
+                    && fulfilGeneralLocationFilter
                     && fulfilSerialNumberFilter
             })
             : this.chips
@@ -80,7 +83,7 @@ export class EpicDbAgentChipsService {
                         throw new Error(`Asic does not exist: ${createRequest.asicId}`)
                     }
 
-                    const refAsic = list[0]
+                    const refAsic = list.items[0]
 
                     const newChip: EpicChipEntity = {
                         id: (this.chips[this.chips.length - 1]?.id || 0) + 1,

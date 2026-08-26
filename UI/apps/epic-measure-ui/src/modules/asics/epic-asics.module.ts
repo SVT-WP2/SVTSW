@@ -23,7 +23,6 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicAsicInfoComponent, EpicAsicIvMntGridComponent, EpicAsicsListComponent } from 'epic-ui/shared/asics'
-import { EpicChipInfoComponent } from 'epic-ui/shared/chips'
 import { EpicIvMntGridComponent } from 'epic-ui/shared/iv-mnt'
 import { EpicKafkaSendMessageFormComponent } from 'epic-ui/shared/kafka'
 import { EpicTcpSendMessageFormComponent } from 'epic-ui/shared/tcp'
@@ -72,7 +71,6 @@ import { EpicAsicDetailsPageComponent, EpicAsicOverviewPageComponent, EpicAsicVo
         EpicAsicIvMntGridComponent,
         EpicContentErrorMessagePipe,
         EpicIconMatOutlinedPipe,
-        EpicChipInfoComponent,
     ],
     declarations: [
         EpicAsicDetailsPageComponent,

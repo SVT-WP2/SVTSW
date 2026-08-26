@@ -17,16 +17,19 @@ import { BaseComponent, SelectOptionLabelValue } from 'epic-ui/utils'
 
 export type EpicChipsListFilterValue = {
     searchTerm: string
+    familyType: string | null
     generalLocation: string | null
 }
 
 export type EpicChipsListFilterData = {
+    familyTypeSelectOptions: SelectOptionLabelValue[]
     generalLocationSelectOptions: SelectOptionLabelValue[]
 }
 
 export function getDefaultEpicChipsListFilterValue(): EpicChipsListFilterValue {
     return {
         searchTerm: '',
+        familyType: null,
         generalLocation: null,
     }
 }

@@ -1,13 +1,17 @@
 import { NgModule } from '@angular/core'
 import { RouterModule, Routes } from '@angular/router'
 
-import { EpicChipsInfiniteListPageComponent } from './pages'
+import { EpicChipDetailsPageComponent, EpicChipsInfiniteListPageComponent } from './pages'
 
 
 const routes: Routes = [
     {
         path: 'list',
         component: EpicChipsInfiniteListPageComponent,
+    },
+    {
+        path: 'details/:chipId',
+        component: EpicChipDetailsPageComponent,
     },
     {
         path: '',

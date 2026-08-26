@@ -6,9 +6,33 @@ export namespace AppSidebarNav {
 
     export function getSidebarMenu(): EpicMenuLightItem[] {
         return [
+            // {
+            //     label: 'Wafer Test',
+            //     icon:  'epic-experiment',
+            //     routerLink: '/wafer-tests',
+            //     routerUrlPattern: '^/wafer-tests',
+            // },
             {
-                label: 'SVT Tests',
-                icon:  'epic-experiment',
+                label: 'ASICs',
+                icon: toEpicMatOutlinedIcon('layers'),
+                routerLink: '/asics',
+                routerUrlPattern: '^/asics',
+            },
+            {
+                label: 'Chips',
+                icon: toEpicMatOutlinedIcon('memory'),
+                routerLink: '/chips',
+                routerUrlPattern: '^/chips',
+            },
+            {
+                label: 'Wafers',
+                icon: 'epic-dashboard',
+                routerLink: '/wafers',
+                routerUrlPattern: '^/wafers',
+            },
+            {
+                label: 'Testing',
+                icon:  'epic-line-chart',
                 routerLink: '/svt-tests',
                 routerUrlPattern: '^/svt-tests',
             },
@@ -18,36 +42,6 @@ export namespace AppSidebarNav {
                 routerLink: '/wp-machines',
                 routerUrlPattern: '^/wp-machines',
             },
-            // {
-            //     label: 'Wafer Test',
-            //     icon:  'epic-experiment',
-            //     routerLink: '/wafer-tests',
-            //     routerUrlPattern: '^/wafer-tests',
-            // },
-            // {
-            //     label: 'ASICs',
-            //     icon: toEpicMatOutlinedIcon('layers'),
-            //     routerLink: '/asics',
-            //     routerUrlPattern: '^/asics',
-            // },
-            {
-                label: 'ASICs',
-                icon: toEpicMatOutlinedIcon('layers'),
-                routerLink: '/asics',
-                routerUrlPattern: '^/asics',
-            },
-            {
-                label: 'Wafers',
-                icon: 'epic-dashboard',
-                routerLink: '/wafers',
-                routerUrlPattern: '^/wafers',
-            },
-            // {
-            //     label: 'Chips',
-            //     icon: toEpicMatOutlinedIcon('memory'),
-            //     routerLink: '/chips',
-            //     routerUrlPattern: '^/chips',
-            // },
             // {
             //     label: 'Measure',
             //     icon: 'epic-line-chart',

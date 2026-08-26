@@ -4,6 +4,14 @@
                         (search$)="onFilterChange('searchTerm', $event)"/>
 
         <epic-inline-filter-selection-list
+                [icon]="'type_specimen' | epicIconMatOutlined"
+                [label]="'Family Type' + (filterValue().familyType ? (': ' + filterValue().familyType) : '')"
+                [multiple]="false"
+                [ngModel]="filterValue().familyType"
+                [selectOptions]="filterData()!.familyTypeSelectOptions"
+                (ngModelChange)="onFilterChange('familyType', $event)"/>
+
+        <epic-inline-filter-selection-list
                 [icon]="'location_on' | epicIconMatOutlined"
                 [label]="'Location' + (filterValue().generalLocation ? (': ' + filterValue().generalLocation) : '')"
                 [multiple]="false"
