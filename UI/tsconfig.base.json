@@ -94,6 +94,9 @@
             "epic-ui/shared/chips": [
                 "libs/epic-ui/shared/chips/main/src/index.ts"
             ],
+            "epic-ui/shared/chip-blocks": [
+                "libs/epic-ui/shared/chip-blocks/main/src/index.ts"
+            ],
             "epic-ui/shared/asics/__mock__": [
                 "libs/epic-ui/shared/asics/__mock__/src/index.ts"
             ],

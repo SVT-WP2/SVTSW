@@ -1,0 +1,24 @@
+@if (filterData()) {
+    <div class="d-flex align-items-center gap-2">
+        <epic-search-box [searchTerm]="filterValue().searchTerm"
+                        (search$)="onFilterChange('searchTerm', $event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'category' | epicIconMatOutlined"
+                [label]="'Block Type' + (filterValue().chipBlockType ? (': ' + filterValue().chipBlockType) : '')"
+                [multiple]="false"
+                [ngModel]="filterValue().chipBlockType"
+                [selectOptions]="filterData()!.chipBlockTypeSelectOptions"
+                (ngModelChange)="onFilterChange('chipBlockType', $event)"/>
+
+        @if (!isFilterValueEmpty()) {
+            <mat-divider vertical class="mx-1"/>
+            <button epicStrokedButton
+                    mat-icon-button
+                    [matTooltip]="'COMMON.CLEAR' | translate"
+                    (click)="onClearFilter()">
+                <epic-icon [name]="'clear'"/>
+            </button>
+        }
+    </div>
+}

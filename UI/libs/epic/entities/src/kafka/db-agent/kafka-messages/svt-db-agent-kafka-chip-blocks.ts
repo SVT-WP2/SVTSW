@@ -1,4 +1,5 @@
 import { EpicChipBlockEntity, EpicGetAllChipBlocksQueryFilter } from '../../../chip-blocks'
+import { EpicPager } from '../../../common'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -15,6 +16,7 @@ export namespace SvtDbAgentKafkaChipBlocks {
 
     export type GetAllChipBlocksMessageData = {
         filter?: EpicGetAllChipBlocksQueryFilter
+        pager?: EpicPager
     }
 
     export class GetAllChipBlocksMessage extends EpicKafkaMessageClass<GetAllChipBlocksMessageData> {
@@ -23,7 +25,7 @@ export namespace SvtDbAgentKafkaChipBlocks {
 
     }
 
-    export type GetAllChipBlocksReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicChipBlockEntity>
+    export type GetAllChipBlocksReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicChipBlockEntity>
 
     export class GetAllChipBlocksReplyMessage extends EpicKafkaReplyMessageClass<GetAllChipBlocksReplyMessageData> {
 

@@ -3,8 +3,9 @@ import { ClientKafka } from '@nestjs/microservices'
 import {
     EpicChipBlockEntity,
     EpicGetAllChipBlocksQueryFilter,
+    EpicPageData,
+    EpicPager,
     mapEpicKafkaMessageData,
-    mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaChipBlocks,
 } from 'epic/entities'
@@ -21,12 +22,27 @@ export class EpicChipBlocksService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: EpicGetAllChipBlocksQueryFilter): Observable<EpicChipBlockEntity[]> {
-        const message = new SvtDbAgentKafkaChipBlocks.GetAllChipBlocksMessage({ filter })
+    getAll(
+        queryFilter?: EpicGetAllChipBlocksQueryFilter,
+        pager?: EpicPager): Observable<EpicPageData<EpicChipBlockEntity>> {
+        const data: SvtDbAgentKafkaChipBlocks.GetAllChipBlocksMessageData = {
+            filter: {
+                ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
+                ...(queryFilter?.chipId ? { chipId: queryFilter.chipId } : {}),
+                ...(queryFilter?.chipBlockTypes ? { chipBlockTypes: queryFilter.chipBlockTypes } : {}),
+                ...(queryFilter?.serialNumber ? { serialNumber: queryFilter.serialNumber } : {}),
+            },
+            pager: {
+                limit: 20,
+                offset: 0,
+                ...(pager || {}),
+            },
+        }
+
+        const message = new SvtDbAgentKafkaChipBlocks.GetAllChipBlocksMessage(data)
         return this.sendMessageAndGetReply<SvtDbAgentKafkaChipBlocks.GetAllChipBlocksReplyMessage>(message)
             .pipe(
                 mapEpicKafkaMessageData(),
-                mapSvtDbAgentListReplyData(),
             )
     }
 

@@ -136,9 +136,9 @@ export class EpicDbAgentWafersController {
 
             // CHIP BLOCKS
             case SvtDbAgentKafkaChipBlocks.MessageType.GetAllChipBlocks:
-                return this.epicDbAgentChipBlocksService.getAll(message.data.filter)
+                return this.epicDbAgentChipBlocksService.getAll(message.data?.filter, message.data?.pager)
                     .pipe(
-                        map(items => JSON.stringify(new SvtDbAgentKafkaChipBlocks.GetAllChipBlocksReplyMessage({ items }))),
+                        map(result => JSON.stringify(new SvtDbAgentKafkaChipBlocks.GetAllChipBlocksReplyMessage(result))),
                     )
 
             // CHIP LOCATION

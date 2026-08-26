@@ -1,0 +1,51 @@
+<epic-layout-light-header-title>
+    <div class="d-flex align-items-center">
+        <epic-breadcrumbs [breadcrumbs]="breadcrumbs()" [size]="'large'"/>
+    </div>
+</epic-layout-light-header-title>
+
+@if (chipBlockFetchOneProcessing().processing) {
+    <epic-loader [fillAllSection]="true"/>
+} @else if (chipBlockFetchOneProcessing().processingError) {
+    <epic-content-error>
+        {{ chipBlockFetchOneProcessing().processingError | epicContentErrorMessage }}
+    </epic-content-error>
+} @else {
+    <div class="h-100 d-flex w-100">
+        <div class="e2e-container flex-row">
+            <div style="width: 320px" class="epic-bg-color-neutral-0 overflow-auto epic-border-style-right--solid position-relative">
+                @if (chipBlock()) {
+                    <div class="d-flex justify-content-between align-items-center p-3 pb-0">
+                        <div class="epic-font-title">
+                            {{ chipBlock().serialNumber }}
+                        </div>
+                    </div>
+
+                    <epic-chip-block-info [chipBlock]="chipBlock()"/>
+
+                    <!-- PARENT CHIP -->
+                    @if (chip()) {
+                        <mat-divider/>
+                        <div class="p-3">
+                            <div class="row py-1">
+                                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                                    Chip
+                                </div>
+                                <div class="col-lg-6 epic-font-label">
+                                    <a [routerLink]="['/chips/details', chip().id]">
+                                        {{ chip().serialNumber }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <!-- ./PARENT CHIP -->
+                }
+            </div>
+
+            <div class="e2e-container__body-with-scroll p-3">
+                <router-outlet/>
+            </div>
+        </div>
+    </div>
+}
