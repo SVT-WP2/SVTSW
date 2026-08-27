@@ -15,20 +15,21 @@
     </button>
 </epic-layout-light-header-actions>
 
-<div class="e2e-container h-100 d-flex w-100">
+<div class="e2e-container">
+    <div class="epic-border-style-bottom--solid epic-bg-color-neutral-0 px-3 py-2 overflow-x-auto">
+        <epic-svt-tests-list-filter [(filterValue)]="headerFilterValue" [filterData]="filterData()"/>
+    </div>
     <div class="e2e-container__body p-3">
-        @if (dataFetchingProcessing().processing) {
-            <epic-loader [fillAllSection]="true"/>
-        } @else if (dataFetchingProcessing().processingError) {
+        @if (dataFetchingProcessing()?.processingError) {
             <epic-content-error>
-                {{ dataFetchingProcessing().processingError | epicContentErrorMessage }}
+                {{ dataFetchingProcessing()?.processingError | epicContentErrorMessage }}
             </epic-content-error>
         } @else {
+            <!-- no loader in front of the grid: it loads its own blocks and renders loading rows while it waits -->
             <epic-svt-tests-list
                     class="d-flex h-100 w-100"
-                    [entitiesList]="entitiesList()"
+                    [datasource]="datasource()"
                     (rowClicked$)="onRowClicked($event)" />
         }
     </div>
 </div>
-

@@ -27,6 +27,7 @@ export const EPIC_DEFAULT_ICONS: string[] = [
     'epic-experiment',
     'epic-machine',
     'epic-clean-filter',
+    'epic-report',
 ]
 
 export const EPIC_ICON_PROVIDER = new InjectionToken<EpicIconsProvider>('EPIC_ICON_NAME_PROVIDER')

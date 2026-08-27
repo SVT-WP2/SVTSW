@@ -1,6 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import { EpicAsic, EpicAsicsApiClient, EpicChip, EpicChipsApiClient } from 'epic-ui/api'
+import {
+    EpicAsic,
+    EpicAsicsApiClient,
+    EpicChip,
+    EpicChipBlock,
+    EpicChipBlocksApiClient,
+    EpicChipsApiClient,
+} from 'epic-ui/api'
 import { EpicBreadcrumbs, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicChipLocationHistoryDialogService, EpicChipLocationUpdateDialogService } from 'epic-ui/shared/chips'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -16,6 +23,7 @@ export class EpicChipDetailsPageComponent extends BaseComponent {
 
     readonly chip = signal<EpicChip>(null)
     readonly asic = signal<EpicAsic>(null)
+    readonly chipBlocks = signal<EpicChipBlock[]>([])
     readonly chipFetchOneProcessing = signal<ProcessingStore.EventProcessingState>(
         ProcessingStore.getDefaultProcessingState(),
     )
@@ -38,6 +46,7 @@ export class EpicChipDetailsPageComponent extends BaseComponent {
     protected readonly activatedRoute = inject(ActivatedRoute)
     protected readonly epicChipsApiClient = inject(EpicChipsApiClient)
     protected readonly epicAsicsApiClient = inject(EpicAsicsApiClient)
+    protected readonly epicChipBlocksApiClient = inject(EpicChipBlocksApiClient)
     protected readonly epicChipLocationHistoryDialogService = inject(EpicChipLocationHistoryDialogService)
     protected readonly epicChipLocationUpdateDialogService = inject(EpicChipLocationUpdateDialogService)
     protected readonly epicNotificationService = inject(EpicNotificationService)
@@ -86,6 +95,7 @@ export class EpicChipDetailsPageComponent extends BaseComponent {
                     ProcessingStore.eventProcessingFinish(this.chipFetchOneProcessing()),
                 )
                 this.initParentAsic()
+                this.initChipBlocks()
             })
     }
 
@@ -104,6 +114,24 @@ export class EpicChipDetailsPageComponent extends BaseComponent {
             )
             .subscribe((asic) => {
                 this.asic.set(asic)
+            })
+    }
+
+    protected initChipBlocks(): void {
+        this.epicChipBlocksApiClient.fetchList({ chipId: this.chipId })
+            .pipe(
+                takeUntil(this.destroyed$),
+                map((response) => response.items || []),
+                catchError((error: Error) => {
+                    this.epicNotificationService.error(
+                        error.message,
+                        'Unable to Fetch Chip Blocks Info',
+                    )
+                    return throwError(() => error)
+                }),
+            )
+            .subscribe((chipBlocks) => {
+                this.chipBlocks.set(chipBlocks)
             })
     }
 

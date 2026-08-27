@@ -2,7 +2,9 @@
         class="ag-theme-alpine h-100"
         [columnDefs]="colDefs"
         [gridOptions]="gridOptions"
-        [rowData]="entitiesList"
+        [datasource]="datasource"
         epicAgGridCellEvent
         (cellEvent$)="onCellEvent($event)"
+        (gridReady)="onGridReady($event)"
+        (modelUpdated)="onModelUpdated()"
         (rowClicked)="onRowClicked($event.data)"/>

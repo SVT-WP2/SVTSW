@@ -1,6 +1,7 @@
 ﻿@if (this.filterData()) {
     <div class="d-flex align-items-center gap-2">
-        <epic-search-box [searchTerm]="filterValue().searchTerm"
+        <epic-search-box [placeholder]="'COMMON.SEARCH_BY_SERIAL_NUMBER_PLACEHOLDER'"
+                        [searchTerm]="filterValue().searchTerm"
                         (search$)="onFilterChange('searchTerm', $event)"/>
 
         @if (showWaferFilter) {

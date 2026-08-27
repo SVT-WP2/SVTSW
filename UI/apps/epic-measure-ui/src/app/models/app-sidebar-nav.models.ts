@@ -12,39 +12,49 @@ export namespace AppSidebarNav {
             //     routerLink: '/wafer-tests',
             //     routerUrlPattern: '^/wafer-tests',
             // },
+            // dataset
             {
-                label: 'ASICs',
-                icon: toEpicMatOutlinedIcon('layers'),
-                routerLink: '/asics',
-                routerUrlPattern: '^/asics',
+                label: 'DUTs',
+                icon: toEpicMatOutlinedIcon('dataset'),
+                submenu: {
+                    items: [
+                        {
+                            label: 'Wafers',
+                            icon: 'epic-dashboard',
+                            routerLink: '/wafers',
+                            routerUrlPattern: '^/wafers',
+                        },
+                        {
+                            label: 'ASICs',
+                            icon: toEpicMatOutlinedIcon('layers'),
+                            routerLink: '/asics',
+                            routerUrlPattern: '^/asics',
+                        },
+                        {
+                            label: 'Chips',
+                            icon: toEpicMatOutlinedIcon('memory'),
+                            routerLink: '/chips',
+                            routerUrlPattern: '^/chips',
+                        },
+                        {
+                            label: 'Chip Blocks',
+                            icon: toEpicMatOutlinedIcon('developer_board'),
+                            routerLink: '/chip-blocks',
+                            routerUrlPattern: '^/chip-blocks',
+                        },
+                    ],
+                },
             },
-            {
-                label: 'Chips',
-                icon: toEpicMatOutlinedIcon('memory'),
-                routerLink: '/chips',
-                routerUrlPattern: '^/chips',
-            },
-            {
-                label: 'Chip Blocks',
-                icon: toEpicMatOutlinedIcon('grid_view'),
-                routerLink: '/chip-blocks',
-                routerUrlPattern: '^/chip-blocks',
-            },
-            {
-                label: 'Wafers',
-                icon: 'epic-dashboard',
-                routerLink: '/wafers',
-                routerUrlPattern: '^/wafers',
-            },
+
             {
                 label: 'Testing',
-                icon:  'epic-line-chart',
+                icon: 'epic-report',
                 routerLink: '/svt-tests',
                 routerUrlPattern: '^/svt-tests',
             },
             {
                 label: 'WPM',
-                icon:  'epic-machine',
+                icon: 'epic-machine',
                 routerLink: '/wp-machines',
                 routerUrlPattern: '^/wp-machines',
             },

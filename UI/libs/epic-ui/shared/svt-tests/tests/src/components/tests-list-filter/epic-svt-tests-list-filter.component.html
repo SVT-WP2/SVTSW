@@ -1,0 +1,83 @@
+<div class="d-flex align-items-center gap-2">
+    <epic-search-box [placeholder]="'Search by ID ...'"
+                     [searchTerm]="filterValue().searchTerm"
+                     (search$)="onFilterChange('searchTerm', $event)"/>
+
+    <epic-inline-filter-selection-list
+            [icon]="'memory' | epicIconMatOutlined"
+            [label]="'DUT'"
+            [multiple]="true"
+            [ngModel]="filterValue().dutEntityNames"
+            [selectOptions]="dutEntityNameSelectOptions"
+            (ngModelChange)="onFilterChange('dutEntityNames', $event)"/>
+
+    <epic-inline-filter-selection-list
+            [icon]="'checklist'"
+            [label]="'Status'"
+            [multiple]="true"
+            [ngModel]="filterValue().statuses"
+            [selectOptions]="statusSelectOptions"
+            (ngModelChange)="onFilterChange('statuses', $event)"/>
+
+    @if (filterData(); as filterData) {
+        <epic-inline-filter-selection-list
+                [icon]="'science' | epicIconMatOutlined"
+                [label]="'Test Type'"
+                [multiple]="true"
+                [ngModel]="filterValue().testTypeIds"
+                [selectOptions]="filterData.testTypeSelectOptions"
+                (ngModelChange)="onTestTypeIdsChange($event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'tune' | epicIconMatOutlined"
+                [label]="'Test Type Config'"
+                [multiple]="true"
+                [ngModel]="filterValue().testTypeConfigIds"
+                [selectOptions]="testTypeConfigSelectOptions()"
+                (ngModelChange)="onFilterChange('testTypeConfigIds', $event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'devices_other' | epicIconMatOutlined"
+                [label]="'Test Setup'"
+                [multiple]="true"
+                [ngModel]="filterValue().testSetupIds"
+                [selectOptions]="filterData.testSetupSelectOptions"
+                (ngModelChange)="onTestSetupIdsChange($event)"/>
+
+        <epic-inline-filter-selection-list
+                [icon]="'settings' | epicIconMatOutlined"
+                [label]="'Test Setup Config'"
+                [multiple]="true"
+                [ngModel]="filterValue().testSetupConfigIds"
+                [selectOptions]="testSetupConfigSelectOptions()"
+                (ngModelChange)="onFilterChange('testSetupConfigIds', $event)"/>
+    }
+
+    <epic-inline-filter-date-range
+            [icon]="'calendar_month' | epicIconMatOutlined"
+            [label]="toDateRangeLabel('Created At', filterValue().createdAt)"
+            [ngModel]="filterValue().createdAt"
+            (ngModelChange)="onFilterChange('createdAt', $event)"/>
+
+    <epic-inline-filter-date-range
+            [icon]="'play_circle' | epicIconMatOutlined"
+            [label]="toDateRangeLabel('Started At', filterValue().startedAt)"
+            [ngModel]="filterValue().startedAt"
+            (ngModelChange)="onFilterChange('startedAt', $event)"/>
+
+    <epic-inline-filter-date-range
+            [icon]="'check_circle' | epicIconMatOutlined"
+            [label]="toDateRangeLabel('Finished At', filterValue().finishedAt)"
+            [ngModel]="filterValue().finishedAt"
+            (ngModelChange)="onFilterChange('finishedAt', $event)"/>
+
+    @if (!isFilterValueEmpty()) {
+        <mat-divider vertical class="mx-1"/>
+        <button epicStrokedButton
+                mat-icon-button
+                [matTooltip]="'COMMON.CLEAR' | translate"
+                (click)="onClearFilter()">
+            <epic-icon [name]="'clear'"/>
+        </button>
+    }
+</div>
