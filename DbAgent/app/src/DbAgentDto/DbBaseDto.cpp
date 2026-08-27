@@ -105,8 +105,8 @@ namespace dbagent
     }
     else
     {
-      size_t pager_limit = data_j["pager"]["limit"];
-      size_t pager_offset = data_j["pager"]["offset"];
+      size_t pager_limit = data_j["pager"].contains("limit") ? static_cast<size_t>(data_j["pager"]["limit"]) : 20;
+      size_t pager_offset = data_j["pager"].contains("offset") ? static_cast<size_t>(data_j["pager"]["offset"]) : 0;
 
       if (entries.size() < pager_offset)
       {
