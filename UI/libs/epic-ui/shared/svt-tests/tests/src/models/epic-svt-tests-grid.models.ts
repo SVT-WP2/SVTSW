@@ -1,5 +1,14 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicSvtTest, EpicSvtTestResultStatus, EpicSvtTestSetupConfig, EpicSvtTestStatus, EpicSvtTestTypeConfig } from 'epic-ui/api'
+import {
+    EpicSvtDutEntityName,
+    EpicSvtTest,
+    EpicSvtTestResultStatus,
+    EpicSvtTestSetup,
+    EpicSvtTestSetupConfig,
+    EpicSvtTestStatus,
+    EpicSvtTestType,
+    EpicSvtTestTypeConfig,
+} from 'epic-ui/api'
 import {
     AgIconActionsCell,
     AgIconActionsCellComponent,
@@ -7,6 +16,7 @@ import {
     AgLabelCellFactory,
     AgLinkCell,
     AgLinkCellFactory,
+    AgSkeletonCell,
     EpicAgGrid,
 } from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
@@ -22,7 +32,9 @@ export namespace EpicSvtTestsGrid {
         testResultStatus = 'testResultStatus',
         dutEntityName = 'dutEntityName',
         dutId = 'dutId',
+        testType = 'testType.name',
         testTypeConfig = 'testTypeConfig.name',
+        testSetup = 'testSetup.name',
         testSetupConfig = 'testSetupConfig.name',
         createdAt = 'createdAt',
         startedAt = 'startedAt',
@@ -35,7 +47,9 @@ export namespace EpicSvtTestsGrid {
         & EpicSvtTest
         &
         {
+            testType: EpicSvtTestType | null
             testTypeConfig: EpicSvtTestTypeConfig | null
+            testSetup: EpicSvtTestSetup | null
             testSetupConfig: EpicSvtTestSetupConfig | null
         }
 
@@ -44,22 +58,33 @@ export namespace EpicSvtTestsGrid {
         Start = 'Start',
     }
 
-    export function getStatusLabelConfig(status: EpicSvtTestStatus): AgLabelCell.Config {
+    /**
+     * How many rows one block holds, i.e. how many rows a single API call brings in. The grid keeps every block
+     * it has loaded, so this is the size of one round trip, not a cap on what the user can scroll through.
+     */
+    export const BLOCK_SIZE = 100
+
+    /**
+     * The status is undefined while the row is still an unloaded placeholder of the infinite row model — every
+     * cell config getter here has to survive a row without data.
+     */
+    export function getStatusLabelConfig(status: EpicSvtTestStatus | undefined): AgLabelCell.Config {
         switch (status) {
             case EpicSvtTestStatus.Completed:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
             case EpicSvtTestStatus.Running:
                 return { color: DEFAULT_SYSTEM_COLORS.INFO_400, bgColor: DEFAULT_SYSTEM_COLORS.INFO_50 }
-            case EpicSvtTestStatus.Pending:
-                return { color: DEFAULT_SYSTEM_COLORS.NEUTRAL_300, bgColor: DEFAULT_SYSTEM_COLORS.NEUTRAL_30 }
             case EpicSvtTestStatus.Failed:
                 return { color: DEFAULT_SYSTEM_COLORS.ERROR_400, bgColor: DEFAULT_SYSTEM_COLORS.ERROR_50 }
             case EpicSvtTestStatus.Cancelled:
                 return { color: DEFAULT_SYSTEM_COLORS.WARNING_400, bgColor: DEFAULT_SYSTEM_COLORS.WARNING_50 }
+            // EpicSvtTestStatus.Pending and the not yet loaded row
+            default:
+                return { color: DEFAULT_SYSTEM_COLORS.NEUTRAL_300, bgColor: DEFAULT_SYSTEM_COLORS.NEUTRAL_30 }
         }
     }
 
-    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus): AgLabelCell.Config {
+    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus | undefined): AgLabelCell.Config {
         switch (resultStatus) {
             case EpicSvtTestResultStatus.Completed:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
@@ -67,8 +92,41 @@ export namespace EpicSvtTestsGrid {
                 return { color: DEFAULT_SYSTEM_COLORS.ERROR_400, bgColor: DEFAULT_SYSTEM_COLORS.ERROR_50 }
             case EpicSvtTestResultStatus.Cancelled:
                 return { color: DEFAULT_SYSTEM_COLORS.WARNING_400, bgColor: DEFAULT_SYSTEM_COLORS.WARNING_50 }
-            case EpicSvtTestResultStatus.None:
+            // EpicSvtTestResultStatus.None and the not yet loaded row
+            default:
                 return { color: DEFAULT_SYSTEM_COLORS.NEUTRAL_300, bgColor: DEFAULT_SYSTEM_COLORS.NEUTRAL_30 }
+        }
+    }
+
+    /**
+     * The DUT is one of three different entities and `dutId` is only unique per entity, so `dutEntityName` is
+     * what decides which details page the id belongs to.
+     */
+    export function getDutLinkConfig(
+        dutEntityName: EpicSvtDutEntityName | undefined, dutId: number | undefined): AgLinkCell.Config {
+
+        if (!dutEntityName || !dutId) {
+            return {}
+        }
+
+        switch (dutEntityName) {
+            case EpicSvtDutEntityName.Asic:
+                return { routerLink: ['/asics/details', dutId], tooltip: 'Open ASIC' }
+            case EpicSvtDutEntityName.Chip:
+                return { routerLink: ['/chips/details', dutId], tooltip: 'Open Chip' }
+            case EpicSvtDutEntityName.ChipBlock:
+                return { routerLink: ['/chip-blocks/details', dutId], tooltip: 'Open Chip Block' }
+            default:
+                return {}
+        }
+    }
+
+    export function getTestTypeLinkConfig(testType: EpicSvtTestType | null): AgLinkCell.Config {
+        return {
+            routerLink: testType
+                ? ['/admin/svt-test/test-types/details', testType.id]
+                : undefined,
+            tooltip: testType ? 'Open Test Type' : undefined,
         }
     }
 
@@ -78,6 +136,15 @@ export namespace EpicSvtTestsGrid {
                 ? ['/admin/svt-test/test-types/details', testTypeConfig.testTypeId, 'config', testTypeConfig.id]
                 : undefined,
             tooltip: testTypeConfig ? 'Open Test Type Config' : undefined,
+        }
+    }
+
+    export function getTestSetupLinkConfig(testSetup: EpicSvtTestSetup | null): AgLinkCell.Config {
+        return {
+            routerLink: testSetup
+                ? ['/admin/svt-test/test-setups/details', testSetup.id]
+                : undefined,
+            tooltip: testSetup ? 'Open Test Setup' : undefined,
         }
     }
 
@@ -97,11 +164,10 @@ export namespace EpicSvtTestsGrid {
                 headerName: 'ID',
                 minWidth: 80,
                 width: 80,
-                sort: 'desc',
             },
             {
                 ...AgLabelCellFactory.createCellSchema<RowEntity, EpicSvtTestStatus>({
-                    config: ({ rowData }) => getStatusLabelConfig(rowData.status),
+                    config: ({ rowData }) => getStatusLabelConfig(rowData?.status),
                 }),
                 filter: false,
                 field: ColId.status,
@@ -115,13 +181,27 @@ export namespace EpicSvtTestsGrid {
                 minWidth: 120,
             },
             {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, number>({
+                    config: ({ rowData }) => getDutLinkConfig(rowData?.dutEntityName, rowData?.dutId),
+                }),
+                filter: false,
                 field: ColId.dutId,
                 headerName: 'DUT ID',
                 minWidth: 80,
             },
             {
                 ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
-                    config: ({ rowData }) => getTestTypeConfigLinkConfig(rowData.testTypeConfig),
+                    config: ({ rowData }) => getTestTypeLinkConfig(rowData?.testType || null),
+                }),
+                filter: false,
+                field: ColId.testType,
+                headerName: 'Test Type',
+                flex: 1,
+                minWidth: 180,
+            },
+            {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => getTestTypeConfigLinkConfig(rowData?.testTypeConfig || null),
                 }),
                 filter: false,
                 field: ColId.testTypeConfig,
@@ -131,7 +211,17 @@ export namespace EpicSvtTestsGrid {
             },
             {
                 ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
-                    config: ({ rowData }) => getTestSetupConfigLinkConfig(rowData.testSetupConfig),
+                    config: ({ rowData }) => getTestSetupLinkConfig(rowData?.testSetup || null),
+                }),
+                filter: false,
+                field: ColId.testSetup,
+                headerName: 'Test Setup',
+                flex: 1,
+                minWidth: 180,
+            },
+            {
+                ...AgLinkCellFactory.createCellSchema<RowEntity, string>({
+                    config: ({ rowData }) => getTestSetupConfigLinkConfig(rowData?.testSetupConfig || null),
                 }),
                 filter: false,
                 field: ColId.testSetupConfig,
@@ -173,7 +263,7 @@ export namespace EpicSvtTestsGrid {
                                 eventName: CellEventEvent.Start,
                             }),
                             color: DEFAULT_SYSTEM_COLORS.SUCCESS_300,
-                            disabled: rowData.status !== EpicSvtTestStatus.Pending,
+                            disabled: rowData?.status !== EpicSvtTestStatus.Pending,
                             tooltip: 'Start',
                         },
                         {
@@ -181,7 +271,7 @@ export namespace EpicSvtTestsGrid {
                             onClick: () => ({
                                 eventName: CellEventEvent.Start,
                             }),
-                            disabled: rowData.status !== EpicSvtTestStatus.Running,
+                            disabled: rowData?.status !== EpicSvtTestStatus.Running,
                             tooltip: 'Start',
                         },
                     ],
@@ -204,8 +294,18 @@ export namespace EpicSvtTestsGrid {
                 sortable: false,
                 filter: false,
                 floatingFilter: false,
+                // rows of a block that is still on its way are filled with skeleton bars
+                cellRendererSelector: AgSkeletonCell.getLoadingCellRendererSelector<RowEntity>(),
             },
             getRowId: ({ data }) => data.id.toString(),
+            // rows are fetched block by block from the paginated endpoint as the user scrolls, never all at once
+            rowModelType: 'infinite',
+            cacheBlockSize: BLOCK_SIZE,
+            // a pager over blocks the grid has not loaded yet makes no sense — the list scrolls instead
+            pagination: false,
+            paginationAutoPageSize: false,
+            // dragging the scrollbar across many blocks must not fire a request for every one of them
+            blockLoadDebounceMillis: 200,
         }
     }
 

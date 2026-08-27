@@ -355,9 +355,9 @@ export class EpicDbAgentWafersController {
 
             // SVT TESTS
             case SvtDbAgentKafkaSvtTests.MessageType.GetAllSvtTests:
-                return this.epicDbAgentSvtTestsService.getAll(message.data.filter)
+                return this.epicDbAgentSvtTestsService.getAll(message.data?.filter, message.data?.pager)
                     .pipe(
-                        map(items => JSON.stringify(new SvtDbAgentKafkaSvtTests.GetAllSvtTestsReplyMessage({ items }))),
+                        map(result => JSON.stringify(new SvtDbAgentKafkaSvtTests.GetAllSvtTestsReplyMessage(result))),
                     )
             case SvtDbAgentKafkaSvtTests.MessageType.CreateSvtTest:
                 return this.epicDbAgentSvtTestsService.create(message.data.create)

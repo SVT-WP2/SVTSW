@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common'
 import { ApiBody, ApiResponse } from '@nestjs/swagger'
 import {
+    EpicPageDataDto,
     EpicSvtTestCreateDto,
     EpicSvtTestDto,
     EpicSvtTestsGetAllParamsDto,
+    EpicSvtTestsListDto,
     processKafkaReplyError,
 } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
@@ -29,15 +31,31 @@ export class EpicSvtTestsController {
     }
 
     @Get()
-    @ApiResponse({ type: EpicSvtTestDto, isArray: true })
+    @ApiResponse({ type: EpicPageDataDto<EpicSvtTestDto> })
     @UseInterceptors(ClassSerializerInterceptor)
-    @SerializeOptions({ type: EpicSvtTestDto })
-    async getAll(@Query() params: EpicSvtTestsGetAllParamsDto): Promise<EpicSvtTestDto[]> {
+    @SerializeOptions({ type: EpicPageDataDto<EpicSvtTestDto> })
+    async getAll(@Query() params: EpicSvtTestsGetAllParamsDto): Promise<EpicSvtTestsListDto> {
         return processKafkaReplyError(() => (
-            firstValueFrom(this.epicSvtTestsService.getAll({
-                ids: params.ids ? params.ids : undefined,
-                dutEntityNames: params.dutEntityNames ? params.dutEntityNames : undefined,
-            }))
+            firstValueFrom(this.epicSvtTestsService.getAll(
+                {
+                    ids: params.ids?.length ? params.ids : undefined,
+                    dutEntityNames: params.dutEntityNames?.length ? params.dutEntityNames : undefined,
+                    dutId: params.dutId ? +params.dutId : undefined,
+                    statuses: params.statuses?.length ? params.statuses : undefined,
+                    testTypeConfigIds: params.testTypeConfigIds?.length ? params.testTypeConfigIds : undefined,
+                    testSetupConfigIds: params.testSetupConfigIds?.length ? params.testSetupConfigIds : undefined,
+                    createdAtFrom: params.createdAtFrom || undefined,
+                    createdAtTo: params.createdAtTo || undefined,
+                    startedAtFrom: params.startedAtFrom || undefined,
+                    startedAtTo: params.startedAtTo || undefined,
+                    finishedAtFrom: params.finishedAtFrom || undefined,
+                    finishedAtTo: params.finishedAtTo || undefined,
+                },
+                {
+                    limit: params.limit,
+                    offset: params.offset,
+                },
+            ))
         ))
     }
 
@@ -46,13 +64,13 @@ export class EpicSvtTestsController {
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestDto })
     async getOne(@Param('id') id: number): Promise<EpicSvtTestDto> {
-        const result = await processKafkaReplyError(() => (
+        const list = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestsService.getAll({ ids: [+id] }),
             )
         ))
 
-        const entity = result?.find(item => item.id === +id)
+        const entity = list.items.find(item => item.id === +id)
 
         if (!entity) {
             throw new NotFoundException(`SvtTest does not exist: ${id}`)

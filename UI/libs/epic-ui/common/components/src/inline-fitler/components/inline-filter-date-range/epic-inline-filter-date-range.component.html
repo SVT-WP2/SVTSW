@@ -1,0 +1,28 @@
+<epic-inline-filter-with-overlay [disabled]="disabled"
+                                 [icon]="icon()"
+                                 [isActive]="isActive() !== undefined ? isActive() : hasValue"
+                                 [isIconOnly]="isIconOnly()"
+                                 [label]="label()"
+                                 (apply$)="onApply()"
+                                 (panelClosed$)="onPanelClosed()"
+                                 (panelOpened$)="onPanelOpened()">
+
+    <div actionsLeft>
+        <epic-selection-toggle [showSelectAll]="false" (clear$)="onClear()"/>
+    </div>
+
+    <div [style.width]="width()" class="d-flex align-items-center justify-content-center flex-column">
+        <mat-calendar [selected]="draftRange()"
+                      class="p-3 mt-2"
+                      (selectedChange)="onDateSelected($event)"/>
+
+        <div class="epic-font-label-sm epic-color-neutral-60 px-3 pb-2">
+            @if (draftRangeLabel()) {
+                {{ draftRangeLabel() }}
+            } @else {
+                Pick a start and an end date
+            }
+        </div>
+    </div>
+
+</epic-inline-filter-with-overlay>

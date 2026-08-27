@@ -55,6 +55,27 @@
                         </div>
                     }
                     <!-- ./PARENT ASIC -->
+
+                    <!-- CHIP BLOCKS -->
+                    @if (chipBlocks().length) {
+                        <mat-divider/>
+                        <div class="p-3">
+                            <div class="row py-1">
+                                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                                    Chip Block
+                                </div>
+                                <div class="col-lg-6 epic-font-label d-flex flex-column gap-2">
+                                    @for (chipBlock of chipBlocks(); track chipBlock.id) {
+                                        <a [routerLink]="['/chip-blocks/details', chipBlock.id]"
+                                           [matTooltip]="chipBlock.chipBlockType">
+                                            {{ chipBlock.serialNumber }}
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <!-- ./CHIP BLOCKS -->
                 }
             </div>
 

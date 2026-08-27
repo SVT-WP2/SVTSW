@@ -1,5 +1,8 @@
-import { EpicSvtTestCreateEntity, EpicSvtTestEntity, EpicSvtTestsGetAllParams } from '../../../svt-tests'
+import { EpicDateTimeString, EpicPager } from '../../../common'
+import { EpicSvtTestCreateEntity, EpicSvtTestEntity } from '../../../svt-tests'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+
+import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 
 
 export namespace SvtDbAgentKafkaSvtTests {
@@ -13,8 +16,37 @@ export namespace SvtDbAgentKafkaSvtTests {
 
     // GET ALL
 
+    /**
+     * The filter exactly as `svt.db-agent.kafka.yaml` defines it — the DB vocabulary, spelled out rather than
+     * derived from the API filter so the two layers stay free to diverge. `testResultStatuses` holds the
+     * physically stored values, unlike the synthetic `statuses` the API exposes.
+     */
+    export type GetAllSvtTestsFilter = {
+        ids?: number[]
+        dutEntityNames?: string[]
+        /** DUT ids are unique per DUT entity only, so it is meant to be combined with `dutEntityNames`. */
+        dutId?: number
+        /** Enum values of `EpicSvtTestResultStatus`. */
+        testResultStatuses?: string[]
+        testTypeConfigIds?: number[]
+        testSetupConfigIds?: number[]
+        /** Lower bound of the `createdAt` filter range, inclusive. */
+        createdAtFrom?: EpicDateTimeString
+        /** Upper bound of the `createdAt` filter range, exclusive. */
+        createdAtTo?: EpicDateTimeString
+        /** Lower bound of the `startedAt` filter range, inclusive. */
+        startedAtFrom?: EpicDateTimeString
+        /** Upper bound of the `startedAt` filter range, exclusive. */
+        startedAtTo?: EpicDateTimeString
+        /** Lower bound of the `finishedAt` filter range, inclusive. */
+        finishedAtFrom?: EpicDateTimeString
+        /** Upper bound of the `finishedAt` filter range, exclusive. */
+        finishedAtTo?: EpicDateTimeString
+    }
+
     export type GetAllSvtTestsData = {
-        filter?: EpicSvtTestsGetAllParams
+        filter?: GetAllSvtTestsFilter
+        pager?: EpicPager
     }
 
     export class GetAllSvtTestsMessage extends EpicKafkaMessageClass<GetAllSvtTestsData> {
@@ -23,9 +55,7 @@ export namespace SvtDbAgentKafkaSvtTests {
 
     }
 
-    export type GetAllSvtTestsReplyMessageData = {
-        items: EpicSvtTestEntity[]
-    }
+    export type GetAllSvtTestsReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestEntity>
 
     export class GetAllSvtTestsReplyMessage extends EpicKafkaReplyMessageClass<GetAllSvtTestsReplyMessageData> {
 
