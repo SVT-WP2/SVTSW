@@ -3090,6 +3090,16 @@ components:
                   description: TestResultStatus values array. If array is empty / undefined => tests with any result status will be returned.
                   items:
                     type: string
+                testTypeConfigIds:
+                  type: array
+                  description: SvtTestTypeConfig ids array. If array is empty / undefined => tests of any test type configuration will be returned.
+                  items:
+                    type: number
+                testSetupConfigIds:
+                  type: array
+                  description: SvtTestSetupConfig ids array. If array is empty / undefined => tests of any test setup configuration will be returned.
+                  items:
+                    type: number
                 createdAtFrom:
                   type: string
                   description: Optional lower bound of the createdAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
