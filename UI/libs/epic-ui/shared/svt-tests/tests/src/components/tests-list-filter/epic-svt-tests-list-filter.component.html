@@ -3,13 +3,15 @@
                      [searchTerm]="filterValue().searchTerm"
                      (search$)="onFilterChange('searchTerm', $event)"/>
 
-    <epic-inline-filter-selection-list
-            [icon]="'memory' | epicIconMatOutlined"
-            [label]="'DUT'"
-            [multiple]="true"
-            [ngModel]="filterValue().dutEntityNames"
-            [selectOptions]="dutEntityNameSelectOptions"
-            (ngModelChange)="onFilterChange('dutEntityNames', $event)"/>
+    @if (showDutEntityNameFilter()) {
+        <epic-inline-filter-selection-list
+                [icon]="'memory' | epicIconMatOutlined"
+                [label]="'DUT'"
+                [multiple]="true"
+                [ngModel]="filterValue().dutEntityNames"
+                [selectOptions]="dutEntityNameSelectOptions"
+                (ngModelChange)="onFilterChange('dutEntityNames', $event)"/>
+    }
 
     <epic-inline-filter-selection-list
             [icon]="'checklist'"
@@ -29,49 +31,82 @@
                 (ngModelChange)="onTestTypeIdsChange($event)"/>
 
         <epic-inline-filter-selection-list
-                [icon]="'tune' | epicIconMatOutlined"
-                [label]="'Test Type Config'"
-                [multiple]="true"
-                [ngModel]="filterValue().testTypeConfigIds"
-                [selectOptions]="testTypeConfigSelectOptions()"
-                (ngModelChange)="onFilterChange('testTypeConfigIds', $event)"/>
-
-        <epic-inline-filter-selection-list
                 [icon]="'devices_other' | epicIconMatOutlined"
                 [label]="'Test Setup'"
                 [multiple]="true"
                 [ngModel]="filterValue().testSetupIds"
                 [selectOptions]="filterData.testSetupSelectOptions"
                 (ngModelChange)="onTestSetupIdsChange($event)"/>
-
-        <epic-inline-filter-selection-list
-                [icon]="'settings' | epicIconMatOutlined"
-                [label]="'Test Setup Config'"
-                [multiple]="true"
-                [ngModel]="filterValue().testSetupConfigIds"
-                [selectOptions]="testSetupConfigSelectOptions()"
-                (ngModelChange)="onFilterChange('testSetupConfigIds', $event)"/>
     }
 
-    <epic-inline-filter-date-range
-            [icon]="'calendar_month' | epicIconMatOutlined"
-            [label]="toDateRangeLabel('Created At', filterValue().createdAt)"
-            [ngModel]="filterValue().createdAt"
-            (ngModelChange)="onFilterChange('createdAt', $event)"/>
+    <!-- FILTERS TAKEN FROM THE MENU, IN THE ORDER THEY WERE TAKEN IN -->
+    @for (item of visibleOptionalFilters(); track item.key) {
+        @switch (item.key) {
+            @case ('testTypeConfigIds') {
+                <epic-inline-filter-selection-list
+                        [icon]="item.icon"
+                        [label]="item.label"
+                        [multiple]="true"
+                        [ngModel]="filterValue().testTypeConfigIds"
+                        [selectOptions]="testTypeConfigSelectOptions()"
+                        (ngModelChange)="onFilterChange('testTypeConfigIds', $event)"/>
+            }
+            @case ('testSetupConfigIds') {
+                <epic-inline-filter-selection-list
+                        [icon]="item.icon"
+                        [label]="item.label"
+                        [multiple]="true"
+                        [ngModel]="filterValue().testSetupConfigIds"
+                        [selectOptions]="testSetupConfigSelectOptions()"
+                        (ngModelChange)="onFilterChange('testSetupConfigIds', $event)"/>
+            }
+            @case ('createdAt') {
+                <epic-inline-filter-date-range
+                        [icon]="item.icon"
+                        [label]="toDateRangeLabel(item.label, filterValue().createdAt)"
+                        [ngModel]="filterValue().createdAt"
+                        (ngModelChange)="onFilterChange('createdAt', $event)"/>
+            }
+            @case ('startedAt') {
+                <epic-inline-filter-date-range
+                        [icon]="item.icon"
+                        [label]="toDateRangeLabel(item.label, filterValue().startedAt)"
+                        [ngModel]="filterValue().startedAt"
+                        (ngModelChange)="onFilterChange('startedAt', $event)"/>
+            }
+            @case ('finishedAt') {
+                <epic-inline-filter-date-range
+                        [icon]="item.icon"
+                        [label]="toDateRangeLabel(item.label, filterValue().finishedAt)"
+                        [ngModel]="filterValue().finishedAt"
+                        (ngModelChange)="onFilterChange('finishedAt', $event)"/>
+            }
+        }
+    }
+    <!-- ./FILTERS TAKEN FROM THE MENU -->
 
-    <epic-inline-filter-date-range
-            [icon]="'play_circle' | epicIconMatOutlined"
-            [label]="toDateRangeLabel('Started At', filterValue().startedAt)"
-            [ngModel]="filterValue().startedAt"
-            (ngModelChange)="onFilterChange('startedAt', $event)"/>
+    <!-- MORE FILTERS -->
+    @if (moreFilters().length) {
+        <epic-inline-filter #moreFiltersTrigger="matMenuTrigger"
+                            [icon]="'filter_list' | epicIconMatOutlined"
+                            [isOpened]="moreFiltersTrigger.menuOpen"
+                            [label]="'More Filters'"
+                            [matMenuTriggerFor]="moreFiltersMenu"/>
 
-    <epic-inline-filter-date-range
-            [icon]="'check_circle' | epicIconMatOutlined"
-            [label]="toDateRangeLabel('Finished At', filterValue().finishedAt)"
-            [ngModel]="filterValue().finishedAt"
-            (ngModelChange)="onFilterChange('finishedAt', $event)"/>
+        <mat-menu #moreFiltersMenu="matMenu">
+            <ng-template matMenuContent>
+                @for (item of moreFilters(); track item.key) {
+                    <button mat-menu-item (click)="onShowOptionalFilter(item.key)">
+                        <epic-icon [name]="item.icon"/>
+                        {{ item.label | translate }}
+                    </button>
+                }
+            </ng-template>
+        </mat-menu>
+    }
+    <!-- ./MORE FILTERS -->
 
-    @if (!isFilterValueEmpty()) {
+    @if (canClearFilter()) {
         <mat-divider vertical class="mx-1"/>
         <button epicStrokedButton
                 mat-icon-button

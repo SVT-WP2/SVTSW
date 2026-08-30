@@ -1,5 +1,5 @@
-import { EpicSvtDutEntityName, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'epic-ui/api'
-import { EpicInlineFilterDateRange } from 'epic-ui/common/components'
+import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'epic-ui/api'
+import { EpicInlineFilterDateRange, toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { SelectOptionLabelValue } from 'epic-ui/utils'
 import { uniq } from 'lodash-es'
 
@@ -56,6 +56,48 @@ export function isEpicSvtTestsListFilterValueEmpty(filterValue: EpicSvtTestsList
         && EpicInlineFilterDateRange.isEmpty(filterValue.createdAt)
         && EpicInlineFilterDateRange.isEmpty(filterValue.startedAt)
         && EpicInlineFilterDateRange.isEmpty(filterValue.finishedAt)
+}
+
+/**
+ * The filters the bar only shows once they are asked for, through its "More Filters" menu — everything not
+ * named here is always there. A filter that is already narrowing the list down is shown either way, see
+ * `isEpicSvtTestsListOptionalFilterSet`.
+ */
+export type EpicSvtTestsListOptionalFilterKey =
+    | 'testTypeConfigIds'
+    | 'testSetupConfigIds'
+    | 'createdAt'
+    | 'startedAt'
+    | 'finishedAt'
+
+/** What it takes to name one optional filter — both the filter itself and the menu entry offering it. */
+export type EpicSvtTestsListOptionalFilter = {
+    key: EpicSvtTestsListOptionalFilterKey
+    label: string
+    icon: string
+}
+
+/** In the order the menu offers them in — the bar itself draws them in the order they were picked. */
+export const EPIC_SVT_TESTS_LIST_OPTIONAL_FILTERS: EpicSvtTestsListOptionalFilter[] = [
+    { key: 'testTypeConfigIds', label: 'Test Type Config', icon: toEpicMatOutlinedIcon('tune') },
+    { key: 'testSetupConfigIds', label: 'Test Setup Config', icon: toEpicMatOutlinedIcon('settings') },
+    { key: 'createdAt', label: 'Created At', icon: toEpicMatOutlinedIcon('calendar_month') },
+    { key: 'startedAt', label: 'Started At', icon: toEpicMatOutlinedIcon('play_circle') },
+    { key: 'finishedAt', label: 'Finished At', icon: toEpicMatOutlinedIcon('check_circle') },
+]
+
+/** Whether one optional filter narrows the list down — one that does has to be shown, or it would filter blindly. */
+export function isEpicSvtTestsListOptionalFilterSet(
+    filterValue: EpicSvtTestsListFilterValue, key: EpicSvtTestsListOptionalFilterKey): boolean {
+
+    switch (key) {
+        case 'createdAt':
+        case 'startedAt':
+        case 'finishedAt':
+            return !EpicInlineFilterDateRange.isEmpty(filterValue[key])
+        default:
+            return !!filterValue[key]?.length
+    }
 }
 
 export function getEpicSvtTestDutEntityNameSelectOptions(): SelectOptionLabelValue[] {
@@ -168,4 +210,47 @@ export function toEpicSvtTestsListQueryFilter(
         finishedAtFrom: EpicInlineFilterDateRange.toInclusiveFrom(filterValue.finishedAt),
         finishedAtTo: EpicInlineFilterDateRange.toExclusiveTo(filterValue.finishedAt),
     }
+}
+
+/**
+ * Answers the very same query filter locally, for the lists holding every row they will ever show at once —
+ * see `EpicSvtDutTestsDataSource`. The semantics are the ones of the API: a bound that is not set narrows
+ * nothing down, `*From` is inclusive and `*To` is exclusive.
+ */
+export function matchesEpicSvtTestsListQueryFilter(
+    test: EpicSvtTest, queryFilter: EpicSvtTestsListQuery.QueryFilter): boolean {
+
+    return matchesFilterList<string>(String(test.id), queryFilter.ids?.map(String))
+        && matchesFilterList<string>(test.dutEntityName, queryFilter.dutEntityNames)
+        && (!queryFilter.dutId || queryFilter.dutId === test.dutId)
+        && matchesFilterList<string>(test.status, queryFilter.statuses)
+        && matchesFilterList<number>(test.testTypeConfigId, queryFilter.testTypeConfigIds)
+        && matchesFilterList<number>(test.testSetupConfigId, queryFilter.testSetupConfigIds)
+        && matchesDateRange(test.createdAt, queryFilter.createdAtFrom, queryFilter.createdAtTo)
+        && matchesDateRange(test.startedAt, queryFilter.startedAtFrom, queryFilter.startedAtTo)
+        && matchesDateRange(test.finishedAt, queryFilter.finishedAtFrom, queryFilter.finishedAtTo)
+}
+
+/**
+ * A list that is not there narrows nothing down, while an explicit but empty one can be satisfied by no value
+ * at all — that is how `toEpicSvtTestsListQueryFilter` expresses "nothing can match", see its own comment.
+ */
+function matchesFilterList<TValue>(value: TValue, filterValues?: TValue[] | null): boolean {
+    return !filterValues || filterValues.includes(value)
+}
+
+/** A date that is not set (a test that has not been started / finished yet) fulfils no bound at all. */
+function matchesDateRange(value: string, from?: string | null, to?: string | null): boolean {
+    if (!from && !to) {
+        return true
+    }
+
+    if (!value) {
+        return false
+    }
+
+    const timestamp = new Date(value).getTime()
+
+    return (!from || timestamp >= new Date(from).getTime())
+        && (!to || timestamp < new Date(to).getTime())
 }

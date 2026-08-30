@@ -1,4 +1,4 @@
-@if (showSelectAll) {
+<div class="d-flex align-items-center gap-2">
     <button [matTooltip]="'COMMON.SELECT_ALL' | translate"
             [disabled]="disabled"
             epicStrokedButton
@@ -6,7 +6,6 @@
             (click)="onSelectAll()">
         <epic-icon matButtonIcon name="done_all"/>
     </button>
-} @else {
     <button [matTooltip]="'COMMON.CLEAR_SELECTION' | translate"
             [disabled]="disabled"
             epicStrokedButton
@@ -14,4 +13,4 @@
             (click)="onClear()">
         <epic-icon matButtonIcon name="epic-clean-filter"/>
     </button>
-}
+</div>
