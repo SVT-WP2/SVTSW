@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router'
 
 import {
     EpicAsicDetailsPageComponent,
-    EpicAsicOverviewPageComponent,
+    EpicAsicSvtTestsPageComponent,
     EpicAsicsInfiniteListPageComponent,
     EpicAsicsListPageComponent,
     EpicAsicVoltageScanPageComponent,
@@ -24,28 +24,16 @@ const routes: Routes = [
         component: EpicAsicDetailsPageComponent,
         children: [
             {
-                path: 'overview',
-                component: EpicAsicOverviewPageComponent,
-            },
-            {
-                path: 'threshold-scan',
-                component: EpicAsicOverviewPageComponent,
-            },
-            {
-                path: 'noise-test',
-                component: EpicAsicOverviewPageComponent,
+                path: 'svt-tests',
+                component: EpicAsicSvtTestsPageComponent,
             },
             {
                 path: 'voltage-scan',
                 component: EpicAsicVoltageScanPageComponent,
             },
             {
-                path: 'register-scan',
-                component: EpicAsicOverviewPageComponent,
-            },
-            {
                 path: '**',
-                redirectTo: 'voltage-scan',
+                redirectTo: 'svt-tests',
             },
         ],
     },

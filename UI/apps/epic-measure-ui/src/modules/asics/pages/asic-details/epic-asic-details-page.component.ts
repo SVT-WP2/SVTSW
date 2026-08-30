@@ -2,7 +2,7 @@
 import { toSignal } from '@angular/core/rxjs-interop'
 import { ActivatedRoute, Router } from '@angular/router'
 import { EpicAsic, EpicChip, EpicChipsApiClient, EpicIvMnt, EpicWafer } from 'epic-ui/api'
-import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService, toEpicMatOutlinedIcon } from 'epic-ui/common/components'
+import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
 import {
     EpicAsicCreateDialogService,
     EpicAsicDeleteDialogService,
@@ -44,34 +44,16 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
 
     navTabs: EpicNavTabs.NavTabInfo[] = [
         {
-            label: 'Overview',
-            routerLink: './overview',
+            label: 'SVT Tests',
+            routerLink: './svt-tests',
             routerLinkActiveOptions: { exact: false },
-            icon: 'epic-eye-open',
+            icon: 'epic-report',
         },
         {
-            label: 'Voltage Scan',
+            label: 'Voltage Scan [PoC]',
             routerLink: './voltage-scan',
             routerLinkActiveOptions: { exact: false },
             icon: 'epic-line-chart',
-        },
-        {
-            label: 'Threshold Scan',
-            routerLink: './threshold-scan',
-            routerLinkActiveOptions: { exact: false },
-            icon: toEpicMatOutlinedIcon('data_thresholding'),
-        },
-        {
-            label: 'Noise Test',
-            routerLink: './noise-test',
-            routerLinkActiveOptions: { exact: false },
-            icon: 'graphic_eq',
-        },
-        {
-            label: 'Registers Scan',
-            routerLink: './register-scan',
-            routerLinkActiveOptions: { exact: false },
-            icon: 'scatter_plot',
         },
     ]
 

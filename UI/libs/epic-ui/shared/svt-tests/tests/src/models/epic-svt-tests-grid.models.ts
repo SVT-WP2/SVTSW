@@ -21,6 +21,7 @@ import {
 } from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'
+import { keyBy } from 'lodash-es'
 import moment from 'moment'
 
 
@@ -53,6 +54,14 @@ export namespace EpicSvtTestsGrid {
             testSetupConfig: EpicSvtTestSetupConfig | null
         }
 
+    /** Everything a test refers to by id — all of it comes from the cached facades, none of it is paginated. */
+    export type RowEntityRelations = {
+        testSetupConfigs: EpicSvtTestSetupConfig[]
+        testSetups: EpicSvtTestSetup[]
+        testTypeConfigs: EpicSvtTestTypeConfig[]
+        testTypes: EpicSvtTestType[]
+    }
+
     export enum CellEventEvent {
         Details = 'Details',
         Start = 'Start',
@@ -65,10 +74,37 @@ export namespace EpicSvtTestsGrid {
     export const BLOCK_SIZE = 100
 
     /**
+     * A test only knows the ids of its two configs — the test type and the test setup they belong to are the
+     * ones of the config, so they are resolved through it rather than looked up on the test itself.
+     */
+    export function toRowEntities(tests: EpicSvtTest[], relations: RowEntityRelations): RowEntity[] {
+        const testSetupConfigsMap = keyBy(relations.testSetupConfigs, 'id')
+        const testSetupsMap = keyBy(relations.testSetups, 'id')
+        const testTypeConfigsMap = keyBy(relations.testTypeConfigs, 'id')
+        const testTypesMap = keyBy(relations.testTypes, 'id')
+
+        return tests.map((item) => {
+            const testTypeConfig = testTypeConfigsMap[item.testTypeConfigId] || null
+            const testSetupConfig = testSetupConfigsMap[item.testSetupConfigId] || null
+
+            return {
+                ...item,
+                testType: testTypeConfig ? testTypesMap[testTypeConfig.testTypeId] || null : null,
+                testTypeConfig,
+                testSetup: testSetupConfig ? testSetupsMap[testSetupConfig.setupId] || null : null,
+                testSetupConfig,
+            } satisfies RowEntity
+        })
+    }
+
+    /**
      * The status is undefined while the row is still an unloaded placeholder of the infinite row model — every
      * cell config getter here has to survive a row without data.
      */
-    export function getStatusLabelConfig(status: EpicSvtTestStatus | undefined): AgLabelCell.Config {
+    /** Colours a status wears, the very same ones in the grid cell and in the statistics boxes above it. */
+    export type StatusLabelConfig = Required<Pick<AgLabelCell.Config, 'color' | 'bgColor'>>
+
+    export function getStatusLabelConfig(status: EpicSvtTestStatus | undefined): StatusLabelConfig {
         switch (status) {
             case EpicSvtTestStatus.Completed:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
@@ -84,7 +120,7 @@ export namespace EpicSvtTestsGrid {
         }
     }
 
-    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus | undefined): AgLabelCell.Config {
+    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus | undefined): StatusLabelConfig {
         switch (resultStatus) {
             case EpicSvtTestResultStatus.Completed:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
@@ -157,8 +193,14 @@ export namespace EpicSvtTestsGrid {
         }
     }
 
-    export function getColDefs(): ColDef<RowEntity>[] {
-        return [
+    /** Columns a caller does not want. A page that already is one single DUT has no use for the DUT ones. */
+    export type ColDefsOptions = {
+        excludeColIds?: ColId[]
+    }
+
+    export function getColDefs(options: ColDefsOptions = {}): ColDef<RowEntity>[] {
+        const excludeColIds = options.excludeColIds || []
+        const colDefs: ColDef<RowEntity>[] = [
             {
                 field: ColId.id,
                 headerName: 'ID',
@@ -280,6 +322,8 @@ export namespace EpicSvtTestsGrid {
                 cellRenderer: AgIconActionsCellComponent,
             },
         ]
+
+        return colDefs.filter(item => !excludeColIds.includes((item.colId || item.field) as ColId))
     }
 
     export function getGridOptions(): GridOptions<RowEntity> {
@@ -306,6 +350,26 @@ export namespace EpicSvtTestsGrid {
             paginationAutoPageSize: false,
             // dragging the scrollbar across many blocks must not fire a request for every one of them
             blockLoadDebounceMillis: 200,
+        }
+    }
+
+    /**
+     * Grid options of a list that already holds every row it will ever show — see `EpicSvtDutTestsDataSource`.
+     * Sorting and paging are the grid's own here, while filtering stays with the filter bar above it. The rows
+     * arrive newest first, which is the order the grid keeps as long as no column is sorted by hand.
+     */
+    export function getClientSideGridOptions(): GridOptions<RowEntity> {
+        const defaultGridOptions = EpicAgGrid.getDefaultGridOptions<RowEntity>()
+
+        return {
+            ...defaultGridOptions,
+            rowSelection: undefined,
+            defaultColDef: {
+                ...defaultGridOptions.defaultColDef,
+                filter: false,
+                floatingFilter: false,
+            },
+            getRowId: ({ data }) => data.id.toString(),
         }
     }
 

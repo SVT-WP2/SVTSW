@@ -1,0 +1,12 @@
+@if (asicId(); as asicId) {
+
+    <epic-layout-light-header-actions>
+        <button [matTooltip]="'Refresh'" epicStrokedButton mat-icon-button (click)="onReload()">
+            <epic-icon [name]="'epic-refresh'" matButtonIcon/>
+        </button>
+    </epic-layout-light-header-actions>
+
+    <epic-svt-dut-tests-container
+                        [dutEntityName]="dutEntityName"
+                        [dutId]="asicId"/>
+}

@@ -3,7 +3,6 @@ import { EpicApiPager, EpicApiPageResponse, EpicSvtTestsApiClient, EpicSvtTestsL
 import { EpicAgGridInfiniteDataSource } from 'epic-ui/common/ag-grid'
 import { EpicSvtTestTypeConfigsDataFacade, EpicSvtTestTypesDataFacade } from 'epic-ui/shared/svt-test/test-types'
 import { EpicSvtTestSetupConfigsDataFacade, EpicSvtTestSetupsDataFacade } from 'epic-ui/shared/svt-tests'
-import { keyBy } from 'lodash-es'
 import { forkJoin, map, Observable, of } from 'rxjs'
 
 import { EpicSvtTestsGrid } from '../models'
@@ -49,30 +48,10 @@ export class EpicSvtTestsGridDataSource
             testTypes: this.epicSvtTestTypesDataFacade.fetchData(),
         })
             .pipe(
-                map(({ tests, testSetupConfigs, testSetups, testTypeConfigs, testTypes }) => {
-                    const testSetupConfigsMap = keyBy(testSetupConfigs, 'id')
-                    const testSetupsMap = keyBy(testSetups, 'id')
-                    const testTypeConfigsMap = keyBy(testTypeConfigs, 'id')
-                    const testTypesMap = keyBy(testTypes, 'id')
-
-                    return {
-                        items: tests.items
-                            .map((item) => {
-                                // the test only knows its configs, the type and setup they belong to come with them
-                                const testTypeConfig = testTypeConfigsMap[item.testTypeConfigId] || null
-                                const testSetupConfig = testSetupConfigsMap[item.testSetupConfigId] || null
-
-                                return {
-                                    ...item,
-                                    testType: testTypeConfig ? testTypesMap[testTypeConfig.testTypeId] || null : null,
-                                    testTypeConfig,
-                                    testSetup: testSetupConfig ? testSetupsMap[testSetupConfig.setupId] || null : null,
-                                    testSetupConfig,
-                                } satisfies EpicSvtTestsGrid.RowEntity
-                            }),
-                        totalCount: tests.totalCount,
-                    }
-                }),
+                map(({ tests, ...relations }) => ({
+                    items: EpicSvtTestsGrid.toRowEntities(tests.items, relations),
+                    totalCount: tests.totalCount,
+                })),
             )
     }
 

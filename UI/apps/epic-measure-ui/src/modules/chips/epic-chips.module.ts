@@ -25,6 +25,7 @@ import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicAsicsListComponent } from 'epic-ui/shared/asics'
 import { EpicChipInfoComponent } from 'epic-ui/shared/chips'
 import { EpicIvMntGridComponent } from 'epic-ui/shared/iv-mnt'
+import { EpicSvtDutTestsContainerComponent } from 'epic-ui/shared/svt-test/tests'
 
 
 import { EpicChipsRoutingModule } from './epic-chips-routing.module'
@@ -66,6 +67,7 @@ import { EpicChipDetailsPageComponent } from './pages'
         EpicIvMntGridComponent,
         EpicTabsModule,
         EpicMatMenuContentComponent,
+        EpicSvtDutTestsContainerComponent,
     ],
     declarations: [
         EpicChipDetailsPageComponent,

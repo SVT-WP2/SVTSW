@@ -14,10 +14,11 @@ import {
     EpicContentErrorModule,
     EpicIconComponent,
     EpicIconMatOutlinedPipe,
-    EpicLoaderComponent,
+    EpicLoaderComponent, EpicMatMenuContentComponent, EpicTabsModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicChipBlockInfoComponent } from 'epic-ui/shared/chip-blocks'
+import { EpicSvtDutTestsContainerComponent } from 'epic-ui/shared/svt-test/tests'
 
 
 import { EpicChipBlocksRoutingModule } from './epic-chip-blocks-routing.module'
@@ -50,6 +51,9 @@ import { EpicChipBlockDetailsPageComponent } from './pages'
         EpicButtonModule,
 
         EpicChipBlockInfoComponent,
+        EpicSvtDutTestsContainerComponent,
+        EpicMatMenuContentComponent,
+        EpicTabsModule,
     ],
     declarations: [
         EpicChipBlockDetailsPageComponent,

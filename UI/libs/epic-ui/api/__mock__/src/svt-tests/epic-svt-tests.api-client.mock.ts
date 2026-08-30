@@ -89,6 +89,18 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
 const PENDING_TESTS_COUNT = 3
 
 /**
+ * Over how many DUTs per entity the generated tests are spread. Few enough that every one of them ends up with
+ * a history worth looking at, which is what the tests list of a single DUT is about.
+ */
+const DUT_IDS_COUNT = 20
+
+/**
+ * Spreads the attributes that have nothing to do with the DUT over the generated tests. It shares no divisor
+ * with either count above, so the tests of one single DUT keep differing instead of collapsing into one kind.
+ */
+const ATTRIBUTES_SPREAD = 7
+
+/**
  * Bulk data standing behind the curated entries — the paginated list and its filters only make sense over a
  * data set that is bigger than a single page.
  */
@@ -107,17 +119,19 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
     for (let i = idStartsFrom; i < idStartsFrom + totalCount; i++) {
         // a test with no result yet has neither been started nor finished
         const isPending = i >= firstPendingId
+        // everything the DUT itself does not decide is picked with this one, see the constant above
+        const spread = i % ATTRIBUTES_SPREAD
         const testResultStatus = isPending
             ? EpicSvtTestResultStatus.None
-            : finalResultStatuses[i % finalResultStatuses.length]
+            : finalResultStatuses[spread % finalResultStatuses.length]
         const createdAt = moment().subtract(i, 'hour')
 
         result.push({
             id: i,
             dutEntityName: dutEntityNames[i % dutEntityNames.length],
-            dutId: Math.ceil(i / dutEntityNames.length),
-            testTypeConfigId: (i % 2) + 1,
-            testSetupConfigId: (i % 3) + 1,
+            dutId: (i % DUT_IDS_COUNT) + 1,
+            testTypeConfigId: (spread % 2) + 1,
+            testSetupConfigId: (spread % 3) + 1,
             createdAt: createdAt.toISOString(),
             startedAt: isPending ? '' : createdAt.clone().add(1, 'minute').toISOString(),
             finishedAt: isPending ? '' : createdAt.clone().add(10, 'minute').toISOString(),

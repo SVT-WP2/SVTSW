@@ -25,12 +25,18 @@ import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicAsicInfoComponent, EpicAsicIvMntGridComponent, EpicAsicsListComponent } from 'epic-ui/shared/asics'
 import { EpicIvMntGridComponent } from 'epic-ui/shared/iv-mnt'
 import { EpicKafkaSendMessageFormComponent } from 'epic-ui/shared/kafka'
+import { EpicSvtDutTestsContainerComponent } from 'epic-ui/shared/svt-test/tests'
 import { EpicTcpSendMessageFormComponent } from 'epic-ui/shared/tcp'
 import { EpicWaferInfoComponent, EpicWafersListComponent } from 'epic-ui/shared/wafers'
 
 
 import { EpicAsicsRoutingModule } from './epic-asics-routing.module'
-import { EpicAsicDetailsPageComponent, EpicAsicOverviewPageComponent, EpicAsicVoltageScanPageComponent } from './pages'
+import {
+    EpicAsicDetailsPageComponent,
+    EpicAsicSvtTestsPageComponent,
+    EpicAsicUnderDevelopmentPageComponent,
+    EpicAsicVoltageScanPageComponent,
+} from './pages'
 
 
 @NgModule({
@@ -71,11 +77,13 @@ import { EpicAsicDetailsPageComponent, EpicAsicOverviewPageComponent, EpicAsicVo
         EpicAsicIvMntGridComponent,
         EpicContentErrorMessagePipe,
         EpicIconMatOutlinedPipe,
+        EpicSvtDutTestsContainerComponent,
     ],
     declarations: [
         EpicAsicDetailsPageComponent,
         EpicAsicVoltageScanPageComponent,
-        EpicAsicOverviewPageComponent,
+        EpicAsicSvtTestsPageComponent,
+        EpicAsicUnderDevelopmentPageComponent,
     ],
 })
 export class EpicAsicsModule {
