@@ -7,8 +7,9 @@ import {
     EpicChipBlock,
     EpicChipBlocksApiClient,
     EpicChipsApiClient,
+    EpicSvtDutEntityName,
 } from 'epic-ui/api'
-import { EpicBreadcrumbs, EpicNotificationService } from 'epic-ui/common/components'
+import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicChipLocationHistoryDialogService, EpicChipLocationUpdateDialogService } from 'epic-ui/shared/chips'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { catchError, map, takeUntil, throwError } from 'rxjs'
@@ -20,6 +21,9 @@ import { catchError, map, takeUntil, throwError } from 'rxjs'
     standalone: false,
 })
 export class EpicChipDetailsPageComponent extends BaseComponent {
+
+    /** Whatever this page shows is about the chip it is the details of. */
+    readonly dutEntityName = EpicSvtDutEntityName.Chip
 
     readonly chip = signal<EpicChip>(null)
     readonly asic = signal<EpicAsic>(null)
@@ -41,6 +45,15 @@ export class EpicChipDetailsPageComponent extends BaseComponent {
             disabled: true,
         },
     ])
+
+    navTabs: EpicNavTabs.NavTabInfo[] = [
+        {
+            label: 'SVT Tests',
+            routerLink: './',
+            routerLinkActiveOptions: { exact: false },
+            icon: 'epic-report',
+        },
+    ]
 
     // DI
     protected readonly activatedRoute = inject(ActivatedRoute)

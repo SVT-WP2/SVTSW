@@ -76,11 +76,20 @@
                         </div>
                     }
                     <!-- ./CHIP BLOCKS -->
+                    <mat-divider/>
+
+                    <div class="px-3">
+                        <epic-mat-menu-content>
+                            <epic-vertical-nav-tabs [tabs]="navTabs"/>
+                        </epic-mat-menu-content>
+                    </div>
                 }
             </div>
 
             <div class="e2e-container__body-with-scroll p-3">
-                <router-outlet/>
+                <epic-svt-dut-tests-container class="d-block h-100"
+                                    [dutEntityName]="dutEntityName"
+                                    [dutId]="chipId"/>
             </div>
         </div>
     </div>

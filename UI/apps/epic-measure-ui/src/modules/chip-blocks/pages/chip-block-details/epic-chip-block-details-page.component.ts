@@ -1,7 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import { EpicChip, EpicChipBlock, EpicChipBlocksApiClient, EpicChipsApiClient } from 'epic-ui/api'
-import { EpicBreadcrumbs, EpicNotificationService } from 'epic-ui/common/components'
+import {
+    EpicChip,
+    EpicChipBlock,
+    EpicChipBlocksApiClient,
+    EpicChipsApiClient,
+    EpicSvtDutEntityName,
+} from 'epic-ui/api'
+import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { catchError, takeUntil, throwError } from 'rxjs'
 
@@ -12,6 +18,9 @@ import { catchError, takeUntil, throwError } from 'rxjs'
     standalone: false,
 })
 export class EpicChipBlockDetailsPageComponent extends BaseComponent {
+
+    /** Whatever this page shows is about the chip block it is the details of. */
+    readonly dutEntityName = EpicSvtDutEntityName.ChipBlock
 
     readonly chipBlock = signal<EpicChipBlock>(null)
     readonly chip = signal<EpicChip>(null)
@@ -32,6 +41,15 @@ export class EpicChipBlockDetailsPageComponent extends BaseComponent {
             disabled: true,
         },
     ])
+
+    navTabs: EpicNavTabs.NavTabInfo[] = [
+        {
+            label: 'SVT Tests',
+            routerLink: './',
+            routerLinkActiveOptions: { exact: false },
+            icon: 'epic-report',
+        },
+    ]
 
     // DI
     protected readonly activatedRoute = inject(ActivatedRoute)

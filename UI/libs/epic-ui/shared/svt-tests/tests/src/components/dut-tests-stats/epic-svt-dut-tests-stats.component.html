@@ -1,0 +1,33 @@
+<!-- one row as long as the boxes fit, wrapping into an even grid rather than a ragged last line -->
+<div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+    @for (tile of tiles(); track tile.id) {
+        <div class="d-flex align-items-center gap-3 p-2 px-3 rounded-3 epic-bg-color-neutral-0 epic-border-style--solid">
+
+            <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                 style="width: 36px; height: 36px"
+                 [style.background]="tile.bgColor"
+                 [style.color]="tile.color">
+                <epic-icon [name]="tile.icon"/>
+            </div>
+
+            <div class="d-flex flex-column overflow-hidden">
+                <div class="epic-font-body-sm epic-color-neutral-300 text-overflow-ellipsis">
+                    {{ tile.label }}
+                </div>
+                <!-- the count behind the filter stays next to the filtered one, as `12/34` -->
+                <div class="d-flex align-items-baseline">
+                    <span class="epic-font-title-lg" [style.color]="tile.color">{{ tile.value }}</span>
+                    @if (tile.totalValue) {
+                        <span class="epic-font-body epic-color-neutral-300">/{{ tile.totalValue }}</span>
+                    }
+                </div>
+                @if (tile.hint) {
+                    <div class="epic-font-label-sm epic-color-neutral-300 text-overflow-ellipsis">
+                        {{ tile.hint }}
+                    </div>
+                }
+            </div>
+
+        </div>
+    }
+</div>
