@@ -217,7 +217,7 @@ class WaferProberAgent:
         print("   ⚠️  DB lookup failed, falling back to config file values")
         return file_config
 
-    def _load_from_database_by_name(self, agent_name, kafka_broker=None, timeout=5.0):
+    def _load_from_database_by_name(self, agent_name, kafka_broker=None, timeout=10.0):
         """
         Fetch machine connection details from DB by waferAgentName (name field in DB).
 

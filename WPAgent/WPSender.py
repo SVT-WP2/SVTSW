@@ -7,7 +7,7 @@ Usage:
 
 Port selection (auto-detected from waferAgentName in --data, or override with --port):
   CERN_DEV  → 9096
-  CERN      → 9093
+  CERN      → 9092
 """
 
 import json
@@ -18,12 +18,12 @@ import argparse
 from confluent_kafka import Producer, Consumer
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-BROKER_HOST = "svmithi02"
+BROKER_HOST = "pcmitpx01"
 
 # Port mapping: keys are matched as substrings of waferAgentName (most specific first)
 AGENT_PORT_MAP = {
-    "CERN_DEV": 9096,
-    "CERN": 9093,
+    "WPMIT": 9092,
+    "WPMIT_DEV": 9096,
 }
 
 REQUEST_TOPIC = "svt.wp-agent.request"
