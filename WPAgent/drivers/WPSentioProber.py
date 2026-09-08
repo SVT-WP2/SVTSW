@@ -9,7 +9,7 @@ from sentio_prober_control.Sentio import Response
 class SentioProberImpl(AbstractProber):
     def __init__(self, address):
         self.prober = SentioProber.create_prober("tcpip", address)
-        self.prober.initialize_if_needed()
+        #self.prober.initialize_if_needed()
 
     def initialize(self):
         self.prober.initialize_if_needed()
@@ -65,7 +65,7 @@ class SentioProberImpl(AbstractProber):
 
     def run_ptpa(self):
         resp = self.prober.send_cmd(
-            "vis:compensation:start_execute OffAxis, BothWithProbeTips, True"
+            "vis:compensation:start_execute OffAxis, BothWithProbeTips"
         )
 
         if not resp.ok():
