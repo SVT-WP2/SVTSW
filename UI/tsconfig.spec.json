@@ -1,15 +1,20 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./out-tsc/spec",
-    "types": [
-      "jest"
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "./out-tsc/spec",
+        "types": [
+            "vitest/globals",
+            "node"
+        ],
+        "moduleResolution": "bundler"
+    },
+    "include": [
+        "test-setup.ts",
+        "apps/**/*.spec.ts",
+        "apps/**/*.test.ts",
+        "apps/**/*.d.ts",
+        "libs/**/*.spec.ts",
+        "libs/**/*.test.ts",
+        "libs/**/*.d.ts"
     ]
-  },
-  "include": [
-    "apps/epic-measure-ui/src/**/*.spec.ts",
-    "apps/epic-measure-ui/src/**/*.d.ts"
-  ]
 }

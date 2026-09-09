@@ -2,6 +2,8 @@
     "name": "epic-measure-ui",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
+    "sourceRoot": "apps/epic-measure-ui/src",
+    "prefix": "app",
     "generators": {
         "@schematics/angular:component": {
             "style": "scss",
@@ -27,8 +29,6 @@
             "skipTests": true
         }
     },
-    "sourceRoot": "apps/epic-measure-ui/src",
-    "prefix": "app",
     "targets": {
         "build": {
             "executor": "@angular-devkit/build-angular:application",
@@ -36,7 +36,9 @@
                 "outputPath": "dist/apps/epic-measure-ui",
                 "index": "apps/epic-measure-ui/src/index.html",
                 "browser": "apps/epic-measure-ui/src/main.ts",
-                "polyfills": ["zone.js"],
+                "polyfills": [
+                    "zone.js"
+                ],
                 "tsConfig": "apps/epic-measure-ui/tsconfig.app.json",
                 "inlineStyleLanguage": "scss",
                 "baseHref": "/app/",
@@ -120,11 +122,12 @@
                     "apps/epic-measure-ui/src/styles/styles.scss",
                     "node_modules/ngx-toastr/toastr.css"
                 ],
-                "scripts": [
-                ],
+                "scripts": [],
                 "stylePreprocessorOptions": {
                     "sass": {
-                        "silenceDeprecations": ["import"]
+                        "silenceDeprecations": [
+                            "import"
+                        ]
                     },
                     "includePaths": [
                         "libs/epic-ui/common/auth/styles",
@@ -147,7 +150,9 @@
                         "libs/epic-ui/shared/svt-tests/main/styles"
                     ]
                 },
-                "externalDependencies": ["assets/*"]
+                "externalDependencies": [
+                    "assets/*"
+                ]
             },
             "configurations": {
                 "production": {
@@ -206,20 +211,17 @@
                     "buildTarget": "epic-measure-ui:build:development"
                 }
             },
-            "defaultConfiguration": "development"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "extract-i18n": {
             "executor": "@angular-devkit/build-angular:extract-i18n"
         },
         "test": {
-            "executor": "@angular-builders/jest:run",
+            "executor": "nx:run-commands",
             "options": {
-                "polyfills": ["zone.js", "zone.js/testing"],
-                "tsConfig": "tsconfig.spec.json",
-                "inlineStyleLanguage": ["scss"],
-                "assets": [],
-                "styles": ["src/styles/styles.scss"],
-                "scripts": []
+                "command": "vitest run --dir apps/epic-measure-ui",
+                "cwd": "{workspaceRoot}"
             }
         }
     }

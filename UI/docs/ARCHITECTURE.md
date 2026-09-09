@@ -284,8 +284,10 @@ Consumer groups: `epic-ui` (API), `epic-ui.fake-db-agent` (mock agent).
 - Angular build: `@angular-devkit/build-angular:application` → `dist/apps/epic-measure-ui`.
   Production swaps `environment.ts` → `environment.prod.ts`.
 - API/db-agent build: `webpack-cli` via `nx:run-commands`.
-- Tests: Jest, `jest-preset-angular` for UI libs, node env for the Nest side. Each lib has its own
-  `jest.config.ts`. Coverage is thin today.
+- Tests: Vitest, jsdom environment, `@analogjs/vite-plugin-angular` for Angular compilation.
+  One root `vitest.config.ts` + `test-setup.ts` covers the whole workspace — libs do **not**
+  carry their own config. `npm test` runs everything in a single process; `nx test <project>`
+  and `npm run test::affected` scope it per project. Coverage is thin today.
 - Husky + lint-staged run on commit; `npm run pre-pull-request` is the gate before a PR.
 
 CI/CD, release flow and the deploy workflows are documented in [../README.md](../README.md).

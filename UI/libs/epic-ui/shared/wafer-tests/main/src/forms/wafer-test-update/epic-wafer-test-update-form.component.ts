@@ -11,7 +11,6 @@ import {
     EpicContentErrorModule,
     EpicLoaderComponent,
     EpicNoResultModule,
-    EpicSelectModule,
 } from 'epic-ui/common/components'
 import { BaseFormWithFactoryComponent, EpicSearchPipe } from 'epic-ui/utils'
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search'
@@ -47,7 +46,6 @@ import Form = EpicWaferTestUpdateForm
         FormsModule,
         EpicLoaderComponent,
         EpicContentErrorModule,
-        EpicSelectModule,
         MatSelect,
         EpicSearchPipe,
         MatOption,

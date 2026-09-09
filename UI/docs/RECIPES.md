@@ -342,8 +342,8 @@ Always `disconnect()` in `ngOnDestroy` — the data source is `providedIn: 'root
 
 1. Generate or copy the skeleton under `libs/epic-ui/shared/<domain>/main/`. Copying an existing small lib
    (`libs/epic-ui/shared/svt-tests/tests/`) is faster and keeps the configs consistent — it needs
-   `project.json`, `jest.config.ts`, `tsconfig{,.lib,.spec}.json`, `eslint.config.mjs`, `src/test-setup.ts`,
-   `src/index.ts`.
+   `project.json`, `tsconfig{,.lib,.spec}.json`, `eslint.config.mjs`, `src/index.ts`. There is no
+   per-lib test config — the root `vitest.config.ts` picks up any `*.spec.ts` you add.
 2. Add the alias to `tsconfig.base.json` `compilerOptions.paths`, pointing at `.../src/index.ts`.
 3. If the lib has **styles**, add `libs/epic-ui/shared/<domain>/main/styles` to
    `stylePreprocessorOptions.includePaths` in `apps/epic-measure-ui/project.json`.

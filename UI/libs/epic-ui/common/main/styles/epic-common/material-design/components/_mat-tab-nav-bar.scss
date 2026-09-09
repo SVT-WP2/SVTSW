@@ -9,8 +9,8 @@ $nav-item-bg--active: $color-primary-50;
 
 .mat-mdc-tab-nav-bar {
     .mat-mdc-tab-link.mdc-tab {
-        --mat-tab-header-inactive-label-text-color: #{$nav-item-text-color};
-        --mat-tab-header-active-label-text-color: #{$nav-item-text-color--active};
+        --mat-tab-inactive-label-text-color: #{$nav-item-text-color};
+        --mat-tab-active-label-text-color: #{$nav-item-text-color--active};
         border-radius: 8px 8px 0 0;
         color: $nav-item-text-color;
         height: 40px;

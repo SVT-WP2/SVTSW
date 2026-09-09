@@ -173,6 +173,9 @@ export const ROOT_CONFIG = tseslint.config(
             '@angular-eslint/use-component-view-encapsulation': 'error',
             '@angular-eslint/no-conflicting-lifecycle': 'error',
             '@angular-eslint/prefer-standalone': 'off',
+            // Enabled by angular-eslint v20. Kept as a warning so it does not block lint (--quiet);
+            // migrate with `ng generate @angular/core:inject` as a separate refactor.
+            '@angular-eslint/prefer-inject': 'warn',
             ...getAngularSelectorsRules({
                 component: DEFAULT_COMPONENT_SELECTORS,
                 directive: DEFAULT_DIRECTIVE_SELECTORS,
@@ -210,6 +213,17 @@ export const ROOT_CONFIG = tseslint.config(
             '@angular-eslint/template/click-events-have-key-events': 'off',
             '@angular-eslint/template/interactive-supports-focus': 'off',
             '@angular-eslint/template/alt-text': 'off',
+        }
+    },
+    {
+        // This template probes members that only exist on some arms of the
+        // EpicActionsMenu.Action union (divider, children, url, disabled). Built-in
+        // control flow type-checks those accesses against the whole union, where the
+        // *ngIf it would replace did not, so converting it needs the union widened
+        // first. Left on structural directives until that model is reworked.
+        files: ['**/epic-actions-menu.component.html'],
+        rules: {
+            '@angular-eslint/template/prefer-control-flow': 'off',
         }
     },
 )

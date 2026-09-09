@@ -25,10 +25,10 @@ $assets-icons-path: 'assets/images/epic-common.components/icon';
 
 .mat-mdc-form-field {
     // chips
-    --mdc-chip-elevated-container-color: #{$color-neutral-30};
-    --mdc-filled-text-field-error-hover-label-text-color: #{$label-color--error};
-    --mdc-filled-text-field-hover-label-text-color: #{$label-color};
-    --mdc-outlined-text-field-container-shape: 12px;
+    --mat-chip-elevated-container-color: #{$color-neutral-30};
+    --mat-form-field-filled-error-hover-label-text-color: #{$label-color--error};
+    --mat-form-field-filled-hover-label-text-color: #{$label-color};
+    --mat-form-field-outlined-container-shape: 12px;
 
     // mat error from content projection
     mat-error > mat-error.mat-mdc-form-field-bottom-align {
@@ -41,7 +41,7 @@ $assets-icons-path: 'assets/images/epic-common.components/icon';
 
 
     .mat-mdc-chip.mat-mdc-standard-chip {
-        --mdc-chip-container-height: 24px;
+        --mat-chip-container-height: 24px;
     }
 
     .mat-mdc-form-field-icon-prefix {

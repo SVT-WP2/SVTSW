@@ -22,7 +22,7 @@
     position: relative;
 
     .mdc-dialog__content {
-        --mdc-dialog-supporting-text-color: $color-neutral-900;
+        --mat-dialog-supporting-text-color: $color-neutral-900;
         @include epic-font-body-lg();
     }
 

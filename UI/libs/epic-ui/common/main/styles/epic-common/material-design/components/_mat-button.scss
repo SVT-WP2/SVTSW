@@ -157,9 +157,9 @@
         disabled-icon-color: var(--epic-mat-icon-button-text-color-disabled),
     ));
 
-    --mdc-icon-button-state-layer-size: var(--epic-mat-button-container-height);
-    --mdc-icon-button-icon-size: var(--epic-mat-button-icon-size);
-    --mat-outlined-button-horizontal-padding: 8px;
+    --mat-icon-button-state-layer-size: var(--epic-mat-button-container-height);
+    --mat-icon-button-icon-size: var(--epic-mat-button-icon-size);
+    --mat-button-outlined-horizontal-padding: 8px;
 
     &.mat-primary {
         --epic-mat-icon-button-text-color: #{$color-primary-300};

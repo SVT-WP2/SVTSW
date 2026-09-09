@@ -1,6 +1,5 @@
 ﻿import { Clipboard } from '@angular/cdk/clipboard'
-import { DOCUMENT } from '@angular/common'
-import { ChangeDetectionStrategy, Component, computed, inject, input, ResourceRef, Signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, DOCUMENT, inject, input, ResourceRef, Signal } from '@angular/core'
 import { rxResource } from '@angular/core/rxjs-interop'
 import { MatCardModule } from '@angular/material/card'
 import { ActivatedRoute, Router } from '@angular/router'
@@ -83,8 +82,8 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
         })
 
         this.testSetupConfigBodyResource = rxResource<EpicSvtTestSetupConfigBody, { testSetupConfigId: number }>({
-            request: () => ({ testSetupConfigId: +this.testSetupConfigId() }),
-            loader: ({ request }) => this.epicSvtTestSetupConfigBodyDataFacade.fetchData(request.testSetupConfigId),
+            params: () => ({ testSetupConfigId: +this.testSetupConfigId() }),
+            stream: ({ params }) => this.epicSvtTestSetupConfigBodyDataFacade.fetchData(params.testSetupConfigId),
         })
 
         // on config created, navigate to config details

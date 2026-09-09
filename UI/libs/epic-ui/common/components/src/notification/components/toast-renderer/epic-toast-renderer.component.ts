@@ -1,5 +1,5 @@
 ﻿import { Component, OnDestroy } from '@angular/core'
-import { Toast, ToastPackage, ToastrService } from 'ngx-toastr'
+import { Toast } from 'ngx-toastr'
 
 import { EpicToastr } from '../../models'
 
@@ -14,11 +14,8 @@ export class EpicToastRendererComponent extends Toast implements OnDestroy {
     iconName: string
     actions: EpicToastr.Action[] = []
 
-    constructor(
-        protected readonly toastrService: ToastrService,
-        readonly toastPackage: ToastPackage) {
-
-        super(toastrService, toastPackage)
+    constructor() {
+        super()
 
         this.iconName = EpicToastr.getToastrTypeIconName(this.toastPackage.toastType as EpicToastr.EpicToastrType)
         this.actions = EpicToastr.extractActions(this.toastPackage.config.payload)

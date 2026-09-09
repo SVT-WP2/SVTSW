@@ -9,22 +9,28 @@
             "executor": "nx:run-commands",
             "options": {
                 "command": "webpack-cli build",
-                "args": ["node-env=production"]
+                "args": [
+                    "node-env=production"
+                ]
             },
             "configurations": {
                 "development": {
-                    "args": ["node-env=development"]
+                    "args": [
+                        "node-env=development"
+                    ]
                 }
             }
         },
         "serve": {
             "executor": "@nx/js:node",
             "defaultConfiguration": "development",
-            "dependsOn": ["build"],
+            "dependsOn": [
+                "build"
+            ],
             "options": {
                 "buildTarget": "epic-db-agent:build",
                 "runBuildTargetDependencies": false,
-                "port": 9696,
+                "port": 9696
             },
             "configurations": {
                 "development": {
@@ -36,8 +42,10 @@
             }
         },
         "test": {
+            "executor": "nx:run-commands",
             "options": {
-                "passWithNoTests": true
+                "command": "vitest run --dir apps/epic-db-agent",
+                "cwd": "{workspaceRoot}"
             }
         }
     }

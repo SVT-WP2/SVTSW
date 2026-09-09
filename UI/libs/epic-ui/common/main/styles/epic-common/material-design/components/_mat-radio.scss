@@ -19,12 +19,12 @@ $radio-container-size: 32px;
 mat-radio-button.mat-mdc-radio-button {
     .mdc-radio {
         height: $_radio-size;
-        padding: calc((var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+        padding: calc((var(--mat-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
         width: $_radio-size;
 
         .mat-mdc-radio-touch-target {
-            height: var(--mdc-radio-state-layer-size, $radio-container-size);
-            width: var(--mdc-radio-state-layer-size, $radio-container-size);
+            height: var(--mat-radio-state-layer-size, $radio-container-size);
+            width: var(--mat-radio-state-layer-size, $radio-container-size);
         }
 
         .mdc-radio__background {
@@ -32,8 +32,8 @@ mat-radio-button.mat-mdc-radio-button {
             width: $_radio-size;
 
             &::before {
-                left: calc(-1 * (var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
-                top: calc(-1 * (var(--mdc-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+                left: calc(-1 * (var(--mat-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
+                top: calc(-1 * (var(--mat-radio-state-layer-size, $radio-container-size) - $_radio-size) / 2);
             }
         }
     }

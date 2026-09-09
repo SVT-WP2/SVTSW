@@ -32,13 +32,13 @@ $selection-control-container-size: 24px;
 }
 
 mat-selection-list.mat-mdc-list-base {
-    --mdc-checkbox-state-layer-size: $selection-control-container-size;
-    --mdc-radio-state-layer-size: $selection-control-container-size;
-    --mdc-list-list-item-container-shape: #{$list-option-border-radius};
-    --mdc-list-list-item-hover-state-layer-opacity: 0;
-    --mdc-list-list-item-focus-state-layer-opacity: 0;
-    --mdc-checkbox-unselected-icon-color: #{$color-neutral-60};
-    --mdc-radio-unselected-icon-color: #{$color-neutral-60};
+    --mat-checkbox-state-layer-size: $selection-control-container-size;
+    --mat-radio-state-layer-size: $selection-control-container-size;
+    --mat-list-list-item-container-shape: #{$list-option-border-radius};
+    --mat-list-list-item-hover-state-layer-opacity: 0;
+    --mat-list-list-item-focus-state-layer-opacity: 0;
+    --mat-checkbox-unselected-icon-color: #{$color-neutral-60};
+    --mat-radio-unselected-icon-color: #{$color-neutral-60};
 
     .mat-mdc-list-option {
         margin-bottom: 4px;
@@ -93,11 +93,11 @@ mat-selection-list.mat-mdc-list-base {
     }
 
     .mdc-list-item--selected {
-        --mdc-list-list-item-label-text-color: #{$color-primary-300};
-        --mdc-list-list-item-hover-label-text-color: #{$color-primary-300};
-        --mdc-list-list-item-focus-label-text-color: #{$color-primary-300};
-        --mdc-list-list-item-label-text-size: #{$font-size--title};
-        --mdc-list-list-item-label-text-weight: 500;
+        --mat-list-list-item-label-text-color: #{$color-primary-300};
+        --mat-list-list-item-hover-label-text-color: #{$color-primary-300};
+        --mat-list-list-item-focus-label-text-color: #{$color-primary-300};
+        --mat-list-list-item-label-text-size: #{$font-size--title};
+        --mat-list-list-item-label-text-weight: 500;
     }
 
 }

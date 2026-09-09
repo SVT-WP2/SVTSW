@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common'
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core'
+import { ChangeDetectionStrategy, Component, DOCUMENT, EventEmitter, Inject, Input, Output } from '@angular/core'
 import { MatIconButton } from '@angular/material/button'
 import { MatIcon } from '@angular/material/icon'
 import { MatTooltip } from '@angular/material/tooltip'
