@@ -1483,8 +1483,8 @@ def move_chuck_top_left(user=None, waferAgentName=None):
         prober = get_current_prober()
 
         position = 'Relative'
-        x = 20.0
-        y = -15.0
+        x = 15.0
+        y = -10.0
         prober.move_chuck_xy(x, y, position)
 
         update_current_info(currentProber=prober)
@@ -1508,8 +1508,8 @@ def move_chuck_top_right(user=None, waferAgentName=None):
         prober = get_current_prober()
 
         position = 'Relative'
-        x = -20.0
-        y = -15.0
+        x = -15.0
+        y = -10.0
         prober.move_chuck_xy(x, y, position)
 
         update_current_info(currentProber=prober)
@@ -1531,8 +1531,8 @@ def move_chuck_bottom_left(user=None, waferAgentName=None):
         prober = get_current_prober()
 
         position = 'Relative'
-        x = 20.0
-        y = 15.0
+        x = 15.0
+        y = 10.0
         prober.move_chuck_xy(x, y, position)
 
         update_current_info(currentProber=prober)
@@ -1553,8 +1553,14 @@ def move_chuck_bottom_right(user=None, waferAgentName=None):
         return error
     try:
         prober = get_current_prober()
-        prober.move_chuck_bottom_right()
+
+        position = 'Relative'
+        x = -15.0
+        y = 10.0
+        prober.move_chuck_xy(x, y, position)
+
         update_current_info(currentProber=prober)
+        prober.local_mode()
         agentStateMachine.transition("MoveChuckBottomRight")
         return ResponseBuilder.success(reply, "Chuck moved to bottom-right")
     except Exception as e:
