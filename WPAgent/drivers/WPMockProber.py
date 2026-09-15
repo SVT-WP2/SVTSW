@@ -203,6 +203,20 @@ class MockProberImpl:
         """
         return self._working_area
 
+    def get_chuck_xy(self):
+        """
+        Return current chuck XY position (mock).
+        Matches SentioProberImpl.get_chuck_xy().
+        """
+        return self._chuck_xy["x"], self._chuck_xy["y"]
+
+    def get_contact_height(self):
+        """
+        Return current contact height (mock).
+        Matches SentioProberImpl.get_contact_height().
+        """
+        return self._chuck_z
+
     # ------------------------------------------------------------------
     # Die navigation
     # ------------------------------------------------------------------
@@ -319,6 +333,14 @@ class MockProberImpl:
 
     def run_ptpa(self):
         time.sleep(1.0)
+        # Simulate a small position/contact-height correction so
+        # get_chuck_xy()/get_contact_height() reflect a realistic
+        # before/after difference in tests.
+        self._chuck_xy = {
+            "x": self._chuck_xy["x"] + 0.35,
+            "y": self._chuck_xy["y"] - 0.20,
+        }
+        self._chuck_z += 0.10
         print("[MockProber] PTPA alignment complete")
         return "0,OK"
 

@@ -704,15 +704,48 @@ def run_ptpa(user=None, waferAgentName=None):
 
     try:
         prober = get_current_prober()
-        prober.run_ptpa()
-        prober.local_mode()
 
+        # Store X, Y position and contact height before running PTPA
+        x_before, y_before = prober.get_chuck_xy()
+        contact_height_before = prober.get_contact_height()
+        print(
+            f"   📍 Before PTPA:  x={x_before:.2f} µm  y={y_before:.2f} µm  "
+            f"contact_height={contact_height_before:.2f} µm"
+        )
+
+        prober.run_ptpa()
+
+        # Read the same values again after PTPA has completed
+        x_after, y_after = prober.get_chuck_xy()
+        contact_height_after = prober.get_contact_height()
+        print(
+            f"   📍 After PTPA:   x={x_after:.2f} µm  y={y_after:.2f} µm  "
+            f"contact_height={contact_height_after:.2f} µm"
+        )
+
+        # Corrections introduced by PTPA
+        delta_x = x_after - x_before
+        delta_y = y_after - y_before
+        delta_contact_height = contact_height_after - contact_height_before
+        print(
+            f"   Δ PTPA correction:  ΔX={delta_x:.2f} µm  ΔY={delta_y:.2f} µm  "
+            f"ΔContactHeight={delta_contact_height:.2f} µm"
+        )
+        prober.local_mode()
         # Update info
         update_current_info(currentProber=prober)
 
         agentStateMachine.transition("RunPTPA")
 
-        return ResponseBuilder.success(reply, "PTPA executed")
+        message = (
+            f"PTPA executed | before: x={x_before:.2f}, y={y_before:.2f}, "
+            f"contact_height={contact_height_before:.2f} | "
+            f"after: x={x_after:.2f}, y={y_after:.2f}, "
+            f"contact_height={contact_height_after:.2f} | "
+            f"correction: dx={delta_x:.2f}, dy={delta_y:.2f}, "
+            f"d_contact_height={delta_contact_height:.2f}"
+        )
+        return ResponseBuilder.success(reply, message)
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))

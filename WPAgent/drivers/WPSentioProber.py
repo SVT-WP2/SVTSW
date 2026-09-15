@@ -228,7 +228,38 @@ class SentioProberImpl(AbstractProber):
 
         except Exception as e:
             return f"Error: {str(e)}"
-            
+
+    def get_chuck_xy(self):
+        """
+        Get current chuck XY position.
+
+        Uses the Sentio Python library method:
+            self.prober.get_chuck_xy(ChuckSite.Wafer, ChuckXYReference.Zero)
+
+        Returns:
+            tuple[float, float]: (x, y) position in micrometer (Zero reference)
+        """
+        from sentio_prober_control.Sentio.Enumerations import ChuckSite, ChuckXYReference
+
+        x, y = self.prober.get_chuck_xy(ChuckSite.Wafer, ChuckXYReference.Zero)
+        return x, y
+
+    def get_contact_height(self):
+        """
+        Get current contact height for the wafer chuck site.
+
+        Uses the Sentio Python library method:
+            self.prober.get_chuck_site_height(ChuckSite.Wafer)
+
+        Returns:
+            float: contact height in micrometer
+        """
+        from sentio_prober_control.Sentio.Enumerations import ChuckSite
+
+        contact, separation, overtravel_gap, hover_gap = self.prober.get_chuck_site_height(
+            ChuckSite.Wafer
+        )
+        return contact
 
     def take_image(
         self,
