@@ -485,27 +485,16 @@ class KafkaClient:
                 pass
 
     def _get_persistent_reply_consumer(self):
+        # self.reply_consumer is normally already set by _initialize_reply_consumer()
+        # (called from __init__) using assign(), not subscribe() — deliberately, so
+        # it never joins a consumer group and can't be silently dropped for going
+        # idle past max.poll.interval.ms (the same failure fixed in WPDbKafkaClient).
+        # This is just a defensive fallback in case it's ever missing; it reuses
+        # that same assign()-based setup rather than duplicating a subscribe()-based
+        # one, which would reintroduce that risk (and can't safely be mixed with an
+        # assign()-based consumer anyway).
         if self.reply_consumer is None:
-            consumer_config = {
-                "bootstrap.servers": self.bootstrap_servers,
-                "group.id": f"{self.group_id}-reply",
-                "auto.offset.reset": "latest",
-                "enable.auto.commit": False,
-                "session.timeout.ms": 60000,
-                "max.poll.interval.ms": 120000,
-                "fetch.wait.max.ms": 50,
-                "client.id": f"wp-agent-persistent-reply-{uuid.uuid4().hex[:8]}",
-                # Disable localhost fallback
-                "broker.address.family": "v4",  # Force IPv4 only
-            }
-            self.reply_consumer = KafkaConsumer(consumer_config)
-            self.reply_consumer.subscribe([self.reply_topic])
-
-            start = time.time()
-            while time.time() - start < 10.0:
-                self.reply_consumer.poll(0.1)
-                if self.reply_consumer.assignment():
-                    break
+            self._initialize_reply_consumer()
         return self.reply_consumer
 
     def subscribe_if_needed(self, topics: List[str]) -> None:

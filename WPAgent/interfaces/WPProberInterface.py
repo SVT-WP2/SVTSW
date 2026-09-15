@@ -78,6 +78,16 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
+    def get_chuck_xy(self):
+        """Get current chuck XY position in micrometers as (x, y)"""
+        pass
+
+    @abstractmethod
+    def get_contact_height(self):
+        """Get current contact height in micrometers"""
+        pass
+
+    @abstractmethod
     def set_overtravel(self, overtravelGap: float):
         """Set overtravel"""
         pass
