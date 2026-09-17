@@ -20,7 +20,7 @@ export class EpicSvtTestTypeConfigCreateDto implements EpicSvtTestTypeConfigCrea
     note: string | null
 
     @IsString()
-    @ApiProperty({ type: 'string', description: 'stringified JSON' })
+    @ApiProperty({ type: 'string', description: 'Config file content as a plain text (JSON, JSON5 or any other text file format)' })
     configBody: string
 
 }

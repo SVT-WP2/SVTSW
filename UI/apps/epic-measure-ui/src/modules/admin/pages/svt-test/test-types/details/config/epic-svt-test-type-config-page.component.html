@@ -46,11 +46,11 @@
                     <div class="d-flex gap-2">
                         <button epicSmallButton mat-stroked-button (click)="onCopyToClipboard()">
                             <epic-icon [name]="'epic-copy'" matMenuItemIcon/>
-                            Copy JSON
+                            Copy
                         </button>
-                        <button epicSmallButton mat-stroked-button (click)="onDownloadJson()">
+                        <button epicSmallButton mat-stroked-button (click)="onDownloadFile()">
                             <epic-icon [name]="'download'" matMenuItemIcon/>
-                            Download JSON
+                            Download
                         </button>
                     </div>
                 }
@@ -68,7 +68,7 @@
                          [disabled]="true"
                          [mode]="'hjson'"
                          [theme]="'ace/theme/github'"
-                         [value]="testTypeConfigBody() | json">
+                         [value]="testTypeConfigBody()">
                     </ace>
                 }
             </div>

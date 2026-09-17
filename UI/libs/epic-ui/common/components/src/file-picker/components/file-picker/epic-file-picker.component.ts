@@ -25,7 +25,7 @@ import { EpicFilePickerFilePreviewComponent } from '../file-picker-file-preview'
 })
 export class EpicFilePickerComponent extends BaseFormValueControlComponent<File | null> {
 
-    @Input() acceptFileExtensions: string
+    @Input() acceptFileExtensions = ''
 
     onFilesInserted(files: File[]): void {
         const refFile = files.length
