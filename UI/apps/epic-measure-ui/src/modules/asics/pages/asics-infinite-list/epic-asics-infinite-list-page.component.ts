@@ -13,7 +13,6 @@ import {
     EpicContentErrorMessagePipe,
     EpicContentErrorModule,
     EpicSearchBoxModule,
-    EpicSelectModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import {
@@ -42,7 +41,6 @@ import { Observable } from 'rxjs'
         EpicContentErrorModule,
         MatCardModule,
         EpicAsicsListContainerComponent,
-        EpicSelectModule,
         EpicSearchBoxModule,
         FormsModule,
         AsyncPipe,

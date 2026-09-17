@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '20.19'
+  NODE_VERSION: '22.13'
   TAG_PREFIX: 'svt-ui-'
   COMMIT_PREFIX: 'svt-ui@'
 

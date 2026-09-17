@@ -5,9 +5,7 @@ import { MAT_CHIPS_DEFAULT_OPTIONS, MatChipsDefaultOptions } from '@angular/mate
 import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig } from '@angular/material/dialog'
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldDefaultOptions } from '@angular/material/form-field'
 import { MAT_RADIO_DEFAULT_OPTIONS, MatRadioDefaultOptions } from '@angular/material/radio'
-import { MAT_SELECT_SCROLL_STRATEGY_PROVIDER } from '@angular/material/select'
 import { MAT_SLIDE_TOGGLE_DEFAULT_OPTIONS, MatSlideToggleDefaultOptions } from '@angular/material/slide-toggle'
-import { MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY_PROVIDER } from '@angular/material/tooltip'
 
 
 export function getEpicMatDefaultProviders(): Provider[] {
@@ -59,7 +57,5 @@ export function getEpicMatDefaultProviders(): Provider[] {
                 hideSingleSelectionIndicator: true,
             } as MatChipsDefaultOptions,
         },
-        MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY_PROVIDER,
-        MAT_SELECT_SCROLL_STRATEGY_PROVIDER,
     ]
 }

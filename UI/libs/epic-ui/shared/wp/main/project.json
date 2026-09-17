@@ -4,13 +4,15 @@
     "sourceRoot": "libs/epic-ui/shared/wp/main/src",
     "prefix": "lib",
     "projectType": "library",
-    "tags": ["ui common"],
+    "tags": [
+        "ui common"
+    ],
     "targets": {
         "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "executor": "nx:run-commands",
             "options": {
-                "jestConfig": "libs/epic-ui/shared/wp/main/jest.config.ts"
+                "command": "vitest run --dir libs/epic-ui/shared/wp/main",
+                "cwd": "{workspaceRoot}"
             }
         },
         "lint": {

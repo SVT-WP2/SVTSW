@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common'
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core'
+import { ChangeDetectionStrategy, Component, DOCUMENT, EventEmitter, Inject, Input, Output } from '@angular/core'
 import { TranslatePipe } from '@ngx-translate/core'
 
 import { EpicIconComponent } from '../icon'

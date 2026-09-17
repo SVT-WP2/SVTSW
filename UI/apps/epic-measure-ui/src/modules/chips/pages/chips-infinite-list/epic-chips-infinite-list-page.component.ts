@@ -9,7 +9,6 @@ import {
     EpicLoaderComponent, EpicContentErrorMessagePipe,
     EpicContentErrorModule,
     EpicSearchBoxModule,
-    EpicSelectModule,
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import {
@@ -38,7 +37,6 @@ import { Observable } from 'rxjs'
         EpicButtonModule,
         EpicIconComponent,
         EpicContentErrorModule,
-        EpicSelectModule,
         EpicSearchBoxModule,
         EpicLoaderComponent,
         EpicChipsListFilterComponent,

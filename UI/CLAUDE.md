@@ -10,7 +10,7 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 
 | App | Stack | Role |
 |---|---|---|
-| `apps/epic-measure-ui` | Angular 19 | Front-end. Serves on **7755**, baseHref `/app/`. |
+| `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
 
@@ -47,6 +47,10 @@ npm run pre-pull-request   # lint + test — run this before opening a PR
 ```
 
 Lint/test individually: `npm run lint`, `npm run lint:fix`, `npm test`.
+
+Tests run on **Vitest** from a single root `vitest.config.ts` + `test-setup.ts` — libs have no
+test config of their own. `npm test` runs the whole workspace in one process; `nx test <project>`
+or `npm run test::affected` scope it.
 
 **Kafka must be running before the API starts.** Broker is `localhost:9095` per
 `apps/epic-measure-api/.env.development`.
@@ -105,6 +109,13 @@ Don't add a NgRx store for a single grid.
   `apps/epic-measure-ui/project.json`; new lib `assets/` needs an entry in the same file's `assets` array.
 - Kafka payloads are `JSON.stringify`'d by hand before `.send()` — the reply comes back needing
   `mapEpicKafkaMessageData()` to unwrap.
+- **After pulling a branch that bumps Angular or Nx, wipe the build caches before you build:**
+  `npx nx reset && rm -rf .angular/cache`. A cache written by the previous major makes `@angular/build`'s
+  lmdb store blow up with `Error: Not enough space` (lmdb code 12) — that's the cache, not your disk.
+  CI sidesteps this by running `rm -rf .nx` before `build::all`.
+- Every dependency must satisfy the Angular 21 peer ranges so plain `npm i` / `npm ci` resolve. If you add
+  or bump a package, check its peers — a single stale one (e.g. a lib still pinned to `@angular/*@^19`)
+  forces the whole workspace onto `npm i --force` and hides every other conflict behind it.
 - Release/CI details live in [README.md](README.md); don't duplicate them here.
 
 ## External sources of truth (outside this workspace)

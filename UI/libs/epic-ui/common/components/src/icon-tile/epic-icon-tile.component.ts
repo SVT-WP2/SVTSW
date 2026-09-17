@@ -26,7 +26,7 @@ export class EpicIconTileComponent implements OnInit, OnChanges {
     @Input() bgColor: string
 
     @HostBinding('class')
-    private cssClass: string
+    cssClass: string
 
     ngOnInit(): void {
         this.setCssClass(this.size, this.shape)

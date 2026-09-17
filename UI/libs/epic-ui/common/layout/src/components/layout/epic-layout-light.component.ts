@@ -1,5 +1,4 @@
-﻿import { DOCUMENT } from '@angular/common'
-import { ChangeDetectorRef, Component, Inject, Input, OnInit } from '@angular/core'
+﻿import { ChangeDetectorRef, Component, DOCUMENT, Inject, Input, OnInit } from '@angular/core'
 import { DynamicSection } from 'epic-ui/utils'
 
 import { EpicLayoutLightDynamicSection } from '../../models'

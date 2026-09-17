@@ -19,13 +19,13 @@ $checkbox-container-size: 32px;
 .mat-mdc-checkbox .mdc-checkbox__background {
     border-radius: 4px;
     height: $_checkbox-size;
-    left: calc((var(--mdc-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
-    top: calc((var(--mdc-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
+    left: calc((var(--mat-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
+    top: calc((var(--mat-checkbox-state-layer-size, $checkbox-container-size) - #{$_checkbox-size}) / 2);
     width: $_checkbox-size;
 }
 
 .mat-mdc-checkbox.mat-primary {
-    --mdc-checkbox-selected-checkmark-color: #{$color-neutral-0};
+    --mat-checkbox-selected-checkmark-color: #{$color-neutral-0};
 }
 
 .mat-mdc-checkbox {

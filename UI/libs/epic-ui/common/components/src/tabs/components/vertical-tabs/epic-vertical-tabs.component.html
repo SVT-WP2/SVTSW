@@ -1,25 +1,24 @@
 <epic-mat-menu-content>
-
-    <button *ngFor="let tabInfo of tabs"
+    @for (tabInfo of tabs; track tabInfo) {
+        <button
             [class.active]="tabInfo.id === activeTabId"
             [disabled]="tabInfo?.disabled"
             [ngStyle]="{ color: tabInfo?.color }"
             mat-menu-item
-            (click)="onTabClicked(tabInfo)">
-
-        <!-- ICON -->
-        <epic-icon *ngIf="tabInfo?.icon"
-                  [name]="tabInfo.icon"
-                  [ngStyle]="{ color: tabInfo?.color}"
-                  matMenuItemIcon>
-        </epic-icon>
-        <!-- ./ICON -->
-
-        <!-- CONTENT -->
-        <ng-container *ngTemplateOutlet="(tabContentTemplate?.templateRef || defaultContentTemplate); context: { tabInfo: tabInfo }"></ng-container>
-        <!-- ./CONTENT -->
-
-    </button>
+            (click)="onTabClicked(tabInfo)"
+        >
+            <!-- ICON -->
+            @if (tabInfo?.icon) {
+                <epic-icon [name]="tabInfo.icon" [ngStyle]="{ color: tabInfo?.color }" matMenuItemIcon> </epic-icon>
+            }
+            <!-- ./ICON -->
+            <!-- CONTENT -->
+            <ng-container
+                *ngTemplateOutlet="tabContentTemplate?.templateRef || defaultContentTemplate; context: { tabInfo: tabInfo }"
+            ></ng-container>
+            <!-- ./CONTENT -->
+        </button>
+    }
 </epic-mat-menu-content>
 
 <ng-template #defaultContentTemplate let-tabInfo="tabInfo">

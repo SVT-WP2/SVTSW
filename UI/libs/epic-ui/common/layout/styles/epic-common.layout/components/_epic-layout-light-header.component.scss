@@ -61,10 +61,6 @@
 $select-min-width: 220px;
 
 .epic-layout-light-header__actions {
-    .ng-select .ng-select-container {
-        min-width: $select-min-width;
-    }
-
     ag-view-control {
         $actions-button-width: 40px;
         max-width: $select-min-width + $actions-button-width;
