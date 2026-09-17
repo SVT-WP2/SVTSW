@@ -714,6 +714,7 @@ def run_ptpa(user=None, waferAgentName=None):
         )
 
         prober.run_ptpa()
+        prober.local_mode()
 
         # Read the same values again after PTPA has completed
         x_after, y_after = prober.get_chuck_xy()
@@ -731,7 +732,7 @@ def run_ptpa(user=None, waferAgentName=None):
             f"   Δ PTPA correction:  ΔX={delta_x:.2f} µm  ΔY={delta_y:.2f} µm  "
             f"ΔContactHeight={delta_contact_height:.2f} µm"
         )
-        prober.local_mode()
+
         # Update info
         update_current_info(currentProber=prober)
 
@@ -796,14 +797,46 @@ def find_home(user=None, waferAgentName=None):
     try:
         prober = get_current_prober()
 
+        # Store X, Y position and contact height (Z) before FindHome
+        x_before, y_before = prober.get_chuck_xy()
+        z_before = prober.get_contact_height()
+        print(
+            f"   📍 Before FindHome:  x={x_before:.2f} µm  y={y_before:.2f} µm  "
+            f"z={z_before:.2f} µm"
+        )
+
         prober.find_home()
+
+        # Read the same values again after FindHome has completed
+        x_after, y_after = prober.get_chuck_xy()
+        z_after = prober.get_contact_height()
+        print(
+            f"   📍 After FindHome:   x={x_after:.2f} µm  y={y_after:.2f} µm  "
+            f"z={z_after:.2f} µm"
+        )
+
+        # Corrections introduced by FindHome
+        delta_x = x_after - x_before
+        delta_y = y_after - y_before
+        delta_z = z_after - z_before
+        print(
+            f"   Δ FindHome correction:  ΔX={delta_x:.2f} µm  ΔY={delta_y:.2f} µm  "
+            f"ΔZ={delta_z:.2f} µm"
+        )
 
         # Update info
         update_current_info(currentProber=prober)
         prober.local_mode()
 
         agentStateMachine.transition("FindHome")
-        return ResponseBuilder.success(reply, "Found home position")
+
+        message = (
+            f"Found home position | before: x={x_before:.2f}, y={y_before:.2f}, "
+            f"z={z_before:.2f} | after: x={x_after:.2f}, y={y_after:.2f}, "
+            f"z={z_after:.2f} | correction: dx={delta_x:.2f}, dy={delta_y:.2f}, "
+            f"dz={delta_z:.2f}"
+        )
+        return ResponseBuilder.success(reply, message)
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
