@@ -18,7 +18,7 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicSvtTestTypeConfigBodyDataFacade, EpicSvtTestTypesActions, EpicSvtTestTypesSelectors } from 'epic-ui/shared/svt-test/test-types'
-import { BaseComponent, FileHelpers } from 'epic-ui/utils'
+import { BaseComponent, FileHelpers, StringHelpers } from 'epic-ui/utils'
 import { AceModule } from 'ngx-ace-wrapper'
 import { takeUntil } from 'rxjs'
 
@@ -50,7 +50,7 @@ export class EpicSvtTestTypeConfigPageComponent extends BaseComponent {
     readonly testTypeConfigId = input<string>()
     readonly testTypeConfig: Signal<EpicSvtTestTypeConfig>
     readonly testTypeConfigBodyResource: ResourceRef<EpicSvtTestTypeConfigBody>
-    readonly testTypeConfigBody: Signal<Record<any, any>>
+    readonly testTypeConfigBody: Signal<string>
     readonly testType: Signal<EpicSvtTestType>
 
     // DI
@@ -73,7 +73,7 @@ export class EpicSvtTestTypeConfigPageComponent extends BaseComponent {
         })
 
         this.testTypeConfigBody = computed(() => {
-            return JSON.parse(this.testTypeConfigBodyResource.value()?.configBody ?? null)
+            return this.testTypeConfigBodyResource.value()?.configBody ?? ''
         })
 
         this.testTypeConfigBodyResource = rxResource<EpicSvtTestTypeConfigBody, { testTypeConfigId: number }>({
@@ -100,14 +100,15 @@ export class EpicSvtTestTypeConfigPageComponent extends BaseComponent {
     }
 
     onCopyToClipboard(): void {
-        const configBodyString = JSON.stringify(this.testTypeConfigBody(), null, 4)
-        this.clipboard.copy(configBodyString)
+        this.clipboard.copy(this.testTypeConfigBody())
     }
 
-    onDownloadJson(): void {
-        const configBodyString = JSON.stringify(this.testTypeConfigBody(), null, 4)
-        const blob = new Blob([configBodyString], { type: 'application/json' })
-        const fileName = `${this.testTypeConfig()?.name.replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}.json`
+    onDownloadFile(): void {
+        const configBody = this.testTypeConfigBody()
+        const isJson = StringHelpers.isJsonString(configBody)
+        const blob = new Blob([configBody], { type: isJson ? 'application/json' : 'text/plain' })
+        const name = this.testTypeConfig()?.name.replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()
+        const fileName = `${name}.${isJson ? 'json' : 'txt'}`
 
         FileHelpers.saveBlobFile(blob, fileName, this.document)
     }

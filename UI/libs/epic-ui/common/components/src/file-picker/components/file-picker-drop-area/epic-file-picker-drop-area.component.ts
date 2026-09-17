@@ -20,7 +20,7 @@ import { EpicFileDragAndDropAreaDirective } from '../../directives'
 })
 export class EpicFilePickerDropAreaComponent {
 
-    @Input() acceptFileExtensions: string
+    @Input() acceptFileExtensions = ''
     @Input() isMultiple = false
 
     @Output() fileDrop$ = new EventEmitter<File[]>()

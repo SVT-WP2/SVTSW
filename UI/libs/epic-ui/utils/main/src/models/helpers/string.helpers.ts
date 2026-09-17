@@ -67,6 +67,19 @@ export namespace StringHelpers {
         }
     }
 
+    /**
+     * Check whether the string is a valid JSON content
+     */
+    export function isJsonString(str: string): boolean {
+        try {
+            JSON.parse(str)
+            return true
+        }
+        catch {
+            return false
+        }
+    }
+
     export function encodeObjToUrlString(obj: Record<string, any>): string {
         return encodeBase64(JSON.stringify(obj))
     }

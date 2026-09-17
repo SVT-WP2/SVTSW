@@ -10,7 +10,7 @@ export type EpicSvtTestSetupCreate = {
     generalLocation: string
     defaultConfig: {
         name: string
-        configBody: string // JSON string
+        configBody: string // text file content (JSON, JSON5, ...)
         note: string | null
     }
 }

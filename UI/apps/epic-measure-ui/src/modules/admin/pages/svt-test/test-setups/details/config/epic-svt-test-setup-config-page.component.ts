@@ -18,7 +18,7 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicSvtTestSetupConfigBodyDataFacade, EpicSvtTestSetupsActions, EpicSvtTestSetupsSelectors } from 'epic-ui/shared/svt-tests'
-import { BaseComponent, FileHelpers } from 'epic-ui/utils'
+import { BaseComponent, FileHelpers, StringHelpers } from 'epic-ui/utils'
 import { AceModule } from 'ngx-ace-wrapper'
 import { takeUntil } from 'rxjs'
 
@@ -50,7 +50,7 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
     readonly testSetupConfigId = input<string>()
     readonly testSetupConfig: Signal<EpicSvtTestSetupConfig>
     readonly testSetupConfigBodyResource: ResourceRef<EpicSvtTestSetupConfigBody>
-    readonly testSetupConfigBody: Signal<Record<any, any>>
+    readonly testSetupConfigBody: Signal<string>
     readonly isDefault: Signal<boolean>
 
     // DI
@@ -78,7 +78,7 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
         this.isDefault = computed(() => this.testSetupConfig()?.id === testSetup()?.defaultConfigId)
 
         this.testSetupConfigBody = computed(() => {
-            return JSON.parse(this.testSetupConfigBodyResource.value()?.configBody ?? null)
+            return this.testSetupConfigBodyResource.value()?.configBody ?? ''
         })
 
         this.testSetupConfigBodyResource = rxResource<EpicSvtTestSetupConfigBody, { testSetupConfigId: number }>({
@@ -108,14 +108,15 @@ export class EpicSvtTestSetupConfigPageComponent extends BaseComponent {
     }
 
     onCopyToClipboard(): void {
-        const configBodyString = JSON.stringify(this.testSetupConfigBody(), null, 4)
-        this.clipboard.copy(configBodyString)
+        this.clipboard.copy(this.testSetupConfigBody())
     }
 
-    onDownloadJson(): void {
-        const configBodyString = JSON.stringify(this.testSetupConfigBody(), null, 4)
-        const blob = new Blob([configBodyString], { type: 'application/json' })
-        const fileName = `${this.testSetupConfig()?.name.replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}.json`
+    onDownloadFile(): void {
+        const configBody = this.testSetupConfigBody()
+        const isJson = StringHelpers.isJsonString(configBody)
+        const blob = new Blob([configBody], { type: isJson ? 'application/json' : 'text/plain' })
+        const name = this.testSetupConfig()?.name.replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()
+        const fileName = `${name}.${isJson ? 'json' : 'txt'}`
 
         FileHelpers.saveBlobFile(blob, fileName, this.document)
     }

@@ -11,13 +11,13 @@ export type EpicSvtTestSetupConfigEntity = {
 
 export type EpicSvtTestSetupConfigBodyEntity = {
     id: number
-    configBody: string // JSON string
+    configBody: string // text file content (JSON, JSON5, ...)
 }
 
 export type EpicSvtTestSetupConfigCreateEntity = {
     setupId: number
     name: string
-    configBody: string // JSON string
+    configBody: string // text file content (JSON, JSON5, ...)
     note: string | null
 
 }

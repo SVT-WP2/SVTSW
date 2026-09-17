@@ -8,12 +8,12 @@ export type EpicSvtTestTypeConfig = {
 
 export type EpicSvtTestTypeConfigBody = {
     id: number
-    configBody: string // JSON string
+    configBody: string // text file content (JSON, JSON5, ...)
 }
 
 export type EpicSvtTestTypeConfigCreate = {
     testTypeId: number
     name: string
-    configBody: string // JSON string
+    configBody: string // text file content (JSON, JSON5, ...)
     note: string | null
 }
