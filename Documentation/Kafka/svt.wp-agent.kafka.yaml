@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: SVT Wafer Prober Agent API (Kafka Command Contract)
-  version: 2.2.0
+  version: 1.2.0
   description: |
     The Kafka communication layer definitions for `SVT Wafer Prober Agent Service`.
 
@@ -471,7 +471,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'                           
 
-  /svt.wp-agent.request/TestingUnLock:
+  /svt.wp-agent.request/TestingUnlock:
     post:
       tags: [ "1. USER LEVEL" ]
       summary: 
@@ -485,7 +485,7 @@ paths:
             schema:
               allOf:
                 - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/TestingUnLockMessage'
+                - $ref: '#/components/schemas/TestingUnlockMessage'
       responses:
         '200':
           description: Success
@@ -494,7 +494,7 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/TestingUnLockReplyMessage'
+                  - $ref: '#/components/schemas/TestingUnlockReplyMessage'
         '400':
           description: Error
           content:
@@ -564,37 +564,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage'
   
-  /svt.wp-agent.request/TakeScreenshot:
-    post:
-      tags: [ "1. USER LEVEL" ]
-      summary: 
-      description: |
-        ### State availability
-        **Required state:** `Any`  
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/RequestMessage'
-                - $ref: '#/components/schemas/TakeScreenshotMessage'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ReplyMessage'
-                  - $ref: '#/components/schemas/TakeScreenshotReplyMessage'
-        '400':
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReplyMessage'                                
-
   #########################
   # EXPERT LEVEL
   #########################
@@ -765,7 +734,7 @@ paths:
       summary: Sets overtravel gap for all chuck sites.
       description: |
         ### State availability
-        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide` or `OnDie_Wide_withoutPTPA`
+        **Required state:** `OnDie_Wide_withPTPA` or `OnDie_Wide_withoutPTPA` or `UsedByDeveloper`
       requestBody:
         required: true
         content:
@@ -921,6 +890,37 @@ paths:
   #########################
   # DEVELOPER  LEVEL
   #########################
+  /svt.wp-agent.request/TakeScreenshot:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary:
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/TakeScreenshotMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/TakeScreenshotReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
   /svt.wp-agent.request/MoveChuckTopLeft:
     post:
       tags: [ "3. DEVELOPER LEVEL" ]
@@ -1160,6 +1160,10 @@ paths:
     get:
       tags: [ "3. DEVELOPER LEVEL" ]
       summary: List wafer orientations from database
+      description: |
+        NOT YET WIRED UP — `list_orientations()` exists in `WPDataBaseActions.py` but is not
+        registered in `COMMAND_ROUTER`, and its body just returns "not yet implemented".
+        Sending this command today gets "Unknown command: ListOrientations".
       requestBody:
         required: false
         content:
@@ -1314,7 +1318,7 @@ paths:
                 $ref: '#/components/schemas/ReplyMessage'
 
 
-  /svt.wp-agent.request/WPAGInitializeManual:
+  /svt.wp-agent.request/Initialize:
     post:
       tags: [ "3. DEVELOPER LEVEL" ]
       summary: Initialize connection to wafer prober
@@ -1545,6 +1549,897 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReplyMessage' 
   
+
+  #########################
+  # SYSTEM / STATUS QUERIES  (added — registered in COMMAND_ROUTER but missing from this file)
+  #########################
+
+  /svt.wp-agent.request/GetAgentState:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Get current agent FSM state
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "GetAgentStateReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Agent state: OnDie_Wide_withPTPA, Current command: MoveChuckAsic"
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/GetInfo:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Get current die info
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "GetInfoReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: "Current die: Count of selected dies 24, Number 3, Row 1, Column 2"
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/ListAvailableCommands:
+    get:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: List all commands registered in COMMAND_ROUTER
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+              examples:
+                Success:
+                  value:
+                    type: "ListAvailableCommandsReply"
+                    requestId: "string"
+                    command: "string"
+                    status: "success"
+                    output: '{"available_commands": ["ListProbers", "..."]}'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/GetChuckPosition:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Get current chuck position (Wide/OffAxis/Contact/Separation)
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetChuckPositionMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetChuckPositionReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/GetChuckXY:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Query actual chuck XY and append it to a CSV log file (diagnostics)
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GetChuckXYMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GetChuckXYReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  #########################
+  # MOVEMENT / SEQUENCER  (added)
+  #########################
+
+  /svt.wp-agent.request/MoveChuckXYPrecise:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Move chuck to XY with iterative correction until within precision_um
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/MoveChuckXYPreciseMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/MoveChuckXYPreciseReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/Sleep:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Pause execution for N seconds (used inside sequences)
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/SleepMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/SleepReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/RunSequencerYAML:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Execute a command sequence from a YAML file
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RunSequencerYAMLMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/RunSequencerYAMLReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  #########################
+  # IMAGING / RASTER PIPELINE  (added)
+  #########################
+
+  /svt.wp-agent.request/TakeImage:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Raster-scan and capture a grid of images
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/TakeImageMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/TakeImageReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/BuildFlatfield:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Build a flatfield correction profile from a folder of raster images
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/BuildFlatfieldMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/BuildFlatfieldReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/GenerateRasterSteps:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Compute the raster grid step list for the current wafer (no motion)
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/GenerateRasterStepsMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/GenerateRasterStepsReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/StitchImagesFull:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Stitch a folder of raster images into one large image
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/StitchImagesFullMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/StitchImagesFullReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/CropImage:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Crop a stitched image to a pixel region
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CropImageMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CropImageReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/CleanupRasterImages:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Delete the individual raster tile images for a folder (post-stitch cleanup)
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/CleanupRasterImagesMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/CleanupRasterImagesReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/ArchiveImaging:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Archive the local Imaging folder to the EOS project store
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/ArchiveImagingMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/ArchiveImagingReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/DeleteImagingFolder:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Delete the local imaging output folder for a wafer
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/DeleteImagingFolderMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/DeleteImagingFolderReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/ComputeCouplingConstants:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Compute XY axis-coupling correction constants from a chuck_xy log
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/ComputeCouplingConstantsMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/ComputeCouplingConstantsReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+
+  #########################
+  # FIXED IMAGE SEQUENCES  (added — thin wrappers that run a fixed sequencer/*.yaml file; all params optional, override the sequence's own defaults)
+  #########################
+
+  /svt.wp-agent.request/TakeImageWafer:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageWafer.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageBAM:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageBAM.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageSEG:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageSEG.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageLEC:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageLEC.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL2:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL2.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL1_0-3:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL1_0-3.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL1_1-4:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL1_1-4.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL0_0-2:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL0_0-2.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL0_1-3:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL0_1-3.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/TakeImageL0_2-4:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed TakeImageL0_2-4.yaml image sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
+  /svt.wp-agent.request/BrightnessCorrection:
+    post:
+      tags: [ "3. DEVELOPER LEVEL" ]
+      summary: Run the fixed BrightnessCorrection.yaml sequence
+      description: |
+        ### State availability
+        **Required state:** `UsedByDeveloper`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/FixedImageSequenceMessage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ReplyMessage'
+                  - $ref: '#/components/schemas/FixedImageSequenceReplyMessage'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyMessage'
+
 components:
     schemas:
       RunSequencerMessage:
@@ -1571,17 +2466,17 @@ components:
         properties:
           type:
             type: string
-            default: 'MoveChuckDie'
+            default: 'MoveChuckRowColumn'
           data:
             type: object
-            required: [ user, waferAgentName,row,col ] 
-            properties:              
+            description: Auto-detects input type - provide either (row AND col) or label
+            properties:
               row:
                 type: number
               col:
                 type: number
               label:
-                type: string  
+                type: string
 
       MoveChuckRowColumnReplyMessage:
         properties:
@@ -1725,9 +2620,9 @@ components:
             default: 'SetChuckOvertravel'
           data:
             type: object
-            required: [ overdrive ]
+            required: [ overtravelGap ]
             properties:
-              overdrive:
+              overtravelGap:
                 type: number
 
       SetOverdriveReplyMessage:
@@ -1893,8 +2788,8 @@ components:
             properties:  
               reason:
                 type: string   
-              testSequanceId:
-                type: number  
+              testSequenceId:
+                type: number
       
 
       UserLogInReplyMessage:
@@ -1920,19 +2815,19 @@ components:
             $ref: '#/components/schemas/WpMachineStateDto'
      
 
-      TestingUnLockReplyMessage:
+      TestingUnlockReplyMessage:
         properties:
           type:
             type: string
-            default: 'TestingUnLockReply'
+            default: 'TestingUnlockReply'
           data:
             $ref: '#/components/schemas/WpMachineStateDto'
 
-      TestingUnLockMessage:
+      TestingUnlockMessage:
         properties:
           type:
             type: string
-            default: 'TestingUnLock'         
+            default: 'TestingUnlock'         
 
       UserLogOutMessage:
         properties:
@@ -1969,12 +2864,6 @@ components:
           type:
             type: string
             default: 'MoveChuckLoadedWafer'
-          data:
-            type: object
-            required: [ waferId ]
-            properties:
-              waferId:
-                type: number 
 
       MoveChuckLoadedWaferReplyMessage:
         properties:
@@ -2017,11 +2906,21 @@ components:
             default: 'TakeScreenshot'
           data:
             type: object
-            required: [ filePath ]
             properties:
-              filePath:
+              fileName:
                 type: string
- 
+              snapshot_type:
+                type: string
+                default: CameraRaw
+              save_locally:
+                type: boolean
+                default: true
+              outputDir:
+                type: string
+                default: screenshotsSVT
+              wafer:
+                type: string
+
 
       TakeScreenshotReplyMessage:
         properties:
@@ -2111,10 +3010,10 @@ components:
             default: 'LoadWafer'
           data:
             type: object
-            required: [ waferId ]
+            required: [ waferId, orientation ]
             properties:
               waferId:
-                type: string
+                type: number
               orientation:
                 type: string
 
@@ -2481,3 +3380,440 @@ components:
           - Error
           - UsedByDeveloper
           - UserLogged
+
+      GetChuckPositionMessage:
+        properties:
+          type:
+            type: string
+            default: 'GetChuckPosition'
+
+      GetChuckPositionReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'GetChuckPositionReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      GetChuckXYMessage:
+        properties:
+          type:
+            type: string
+            default: 'GetChuckXY'
+          data:
+            type: object
+            properties:
+              log_file:
+                type: string
+                default: chuck_xy_log.csv
+              label:
+                type: string
+
+      GetChuckXYReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'GetChuckXYReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      MoveChuckXYPreciseMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckXYPrecise'
+          data:
+            type: object
+            required: [ x, y ]
+            properties:
+              x:
+                type: number
+              y:
+                type: number
+              position:
+                type: string
+                default: Relative
+              abs_target_x:
+                type: number
+              abs_target_y:
+                type: number
+              precision_um:
+                type: number
+                default: 1.0
+              max_iterations:
+                type: integer
+                default: 3
+              correction_settle_s:
+                type: number
+                default: 0.2
+
+      MoveChuckXYPreciseReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'MoveChuckXYPreciseReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      SleepMessage:
+        properties:
+          type:
+            type: string
+            default: 'Sleep'
+          data:
+            type: object
+            properties:
+              seconds:
+                type: number
+                default: 1
+
+      SleepReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'SleepReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      RunSequencerYAMLMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunSequencerYAML'
+          data:
+            type: object
+            required: [ filepath ]
+            properties:
+              filepath:
+                type: string
+
+      RunSequencerYAMLReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'RunSequencerYAMLReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      TakeImageMessage:
+        properties:
+          type:
+            type: string
+            default: 'TakeImage'
+          data:
+            type: object
+            properties:
+              snapshot_type:
+                type: string
+                default: CameraRaw
+              save_locally:
+                type: boolean
+                default: true
+              outputDir:
+                type: string
+                default: screenshots
+              num_columns:
+                type: integer
+                default: 5
+              num_rows:
+                type: integer
+                default: 5
+              column_spacing_um:
+                type: number
+                default: -2968
+              row_spacing_um:
+                type: number
+                default: 2476
+              start_x_um:
+                type: number
+                default: -21088
+              start_y_um:
+                type: number
+                default: -27245
+              settle_time_s:
+                type: number
+                default: 0.25
+
+      TakeImageReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'TakeImageReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      BuildFlatfieldMessage:
+        properties:
+          type:
+            type: string
+            default: 'BuildFlatfield'
+          data:
+            type: object
+            required: [ folder ]
+            properties:
+              folder:
+                type: string
+              wafer:
+                type: string
+              sample_n:
+                type: integer
+                default: 64
+              sigma:
+                type: number
+                default: 300
+              output:
+                type: string
+                default: flatfield.npy
+
+      BuildFlatfieldReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'BuildFlatfieldReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      GenerateRasterStepsMessage:
+        properties:
+          type:
+            type: string
+            default: 'GenerateRasterSteps'
+          data:
+            type: object
+            properties:
+              num_columns:
+                type: integer
+                default: 1
+              num_rows:
+                type: integer
+                default: 1
+              column_spacing_um:
+                type: number
+                default: -2968
+              row_spacing_um:
+                type: number
+                default: 2476
+              start_x_um:
+                type: number
+                default: -21088
+              start_y_um:
+                type: number
+                default: -27245
+              settle_time_s:
+                type: number
+                default: 1
+              col_settle_time_s:
+                type: number
+              row_settle_time_s:
+                type: number
+              y_col_correction_um:
+                type: number
+              x_row_correction_um:
+                type: number
+              wafer_radius_um:
+                type: number
+                default: 0
+              wafer_center_x_um:
+                type: number
+                default: 0
+              wafer_center_y_um:
+                type: number
+                default: 0
+              debug_edge_cols_only:
+                type: boolean
+                default: false
+              wafer:
+                type: string
+
+      GenerateRasterStepsReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'GenerateRasterStepsReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      StitchImagesFullMessage:
+        properties:
+          type:
+            type: string
+            default: 'StitchImagesFull'
+          data:
+            type: object
+            required: [ folder ]
+            properties:
+              folder:
+                type: string
+              wafer:
+                type: string
+              save_overview_jpg:
+                type: boolean
+                default: false
+              pyramid_tiff:
+                type: boolean
+                default: true
+              tiff_quality:
+                type: integer
+                default: 75
+              name_suffix:
+                type: string
+              n_workers:
+                type: integer
+              flatfield:
+                type: string
+              flatfield_strength:
+                type: number
+                default: 1.0
+
+      StitchImagesFullReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'StitchImagesFullReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      CropImageMessage:
+        properties:
+          type:
+            type: string
+            default: 'CropImage'
+          data:
+            type: object
+            required: [ folder ]
+            properties:
+              folder:
+                type: string
+              wafer:
+                type: string
+              x_px:
+                type: integer
+                default: 0
+              y_px:
+                type: integer
+                default: 0
+              width_px:
+                type: integer
+              height_px:
+                type: integer
+              source:
+                type: string
+              output:
+                type: string
+              tif_quality:
+                type: integer
+                default: 75
+
+      CropImageReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'CropImageReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      CleanupRasterImagesMessage:
+        properties:
+          type:
+            type: string
+            default: 'CleanupRasterImages'
+          data:
+            type: object
+            required: [ folder ]
+            properties:
+              folder:
+                type: string
+              wafer:
+                type: string
+
+      CleanupRasterImagesReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'CleanupRasterImagesReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      ArchiveImagingMessage:
+        properties:
+          type:
+            type: string
+            default: 'ArchiveImaging'
+          data:
+            type: object
+            properties:
+              source_dir:
+                type: string
+                default: Imaging
+              dest_dir:
+                type: string
+
+      ArchiveImagingReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'ArchiveImagingReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      DeleteImagingFolderMessage:
+        properties:
+          type:
+            type: string
+            default: 'DeleteImagingFolder'
+          data:
+            type: object
+            properties:
+              wafer:
+                type: string
+
+      DeleteImagingFolderReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'DeleteImagingFolderReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      ComputeCouplingConstantsMessage:
+        properties:
+          type:
+            type: string
+            default: 'ComputeCouplingConstants'
+          data:
+            type: object
+            properties:
+              log_file:
+                type: string
+                default: chuck_xy_log.csv
+              wafer:
+                type: string
+
+      ComputeCouplingConstantsReplyMessage:
+        properties:
+          type:
+            type: string
+            default: 'ComputeCouplingConstantsReply'
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
+
+      FixedImageSequenceMessage:
+        description: >
+          Shared by the fixed sequencer/*.yaml runners (TakeImageWafer, TakeImageBAM,
+          TakeImageSEG, TakeImageLEC, TakeImageL2, TakeImageL1_0-3, TakeImageL1_1-4,
+          TakeImageL0_0-2, TakeImageL0_1-3, TakeImageL0_2-4, BrightnessCorrection).
+          `type` must equal the command name (e.g. 'TakeImageBAM'). `data` fields are
+          all optional and override the fixed sequence's own '$'-prefixed placeholders.
+        properties:
+          type:
+            type: string
+          data:
+            type: object
+            additionalProperties: true
+
+      FixedImageSequenceReplyMessage:
+        properties:
+          type:
+            type: string
+          data:
+            $ref: '#/components/schemas/WpMachineStateDto'
