@@ -2,7 +2,7 @@
 Kafka client specifically for DB Agent communication.
 """
 
-from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
+from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic
 import json
 import uuid
@@ -55,34 +55,43 @@ class DBKafkaClient:
             "socket.timeout.ms": 30000,
         })
 
+        # No group.id-based subscribe() here on purpose. This consumer is only
+        # ever polled while a specific request_reply() call is in flight
+        # (correlation IDs — not consumer-group semantics — are what route
+        # replies back to the right caller), so it can sit idle between DB
+        # requests for arbitrarily long stretches. A subscribe()'d consumer
+        # group member has to poll() at least every max.poll.interval.ms or
+        # the broker drops it from the group; any idle gap longer than that
+        # (e.g. simply not calling a DB-backed command for a couple of
+        # minutes) silently kicks it out, and the *next* request then fails
+        # immediately with _MAX_POLL_EXCEEDED on its very first poll.
+        # assign()ing directly to the single known partition sidesteps
+        # consumer-group coordination entirely — no heartbeats, no
+        # max.poll.interval.ms, nothing to time out while idle.
         self.consumer = KafkaConsumer({
             "bootstrap.servers": self.DB_BROKER,
             "group.id": f"wp-agent-db-consumer-{uuid.uuid4().hex[:8]}",
-            "auto.offset.reset": "latest",
             "enable.auto.commit": False,
-            "session.timeout.ms": 10000,
-            "heartbeat.interval.ms": 3000,
-            "max.poll.interval.ms": 120000,
         })
-        self.consumer.subscribe([self.DB_REPLY_TOPIC])
-        self._wait_for_assignment()
-        print("✅ DB Kafka Client initialized successfully")
+
+        # Assign, then force a real fetch of the current high-watermark offset
+        # and seek() to that concrete number — rather than the symbolic
+        # OFFSET_END, which only gets resolved on the consumer's first poll().
+        # Since requests are produced (and can be replied to) before this
+        # consumer ever polls, resolving "end" lazily can land the starting
+        # position *after* a reply that arrived in between, and it's missed
+        # forever. Pinning a real offset here, before any request is sent,
+        # avoids that race.
+        partition = TopicPartition(self.DB_REPLY_TOPIC, 0)
+        self.consumer.assign([partition])
+        self.consumer.poll(1.0)
+        low, high = self.consumer.get_watermark_offsets(partition, timeout=5.0)
+        self.consumer.seek(TopicPartition(self.DB_REPLY_TOPIC, 0, high))
+        print(f"✅ DB Kafka Client initialized successfully (manual assign, offset={high})")
 
     # =========================================================================
     # Kafka plumbing
     # =========================================================================
-
-    def _wait_for_assignment(self, timeout: float = 5.0) -> bool:
-        """Wait until consumer is assigned to at least one partition."""
-        start = time.time()
-        while time.time() - start < timeout:
-            self.consumer.poll(0.1)
-            if self.consumer.assignment():
-                parts = [f"{p.topic}[{p.partition}]" for p in self.consumer.assignment()]
-                print(f"   ✅ Consumer assigned to partition(s): {', '.join(parts)}")
-                return True
-        print(f"   ⚠️  Consumer not assigned within {timeout}s — replies may be missed")
-        return False
 
     def _ensure_topics_exist(self):
         """Create required topics if they don't exist."""
