@@ -7,12 +7,12 @@ Table main.WaferType {
 }
 
 Table main.WaferTypeMap{
-  waferTypeId integer [pk, ref:> main.WaferType.id]
+  waferTypeId integer [pk, ref:- main.WaferType.id, not null]
   waferMap JSON [not null]
 }
 
 Table main.WaferTypeImage{
-  waferTypeId integer [pk, ref:> main.WaferType.id]
+  waferTypeId integer [pk, ref:- main.WaferType.id]
   imageBase64String text [not null]
 }
 
@@ -136,9 +136,9 @@ Table main.WaferProbeMachine {
   software main.wpSwType [not null]
   swVersion varchar(50) [not null]
   vendor main.wpVendor [not null]
-  loadedWaferId integer [ref:> main.Wafer.id, default: null]
+  loadedWaferId integer [ref:>? main.Wafer.id, null]
   loadedWaferOrientation main.waferMapOrientation [default: null]
-  installedProbeCardId integer [ref:> main.ProbeCard.id, default: null]
+  installedProbeCardId integer [ref:>? main.ProbeCard.id, default: null]
   installedProbeCardOrientation main.waferMapOrientation [default: null]
 }
 
@@ -201,8 +201,8 @@ Table main.SvtTestSetup {
 }
 
 Table main.SvtTestSetupDefaultConfig{
-  setupId integer [pk, ref:> main.SvtTestSetup.id]
-  defaultConfigId integer [ref:> main.SvtTestSetupConfig.id, default: null]
+  setupId integer [ref:> main.SvtTestSetup.id, not null]
+  defaultConfigId integer [ref:>? main.SvtTestSetupConfig.id, default: null]
 }
 
 // Table main.SvtTestSetupAsicFamilyTypeList {
@@ -223,7 +223,7 @@ Table main.SvtTestSetupConfig {
   setupId integer [ref:> main.SvtTestSetup.id, not null]
   name varchar(100) [unique, not null]
   note text
-  configBody JSON [not null]
+  configBody text [not null]
   createdAt date [default: `CURRENT_DATE`]
 }
 
@@ -245,7 +245,7 @@ Table main.SvtTestTypeConfig {
   testTypeId integer [ref:> main.SvtTestType.id, not null]
   name varchar(100) [not null]
   note text
-  configBody JSON [not null]
+  configBody text [not null]
   createdAt date [default: `CURRENT_DATE`]
   indexes {
     (testTypeId, name) [unique]
@@ -255,7 +255,7 @@ Table main.SvtTestTypeConfig {
 Table main.SvtTestTemplate {
   id integer [pk, increment]
   dutType main.dutType
-  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id]
+  testTypeConfigId integer [ref:> main.SvtTestTypeConfig.id, not null]
   isEnabled bool [default: TRUE]
   indexes {
     (dutType, testTypeConfigId) [unique]
