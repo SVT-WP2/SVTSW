@@ -18,6 +18,7 @@
 #include "DbAgentDto/DbEquipDto.h"
 #include "DbAgentDto/DbEquipTypeDto.h"
 #include "DbAgentDto/DbProbeCardDto.h"
+#include "DbAgentDto/DbTestDto.h"
 #include "DbAgentDto/DbTestSetupConfigDto.h"
 #include "DbAgentDto/DbTestSetupDto.h"
 #include "DbAgentDto/DbTestTemplateDto.h"
@@ -47,6 +48,7 @@ namespace dbagent
     dtoList["SvtDbEquipDto"] = Singleton<DbEquipDto>::instance();
     dtoList["SvtDbTestSetupDto"] = Singleton<DbTestSetupDto>::instance();
     dtoList["SvtDbTestSetupConfigDto"] = Singleton<DbTestSetupConfigDto>::instance();
+    dtoList["SvtDbTestDto"] = Singleton<DbTestDto>::instance();
     dtoList["SvtDbTestTypeDto"] = Singleton<DbTestTypeDto>::instance();
     dtoList["SvtDbTestTypeConfigDto"] = Singleton<DbTestTypeConfigDto>::instance();
     dtoList["SvtDbTestTemplateDto"] = Singleton<DbTestTemplateDto>::instance();

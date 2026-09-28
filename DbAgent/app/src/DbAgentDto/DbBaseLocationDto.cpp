@@ -66,10 +66,9 @@ namespace dbagent
       DbEntry &entry)
   {
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("create"))
-    {
-      THROW_RUNTIME_ERROR("Non object create was found");
-    }
+    if (!SvtUtils::keyExists(msgData, "create"))
+      return false;
+
     return createEntryWithLocation(msgData["create"], entry);
   }
 

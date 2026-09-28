@@ -1,9 +1,9 @@
 
+#include <getopt.h>
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
-
-#include <getopt.h>
+#include <iostream>
 
 #include <kafka/KafkaConsumer.h>
 #include <kafka/Properties.h>
@@ -34,6 +34,22 @@ void stopRunning(int sig)
   }
 }
 
+void print_help(const char *prog)
+{
+  std::cout
+      << "Usage: " << prog << " [options]\n"
+      << "\n"
+      << "Test Kafka consumer that subscribes to a topic and prints incoming records.\n"
+      << "\n"
+      << "Options:\n"
+      << "  -b <broker>    Kafka broker address     (default: localhost:9095)\n"
+      << "  -g <group_id>  Consumer group ID        (default: svt.db-agent.test)\n"
+      << "  -t <topic>     Topic to subscribe to    (default: svt.db-agent.request)\n"
+      << "  -h             Show this help message and exit\n"
+      << "\n"
+      << "Press Ctrl+C to stop consuming.\n";
+}
+
 int main(int argc, char **argv)
 {
   // Register signal handlers for graceful shutdown
@@ -49,7 +65,7 @@ int main(int argc, char **argv)
   std::string topic_name = "svt.db-agent.request";
 
   int opt;
-  while ((opt = getopt(argc, argv, ":b:g:t:")) != -1)
+  while ((opt = getopt(argc, argv, ":b:g:ht:")) != -1)
   {
     switch (opt)
     {
@@ -62,6 +78,9 @@ int main(int argc, char **argv)
     case 'g':
       group_id = optarg;
       break;
+    case 'h':
+      print_help(argv[0]);
+      return EXIT_SUCCESS;
     case ':':
     {
       std::ostringstream ss;

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 
-# The build version comes from the DbAgent/VERSION file (bumped by the
-# DbAgent :: Release workflow) and is passed to CMake as -DVERSION=... by compile.sh; that is
-# what configure_file() stamps into version.h further below. The VERSION on the
-# project() line is only the nominal CMake project version (PROJECT_VERSION) and is
-# not used at build or runtime.
+# The build version comes from the DbAgent/VERSION file (bumped by the DbAgent
+# :: Release workflow) and is passed to CMake as -DVERSION=... by compile.sh;
+# that is what configure_file() stamps into version.h further below. The VERSION
+# on the project() line is only the nominal CMake project version
+# (PROJECT_VERSION) and is not used at build or runtime.
 project(
   svt-db-agent
   VERSION 0.0.0
@@ -68,11 +68,12 @@ set(SVT_COMMON_CPP_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/svt-common")
 
 add_subdirectory(${SVT_COMMON_CPP_SOURCE_DIR} ${SVT_COMMON_CPP_BINARY_DIR})
 
-# VERSION is supplied at configure time via -DVERSION=... by compile.sh
-# (which resolves it from the VERSION env var in Docker builds, or
-# `git describe` for local builds).
+# VERSION is supplied at configure time via -DVERSION=... by compile.sh (which
+# resolves it from the VERSION env var in Docker builds, or `git describe` for
+# local builds).
 if(NOT DEFINED VERSION OR VERSION STREQUAL "")
-  message(FATAL_ERROR "VERSION not set. Pass -DVERSION=... or run via compile.sh.")
+  message(
+    FATAL_ERROR "VERSION not set. Pass -DVERSION=... or run via compile.sh.")
 endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version/version.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
@@ -94,7 +95,7 @@ if(UNIX AND NOT APPLE)
   set(PQXX_TARGET pqxx)
 else()
   set(ENV{PKG_CONFIG_PATH}
-      "/opt/homebrew/lib/postgresql@17/pkgconfig:/opt/homebrew/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+      "/opt/homebrew/opt/postgresql@17/lib/postgresql/pkgconfig:/opt/homebrew/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
   )
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PQXX REQUIRED IMPORTED_TARGET libpqxx)

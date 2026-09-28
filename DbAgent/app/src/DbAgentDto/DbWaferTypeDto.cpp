@@ -57,15 +57,15 @@ namespace dbagent
   {
     const auto waferMap_field = "waferMap";
     const auto &msgData = msg.getPayload()["data"];
-    if (!msgData.contains("create"))
-    {
-      THROW_RUNTIME_ERROR("Object item create was not found");
+    if (!SvtUtils::keyExists(msgData, "create"))
       return;
-    }
 
-    if (!msgData["create"].contains(waferMap_field) || msgData["create"][waferMap_field].is_null())
+    if (!SvtUtils::keyExists(msgData, waferMap_field))
+      return;
+
+    if (msgData["create"][waferMap_field].is_null())
     {
-      THROW_RUNTIME_ERROR("Error, field not null waferMap required");
+      THROW_RUNTIME_ERROR("Error, not null waferMap field required");
       return;
     }
 
