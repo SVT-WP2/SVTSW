@@ -1,0 +1,534 @@
+openapi: "3.0.1"
+info:
+  title: SVT Test Agent
+  description: |
+    The Kafka communication layer definitions for `SVT Test Agent Service` - the service that processes (executes) `SvtTest` entities.
+
+    ### Naming Conventions
+    - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - The reply message topic name is defined by the global SVT naming conventions `*.reply`, e.g:
+      - request message topic `svt.test.request` => reply topic name `svt.test.request.reply`
+    - Each message structure follows the global SVT naming conventions
+
+    ### Topics
+    | Topic | Produced by | Consumed by | Messages |
+    | --- | --- | --- | --- |
+    | `svt.test.request` | UI backend, other services | SVT Test Agents | `StartSvtTest`, `AbortSvtTest` |
+    | `svt.test.request.reply` | SVT Test Agents | requesters | `StartSvtTestReply`, `AbortSvtTestReply` |
+    | `svt.test.event` | SVT Test Agents | UI backend, other services | `SvtTestProcessingStatusChanged` |
+    | `svt.test.heartbeat` | SVT Test Agents | UI backend, other services | `SvtTestAgentHeartbeat` |
+
+    - All topics have 1 partition and are created by the agent on startup if they do not exist.
+    - `svt.test.heartbeat` has retention `60 s`, same as the other SVT heartbeat topics.
+    - Messages are produced without a message key.
+
+    ### POST Request Meaning
+    - Request body describes the Kafka Message structure published to the topic of the path.
+    - Response
+      - `200` / `default` - the relevant message will be emitted to the relevant `*.reply` topic as a reply to that message.
+      - `204` - no reply, the message is a broadcast (`svt.test.event`, `svt.test.heartbeat`).
+
+    ### Agent Instances & Routing
+    - One SVT Test Agent instance runs per test setup (`SvtTestSetup`) and is bound to its `setupId` by configuration.
+    - All agents share the topic `svt.test.request`, each agent consumes it with its **own** consumer group (e.g. `svt.test.request.setup-<setupId>`), so every agent receives every command.
+    - Every command carries `data.setupId`. An agent processes and replies **only** to the commands with its own `setupId`, all other commands are ignored.
+    - If no agent of the setup is online, **no reply is sent**. Requesters must apply a reply timeout (recommended `15 s`) and should check `svt.test.heartbeat` before sending a command.
+    - On startup an agent skips the backlog of `svt.test.request` (seek to end), commands sent while the agent was offline are never executed.
+
+    ### Processing Flow
+    1. The requester resolves the `setupId` of the SvtTest (`SvtTest.testSetupConfigId` => `SvtTestSetupConfig.setupId`) and sends `StartSvtTest`.
+    2. The agent loads and validates everything needed for the execution from the SVT DB Agent (`svt.db-agent.request`):
+       - `GetAllSvtTests` (filter `ids`) - the SvtTest must exist and must not be started / finished yet.
+       - `GetAllSvtTestSetupConfigs` (filter `ids`) - the test setup configuration must belong to the agent's setup.
+       - `GetSvtTestSetupConfigBody`, `GetAllSvtTestTypeConfigs`, `GetAllSvtTestTypes`, `GetSvtTestTypeConfigBody` - test setup / test type configuration.
+       - `GetAllAsics` | `GetAllChips` | `GetAllChipBlocks` (filter `ids` = `dutId`, according to `dutEntityName`) - DUT.
+    3. The agent marks the SvtTest as started with `UpdateSvtTestStart` (`startedAt`).
+    4. The agent replies `StartSvtTestReply` (processing status `Starting`) and publishes `SvtTestProcessingStatusChanged` (`Starting`).
+    5. The agent prepares the setup and starts the execution => `SvtTestProcessingStatusChanged` (`Running`).
+    6. The execution ends (completed, failed or aborted). The agent stores the result with `UpdateSvtTestFinish` (`finishedAt`, `pathToResult`, `testResultStatus`) and **after that** publishes `SvtTestProcessingStatusChanged` (`Finished`), so the consumers of `Finished` can rely on the updated SvtTest entity in the DB.
+
+    ### Processing Rules
+    - One `SvtTest` entity = one execution. A started / finished SvtTest cannot be started again (error `1004`), create a new SvtTest to repeat the test.
+    - An agent processes one SvtTest at a time. `StartSvtTest` sent to a busy agent is rejected (error `2001`), nothing is queued.
+    - `AbortSvtTest` moves the SvtTest to `Aborting`, the processing ends with `Finished` and `testResultStatus` = `ABORTED`.
+    - Agent side failures end with `Finished`, `testResultStatus` = `ERROR` and `error` (e.g. `4001`). If the agent is restarted while processing, it finishes the interrupted SvtTest on startup with `ERROR` (error `4002`).
+    - To wait for the result (e.g. other services): subscribe to `svt.test.event` **before** sending `StartSvtTest` and wait for the `Finished` event of the `svtTestId`.
+
+    ### Kafka Headers
+    - Request / reply headers follow the global SVT naming conventions: `kafka_correlationId`, `kafka_replyTopic`, `kafka_replyPartition`.
+    - Reply messages additionally carry the header `kafka_nest-is-disposed` (any value, e.g. `00`, same as SVT DB Agent). It marks the reply as final for NestJS clients (UI backend).
+    - The header `kafka_nest-err` is never set, errors are reported in the message body (`status`, `error`).
+
+    ### Useful Links
+    - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
+    - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
+    - SVT DB Agent Kafka contract: [svt.db-agent.kafka.yaml](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/svt.db-agent.kafka.yaml)
+  version: 0.0.1
+tags:
+  - name: SvtTest Commands
+    description: Commands consumed by the SVT Test Agent bound to `setupId`. Replies are emitted to `svt.test.request.reply`.
+  - name: SvtTest Events
+    description: Broadcast messages published by the SVT Test Agents to `svt.test.event`.
+  - name: Agent Heartbeat
+    description: Broadcast presence messages published by the SVT Test Agents to `svt.test.heartbeat`.
+#
+paths:
+  # COMMANDS
+  /svt.test.request/StartSvtTest:
+    post:
+      tags:
+        - SvtTest Commands
+      summary: Start SvtTest processing
+      description: |
+        Requests the agent bound to `setupId` to process (execute) the SvtTest `svtTestId`.
+
+        The reply is emitted as soon as the request is validated and the SvtTest is marked as started (`UpdateSvtTestStart`). It does not wait for the end of the test, the further processing statuses and the result are published to `svt.test.event`.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `1003` SetupMismatch, `1004` SvtTestAlreadyStarted, `1005` InvalidTestConfig, `1006` UnsupportedTestType, `2001` AgentBusy
+        - `NotFound`: `1002` SvtTestNotFound
+        - `UnexpectedError`: `2002` AgentNotReady, `3001` DbAgentUnavailable, `3002` DbAgentError, `9999` UnexpectedError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/StartSvtTestMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/StartSvtTestReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.test.request/AbortSvtTest:
+    post:
+      tags:
+        - SvtTest Commands
+      summary: Abort SvtTest processing
+      description: |
+        Requests the agent bound to `setupId` to abort the processing of the SvtTest `svtTestId` (processing status `Starting` or `Running`).
+
+        The reply is emitted as soon as the abort is initiated (processing status `Aborting`). When the setup is brought to a safe state, the agent stores the result (`testResultStatus` = `ABORTED`) and publishes `Finished` to `svt.test.event`. A repeated abort of a SvtTest in `Aborting` status replies `Success`.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `1007` SvtTestNotRunning
+        - `UnexpectedError`: `9999` UnexpectedError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/AbortSvtTestMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/AbortSvtTestReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # EVENTS
+  /svt.test.event/SvtTestProcessingStatusChanged:
+    post:
+      tags:
+        - SvtTest Events
+      summary: SvtTest processing status changed
+      description: |
+        Published by the agent on each processing status change of a SvtTest: `Starting` => `Running` => (`Aborting`) => `Finished`.
+
+        - Every message is a full snapshot of the processing state, the latest message of a `svtTestId` describes its current state.
+        - `Finished` is the final status. It is published after the result is stored in the DB (`UpdateSvtTestFinish`). If the result cannot be stored, `Finished` is published with `error` (`3001`, `3002`).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/EventMessage"
+                - $ref: "#/components/schemas/SvtTestProcessingStatusChangedMessage"
+        required: true
+      responses:
+        "204":
+          description: No reply, broadcast message.
+  # HEARTBEAT
+  /svt.test.heartbeat/SvtTestAgentHeartbeat:
+    post:
+      tags:
+        - Agent Heartbeat
+      summary: SVT Test Agent heartbeat
+      description: |
+        Published periodically (every `heartbeatIntervalMs`, default `5 s`) by every running agent.
+
+        - Consumers consider an agent offline when no heartbeat was received for 3 times `heartbeatIntervalMs`.
+        - The heartbeat contains the processing state of the SvtTest being processed, so consumers subscribing later (e.g. UI after reload) get the live processing state without any request.
+        - A new consumer reading the topic from the earliest offset gets the state of all online agents immediately (retention `60 s`).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/EventMessage"
+                - $ref: "#/components/schemas/SvtTestAgentHeartbeatMessage"
+        required: true
+      responses:
+        "204":
+          description: No reply, broadcast message.
+
+components:
+  schemas:
+    RequestMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    ReplyMessage:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        status:
+          $ref: "#/components/schemas/ReplyStatus"
+        type:
+          type: string
+        data:
+          type: object
+        error:
+          $ref: "#/components/schemas/SvtTestAgentErrorDto"
+    ReplyStatus:
+      type: string
+      enum:
+        - Success
+        - BadRequest
+        - NotFound
+        - UnexpectedError
+    EventMessage:
+      type: object
+      required:
+        - type
+        - data
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    #
+    # COMMANDS :: START
+    #
+    StartSvtTestMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTest"
+        data:
+          type: object
+          required:
+            - setupId
+            - svtTestId
+          properties:
+            setupId:
+              type: number
+              description: SvtTestSetup id, addresses the agent bound to that setup. It must be the setup of the SvtTest (`testSetupConfigId` => `SvtTestSetupConfig.setupId`).
+              example: 3
+            svtTestId:
+              type: number
+              description: SvtTest id.
+              example: 1542
+    StartSvtTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTestReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+    #
+    # COMMANDS :: ABORT
+    #
+    AbortSvtTestMessage:
+      properties:
+        type:
+          type: string
+          default: "AbortSvtTest"
+        data:
+          type: object
+          required:
+            - setupId
+            - svtTestId
+          properties:
+            setupId:
+              type: number
+              description: SvtTestSetup id, addresses the agent bound to that setup.
+              example: 3
+            svtTestId:
+              type: number
+              description: SvtTest id. Must be the SvtTest currently processed by the agent.
+              example: 1542
+    AbortSvtTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "AbortSvtTestReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+    #
+    # EVENTS :: PROCESSING STATUS
+    #
+    SvtTestProcessingStatusChangedMessage:
+      properties:
+        type:
+          type: string
+          default: "SvtTestProcessingStatusChanged"
+        data:
+          $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+    #
+    # HEARTBEAT
+    #
+    SvtTestAgentHeartbeatMessage:
+      properties:
+        type:
+          type: string
+          default: "SvtTestAgentHeartbeat"
+        data:
+          $ref: "#/components/schemas/SvtTestAgentHeartbeatDto"
+    #
+    # DTOs
+    #
+    SvtTestProcessingStatusDto:
+      type: object
+      description: Snapshot of the processing state of a SvtTest on an agent.
+      required:
+        - svtTestId
+        - setupId
+        - agentName
+        - processingStatus
+        - updatedAt
+        - startedAt
+        - finishedAt
+        - testResultStatus
+        - pathToResult
+        - error
+      properties:
+        svtTestId:
+          type: number
+          description: SvtTest id.
+          example: 1542
+        setupId:
+          type: number
+          description: SvtTestSetup id of the agent.
+          example: 3
+        agentName:
+          type: string
+          description: Name of the agent instance processing the SvtTest.
+          example: "svt-test-agent-setup-3"
+        processingStatus:
+          $ref: "#/components/schemas/SvtTestProcessingStatus"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Time of the last processing status change. Date in UTC, format `2025-06-03T23:59:12.000Z`
+        startedAt:
+          type: string
+          format: date-time
+          description: Start time stored with `UpdateSvtTestStart`. Date in UTC, format `2025-06-03T23:59:12.000Z`
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Set with `Finished`, finish time stored with `UpdateSvtTestFinish`. Date in UTC, format `2025-06-03T23:59:12.000Z`
+        testResultStatus:
+          nullable: true
+          description: Set with `Finished`, result stored with `UpdateSvtTestFinish`.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestResultStatus"
+        pathToResult:
+          type: string
+          nullable: true
+          description: Path to the test results, set at the latest with `Finished` and stored with `UpdateSvtTestFinish`. Empty string if no results were produced.
+        error:
+          nullable: true
+          description: Set with `Finished` when the processing failed on the agent side (`testResultStatus` = `ERROR`, e.g. `4001`, `4002`) or when the result could not be stored in the DB (`3001`, `3002`).
+          allOf:
+            - $ref: "#/components/schemas/SvtTestAgentErrorDto"
+    SvtTestAgentHeartbeatDto:
+      type: object
+      required:
+        - agentName
+        - setupId
+        - agentStatus
+        - currentTest
+        - error
+        - version
+        - heartbeatIntervalMs
+        - sentAt
+      properties:
+        agentName:
+          type: string
+          description: Unique name of the agent instance (agent configuration).
+          example: "svt-test-agent-setup-3"
+        setupId:
+          type: number
+          description: SvtTestSetup id the agent is bound to.
+          example: 3
+        agentStatus:
+          $ref: "#/components/schemas/SvtTestAgentStatus"
+        currentTest:
+          nullable: true
+          description: Processing state of the SvtTest being processed (`agentStatus` = `Busy`), otherwise `null`.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+        error:
+          nullable: true
+          description: Reason of the `Error` agent status, otherwise `null`.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestAgentErrorDto"
+        version:
+          type: string
+          description: Agent software version.
+          example: "0.1.0"
+        heartbeatIntervalMs:
+          type: number
+          description: Interval between two heartbeats in milliseconds, default `5000`.
+          example: 5000
+        sentAt:
+          type: string
+          format: date-time
+          description: Date in UTC, format `2025-06-03T23:59:12.000Z`
+    SvtTestAgentErrorDto:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: "#/components/schemas/SvtTestAgentErrorCode"
+        message:
+          type: string
+          description: Human readable error message.
+    #
+    # ENUMS
+    #
+    SvtTestProcessingStatus:
+      type: string
+      description: |
+        Processing status of a SvtTest on an agent:
+        - `Starting` - the request is accepted and the SvtTest is marked as started (`UpdateSvtTestStart`), the agent prepares the setup.
+        - `Running` - the test is being executed.
+        - `Aborting` - the abort is requested, the agent stops the execution and brings the setup to a safe state.
+        - `Finished` - final status, the result is stored in the DB (`UpdateSvtTestFinish`), see `testResultStatus`.
+      enum:
+        - Starting
+        - Running
+        - Aborting
+        - Finished
+    SvtTestResultStatus:
+      type: string
+      description: |
+        Result of the SvtTest, values of the DB enum `testResultStatus` (SVT DB Agent `GetAllEnums`):
+        - `SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE` - the test was executed, overall result reported by the test.
+        - `ERROR` - the test could not be completed, error of the test or of the agent (see `error`).
+        - `ABORTED` - the processing was aborted with `AbortSvtTest`. **New value**, the DB enum `testResultStatus` has to be extended.
+      enum:
+        - SUCCESS
+        - PARTIAL_SUCCESS
+        - FAILURE
+        - ERROR
+        - ABORTED
+    SvtTestAgentStatus:
+      type: string
+      description: |
+        Status of the agent reported by the heartbeat:
+        - `Idle` - ready to process a SvtTest.
+        - `Busy` - processing a SvtTest (`currentTest`), `StartSvtTest` is rejected with `2001`.
+        - `Error` - the agent is not able to process SvtTests (e.g. equipment not reachable), see `error`. `StartSvtTest` is rejected with `2002`.
+
+        There is no `Offline` status, an agent is offline when no heartbeat is received for 3 times `heartbeatIntervalMs`.
+      enum:
+        - Idle
+        - Busy
+        - Error
+    SvtTestAgentErrorCode:
+      type: number
+      description: |
+        Error codes of the SVT Test Agent, used in `error.code` of the reply messages, of `SvtTestProcessingStatusDto` and of `SvtTestAgentHeartbeatDto`.
+
+        | Code | Name | Reply status | Meaning |
+        | --- | --- | --- | --- |
+        | `1001` | InvalidMessage | BadRequest | Unknown message type, invalid JSON or missing / invalid fields. |
+        | `1002` | SvtTestNotFound | NotFound | The SvtTest `svtTestId` does not exist. |
+        | `1003` | SetupMismatch | BadRequest | The test setup configuration of the SvtTest (`testSetupConfigId`) belongs to another setup than `setupId`. |
+        | `1004` | SvtTestAlreadyStarted | BadRequest | The SvtTest has already been started or finished (`startedAt` / `finishedAt` is set). |
+        | `1005` | InvalidTestConfig | BadRequest | The test type / test setup configuration body cannot be parsed or is not valid for the agent. |
+        | `1006` | UnsupportedTestType | BadRequest | The agent is not able to execute the test type of the SvtTest. |
+        | `1007` | SvtTestNotRunning | BadRequest | `AbortSvtTest` of a SvtTest that is not being processed by the agent. |
+        | `2001` | AgentBusy | BadRequest | The agent is processing another SvtTest. |
+        | `2002` | AgentNotReady | UnexpectedError | The agent is in `Error` status and does not accept SvtTests. |
+        | `3001` | DbAgentUnavailable | UnexpectedError | The SVT DB Agent did not reply in time. |
+        | `3002` | DbAgentError | UnexpectedError | The SVT DB Agent replied with an error. |
+        | `4001` | ExecutionFailed | - | The execution failed on the agent side (equipment, software), used with `testResultStatus` = `ERROR`. |
+        | `4002` | ExecutionInterrupted | - | The agent was restarted while processing, used with `testResultStatus` = `ERROR`. |
+        | `9999` | UnexpectedError | UnexpectedError | Any other error. |
+      enum:
+        - 1001
+        - 1002
+        - 1003
+        - 1004
+        - 1005
+        - 1006
+        - 1007
+        - 2001
+        - 2002
+        - 3001
+        - 3002
+        - 4001
+        - 4002
+        - 9999
+      x-enum-varnames:
+        - InvalidMessage
+        - SvtTestNotFound
+        - SetupMismatch
+        - SvtTestAlreadyStarted
+        - InvalidTestConfig
+        - UnsupportedTestType
+        - SvtTestNotRunning
+        - AgentBusy
+        - AgentNotReady
+        - DbAgentUnavailable
+        - DbAgentError
+        - ExecutionFailed
+        - ExecutionInterrupted
+        - UnexpectedError
