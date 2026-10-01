@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: SVT Test Agent API
+  version: 1.0.0
+  description: |
+    API contract for submitting SVT test-agent commands and receiving replies.
+
+    Kafka routing:
+    - Input request messages are consumed from svt.test-agent.request.
+    - Final reply and error messages are published to svt.test-agent.request.reply.
+    - Heartbeat messages are published to svt.test-agent.heartbeat.
+
+tags:
+  - name: Run Test
+    description: Commands for executing tests through the SVT test agent.
+
+paths:
+  /svt.test-agent.request/RunTest:
+    post:
+      tags:
+        - Run Test
+      operationId: runTest
+      summary: Execute a single test
+      description: |
+        Executes one test using the specified test ID.
+      requestBody:
+        $ref: "#/components/requestBodies/RunTestRequest"
+      responses:
+        "102":
+          $ref: '#/components/responses/HeartbeatRunTest'
+        "200":
+          $ref: "#/components/responses/RunTestReply"
+        default:
+          $ref: "#/components/responses/RunTestErrorReply"
+
+components:
+  requestBodies:
+    RunTestRequest:
+      description: RunTest input message consumed from svt.test-agent.request.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestMessage"
+          examples:
+            default:
+              value:
+                type: "RunTest"
+                data:
+                  testId: 1
+
+  responses:
+    RunTestReply:
+      description: Final reply message for a single test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ReplyMessage"
+          examples:
+            successful:
+              value:
+                status: "Success"
+                type: "RunTest"
+                data:
+                  testId: 1
+                  event: "Completed"
+                  finishedAt: "string"
+                  outputLocation: "string"
+                error:
+                  code: 0
+                  message: "string"
+
+    RunTestErrorReply:
+      description: Unexpected error reply for a single test run. Published to svt.test-agent.request.reply.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ReplyMessage"
+          examples:
+            runTestFailed:
+              value:
+                status: "Failed"
+                type: "RunTest"
+                data:
+                  testId: 1
+                  event: "Completed"
+                  finishedAt: "string"
+                  outputLocation: "string"
+                error:
+                  code: 1
+                  message: "string"
+    HeartbeatRunTest:
+      description: Intermediate heartbeat message emitted while a RunTest request is running. Published to svt.test-agent.heartbeat.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HeartbeatMessage"
+          examples:
+            runTestStarted:
+              $ref: "#/components/examples/RunTestStartedHeartbeat"
+            runTestRunning:
+              $ref: "#/components/examples/RunTestRunningHeartbeat"
+  examples:
+    RunTestStartedHeartbeat:
+      summary: RunTest started heartbeat
+      value:
+        status: "Running"
+        type: "RunTestHeartbeat"
+        data:
+          testId: 1
+          event: "Started"
+        error:
+          code: 0
+          message: "string"
+
+    RunTestRunningHeartbeat:
+      summary: RunTest running heartbeat
+      value:
+        status: "Running"
+        type: "RunTestHeartbeat"
+        data:
+          testId: 1
+          event: "Running"
+        error:
+          code: 0
+          message: "string"
+
+  schemas:
+    RequestMessage:
+      type: object
+      description: Base request envelope consumed from svt.test-agent.request. Final replies are published to svt.test-agent.request.reply and heartbeats are published to svt.test-agent.heartbeat.
+      required:
+        - type
+        - data
+      properties:
+        type:
+          type: string
+          enum:
+            - RunTest
+          description: Message type handled by the test agent.
+        data:
+          $ref: "#/components/schemas/RequestData"
+      additionalProperties: false
+
+    RequestData:
+      type: object
+      description: Request payload. Fields are used according to the request type.
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+      additionalProperties: false
+
+    ReplyMessage:
+      type: object
+      description: Base final reply envelope published to svt.test-agent.request.reply.
+      required:
+        - status
+        - type
+        - data
+        - error
+      properties:
+        status:
+          type: string
+          enum:
+            - Success
+            - Partial Success
+            - Failed
+        type:
+          type: string
+          enum:
+            - RunTest
+        data:
+          $ref: "#/components/schemas/FinalReplyData"
+        error:
+          $ref: "#/components/schemas/ReplyError"
+      additionalProperties: false
+
+    HeartbeatMessage:
+      type: object
+      description: Heartbeat envelope published to svt.test-agent.heartbeat.
+      required:
+        - status
+        - type
+        - data
+        - error
+      properties:
+        status:
+          type: string
+          enum:
+            - Running
+        type:
+          type: string
+          enum:
+            - RunTestHeartbeat
+        data:
+          $ref: "#/components/schemas/HeartbeatData"
+        error:
+          $ref: "#/components/schemas/ReplyError"
+      additionalProperties: false
+
+    HeartbeatData:
+      type: object
+      required:
+        - testId
+        - event
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        event:
+          type: string
+          enum:
+            - Started
+            - Running
+      additionalProperties: false
+
+    FinalReplyData:
+      type: object
+      required:
+        - testId
+        - event
+        - finishedAt
+        - outputLocation
+      properties:
+        testId:
+          type: integer
+          format: int64
+          minimum: 0
+        event:
+          type: string
+          enum:
+            - Completed
+            - Failure
+        finishedAt:
+          type: string
+        outputLocation:
+          type: string
+          description: Output folder for link produced by the run.
+      additionalProperties: false
+
+    ReplyError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      additionalProperties: false
