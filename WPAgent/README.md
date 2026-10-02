@@ -94,48 +94,66 @@ The **Wafer Prober Agent** is a distributed system that enables remote control a
 
 ```
 WPAgent/
-├── main.py                          # CLI entry point
-├── WPAgent.py                       # Main producer API
-├── WPKafkaClient.py                 # Kafka communication layer
+├── main.py                          # CLI entry point (fire.Fire over WaferProberAgent)
+├── WPAgent.py                       # WaferProberAgent — send/listen, config + DB resolution
+├── WPKafkaClient.py                 # Kafka communication layer (command req/reply)
 ├── WPCmdMap.py                      # Command routing (COMMAND_ROUTER)
 ├── WPCommandHandler.py              # Command execution and dispatch
+├── WPSender.py                      # Standalone Kafka sender CLI (alternative to main.py send)
 │
 ├── stateMachine/
 │   ├── WpAgentStateMachine.py       # FSM states, transitions, logic
-│   └── WpAgentStateMachineGlobals.py  # Singleton FSM instance
+│   ├── WpAgentStateMachineGlobals.py  # Singleton FSM instance
+│   └── StateHelpers.py
 │
 ├── actions/                         # Command handlers (Consumer side)
 │   ├── WPLoginActions.py            # UserLogIn / UserLogOut
 │   ├── WPProjectActions.py          # Initialize, OpenProject, Help, ResetAgent
-│   ├── WPTestingActions.py          # Movement, probing, alignment commands
-│   ├── WPSequencerActions.py        # Sequencer commands
-│   └── WPDataBaseActions.py         # Database queries
+│   ├── WPTestingActions.py          # Movement, probing, alignment, PTPA, FindHome
+│   ├── WPCommandActions.py
+│   ├── WPSequencerActions.py / WPSequencerActionsYAML.py
+│   ├── WPImagingActions.py / WPMapConversionActions.py
+│   └── WPDataBaseActions.py         # Database queries (machine/project lookups)
+│
+├── interfaces/
+│   ├── WPProberInterface.py         # Abstract prober interface
+│   └── WPDbService.py               # Abstract DB service interface
 │
 ├── drivers/                         # Hardware drivers
-│   ├── WPProberInterface.py         # Abstract interface
 │   ├── WPSentioProber.py            # SENTIO implementation
+│   ├── WPMockProber.py              # Mock prober, used by MOCK configs / tests
 │   └── WPFactory.py                 # Driver factory
 │
 ├── services/
-│   ├── WPKafkaDbService.py          # Database Kafka service
-│   └── WPListenerHeartbeat.py       # Health monitoring
+│   ├── WPDbKafkaClient.py           # Kafka client for DB Agent communication
+│   ├── WPHeartbeat.py               # Listener heartbeat / health monitoring
+│   └── WPInitializationService.py   # DB-driven + manual prober initialization
+│
+├── sequencer/
+│   ├── WPSequencer.py
+│   └── WPSequencerYAML.py
 │
 ├── globals/
-│   └── WPAagentGlobalParameters.py  # Global state: user, state, project, chuck
+│   └── WPAagentGlobalParameters.py  # Global state: user, state, project, chuck, wpAgentName
 │
 ├── utilities/
 │   ├── WPResponseBuilder.py         # Standard response format builder
-│   └── WPAgentLogger.py             # Logging
+│   ├── WPAgentLogger.py             # Logging
+│   ├── WPValidator.py / WPValidationDecorator.py
+│   └── WPAgentTypes.py / WPCommandConstants.py / WPHelpers.py / WPMapConverter.py / ...
+│
+├── linters/                         # Static checks over the actions/ codebase
+│   ├── CheckContracts.py            # Flags COMMAND_ROUTER functions with missing/invalid returns
+│   └── CheckKafkaConventions.py
 │
 ├── configs/
-│   └── WPUserHierarchy.json         # User → hierarchy level mapping
+│   ├── ProbeConfig*.json            # Per-machine/env configs — {"name", "kafka_broker"}, see Configuration
+│   ├── WPUserHierarchy.json         # User → hierarchy level mapping
+│   ├── WPMapConversion.json
+│   └── WPProbesConfigs.json         # Legacy, no longer read by the code (see Configuration)
 │
-└── tests/
-    └── unit/
-        ├── conftest.py
-        ├── test_fsm.py
-        ├── test_login_actions.py
-        └── test_testing_actions.py
+└── tests/                           # pytest suite — FSM, login/testing actions, mock prober, etc.
+    └── conftest.py
 ```
 
 ---
@@ -149,38 +167,46 @@ WPAgent/
 - SENTIO prober control software (for hardware control)
 - Network access to prober equipment
 
-### Install Dependencies
+## Install Dependencies
+
+All required Python packages and their versions are listed in `requirements.txt`.
+
+Use the setup script to automatically install all dependencies:
 
 ```bash
 cd WPAgent
-pip install confluent-kafka fire sentio-prober-control
+./WPAgent.sh
 ```
-### Install Dependencies for DEV
 
-```bash
-cd WPAgent
-pip install confluent-kafka fire sentio-prober-control pytest pytest-cov flake8 pylint mypy black
-```
+The script will:
+
+* Create and configure the Python environment
+* Install all required dependencies from `requirements.txt`
+
 ---
-
 ## 🚀 Quick Start
 
 ### 1. Start the Listener (Consumer side — runs on the hardware machine)
 
-The listener takes a **config name** that tells it which Kafka broker and prober to connect to. Configs are defined in `configs/WPProbesConfigs.json`.
+The listener takes a **path to a config file** that tells it which machine to connect to and which Kafka broker to use. Config files live in `configs/ProbeConfig*.json` (see [Configuration](#️-configuration) below).
 
 ```bash
-# Production (Kafka on svmithi02:9093)
-python3.12 main.py listen CERN
+# Command to run WPAgent 
+python3.12 main.py listen  --config=<path to config file >
 
-# Developer / staging (Kafka on svmithi02:9096)
-python3.12 main.py listen CERN_DEV
-
-# Mock prober — for local testing without hardware
-python3.12 main.py listen MOCK
 ```
+Example of config file:
+```json
+{
+  "name": "WPMIT",
+  "kafka_broker": "pcmitpx01:9096"
+}
+```
+`name` is the machine name as registered in the database — the listener uses it to look up the rest of the machine's connection details (address, port, machine type, machine ID) from the DB Agent at startup. If the DB lookup fails, it falls back to whatever is in the config file.
 
-> **Note:** The `CERN` production listener is normally run as a system service and does not need to be started manually. Use `CERN_DEV` for development and testing.
+Note: Depending on which Kafka broker is specified in the config file, WPAgent will run in either development or production mode (see the `_DEV` suffix note in [Configuration](#️-configuration)).
+
+> **Note:** On the CERN side, the `WPMIT` machine's production listener (`ProbeConfigCERN.json`, broker `pcmitpx01:9092`) runs as a system service and does not need to be started manually. Only start the listener yourself for development/testing (e.g. against `ProbeConfigCERN_DEV.json` / MOCK configs).
 
 
 ### 2. Send Commands (Producer side — runs anywhere with Kafka access)
@@ -190,6 +216,17 @@ All commands follow this pattern:
 ```bash
 python3.12 main.py send <CommandName> --data='{"user":"<user>","waferAgentName":"<agent>", ...}'
 ```
+
+**Alternative: `WPSender.py`.** Instead of `main.py send`, you can also use the standalone `WPSender.py` script — same command/`--data` pattern, but it talks to Kafka directly rather than going through `WaferProberAgent`/the `configs/ProbeConfig*.json` files. It resolves the broker port itself from `waferAgentName` (`WPMIT` → `9092`, `WPMIT_DEV` → `9096`, host `pcmitpx01`), so it works without a local config file:
+
+```bash
+python3.12 WPSender.py <CommandName> --data='{"user":"<user>","waferAgentName":"<agent>", ...}'
+
+# e.g.
+python3.12 WPSender.py UserLogIn --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'
+```
+
+Use `--port` to override the auto-detected port, and `--no-reply` for fire-and-forget.
 
 ### 3. Minimal Happy Path
 
@@ -374,6 +411,8 @@ python3.12 main.py send AutoFocus  --data='{"user":"user1","waferAgentName":"CER
 python3.12 main.py send TakeScreenshot --data='{"user":"dev1","waferAgentName":"CERN","fileName":"before_test"}'
 ```
 
+> **Position/correction logging:** `RunPTPA` and `FindHome` both read chuck X, Y, and contact height immediately before and after they run, and print the before/after values plus the resulting ΔX/ΔY/ΔContactHeight (or ΔZ for `FindHome`) to the console — useful for seeing exactly what correction a run applied. This is diagnostic console output only; it does not change the commands' reply message (`"PTPA executed"` / `"Found home position"`, matching the API contract in `svt.wp-agent.yaml`). If `RunPTPA` fails with `"PTPA failed: ...offset exceeds tolerance..."`, that's SENTIO's own PTPA Tolerance Gap check (configured on the SENTIO Setup page) rejecting a detected correction that's larger than the allowed limit — it's not a WPAgent error, and the before/after console output is the best way to see which axis and by how much it was over.
+
 ### Testing
 
 | Command | Key Parameters | Description |
@@ -407,43 +446,32 @@ python3.12 main.py send ListProbers
 
 ## ⚙️ Configuration
 
-### Named Probe Configs — `configs/WPProbesConfigs.json`
+### Probe Configs — `configs/ProbeConfig*.json`
 
-This is the primary config file. Each entry maps a config name to a Kafka broker, prober address, and machine type. The config name is passed as the argument to `python3.12 main.py listen <name>`.
+Each probe/environment has its own small config file under `configs/`, named `ProbeConfig<Something>.json`. A config file only needs two fields:
 
 ```json
 {
-  "CERN": {
-    "machineId": 1,
-    "address": "wpmit01.cern.ch",
-    "port": 35555,
-    "machineType": "sentio",
-    "description": "CERN DSF Probe Station",
-    "kafka_broker": "svmithi02:9093"
-  },
-  "CERN_DEV": {
-    "machineId": 1,
-    "address": "wpmit01.cern.ch",
-    "port": 35555,
-    "machineType": "sentio",
-    "description": "CERN DSF Probe Station",
-    "kafka_broker": "svmithi02:9096"
-  },
-  "MOCK": {
-    "machineId": 167,
-    "address": "mock-prober",
-    "port": 35555,
-    "machineType": "mock",
-    "description": "Mock Probe Station for Testing"
-  }
+  "name": "WPMIT",
+  "kafka_broker": "pcmitpx01:9096"
 }
 ```
 
-| Config | Kafka Broker | Purpose |
-|--------|-------------|---------|
-| `CERN` | `svmithi02:9093` | **Production** — normally runs as a system service |
-| `CERN_DEV` | `svmithi02:9096` | **Development / staging** — use for testing |
-| `MOCK` | — | Local testing without real hardware |
+* **`name`** — the machine name as registered in the database. It is *not* a free-form label: the listener passes it to the DB Agent (`GetAllWaferProbeMachines`) to resolve the machine's real `address`, `port`, `machineType` and `machineId`. The sender side also matches on this name (via the *effective* name — see below) to find the right config file and Kafka broker for `--waferAgentName=...`.
+* **`kafka_broker`** — which Kafka broker/environment this config talks to.
+
+Current configs on disk:
+
+| File | `name` | `kafka_broker` | Purpose |
+|------|--------|-----------------|---------|
+| `ProbeConfigCERN.json` | `WPMIT` | `pcmitpx01:9092` | **Production** — runs as a system service on the CERN side |
+| `ProbeConfigCERN_DEV.json` | `WPMIT` | `pcmitpx01:9096` | **Development / staging** — same machine, DEV broker |
+| `ProbeConfigMOCK.json` | `MOCK` | `pcmitpx01:9096` | Mock prober, DEV broker |
+| `ProbeConfigLocalMOCK.json` | `MOCK` | `localhost:9085` | Mock prober, fully local Kafka |
+
+**`_DEV` suffix:** any config whose `kafka_broker` equals the DEV broker (`pcmitpx01:9096`) automatically gets `_DEV` appended to its effective agent name — e.g. `ProbeConfigCERN_DEV.json` (`name: "WPMIT"`, DEV broker) is addressed as `WPMIT_DEV` in commands, while `ProbeConfigCERN.json` (same `name`, production broker) is addressed as `WPMIT`. This is why `waferAgentName` in the examples above shows values like `CERN`/`CERN_DEV` — use whichever effective name matches the config you started the listener with. The DB lookup itself always uses the plain `name` field (e.g. `WPMIT`), not the `_DEV`-suffixed name.
+
+> Note: an older `configs/WPProbesConfigs.json` file (a single JSON file with nested `machineId`/`address`/`port` per machine) still exists in the repo but is no longer read by the code — machine connection details now come from the database, keyed by the config file's `name` field.
 
 ### SSH Tunnel (remote Kafka access)
 
@@ -580,6 +608,10 @@ You are calling a command that is not valid from the current FSM state. Check th
 - Check broker address in config
 - If using remote Kafka, confirm your SSH tunnel is up
 
+### DB reply timeout / "No projects found or database agent not responding"
+
+If a DB-backed command (`OpenProject`, `ListProbers`, machine/project lookups, etc.) intermittently times out waiting on a reply from the DB Agent, this used to be caused by the DB reply consumer (`services/WPDbKafkaClient.py`) being a `subscribe()`-based Kafka consumer-group member that only got polled while a request was actively in flight. Any idle gap longer than `max.poll.interval.ms` between DB requests silently dropped it from its consumer group, and the next request would fail immediately with a Kafka `_MAX_POLL_EXCEEDED` error. Both `WPDbKafkaClient.py` and `WPKafkaClient.py`'s reply consumers now use `assign()` to a specific partition instead of `subscribe()`, so they never join a consumer group and can't be dropped for sitting idle. If you still see this, check that the listener log shows `"manual assign, offset=..."` at startup — if it instead shows the old subscribe-based init log, the listener needs restarting to pick up the fix.
+
 ### Prober not initializing
 
 - Verify SENTIO software is running on the prober machine
@@ -604,8 +636,6 @@ This returns the FSM to `UserLogged` so normal operations can resume.
 ## 🙏 Acknowledgments
 
 - SVT SW Core Team
-- MPI Corporation for SENTIO prober platform
-- Apache Kafka community
 
 ---
 
