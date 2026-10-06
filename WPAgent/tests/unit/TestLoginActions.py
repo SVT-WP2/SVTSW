@@ -74,7 +74,7 @@ class TestUserLogIn:
         from actions.WPLoginActions import UserLogIn
 
         result = UserLogIn(user="ghost_user", waferAgentName="MOCK")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
         assert "not recognized" in _msg(result)
 
     def test_valid_user_logs_in_successfully(self, mock_prober):
@@ -116,7 +116,7 @@ class TestUserLogIn:
 
         UserLogIn(user="user5", waferAgentName="MOCK")
         result = UserLogIn(user="user6", waferAgentName="MOCK")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
         assert "user5" in _msg(result)
 
     def test_developer_takes_control_from_normal_user(self, mock_prober):
@@ -133,7 +133,7 @@ class TestUserLogIn:
 
         UserLogIn(user="user1", waferAgentName="MOCK")
         result = UserLogIn(user="user2", waferAgentName="MOCK")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
         # message contains the currently-logged-in developer's name or the word "Developer"
         msg = _msg(result)
         assert "Developer" in msg or "user1" in msg
@@ -150,7 +150,7 @@ class TestUserLogOut:
         from actions.WPLoginActions import UserLogOut
 
         result = UserLogOut(user="user5")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
         assert "No user" in _msg(result)
 
     def test_logout_wrong_user_returns_error(self, mock_prober):
@@ -158,7 +158,7 @@ class TestUserLogOut:
 
         UserLogIn(user="user5", waferAgentName="MOCK")
         result = UserLogOut(user="user6")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
         assert "user5" in _msg(result)
 
     def test_logout_correct_user_succeeds(self, mock_prober):

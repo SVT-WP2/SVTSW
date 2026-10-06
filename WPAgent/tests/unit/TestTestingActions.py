@@ -280,7 +280,7 @@ class TestWaferLoadUnload:
                 user="user1",
                 waferAgentName="TestAgent",
             )
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
 
     def test_unload_wafer_succeeds(self, globals_instance, prober):
         from actions.WPTestingActions import unload_wafer
@@ -301,7 +301,7 @@ class TestWaferLoadUnload:
 
         globals_instance.loaded_wafer_id = None
         result = unload_wafer(user="user1", waferAgentName="TestAgent")
-        assert _status(result) == "error"
+        assert _status(result) == "unexpectederror"
 
 
 # ─────────────────────────────────────────────────────────────

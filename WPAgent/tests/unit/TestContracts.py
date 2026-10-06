@@ -34,7 +34,20 @@ _checkable = [
 # ── 1. PascalCase names ───────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("cmd", _all_commands, ids=_all_commands)
+# YAML sequencer commands whose names embed the die range (e.g. "_0-3") and so
+# cannot be strict PascalCase. Legacy names that clients already send.
+_NON_PASCAL_ALLOWED = {
+    "TakeImageL1_0-3",
+    "TakeImageL1_1-4",
+    "TakeImageL0_0-2",
+    "TakeImageL0_1-3",
+    "TakeImageL0_2-4",
+}
+
+_pascal_commands = [c for c in _all_commands if c not in _NON_PASCAL_ALLOWED]
+
+
+@pytest.mark.parametrize("cmd", _pascal_commands, ids=_pascal_commands)
 def test_command_name_is_pascal_case(cmd: str) -> None:
     """Every key in COMMAND_ROUTER must be PascalCase (e.g. 'TestingLock')."""
     assert is_pascal_case(cmd), (

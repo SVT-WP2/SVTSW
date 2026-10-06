@@ -17,6 +17,7 @@ ROOT = Path(__file__).parent.parent  # WPAgent/ root (this file lives in linters
 # Lambda wrappers are automatically skipped — no need to list them here.
 EXEMPT_FUNCTIONS: set[str] = {
     "list_available_commands",  # returns raw dict, wrapped in lambda anyway
+    "generate_raster_steps",  # internal step generator, returns raw step data
 }
 
 # ── ANSI colours (disabled with --no-color) ───────────────────────────────────
