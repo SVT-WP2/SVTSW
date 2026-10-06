@@ -261,6 +261,26 @@ class SentioProberImpl(AbstractProber):
         )
         return contact
 
+    def set_contact_height(self, height):
+        """
+        Set ONLY the contact height for the wafer chuck site.
+
+        Uses SENTIO remote command set_chuck_site_heights in its
+        "Parameters 1" form (site, position, value):
+
+            set_chuck_site_heights Wafer,Contact,<height>
+
+        Per the SENTIO remote command manual, when the contact height is set this
+        way the site's current separation gap and overtravel gap remain constant
+        (absolute separation/overtravel heights are adapted by SENTIO), so nothing
+        else has to be read back and re-sent. The chuck is NOT moved.
+
+        Args:
+            height: new contact height in micrometer
+        """
+        resp = self.prober.send_cmd(f"set_chuck_site_heights Wafer,Contact,{height}")
+        print(f"   set_chuck_site_heights Wafer,Contact,{height} -> {resp.message()}")
+
     def take_image(
         self,
         snapshot_type : str = "CameraRaw",

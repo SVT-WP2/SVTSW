@@ -8,6 +8,8 @@ class SvtWPAagentGlobalParameters:
 
     def __init__(self):
         # Core parameters
+        self.PROJECTS_PASS = "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
+
         self.address = None
         self.machineType = None
         self.chip_name = None
@@ -49,6 +51,7 @@ class SvtWPAagentGlobalParameters:
 
         # Configuration
         self.overdrive = 0
+        self.contact_height = None  # saved from the prober when OpenProject runs; SetContactHeight defaults to this
         self.camera_mount_point = ""  # "Top", "Bottom", "Side", etc.
         self.current_working_area = ""  # "LoadPosition", "TestArea", etc.
 
@@ -64,9 +67,7 @@ class SvtWPAagentGlobalParameters:
         self.total_dies_number = 0
 
         # Project paths for now its only Sentio machine
-        self.sentio_projects_base_path = (
-            "C:\\ProgramData\\MPI Corporation\\SENTIO\\projects\\"
-        )
+        self.sentio_projects_base_path = self.PROJECTS_PASS
         self.projects_base_path = self.sentio_projects_base_path
 
         # Locker for testing
@@ -77,10 +78,10 @@ class SvtWPAagentGlobalParameters:
         self.test_sequence_id = None  # ID of running test sequence
 
     def lock_for_testing(
-        self,
-        user: str,
-        reason: str = "Testing in progress",
-        test_sequence_id: str = None,
+            self,
+            user: str,
+            reason: str = "Testing in progress",
+            test_sequence_id: str = None,
     ):
         """Lock the agent for testing"""
         import time
@@ -173,6 +174,10 @@ class SvtWPAagentGlobalParameters:
     def set_overdrive(self, overdriveGap):
         """Set project overdrive gap"""
         self.overdrive = overdriveGap
+
+    def set_contact_height(self, contact_height):
+        """Set the saved contact height (default source for the SetContactHeight command)"""
+        self.contact_height = contact_height
 
     def set_project_name(self, project_name):
         self.projectName = project_name
@@ -276,6 +281,7 @@ class SvtWPAagentGlobalParameters:
         self.probe_card_orientation = None
         self.opened_project_id = 0
         self.overdrive = 0
+        self.contact_height = None
         self.camera_mount_point = ""
         self.current_working_area = ""
         self.current_die_col = 0

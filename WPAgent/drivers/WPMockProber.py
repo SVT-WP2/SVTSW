@@ -217,6 +217,13 @@ class MockProberImpl:
         """
         return self._chuck_z
 
+    def set_contact_height(self, height):
+        """
+        Set contact height (mock).
+        Matches SentioProberImpl.set_contact_height().
+        """
+        self._chuck_z = height
+
     # ------------------------------------------------------------------
     # Die navigation
     # ------------------------------------------------------------------
