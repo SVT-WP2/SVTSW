@@ -195,7 +195,7 @@ class TestValidationShortCircuit:
 
         result = load_wafer(user="u", waferAgentName="a")
         assert entered == []                        # body never ran
-        assert result["status"] == "Error"
+        assert result["status"] == "UnexpectedError"
         assert get_reply_type() == ""               # context still clean
 
 
@@ -302,7 +302,7 @@ class TestValidateCommandWithNameRunsValidation:
         with patch("utilities.WPValidationDecorator.get_validator", side_effect=get_validator):
             result = my_load_wafer(user=None, waferAgentName="TestAgent")
 
-        assert result["status"] == "Error"
+        assert result["status"] == "UnexpectedError"
         assert result["type"] == "LoadWaferReply"   # reply type still correct in error
 
         agentStateMachine.force_state(WPAgentState.ServiceOn)
@@ -347,7 +347,7 @@ class TestValidateCommandWithNameRunsValidation:
                    return_value=reset_validator):
             result = my_open_project(user=None, waferAgentName="a")
 
-        assert result["status"] == "Error"
+        assert result["status"] == "UnexpectedError"
         assert result["type"] == "OpenProjectReply"
 
     def test_same_validator_called_as_validate_command(self):
