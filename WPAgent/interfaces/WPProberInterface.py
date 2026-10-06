@@ -88,6 +88,11 @@ class AbstractProber(ABC):
         pass
 
     @abstractmethod
+    def set_contact_height(self, height: float):
+        """Set contact height in micrometers, preserving the other chuck site heights"""
+        pass
+
+    @abstractmethod
     def set_overtravel(self, overtravelGap: float):
         """Set overtravel"""
         pass

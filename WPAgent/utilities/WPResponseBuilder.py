@@ -56,6 +56,7 @@ class ResponseBuilder:
             openedProjectId=getattr(g, "opened_project_id", 0),
             projectName=getattr(g, "projectName", ""),
             overdrive=getattr(g, "overdrive", 0),
+            contactHeight=getattr(g, "contact_height", None),
             cameraMountPoint=getattr(g, "camera_mount_point", ""),
             currentWorkingArea=getattr(g, "current_working_area", ""),
             waferMapDiePosition=wafer_map_position,

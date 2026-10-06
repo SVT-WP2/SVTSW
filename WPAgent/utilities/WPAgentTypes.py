@@ -34,6 +34,7 @@ class AgentData(TypedDict):
     openedProjectId: int
     projectName: str
     overdrive: int
+    contactHeight: Optional[float]
     cameraMountPoint: str
     currentWorkingArea: str
     waferMapDiePosition: WaferMapPosition

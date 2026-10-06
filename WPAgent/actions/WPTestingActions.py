@@ -1110,6 +1110,10 @@ def open_project(projectName: str, user=None, waferAgentName=None):
         g.set_project_name(projectName)
         g.opened_project_id = get_project_id_by_name(projectName)
 
+        # Save current contact height as the default SetContactHeight will use
+        # when called without an explicit value
+        g.set_contact_height(prober.get_contact_height())
+
         # Update info
         update_current_info(currentProber=prober)
         prober.local_mode()
@@ -1271,6 +1275,64 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
 
 
 @validate_command
+def set_contact_height(contactHeight=None, user=None, waferAgentName=None):
+    """
+    Set contact height for the current chuck site.
+
+    Args:
+        contactHeight: contact height in micrometer. If omitted, uses the contact
+            height saved globally when OpenProject last ran (g.contact_height).
+    """
+    reply = get_reply_type()
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        target_height = contactHeight if contactHeight is not None else g.contact_height
+        if target_height is None:
+            raise Exception(
+                "No contact height available: none was saved by OpenProject and "
+                "none was provided — pass contactHeight explicitly"
+            )
+
+        prober = get_current_prober()
+
+        # SENTIO disables "Set Contact" at the off-axis camera and rejects the
+        # remote command there ("Contact/separation/overtravel value out of motion
+        # range"), so refuse early with a clear message instead.
+        working_area = str(prober.get_current_working_area())
+        if "OffAxis" in working_area:
+            return ResponseBuilder.error(
+                reply,
+                f"Cannot set contact height at the off-axis camera (current area: "
+                f"{working_area}). Move to the probing area first.",
+                400,
+            )
+
+        prober.set_contact_height(target_height)
+
+        g.set_contact_height(target_height)
+
+        # Update info
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+
+        agentStateMachine.transition("SetContactHeight")
+
+        return ResponseBuilder.success(
+            reply, f"Contact height set to {target_height:.2f} µm"
+        )
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error(reply, str(e), 500)
+
+
+@validate_command
 def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
     """Disable overtravel, set to 0"""
     reply = get_reply_type()
@@ -1330,7 +1392,10 @@ def local_mode(user=None, waferAgentName=None):
 @validate_command
 def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=None):
     """
-    Move to ASIC die using database ID
+    Move to ASIC die using database ID.
+
+    Runs the full alignment sequence described in the API contract:
+    MoveChuckOffAxis -> MoveChuckRowColumn -> AutoFocus -> RunPTPA -> MoveChuckWide
 
     Args:
         asicId: ASIC ID from database
@@ -1381,20 +1446,38 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
     col, row = result
     print(f"   ✅ Converted: col={col}, row={row}")
 
-    # Move chuck
+    # Full sequence: MoveChuckOffAxis -> MoveChuckRowColumn -> AutoFocus -> RunPTPA -> MoveChuckWide
     try:
         prober = get_current_prober()
+
+        # 1. MoveChuckOffAxis
+        prober.move_chuck_offaxis_area()
+        g.chuck_z_position_state = "Separation"
+
+        # 2. MoveChuckRowColumn
         prober.go_to_die(col, row)
-
         g.set_current_die(col, row, subsite)
-        agentStateMachine.transition("MoveChuckAsic")
 
+        # 3. AutoFocus
+        prober.auto_focus()
+
+        # 4. RunPTPA
+        prober.run_ptpa()
+
+        # 5. MoveChuckWide
+        prober.move_chuck_wide()
+        g.chuck_z_position_state = "Separation"
+
+        # Update info
         update_current_info(currentProber=prober)
         prober.local_mode()
 
+        agentStateMachine.transition("MoveChuckAsic")
+
         return ResponseBuilder.success(
             reply,
-            f"Moved to ASIC ID {asicId} (serial: {serial_number}) at col={col}, row={row}",
+            f"Moved to ASIC ID {asicId} (serial: {serial_number}) at col={col}, row={row} "
+            "— off-axis, row/column, auto-focus, PTPA and wide sequence complete",
         )
 
     except Exception as e:

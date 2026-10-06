@@ -59,6 +59,7 @@ EXPERT_COMMANDS: set[str] = {
     "SetPTPA",
     "MoveChuckPreviousDie",
     "SetChuckOvertravel",
+    "SetContactHeight",
     "DisableOvertravel",
     "AutoFocus",
     "MoveChuckRowColumn",

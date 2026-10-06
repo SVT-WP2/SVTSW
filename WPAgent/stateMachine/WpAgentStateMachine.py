@@ -129,6 +129,7 @@ class WPAgentStateMachine:
             WPAgentState.OnDie_Wide_withPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
                 "SetChuckOvertravel": WPAgentState.OnDie_Wide_withPTPA,
+                "SetContactHeight": WPAgentState.OnDie_Wide_withPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
@@ -139,6 +140,7 @@ class WPAgentStateMachine:
             WPAgentState.OnDie_Wide_withoutPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
                 "SetChuckOvertravel": WPAgentState.OnDie_Wide_withoutPTPA,
+                "SetContactHeight": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
                 "MoveChuckOffAxis": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
@@ -162,6 +164,7 @@ class WPAgentStateMachine:
                 "FindHome": WPAgentState.UsedByDeveloper,
                 "SwitchCamera": WPAgentState.UsedByDeveloper,
                 "SetChuckOvertravel": WPAgentState.UsedByDeveloper,
+                "SetContactHeight": WPAgentState.UsedByDeveloper,
                 "DisableOvertravel": WPAgentState.UsedByDeveloper,
                 "LocalMode": WPAgentState.UsedByDeveloper,
                 "TakeScreenshot": WPAgentState.UsedByDeveloper,
