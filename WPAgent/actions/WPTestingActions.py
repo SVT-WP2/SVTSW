@@ -1295,9 +1295,26 @@ def set_contact_height(contactHeight=None, user=None, waferAgentName=None):
     try:
         target_height = contactHeight if contactHeight is not None else g.contact_height
         if target_height is None:
-            raise Exception(
+            return ResponseBuilder.error(
+                reply,
                 "No contact height available: none was saved by OpenProject and "
-                "none was provided — pass contactHeight explicitly"
+                "none was provided — pass contactHeight explicitly",
+                400,
+            )
+
+        # Sanity-check the value BEFORE anything is sent to SENTIO
+        import math
+
+        if (
+            isinstance(target_height, bool)
+            or not isinstance(target_height, (int, float))
+            or not math.isfinite(target_height)
+            or target_height <= 0
+        ):
+            return ResponseBuilder.error(
+                reply,
+                f"Invalid contactHeight {target_height!r}: must be a positive number (µm)",
+                400,
             )
 
         prober = get_current_prober()

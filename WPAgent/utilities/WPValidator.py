@@ -352,6 +352,10 @@ class WPCommandValidator:
             "SetOvertravel": {
                 "overtravelGap": {"type": "float", "required": True},
             },
+            # set_contact_height(contactHeight=None) - micrometers, optional
+            "SetContactHeight": {
+                "contactHeight": {"type": "float", "required": False},
+            },
             # switch_camera(mountPoint)
             "SwitchCamera": {
                 "mountPoint": {"type": "str", "required": True},
@@ -420,6 +424,10 @@ class WPCommandValidator:
         expected_python_type = type_map.get(expected_type)
         if not expected_python_type:
             return True  # Unknown type - skip check
+
+        # bool is a subclass of int in Python - never accept True/False as a number
+        if isinstance(value, bool) and expected_type in ("int", "float"):
+            return False
 
         return isinstance(value, expected_python_type)
 
