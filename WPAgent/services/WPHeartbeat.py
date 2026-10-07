@@ -1,13 +1,15 @@
 """
-WPHeartbeat - Base unified heartbeat base + Listener and Cache subclasses
+WPHeartbeat - Heartbeat base + Listener health check and monitor
 
 Architecture:
     HeartbeatBase
         ListenerHealthCheck  - is_listener_alive(), wait_for_listener()
-        CacheHealthCheck     - is_cache_alive(),    wait_for_cache()
     HeartbeatMonitorBase
-        ListenerHealthMonitor  (no callback)
-        CacheHealthMonitor     (on_heartbeat callback for snapshot writes)
+        ListenerHealthMonitor  (optional on_heartbeat callback, e.g. cache snapshot writes)
+
+There is a single heartbeat topic (svt.wp-agent.heartbeat). The cache snapshot
+that used to be written from a separate cache-heartbeat monitor is now written
+from the on_heartbeat callback of the listener monitor.
 """
 
 import json
@@ -153,16 +155,6 @@ class ListenerHealthCheck(HeartbeatBase):
         return self._wait_for_online("listener", max_wait, check_interval)
 
 
-class CacheHealthCheck(HeartbeatBase):
-    HEARTBEAT_TOPIC = "svt.wp-agent.cache-heartbeat"
-
-    def is_cache_alive(self, timeout=2.0):
-        return self._is_alive(timeout)
-
-    def wait_for_cache(self, max_wait=30.0, check_interval=2.0):
-        return self._wait_for_online("cache", max_wait, check_interval)
-
-
 class HeartbeatMonitorBase:
     """Background thread that calls send_heartbeat() on a fixed interval."""
 
@@ -198,8 +190,7 @@ class HeartbeatMonitorBase:
                 except Exception as e:
                     logger = self._get_logger()
                     if logger:
-                        component = "Cache" if "Cache" in label else "Listener"
-                        logger.log_heartbeat(component, is_alive=False, kafka_error=str(e))
+                        logger.log_heartbeat("Listener", is_alive=False, kafka_error=str(e))
                 time.sleep(self.health_check.HEARTBEAT_INTERVAL)
         self._thread = threading.Thread(target=heartbeat_loop, daemon=False)
         self._thread.start()
@@ -214,15 +205,15 @@ class HeartbeatMonitorBase:
 
 
 class ListenerHealthMonitor(HeartbeatMonitorBase):
-    def __init__(self, health_check: ListenerHealthCheck):
+    def __init__(self, health_check: ListenerHealthCheck, on_heartbeat=None):
         super().__init__(health_check)
-
-
-class CacheHealthMonitor(HeartbeatMonitorBase):
-    def __init__(self, cache_check: CacheHealthCheck, on_heartbeat=None):
-        super().__init__(cache_check)
         self.on_heartbeat = on_heartbeat
 
     def _on_beat(self):
+        # A failing callback (e.g. cache snapshot write) must not be reported as a
+        # dead heartbeat: the beat itself was already sent successfully.
         if self.on_heartbeat:
-            self.on_heartbeat()
+            try:
+                self.on_heartbeat()
+            except Exception as e:
+                print(f"WARNING - heartbeat callback failed: {e}")
