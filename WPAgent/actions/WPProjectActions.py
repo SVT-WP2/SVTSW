@@ -108,10 +108,11 @@ def _sync_from_db(globals_, machine_id, is_mock):
 
         # Sync wafer
         wafer_id = our_machine.get("loadedWaferId")
+        wafer_orientation = our_machine.get("loadedWaferOrientation")
+
         if wafer_id:
             globals_.loaded_wafer_id = wafer_id
-            # TODO: replace hardcoded "West" once DB provides orientation
-            globals_.wafer_orientation = "West"
+            globals_.wafer_orientation = wafer_orientation
             print(f"✓ Synced loaded wafer: ID={wafer_id}, orientation={globals_.wafer_orientation}")
         else:
             globals_.loaded_wafer_id = None
@@ -120,10 +121,11 @@ def _sync_from_db(globals_, machine_id, is_mock):
 
         # Sync probe card
         card_id = our_machine.get("installedProbeCardId")
+        card_orientation_from_from_DB = our_machine.get("installedProbeCardOrientation")
+
         if card_id:
             globals_.probe_card_id = card_id
-            # TODO: replace hardcoded "West" once DB provides orientation
-            globals_.probe_card_orientation = "West"
+            globals_.probe_card_orientation = card_orientation_from_from_DB
             print(f"✓ Synced probe card: ID={card_id}, orientation={globals_.probe_card_orientation}")
         else:
             globals_.probe_card_id = None

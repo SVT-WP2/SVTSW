@@ -27,6 +27,8 @@ COMMAND_ROUTER = {
     # Database
     "ListProbers": database_actions.list_probers,
     "ListChipTypes": database_actions.list_chip_types,
+    "UpdateLoadedWafer": database_actions.update_loaded_wafer,
+    "UpdateInstalledProbeCard": database_actions.update_installed_probe_card,
 
     # User Login/Logout
     "UserLogIn": user_actions.UserLogIn,
