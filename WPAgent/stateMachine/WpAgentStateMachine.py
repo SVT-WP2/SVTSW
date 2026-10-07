@@ -1,5 +1,9 @@
 from enum import Enum, auto
-from utilities.WPCommandConstants import BYPASS_COMMANDS
+from utilities.WPCommandConstants import BYPASS_COMMANDS, SEQUENCE_COMMANDS
+from utilities.WPSequenceContext import in_trusted_sequence
+
+
+RECONNECT_COMMAND = "ReconnectProber"
 
 
 class WPAgentState(Enum):
@@ -35,8 +39,9 @@ class WPAgentStateMachine:
         #  transitions
         self.transitions = {
             # From ServiceOn
+            # Nobody is logged in: only UserLogIn (a bypass command whose action sets the
+            # state) is possible. Developers are unrestricted once logged in.
             WPAgentState.ServiceOn: {
-                "OpenProject": WPAgentState.OpenedProject,
                 "Error": WPAgentState.Error,
             },
             # From OpenedProject
@@ -79,8 +84,6 @@ class WPAgentStateMachine:
             # From UserLogged — wafer is loaded, must open project first
             WPAgentState.UserLogged: {
                 "OpenProject": WPAgentState.OpenedProject,
-                "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,
-                "UnloadWafer": WPAgentState.ChuckUnloaded,  # unload if changed mind after loading
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide
@@ -119,9 +122,9 @@ class WPAgentStateMachine:
             WPAgentState.OnDie_OffAxis_withPTPA: {
                 "MoveChuckAsic": WPAgentState.OnDie_Wide_withPTPA,
                 "MoveChuckWide": WPAgentState.OnDie_Wide_withPTPA,
-                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withPTPA,
-                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withPTPA,
-                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "AutoFocus": WPAgentState.OnDie_OffAxis_withPTPA,
                 "Error": WPAgentState.Error,
             },
@@ -131,9 +134,9 @@ class WPAgentStateMachine:
                 "SetChuckOvertravel": WPAgentState.OnDie_Wide_withPTPA,
                 "SetContactHeight": WPAgentState.OnDie_Wide_withPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
-                "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
-                "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
-                "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide_withoutPTPA
@@ -143,9 +146,9 @@ class WPAgentStateMachine:
                 "SetContactHeight": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckContact": WPAgentState.AtContact,
                 "MoveChuckOffAxis": WPAgentState.OnDie_OffAxis_withoutPTPA,
-                "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
-                "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
-                "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
             # From Error
@@ -175,6 +178,19 @@ class WPAgentStateMachine:
                 "Error": WPAgentState.Error,
             },
         }
+
+        # Built-in sequences (TakeImage*, BrightnessCorrection) can be started only
+        # from Aligned and do not change the state (their steps run as a trusted
+        # sequence, see WPSequenceContext).
+        for command in SEQUENCE_COMMANDS:
+            self.transitions[WPAgentState.Aligned][command] = WPAgentState.Aligned
+
+        # ReconnectProber works from every state of a logged-in user (the machine
+        # may have been switched off in any state, including Error). The action
+        # itself puts the agent back to UserLogged.
+        for state, table in self.transitions.items():
+            if state not in (WPAgentState.ServiceOn, WPAgentState.UsedByDeveloper):
+                table[RECONNECT_COMMAND] = WPAgentState.UserLogged
 
     def _sync_to_global_params(self):
         """Auto-sync current state to global parameters to not to write same thing a few times"""
@@ -206,6 +222,11 @@ class WPAgentStateMachine:
             True if transition successful, False if invalid
         """
         self.current_command = command
+
+        # Steps of a trusted built-in sequence do not change the state: the
+        # agent is in the same state after the sequence as before it.
+        if in_trusted_sequence():
+            return True
 
         # DEVELOPER BYPASS: all commands allowed, state stays UsedByDeveloper
         if self.is_developer_mode():

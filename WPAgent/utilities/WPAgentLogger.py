@@ -57,6 +57,39 @@ class WPAgentLogger:
             stream_handler.setFormatter(formatter)
             self.logger.addHandler(stream_handler)
 
+    # ── who is logged in ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def _current_user_label() -> str:
+        """'user1 (Expert)' for the logged-in user, '-' when nobody is logged in."""
+        try:
+            from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+            g = SvtWPAagentGlobalParameters.getInstance()
+            if g.userLogged:
+                return f"{g.userLogged} ({g.userLoggedHierarchy})"
+        except Exception:
+            pass
+        return "-"
+
+    def log_audit(self, event, user=None, hierarchy=None, severity=Severity.INFO, **details):
+        """Log an easy-to-grep audit line about who did what, e.g.
+
+        [AUDIT] LOGIN user=user3 hierarchy=Expert state=UserLogged
+        """
+        parts = [f"[AUDIT] {event}", f"user={user or '-'}"]
+        if hierarchy:
+            parts.append(f"hierarchy={hierarchy}")
+        parts += [f"{k}={v}" for k, v in details.items() if v is not None]
+        log_method = {
+            Severity.DEBUG: self.logger.debug,
+            Severity.INFO: self.logger.info,
+            Severity.WARNING: self.logger.warning,
+            Severity.ERROR: self.logger.error,
+            Severity.CRITICAL: self.logger.critical,
+        }.get(severity, self.logger.info)
+        log_method(" ".join(parts))
+
     # ── command logging ───────────────────────────────────────────────────────
 
     def log_command(
@@ -75,7 +108,8 @@ class WPAgentLogger:
             Severity.CRITICAL: self.logger.critical,
         }.get(severityLevel, self.logger.info)
 
-        parts = [f"{command or 'N/A'} - {messageOut}"]
+        user_label = self._current_user_label()
+        parts = [f"{command or 'N/A'} - {messageOut}", f"user={user_label}"]
         if data is not None:
             parts.append(f"data={json.dumps(data)}")
         if result is not None:
@@ -85,6 +119,7 @@ class WPAgentLogger:
         # Build structured log for Kafka
         log_entry = {
             "command": command,
+            "user": None if user_label == "-" else user_label,
             "messageOut": messageOut,
             "severityLevel": severityLevel,
             "data": data,

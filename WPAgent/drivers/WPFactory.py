@@ -89,6 +89,24 @@ class ProberFactory:
 
         return self._prober
 
+    def reconnect(self, machineType: str, address: str):
+        """
+        Open a NEW connection to the prober and replace the current one.
+
+        The current prober is kept if the new connection cannot be opened, so a
+        failed reconnect (machine still booting) does not lose the old setup.
+        """
+        try:
+            prober_class = prober_classes[machineType.lower()]
+        except KeyError:
+            raise ValueError(f"Unsupported machine type: {machineType}")
+        prober = prober_class(address)  # raises when the machine is unreachable
+        self._prober = prober
+        self._current_config = (machineType.lower(), address)
+        self._initialized = True
+        print(f"🔌 Prober reconnected: {machineType} at {address}")
+        return prober
+
     def reset(self):
         """Reset the factory (useful for testing or reconnection)"""
         self._prober = None

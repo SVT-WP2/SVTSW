@@ -143,8 +143,11 @@ class TestCanExecute:
         ]:
             assert sm.can_execute(cmd) is True
 
-    def test_service_on_allows_open_project(self, sm):
-        assert sm.can_execute("OpenProject") is True
+    def test_service_on_blocks_open_project(self, sm):
+        assert sm.can_execute("OpenProject") is False
+
+    def test_service_on_allows_user_login(self, sm):
+        assert sm.can_execute("UserLogIn") is True
 
     def test_service_on_blocks_load_wafer(self, sm):
         assert sm.can_execute("LoadWafer") is False
@@ -180,9 +183,11 @@ class TestCanExecute:
 class TestTransition:
 
     def test_valid_transition_returns_true(self, sm):
+        sm.force_state(WPAgentState.UserLogged)
         assert sm.transition("OpenProject") is True
 
     def test_valid_transition_changes_state(self, sm):
+        sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
         assert sm.get_state() == WPAgentState.OpenedProject
 
@@ -226,7 +231,8 @@ class TestTransition:
 class TestStatePaths:
 
     def test_probing_path(self, sm):
-        """ServiceOn → OpenedProject → Aligned → OnDie_OffAxis_withoutPTPA"""
+        """UserLogged → OpenedProject → Aligned → OnDie_OffAxis_withoutPTPA"""
+        sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
         assert sm.get_state() == WPAgentState.OpenedProject
 
@@ -274,8 +280,8 @@ class TestStatePaths:
 
 class TestGetAvailableCommands:
 
-    def test_service_on_includes_open_project(self, sm):
-        assert "OpenProject" in sm.get_available_commands()
+    def test_service_on_has_no_commands_besides_error(self, sm):
+        assert "OpenProject" not in sm.get_available_commands()
 
     def test_developer_mode_returns_all_marker(self, sm):
         sm.force_state(WPAgentState.UsedByDeveloper)
