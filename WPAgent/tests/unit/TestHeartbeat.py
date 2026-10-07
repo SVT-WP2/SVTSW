@@ -5,10 +5,8 @@ Unit tests for services/WPHeartbeat.py
 Tests the inheritance-based design:
     HeartbeatBase
         ListenerHealthCheck  - is_listener_alive(), wait_for_listener()
-        CacheHealthCheck     - is_cache_alive(),    wait_for_cache()
     HeartbeatMonitorBase
         ListenerHealthMonitor
-        CacheHealthMonitor   - on_heartbeat callback (snapshot writes)
 
 All Kafka objects are mocked so no live broker is needed.
 """
@@ -39,7 +37,7 @@ def _make_admin_mock(existing_topics=()):
     future.result.return_value = None
     admin.create_topics.return_value = {
         t: future
-        for t in ["svt.wp-agent.heartbeat", "svt.wp-agent.cache-heartbeat"]
+        for t in ["svt.wp-agent.heartbeat"]
     }
     admin.alter_configs.return_value = {MagicMock(): future}
     return admin
@@ -95,13 +93,6 @@ def _listener_with_consumer(messages):
     return hc
 
 
-def _cache_with_consumer(messages):
-    from services.WPHeartbeat import CacheHealthCheck
-    hc = CacheHealthCheck()             # bootstrap_servers=None
-    hc.consumer = _FakeConsumer(messages)
-    return hc
-
-
 # ---------------------------------------------------------------------------
 # Topic attributes
 # ---------------------------------------------------------------------------
@@ -113,13 +104,10 @@ class TestTopicAttributes:
         from services.WPHeartbeat import ListenerHealthCheck
         assert ListenerHealthCheck.HEARTBEAT_TOPIC == "svt.wp-agent.heartbeat"
 
-    def test_cache_topic(self):
-        from services.WPHeartbeat import CacheHealthCheck
-        assert CacheHealthCheck.HEARTBEAT_TOPIC == "svt.wp-agent.cache-heartbeat"
-
-    def test_topics_are_distinct(self):
-        from services.WPHeartbeat import ListenerHealthCheck, CacheHealthCheck
-        assert ListenerHealthCheck.HEARTBEAT_TOPIC != CacheHealthCheck.HEARTBEAT_TOPIC
+    def test_no_separate_cache_heartbeat(self):
+        import services.WPHeartbeat as hb
+        assert not hasattr(hb, "CacheHealthCheck")
+        assert not hasattr(hb, "CacheHealthMonitor")
 
 
 # ---------------------------------------------------------------------------
@@ -135,19 +123,9 @@ class TestInitNoServers:
         assert hc.producer is None
         assert hc.consumer is None
 
-    def test_cache_producer_and_consumer_none(self):
-        from services.WPHeartbeat import CacheHealthCheck
-        hc = CacheHealthCheck()
-        assert hc.producer is None
-        assert hc.consumer is None
-
     def test_listener_does_not_crash(self):
         from services.WPHeartbeat import ListenerHealthCheck
         ListenerHealthCheck(bootstrap_servers=None)
-
-    def test_cache_does_not_crash(self):
-        from services.WPHeartbeat import CacheHealthCheck
-        CacheHealthCheck(bootstrap_servers=None)
 
 
 # ---------------------------------------------------------------------------
@@ -162,14 +140,6 @@ class TestInitWithServers:
         patches, prod, cons, _ = _patch_kafka()
         with patches[0], patches[1], patches[2]:
             hc = ListenerHealthCheck(SERVERS)
-        assert hc.producer is prod
-        assert hc.consumer is cons
-
-    def test_cache_creates_producer_and_consumer(self):
-        from services.WPHeartbeat import CacheHealthCheck
-        patches, prod, cons, _ = _patch_kafka()
-        with patches[0], patches[1], patches[2]:
-            hc = CacheHealthCheck(SERVERS)
         assert hc.producer is prod
         assert hc.consumer is cons
 
@@ -206,14 +176,6 @@ class TestSendHeartbeat:
             hc.send_heartbeat()
         prod.produce.assert_called_once()
 
-    def test_cache_calls_produce(self):
-        from services.WPHeartbeat import CacheHealthCheck
-        patches, prod, _, _ = _patch_kafka()
-        with patches[0], patches[1], patches[2]:
-            hc = CacheHealthCheck(SERVERS)
-            hc.send_heartbeat()
-        prod.produce.assert_called_once()
-
     def test_payload_has_timestamp_and_status(self):
         from services.WPHeartbeat import ListenerHealthCheck
         patches, prod, _, _ = _patch_kafka()
@@ -240,7 +202,7 @@ class TestSendHeartbeat:
 
 
 # ---------------------------------------------------------------------------
-# is_listener_alive / is_cache_alive
+# is_listener_alive
 # ---------------------------------------------------------------------------
 
 
@@ -271,20 +233,9 @@ class TestIsAlive:
         assert alive is False
         assert age == float("inf")
 
-    def test_cache_alive_for_recent_heartbeat(self):
-        hc = _cache_with_consumer([_make_msg(time.time() - 1.0)])
-        alive, age = hc.is_cache_alive(timeout=1.0)
-        assert alive is True
-
-    def test_cache_dead_when_no_messages(self):
-        hc = _cache_with_consumer([None])
-        alive, age = hc.is_cache_alive(timeout=0.2)
-        assert alive is False
-        assert age == float("inf")
-
 
 # ---------------------------------------------------------------------------
-# wait_for_listener / wait_for_cache
+# wait_for_listener
 # ---------------------------------------------------------------------------
 
 
@@ -297,14 +248,6 @@ class TestWaitForOnline:
     def test_listener_returns_false_on_timeout(self):
         hc = _listener_with_consumer([None])
         assert hc.wait_for_listener(max_wait=0.5, check_interval=0.2) is False
-
-    def test_cache_returns_true_when_alive(self):
-        hc = _cache_with_consumer([_make_msg(time.time() - 0.5)])
-        assert hc.wait_for_cache(max_wait=5.0, check_interval=0.5) is True
-
-    def test_cache_returns_false_on_timeout(self):
-        hc = _cache_with_consumer([None])
-        assert hc.wait_for_cache(max_wait=0.5, check_interval=0.2) is False
 
 
 # ---------------------------------------------------------------------------
@@ -364,28 +307,28 @@ class TestListenerHealthMonitor:
 
 
 # ---------------------------------------------------------------------------
-# CacheHealthMonitor
+# ListenerHealthMonitor - on_heartbeat callback (cache snapshot writes)
 # ---------------------------------------------------------------------------
 
 
-class TestCacheHealthMonitor:
+class TestListenerHealthMonitorCallback:
 
     def test_on_heartbeat_called_every_beat(self):
-        from services.WPHeartbeat import CacheHealthCheck, CacheHealthMonitor
+        from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
         patches, _, _, _ = _patch_kafka()
         callback = MagicMock()
         with patches[0], patches[1], patches[2]:
-            hc = CacheHealthCheck(SERVERS)
+            hc = ListenerHealthCheck(SERVERS)
             hc.HEARTBEAT_INTERVAL = 0.05
-            monitor = CacheHealthMonitor(hc, on_heartbeat=callback)
+            monitor = ListenerHealthMonitor(hc, on_heartbeat=callback)
             monitor.start()
             time.sleep(0.25)
             monitor.stop()
         assert callback.call_count >= 1
 
     def test_on_heartbeat_writes_file(self):
-        """Concrete file-write scenario: snapshot written on each cache beat."""
-        from services.WPHeartbeat import CacheHealthCheck, CacheHealthMonitor
+        """Concrete file-write scenario: snapshot written on each heartbeat."""
+        from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False, encoding="utf-8"
         ) as f:
@@ -400,9 +343,9 @@ class TestCacheHealthMonitor:
 
         patches, _, _, _ = _patch_kafka()
         with patches[0], patches[1], patches[2]:
-            hc = CacheHealthCheck(SERVERS)
+            hc = ListenerHealthCheck(SERVERS)
             hc.HEARTBEAT_INTERVAL = 0.05
-            monitor = CacheHealthMonitor(hc, on_heartbeat=write_snapshot)
+            monitor = ListenerHealthMonitor(hc, on_heartbeat=write_snapshot)
             monitor.start()
             time.sleep(0.25)
             monitor.stop()
@@ -414,51 +357,28 @@ class TestCacheHealthMonitor:
         assert len(beats) >= 1
         os.unlink(snapshot_path)
 
-    def test_no_callback_for_none(self):
-        """CacheHealthMonitor with no callback still beats without crashing."""
-        from services.WPHeartbeat import CacheHealthCheck, CacheHealthMonitor
+    def test_no_callback_still_beats(self):
+        from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
         patches, prod, _, _ = _patch_kafka()
         with patches[0], patches[1], patches[2]:
-            hc = CacheHealthCheck(SERVERS)
+            hc = ListenerHealthCheck(SERVERS)
             hc.HEARTBEAT_INTERVAL = 0.05
-            monitor = CacheHealthMonitor(hc, on_heartbeat=None)
+            monitor = ListenerHealthMonitor(hc, on_heartbeat=None)
             monitor.start()
             time.sleep(0.2)
             monitor.stop()
         assert prod.produce.call_count >= 1
 
-
-# ---------------------------------------------------------------------------
-# Both monitors independent
-# ---------------------------------------------------------------------------
-
-
-class TestIndependentMonitors:
-
-    def test_listener_and_cache_run_simultaneously(self):
-        from services.WPHeartbeat import (
-            ListenerHealthCheck, ListenerHealthMonitor,
-            CacheHealthCheck, CacheHealthMonitor,
-        )
-        patches_l, prod_l, _, _ = _patch_kafka()
-        patches_c, prod_c, _, _ = _patch_kafka()
-        cache_callback = MagicMock()
-
-        with patches_l[0], patches_l[1], patches_l[2]:
-            hc_l = ListenerHealthCheck(SERVERS)
-            hc_l.HEARTBEAT_INTERVAL = 0.05
-            monitor_l = ListenerHealthMonitor(hc_l)
-
-        with patches_c[0], patches_c[1], patches_c[2]:
-            hc_c = CacheHealthCheck(SERVERS)
-            hc_c.HEARTBEAT_INTERVAL = 0.05
-            monitor_c = CacheHealthMonitor(hc_c, on_heartbeat=cache_callback)
-
-        monitor_l.start()
-        monitor_c.start()
-        time.sleep(0.25)
-        monitor_l.stop()
-        monitor_c.stop()
-
-        assert prod_l.produce.call_count >= 1
-        assert cache_callback.call_count >= 1
+    def test_failing_callback_does_not_stop_heartbeats(self):
+        from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
+        patches, prod, _, _ = _patch_kafka()
+        callback = MagicMock(side_effect=OSError("disk full"))
+        with patches[0], patches[1], patches[2]:
+            hc = ListenerHealthCheck(SERVERS)
+            hc.HEARTBEAT_INTERVAL = 0.05
+            monitor = ListenerHealthMonitor(hc, on_heartbeat=callback)
+            monitor.start()
+            time.sleep(0.3)
+            monitor.stop()
+        assert callback.call_count >= 2          # kept being called after the first failure
+        assert prod.produce.call_count >= 2      # heartbeats kept flowing

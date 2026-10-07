@@ -12,10 +12,7 @@ from utilities.WPAgentTypes import KafkaPayload
 from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
-from services.WPHeartbeat import (
-    ListenerHealthCheck, ListenerHealthMonitor,
-    CacheHealthCheck, CacheHealthMonitor,
-)
+from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from utilities.WPMessagesStatus import WPMessagesStatus
 
 logger = WPAgentLogger(kafka_servers=None)
@@ -304,13 +301,9 @@ class KafkaClient:
         health_check = ListenerHealthCheck(
             bootstrap_servers=self.bootstrap_servers
         )
-        heartbeat_monitor = ListenerHealthMonitor(health_check)
-
-        cache_health_check = CacheHealthCheck(
-            bootstrap_servers=self.bootstrap_servers
-        )
-        cache_heartbeat = CacheHealthMonitor(
-            cache_health_check, on_heartbeat=self.cache.cache_command
+        # The cache snapshot is refreshed on every heartbeat beat (no separate cache topic)
+        heartbeat_monitor = ListenerHealthMonitor(
+            health_check, on_heartbeat=self.cache.cache_command
         )
 
         executor = ThreadPoolExecutor(max_workers=4)
@@ -323,7 +316,6 @@ class KafkaClient:
         )
 
         heartbeat_monitor.start()
-        cache_heartbeat.start()
 
         try:
             while True:
@@ -348,7 +340,6 @@ class KafkaClient:
         finally:
             self.request_consumer.close()
             heartbeat_monitor.stop()
-            cache_heartbeat.stop()
             self.producer.flush(timeout=5.0)
             if self.reply_consumer:
                 self.reply_consumer.close()
