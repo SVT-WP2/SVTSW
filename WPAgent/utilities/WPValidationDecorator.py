@@ -85,7 +85,7 @@ def validate_command(func: Callable) -> Callable:
     return wrapper
 
 
-def validate_command_with_name(command_name: str):
+def validate_command_with_name(command_name: str, reply_type: str = None):
     """
     Decorator that validates with an explicit command name.
 
@@ -94,13 +94,18 @@ def validate_command_with_name(command_name: str):
         @validate_command_with_name("Initialize")
         def svt_initialise_wp(address=None, ...):
             reply = get_reply_type()   # "InitializeReply"
+
+    The reply type defaults to "<command_name>Reply". Pass reply_type to keep an
+    already published reply type that differs from the command name, e.g.
+    @validate_command_with_name("MoveChuckRowColumn", reply_type="MoveChuckDieReply").
     """
+    explicit_reply_type = reply_type
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             validator = get_validator()
-            reply_type = f"{command_name}Reply"
+            reply_type = explicit_reply_type or f"{command_name}Reply"
 
             payload_user = kwargs.get("user")
             payload_agent_name = kwargs.get("waferAgentName")

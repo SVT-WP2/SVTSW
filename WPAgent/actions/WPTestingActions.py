@@ -309,7 +309,7 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         return ResponseBuilder.error(reply, str(e), 500)
 
 
-@validate_command
+@validate_command_with_name("MoveChuckOffAxis", reply_type="MoveChuckOffaxisReply")
 def move_chuck_offaxis(user=None, waferAgentName=None):
     """Move chuck to off-axis area"""
     reply = get_reply_type()
@@ -491,7 +491,7 @@ def move_chuck_separation(user=None, waferAgentName=None):
 # ==============================================================================
 
 
-@validate_command
+@validate_command_with_name("MoveChuckRowColumn", reply_type="MoveChuckDieReply")
 def move_chuck_die(
     col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None
 ):
@@ -1044,7 +1044,7 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.error(reply, str(e), 500)
 
 
-@validate_command
+@validate_command_with_name("MoveChuckUnloadWafer", reply_type="MoveChuckUnloadedWaferReply")
 def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
     """Unload wafer from chuck"""
     reply = get_reply_type()
