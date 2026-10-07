@@ -3621,14 +3621,14 @@ components:
       required:
         - wpMachineId
         - loadedWaferId
-        - orientation
+        - loadedWaferOrientation
       properties:
         wpMachineId:
           type: number
         loadedWaferId:
           type: number
           nullable: true
-        orientation:
+        loadedWaferOrientation:
           type: string
           nullable: true
     WpMachineInstalledProbeCardUpdateDto:
@@ -3636,14 +3636,14 @@ components:
       required:
         - wpMachineId
         - installedProbeCardId
-        - orientation
+        - installedProbeCardOrientation
       properties:
         wpMachineId:
           type: number
         installedProbeCardId:
           type: number
           nullable: true
-        orientation:
+        installedProbeCardOrientation:
           type: string
           nullable: true
     WaferProbeProjectDto:
