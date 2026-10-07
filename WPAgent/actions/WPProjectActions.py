@@ -108,6 +108,13 @@ def _sync_from_db(globals_, machine_id, is_mock):
 
         # Sync wafer
         wafer_id = our_machine.get("loadedWaferId")
+        wafer_orientation = our_machine.get("loadedWaferOrientation")
+        print('WAFER ORIENTATION FFROM DB :::::::::: ')
+        print(wafer_orientation)
+        card_orientation_from_from_DB = our_machine.get("installedProbeCardOrientation")
+        print('CARD ORIENTATION FFROM DB :::::::::: ')
+        print(card_orientation_from_from_DB)
+
         if wafer_id:
             globals_.loaded_wafer_id = wafer_id
             # TODO: replace hardcoded "West" once DB provides orientation
