@@ -1,5 +1,6 @@
 from enum import Enum, auto
-from utilities.WPCommandConstants import BYPASS_COMMANDS
+from utilities.WPCommandConstants import BYPASS_COMMANDS, SEQUENCE_COMMANDS
+from utilities.WPSequenceContext import in_trusted_sequence
 
 
 class WPAgentState(Enum):
@@ -176,6 +177,16 @@ class WPAgentStateMachine:
             },
         }
 
+        # Built-in sequences can be started from these states and do not change the
+        # state (their steps run as a trusted sequence, see WPSequenceContext).
+        for start_state in (
+            WPAgentState.UserLogged,
+            WPAgentState.OpenedProject,
+            WPAgentState.Aligned,
+        ):
+            for command in SEQUENCE_COMMANDS:
+                self.transitions[start_state][command] = start_state
+
     def _sync_to_global_params(self):
         """Auto-sync current state to global parameters to not to write same thing a few times"""
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -206,6 +217,11 @@ class WPAgentStateMachine:
             True if transition successful, False if invalid
         """
         self.current_command = command
+
+        # Steps of a trusted built-in sequence do not change the state: the
+        # agent is in the same state after the sequence as before it.
+        if in_trusted_sequence():
+            return True
 
         # DEVELOPER BYPASS: all commands allowed, state stays UsedByDeveloper
         if self.is_developer_mode():
