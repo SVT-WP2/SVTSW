@@ -338,10 +338,22 @@ def reset_agent(user=None, waferAgentName=None):
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
     old_state = agentStateMachine.get_state_name()
+    # reset() logs the current user out: remember who it was for the log
+    g = SvtWPAagentGlobalParameters.getInstance()
+    logged_out_user, logged_out_hierarchy = g.userLogged, g.userLoggedHierarchy
     agentStateMachine.transition("ResetAgent")
     agentStateMachine.reset()
     new_state = agentStateMachine.get_state_name()
     print(f"🔄 Agent state reset: {old_state} → {new_state}")
+    try:
+        from utilities.WPAgentLogger import WPAgentLogger
+
+        WPAgentLogger().log_audit(
+            "RESET", logged_out_user, logged_out_hierarchy,
+            requested_by=user, from_state=old_state, to_state=new_state,
+        )
+    except Exception:
+        pass
 
     return ResponseBuilder.success(
         "ResetAgentReply", f"✅ Agent state reset from '{old_state}' to '{new_state}'"
