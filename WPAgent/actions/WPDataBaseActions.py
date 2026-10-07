@@ -8,6 +8,7 @@ from typing import cast
 from utilities.WPAgentTypes import LoadedWaferData, InstalledProbeCardData, ListProbersData
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from services.WPDbKafkaClient import DBKafkaClient
+from utilities.WPValidationDecorator import validate_command_with_name, get_reply_type
 
 
 def _get_db_client() -> DBKafkaClient:
@@ -308,6 +309,49 @@ def update_wp_machine_loaded_wafer(
 
     except Exception as e:
         return ResponseBuilder.error("UpdateWpMachineLoadedWaferReply", f"Error updating loaded wafer: {str(e)}", 500)
+
+
+_VALID_WAFER_ORIENTATIONS = {"east": "East", "west": "West", "north": "North", "south": "South"}
+
+
+@validate_command_with_name("UpdateLoadedWafer")
+def update_loaded_wafer(waferId=None, orientation=None, user=None, waferAgentName=None):
+    """Correct the orientation stored in the DB for the wafer that is currently loaded.
+
+    Does not touch the hardware and cannot load/unload a wafer (use LoadWafer /
+    UnloadWafer for that): waferId must match the wafer the agent has loaded.
+    """
+    reply = get_reply_type()
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    if g.loaded_wafer_id is None:
+        return ResponseBuilder.error(reply, "No wafer loaded. Use LoadWafer first.", 400)
+
+    try:
+        same_wafer = float(waferId) == float(g.loaded_wafer_id)
+    except (TypeError, ValueError):
+        same_wafer = False
+    if not same_wafer:
+        return ResponseBuilder.error(
+            reply,
+            f"waferId {waferId} does not match the loaded wafer ({g.loaded_wafer_id})",
+            400,
+        )
+
+    normalized = _VALID_WAFER_ORIENTATIONS.get(str(orientation).strip().lower())
+    if normalized is None:
+        return ResponseBuilder.error(
+            reply,
+            f"Invalid orientation '{orientation}'. Allowed: East, West, North, South",
+            400,
+        )
+
+    result = update_wp_machine_loaded_wafer(loaded_wafer_id=g.loaded_wafer_id, orientation=normalized)
+    if result.get("status") != "Success":
+        err = result.get("error") or {}
+        return ResponseBuilder.error(reply, err.get("message", "Failed to update database"), err.get("code", 500))
+
+    return ResponseBuilder.success(reply, f"Loaded wafer orientation set to {normalized}")
 
 
 # =============================================================================
