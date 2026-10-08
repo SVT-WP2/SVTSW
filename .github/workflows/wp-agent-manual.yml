@@ -1,0 +1,122 @@
+name: 'WPAgent :: Manual'
+
+# Manual-only operations, run from the Actions UI (Run workflow → pick a job).
+# Extracted from wp-agent.yml so that workflow stays automatic-only (push /
+# PR / tag), mirroring the ui.yml / ui-manual.yml and
+# db-agent.yml / db-agent-manual.yml splits.
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Manual job to run'
+        required: true
+        default: 'deploy-dev--manual'
+        type: choice
+        options:
+          - docker-registry-create--manual
+          - deploy-dev--manual
+          - deploy-prod--manual
+      image_tag:
+        description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-registry-create--manual (always builds short SHA).'
+        required: false
+        type: string
+
+concurrency:
+  # Serialize manual ops (one at a time) so concurrent deploys can't clobber
+  # each other; never cancel an in-progress deploy.
+  group: wp-agent-manual
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: svt-wp2/svt-wp-agent
+
+defaults:
+  run:
+    working-directory: WPAgent
+
+jobs:
+  docker-registry-create--manual:
+    if: inputs.job == 'docker-registry-create--manual'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: WPAgent
+          file: WPAgent/Dockerfile
+          target: wp-agent
+          push: true
+          build-args: |
+            VERSION=${{ steps.vars.outputs.tag }}
+          cache-from: type=gha,scope=wp-agent
+          cache-to: type=gha,mode=max,scope=wp-agent
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+
+  # Deploys pin the image version in /opt/docker/svtsw/<env>/versions.env and
+  # recreate ONLY this service inside the svt-svtsw--<env> compose project
+  # (see Environment/README.md). App config + secrets live in the
+  # server-side .env, not in GitHub.
+  deploy-dev--manual:
+    if: inputs.job == 'deploy-dev--manual'
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy wp-agent to dev
+        # Override the workflow-level `defaults.run.working-directory: WPAgent`
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
+        env:
+          INPUT_TAG: ${{ inputs.image_tag }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          IMAGE_TAG="${INPUT_TAG:-${GITHUB_SHA::8}}"
+          bash Environment/deploy-service.sh dev svt-wp-agent "${IMAGE_TAG}"
+
+  # Manual production deploy. Run from the Actions UI once a release image
+  # exists for a `svt-wp-agent-*` tag. Requires `image_tag` input (the
+  # release version, e.g. 1.2.3) and the `environment: prod` approval gate
+  # (configure Required reviewers in repo Settings -> Environments -> prod).
+  deploy-prod--manual:
+    if: inputs.job == 'deploy-prod--manual'
+    runs-on: self-hosted
+    environment: prod
+    steps:
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy wp-agent to prod
+        # Override the workflow-level `defaults.run.working-directory: WPAgent`
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
+        env:
+          INPUT_TAG: ${{ inputs.image_tag }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${INPUT_TAG}" ]]; then
+            echo "ERROR: image_tag input is required for deploy-prod--manual" >&2
+            exit 1
+          fi
+          bash Environment/deploy-service.sh prod svt-wp-agent "${INPUT_TAG}"
