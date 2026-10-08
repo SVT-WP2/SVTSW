@@ -428,6 +428,7 @@ Enum main.pcLocation {
 
 Enum main.pcModel {
   "NKF7-TS3500-CABLEOUT-MLO(EVS-P)"
+  "MOSAIX-LEC-TS3500-CABLEOUT-OTHERS-MLOO-EVS-P-VY540"
   MosaixLeft
   MosaixRight
   LAS
@@ -437,6 +438,7 @@ Enum main.pcModel {
 
 Enum main.pcName {
   NKF7_MPI
+  MOSAIX_LEC
   BabyMOSS_Korea
   Mosaix_Korea
 }
