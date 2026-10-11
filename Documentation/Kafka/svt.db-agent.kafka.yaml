@@ -1489,7 +1489,7 @@ paths:
       tags:
         - SvtTest
       summary: Create an entry to the SvtTest
-      description: Returns the newly created entry to the SvtTest in the reply message
+      description: Returns the newly created entry to the SvtTest in the reply message. `setupId` and `testProcessingAgentType` of the new SvtTest are not part of the request, they are filled by the DB Agent from the test setup configuration and from the test type.
       requestBody:
         content:
           application/json:
@@ -1571,6 +1571,179 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
                   - $ref: "#/components/schemas/UpdateSvtTestFinishReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestReset:
+    post:
+      tags:
+        - SvtTest
+      summary: Reset an aborted SvtTest
+      description: |
+        Puts an aborted SvtTest back to "not started": clears `startedAt`, `finishedAt`, `pathToResult` and `testResultStatus`. Returns the updated entry to the SvtTest in the reply message.
+
+        - Only a SvtTest with `testResultStatus` = `ABORTED` can be reset, otherwise the reply status is `BadRequest`.
+        - Used by the SVT Test Plan Service after a plan is paused, so the aborted SvtTest is executed again with the next start of the plan.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestResetMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestResetReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # TEST_PLAN
+  /svt.db-agent.request/GetAllSvtTestPlans:
+    post:
+      tags:
+        - SvtTestPlan
+      summary: Get all SvtTestPlan
+      description: Returns SvtTestPlan list in the reply message. Optional filters by plan ids, setup ids and statuses can be applied.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllSvtTestPlansMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllSvtTestPlansReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateSvtTestPlan:
+    post:
+      tags:
+        - SvtTestPlan
+      summary: Create an entry to the SvtTestPlan
+      description: |
+        Returns the newly created entry to the SvtTestPlan in the reply message. The status of the new plan is `NotStarted`.
+
+        - All SvtTests of `svtTestIds` must exist and must belong to the setup of the plan (`SvtTest.setupId` = `setupId`), otherwise the reply status is `BadRequest`.
+        - A SvtTest belongs to at most one plan. A SvtTest that already has a `testPlanId` is rejected with `BadRequest`.
+        - `SvtTest.testPlanId` of the SvtTests of `svtTestIds` is set to the id of the new plan.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateSvtTestPlanMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateSvtTestPlanReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestPlan:
+    post:
+      tags:
+        - SvtTestPlan
+      summary: Update entry to the SvtTestPlan
+      description: |
+        Updates the name, the failure rule and / or the SvtTests of a plan. Returns the updated entry to the SvtTestPlan in the reply message.
+
+        - A plan with the status `Running` cannot be updated, the reply status is `BadRequest`.
+        - `svtTestIds` replaces the whole list, the order of the array is the execution order. The same rules as for `CreateSvtTestPlan` are applied.
+        - `SvtTest.testPlanId` is set for the added SvtTests and cleared (`null`) for the removed ones.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestPlanMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestPlanReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateSvtTestPlanStatus:
+    post:
+      tags:
+        - SvtTestPlan
+      summary: Update entry to the SvtTestPlan with the plan status
+      description: |
+        Stores the status of a plan. Returns the updated entry to the SvtTestPlan in the reply message.
+
+        Used by the SVT Test Plan Service only, on every status change of a plan (`Running`, `Paused`, `Finished`).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateSvtTestPlanStatusMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateSvtTestPlanStatusReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -3100,6 +3273,11 @@ components:
                   description: SvtTestSetupConfig ids array. If array is empty / undefined => tests of any test setup configuration will be returned.
                   items:
                     type: number
+                testPlanIds:
+                  type: array
+                  description: SvtTestPlan ids array. If array is empty / undefined => tests of any plan and tests outside any plan will be returned.
+                  items:
+                    type: number
                 createdAtFrom:
                   type: string
                   description: Optional lower bound of the createdAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
@@ -3213,6 +3391,165 @@ components:
           properties:
             entity:
               $ref: "#/components/schemas/SvtTestDto"
+    #
+    # TEST :: Reset :: Update
+    #
+    UpdateSvtTestResetMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestReset"
+        data:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: number
+              description: SvtTest id.
+    UpdateSvtTestResetReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestResetReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestDto"
+    #
+    # TEST_PLAN :: LIST
+    #
+    GetAllSvtTestPlansMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestPlans"
+        data:
+          type: object
+          properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: SvtTestPlan ids array. If array is empty / undefined => all plans will be returned.
+                  items:
+                    type: number
+                setupIds:
+                  type: array
+                  description: SvtTestSetup ids array. If array is empty / undefined => plans of any setup will be returned.
+                  items:
+                    type: number
+                statuses:
+                  type: array
+                  description: svtTestPlanStatus values array. If array is empty / undefined => plans with any status will be returned.
+                  items:
+                    type: string
+    GetAllSvtTestPlansReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllSvtTestPlansReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SvtTestPlanDto"
+            totalCount:
+              type: number
+    #
+    # TEST_PLAN :: Create
+    #
+    CreateSvtTestPlanMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestPlan"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/SvtTestPlanCreateDto"
+    CreateSvtTestPlanReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateSvtTestPlanReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestPlanDto"
+    #
+    # TEST_PLAN :: Update
+    #
+    UpdateSvtTestPlanMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestPlan"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: SvtTestPlan id.
+            update:
+              $ref: "#/components/schemas/SvtTestPlanUpdateDto"
+    UpdateSvtTestPlanReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestPlanReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestPlanDto"
+    #
+    # TEST_PLAN :: Status :: Update
+    #
+    UpdateSvtTestPlanStatusMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestPlanStatus"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: SvtTestPlan id.
+            update:
+              $ref: "#/components/schemas/SvtTestPlanStatusUpdateDto"
+    UpdateSvtTestPlanStatusReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateSvtTestPlanStatusReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestPlanDto"
     #
     # DTOs
     #
@@ -3946,6 +4283,7 @@ components:
         - id
         - name
         - dutTypes
+        - testProcessingAgentType
       properties:
         id:
           type: number
@@ -3955,11 +4293,15 @@ components:
           type: array
           items:
             type: string
+        testProcessingAgentType:
+          type: string
+          description: Value of the enum `testProcessingAgentType` (`TestAgent`, `ITS3TestAgent`). The kind of SVT Test Agent that processes the tests of this test type.
     SvtTestTypeCreateDto:
       type: object
       required:
         - name
         - dutTypes
+        - testProcessingAgentType
         - testTypeConfig
       properties:
         name:
@@ -3968,6 +4310,9 @@ components:
           type: array
           items:
             type: string
+        testProcessingAgentType:
+          type: string
+          description: Value of the enum `testProcessingAgentType`.
         testTypeConfig:
           type: object
           required:
@@ -4092,6 +4437,9 @@ components:
         - dutId
         - testTypeConfigId
         - testSetupConfigId
+        - setupId
+        - testProcessingAgentType
+        - testPlanId
         - createdAt
         - startedAt
         - finishedAt
@@ -4108,6 +4456,16 @@ components:
           type: number
         testSetupConfigId:
           type: number
+        setupId:
+          type: number
+          description: SvtTestSetup id of the test. Filled by the DB Agent on `CreateSvtTest` from the test setup configuration (`testSetupConfigId` => `SvtTestSetupConfig.setupId`).
+        testProcessingAgentType:
+          type: string
+          description: Value of the enum `testProcessingAgentType`. The kind of SVT Test Agent that processes the test. Filled by the DB Agent on `CreateSvtTest` from the test type (`testTypeConfigId` => `SvtTestTypeConfig.testTypeId` => `SvtTestType.testProcessingAgentType`).
+        testPlanId:
+          type: number
+          nullable: true
+          description: SvtTestPlan id the test belongs to, `null` for a test outside any plan. Set by `CreateSvtTestPlan` / `UpdateSvtTestPlan`.
         createdAt:
           type: string
           description: Date only in format `2025-06-03T23:59:12.Z`
@@ -4121,6 +4479,7 @@ components:
           type: string
         testResultStatus:
           type: string
+          description: Value of the enum `testResultStatus` (`SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR`, `ABORTED`). `ABORTED` is a new value.
     SvtTestCreateDto:
       required:
         - dutEntityName
@@ -4156,6 +4515,81 @@ components:
           type: string
         testResultStatus:
           type: string
+    # TEST_PLAN :: DTO
+    SvtTestPlanDto:
+      type: object
+      required:
+        - id
+        - name
+        - setupId
+        - failureRule
+        - status
+        - svtTestIds
+        - createdAt
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        setupId:
+          type: number
+          description: SvtTestSetup id the plan runs on.
+        failureRule:
+          type: string
+          description: Value of the enum `svtTestPlanFailureRule` (`Continue`, `SkipDut`, `Pause`). What happens to the running plan when one of its tests ends with `FAILURE` or `ERROR`.
+        status:
+          type: string
+          description: Value of the enum `svtTestPlanStatus` (`NotStarted`, `Running`, `Paused`, `Finished`).
+        svtTestIds:
+          type: array
+          description: SvtTest ids of the plan, the order of the array is the execution order.
+          items:
+            type: number
+        createdAt:
+          type: string
+          description: Date in format `2025-06-03T23:59:12.Z`
+    SvtTestPlanCreateDto:
+      type: object
+      required:
+        - name
+        - setupId
+        - failureRule
+        - svtTestIds
+      properties:
+        name:
+          type: string
+        setupId:
+          type: number
+        failureRule:
+          type: string
+          description: Value of the enum `svtTestPlanFailureRule`.
+        svtTestIds:
+          type: array
+          description: SvtTest ids of the plan, the order of the array is the execution order.
+          items:
+            type: number
+    SvtTestPlanUpdateDto:
+      type: object
+      description: Only the specified fields are updated.
+      properties:
+        name:
+          type: string
+        failureRule:
+          type: string
+          description: Value of the enum `svtTestPlanFailureRule`.
+        svtTestIds:
+          type: array
+          description: Replaces the whole list of the SvtTest ids of the plan, the order of the array is the execution order.
+          items:
+            type: number
+    SvtTestPlanStatusUpdateDto:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Value of the enum `svtTestPlanStatus`.
 
     # ENUM :: DTO
     SvtEnumName:
@@ -4181,3 +4615,6 @@ components:
         - wpSwType
         - wpVendor
         - testResultStatus
+        - testProcessingAgentType
+        - svtTestPlanFailureRule
+        - svtTestPlanStatus

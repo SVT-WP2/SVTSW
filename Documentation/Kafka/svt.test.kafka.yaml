@@ -29,23 +29,33 @@ info:
       - `204` - no reply, the message is a broadcast (`svt.test.event`, `svt.test.heartbeat`).
 
     ### Agent Instances & Routing
-    - One SVT Test Agent instance runs per test setup (`SvtTestSetup`) and is bound to its `setupId` by configuration.
-    - All agents share the topic `svt.test.request`, each agent consumes it with its **own** consumer group (e.g. `svt.test.request.setup-<setupId>`), so every agent receives every command.
-    - Every command carries `data.setupId`. An agent processes and replies **only** to the commands with its own `setupId`, all other commands are ignored.
-    - If no agent of the setup is online, **no reply is sent**. Requesters must apply a reply timeout (recommended `15 s`) and should check `svt.test.heartbeat` before sending a command.
+    - One SVT Test Agent instance runs per test setup (`SvtTestSetup`) **and** agent type (`SvtTestType.testProcessingAgentType`). The agent is bound to its `setupId` and `agentType` by configuration.
+    - The pair `setupId` + `agentType` is the address of an agent. A setup has at most one agent of each agent type.
+    - Both parts of the address are stored on the SvtTest in two **new fields**: `SvtTest.setupId` and `SvtTest.testProcessingAgentType`. The SVT DB Agent fills them when the SvtTest is created (`CreateSvtTest`): `setupId` from the test setup configuration (`testSetupConfigId` => `SvtTestSetupConfig.setupId`), the agent type from the test type (`testTypeConfigId` => `SvtTestTypeConfig.testTypeId` => `SvtTestType.testProcessingAgentType`). They are not part of `SvtTestCreateDto`.
+    - All agents share the topic `svt.test.request`, each agent consumes it with its **own** consumer group (e.g. `svt.test.request.setup-<setupId>.<agentType>`), so every agent receives every command.
+    - Every command carries `data.setupId` and `data.agentType`. An agent processes and replies **only** to the commands with its own `setupId` and `agentType`, all other commands are ignored.
+    - If the addressed agent is not online, **no reply is sent**. Requesters must apply a reply timeout (recommended `15 s`) and should check `svt.test.heartbeat` before sending a command.
     - On startup an agent skips the backlog of `svt.test.request` (seek to end), commands sent while the agent was offline are never executed.
+    - The agents of one setup do not know about each other. The requester must not send `StartSvtTest` to a setup while another agent of the same setup is `Busy` (`svt.test.heartbeat`).
 
     ### Processing Flow
-    1. The requester resolves the `setupId` of the SvtTest (`SvtTest.testSetupConfigId` => `SvtTestSetupConfig.setupId`) and sends `StartSvtTest`.
+    1. The requester reads the address from the SvtTest (`SvtTest.setupId`, `SvtTest.testProcessingAgentType`) and sends `StartSvtTest`.
     2. The agent loads and validates everything needed for the execution from the SVT DB Agent (`svt.db-agent.request`):
-       - `GetAllSvtTests` (filter `ids`) - the SvtTest must exist and must not be started / finished yet.
-       - `GetAllSvtTestSetupConfigs` (filter `ids`) - the test setup configuration must belong to the agent's setup.
-       - `GetSvtTestSetupConfigBody`, `GetAllSvtTestTypeConfigs`, `GetAllSvtTestTypes`, `GetSvtTestTypeConfigBody` - test setup / test type configuration.
+       - `GetAllSvtTests` (filter `ids`) - the SvtTest must exist and must not be started / finished yet. Its `setupId` and `testProcessingAgentType` must be the setup and the agent type of the agent.
+       - `GetSvtTestSetupConfigBody` (`testSetupConfigId`), `GetSvtTestTypeConfigBody` (`testTypeConfigId`) - the two configuration bodies that define the execution, see `What defines the execution`.
        - `GetAllAsics` | `GetAllChips` | `GetAllChipBlocks` (filter `ids` = `dutId`, according to `dutEntityName`) - DUT.
     3. The agent marks the SvtTest as started with `UpdateSvtTestStart` (`startedAt`).
     4. The agent replies `StartSvtTestReply` (processing status `Starting`) and publishes `SvtTestProcessingStatusChanged` (`Starting`).
     5. The agent prepares the setup and starts the execution => `SvtTestProcessingStatusChanged` (`Running`).
     6. The execution ends (completed, failed or aborted). The agent stores the result with `UpdateSvtTestFinish` (`finishedAt`, `pathToResult`, `testResultStatus`) and **after that** publishes `SvtTestProcessingStatusChanged` (`Finished`), so the consumers of `Finished` can rely on the updated SvtTest entity in the DB.
+
+    ### What defines the execution
+    - `SvtTestType` is a generic entity created by the users. An agent has no list of known test types and does not depend on the name of a test type.
+    - A test type says which kind of agent processes its SvtTests: `SvtTestType.testProcessingAgentType` (**new field**, **new DB enum** `testProcessingAgentType`, see `SvtTestProcessingAgentType`).
+    - The SVT DB Agent copies that value to `SvtTest.testProcessingAgentType` when the SvtTest is created. Requesters and agents read the agent type from the SvtTest, the agent never reads the `SvtTestType` entity.
+    - What the agent executes is defined only by two configuration bodies: the test setup configuration body (`testSetupConfigId`) and the test type configuration body (`testTypeConfigId`), applied to the DUT of the SvtTest.
+    - Both bodies are plain text for this contract (JSON or not). Their format is agreed between the authors of the configurations and the developers of the agent type.
+    - The agent checks the bodies before it accepts the SvtTest. A body it cannot read or cannot execute is rejected with `1005`.
 
     ### Processing Rules
     - One `SvtTest` entity = one execution. A started / finished SvtTest cannot be started again (error `1004`), create a new SvtTest to repeat the test.
@@ -66,7 +76,7 @@ info:
   version: 0.0.1
 tags:
   - name: SvtTest Commands
-    description: Commands consumed by the SVT Test Agent bound to `setupId`. Replies are emitted to `svt.test.request.reply`.
+    description: Commands consumed by the SVT Test Agent addressed by `setupId` + `agentType`. Replies are emitted to `svt.test.request.reply`.
   - name: SvtTest Events
     description: Broadcast messages published by the SVT Test Agents to `svt.test.event`.
   - name: Agent Heartbeat
@@ -80,12 +90,12 @@ paths:
         - SvtTest Commands
       summary: Start SvtTest processing
       description: |
-        Requests the agent bound to `setupId` to process (execute) the SvtTest `svtTestId`.
+        Requests the agent addressed by `setupId` + `agentType` to process (execute) the SvtTest `svtTestId`.
 
         The reply is emitted as soon as the request is validated and the SvtTest is marked as started (`UpdateSvtTestStart`). It does not wait for the end of the test, the further processing statuses and the result are published to `svt.test.event`.
 
         Errors (`error.code`):
-        - `BadRequest`: `1001` InvalidMessage, `1003` SetupMismatch, `1004` SvtTestAlreadyStarted, `1005` InvalidTestConfig, `1006` UnsupportedTestType, `2001` AgentBusy
+        - `BadRequest`: `1001` InvalidMessage, `1003` SetupMismatch, `1004` SvtTestAlreadyStarted, `1005` InvalidTestConfig, `1006` AgentTypeMismatch, `2001` AgentBusy
         - `NotFound`: `1002` SvtTestNotFound
         - `UnexpectedError`: `2002` AgentNotReady, `3001` DbAgentUnavailable, `3002` DbAgentError, `9999` UnexpectedError
       requestBody:
@@ -119,7 +129,7 @@ paths:
         - SvtTest Commands
       summary: Abort SvtTest processing
       description: |
-        Requests the agent bound to `setupId` to abort the processing of the SvtTest `svtTestId` (processing status `Starting` or `Running`).
+        Requests the agent addressed by `setupId` + `agentType` to abort the processing of the SvtTest `svtTestId` (processing status `Starting` or `Running`).
 
         The reply is emitted as soon as the abort is initiated (processing status `Aborting`). When the setup is brought to a safe state, the agent stores the result (`testResultStatus` = `ABORTED`) and publishes `Finished` to `svt.test.event`. A repeated abort of a SvtTest in `Aborting` status replies `Success`.
 
@@ -253,12 +263,17 @@ components:
           type: object
           required:
             - setupId
+            - agentType
             - svtTestId
           properties:
             setupId:
               type: number
-              description: SvtTestSetup id, addresses the agent bound to that setup. It must be the setup of the SvtTest (`testSetupConfigId` => `SvtTestSetupConfig.setupId`).
+              description: SvtTestSetup id, first part of the agent address. It must be the setup of the SvtTest (`SvtTest.setupId`).
               example: 3
+            agentType:
+              description: Agent type, second part of the agent address. It must be the agent type of the SvtTest (`SvtTest.testProcessingAgentType`).
+              allOf:
+                - $ref: "#/components/schemas/SvtTestProcessingAgentType"
             svtTestId:
               type: number
               description: SvtTest id.
@@ -285,12 +300,17 @@ components:
           type: object
           required:
             - setupId
+            - agentType
             - svtTestId
           properties:
             setupId:
               type: number
-              description: SvtTestSetup id, addresses the agent bound to that setup.
+              description: SvtTestSetup id, first part of the agent address.
               example: 3
+            agentType:
+              description: Agent type, second part of the agent address.
+              allOf:
+                - $ref: "#/components/schemas/SvtTestProcessingAgentType"
             svtTestId:
               type: number
               description: SvtTest id. Must be the SvtTest currently processed by the agent.
@@ -334,6 +354,7 @@ components:
       required:
         - svtTestId
         - setupId
+        - agentType
         - agentName
         - processingStatus
         - updatedAt
@@ -351,6 +372,10 @@ components:
           type: number
           description: SvtTestSetup id of the agent.
           example: 3
+        agentType:
+          description: Agent type of the agent.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestProcessingAgentType"
         agentName:
           type: string
           description: Name of the agent instance processing the SvtTest.
@@ -389,6 +414,7 @@ components:
       required:
         - agentName
         - setupId
+        - agentType
         - agentStatus
         - currentTest
         - error
@@ -404,6 +430,10 @@ components:
           type: number
           description: SvtTestSetup id the agent is bound to.
           example: 3
+        agentType:
+          description: Agent type the agent is bound to. Together with `setupId` it is the address of the agent.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestProcessingAgentType"
         agentStatus:
           $ref: "#/components/schemas/SvtTestAgentStatus"
         currentTest:
@@ -468,6 +498,21 @@ components:
         - FAILURE
         - ERROR
         - ABORTED
+    SvtTestProcessingAgentType:
+      type: string
+      description: |
+        Kind of agent that processes the SvtTests of a test type. Values of the **new DB enum** `testProcessingAgentType`, stored in two **new fields**:
+        - `SvtTestType.testProcessingAgentType` (required) - set when the test type is created.
+        - `SvtTest.testProcessingAgentType` (required) - copied from the test type by the SVT DB Agent when the SvtTest is created.
+
+        - Every agent is bound to one agent type by configuration.
+        - `setupId` + `agentType` is the address of an agent, agents use the pair to filter the commands of `svt.test.request`.
+
+        The two values are named after the two existing code bases (`TestAgent/`, `ITS3TestAgent/`).
+      enum:
+        - TestAgent
+        - ITS3TestAgent
+      example: ITS3TestAgent
     SvtTestAgentStatus:
       type: string
       description: |
@@ -490,10 +535,10 @@ components:
         | --- | --- | --- | --- |
         | `1001` | InvalidMessage | BadRequest | Unknown message type, invalid JSON or missing / invalid fields. |
         | `1002` | SvtTestNotFound | NotFound | The SvtTest `svtTestId` does not exist. |
-        | `1003` | SetupMismatch | BadRequest | The test setup configuration of the SvtTest (`testSetupConfigId`) belongs to another setup than `setupId`. |
+        | `1003` | SetupMismatch | BadRequest | The SvtTest belongs to another setup (`SvtTest.setupId`) than `setupId`. |
         | `1004` | SvtTestAlreadyStarted | BadRequest | The SvtTest has already been started or finished (`startedAt` / `finishedAt` is set). |
-        | `1005` | InvalidTestConfig | BadRequest | The test type / test setup configuration body cannot be parsed or is not valid for the agent. |
-        | `1006` | UnsupportedTestType | BadRequest | The agent is not able to execute the test type of the SvtTest. |
+        | `1005` | InvalidTestConfig | BadRequest | The test setup / test type configuration body cannot be read or cannot be executed by the agent. |
+        | `1006` | AgentTypeMismatch | BadRequest | The SvtTest is assigned to another agent type (`SvtTest.testProcessingAgentType`) than `agentType`. |
         | `1007` | SvtTestNotRunning | BadRequest | `AbortSvtTest` of a SvtTest that is not being processed by the agent. |
         | `2001` | AgentBusy | BadRequest | The agent is processing another SvtTest. |
         | `2002` | AgentNotReady | UnexpectedError | The agent is in `Error` status and does not accept SvtTests. |
@@ -523,7 +568,7 @@ components:
         - SetupMismatch
         - SvtTestAlreadyStarted
         - InvalidTestConfig
-        - UnsupportedTestType
+        - AgentTypeMismatch
         - SvtTestNotRunning
         - AgentBusy
         - AgentNotReady

@@ -1,0 +1,852 @@
+openapi: "3.0.1"
+info:
+  title: SVT Test Plan Service
+  description: |
+    The Kafka communication layer definitions for `SVT Test Plan Service` - the service that runs `SvtTestPlan` entities. A plan is an ordered list of existing `SvtTest` entities of one test setup. The service starts them one by one on the SVT Test Agent of that setup.
+
+    ### Naming Conventions
+    - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
+    - The reply message topic name is defined by the global SVT naming conventions `*.reply`, e.g:
+      - request message topic `svt.test-plan.request` => reply topic name `svt.test-plan.request.reply`
+    - Each message structure follows the global SVT naming conventions
+
+    ### Topics
+    | Topic | Produced by | Consumed by | Messages |
+    | --- | --- | --- | --- |
+    | `svt.test-plan.request` | UI backend, other services | SVT Test Plan Service | `StartSvtTestPlan`, `PauseSvtTestPlan`, `StartSvtTest`, `AbortSvtTest` |
+    | `svt.test-plan.request.reply` | SVT Test Plan Service | requesters | `StartSvtTestPlanReply`, `PauseSvtTestPlanReply`, `StartSvtTestReply`, `AbortSvtTestReply` |
+    | `svt.test-plan.event` | SVT Test Plan Service | UI backend, other services | `SvtTestPlanProcessingStatusChanged` |
+    | `svt.test-plan.heartbeat` | SVT Test Plan Service | UI backend, other services | `SvtTestPlanServiceHeartbeat` |
+
+    - All topics have 1 partition and are created by the service on startup if they do not exist.
+    - `svt.test-plan.heartbeat` has retention `60 s`, same as the other SVT heartbeat topics.
+    - Messages are produced without a message key.
+
+    Topics the service uses as a client of the other services:
+
+    | Topic | Direction | Used for |
+    | --- | --- | --- |
+    | `svt.test.request` / `svt.test.request.reply` | produce / consume | `StartSvtTest`, `AbortSvtTest` sent to the SVT Test Agent addressed by `setupId` + `agentType`. |
+    | `svt.test.event` | consume | `SvtTestProcessingStatusChanged`, the service waits for `Finished` of the SvtTest it started. |
+    | `svt.test.heartbeat` | consume | `SvtTestAgentHeartbeat`, tells which agents are online and what they are processing. |
+    | `svt.db-agent.request` / `svt.db-agent.request.reply` | produce / consume | Reads plans and SvtTests, stores the plan status, see `Required SVT DB Agent additions`. |
+
+    ### POST Request Meaning
+    - Request body describes the Kafka Message structure published to the topic of the path.
+    - Response
+      - `200` / `default` - the relevant message will be emitted to the relevant `*.reply` topic as a reply to that message.
+      - `204` - no reply, the message is a broadcast (`svt.test-plan.event`, `svt.test-plan.heartbeat`).
+
+    ### Service Instance & Routing
+    - **One** SVT Test Plan Service instance runs for the whole system. It consumes `svt.test-plan.request` with the consumer group `svt.test-plan.request`.
+    - Commands carry no address. The service reads the address of the agent from the SvtTest (`SvtTest.setupId`, `SvtTest.testProcessingAgentType`) and addresses the SVT Test Agent itself (`setupId` + `agentType` of the SVT Test Agent contract).
+    - A setup can have several agents, one per agent type (`SvtTest.testProcessingAgentType`). The agents of one setup do not know about each other, so the service is the one that guarantees **one SvtTest at a time per setup**, whatever agent processes it.
+    - If the service is offline, **no reply is sent**. Requesters must apply a reply timeout (recommended `15 s`) and should check `svt.test-plan.heartbeat` before sending a command.
+    - On startup the service skips the backlog of `svt.test-plan.request` (seek to end), commands sent while the service was offline are never executed.
+    - One plan can run per setup. Plans of different setups run in parallel.
+
+    ### SvtTestPlan Entity
+    `SvtTestPlan` is a new DB entity (see the schema `SvtTestPlanDto`). Plans are created and edited through the SVT DB Agent, **not** through this service. The service only runs them.
+
+    - `setupId` - the setup the plan runs on. All SvtTests of the plan must belong to that setup (`SvtTest.setupId`).
+    - `svtTestIds` - the SvtTests of the plan. The order of the array is the execution order. The service does not reorder, the UI is expected to keep the SvtTests of one DUT next to each other.
+    - `failureRule` - what happens to the plan when a SvtTest ends with `FAILURE` or `ERROR`, see `SvtTestPlanFailureRule`.
+    - `status` - stored by the service on every status change, see `SvtTestPlanStatus`.
+    - The SvtTests of a plan can have test types of different agent types. Every SvtTest is sent to the agent of its own agent type, all on the setup of the plan.
+    - A SvtTest belongs to at most one plan. SvtTests outside any plan still exist.
+    - A plan cannot be edited while its status is `Running`.
+
+    ### Which SvtTest is next
+    The service keeps no list of its own. Before every SvtTest it reads the SvtTests of the plan from the DB and sorts each of them into one of three states:
+
+    | State | Condition |
+    | --- | --- |
+    | started | `startedAt` is set (running or finished). The plan never runs it again. |
+    | skipped | Not started, `failureRule` = `SkipDut` and an earlier SvtTest of the same DUT (`dutEntityName` + `dutId`) in the plan order has `testResultStatus` = `FAILURE` or `ERROR`. |
+    | waiting | Not started and not skipped. |
+
+    - The next SvtTest is the **first waiting SvtTest in the plan order**. The plan is finished when no SvtTest is waiting.
+    - The states depend only on the DB, so they are the same after a pause and after a restart of the service. The UI can compute the same states for its grids.
+    - There is no new SvtTest status and no `SKIPPED` result. A skipped SvtTest stays untouched in the DB and can still be run by hand with `StartSvtTest`.
+
+    ### Processing Flow
+    1. The requester sends `StartSvtTestPlan` (`svtTestPlanId`).
+    2. The service loads and validates everything from the SVT DB Agent (`svt.db-agent.request`) and from the agent heartbeats:
+       - `GetAllSvtTestPlans` (filter `ids`) - the plan must exist and must not be running.
+       - `GetAllSvtTests` (filter `ids` = `svtTestIds`) - at least one SvtTest must be waiting. The SvtTests carry the address of their agent (`setupId`, `testProcessingAgentType`).
+       - No other plan is running on the setup, no agent of the setup is `Busy` and the agent of the first waiting SvtTest is online and `Idle`.
+    3. The service stores the plan status `Running` (`UpdateSvtTestPlanStatus`).
+    4. The service replies `StartSvtTestPlanReply` (processing status `Running`) and publishes `SvtTestPlanProcessingStatusChanged` (`Running`).
+    5. For the next waiting SvtTest the service sends `StartSvtTest` (`setupId`, `agentType`, `svtTestId`) to `svt.test.request`. When the agent accepts it, the service publishes `SvtTestPlanProcessingStatusChanged` (`Running`, `currentSvtTestId`).
+    6. The service waits for the `Finished` event of that SvtTest on `svt.test.event`, reads the SvtTests of the plan again and applies the failure rule. Then it continues with step 5.
+    7. No SvtTest is waiting any more. The service stores the plan status `Finished` and **after that** publishes `SvtTestPlanProcessingStatusChanged` (`Finished`).
+
+    ### Pause
+    1. The requester sends `PauseSvtTestPlan` (`svtTestPlanId`).
+    2. The service replies `PauseSvtTestPlanReply` (processing status `Pausing`), publishes `SvtTestPlanProcessingStatusChanged` (`Pausing`) and sends `AbortSvtTest` for the running SvtTest to the agent.
+    3. The agent ends the SvtTest with `testResultStatus` = `ABORTED`. The service puts this SvtTest back to "not started" with `UpdateSvtTestReset`, so it is the first SvtTest of the next start.
+    4. The service stores the plan status `Paused` and publishes `SvtTestPlanProcessingStatusChanged` (`Paused`, `pauseReason` = `PauseRequested`).
+
+    - A SvtTest that ended by itself before the abort reached it keeps its result, only a SvtTest ended with `ABORTED` by the pause is put back.
+    - A pause always ends in `Paused`. If the agent is not running the SvtTest any more, the plan is paused right away. If the agent does not answer the abort, the plan is paused with `pauseReason` = `Error` (`3003`) and the SvtTest is not put back.
+    - `StartSvtTestPlan` of a paused plan continues with the first waiting SvtTest.
+
+    ### Failure Rule
+    Applied when a SvtTest of the running plan ends with `testResultStatus` = `FAILURE` or `ERROR`:
+
+    | `failureRule` | The plan |
+    | --- | --- |
+    | `Continue` | goes on with the next waiting SvtTest. |
+    | `SkipDut` | goes on with the next waiting SvtTest. The remaining SvtTests of that DUT are skipped (see `Which SvtTest is next`). |
+    | `Pause` | is paused (`pauseReason` = `TestFailed`). The next `StartSvtTestPlan` continues with the next waiting SvtTest. |
+
+    ### Processing Rules
+    - The service never counts a problem of its own as a test failure. Everything below pauses the plan with `pauseReason` = `Error` and `error`, the failure rule is not applied:
+      - the agent of the next SvtTest is offline (`2002`) or in `Error` status (`2003`), or another agent of the setup is `Busy` (`2001`). The SvtTest is not started, it is taken again with the next start.
+      - the agent refuses `StartSvtTest` (`3004`) or does not reply (`3003`). The SvtTest is not started, it is taken again with the next start.
+      - the agent goes offline while it processes the SvtTest of the plan (`4001`). The agent ends that SvtTest with `ERROR` when it is back.
+      - the SVT DB Agent does not reply or replies with an error (`3001`, `3002`).
+    - If the SvtTest of a running plan ends with `ABORTED` and no pause was requested (it was aborted with `AbortSvtTest`), the plan is paused with `pauseReason` = `TestAborted`. This SvtTest keeps `ABORTED` and is **not** put back.
+    - If the service is restarted, it pauses on startup every plan stored as `Running` (`pauseReason` = `Error`, error `4002`). A SvtTest that was running goes on and ends on its agent, the setup is busy until then.
+    - `StartSvtTestPlan` is accepted in any stored status except `Running`, as long as a SvtTest is waiting. A `Finished` plan gets waiting SvtTests again when SvtTests are added or the failure rule is changed.
+    - To wait for the end of a plan (e.g. other services): subscribe to `svt.test-plan.event` **before** sending `StartSvtTestPlan` and wait for `Paused` or `Finished` of the `svtTestPlanId`.
+
+    ### Single SvtTests
+    - `StartSvtTest` and `AbortSvtTest` of this service run one SvtTest, in a plan or outside any plan. The service adds the address of the agent (`setupId`, `agentType`) and forwards the command to that SVT Test Agent, the requester does not need to know the setup or the agent type.
+    - `StartSvtTest` is rejected with `2001` while the setup is in use: one of its agents is `Busy`, or a plan is running on it, also between two SvtTests of the plan.
+    - The processing statuses and the result of the SvtTest are published by the agent to `svt.test.event`, as for every SvtTest.
+    - The service is meant to be the **only** producer of `svt.test.request`. A `StartSvtTest` sent directly to an agent can land between two SvtTests of a running plan. The agent then refuses the next SvtTest of the plan (`AgentBusy`) and the plan is paused with `error` `3004`.
+
+    ### Required SVT DB Agent additions
+    The messages and fields below are defined in the SVT DB Agent contract (`svt.db-agent.kafka.yaml`), this table lists what the service depends on.
+
+    | Message / change | Used by | Meaning |
+    | --- | --- | --- |
+    | `GetAllSvtTestPlans` | UI, service | List of `SvtTestPlanDto`. Filter `ids`, `setupIds`, `statuses`, pager. |
+    | `CreateSvtTestPlan` | UI | `name`, `setupId`, `failureRule`, `svtTestIds`. The status is `NotStarted`. |
+    | `UpdateSvtTestPlan` | UI | `name`, `failureRule`, `svtTestIds`. Rejected while the status is `Running`. |
+    | `UpdateSvtTestPlanStatus` | service | Stores `status`. |
+    | `UpdateSvtTestReset` | service | Puts a SvtTest with `testResultStatus` = `ABORTED` back to "not started": clears `startedAt`, `finishedAt`, `pathToResult`, `testResultStatus`. |
+    | `SvtTestDto.testPlanId`, `GetAllSvtTests` filter `testPlanIds` | UI | The plan of a SvtTest, `null` outside any plan. |
+    | DB enums `svtTestPlanFailureRule`, `svtTestPlanStatus` | UI, service | See `SvtTestPlanFailureRule`, `SvtTestPlanStatus`. |
+    | DB enum `testResultStatus` | agent | New value `ABORTED`, already required by the SVT Test Agent contract. |
+    | `SvtTestTypeDto.testProcessingAgentType`, DB enum `testProcessingAgentType` | UI | The agent type that processes the SvtTests of a test type. Already required by the SVT Test Agent contract. |
+    | `SvtTestDto.setupId`, `SvtTestDto.testProcessingAgentType` | UI, service, agent | The address of the agent of a SvtTest. Filled by the SVT DB Agent on `CreateSvtTest` from the test setup configuration and the test type. Already required by the SVT Test Agent contract. |
+
+    `UpdateSvtTestReset` relaxes the rule "one SvtTest = one execution" of the SVT Test Agent contract for SvtTests aborted by a pause. After the reset `startedAt` is empty, so the agent accepts the SvtTest again.
+
+    ### Not in this version: wafer plans
+    A plan over a whole wafer needs the wafer prober between the DUTs. It is left out of this version and is meant to be added without changing the messages below:
+
+    - `SvtTestPlanDto` gets `waferId` and `wpMachineId`, both `null` for a plan without a prober.
+    - Before the first SvtTest of a DUT the service sends `MoveChuckAsic`, `MoveChuckContact`, `TestingLock` to the WP Agent, after the last one `TestingUnlock`, `MoveChuckSeparation`.
+    - `SvtTestPlanProcessingStatusDto` gets the current DUT, the error codes get a `35xx` range for the WP Agent.
+    - Open points: the WP Agent accepts one logged-in user, so `StartSvtTestPlan` has to carry the user. The DB has no link between a setup and a prober.
+
+    ### Kafka Headers
+    - Request / reply headers follow the global SVT naming conventions: `kafka_correlationId`, `kafka_replyTopic`, `kafka_replyPartition`.
+    - Reply messages additionally carry the header `kafka_nest-is-disposed` (any value, e.g. `00`, same as SVT DB Agent). It marks the reply as final for NestJS clients (UI backend).
+    - The header `kafka_nest-err` is never set, errors are reported in the message body (`status`, `error`).
+
+    ### Useful Links
+    - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
+    - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
+    - SVT Test Agent Kafka contract: [svt.test.kafka.yaml](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/svt.test.kafka.yaml)
+    - SVT DB Agent Kafka contract: [svt.db-agent.kafka.yaml](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/svt.db-agent.kafka.yaml)
+  version: 0.0.1
+tags:
+  - name: SvtTestPlan Commands
+    description: Commands that start and pause a plan. Replies are emitted to `svt.test-plan.request.reply`.
+  - name: SvtTest Commands
+    description: Commands that run one SvtTest through the service. Replies are emitted to `svt.test-plan.request.reply`.
+  - name: SvtTestPlan Events
+    description: Broadcast messages published by the service to `svt.test-plan.event`.
+  - name: Service Heartbeat
+    description: Broadcast presence messages published by the service to `svt.test-plan.heartbeat`.
+#
+paths:
+  # PLAN COMMANDS
+  /svt.test-plan.request/StartSvtTestPlan:
+    post:
+      tags:
+        - SvtTestPlan Commands
+      summary: Start SvtTestPlan processing
+      description: |
+        Requests the service to run the waiting SvtTests of the plan `svtTestPlanId`, one by one, in the plan order. The same command starts a new plan and continues a paused one.
+
+        The reply is emitted as soon as the request is validated and the plan status `Running` is stored (`UpdateSvtTestPlanStatus`). It does not wait for the first SvtTest, the further processing is published to `svt.test-plan.event`.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `1004` SvtTestPlanAlreadyRunning, `1006` NothingToRun, `1007` InvalidSvtTestPlan, `2001` SetupBusy
+        - `NotFound`: `1002` SvtTestPlanNotFound
+        - `UnexpectedError`: `2002` AgentOffline, `2003` AgentNotReady, `3001` DbAgentUnavailable, `3002` DbAgentError, `9999` UnexpectedError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/StartSvtTestPlanMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/StartSvtTestPlanReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.test-plan.request/PauseSvtTestPlan:
+    post:
+      tags:
+        - SvtTestPlan Commands
+      summary: Pause SvtTestPlan processing
+      description: |
+        Requests the service to pause the running plan `svtTestPlanId`: the running SvtTest is aborted and put back to "not started", no further SvtTest is started.
+
+        The reply is emitted as soon as the pause is initiated (processing status `Pausing`). When the SvtTest is aborted and put back, the service stores the plan status `Paused` and publishes `Paused` to `svt.test-plan.event`. If no SvtTest has to be aborted, the reply already carries `Paused`. A repeated pause of a plan in `Pausing` status replies `Success`.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `1005` SvtTestPlanNotRunning
+        - `UnexpectedError`: `9999` UnexpectedError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/PauseSvtTestPlanMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/PauseSvtTestPlanReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # SINGLE TEST COMMANDS
+  /svt.test-plan.request/StartSvtTest:
+    post:
+      tags:
+        - SvtTest Commands
+      summary: Start one SvtTest
+      description: |
+        Requests the service to run the SvtTest `svtTestId`, in a plan or outside any plan. The service reads the address of the agent from the SvtTest (`SvtTest.setupId`, `SvtTest.testProcessingAgentType`), checks that the setup is not in use (no running plan, no `Busy` agent of the setup, addressed agent online and `Idle`) and forwards `StartSvtTest` (`setupId`, `agentType`, `svtTestId`) to that agent.
+
+        The reply carries the processing state replied by the agent (processing status `Starting`). A refusal of the agent is replied with the reply status of the agent, `error.code` `3004` and the error of the agent in `error.cause`.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `2001` SetupBusy
+        - `NotFound`: `1003` SvtTestNotFound
+        - `UnexpectedError`: `2002` AgentOffline, `2003` AgentNotReady, `3001` DbAgentUnavailable, `3002` DbAgentError, `3003` TestAgentUnavailable, `9999` UnexpectedError
+        - reply status of the agent: `3004` TestAgentError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/StartSvtTestMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/StartSvtTestReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.test-plan.request/AbortSvtTest:
+    post:
+      tags:
+        - SvtTest Commands
+      summary: Abort one SvtTest
+      description: |
+        Requests the service to abort the processing of the SvtTest `svtTestId`. The service finds the agent that processes the SvtTest in the agent heartbeats (`currentTest`) and forwards `AbortSvtTest` (`setupId`, `agentType`, `svtTestId`) to it.
+
+        The reply carries the processing state replied by the agent (processing status `Aborting`). The SvtTest ends with `testResultStatus` = `ABORTED`. If it is the running SvtTest of a plan, the plan is paused with `pauseReason` = `TestAborted` and the SvtTest is **not** put back, use `PauseSvtTestPlan` to stop a plan and run the SvtTest again later.
+
+        Errors (`error.code`):
+        - `BadRequest`: `1001` InvalidMessage, `1008` SvtTestNotRunning
+        - `UnexpectedError`: `3003` TestAgentUnavailable, `9999` UnexpectedError
+        - reply status of the agent: `3004` TestAgentError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/AbortSvtTestMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/AbortSvtTestReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # EVENTS
+  /svt.test-plan.event/SvtTestPlanProcessingStatusChanged:
+    post:
+      tags:
+        - SvtTestPlan Events
+      summary: SvtTestPlan processing status changed
+      description: |
+        Published by the service on each processing status change of a plan and each time a running plan starts its next SvtTest: `Running` => `Running` (next SvtTest) => ... => (`Pausing`) => `Paused` | `Finished`.
+
+        - Every message is a full snapshot of the processing state, the latest message of a `svtTestPlanId` describes its current state.
+        - `Paused` and `Finished` end a run. They are published after the plan status is stored in the DB (`UpdateSvtTestPlanStatus`). If the status cannot be stored, they are published with `error` (`3001`, `3002`).
+        - The processing statuses of the single SvtTests are **not** repeated here, they are published by the agents to `svt.test.event`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/EventMessage"
+                - $ref: "#/components/schemas/SvtTestPlanProcessingStatusChangedMessage"
+        required: true
+      responses:
+        "204":
+          description: No reply, broadcast message.
+  # HEARTBEAT
+  /svt.test-plan.heartbeat/SvtTestPlanServiceHeartbeat:
+    post:
+      tags:
+        - Service Heartbeat
+      summary: SVT Test Plan Service heartbeat
+      description: |
+        Published periodically (every `heartbeatIntervalMs`, default `5 s`) by the running service.
+
+        - Consumers consider the service offline when no heartbeat was received for 3 times `heartbeatIntervalMs`.
+        - The heartbeat contains the processing state of every running plan, so consumers subscribing later (e.g. UI after reload) get the live processing state without any request.
+        - A new consumer reading the topic from the earliest offset gets the state of the service immediately (retention `60 s`).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/EventMessage"
+                - $ref: "#/components/schemas/SvtTestPlanServiceHeartbeatMessage"
+        required: true
+      responses:
+        "204":
+          description: No reply, broadcast message.
+
+components:
+  schemas:
+    RequestMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    ReplyMessage:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        status:
+          $ref: "#/components/schemas/ReplyStatus"
+        type:
+          type: string
+        data:
+          type: object
+        error:
+          $ref: "#/components/schemas/SvtTestPlanServiceErrorDto"
+    ReplyStatus:
+      type: string
+      enum:
+        - Success
+        - BadRequest
+        - NotFound
+        - UnexpectedError
+    EventMessage:
+      type: object
+      required:
+        - type
+        - data
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    #
+    # PLAN COMMANDS :: START
+    #
+    StartSvtTestPlanMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTestPlan"
+        data:
+          type: object
+          required:
+            - svtTestPlanId
+          properties:
+            svtTestPlanId:
+              type: number
+              description: SvtTestPlan id.
+              example: 27
+    StartSvtTestPlanReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTestPlanReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestPlanProcessingStatusDto"
+    #
+    # PLAN COMMANDS :: PAUSE
+    #
+    PauseSvtTestPlanMessage:
+      properties:
+        type:
+          type: string
+          default: "PauseSvtTestPlan"
+        data:
+          type: object
+          required:
+            - svtTestPlanId
+          properties:
+            svtTestPlanId:
+              type: number
+              description: SvtTestPlan id. Must be a plan the service is running.
+              example: 27
+    PauseSvtTestPlanReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "PauseSvtTestPlanReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestPlanProcessingStatusDto"
+    #
+    # SINGLE TEST COMMANDS :: START
+    #
+    StartSvtTestMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTest"
+        data:
+          type: object
+          required:
+            - svtTestId
+          properties:
+            svtTestId:
+              type: number
+              description: SvtTest id. The address of the agent (`setupId`, `agentType`) is read by the service from the SvtTest.
+              example: 1542
+    StartSvtTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "StartSvtTestReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+    #
+    # SINGLE TEST COMMANDS :: ABORT
+    #
+    AbortSvtTestMessage:
+      properties:
+        type:
+          type: string
+          default: "AbortSvtTest"
+        data:
+          type: object
+          required:
+            - svtTestId
+          properties:
+            svtTestId:
+              type: number
+              description: SvtTest id. Must be a SvtTest an agent is processing.
+              example: 1542
+    AbortSvtTestReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "AbortSvtTestReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/SvtTestProcessingStatusDto"
+    #
+    # EVENTS :: PROCESSING STATUS
+    #
+    SvtTestPlanProcessingStatusChangedMessage:
+      properties:
+        type:
+          type: string
+          default: "SvtTestPlanProcessingStatusChanged"
+        data:
+          $ref: "#/components/schemas/SvtTestPlanProcessingStatusDto"
+    #
+    # HEARTBEAT
+    #
+    SvtTestPlanServiceHeartbeatMessage:
+      properties:
+        type:
+          type: string
+          default: "SvtTestPlanServiceHeartbeat"
+        data:
+          $ref: "#/components/schemas/SvtTestPlanServiceHeartbeatDto"
+    #
+    # DTOs
+    #
+    SvtTestPlanProcessingStatusDto:
+      type: object
+      description: Snapshot of the processing state of a plan on the service.
+      required:
+        - svtTestPlanId
+        - setupId
+        - processingStatus
+        - updatedAt
+        - currentSvtTestId
+        - totalCount
+        - finishedCount
+        - skippedCount
+        - waitingCount
+        - pauseReason
+        - pausedBySvtTestId
+        - error
+      properties:
+        svtTestPlanId:
+          type: number
+          description: SvtTestPlan id.
+          example: 27
+        setupId:
+          type: number
+          description: SvtTestSetup id of the plan.
+          example: 3
+        processingStatus:
+          $ref: "#/components/schemas/SvtTestPlanProcessingStatus"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Time of this snapshot (last processing status change or start of the current SvtTest). Date in UTC, format `2025-06-03T23:59:12.000Z`
+        currentSvtTestId:
+          type: number
+          nullable: true
+          description: SvtTest the agent is processing for the plan (`Running`, `Pausing`). `null` before the first SvtTest is accepted by the agent and with `Paused` / `Finished`.
+          example: 1542
+        totalCount:
+          type: number
+          description: Number of SvtTests of the plan.
+          example: 12
+        finishedCount:
+          type: number
+          description: Number of SvtTests of the plan with a result (`finishedAt` is set).
+          example: 4
+        skippedCount:
+          type: number
+          description: Number of skipped SvtTests, see `Which SvtTest is next`.
+          example: 0
+        waitingCount:
+          type: number
+          description: Number of waiting SvtTests, see `Which SvtTest is next`. `0` with `Finished`.
+          example: 7
+        pauseReason:
+          nullable: true
+          description: Set with `Paused`, otherwise `null`.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestPlanPauseReason"
+        pausedBySvtTestId:
+          type: number
+          nullable: true
+          description: Set with `Paused` when a SvtTest caused the pause (`TestFailed`, `TestAborted`, or `Error` of a single SvtTest, e.g. `3004`), otherwise `null`.
+        error:
+          nullable: true
+          description: Set with `Paused` and `pauseReason` = `Error` (`2001`, `2002`, `2003`, `3001`, `3002`, `3003`, `3004`, `4001`, `4002`, `9999`), or when the plan status could not be stored in the DB (`3001`, `3002`). Otherwise `null`.
+          allOf:
+            - $ref: "#/components/schemas/SvtTestPlanServiceErrorDto"
+      example:
+        svtTestPlanId: 27
+        setupId: 3
+        processingStatus: "Running"
+        updatedAt: "2025-06-03T23:59:12.000Z"
+        currentSvtTestId: 1542
+        totalCount: 12
+        finishedCount: 4
+        skippedCount: 0
+        waitingCount: 7
+        pauseReason: null
+        pausedBySvtTestId: null
+        error: null
+    SvtTestPlanServiceHeartbeatDto:
+      type: object
+      required:
+        - serviceName
+        - runningPlans
+        - version
+        - heartbeatIntervalMs
+        - sentAt
+      properties:
+        serviceName:
+          type: string
+          description: Name of the service instance (service configuration).
+          example: "svt-test-plan-service"
+        runningPlans:
+          type: array
+          description: Processing state of every plan in `Running` or `Pausing` status, empty array if no plan is running.
+          items:
+            $ref: "#/components/schemas/SvtTestPlanProcessingStatusDto"
+        version:
+          type: string
+          description: Service software version.
+          example: "0.1.0"
+        heartbeatIntervalMs:
+          type: number
+          description: Interval between two heartbeats in milliseconds, default `5000`.
+          example: 5000
+        sentAt:
+          type: string
+          format: date-time
+          description: Date in UTC, format `2025-06-03T23:59:12.000Z`
+    SvtTestPlanServiceErrorDto:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: "#/components/schemas/SvtTestPlanServiceErrorCode"
+        message:
+          type: string
+          description: Human readable error message.
+        cause:
+          type: object
+          description: Error replied by another service, set with `3002` (SVT DB Agent) and `3004` (SVT Test Agent).
+          required:
+            - message
+          properties:
+            code:
+              type: number
+              description: Error code of the other service, e.g. `2001` AgentBusy of the SVT Test Agent. See `SvtTestAgentErrorCode` in the SVT Test Agent contract.
+              example: 2001
+            message:
+              type: string
+              description: Error message of the other service.
+    SvtTestProcessingStatusDto:
+      type: object
+      description: Snapshot of the processing state of a SvtTest on an agent. It is forwarded unchanged from the reply of the SVT Test Agent, see `SvtTestProcessingStatusDto` in the SVT Test Agent contract (`svt.test.kafka.yaml`).
+      additionalProperties: true
+      example:
+        svtTestId: 1542
+        setupId: 3
+        agentType: "ITS3TestAgent"
+        agentName: "svt-test-agent-setup-3"
+        processingStatus: "Starting"
+        updatedAt: "2025-06-03T23:59:12.000Z"
+        startedAt: "2025-06-03T23:59:12.000Z"
+        finishedAt: null
+        testResultStatus: null
+        pathToResult: null
+        error: null
+    #
+    # DB ENTITY :: new entity of the SVT DB Agent, see `Required SVT DB Agent additions`
+    #
+    SvtTestPlanDto:
+      type: object
+      description: |
+        The plan as stored in the DB. **New entity of the SVT DB Agent**, it is not sent in any message of this service. It is repeated here because the service depends on it, the definition belongs to the SVT DB Agent contract (`SvtTestPlanDto` in `svt.db-agent.kafka.yaml`).
+      required:
+        - id
+        - name
+        - setupId
+        - failureRule
+        - status
+        - svtTestIds
+        - createdAt
+      properties:
+        id:
+          type: number
+          example: 27
+        name:
+          type: string
+          example: "MOSAIX W12 functional"
+        setupId:
+          type: number
+          description: SvtTestSetup id the plan runs on.
+          example: 3
+        failureRule:
+          $ref: "#/components/schemas/SvtTestPlanFailureRule"
+        status:
+          $ref: "#/components/schemas/SvtTestPlanStatus"
+        svtTestIds:
+          type: array
+          description: SvtTest ids of the plan, the order of the array is the execution order.
+          items:
+            type: number
+          example: [1541, 1542, 1543]
+        createdAt:
+          type: string
+          format: date-time
+          description: Date in UTC, format `2025-06-03T23:59:12.000Z`
+    #
+    # ENUMS
+    #
+    SvtTestPlanProcessingStatus:
+      type: string
+      description: |
+        Processing status of a plan on the service:
+        - `Running` - the service runs the waiting SvtTests of the plan one by one (`currentSvtTestId`).
+        - `Pausing` - the pause is requested, the running SvtTest is being aborted and put back to "not started".
+        - `Paused` - the run is stopped, see `pauseReason`. `StartSvtTestPlan` continues the plan.
+        - `Finished` - no SvtTest of the plan is waiting any more.
+      enum:
+        - Running
+        - Pausing
+        - Paused
+        - Finished
+    SvtTestPlanStatus:
+      type: string
+      description: |
+        Status of a plan stored in the DB (**new DB enum** `svtTestPlanStatus`):
+        - `NotStarted` - set by `CreateSvtTestPlan`, the plan was never started.
+        - `Running`, `Paused`, `Finished` - stored by the service with `UpdateSvtTestPlanStatus`, same meaning as `SvtTestPlanProcessingStatus`.
+
+        `Pausing` is not stored, the DB keeps `Running` until the plan is `Paused`.
+      enum:
+        - NotStarted
+        - Running
+        - Paused
+        - Finished
+    SvtTestPlanFailureRule:
+      type: string
+      description: |
+        What happens to the running plan when one of its SvtTests ends with `testResultStatus` = `FAILURE` or `ERROR` (**new DB enum** `svtTestPlanFailureRule`):
+        - `Continue` - the plan goes on with the next waiting SvtTest.
+        - `SkipDut` - the remaining SvtTests of that DUT are skipped, the plan goes on with the next DUT.
+        - `Pause` - the plan is paused.
+      enum:
+        - Continue
+        - SkipDut
+        - Pause
+    SvtTestPlanPauseReason:
+      type: string
+      description: |
+        Why a plan is `Paused`:
+        - `PauseRequested` - paused with `PauseSvtTestPlan`.
+        - `TestFailed` - a SvtTest ended with `FAILURE` or `ERROR` and the `failureRule` of the plan is `Pause`.
+        - `TestAborted` - the running SvtTest of the plan was aborted with `AbortSvtTest`.
+        - `Error` - the service could not go on, see `error`.
+      enum:
+        - PauseRequested
+        - TestFailed
+        - TestAborted
+        - Error
+    SvtTestPlanServiceErrorCode:
+      type: number
+      description: |
+        Error codes of the SVT Test Plan Service, used in `error.code` of the reply messages and of `SvtTestPlanProcessingStatusDto`.
+
+        | Code | Name | Reply status | Meaning |
+        | --- | --- | --- | --- |
+        | `1001` | InvalidMessage | BadRequest | Unknown message type, invalid JSON or missing / invalid fields. |
+        | `1002` | SvtTestPlanNotFound | NotFound | The plan `svtTestPlanId` does not exist. |
+        | `1003` | SvtTestNotFound | NotFound | The SvtTest `svtTestId` does not exist. |
+        | `1004` | SvtTestPlanAlreadyRunning | BadRequest | `StartSvtTestPlan` of a plan in `Running` or `Pausing` status. |
+        | `1005` | SvtTestPlanNotRunning | BadRequest | `PauseSvtTestPlan` of a plan the service is not running. |
+        | `1006` | NothingToRun | BadRequest | No SvtTest of the plan is waiting. |
+        | `1007` | InvalidSvtTestPlan | BadRequest | The plan has no SvtTests or contains a SvtTest of another setup than the setup of the plan. |
+        | `1008` | SvtTestNotRunning | BadRequest | `AbortSvtTest` of a SvtTest that no online agent is processing. |
+        | `2001` | SetupBusy | BadRequest | The setup is in use: a plan is running on it, or one of its agents is `Busy`. |
+        | `2002` | AgentOffline | UnexpectedError | No heartbeat of the SVT Test Agent addressed by the setup and the agent type of the SvtTest. |
+        | `2003` | AgentNotReady | UnexpectedError | The SVT Test Agent addressed by the setup and the agent type of the SvtTest is in `Error` status. |
+        | `3001` | DbAgentUnavailable | UnexpectedError | The SVT DB Agent did not reply in time. |
+        | `3002` | DbAgentError | UnexpectedError | The SVT DB Agent replied with an error, see `error.cause`. |
+        | `3003` | TestAgentUnavailable | UnexpectedError | The SVT Test Agent did not reply in time. |
+        | `3004` | TestAgentError | status of the agent reply | The SVT Test Agent replied with an error, see `error.cause`. |
+        | `4001` | TestAgentLost | - | The SVT Test Agent went offline while processing the SvtTest of a plan, used with `Paused`. |
+        | `4002` | ServiceRestarted | - | The service was restarted while the plan was running, used with `Paused`. |
+        | `9999` | UnexpectedError | UnexpectedError | Any other error. |
+      enum:
+        - 1001
+        - 1002
+        - 1003
+        - 1004
+        - 1005
+        - 1006
+        - 1007
+        - 1008
+        - 2001
+        - 2002
+        - 2003
+        - 3001
+        - 3002
+        - 3003
+        - 3004
+        - 4001
+        - 4002
+        - 9999
+      x-enum-varnames:
+        - InvalidMessage
+        - SvtTestPlanNotFound
+        - SvtTestNotFound
+        - SvtTestPlanAlreadyRunning
+        - SvtTestPlanNotRunning
+        - NothingToRun
+        - InvalidSvtTestPlan
+        - SvtTestNotRunning
+        - SetupBusy
+        - AgentOffline
+        - AgentNotReady
+        - DbAgentUnavailable
+        - DbAgentError
+        - TestAgentUnavailable
+        - TestAgentError
+        - TestAgentLost
+        - ServiceRestarted
+        - UnexpectedError
