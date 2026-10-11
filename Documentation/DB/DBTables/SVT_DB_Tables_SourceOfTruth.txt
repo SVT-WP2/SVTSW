@@ -95,7 +95,7 @@ Table main.ProbeCard {
   name main.pcName [unique, not null]
   model main.pcModel [not null]
   version integer [not null]
-  arrivalDate date [not null]
+  arriveDate date [not null]
   location main.pcLocation [not null]
   type main.pcType [not null]
   vendorCleaningInterval integer [not null]
