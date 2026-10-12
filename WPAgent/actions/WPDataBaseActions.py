@@ -111,6 +111,26 @@ def get_project_id_by_name(project_name: str, timeout: float = 15.0, user=None, 
         return None
 
 
+def get_project_family_by_name(project_name: str, timeout: float = 15.0):
+    """Get the ASIC family type (e.g. 'MOSAIX') of a project by its name. None if unknown."""
+    try:
+        projects = _get_db_client().get_all_wafer_probe_projects(timeout=timeout)
+        if not projects:
+            print("No projects found or database agent not responding")
+            return None
+
+        match = next((p for p in projects if p.get("name", "").lower() == project_name.lower()), None)
+        if not match:
+            print(f"No project found with name '{project_name}'")
+            return None
+
+        return match.get("asicFamilyType") or None
+
+    except Exception as e:
+        print(f"✗ Error getting project family: {str(e)}")
+        return None
+
+
 # =============================================================================
 # Wafer — read
 # =============================================================================
