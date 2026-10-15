@@ -43,6 +43,9 @@ class WPAgentStateMachine:
             WPAgentState.OpenedProject: {
                 "InitProbing": WPAgentState.Aligned,  # diagram: InitProbing also reaches Aligned from here
                 "ChangeProject": WPAgentState.OpenedProject,  # self-loop: swap active project
+                # DB corrections for experts right after OpenProject (state does not change)
+                "UpdateLoadedWafer": WPAgentState.OpenedProject,
+                "UpdateInstalledProbeCard": WPAgentState.OpenedProject,
                 "MoveChuckSafePosition": WPAgentState.ChuckSafePosition,
                 "UnloadWafer": WPAgentState.Unloaded,
                 "MoveChuckUnloadWafer": WPAgentState.ChuckUnloaded,

@@ -63,6 +63,9 @@ EXPERT_COMMANDS: set[str] = {
     "DisableOvertravel",
     "AutoFocus",
     "MoveChuckRowColumn",
+    # DB corrections; the state machine allows them for experts only in OpenedProject
+    "UpdateLoadedWafer",
+    "UpdateInstalledProbeCard",
 }
 
 # Developer commands are not listed — Developers can execute ALL commands.
