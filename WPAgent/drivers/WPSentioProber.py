@@ -14,6 +14,14 @@ class SentioProberImpl(AbstractProber):
     def initialize(self):
         self.prober.initialize_if_needed()
 
+    def is_alive(self):
+        """Cheap read-only connectivity probe (moves nothing). False when the machine is unreachable."""
+        try:
+            self.prober.send_cmd("get_chuck_position_hint")
+            return True
+        except Exception:
+            return False
+
     def open_project(self, path: str):
         self.prober.open_project(path, restore_heights=True)
 
