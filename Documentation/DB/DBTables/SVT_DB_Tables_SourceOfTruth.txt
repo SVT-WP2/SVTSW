@@ -88,6 +88,29 @@ Table main.AsicFamilyTypeBlockList {
   }
 }
 
+Table main.Module{
+  id integer [pk, increment]
+  modType main.moduleType [not null]
+  serialNumber varchar(50) [unique, not null]
+  generalLocation main.wpGeneralLocation [not null]
+}
+
+Table main.ModuleChipList{
+  modId integer [ref:> main.Module.id, not null]
+  chipId integer [ref:> main.Chip.id, not null]
+  indexes {
+    (modId, chipId) [pk]
+  }
+}
+
+Table main.ModuleLocation {
+  modId integer [ref:> main.Module.id, not null]
+  generalLocation main.wpGeneralLocation [not null]
+  date date [default: `CURRENT_DATE`]
+  username varchar(50)
+  note text
+}
+
 Table main.ProbeCard {
   id integer [pk, increment]
   serialNumber varchar(50) [unique, not null]
@@ -390,6 +413,12 @@ Enum main.blockType {
   AncMPW2_SLDO
   AncMPW2_NVBG
   AncMPW2_CML_TRANSCEIVER
+}
+
+Enum main.moduleType{
+  IB0
+  IB1
+  IB2
 }
 
 Enum main.dutType {
