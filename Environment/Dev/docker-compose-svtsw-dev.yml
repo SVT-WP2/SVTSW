@@ -76,6 +76,17 @@ services:
         max-size: "50m"
         max-file: "5"
 
+  svt-wp-agent:
+    image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_VERSION:?missing - set it in versions.env}
+    container_name: svt.wp-agent--dev
+    restart: unless-stopped
+    command: ["listen", "--config=configs/ProbeConfigCERN_DEV.json"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
 # The network is created and owned by the Kafka stack
 # (docker-compose-kafka-dev.yml) - start that stack first.
 networks:

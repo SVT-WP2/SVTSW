@@ -167,5 +167,5 @@ docker compose -f docker-compose.kafka-local.yml down -v
 
 Each team adds its service to `docker-compose.swtsw.yml` following the existing
 pattern: a `build.context` pointing at your folder (e.g. `../WPAgent`), attachment
-to `svt-network--local`, and the env vars your service needs. Only `svt-db-agent`
-and `svt-ui` are wired up today.
+to `svt-network--local`, and the env vars your service needs. `svt-db-agent`,
+`svt-ui`, and `wp-agent` are wired up today.
