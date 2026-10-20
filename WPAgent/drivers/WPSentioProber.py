@@ -136,6 +136,19 @@ class SentioProberImpl(AbstractProber):
         "Moving to probing area"
         self.prober.move_chuck_work_area(WorkArea.Probing)
 
+    def get_die_size(self):
+        """Die size (index size) of the wafer map of the opened project, in µm: (width, height)."""
+        w, h = self.prober.map.get_index_size()
+        return float(w), float(h)
+
+    def get_axis_orient(self):
+        """Axis orientation of the wafer map as "DR", "DL", "UR" or "UL"."""
+        # The enum has no to_string() in every library version: go by the member name.
+        orient = self.prober.map.get_axis_orient()
+        names = {"DownRight": "DR", "DownLeft": "DL", "UpRight": "UR", "UpLeft": "UL"}
+        name = getattr(orient, "name", None) or str(orient)
+        return names.get(name, str(orient))
+
     def get_current_index(self):
         resp = self.prober.send_cmd("map:die:get_current_index")
 

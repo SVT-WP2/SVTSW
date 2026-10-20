@@ -63,6 +63,7 @@ EXPERT_COMMANDS: set[str] = {
     "DisableOvertravel",
     "AutoFocus",
     "MoveChuckRowColumn",
+    "MoveChuckDiePrecise",  # move to a die by calculated coordinates (no PTPA)
     # DB corrections; the state machine allows them for experts only in OpenedProject
     "UpdateLoadedWafer",
     "UpdateInstalledProbeCard",

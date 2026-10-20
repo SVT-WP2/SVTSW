@@ -4,13 +4,13 @@ from utilities.WPResponseBuilder import ResponseBuilder
 import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
-from utilities.WPValidationDecorator import validate_command
+from utilities.WPValidationDecorator import validate_command, validate_command_with_name, get_reply_type
 from utilities.WPMapConverter import get_converter
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
 from actions.WPTestingActions import _ensure_initialized
-from actions.WPTestingActions import move_chuck_die
+from actions.WPTestingActions import move_chuck_die, _go_to_offaxis_side, _label_to_coordinates, update_current_info
 
 def sleep(seconds=1, user=None, waferAgentName=None, **kwargs):
     """Sleep for a given number of seconds."""
@@ -254,6 +254,153 @@ def move_chuck_xy_precise(x, y, position="Relative",
     except Exception as e:
         import traceback; traceback.print_exc()
         return ResponseBuilder.error("MoveChuckXYPreciseReply", str(e), 500)
+
+
+# MoveChuckDiePrecise works in the off-axis area only (SENTIO reports "OffAxisCamera").
+OFFAXIS_AREA_PREFIX = "OffAxis"
+# A die further than this from the home die is a wrong label or map, not a die (wafer is 300 mm).
+MAX_MOVE_FROM_HOME_UM = 300_000.0
+
+
+def _as_bool(value):
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "y")
+    return bool(value)
+
+
+def _in_offaxis_area(prober):
+    area = str(prober.get_current_working_area())
+    return area.startswith(OFFAXIS_AREA_PREFIX), area
+
+
+def _die_offset(prober, col, row, home_die):
+    """
+    (dx_um, dy_um) of die (col, row) from the home position:
+    (die index - home die index) * die size, in the direction the indices run on the chuck.
+
+    The die size and the axis orientation come from the SENTIO wafer map of the opened project.
+    The orientation ("DL" = columns count to the left and rows downwards on the SENTIO screen,
+    where x points right and y up) is turned by 180 degrees on the chuck: with DL a higher
+    column / row is +X / +Y (confirmed on DEV with BAM15, 8 rows = +187811.8 µm).
+    """
+    die_w, die_h = prober.get_die_size()
+    orient = str(prober.get_axis_orient()).strip().upper()
+    if orient not in ("DL", "DR", "UL", "UR"):
+        raise ValueError(f"Unknown wafer map axis orientation '{orient}'")
+    x_sign = 1 if orient[1] == "L" else -1
+    y_sign = 1 if orient[0] == "D" else -1
+    return (
+        x_sign * (col - home_die[0]) * die_w,
+        y_sign * (row - home_die[1]) * die_h,
+    )
+
+
+@validate_command_with_name("MoveChuckDiePrecise", reply_type="MoveChuckDiePreciseReply")
+def move_chuck_die_precise(label=None, precision_um=1.0, dry_run=False, user=None, waferAgentName=None):
+    """
+    Move to a die by calculated coordinates (no PTPA), in the off-axis area.
+
+    The position of the die is calculated from the home die (position and die index stored
+    after FindHome / InitProbing), the die size and the die index from the SENTIO wafer map,
+    and reached with move_chuck_xy_precise.
+
+    Args:
+        label: ITS3 label ("BAM00", "SEG0") or SVT label ("babyMOSAIX-1_1_ER2-W1")
+        precision_um: accepted error per axis in micrometres (default 1.0)
+        dry_run: true = only report the target, the current position and the working
+                 area; nothing is moved and the state does not change
+    """
+    reply = get_reply_type()
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    if not label or not str(label).strip():
+        return ResponseBuilder.error(reply, "Missing parameter: label (for example BAM00)", 400)
+    label = str(label).strip()
+
+    coords = _label_to_coordinates(label)
+    if coords is None:
+        return ResponseBuilder.error(
+            reply, f"Unknown label '{label}'. Use an ITS3 label (BAM00, SEG0) or an SVT label.", 400
+        )
+    col, row = coords
+
+    if g.home_xy is None or g.home_die is None:
+        return ResponseBuilder.error(
+            reply, "Home position unknown. Run InitProbing (or FindHome) first.", 400
+        )
+
+    try:
+        prober = get_current_prober()
+        try:
+            dx, dy = _die_offset(prober, col, row, g.home_die)
+        except ValueError as e:
+            return ResponseBuilder.error(reply, str(e), 400)
+        finally:
+            prober.local_mode()
+
+        if max(abs(dx), abs(dy)) > MAX_MOVE_FROM_HOME_UM:
+            return ResponseBuilder.error(
+                reply,
+                f"Die '{label}' (col {col}, row {row}) is {max(abs(dx), abs(dy)) / 1000:.0f} mm "
+                f"from the home die: check the label and the wafer map.",
+                400,
+            )
+
+        target_x = g.home_xy[0] + dx
+        target_y = g.home_xy[1] + dy
+        print(f"   Target {label} (col {col}, row {row}): home={g.home_xy} {g.home_die} "
+              f"+ ({dx:.1f}, {dy:.1f}) -> ({target_x:.2f}, {target_y:.2f}) µm")
+
+        if _as_bool(dry_run):
+            x, y = prober.get_chuck_xy()
+            _, area = _in_offaxis_area(prober)
+            prober.local_mode()
+            mx, my = target_x - float(x), target_y - float(y)
+            return ResponseBuilder.success(
+                reply,
+                f"DRY RUN {label} (col {col}, row {row}): offset from home ({dx:+.1f},{dy:+.1f}), "
+                f"target=({target_x:.2f},{target_y:.2f}) current=({float(x):.2f},{float(y):.2f}) "
+                f"move=({mx:+.2f},{my:+.2f}) µm ({(mx * mx + my * my) ** 0.5 / 1000:.1f} mm), "
+                f"area now={area}. A real move goes to the off-axis area first. Nothing was moved.",
+            )
+
+        _go_to_offaxis_side(prober)
+        ok, area = _in_offaxis_area(prober)
+        if not ok:
+            return ResponseBuilder.error(
+                reply,
+                f"Chuck is not in the off-axis area (area={area}). Nothing was moved in XY.",
+                409,
+            )
+
+        result = move_chuck_xy_precise(
+            0, 0, "Relative",
+            abs_target_x=target_x, abs_target_y=target_y,
+            precision_um=float(precision_um),
+        )
+        if result.get("status") != "Success":
+            message = result.get("error", {}).get("message", "move failed")
+            return ResponseBuilder.error(reply, f"Move to {label} failed: {message}", 500)
+
+        ok, area = _in_offaxis_area(prober)
+        if not ok:
+            msg = f"Chuck left the off-axis area while moving to {label} (area={area})"
+            agentStateMachine.enter_error_state(msg)
+            return ResponseBuilder.error(reply, msg, 500)
+
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+        agentStateMachine.transition("MoveChuckDiePrecise")
+        return ResponseBuilder.success(
+            reply, f"Moved to {label}: {result.get('error', {}).get('message', '')}"
+        )
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error(reply, str(e), 500)
 
 
 def compute_coupling_constants(log_file="chuck_xy_log.csv", wafer="",

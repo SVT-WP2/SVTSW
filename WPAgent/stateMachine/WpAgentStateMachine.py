@@ -60,6 +60,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
             # From ChuckSafePosition
@@ -93,6 +94,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckOffAxis": WPAgentState.Aligned,
                 "Error": WPAgentState.Error,
             },
@@ -115,6 +117,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withoutPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "AutoFocus": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
@@ -125,6 +128,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_OffAxis_withPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_OffAxis_withPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_OffAxis_withPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "AutoFocus": WPAgentState.OnDie_OffAxis_withPTPA,
                 "Error": WPAgentState.Error,
             },
@@ -137,6 +141,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
             # From OnDie_Wide_withoutPTPA
@@ -149,6 +154,7 @@ class WPAgentStateMachine:
                 "MoveChuckNextDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckPreviousDie": WPAgentState.OnDie_Wide_withoutPTPA,
                 "MoveChuckRowColumn": WPAgentState.OnDie_Wide_withoutPTPA,
+                "MoveChuckDiePrecise": WPAgentState.OnDie_OffAxis_withoutPTPA,
                 "Error": WPAgentState.Error,
             },
             # From Error

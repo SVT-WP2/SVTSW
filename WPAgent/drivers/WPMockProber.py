@@ -259,6 +259,14 @@ class MockProberImpl:
         self._die_index = col * 10 + row
         return f"{self._die_index},{col},{row},{subsite}"
 
+    def get_die_size(self):
+        """Die size in µm (width, height), like SentioProberImpl.get_die_size()."""
+        return 28882.707, 23475.515
+
+    def get_axis_orient(self):
+        """Wafer map axis orientation (like SentioProberImpl.get_axis_orient())."""
+        return "DL"
+
     def get_current_index(self) -> str:
         """
         Return current die as 'index,col,row'.

@@ -142,6 +142,19 @@ def _label_to_coordinates(label: str):
     return None
 
 
+def _remember_home(prober):
+    """Remember the chuck XY and the die index right after FindHome: MoveChuckDiePrecise
+    calculates the position of every other die from them."""
+    try:
+        x, y = prober.get_chuck_xy()
+        g = SvtWPAagentGlobalParameters.getInstance()
+        g.home_xy = (float(x), float(y))
+        parts = prober.get_current_index().split(",")
+        g.home_die = (int(parts[1]), int(parts[2]))
+    except Exception as e:
+        print(f"   WARNING - could not store the home position: {e}")
+
+
 def update_current_info(currentProber=None):
     """Update global parameters with current prober state"""
     g = SvtWPAagentGlobalParameters.getInstance()
@@ -852,6 +865,7 @@ def init_probing(user=None, waferAgentName=None):
     if not align_error and not reopen_error:
         try:
             prober.find_home()
+            _remember_home(prober)
         except Exception as e:
             home_error = e
 
@@ -917,6 +931,8 @@ def find_home(user=None, waferAgentName=None):
             f"   📍 After FindHome:   x={x_after:.2f} µm  y={y_after:.2f} µm  "
             f"z={z_after:.2f} µm"
         )
+
+        _remember_home(prober)
 
         # Corrections introduced by FindHome
         delta_x = x_after - x_before

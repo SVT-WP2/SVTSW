@@ -52,6 +52,8 @@ class SvtWPAagentGlobalParameters:
         # Configuration
         self.overdrive = 0
         self.contact_height = None  # saved from the prober when OpenProject runs; SetContactHeight defaults to this
+        self.home_die = None  # (col, row) of the die under the chuck after FindHome
+        self.home_xy = None  # chuck (x, y) in µm right after FindHome: MoveChuckDiePrecise calculates die positions from it
         self.camera_mount_point = ""  # "Top", "Bottom", "Side", etc.
         self.current_working_area = ""  # "LoadPosition", "TestArea", etc.
 
@@ -282,6 +284,8 @@ class SvtWPAagentGlobalParameters:
         self.opened_project_id = 0
         self.overdrive = 0
         self.contact_height = None
+        self.home_die = None
+        self.home_xy = None
         self.camera_mount_point = ""
         self.current_working_area = ""
         self.current_die_col = 0

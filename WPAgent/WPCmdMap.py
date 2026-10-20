@@ -125,6 +125,7 @@ COMMAND_ROUTER = {
     "BuildFlatfield": imaging_actions.build_flatfield_for_folder,
     "GenerateRasterSteps": imaging_actions.generate_raster_steps,
     "MoveChuckXYPrecise": imaging_actions.move_chuck_xy_precise,
+    "MoveChuckDiePrecise": imaging_actions.move_chuck_die_precise,
     "Sleep": imaging_actions.sleep,
     "StitchImagesFull": imaging_actions.stitch_images_large_for_wafer,
     "CropImage": imaging_actions.crop_stitched_image,
