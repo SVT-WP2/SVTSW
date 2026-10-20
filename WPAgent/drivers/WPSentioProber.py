@@ -1,3 +1,6 @@
+import select
+import socket
+import sys
 from sentio_prober_control.Sentio.ProberSentio import SentioProber
 #from sentio_prober_control.Sentio import Enumerations -> would then require Enumerations.WorkArea ...
 # from sentio_prober_control.Sentio import Enumerations
@@ -10,14 +13,46 @@ class SentioProberImpl(AbstractProber):
     def __init__(self, address):
         self.prober = SentioProber.create_prober("tcpip", address)
         #self.prober.initialize_if_needed()
+        self._enable_keepalive()
 
     def initialize(self):
         self.prober.initialize_if_needed()
 
-    def is_alive(self):
-        """Cheap read-only connectivity probe (moves nothing). False when the machine is unreachable."""
+    def _socket(self):
+        """The library's TCP socket (private attribute of CommunicatorTcpIp), or None."""
+        return getattr(self.prober.comm, "_CommunicatorTcpIp__socket", None)
+
+    def _enable_keepalive(self, idle=10, interval=5, count=3):
+        """Let the OS notice a dead connection (power cut, cable) within ~25 s.
+        Keepalive packets are empty TCP packets: SENTIO never sees them as commands."""
+        sock = self._socket()
+        if sock is None:
+            return
         try:
-            self.prober.send_cmd("get_chuck_position_hint")
+            if sys.platform == "win32":
+                sock.ioctl(socket.SIO_KEEPALIVE_VALS, (1, idle * 1000, interval * 1000))
+            else:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                for opt, val in (("TCP_KEEPIDLE", idle), ("TCP_KEEPINTVL", interval), ("TCP_KEEPCNT", count)):
+                    if hasattr(socket, opt):
+                        sock.setsockopt(socket.IPPROTO_TCP, getattr(socket, opt), val)
+        except Exception as e:
+            print(f"WARNING - could not enable TCP keepalive: {e}")
+
+    def is_alive(self):
+        """
+        Connectivity check that sends NOTHING to SENTIO (a command would switch the
+        station back to remote mode). Looks at the TCP socket: closed or failed -> False.
+        If the socket cannot be reached, assume alive.
+        """
+        sock = self._socket()
+        if sock is None:
+            return True
+        try:
+            readable, _, _ = select.select([sock], [], [], 0)
+            if readable:
+                # Readable on an idle connection means closed (b"") or an error (raises)
+                return len(sock.recv(1, socket.MSG_PEEK)) > 0
             return True
         except Exception:
             return False

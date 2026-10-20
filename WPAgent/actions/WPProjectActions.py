@@ -334,29 +334,23 @@ def get_info():
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 
 
-@validate_command_with_name("ReconnectProber")
-def reconnect_prober(user=None, waferAgentName=None):
+def reconnect_session(requested_by=None, event="RECONNECT"):
     """
-    Reconnect to the prober after the machine was powered off / restarted,
-    without restarting the whole WPAgent.
+    Open a new connection to the prober and forget the old session.
 
-    Opens a new connection to the address stored at startup, forgets everything
-    the agent knew about the old session (open project, die, chuck position, testing
-    lock) and puts the state machine back to UserLogged, so the normal flow
-    OpenProject -> InitProbing can be run again. Loaded wafer / probe card info
-    (from the DB) is kept. If the machine is not reachable yet, nothing changes.
+    Shared by the ReconnectProber command and the automatic reconnect of the
+    connection watch. Returns (ok, message, status_code); status_code is None on success.
     """
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
     from stateMachine.WpAgentStateMachine import WPAgentState
 
-    reply = "ReconnectProberReply"
     g = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
 
     address, machine_type = g.address, g.machineType
     if not address or not machine_type:
-        return ResponseBuilder.error(
-            reply,
+        return (
+            False,
             "No prober address is stored. The agent was never initialized: use Initialize.",
             400,
         )
@@ -364,8 +358,8 @@ def reconnect_prober(user=None, waferAgentName=None):
     try:
         prober = factory.reconnect(machine_type, address)
     except Exception as e:
-        return ResponseBuilder.error(
-            reply,
+        return (
+            False,
             f"Cannot reach the prober at {address}: {e}. "
             "Check that the machine is on, then run ReconnectProber again.",
             503,
@@ -397,17 +391,37 @@ def reconnect_prober(user=None, waferAgentName=None):
         from utilities.WPAgentLogger import WPAgentLogger
 
         WPAgentLogger().log_audit(
-            "RECONNECT", g.userLogged, g.userLoggedHierarchy,
-            requested_by=user, from_state=old_state, to_state=new_state,
+            event, g.userLogged, g.userLoggedHierarchy,
+            requested_by=requested_by, from_state=old_state, to_state=new_state,
         )
     except Exception:
         pass
 
-    return ResponseBuilder.success(
-        reply,
+    return (
+        True,
         f"Reconnected to the prober at {address}. State '{old_state}' -> '{new_state}'. "
         "Open the project again (OpenProject), then run InitProbing.",
+        None,
     )
+
+
+@validate_command_with_name("ReconnectProber")
+def reconnect_prober(user=None, waferAgentName=None):
+    """
+    Reconnect to the prober after the machine was powered off / restarted,
+    without restarting the whole WPAgent.
+
+    Opens a new connection to the address stored at startup, forgets everything
+    the agent knew about the old session (open project, die, chuck position, testing
+    lock) and puts the state machine back to UserLogged, so the normal flow
+    OpenProject -> InitProbing can be run again. Loaded wafer / probe card info
+    (from the DB) is kept. If the machine is not reachable yet, nothing changes.
+    """
+    reply = "ReconnectProberReply"
+    ok, message, status = reconnect_session(requested_by=user)
+    if not ok:
+        return ResponseBuilder.error(reply, message, status)
+    return ResponseBuilder.success(reply, message)
 
 
 def reset_agent(user=None, waferAgentName=None):

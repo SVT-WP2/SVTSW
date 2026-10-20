@@ -2,8 +2,9 @@
 ProberConnectionWatch - detects that the prober machine is no longer reachable.
 
 A daemon thread probes the prober every few seconds with a cheap, read-only call
-(prober.is_alive()). After FAILURES_BEFORE_ERROR consecutive failures the agent state
-machine is put into the Error state and an [AUDIT] line is written. Bring the agent back
+(prober.is_alive()). After FAILURES_BEFORE_ERROR consecutive failures it tries ONE automatic
+reconnect (same as ReconnectProber: session forgotten, state back to UserLogged). If that fails
+the agent state machine is put into the Error state. [AUDIT] lines are written either way. Bring the agent back
 with ReconnectProber (works from Error) once the machine is up again.
 
 The probe is skipped while a command is executing (the prober connection is in use) and
@@ -19,8 +20,10 @@ FAILURES_BEFORE_ERROR = 3
 
 
 class ProberConnectionWatch:
-    def __init__(self, is_busy=None, interval=PROBE_INTERVAL, failures=FAILURES_BEFORE_ERROR):
+    def __init__(self, is_busy=None, interval=PROBE_INTERVAL, failures=FAILURES_BEFORE_ERROR,
+                 auto_reconnect=True):
         self.is_busy  = is_busy or (lambda: False)
+        self.auto_reconnect = auto_reconnect
         self.interval = interval
         self.failures = failures
         self._failed  = 0
@@ -56,9 +59,22 @@ class ProberConnectionWatch:
 
         self._failed = 0
         state = agentStateMachine.get_state_name()
-        msg = "Lost connection to the prober machine. Run ReconnectProber once it is back."
-        agentStateMachine.enter_error_state(msg)
         logger = WPAgentLogger()
+        detail = ""
+
+        if self.auto_reconnect:
+            # One automatic attempt per outage. On failure the agent stays in Error and the
+            # watch is quiet (no retries); ReconnectProber does it by hand later.
+            from actions.WPProjectActions import reconnect_session
+            ok, message, _ = reconnect_session(requested_by="ProberConnectionWatch", event="AUTO_RECONNECT")
+            if ok:
+                logger.log_audit("CONNECTION_RESTORED", severity=Severity.WARNING, from_state=state,
+                                 reason="automatic reconnect succeeded; open the project again")
+                return False
+            detail = f" Automatic reconnect failed: {message}"
+
+        msg = "Lost connection to the prober machine. Run ReconnectProber once it is back." + detail
+        agentStateMachine.enter_error_state(msg)
         logger.log_audit("CONNECTION_LOST", severity=Severity.ERROR, state=state, reason="prober not answering")
         return True
 
