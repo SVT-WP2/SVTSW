@@ -107,10 +107,18 @@ Add a `scope_capture` block to the agent config (see
   "output_dir": "scope_data",                // captured CSVs (prefixed by chip name)
   "points": -1,                              // -1 = use scope config; 0 = all points
   "dry_run": false,                          // true = never touch VISA, just log
+  "pre_capture_delay_s": 1.0,                // settle time before each acquisition (s)
   "timeout_s": 3600,                         // upper bound on the watcher
   "trigger_when_cmd_contains": ["pattern_prbs31_10gbps_scope", "scope"]
 }
 ```
+
+`pre_capture_delay_s` (default `0.0`, i.e. off) waits that long after a drive goes
+`driving` before issuing the acquisition — the watcher polls the status file every
+0.25 s, so without it a capture can fire while the link is still settling. The wait
+applies per driving generation (per channel in TEST_ONE_BY_ONE, per point in a scan)
+and runs inside the drive, so the mosaix-side `test_duration` must comfortably exceed
+`pre_capture_delay_s` + the acquisition time.
 
 `trigger_when_cmd_contains` limits which Sequence commands get a watcher (omit it
 to watch every command — harmless, since the watcher only acts on a fresh
@@ -120,6 +128,28 @@ config, e.g. `Configs/TestConfigs/HsChannel/pattern_prbs31_10gbps_scope.json5`
 
 Scope capture needs `pyvisa` + `pyvisa-py` (in `requirements.txt`); the agent
 imports the package lazily, so a machine without them still runs non-scope tests.
+
+### What each acquisition exports (scope config)
+
+The scope JSON config (`oscilloscope/configs/labmaster_mcm_config.json`) decides
+which traces one acquisition exports:
+
+| config | exported |
+| --- | --- |
+| `"channel": "C4"` (default) | that single channel |
+| `"channels": ["C3", "C4"]` | both raw channels, from **one** trigger event |
+| `"math_enable": true` | the math trace `math_channel` (e.g. `F1 = C3 - C4`), plus the two raw sources when `math_save_sources` is true |
+
+Whenever more than one trace is exported, each gets its own CSV: the watcher's
+filename gains a per-trace suffix, e.g.
+`L2W24_S4_HsChannelPattern_PRBS31_HSCHA3_20260916_130243_F1.csv` (`…_C3.csv`,
+`…_C4.csv`). Math is LabMaster-only (`set_math`); `channels` and `math_enable`
+both need a driver whose `initialize()` accepts `channels_to_enable`, and the
+combination is resolved once when the watcher starts, so a config the driver
+can't do fails immediately with a clear error instead of mid-run. `math_enable`
+wins over `channels` if both are set, and the trigger must stay on a real
+channel (`trigger_source`) — math traces are not valid trigger sources. Note the
+80 GSa/s ceiling on the MCM: at most 2 active input channels.
 
 ### Prerequisites for real (non-dry-run) capture
 

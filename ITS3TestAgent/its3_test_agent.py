@@ -643,6 +643,7 @@ class ITS3Runner:
             skip_setup=bool(sc.get("skip_setup", False)),
             connect_attempts=int(sc.get("connect_attempts", 3)),
             connect_backoff_s=float(sc.get("connect_backoff_s", 1.0)),
+            pre_capture_delay_s=float(sc.get("pre_capture_delay_s", 0.0)),
         )
         watcher = ScopeModeWatcher(cap_cfg)
         stop_event = threading.Event()
@@ -694,7 +695,7 @@ class ITS3Runner:
         prog_dir = self.cfg.get("fpga_program_dir",
                                 "/home/its3/mosaix_testing/software/fx3_tools")
         setup = self.cfg.get("fpga_program_setup", "prober_mit")
-        cmd = f"./program_mts.py {setup} {fw_path}"
+        cmd = f"./program_mts.py {setup} {fw_path} --no-spi"
 
         log.info("Programming FPGA with %s firmware: %s", fw_key, fw_path)
         rc = self._run_cmd(cmd, label=f"fpga:{fw_key}", cwd=prog_dir)
@@ -732,6 +733,18 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
 
+        project = self.cfg.get("wp_project_bam", "") if chip_type.upper() == "BAM" else self.cfg.get("wp_project_seg", "")
+        log.info("Opening project: %s", project)
+        resp = wp.open_project(project)
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("OpenProject failed: %s", resp.get("output", resp))
+            return False
+
+        resp = wp.find_home()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("FindHome failed: %s", resp.get("output", resp))
+            return False
+
         resp = wp.go_to_die(col, row)
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("MoveChuckRowColumn failed: %s", resp.get("output", resp))
@@ -765,9 +778,12 @@ class ITS3Runner:
         # if resp.get("status", "").lower() not in ("success", "ok"):
         #     log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
 
-        resp = wp.move_chuck_bottom_left()
-        if resp.get("status", "").lower() not in ("success", "ok"):
-            log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
+        # if chip_type.upper() == "SEG":
+        #     log.info("SEG chip type detected, moving chuck to bottom-left before contact...")
+        #     # log.info("Moving chuck to bottom-left before contact...")
+        #     resp = wp.move_chuck_bottom_left()
+        #     if resp.get("status", "").lower() not in ("success", "ok"):
+        #         log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
 
         resp = wp.move_chuck_contact()
         if resp.get("status", "").lower() not in ("success", "ok"):

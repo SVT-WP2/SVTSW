@@ -19,19 +19,26 @@ DEFAULT_PROBER_SUBDIR = "cern_prober_mit"
 # NOTE: WaferTileTestingSequenceMinimal must precede WaferTileTestingSequence in the
 # alternations so the longer name wins (regex alternation is ordered, leftmost-first).
 PATH_PATTERN = re.compile(
-    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence)"
-    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence))/"
+    r"/(WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence|AdcSequence)"
+    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence|AdcSequence))/"
 )
 
 # Old-format fallback: command invocation line.
 # e.g.  2026-04-23 04:02:28 [INFO] [SEG0_L1W06_S4]  $ ./build/RunSequence .../wafer_primary_seq.json5 ...
 INVOKE_PATTERN = re.compile(
-    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq|wafer_prbs_seq)\.json5"
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SEG\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq|wafer_prbs_seq|ADC_seq)\.json5"
 )
 
 # New-format: overall sequence result line.
 RESULT_PATTERN = re.compile(
     r"SUMMARY.*TestSequence: Overall result: (\S+)"
+)
+
+# New-format: exact output folder name, emitted at the end of each sequence.
+# Authoritative — supersedes the +1s timestamp guess made from the invocation line.
+OUTPUT_DIR_PATTERN = re.compile(
+    r"SUMMARY.*TestSequence: Output directory \(chip 0\): "
+    r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(?:BAM\d+|SEG\d+)_L\dW\d+_S\d+_\w+)\s*$"
 )
 
 # PTPA: prober-level acceptance test run once per chip before its sequences.
@@ -45,11 +52,13 @@ SEQ_LABEL = {
     "WaferHschTestingSequence": "wafer_hsch_seq",
     "WaferTileTestingSequenceMinimal": "wafer_tile_seq_min",
     "WaferPRBSTestingSequence": "wafer_prbs_seq",
+    "AdcSequence": "ADC_seq",
     "wafer_primary_seq": "wafer_primary_seq",
     "wafer_tile_seq": "wafer_tile_seq",
     "wafer_hsch_seq": "wafer_hsch_seq",
     "wafer_tile_seq_min": "wafer_tile_seq_min",
     "wafer_prbs_seq": "wafer_prbs_seq",
+    "ADC_seq": "ADC_seq",
 }
 
 SEQ_FOLDER_SUFFIX = {
@@ -58,7 +67,31 @@ SEQ_FOLDER_SUFFIX = {
     "wafer_hsch_seq": "WaferHschTestingSequence",
     "wafer_tile_seq_min": "WaferTileTestingSequenceMinimal",
     "wafer_prbs_seq": "WaferPRBSTestingSequence",
+    "ADC_seq": "AdcSequence",
 }
+
+
+FOLDER_TS_PATTERN = re.compile(r"^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})_")
+
+
+def _folder_ts(folder: str) -> datetime | None:
+    """Parse the leading YYYY-MM-DD_HH-MM-SS timestamp of a run folder name."""
+    m = FOLDER_TS_PATTERN.match(folder)
+    if not m:
+        return None
+    date, hh, mm, ss = m.groups()
+    try:
+        return datetime.strptime(f"{date} {hh}:{mm}:{ss}", "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+
+
+def _close_ts(a: str, b: str, tol_seconds: int = 8) -> bool:
+    """True if two run folder names carry timestamps within tol_seconds of each other."""
+    ta, tb = _folder_ts(a), _folder_ts(b)
+    if ta is None or tb is None:
+        return False
+    return abs((ta - tb).total_seconds()) <= tol_seconds
 
 
 def extract_entries(log_path: str) -> tuple[
@@ -121,6 +154,23 @@ def extract_entries(log_path: str) -> tuple[
                 idx = folder_index[current_folder]
                 wafer, chip, seq_type, _, folder = entries[idx]
                 entries[idx] = (wafer, chip, seq_type, result, folder)
+
+            # --- Exact output folder: replace the guessed name for the running seq ---
+            m = OUTPUT_DIR_PATTERN.search(line)
+            if m and current_folder and current_folder in folder_index:
+                actual = m.group(1)
+                idx = folder_index[current_folder]
+                wafer, chip, seq_type, status, folder = entries[idx]
+                expected = f"{chip}_{wafer}_{SEQ_FOLDER_SUFFIX[seq_type]}"
+                # Only a near-identical timestamp means this is the same run: a log may
+                # re-run the same sequence for a chip, and duplicate invocations leave
+                # current_folder pointing at the earlier entry.
+                if actual != folder and actual.endswith(expected) and _close_ts(actual, folder):
+                    entries[idx] = (wafer, chip, seq_type, status, actual)
+                    del folder_index[folder]
+                    folder_index[actual] = idx
+                    seen_folders.add(actual)
+                    current_folder = actual
 
             # --- PTPA reply: buffer status until the chip invocation is seen ---
             m = PTPA_REPLY_PATTERN.search(line)

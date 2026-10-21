@@ -1,11 +1,11 @@
 {
   "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
   "build_dir": "build",
-  "run_list": "run_list.csv",
+  "run_list": "run_list_SEGs.csv",
   "kafka_broker": "pcmitpx01:9092",
   "kafka_ip_family": "v4",
   "wp_user": "user1",
-  "wp_agent_name": "CERN",
+  "wp_agent_name": "WPMIT",
   "wp_project_bam": "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
   "wp_project_seg": "ER2_MOSAIX_Vertical_V0_NotchW_ArrowW",
   "run_ptpa_bam": true,
@@ -13,16 +13,16 @@
   "ptpa_chips_bam": ["ALL"],
   "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
-  "re_enable_ptpa": true,
+  "re_enable_ptpa": false,
 
   "log_cmd_output": true,
   "show_cmd_output": true,
 
   "fpga_program_dir": "/home/its3/mosaix_testing/software/fx3_tools",
   "fpga_program_setup": "prober_mit",
-  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.11.0.bit",
-  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.11.0.bit",
-  "fpga_link_test_trigger": "wafer_prbs_seq",
+  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.15.0.bit",
+  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.15.0.bit",
+  "fpga_link_test_trigger": ["wafer_prbs_seq","wafer_hsch_seq_nj_test"],
 
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "smu",
@@ -36,6 +36,9 @@
 
   "Sequence": [
 "./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_primary_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
-"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_tile_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output} --reset-tile-status",
+"./{build_dir}/RunSequence Configs/SequenceConfigs/ADC_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_hsch_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output} --reset-hs-status",
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_prbs_seq.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
 ]
 }

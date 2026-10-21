@@ -155,6 +155,13 @@ class ScopeCaptureConfig:
     label: str = ""                 # prefix for output filenames (e.g. chip name)
     dry_run: bool = False           # True = never touch a scope, log intentions
     poll_interval_s: float = 0.25   # status-file poll cadence
+    pre_capture_delay_s: float = 0.0  # settle time after a drive goes 'driving',
+                                    # before the acquisition is issued (the poll
+                                    # can fire within ~poll_interval_s of the
+                                    # chip starting to drive). Applied per
+                                    # driving generation, i.e. per channel /
+                                    # per scan point, and it eats into the
+                                    # mosaix-side test_duration.
     skip_setup_after_first: bool = True  # re-use scope setup across channels
     connect_attempts: int = 3       # retries for the (sometimes flaky) first VXI-11 connect
     connect_backoff_s: float = 1.0  # wait between connect attempts
@@ -287,11 +294,16 @@ class ScopeModeWatcher:
         log.info("scope: capturing channels [%s]%s (pattern %s) -> %s%s",
                  channels, scan_log, status.get("pattern"), out,
                  " (reusing setup)" if skip_setup else "")
-        acquire.capture_on_open_scope(scope, self._scope_cfg, out, self._points,
-                                      skip_setup=skip_setup)
+        if self.cfg.pre_capture_delay_s > 0:
+            log.info("scope: settling %.2fs before acquiring", self.cfg.pre_capture_delay_s)
+            time.sleep(self.cfg.pre_capture_delay_s)
+        # Returns one file per exported trace — a math (math_enable) or
+        # multi-channel (channels) config writes several per acquisition.
+        saved = acquire.capture_on_open_scope(scope, self._scope_cfg, out, self._points,
+                                              skip_setup=skip_setup)
         self._first_capture = False
         self.n_captures += 1
-        log.info("scope: saved %s", out)
+        log.info("scope: saved %s", ", ".join(saved) if saved else out)
 
     # ── main loop ─────────────────────────────────────────────────────────
 
@@ -319,6 +331,11 @@ class ScopeModeWatcher:
         ScopeClass = None
         if not self.cfg.dry_run:
             ScopeClass = acquire.load_scope_class(self.cfg.model)
+            # Resolve the capture plan (single channel / `channels` list / math
+            # trace) up front: a bad combination — e.g. math_enable on a driver
+            # without set_math — then fails here, before any drive is captured.
+            plan = acquire.resolve_capture_plan(ScopeClass, self._scope_cfg)
+            log.info("scope: capture plan — %s", acquire.describe_plan(plan, self._scope_cfg))
             warning = preflight_network(self._scope_cfg.get("visa_address", ""))
             if warning:
                 log.warning("scope: network preflight — %s", warning)

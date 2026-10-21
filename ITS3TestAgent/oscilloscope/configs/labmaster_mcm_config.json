@@ -6,7 +6,7 @@
   "timeout_ms"              : 60000,
 
   "channel"                 : "C4",
-  "channel_scale_v"         : 0.5,
+  "channel_scale_v"         : 0.1,
   "amplitude_window_v"      : null,
   "channel_offset_v"        : 0.0,
   "channel_coupling"        : "DC",
@@ -14,7 +14,7 @@
   "sample_rate_sps"         : 8.0e10,
   "acquire_points"          : 1000000,
 
-  "trigger_source"          : "C4",
+  "trigger_source"          : "C3",
   "trigger_level_v"         : 0.0,
   "trigger_slope"           : "Positive",
   "force_trigger"           : true,
@@ -22,19 +22,41 @@
 
   "default_setup"           : true,
 
+  "math_enable"             : true,
+  "math_channel"            : "F1",
+  "math_source1"            : "C3",
+  "math_source2"            : "C4",
+  "math_operator"           : "Difference",
+  "math_scale_v"            : null,
+  "math_amplitude_window_v" : null,
+  "math_offset_v"           : 0.0,
+  "math_hide_sources"       : true,
+  "math_save_sources"       : true,
+
   "output_dir"              : "data",
 
   "_notes": {
-    "visa_address"        : "VXI-11 format: TCPIP0::<ip>::inst0::INSTR. Replace IP as needed.",
-    "channel"             : "C1..C4 (single module) or C1..C16 (MCM with multiple modules).",
-    "channel_coupling"    : "D50 = DC 50 ohm | D1M = DC 1 Mohm | A1M = AC 1 Mohm | GND.",
-    "channel_scale_v"     : "Vertical scale in V/div (8 divisions -> full window = 8 x scale).",
-    "amplitude_window_v"  : "Total vertical amplitude window in V (= 8 divisions). If set (non-null), overrides channel_scale_v.",
-    "sample_rate_sps"     : "8.0e10 = 80 GSa/s. Forced via Maximize='FixedSampleRate'. 80 GSa/s requires <= 2 active channels (interleaved ADCs).",
-    "acquire_points"      : "Samples to acquire and export. 0 = don't constrain memory, export all acquired points.",
-    "trigger_source"      : "e.g. 'C1'. null = leave the scope's current trigger source.",
-    "trigger_slope"       : "Positive | Negative | Either.",
-    "force_trigger"       : "true = software-force a trigger if none arrives within acquisition_timeout_s.",
-    "default_setup"       : "true = recall factory default setup during initialize."
+    "visa_address"            : "VXI-11 format: TCPIP0::<ip>::inst0::INSTR. Replace IP as needed.",
+    "channel"                 : "C1..C4 (single module) or C1..C16 (MCM with multiple modules). Ignored when math_enable=true (acquisition/export uses math_channel instead).",
+    "channel_coupling"        : "D50 = DC 50 ohm | D1M = DC 1 Mohm | A1M = AC 1 Mohm | GND.",
+    "channel_scale_v"         : "Vertical scale in V/div (8 divisions -> full window = 8 x scale). When math_enable=true, also applied to math_source1/2.",
+    "amplitude_window_v"      : "Total vertical amplitude window in V (= 8 divisions). If set (non-null), overrides channel_scale_v.",
+    "sample_rate_sps"         : "8.0e10 = 80 GSa/s. Forced via Maximize='FixedSampleRate'. 80 GSa/s requires <= 2 active channels (interleaved ADCs) — math_source1+math_source2 already = 2.",
+    "acquire_points"          : "Samples to acquire and export. 0 = don't constrain memory, export all acquired points.",
+    "trigger_source"          : "e.g. 'C1'. null = leave the scope's current trigger source. When math_enable=true, keep this on a real channel (e.g. math_source1 or math_source2) — math traces are not valid trigger sources.",
+    "channels"                 : "Optional list of raw channels to acquire together from ONE trigger event, e.g. [\"C3\", \"C4\"] — ignored if math_enable=true. When set, each channel is saved to its own CSV (output filename gets a _C<n> suffix), instead of the single `channel`.",
+    "trigger_slope"           : "Positive | Negative | Either.",
+    "force_trigger"           : "true = software-force a trigger if none arrives within acquisition_timeout_s.",
+    "default_setup"           : "true = recall factory default setup during initialize.",
+    "math_enable"             : "true = acquire/export a math function trace (e.g. a channel difference) instead of a single raw channel.",
+    "math_channel"            : "Math trace name, 'F1'..'F4'.",
+    "math_source1"            : "First operand channel, e.g. 'C1'.",
+    "math_source2"            : "Second operand channel, e.g. 'C2'.",
+    "math_operator"           : "MAUI Operator1 value: 'Difference' gives math_channel = math_source1 - math_source2 (confirmed on the front-panel Math dialog; 'Subtract' is not a valid value). Other operators (Sum, Product, Ratio, ...) unconfirmed.",
+    "math_scale_v"            : "V/div for the math trace. null (default) = don't touch it — F1's vertical scale is derived from channel_scale_v on this firmware and there's no confirmed scriptable VerScale for a math trace (app.Math.F1[.View/.Out].VerScale are all unsupported here).",
+    "math_amplitude_window_v" : "Total vertical window (V) for the math trace, overrides math_scale_v if set. Same caveat as math_scale_v — leave null unless a working CVAR path is found.",
+    "math_offset_v"           : "Vertical offset (V) for the math trace.",
+    "math_hide_sources"       : "true = hide math_source1/2 traces on the grid once the math trace is set up, so only math_channel is displayed. Trigger/math computation still work on hidden channels.",
+    "math_save_sources"       : "true = when math_enable is true, also export the two raw source channels (math_source1, math_source2) as their own CSVs alongside the math trace — 3 files per run, all from the same acquisition (output filename gets a _<channel> suffix, e.g. run_F1.csv, run_C3.csv, run_C4.csv)."
   }
 }

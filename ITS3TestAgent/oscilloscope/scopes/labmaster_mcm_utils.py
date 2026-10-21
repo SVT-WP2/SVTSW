@@ -91,7 +91,8 @@ class LabMasterMCM(Instrument):
 
     # ── 1. Initialize ─────────────────────────────────────────────────────
 
-    def initialize(self, channel: str = 'C1', **options) -> None:
+    def initialize(self, channel: str = 'C1', channels_to_enable: list = None,
+                  **options) -> None:
         """
         Bring the scope to a known state.
 
@@ -99,8 +100,14 @@ class LabMasterMCM(Instrument):
           default_setup (bool, default True) — recall the factory default
             setup first. Disable to preserve the current front-panel state.
 
+        channels_to_enable : optional list of channel names (e.g. ['C1','C2'])
+          to enable instead of the single `channel`. Used when a math
+          function (e.g. a C1-C2 difference) needs more than one source
+          channel live. If omitted, only `channel` is enabled (legacy
+          single-channel behavior).
+
         Sequence: [settodefaultsetup → long-timeout sync] → enable only the
-        requested channel → stop any running acquisition.
+        requested channel(s) → stop any running acquisition.
         """
         if options.get('default_setup', True):
             self.vbs('app.SetToDefaultSetup')
@@ -108,22 +115,24 @@ class LabMasterMCM(Instrument):
             # rather than WaitUntilIdle which requires a VBS query response.
             time.sleep(8)
 
-        # Enable only the requested channel (extend range for >4ch MCM)
+        # Enable the requested channel(s) (extend range for >4ch MCM)
+        enable_set = {c.upper() for c in channels_to_enable} if channels_to_enable \
+            else {channel.upper()}
         n_channels = 4
-        try:
-            ch_idx = int(channel[1:])
-            n_channels = max(n_channels, ch_idx)
-        except ValueError:
-            pass
+        for c in enable_set:
+            try:
+                n_channels = max(n_channels, int(c[1:]))
+            except ValueError:
+                pass
         for i in range(1, n_channels + 1):
-            state = 'True' if f'C{i}' == channel.upper() else 'False'
+            state = 'True' if f'C{i}' in enable_set else 'False'
             self.vbs(f'app.Acquisition.C{i}.View = {state}')
 
         # Stop any running acquisition before reconfiguring
         self.vbs('app.Acquisition.TriggerMode = "Stopped"')
         time.sleep(2)
 
-        print(f'[initialize] Ready — active channel: {channel}')
+        print(f'[initialize] Ready — active channel(s): {", ".join(sorted(enable_set))}')
 
     # ── 2. Vertical (channel) settings ────────────────────────────────────
 
@@ -144,11 +153,67 @@ class LabMasterMCM(Instrument):
                   'GND' — ground
 
         Legacy GPIB commands: <ch>:VDIV, <ch>:OFFSET, <ch>:COUPLING
+        (channel = 'C1'..'C4'/'C16')
+
+        For a math function trace (channel = 'F1'..'F4', e.g. a channel
+        difference set up via set_math()), the legacy Fn:VDIV/COUPLING
+        commands are not supported — vertical scale/offset are configured
+        via the VBS app.Math.<Fn>.VerScale / .VerOffset properties instead,
+        and coupling does not apply (it's inherited from the source
+        channels).
         """
         if amplitude_window_V is not None:
             scale_V = amplitude_window_V / self.VERTICAL_DIVISIONS
         if scale_V is None:
             scale_V = 0.1
+
+        if channel.upper().startswith('F'):
+            mc = channel.upper()
+            print(f'[set_vertical] {mc} (math trace): requested {scale_V:.6g} V/div '
+                  f'(window {scale_V * self.VERTICAL_DIVISIONS:.6g} V) | '
+                  f'offset {offset_V:.6g} V | coupling n/a (math trace)')
+
+            # 'app.Math.F1.VerScale' does not exist on this firmware (confirmed
+            # via readback: "Object doesn't support this property or
+            # method"). Try a couple of plausible alternate paths in order
+            # and report which one (if any) actually took.
+            candidates = [
+                f'app.Math.{mc}.VerScale',
+                f'app.Math.{mc}.View.VerScale',
+                f'app.Math.{mc}.Out.VerScale',
+            ]
+            offset_candidates = [c.replace('VerScale', 'VerOffset') for c in candidates]
+
+            def _try(path, value):
+                self.vbs(f'{path} = {value:.6g}')
+                rb = self.vbs_query(path)
+                ok = "doesn't support" not in rb and 'error' not in rb.lower()
+                return rb, ok
+
+            worked = None
+            for scale_path, offset_path in zip(candidates, offset_candidates):
+                try:
+                    rb_scale, ok_scale = _try(scale_path, scale_V)
+                    rb_offset, ok_offset = _try(offset_path, offset_V)
+                except Exception as exc:              # noqa: BLE001
+                    print(f'[set_vertical] {scale_path}: query failed ({exc})')
+                    continue
+                status = 'OK' if (ok_scale and ok_offset) else 'unsupported'
+                print(f'[set_vertical] {scale_path} -> {rb_scale!r} | '
+                      f'{offset_path} -> {rb_offset!r}  [{status}]')
+                if ok_scale and ok_offset and worked is None:
+                    worked = scale_path
+
+            if worked:
+                print(f'[set_vertical] {mc}: vertical scale set via {worked}')
+            else:
+                print(f'[set_vertical] WARNING — none of {candidates} worked for '
+                      f'{mc}. F1 vertical scale was NOT changed by this driver; '
+                      f'set it manually on the front panel, or find the correct '
+                      f'CVAR path via MAUI Browser (Utilities > Utilities > '
+                      f'MAUI Browser) and report it back.')
+            return
+
         self.write(f'{channel}:VDIV {scale_V:.6g}')
         self.write(f'{channel}:OFFSET {offset_V:.6g}')
         self.write(f'{channel}:COUPLING {coupling}')
@@ -156,7 +221,88 @@ class LabMasterMCM(Instrument):
               f'(window {scale_V * self.VERTICAL_DIVISIONS:.6g} V) | '
               f'offset {offset_V:.6g} V | coupling {coupling}')
 
+    # ── 3b. Math function (e.g. channel difference) ──────────────────────
+
+    def set_math(self, math_channel: str = 'F1',
+                source1: str = 'C1', source2: str = 'C2',
+                operator: str = 'Difference') -> None:
+        """
+        Configure a two-source math function trace, e.g. F1 = C1 - C2.
+
+        math_channel : 'F1'..'F4'
+        source1/2    : 'C1'..'C4' (or up to 'C16' on MCM) — both must
+                       already be enabled (.View = True), see initialize()'s
+                       `channels_to_enable`.
+        operator     : MAUI Operator1 value. 'Difference' gives a channel
+                       difference (source1 - source2) — confirmed against
+                       the scope's front-panel Math dialog: Operator1 picks
+                       a *category* (e.g. "Basic Math"), and 'Difference' is
+                       the specific function within it. 'Subtract' is NOT a
+                       valid value here (it was the original guess and
+                       silently failed — Operator1 stayed at its default,
+                       which is why F1 mirrored source1 1:1). Other
+                       operators (Sum, Product, Ratio, ...) are unconfirmed;
+                       check the front panel if you need one of those.
+
+        CVARs: app.Math.<Fn>.Operator1 / .Source1 / .Source2 / .View
+
+        Enables View first — on some firmware, writing Operator1/Source1/
+        Source2 while the trace is hidden doesn't stick, or gets clobbered
+        back to a single-channel passthrough when View is subsequently
+        turned on. Reads every property back after writing so mismatches
+        are visible in the log instead of failing silently (VBS property
+        writes are fire-and-forget and don't raise CMR errors on a bad
+        name/value — they're just silently ignored).
+
+        Note: math traces are not valid edge-trigger sources on this model —
+        keep the trigger on a real channel (C1..C4), e.g. one of source1/2.
+        """
+        mc = math_channel.upper()
+        s1 = source1.upper()
+        s2 = source2.upper()
+
+        self.vbs(f'app.Math.{mc}.View = True')
+        self.vbs(f'app.Math.{mc}.Operator1 = "{operator}"')
+        self.vbs(f'app.Math.{mc}.Source1 = "{s1}"')
+        self.vbs(f'app.Math.{mc}.Source2 = "{s2}"')
+        time.sleep(0.5)
+
+        symbol = '-' if operator == 'Difference' else f' {operator} '
+        print(f'[set_math] requested {mc} = {s1}{symbol}{s2}')
+
+        # Read back what actually landed on the scope
+        try:
+            rb_op = self.vbs_query(f'app.Math.{mc}.Operator1')
+            rb_s1 = self.vbs_query(f'app.Math.{mc}.Source1')
+            rb_s2 = self.vbs_query(f'app.Math.{mc}.Source2')
+            rb_view = self.vbs_query(f'app.Math.{mc}.View')
+            print(f'[set_math] readback {mc}: Operator1={rb_op!r} '
+                  f'Source1={rb_s1!r} Source2={rb_s2!r} View={rb_view!r}')
+            if rb_op.strip().lower() != operator.lower() or \
+               rb_s1.strip().upper() != s1 or rb_s2.strip().upper() != s2:
+                print(f'[set_math] WARNING — readback does not match the '
+                      f'requested setup. The Operator1/Source1/Source2 CVAR '
+                      f'names may be wrong for this firmware; check MAUI '
+                      f'Browser on the scope for the correct path.')
+        except Exception as exc:                      # noqa: BLE001
+            print(f'[set_math] WARNING — could not read back math setup '
+                  f'({exc}); cannot confirm F1 was actually configured as '
+                  f'a difference.')
+
     # ── 3. Trigger ────────────────────────────────────────────────────────
+
+    def set_channel_view(self, channel: str, view: bool = True) -> None:
+        """
+        Show/hide a channel's trace on the grid (app.Acquisition.<Cn>.View).
+
+        Used to hide the source channels (e.g. C1, C2) once a math function
+        (e.g. F1 = C1 - C2) is configured, so only the math trace is
+        displayed. Triggering and math computation are independent of trace
+        display and keep working on a hidden channel.
+        """
+        state = 'True' if view else 'False'
+        self.vbs(f'app.Acquisition.{channel.upper()}.View = {state}')
+        print(f'[set_channel_view] {channel.upper()} View = {view}')
 
     def set_trigger(self, source: str = None,
                     level_V: float = 0.0,

@@ -5,7 +5,7 @@
   "kafka_broker": "pcmitpx01:9092",
   "kafka_ip_family": "v4",
   "wp_user": "user1",
-  "wp_agent_name": "CERN",
+  "wp_agent_name": "WPMIT",
   "wp_project_bam": "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
   "wp_project_seg": "ER2_MOSAIX_Vertical_V0_NotchW_ArrowW",
   "run_ptpa_bam": true,
@@ -15,16 +15,16 @@
   "reset_on_ptpa_failure": true,
   "re_enable_ptpa": true,
 
-  "log_cmd_output": false,
+  "log_cmd_output": true,
   "show_cmd_output": true,
 
   "fpga_program_dir": "/home/its3/mosaix_testing/software/fx3_tools",
-  "fpga_program_setup": "prober_mit",
-  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.11.0.bit",
-  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.11.0.bit",
-  "fpga_link_test_trigger": "pattern_prbs31_10gbps_scope_scan",
+  "fpga_program_setup": "prober_mit_DME",
+  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.14.0.bit",
+  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.14.0.bit",
+  "fpga_link_test_trigger": ["pattern_prbs31_5gbps_scope_scan", "pattern_prbs31_10gbps_scope_scan"],
 
-  "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
+  "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical_DME.json5",
   "power_profile": "smu",
   "output": "local",
   "remove_daq_status_file": true,
@@ -34,10 +34,11 @@
     "enabled": true,
     "model": "labmaster_mcm",
     "scope_config": "oscilloscope/configs/labmaster_mcm_config.json",
-    "output_dir": "/home/its3/scope_data/12",
+    "output_dir": "/home/its3/scope_data/21",
     
     "points": 1000000,
     "dry_run": false,
+    "pre_capture_delay_s": 1.5,
     "timeout_s": 3600,
     "join_timeout_s": 120,
     "//trigger_when_cmd_contains": ["pattern_prbs31_10gbps_scope", "scope"],
@@ -54,7 +55,7 @@
   ],
 
   "Sequence": [
-    "./{build_dir}/RunTest Configs/TestConfigs/MassTesting/WaferHsch/hs_channel_bandgap_trim.json5 {setup_config} -c {chip_name} -p {power_profile} -o staging",
+    "./{build_dir}/RunTest Configs/TestConfigs/HsChannel/pattern_prbs31_5gbps_scope_scan.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}",
     "./{build_dir}/RunTest Configs/TestConfigs/HsChannel/pattern_prbs31_10gbps_scope_scan.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
   ]
 }
