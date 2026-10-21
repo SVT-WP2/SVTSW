@@ -913,7 +913,7 @@ class ITS3Runner:
             log.info("-" * 60)
 
             # --- switch WP project if chip type changed (BAM <-> SEG) ---
-            chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
+            chip_type = "SEG" if chip["die"].startswith("SE") else "BAM"
             if chip_type != self._current_project_type:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
@@ -932,7 +932,7 @@ class ITS3Runner:
                 self._current_project_type = chip_type
 
             # --- move prober to die ---
-            chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
+            chip_type = "SEG" if chip["die"].startswith("SE") else "BAM"
             run_ptpa = self._should_run_ptpa(chip_type, chip["die"])
             if not self._wp_move_to_die(chip["wp"], chip_type, run_ptpa):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
