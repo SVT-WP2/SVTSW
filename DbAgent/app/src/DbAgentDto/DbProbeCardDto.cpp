@@ -21,7 +21,7 @@ namespace dbagent
     addColName("name");
     addColName("vendor");
     addColName("model");
-    addColName("arrivalDate");
+    addColName("arriveDate");
     addColName("location");
     addColName("type");
 

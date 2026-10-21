@@ -64,6 +64,9 @@ EXPERT_COMMANDS: set[str] = {
     "AutoFocus",
     "MoveChuckRowColumn",
     "ReconnectProber",  # reconnect after the machine was powered off
+    # DB corrections; the state machine allows them for experts only in OpenedProject
+    "UpdateLoadedWafer",
+    "UpdateInstalledProbeCard",
 }
 
 # Built-in YAML sequences (COMMAND_ROUTER entries made with _yaml_command).

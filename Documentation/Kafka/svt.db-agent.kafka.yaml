@@ -517,6 +517,132 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  # Modules
+  /svt.db-agent.request/GetAllModules:
+    post:
+      tags:
+        - Modules
+      summary: Get All Modules
+      description: Returns Modules list in the reply message. Optional filter by chipId can be applied to return exact chip.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllModulesMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllModulesReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateModule:
+    post:
+      tags:
+        - Modules
+      summary: Create module
+      description: Returns the newly created module in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateModuleMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateModuleReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateModuleLocation:
+    post:
+      tags:
+        - Modules
+      summary: Update Module Location
+      description: Returns updated Module in the reply message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateModuleLocationMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateModuleLocationReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetModuleLocationHistory:
+    post:
+      tags:
+        - Modules
+      summary: Get Module Location History Records
+      description: Return list of location records for a Module
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetModuleLocationHistoryMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetModuleLocationHistoryReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # WaferProbeMachines
   /svt.db-agent.request/GetAllWaferProbeMachines:
     post:
       tags:
@@ -1681,6 +1807,10 @@ components:
               type: array
               items:
                 type: string
+            moduleType:
+              type: array
+              items:
+                type: string
             dutType:
               type: array
               items:
@@ -2234,6 +2364,128 @@ components:
                 $ref: "#/components/schemas/ChipBlockDto"
             totalCount:
               type: number
+    #
+    # MODULE :: LIST
+    #
+    GetAllModulesMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllModules"
+        data:
+          type: object
+          properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
+            filter:
+              type: object
+              properties:
+                moduleTypes:
+                  type: array
+                  description: ModuleType values array. If array is empty / undefined => all Modules will be returned.
+                  items:
+                    type: string
+                generalLocation:
+                  type: string
+                serialNumber:
+                  type: string
+                ids:
+                  type: array
+                  description: Chip ids array. If array is empty / undefined => all Chip will be returned.
+                  items:
+                    type: number
+    GetAllModulesReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllModulesReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ModuleDto"
+            totalCount:
+              type: number
+    #
+    # MODULE :: CREATE
+    #
+    CreateModuleMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateModule"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/ModuleCreateDto"
+    CreateModuleReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateModuleReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/ModuleDto"
+    #
+    # MODULE :: UPDATE LOCAION
+    #
+    UpdateModuleLocationMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateModuleLocation"
+        data:
+          $ref: "#/components/schemas/ModuleUpdateLocationDto"
+    UpdateModuleLocationReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateModuleLocationReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/ModuleDto"
+    #
+    # MODULE LOCATION RECORDS
+    #
+    GetModuleLocationHistoryMessage:
+      properties:
+        type:
+          type: string
+          default: "GetModuleLocationHistory"
+        data:
+          type: object
+          required:
+            - modId
+          properties:
+            modId:
+              type: number
+              description: Module id
+    GetModuleLocationHistoryReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetModuleLocationHistoryReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ModuleLocationHistoryRecordDto"
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -3512,6 +3764,85 @@ components:
           type: string
         serialNumber:
           type: string
+    # MODULE :: DTO
+    ModuleDto:
+      type: object
+      required:
+        - id
+        - modType
+        - serialNumber
+        - generalLocation
+        - chips
+      properties:
+        id:
+          type: number
+        modType:
+          type: string
+        serialNumber:
+          type: string
+        generalLocation:
+          type: string
+        chips:
+          type: array
+          items:
+            type: integer
+    ModuleCreateDto:
+      type: object
+      required:
+        - modType
+        - chips
+        - generalLocation
+      properties:
+        modType:
+          type: string
+        chips:
+          type: array
+          items:
+            type: integer
+        generalLocation:
+          type: string
+    ModuleUpdateLocationDto:
+      type: object
+      required:
+        - modId
+        - generalLocation
+        - username
+        - note
+      properties:
+        modId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
+    ModuleLocationHistoryRecordDto:
+      type: object
+      required:
+        - modId
+        - generalLocation
+        - username
+        - note
+      properties:
+        modId:
+          type: number
+        generalLocation:
+          type: string
+        date:
+          type: string
+          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          nullable: true
+        username:
+          type: string
+        note:
+          type: string
+          description: General comment/reason about the location update.
     # WAFER_PROBE_MACHINE :: DTO
     WaferProbeMachineDto:
       type: object
@@ -3621,14 +3952,14 @@ components:
       required:
         - wpMachineId
         - loadedWaferId
-        - orientation
+        - loadedWaferOrientation
       properties:
         wpMachineId:
           type: number
         loadedWaferId:
           type: number
           nullable: true
-        orientation:
+        loadedWaferOrientation:
           type: string
           nullable: true
     WpMachineInstalledProbeCardUpdateDto:
@@ -3636,14 +3967,14 @@ components:
       required:
         - wpMachineId
         - installedProbeCardId
-        - orientation
+        - installedProbeCardOrientation
       properties:
         wpMachineId:
           type: number
         installedProbeCardId:
           type: number
           nullable: true
-        orientation:
+        installedProbeCardOrientation:
           type: string
           nullable: true
     WaferProbeProjectDto:
@@ -4164,6 +4495,7 @@ components:
         - asicFamilyType
         - asicQuality
         - chipBlockType
+        - moduleType
         - dutType
         - dutEntityName
         - engineeringRun

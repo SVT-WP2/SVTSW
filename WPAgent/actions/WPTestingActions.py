@@ -765,31 +765,124 @@ def run_ptpa(user=None, waferAgentName=None):
 
 @validate_command
 def init_probing(user=None, waferAgentName=None):
-    """Sequence of 'Go to off Axis area','Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'"""
+    """
+    Align the wafer: 'Go to off Axis area', 'Go to Center', 'AutoFocus', 'Align wafer', 'Find Home'.
+
+    Only the alignment depends on the project: the moves and the autofocus run with the
+    project the user opened. Then the alignment project of the ASIC family of that project
+    (configs/WPInitProbingConfig.json: family -> alignment project) is opened on the
+    prober and the wafer is aligned. Then the user's project is opened again and home is
+    found with it. The global parameters keep the user's project all the time.
+    """
     reply = get_reply_type()
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from actions.WPDataBaseActions import get_project_family_by_name
+    from utilities.WPInitProbingConfig import get_alignment_project
 
     error = _ensure_initialized()
     if error:
         return error
 
+    g = SvtWPAagentGlobalParameters.getInstance()
+    user_project = g.projectName
+    if not user_project:
+        return ResponseBuilder.error(
+            reply, "No project is open. Run OpenProject first.", 400
+        )
+
+    # 1. Which project does this family align with?
+    family = get_project_family_by_name(user_project)
+    if not family:
+        return ResponseBuilder.error(
+            reply,
+            f"Cannot determine the ASIC family of project '{user_project}' "
+            "(project not found in the database or the database agent does not answer).",
+            404,
+        )
+    try:
+        alignment_project = get_alignment_project(family)
+    except ValueError as e:
+        return ResponseBuilder.error(reply, str(e), 500)
+    if not alignment_project:
+        return ResponseBuilder.error(
+            reply,
+            f"No alignment project is configured for ASIC family '{family}'. "
+            "Add it to configs/WPInitProbingConfig.json.",
+            400,
+        )
+
     try:
         prober = get_current_prober()
-        # Sequence
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error(reply, str(e), 500)
+
+    # 2. Moves and autofocus with the user's project, alignment with the alignment project
+    switched = alignment_project.lower() != user_project.lower()
+    switch_attempted = False
+    align_error = None
+    reopen_error = None
+    home_error = None
+
+    try:
         prober.go_to_separation()
         prober.move_chuck_offaxis_area()
         prober.move_chuck_center()
         prober.auto_focus()
 
+        if switched:
+            print(f"   Opening alignment project '{alignment_project}' (family {family})")
+            switch_attempted = True
+            prober.open_project(alignment_project)
+
         # TODO: we need to get col and row for alignment from project that stored in DB
         prober.align_wafer(align_die_col=-1, align_die_row=1)
-        prober.find_home()
+    except Exception as e:
+        align_error = e
 
+    # 3. Give the prober back the project the user opened (if we changed it)
+    if switch_attempted:
+        try:
+            print(f"   Opening the user's project '{user_project}' again")
+            prober.open_project(user_project)
+        except Exception as e:
+            reopen_error = e
+
+    # 4. Find home with the user's project open, and only on an aligned wafer
+    if not align_error and not reopen_error:
+        try:
+            prober.find_home()
+        except Exception as e:
+            home_error = e
+
+    if align_error or reopen_error or home_error:
+        parts = []
+        if align_error:
+            parts.append(f"Alignment failed: {align_error}")
+        if reopen_error:
+            parts.append(
+                f"Could not open project '{user_project}' again after alignment: {reopen_error}. "
+                f"The prober may still have '{alignment_project}' open."
+            )
+        if home_error:
+            parts.append(f"Find home failed: {home_error}")
+        message = " ".join(parts)
+        agentStateMachine.enter_error_state(message)
+        return ResponseBuilder.error(reply, message, 500)
+
+    try:
         # Update info
         update_current_info(currentProber=prober)
         prober.local_mode()
 
         agentStateMachine.transition("InitProbing")
-        return ResponseBuilder.success(reply, f"Initialization complete")
+        message = "Initialization complete"
+        if switched:
+            message += (
+                f". Alignment was done with project '{alignment_project}' "
+                f"(ASIC family {family}); project '{user_project}' is open again."
+            )
+        return ResponseBuilder.success(reply, message)
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)

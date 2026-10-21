@@ -219,7 +219,7 @@ class DBKafkaClient:
         """Update loaded wafer on machine. Returns True on success."""
         result = self.request_reply(
             "UpdateWpMachineLoadedWafer",
-            {"wpMachineId": wp_machine_id, "loadedWaferId": wafer_id, "orientation": orientation},
+            {"wpMachineId": wp_machine_id, "loadedWaferId": wafer_id, "loadedWaferOrientation": orientation},
             "UpdateWpMachineLoadedWaferReply",
             timeout,
         )
@@ -231,7 +231,7 @@ class DBKafkaClient:
         """Update installed probe card on machine. Returns True on success."""
         result = self.request_reply(
             "UpdateWpMachineInstalledProbeCard",
-            {"wpMachineId": wp_machine_id, "installedProbeCardId": probe_card_id, "orientation": orientation},
+            {"wpMachineId": wp_machine_id, "installedProbeCardId": probe_card_id, "installedProbeCardOrientation": orientation},
             "UpdateWpMachineInstalledProbeCardReply",
             timeout,
         )
