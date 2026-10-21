@@ -99,9 +99,10 @@ class TestBypassCommands:
 class TestValidTransitions:
 
     # ServiceOn
-    def test_service_on_open_project(self, sm):
-        assert sm.transition("OpenProject") is True
-        assert sm.get_state() == WPAgentState.OpenedProject
+    def test_service_on_open_project_not_possible(self, sm):
+        """Only UserLogIn leaves ServiceOn (colleague review)."""
+        assert sm.transition("OpenProject") is False
+        assert sm.get_state() == WPAgentState.ServiceOn
 
     def test_service_on_error(self, sm):
         assert sm.transition("Error") is True
@@ -172,12 +173,12 @@ class TestValidTransitions:
 
     def test_chuck_safe_unload_wafer(self, sm):
         sm.force_state(WPAgentState.ChuckSafePosition)
-        sm.transition("UnloadWafer")
+        assert sm.transition("UnloadWafer") is True
         assert sm.get_state() == WPAgentState.Unloaded
 
     def test_chuck_safe_move_chuck_unload_wafer(self, sm):
         sm.force_state(WPAgentState.ChuckSafePosition)
-        sm.transition("MoveChuckUnloadWafer")
+        assert sm.transition("MoveChuckUnloadWafer") is True
         assert sm.get_state() == WPAgentState.ChuckUnloaded
 
     def test_chuck_safe_error(self, sm):
@@ -213,11 +214,12 @@ class TestValidTransitions:
         sm.transition("OpenProject")
         assert sm.get_state() == WPAgentState.OpenedProject
 
-    def test_user_logged_move_chuck_unload_wafer(self, sm):
-        """Can unload wafer from UserLogged — changed mind after loading."""
+    def test_user_logged_unload_not_possible(self, sm):
+        """Unloading is possible only from OpenedProject or Aligned."""
         sm.force_state(WPAgentState.UserLogged)
-        sm.transition("MoveChuckUnloadWafer")
-        assert sm.get_state() == WPAgentState.ChuckUnloaded
+        assert sm.transition("MoveChuckUnloadWafer") is False
+        assert sm.transition("UnloadWafer") is False
+        assert sm.get_state() == WPAgentState.UserLogged
 
     def test_user_logged_error(self, sm):
         sm.force_state(WPAgentState.UserLogged)
@@ -325,19 +327,22 @@ class TestValidTransitions:
         assert sm.get_state() == WPAgentState.OnDie_Wide_withPTPA
 
     def test_offaxis_with_ptpa_next_die(self, sm):
+        """Die moves lose PTPA and end OffAxis_withoutPTPA."""
         sm.force_state(WPAgentState.OnDie_OffAxis_withPTPA)
         sm.transition("MoveChuckNextDie")
-        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_offaxis_with_ptpa_previous_die(self, sm):
+        """Die moves lose PTPA and end OffAxis_withoutPTPA."""
         sm.force_state(WPAgentState.OnDie_OffAxis_withPTPA)
         sm.transition("MoveChuckPreviousDie")
-        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_offaxis_with_ptpa_row_column(self, sm):
+        """Die moves lose PTPA and end OffAxis_withoutPTPA."""
         sm.force_state(WPAgentState.OnDie_OffAxis_withPTPA)
         sm.transition("MoveChuckRowColumn")
-        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_offaxis_with_ptpa_autofocus(self, sm):
         sm.force_state(WPAgentState.OnDie_OffAxis_withPTPA)
@@ -368,17 +373,17 @@ class TestValidTransitions:
     def test_wide_with_ptpa_next_die_loses_ptpa(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withPTPA)
         sm.transition("MoveChuckNextDie")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_wide_with_ptpa_previous_die_loses_ptpa(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withPTPA)
         sm.transition("MoveChuckPreviousDie")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_wide_with_ptpa_row_column_loses_ptpa(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withPTPA)
         sm.transition("MoveChuckRowColumn")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     # OnDie_Wide_withoutPTPA
     def test_wide_without_ptpa_asic_gains_ptpa(self, sm):
@@ -404,17 +409,17 @@ class TestValidTransitions:
     def test_wide_without_ptpa_next_die(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withoutPTPA)
         sm.transition("MoveChuckNextDie")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_wide_without_ptpa_previous_die(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withoutPTPA)
         sm.transition("MoveChuckPreviousDie")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     def test_wide_without_ptpa_row_column(self, sm):
         sm.force_state(WPAgentState.OnDie_Wide_withoutPTPA)
         sm.transition("MoveChuckRowColumn")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA
 
     # Error
     def test_error_reset_agent(self, sm):
@@ -628,15 +633,18 @@ class TestErrorState:
 class TestStateTracking:
 
     def test_previous_state_updated_on_transition(self, sm):
+        sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
-        assert sm.previous_state == WPAgentState.ServiceOn
+        assert sm.previous_state == WPAgentState.UserLogged
 
     def test_current_command_updated_on_transition(self, sm):
+        sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
         assert sm.current_command == "OpenProject"
 
     def test_previous_state_chained(self, sm):
-        sm.transition("OpenProject")  # ServiceOn → OpenedProject
+        sm.force_state(WPAgentState.UserLogged)
+        sm.transition("OpenProject")  # UserLogged → OpenedProject
         sm.transition("InitProbing")  # OpenedProject → Aligned
         assert sm.previous_state == WPAgentState.OpenedProject
         assert sm.get_state() == WPAgentState.Aligned
@@ -726,8 +734,6 @@ class TestFullWorkflows:
         """Full wafer unload/reload cycle."""
         sm.force_state(WPAgentState.UserLogged)
         sm.transition("OpenProject")
-        sm.transition("MoveChuckSafePosition")
-        assert sm.get_state() == WPAgentState.ChuckSafePosition
         sm.transition("UnloadWafer")
         assert sm.get_state() == WPAgentState.Unloaded
         sm.transition("LoadWafer")
@@ -736,8 +742,6 @@ class TestFullWorkflows:
     def test_chuck_unload_reload_cycle(self, sm):
         """Physical chuck unload/reload via chuck movement commands."""
         sm.force_state(WPAgentState.Aligned)
-        sm.transition("MoveChuckSafePosition")
-        assert sm.get_state() == WPAgentState.ChuckSafePosition
         sm.transition("MoveChuckUnloadWafer")
         assert sm.get_state() == WPAgentState.ChuckUnloaded
         sm.transition("MoveChuckLoadedWafer")
@@ -754,7 +758,7 @@ class TestFullWorkflows:
         assert sm.can_execute("OpenProject") is True
 
     def test_ptpa_is_cleared_on_die_navigation(self, sm):
-        """Moving to next die from Wide_withPTPA drops PTPA flag."""
+        """Moving to next die from Wide_withPTPA drops PTPA and goes off-axis."""
         sm.force_state(WPAgentState.OnDie_Wide_withPTPA)
         sm.transition("MoveChuckNextDie")
-        assert sm.get_state() == WPAgentState.OnDie_Wide_withoutPTPA
+        assert sm.get_state() == WPAgentState.OnDie_OffAxis_withoutPTPA

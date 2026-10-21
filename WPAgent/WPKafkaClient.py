@@ -3,6 +3,7 @@ from confluent_kafka.admin import AdminClient, NewTopic
 from concurrent.futures import ThreadPoolExecutor
 
 import json
+import threading
 import time
 import ast
 import uuid
@@ -13,6 +14,7 @@ from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
+from services.WPProberConnectionWatch import ProberConnectionWatch
 from utilities.WPMessagesStatus import WPMessagesStatus
 
 logger = WPAgentLogger(kafka_servers=None)
@@ -72,6 +74,10 @@ class KafkaClient:
 
         self.request_consumer = None
         self.reply_consumer = None
+
+        # Number of commands being executed right now (the connection watch stays quiet meanwhile)
+        self._active_commands = 0
+        self._active_lock = threading.Lock()
         self._initialize_reply_consumer()
         self.cache = None
 
@@ -317,6 +323,11 @@ class KafkaClient:
 
         heartbeat_monitor.start()
 
+        # Put the agent into Error when the prober machine stops answering
+        # (e.g. powered off). ReconnectProber brings it back without a restart.
+        connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
+        connection_watch.start()
+
         try:
             while True:
                 msg = self.request_consumer.poll(poll_timeout)
@@ -340,6 +351,7 @@ class KafkaClient:
         finally:
             self.request_consumer.close()
             heartbeat_monitor.stop()
+            connection_watch.stop()
             self.producer.flush(timeout=5.0)
             if self.reply_consumer:
                 self.reply_consumer.close()
@@ -383,7 +395,13 @@ class KafkaClient:
             )
 
             exec_start = time.time()
-            result = execute_command(command, params)
+            with self._active_lock:
+                self._active_commands += 1
+            try:
+                result = execute_command(command, params)
+            finally:
+                with self._active_lock:
+                    self._active_commands -= 1
             exec_end = time.time()
             exec_time_ms = (exec_end - exec_start) * 1000
             self.cache.cache_command()  # update cache snapshot with current global state

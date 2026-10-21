@@ -335,6 +335,15 @@
     "execution_time": "< 1 second"
   },
 
+  "ReconnectProber": {
+    "description": "Reconnect to the prober after the machine was powered off or restarted, without restarting WPAgent",
+    "category": "System",
+    "data": {},
+    "example": "python main.py send ReconnectProber --data='{\"user\":\"user1\",\"waferAgentName\":\"CERN_DEV\"}'",
+    "execution_time": "1-5 seconds",
+    "notes": "Expert or Developer. Forgets the old session (project, die, chuck position, testing lock) and returns to UserLogged: run OpenProject and InitProbing afterwards. If the machine is not reachable yet nothing changes; run it again."
+  },
+
   "ResetAgent": {
     "description": "Reset agent state machine to Idle (recovery command)",
     "category": "System",

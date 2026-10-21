@@ -3,6 +3,7 @@ from utilities.WPResponseBuilder import ResponseBuilder
 from typing import Optional, List, Tuple, Any
 from utilities.WPAgentTypes import AgentResponse
 from utilities.WPCommandConstants import BYPASS_COMMANDS as _GLOBAL_BYPASS_COMMANDS, USER_COMMANDS, EXPERT_COMMANDS
+from utilities.WPSequenceContext import in_trusted_sequence
 import re
 
 
@@ -224,6 +225,11 @@ class WPCommandValidator:
         if hierarchy == UserHierarchy.DEVELOPER:
             return None  # All commands allowed!
         # ============================================================
+
+        # Step of a trusted built-in sequence: the caller was already checked when
+        # the sequence command itself was validated (see WPSequenceContext).
+        if in_trusted_sequence():
+            return None
 
         # Expert has access to User + Expert commands
         if hierarchy == UserHierarchy.EXPERT:

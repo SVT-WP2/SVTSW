@@ -11,15 +11,24 @@ import actions.WPLoginActions as user_actions
 import actions.WPImagingActions as imaging_actions
 
 from utilities.WPCommandConstants import BYPASS_COMMANDS
+from utilities.WPValidationDecorator import validate_command_with_name
+from utilities.WPSequenceContext import trusted_sequence, in_trusted_sequence
 
-def _yaml_command(yaml_path):
-    """Returns a handler that runs a fixed YAML file via the sequencer."""
+def _yaml_command(command_name, yaml_path):
+    """Returns a handler that runs a fixed, built-in YAML file via the sequencer.
+
+    The caller is validated once as ``command_name`` (login, agent name, hierarchy
+    - see EXPERT_COMMANDS). The steps then run as a trusted sequence, so an Expert
+    can use the developer-only commands those steps need (see WPSequenceContext).
+    """
+    @validate_command_with_name(command_name)
     def _handler(**data):
-        return run_sequencer_yaml(
-            filepath=yaml_path,
-            executor=_exec_in_sequence,
-            **{k: v for k, v in data.items() if k != "filepath"}
-        )
+        with trusted_sequence(command_name):
+            return run_sequencer_yaml(
+                filepath=yaml_path,
+                executor=_exec_in_sequence,
+                **{k: v for k, v in data.items() if k != "filepath"}
+            )
     return _handler
 
 COMMAND_ROUTER = {
@@ -49,6 +58,8 @@ COMMAND_ROUTER = {
 
     # Project
     "OpenProject": testing_actions.open_project,
+    "ChangeProject": testing_actions.open_project,
+
     "StressOpenProject": testing_actions.stress_open_project,
 
     # Optical
@@ -91,20 +102,21 @@ COMMAND_ROUTER = {
     # Imaging
     "TakeScreenshot": imaging_actions.take_screenshot,
     "TakeImage": imaging_actions.take_image,
-    "TakeImageWafer":  _yaml_command("sequencer/TakeImageWafer.yaml"),
-    "TakeImageBAM":    _yaml_command("sequencer/TakeImageBAM.yaml"),
-    "TakeImageSEG":    _yaml_command("sequencer/TakeImageSEG.yaml"),
-    "TakeImageLEC":    _yaml_command("sequencer/TakeImageLEC.yaml"),
-    "TakeImageL2":    _yaml_command("sequencer/TakeImageL2.yaml"),
-    "TakeImageL1_0-3":    _yaml_command("sequencer/TakeImageL1_0-3.yaml"),
-    "TakeImageL1_1-4":    _yaml_command("sequencer/TakeImageL1_1-4.yaml"),
-    "TakeImageL0_0-2":    _yaml_command("sequencer/TakeImageL0_0-2.yaml"),
-    "TakeImageL0_1-3":    _yaml_command("sequencer/TakeImageL0_1-3.yaml"),
-    "TakeImageL0_2-4":    _yaml_command("sequencer/TakeImageL0_2-4.yaml"),
-    "BrightnessCorrection": _yaml_command("sequencer/BrightnessCorrection.yaml"),
+    "TakeImageWafer":  _yaml_command("TakeImageWafer", "sequencer/TakeImageWafer.yaml"),
+    "TakeImageBAM":    _yaml_command("TakeImageBAM", "sequencer/TakeImageBAM.yaml"),
+    "TakeImageSEG":    _yaml_command("TakeImageSEG", "sequencer/TakeImageSEG.yaml"),
+    "TakeImageLEC":    _yaml_command("TakeImageLEC", "sequencer/TakeImageLEC.yaml"),
+    "TakeImageL2":    _yaml_command("TakeImageL2", "sequencer/TakeImageL2.yaml"),
+    "TakeImageL1_0-3":    _yaml_command("TakeImageL1_0-3", "sequencer/TakeImageL1_0-3.yaml"),
+    "TakeImageL1_1-4":    _yaml_command("TakeImageL1_1-4", "sequencer/TakeImageL1_1-4.yaml"),
+    "TakeImageL0_0-2":    _yaml_command("TakeImageL0_0-2", "sequencer/TakeImageL0_0-2.yaml"),
+    "TakeImageL0_1-3":    _yaml_command("TakeImageL0_1-3", "sequencer/TakeImageL0_1-3.yaml"),
+    "TakeImageL0_2-4":    _yaml_command("TakeImageL0_2-4", "sequencer/TakeImageL0_2-4.yaml"),
+    "BrightnessCorrection": _yaml_command("BrightnessCorrection", "sequencer/BrightnessCorrection.yaml"),
 
     # FSM State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent,
+    "ReconnectProber": project_actions.reconnect_prober,
     "GetAgentState": project_actions.get_agent_state,  # !! irrelevant
     "TestingLock": testing_actions.testing_lock,
     "TestingUnlock": testing_actions.testing_unlock,
@@ -217,6 +229,13 @@ def execute_command(message_type, data=None):
 
 
 
+    # A trusted built-in sequence must never start another (custom) sequence
+    if in_trusted_sequence() and message_type in ("RunSequencer", "RunSequencerYAML"):
+        msg = f"'{message_type}' is not allowed inside a built-in sequence"
+        result = ResponseBuilder.error(f"{message_type}Reply", msg, 403)
+        logger.log_command(msg, Severity.WARNING, message_type, data, result)
+        return result
+
     # Check if command exists
     if message_type not in COMMAND_ROUTER:
         msg = f"Unknown command: {message_type}"
@@ -224,8 +243,9 @@ def execute_command(message_type, data=None):
         logger.log_command(msg, Severity.ERROR, message_type, data, result)
         return result
 
-    # Check if command can be executed (unless bypass)
-    if message_type not in BYPASS_COMMANDS:
+    # Check if command can be executed (unless bypass, or a step of a trusted
+    # built-in sequence: the sequence command itself was checked against the state machine)
+    if message_type not in BYPASS_COMMANDS and not in_trusted_sequence():
         if not agentStateMachine.can_execute(message_type):
             available = agentStateMachine.get_available_commands()
             current_state = agentStateMachine.get_state_name()

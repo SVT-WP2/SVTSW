@@ -37,12 +37,12 @@ def _parse_svt_label(label: str):
         "babyMOSAIX-3_2_ER2-W5"   → ("babyMOSAIX", 3, 2)
     """
     if label.startswith("babyMOSAIX-"):
-        remainder = label[len("babyMOSAIX-") :]  # "1_1_ER2-W1"
+        remainder = label[len("babyMOSAIX-"):]  # "1_1_ER2-W1"
         parts = remainder.split("_")  # ["1", "1", "ER2-W1"]
         return "babyMOSAIX", int(parts[0]), int(parts[1])
 
     elif label.startswith("MOSAIX-"):
-        remainder = label[len("MOSAIX-") :]  # "1_ER2-W1"
+        remainder = label[len("MOSAIX-"):]  # "1_ER2-W1"
         parts = remainder.split("_")  # ["1", "ER2-W1"]
         return "MOSAIX", int(parts[0]), 1  # column_svt always 1 for MOSAIX
 
@@ -500,7 +500,7 @@ def _go_to_offaxis_side(prober):
 
 @validate_command_with_name("MoveChuckRowColumn", reply_type="MoveChuckDieReply")
 def move_chuck_die(
-    col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None
+        col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None
 ):
     """
     Move to specific die using ANY coordinate system.
@@ -948,7 +948,7 @@ def find_home(user=None, waferAgentName=None):
 
 @validate_command
 def align_wafer(
-    align_die_col=None, align_die_row=None, subsite=None, user=None, waferAgentName=None
+        align_die_col=None, align_die_row=None, subsite=None, user=None, waferAgentName=None
 ):
     """Perform wafer alignment"""
     reply = get_reply_type()
@@ -1186,6 +1186,53 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
 
 
 @validate_command
+def change_project(projectName: str, user=None, waferAgentName=None):
+    """Change project"""
+    reply = get_reply_type()
+
+    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+    from actions.WPDataBaseActions import get_project_id_by_name
+
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+
+    try:
+        prober = get_current_prober()
+
+        project_path = os.path.join(str(g.projects_base_path), projectName)
+
+        print(projectName)
+
+        prober.open_project(projectName)
+
+        # Update project name (ID would need to come from DB)
+        g.projectName = projectName
+        g.set_project_name(projectName)
+        g.opened_project_id = get_project_id_by_name(projectName)
+
+        # Save current contact height as the default SetContactHeight will use
+        # when called without an explicit value
+        g.set_contact_height(prober.get_contact_height())
+
+        # Update info
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+
+        agentStateMachine.transition("ChangeProject")
+
+        return ResponseBuilder.success(
+            reply, f"Project has been changed to: {project_path}"
+        )
+
+    except Exception as e:
+        agentStateMachine.enter_error_state(str(e))
+        return ResponseBuilder.error(reply, str(e), 500)
+
+
+@validate_command
 def open_project(projectName: str, user=None, waferAgentName=None):
     """Open project"""
     reply = get_reply_type()
@@ -1234,12 +1281,12 @@ def open_project(projectName: str, user=None, waferAgentName=None):
 
 @validate_command
 def stress_open_project(
-    projectNameFirst: str,
-    projectNameSecond: str,
-    iterations: int,
-    delay: float = 0.0,
-    user=None,
-    waferAgentName=None,
+        projectNameFirst: str,
+        projectNameSecond: str,
+        iterations: int,
+        delay: float = 0.0,
+        user=None,
+        waferAgentName=None,
 ):
     """Open project"""
 
@@ -1409,10 +1456,10 @@ def set_contact_height(contactHeight=None, user=None, waferAgentName=None):
         import math
 
         if (
-            isinstance(target_height, bool)
-            or not isinstance(target_height, (int, float))
-            or not math.isfinite(target_height)
-            or target_height <= 0
+                isinstance(target_height, bool)
+                or not isinstance(target_height, (int, float))
+                or not math.isfinite(target_height)
+                or target_height <= 0
         ):
             return ResponseBuilder.error(
                 reply,
@@ -1607,7 +1654,7 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
 @validate_command
 def testing_lock(
-    user=None, waferAgentName=None, reason="Testing in progress", testSequenceId=None
+        user=None, waferAgentName=None, reason="Testing in progress", testSequenceId=None
 ):
     """
     Lock the WP Agent for testing to prevent interference from other users.
@@ -1713,10 +1760,10 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
 
     # Check authorization
     can_unlock = (
-        user == g.locked_by_user  # User who locked it
-        or user_hierarchy == "Developer"  # Developer
-        or force
-        and user_hierarchy == "Developer"  # Forced by Developer
+            user == g.locked_by_user  # User who locked it
+            or user_hierarchy == "Developer"  # Developer
+            or force
+            and user_hierarchy == "Developer"  # Forced by Developer
     )
 
     if not can_unlock:
@@ -1737,13 +1784,11 @@ def testing_unlock(user=None, waferAgentName=None, force=False):
     # Update state machine
     agentStateMachine.transition("TestingUnlock")
 
-
     return ResponseBuilder.success(reply, f"WP Agent unlocked (was locked by '{locked_by}')")
 
 
 @validate_command
 def move_chuck_top_left(user=None, waferAgentName=None):
-
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
@@ -1766,9 +1811,9 @@ def move_chuck_top_left(user=None, waferAgentName=None):
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
 
+
 @validate_command
 def move_chuck_top_right(user=None, waferAgentName=None):
-
     reply = get_reply_type()
     error = _ensure_initialized()
     if error:
@@ -1789,6 +1834,7 @@ def move_chuck_top_right(user=None, waferAgentName=None):
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
+
 
 @validate_command
 def move_chuck_bottom_left(user=None, waferAgentName=None):

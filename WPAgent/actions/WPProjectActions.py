@@ -1,5 +1,6 @@
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_prober, ProberFactory
+from utilities.WPValidationDecorator import validate_command_with_name
 from utilities.WPResponseBuilder import ResponseBuilder
 from services.WPDbKafkaClient import DBKafkaClient
 import actions.WPDataBaseActions
@@ -335,15 +336,117 @@ def get_info():
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 
 
+def reconnect_session(requested_by=None, event="RECONNECT"):
+    """
+    Open a new connection to the prober and forget the old session.
+
+    Shared by the ReconnectProber command and the automatic reconnect of the
+    connection watch. Returns (ok, message, status_code); status_code is None on success.
+    """
+    from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
+    from stateMachine.WpAgentStateMachine import WPAgentState
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+    factory = ProberFactory.get_instance()
+
+    address, machine_type = g.address, g.machineType
+    if not address or not machine_type:
+        return (
+            False,
+            "No prober address is stored. The agent was never initialized: use Initialize.",
+            400,
+        )
+
+    try:
+        prober = factory.reconnect(machine_type, address)
+    except Exception as e:
+        return (
+            False,
+            f"Cannot reach the prober at {address}: {e}. "
+            "Check that the machine is on, then run ReconnectProber again.",
+            503,
+        )
+
+    g.set_prober_status("initialized")
+
+    # The machine lost its session: forget the old one.
+    g.set_project_name(None)
+    g.opened_project_id = 0
+    g.contact_height = None
+    g.current_die_col = 0
+    g.current_die_row = 0
+    g.current_die_subsite = 0
+    g.chuck_z_position_state = "Unknown"
+    g.current_working_area = "LoadPosition"
+    g.camera_mount_point = "Top"
+    if g.is_locked_for_testing:
+        g.unlock_from_testing()
+
+    old_state = agentStateMachine.get_state_name()
+    if g.userLoggedHierarchy == "Developer":
+        agentStateMachine.force_state(WPAgentState.UsedByDeveloper)
+    else:
+        agentStateMachine.force_state(WPAgentState.UserLogged)
+    new_state = agentStateMachine.get_state_name()
+
+    try:
+        from utilities.WPAgentLogger import WPAgentLogger
+
+        WPAgentLogger().log_audit(
+            event, g.userLogged, g.userLoggedHierarchy,
+            requested_by=requested_by, from_state=old_state, to_state=new_state,
+        )
+    except Exception:
+        pass
+
+    return (
+        True,
+        f"Reconnected to the prober at {address}. State '{old_state}' -> '{new_state}'. "
+        "Open the project again (OpenProject), then run InitProbing.",
+        None,
+    )
+
+
+@validate_command_with_name("ReconnectProber")
+def reconnect_prober(user=None, waferAgentName=None):
+    """
+    Reconnect to the prober after the machine was powered off / restarted,
+    without restarting the whole WPAgent.
+
+    Opens a new connection to the address stored at startup, forgets everything
+    the agent knew about the old session (open project, die, chuck position, testing
+    lock) and puts the state machine back to UserLogged, so the normal flow
+    OpenProject -> InitProbing can be run again. Loaded wafer / probe card info
+    (from the DB) is kept. If the machine is not reachable yet, nothing changes.
+    """
+    reply = "ReconnectProberReply"
+    ok, message, status = reconnect_session(requested_by=user)
+    if not ok:
+        return ResponseBuilder.error(reply, message, status)
+    return ResponseBuilder.success(reply, message)
+
+
 def reset_agent(user=None, waferAgentName=None):
     """Reset the agent state machine to Idle"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
     old_state = agentStateMachine.get_state_name()
+    # reset() logs the current user out: remember who it was for the log
+    g = SvtWPAagentGlobalParameters.getInstance()
+    logged_out_user, logged_out_hierarchy = g.userLogged, g.userLoggedHierarchy
     agentStateMachine.transition("ResetAgent")
     agentStateMachine.reset()
     new_state = agentStateMachine.get_state_name()
     print(f"🔄 Agent state reset: {old_state} → {new_state}")
+    try:
+        from utilities.WPAgentLogger import WPAgentLogger
+
+        WPAgentLogger().log_audit(
+            "RESET", logged_out_user, logged_out_hierarchy,
+            requested_by=user, from_state=old_state, to_state=new_state,
+        )
+    except Exception:
+        pass
 
     return ResponseBuilder.success(
         "ResetAgentReply", f"✅ Agent state reset from '{old_state}' to '{new_state}'"

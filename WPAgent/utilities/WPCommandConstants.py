@@ -63,10 +63,29 @@ EXPERT_COMMANDS: set[str] = {
     "DisableOvertravel",
     "AutoFocus",
     "MoveChuckRowColumn",
+    "ReconnectProber",  # reconnect after the machine was powered off
     # DB corrections; the state machine allows them for experts only in OpenedProject
     "UpdateLoadedWafer",
     "UpdateInstalledProbeCard",
 }
+
+# Built-in YAML sequences (COMMAND_ROUTER entries made with _yaml_command).
+# Experts may run them; the developer-only commands used by their steps are allowed
+# only while the sequence runs (see utilities/WPSequenceContext.py).
+SEQUENCE_COMMANDS: set[str] = {
+    "TakeImageWafer",
+    "TakeImageBAM",
+    "TakeImageSEG",
+    "TakeImageLEC",
+    "TakeImageL2",
+    "TakeImageL1_0-3",
+    "TakeImageL1_1-4",
+    "TakeImageL0_0-2",
+    "TakeImageL0_1-3",
+    "TakeImageL0_2-4",
+    "BrightnessCorrection",
+}
+EXPERT_COMMANDS |= SEQUENCE_COMMANDS
 
 # Developer commands are not listed — Developers can execute ALL commands.
 # Any command not in USER_COMMANDS or EXPERT_COMMANDS is implicitly developer-only.
