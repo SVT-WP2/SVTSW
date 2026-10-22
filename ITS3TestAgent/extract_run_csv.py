@@ -20,13 +20,13 @@ DEFAULT_PROBER_SUBDIR = "cern_prober_mit"
 # alternations so the longer name wins (regex alternation is ordered, leftmost-first).
 PATH_PATTERN = re.compile(
     r"/(WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence|AdcSequence)"
-    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|SE[E36]G\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence|AdcSequence))/"
+    r"/(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(BAM\d+|S[E36]G\d+)_(L\dW\d+_S\d+)_(?:WaferPrimaryTestingSequence|WaferTileTestingSequenceMinimal|WaferTileTestingSequence|WaferHschTestingSequence|WaferPRBSTestingSequence|AdcSequence))/"
 )
 
 # Old-format fallback: command invocation line.
 # e.g.  2026-04-23 04:02:28 [INFO] [SEG0_L1W06_S4]  $ ./build/RunSequence .../wafer_primary_seq.json5 ...
 INVOKE_PATTERN = re.compile(
-    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|SE[E36]G\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq|wafer_prbs_seq|ADC_seq)\.json5"
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[INFO\] \[(BAM\d+|S[E36]G\d+)_(L\dW\d+_S\d+)\].*RunSequence.*/(wafer_primary_seq|wafer_tile_seq_min|wafer_tile_seq|wafer_hsch_seq|wafer_prbs_seq|ADC_seq)\.json5"
 )
 
 # New-format: overall sequence result line.
@@ -38,7 +38,7 @@ RESULT_PATTERN = re.compile(
 # Authoritative — supersedes the +1s timestamp guess made from the invocation line.
 OUTPUT_DIR_PATTERN = re.compile(
     r"SUMMARY.*TestSequence: Output directory \(chip 0\): "
-    r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(?:BAM\d+|SE[E36]G\d+)_L\dW\d+_S\d+_\w+)\s*$"
+    r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(?:BAM\d+|S[E36]G\d+)_L\dW\d+_S\d+_\w+)\s*$"
 )
 
 # PTPA: prober-level acceptance test run once per chip before its sequences.
