@@ -164,6 +164,10 @@ class WPAgentClient:
         _low, high = self.consumer.get_watermark_offsets(reply_tp, timeout=5.0)
         self.consumer.seek(TopicPartition(self.REPLY_TOPIC, 0, high))
 
+        # precise XY offset currently applied on top of the die position
+        # (set by apply_precise_offset, undone by revert_precise_offset)
+        self._pending_offset: tuple[float, float] | None = None
+
         log.info("WPAgent Kafka client ready")
 
     # ------------------------------------------------------------------
@@ -249,6 +253,11 @@ class WPAgentClient:
         return self.send("MoveChuckCenter", timeout=90.0)
 
     def move_chuck_off_axis(self) -> dict:
+        # never go off-axis while a precise offset is still applied
+        resp = self.revert_precise_offset()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("Precise offset revert failed, NOT moving off-axis: %s", resp.get("output", resp))
+            return resp
         return self.send("MoveChuckOffAxis")
 
     def move_chuck_contact(self) -> dict:
@@ -282,7 +291,34 @@ class WPAgentClient:
 
     def move_chuck_xy_precise(self, x: float, y: float, position: str = "Relative") -> dict:
         return self.send("MoveChuckXYPrecise", {"x": x, "y": y, "position": position}, timeout=60.0)
-    
+
+    def apply_precise_offset(self, dx: float, dy: float) -> dict:
+        """Precise relative move before contact, remembered so it can be undone."""
+        # stored before sending: even a non-converged reply means the chuck has moved
+        self._pending_offset = (dx, dy)
+        return self.move_chuck_xy_precise(dx, dy)
+
+    def revert_precise_offset(self) -> dict:
+        """Undo the last apply_precise_offset (no-op if none is pending).
+
+        Goes to separation first so the XY move never happens at contact.
+        """
+        if self._pending_offset is None:
+            return {"status": "success"}
+        resp = self.go_to_separation()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("MoveChuckSeparation failed, not reverting precise offset: %s", resp.get("output", resp))
+            return resp
+        dx, dy = self._pending_offset
+        log.info("Reverting precise offset: x=%.3f y=%.3f um", -dx, -dy)
+        resp = self.move_chuck_xy_precise(-dx, -dy)
+        if resp.get("status", "").lower() in ("success", "ok"):
+            self._pending_offset = None
+        return resp
+
+    def has_pending_offset(self) -> bool:
+        return self._pending_offset is not None
+
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
 
@@ -795,6 +831,10 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
 
+        if wp.has_pending_offset():
+            log.error("Chuck still offset from previous die, skipping die")
+            return False
+
         project = self.cfg.get("wp_project_bam", "") if chip_type.upper() == "BAM" else self.cfg.get("wp_project_seg", "")
         log.info("Opening project: %s", project)
         resp = wp.open_project(project)
@@ -850,7 +890,7 @@ class ITS3Runner:
         if precise_offset is not None:
             dx, dy = precise_offset
             log.info("Applying precise relative offset before contact: x=%.3f y=%.3f um", dx, dy)
-            resp = wp.move_chuck_xy_precise(dx, dy)
+            resp = wp.apply_precise_offset(dx, dy)
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.error("MoveChuckXYPrecise failed: %s", resp.get("output", resp))
                 return False
@@ -872,6 +912,9 @@ class ITS3Runner:
         resp = wp.move_chuck_off_axis()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+        if wp.has_pending_offset():
+            log.error("Chuck still offset from previous die, not switching project")
+            return False
         log.info("Switching WP project: %s -> %s (%s)",
                     self._current_project_type, chip_type, new_project)
         resp = wp.open_project(new_project)
@@ -1061,9 +1104,12 @@ class ITS3Runner:
             resp = wp.move_chuck_off_axis()
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.warning("MoveChuckOffAxis: %s", resp)
-            resp = wp.move_chuck_home()
-            if resp.get("status", "").lower() not in ("success", "ok"):
-                log.warning("MoveChuckHome: %s", resp)
+            if wp.has_pending_offset():
+                log.error("Chuck still offset, skipping MoveChuckHome - park it manually")
+            else:
+                resp = wp.move_chuck_home()
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.warning("MoveChuckHome: %s", resp)
 
             # --- logout last ---
             resp = wp.user_logout()
