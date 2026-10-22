@@ -30,9 +30,9 @@ SEQ_LABEL = {
 }
 LPGBT_SEQ = {"WaferLpgbtTestingSequence_5x": "wafer_lpgbt_seq_5x"}
 
-CHIP_DIR_PATTERN = re.compile(r"^(BAM\d+|SE[E36]\d+)_(L\dW\d+_S\d+)$")
+CHIP_DIR_PATTERN = re.compile(r"^(BAM\d+|SE[E36]G\d+)_(L\dW\d+_S\d+)$")
 RUN_DIR_PATTERN = re.compile(
-    r"^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})_(BAM\d+|SE[E36]\d+)_(L\dW\d+_S\d+)_(\w+)$"
+    r"^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})_(BAM\d+|SE[E36]G\d+)_(L\dW\d+_S\d+)_(\w+)$"
 )
 OUTCOME_PATTERN = re.compile(r"^Sequence Outcome:\s*(\S+)\s*$", re.MULTILINE)
 
