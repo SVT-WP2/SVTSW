@@ -238,6 +238,10 @@ class WPAgentClient:
     def find_home(self) -> dict:
         return self.send("FindHome", timeout=90.0)
 
+    # Temporary replacement until DB entries are fixed
+    def align_wafer(self, align_die_col: int = -1, align_die_row: int = 1) -> dict:
+        return self.send("AlignWafer", {"align_die_col": align_die_col, "align_die_row": align_die_row}, timeout=90.0)
+    
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
     
@@ -481,11 +485,32 @@ class ITS3Runner:
             log.info("wp_project_bam not set — skipping OpenProject")
 
         # --- 3. InitProbing ---
-        resp = wp.init_probing()
+        # resp = wp.init_probing()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("InitProbing failed: %s", resp)
+        #     return False
+
+        #Temporary replacement until DB entries are fixed
+        resp = wp.move_chuck_off_axis() #Temporary replacement until DB entries are fixed
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("InitProbing failed: %s", resp)
             return False
-
+        resp = wp.move_chuck_center() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.auto_focus() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.align_wafer() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.find_home() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
         return True
 
     # ------------------------------------------------------------------
