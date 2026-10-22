@@ -260,13 +260,13 @@ class WPAgentClient:
             return resp
         return self.send("MoveChuckOffAxis")
 
-    def move_chuck_contact(self) -> dict:
-        # TRIAL RUN: contact disabled for safety
-        log.warning("  -> WPAgent  MoveChuckContact SKIPPED (trial run)")
-        return {"status": "success"}
-    
     # def move_chuck_contact(self) -> dict:
-    #     return self.send("MoveChuckContact")
+    #     # TRIAL RUN: contact disabled for safety
+    #     log.warning("  -> WPAgent  MoveChuckContact SKIPPED (trial run)")
+    #     return {"status": "success"}
+    
+    def move_chuck_contact(self) -> dict:
+        return self.send("MoveChuckContact")
 
     def move_chuck_home(self) -> dict:
         return self.send("MoveChuckHome")

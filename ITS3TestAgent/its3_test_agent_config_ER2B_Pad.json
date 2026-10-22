@@ -8,14 +8,14 @@
   "wp_agent_name": "WPMIT",
   "wp_project_bam": "ER2B_Pad_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
   "wp_project_seg": "ER2B_Pad_MOSAIX_Vertical_V0_NotchW_ArrowW",
-  
+
     "die_overrides": {
     "BAM12": {"via_die": "BAM09", "precise_offset_um": [0, 23474.965]},
     "BAM13": {"via_die": "BAM10", "precise_offset_um": [0, 23474.965]}
   },
 
-  "run_ptpa_bam": false,
-  "run_ptpa_seg": false,
+  "run_ptpa_bam": true,
+  "run_ptpa_seg": true,
   "ptpa_chips_bam": ["ALL"],
   "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
