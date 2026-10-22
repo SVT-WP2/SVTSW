@@ -280,6 +280,9 @@ class WPAgentClient:
     def move_chuck_xy(self, x: int, y: int, position: str = "Relative") -> dict:
         return self.send("MoveChuckXY", {"x": x, "y": y, "position": position})
 
+    def move_chuck_xy_precise(self, x: float, y: float, position: str = "Relative") -> dict:
+        return self.send("MoveChuckXYPrecise", {"x": x, "y": y, "position": position}, timeout=60.0)
+    
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
 
@@ -424,6 +427,35 @@ class ITS3Runner:
                     chip_type.lower(), selection)
         return False
 
+    def _resolve_die_override(self, die: str, wp_coord: str,
+                              wp_by_die: dict) -> tuple[str | None, tuple[float, float] | None]:
+        """Return (coordinate to move to, precise offset or None) for this die.
+
+        Dies listed in config "die_overrides" are reached via another die's
+        position (via_die) or an explicit "wp", then shifted by
+        "precise_offset_um" [x, y] before contact. Other dies are unchanged.
+        """
+        ov = (self.cfg.get("die_overrides") or {}).get(die)
+        if not ov:
+            return wp_coord, None
+
+        via = ov.get("via_die")
+        if via:
+            if via not in wp_by_die:
+                log.error("die_overrides[%s]: via_die %s not in run list", die, via)
+                return None, None
+            wp_coord = wp_by_die[via]
+        elif "wp" in ov:
+            wp_coord = ov["wp"]
+
+        offset = ov.get("precise_offset_um")
+        if offset is not None:
+            offset = (float(offset[0]), float(offset[1]))
+
+        log.info("%s: override -> move to %s%s, precise offset %s",
+                 die, wp_coord, f" ({via} position)" if via else "", offset)
+        return wp_coord, offset
+    
     # ------------------------------------------------------------------
 
     def _wp_initialize(self) -> bool:
@@ -737,7 +769,7 @@ class ITS3Runner:
 
     # ------------------------------------------------------------------
 
-    def _wp_move_to_die(self, wp_coord: str, chip_type: str, run_ptpa: bool) -> bool:
+    def _wp_move_to_die(self, wp_coord: str, chip_type: str, run_ptpa: bool, precise_offset: tuple[float, float] | None = None) -> bool:        
         """Full per-chip sequence:
         MoveChuckSeparation -> MoveChuckOffAxis -> MoveChuckRowColumn ->
         RunPTPA (optional) -> MoveChuckWide -> MoveChuckContact
@@ -815,6 +847,14 @@ class ITS3Runner:
         #     if resp.get("status", "").lower() not in ("success", "ok"):
         #         log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
 
+        if precise_offset is not None:
+            dx, dy = precise_offset
+            log.info("Applying precise relative offset before contact: x=%.3f y=%.3f um", dx, dy)
+            resp = wp.move_chuck_xy_precise(dx, dy)
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.error("MoveChuckXYPrecise failed: %s", resp.get("output", resp))
+                return False
+            
         resp = wp.move_chuck_contact()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("MoveChuckContact failed: %s", resp.get("output", resp))
@@ -907,6 +947,7 @@ class ITS3Runner:
 
     def run_sequence(self) -> None:
         chips = load_run_list(str(self.run_list_path))
+        wp_by_die = {c["die"]: c["wp"] for c in chips}
         seq_templates = self.cfg.get("Sequence", [])
 
         # sequence steps containing one of these substrings run on the
@@ -962,9 +1003,11 @@ class ITS3Runner:
                 self._current_project_type = chip_type
 
             # --- move prober to die ---
+
             chip_type = "SEG" if chip["die"].startswith(("SEG", "S3G", "S6G")) else "BAM"
             run_ptpa = self._should_run_ptpa(chip_type, chip["die"])
-            if not self._wp_move_to_die(chip["wp"], chip_type, run_ptpa):
+            wp_coord, precise_offset = self._resolve_die_override(chip["die"], chip["wp"], wp_by_die)
+            if wp_coord is None or not self._wp_move_to_die(wp_coord, chip_type, run_ptpa, precise_offset):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
                 continue
             
