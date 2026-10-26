@@ -880,6 +880,15 @@ class ITS3Runner:
         # if resp.get("status", "").lower() not in ("success", "ok"):
         #     log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
 
+        # Manual relative move before contact
+        manual_offsets = {"SEG": (15.0, 5.0), "BAM": (15.0, 5.0)}  # um, Relative -- set your values
+        dx, dy = manual_offsets.get(chip_type.upper(), (0.0, 0.0))
+        if dx or dy:
+            log.info("%s chip: manual relative move before contact: x=%.1f y=%.1f um", chip_type, dx, dy)
+            resp = wp.move_chuck_xy(x=dx, y=dy, position="Relative")
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckXY (manual offset) failed: %s", resp.get("output", resp))
+
         # if chip_type.upper() == "SEG":
         #     log.info("SEG chip type detected, moving chuck to bottom-left before contact...")
         #     # log.info("Moving chuck to bottom-left before contact...")
