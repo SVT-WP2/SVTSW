@@ -1,26 +1,36 @@
 {
   "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
   "build_dir": "build",
-  "run_list": "run_list_L0_thinned.csv",
-  "kafka_broker": "svmithi02:9092",
+  "run_list": "run_list_L2_thinned.csv",
+  "kafka_broker":"pcmitpx01:9092",
   "kafka_ip_family": "v4",
   "wp_user": "user1",
-  "wp_agent_name": "CERN",
+  "wp_agent_name": "WPMIT",
   "wp_project_bam": "none",
-  "wp_project_seg": "ER2_MOSAIX_Thinned_L0_SEG1-3_Vertical_V0_NotchW_ArrowW",
+  "wp_project_seg": "ER2_MOSAIX_Thinned_L2_Vertical_V0_NotchW_ArrowW",
   "thinned_layer": true,
   "reset_agent_at_login": false,
   "run_ptpa_bam": true,
-  "run_ptpa_seg": true,
+  "run_ptpa_seg": false,
+  "ptpa_chips_bam": ["ALL"],
+  "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
-  "re_enable_ptpa": true,
+  "re_enable_ptpa": false,
 
   "log_cmd_output": true,
   "show_cmd_output": true,
 
+  "fpga_program_dir": "/home/its3/mosaix_testing/software/fx3_tools",
+  "fpga_program_setup": "prober_mit",
+  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.15.0.bit",
+  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.15.0.bit",
+  "fpga_link_test_trigger": "wafer_prbs_seq",
+
   "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
   "power_profile": "imp",
   "output": "staging",
+  "remove_daq_status_file": true,
+  "daq_status_file": ".daq_status.json",
 
   "Initialization": [
     "python3 utility_scripts/set_daq.py {setup_config} -s {power_profile}"

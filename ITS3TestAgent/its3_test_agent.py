@@ -164,6 +164,10 @@ class WPAgentClient:
         _low, high = self.consumer.get_watermark_offsets(reply_tp, timeout=5.0)
         self.consumer.seek(TopicPartition(self.REPLY_TOPIC, 0, high))
 
+        # precise XY offset currently applied on top of the die position
+        # (set by apply_precise_offset, undone by revert_precise_offset)
+        self._pending_offset: tuple[float, float] | None = None
+
         log.info("WPAgent Kafka client ready")
 
     # ------------------------------------------------------------------
@@ -238,6 +242,10 @@ class WPAgentClient:
     def find_home(self) -> dict:
         return self.send("FindHome", timeout=90.0)
 
+    # Temporary replacement until DB entries are fixed
+    def align_wafer(self, align_die_col: int = -1, align_die_row: int = 1) -> dict:
+        return self.send("AlignWafer", {"align_die_col": align_die_col, "align_die_row": align_die_row}, timeout=90.0)
+    
     def move_chuck_wide(self) -> dict:
         return self.send("MoveChuckWide")
     
@@ -245,8 +253,18 @@ class WPAgentClient:
         return self.send("MoveChuckCenter", timeout=90.0)
 
     def move_chuck_off_axis(self) -> dict:
+        # never go off-axis while a precise offset is still applied
+        resp = self.revert_precise_offset()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("Precise offset revert failed, NOT moving off-axis: %s", resp.get("output", resp))
+            return resp
         return self.send("MoveChuckOffAxis")
 
+    # def move_chuck_contact(self) -> dict:
+    #     # TRIAL RUN: contact disabled for safety
+    #     log.warning("  -> WPAgent  MoveChuckContact SKIPPED (trial run)")
+    #     return {"status": "success"}
+    
     def move_chuck_contact(self) -> dict:
         return self.send("MoveChuckContact")
 
@@ -270,6 +288,36 @@ class WPAgentClient:
     
     def move_chuck_xy(self, x: int, y: int, position: str = "Relative") -> dict:
         return self.send("MoveChuckXY", {"x": x, "y": y, "position": position})
+
+    def move_chuck_xy_precise(self, x: float, y: float, position: str = "Relative") -> dict:
+        return self.send("MoveChuckXYPrecise", {"x": x, "y": y, "position": position}, timeout=60.0)
+
+    def apply_precise_offset(self, dx: float, dy: float) -> dict:
+        """Precise relative move before contact, remembered so it can be undone."""
+        # stored before sending: even a non-converged reply means the chuck has moved
+        self._pending_offset = (dx, dy)
+        return self.move_chuck_xy_precise(dx, dy)
+
+    def revert_precise_offset(self) -> dict:
+        """Undo the last apply_precise_offset (no-op if none is pending).
+
+        Goes to separation first so the XY move never happens at contact.
+        """
+        if self._pending_offset is None:
+            return {"status": "success"}
+        resp = self.go_to_separation()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("MoveChuckSeparation failed, not reverting precise offset: %s", resp.get("output", resp))
+            return resp
+        dx, dy = self._pending_offset
+        log.info("Reverting precise offset: x=%.3f y=%.3f um", -dx, -dy)
+        resp = self.move_chuck_xy_precise(-dx, -dy)
+        if resp.get("status", "").lower() in ("success", "ok"):
+            self._pending_offset = None
+        return resp
+
+    def has_pending_offset(self) -> bool:
+        return self._pending_offset is not None
 
     def go_to_die(self, col: int, row: int) -> dict:
         return self.send("MoveChuckRowColumn", {"col": col, "row": row})
@@ -394,6 +442,56 @@ class ITS3Runner:
         )
         return self._wp
 
+    def _should_run_ptpa(self, chip_type: str, die: str) -> bool:
+        ptpa_key = f"run_ptpa_{chip_type.lower()}"
+        if not self.cfg.get(ptpa_key, False):
+            return False
+
+        selection = self.cfg.get(f"ptpa_chips_{chip_type.lower()}", "ALL")
+
+        # normalize: treat a single-element ["ALL"] list the same as "ALL"
+        if isinstance(selection, list) and len(selection) == 1:
+            selection = selection[0]
+
+        if isinstance(selection, str):
+            return selection.strip().upper() == "ALL"
+
+        if isinstance(selection, list):
+            return die in selection
+
+        log.warning("Invalid ptpa_chips_%s value (%r), defaulting to no PTPA",
+                    chip_type.lower(), selection)
+        return False
+
+    def _resolve_die_override(self, die: str, wp_coord: str,
+                              wp_by_die: dict) -> tuple[str | None, tuple[float, float] | None]:
+        """Return (coordinate to move to, precise offset or None) for this die.
+
+        Dies listed in config "die_overrides" are reached via another die's
+        position (via_die) or an explicit "wp", then shifted by
+        "precise_offset_um" [x, y] before contact. Other dies are unchanged.
+        """
+        ov = (self.cfg.get("die_overrides") or {}).get(die)
+        if not ov:
+            return wp_coord, None
+
+        via = ov.get("via_die")
+        if via:
+            if via not in wp_by_die:
+                log.error("die_overrides[%s]: via_die %s not in run list", die, via)
+                return None, None
+            wp_coord = wp_by_die[via]
+        elif "wp" in ov:
+            wp_coord = ov["wp"]
+
+        offset = ov.get("precise_offset_um")
+        if offset is not None:
+            offset = (float(offset[0]), float(offset[1]))
+
+        log.info("%s: override -> move to %s%s, precise offset %s",
+                 die, wp_coord, f" ({via} position)" if via else "", offset)
+        return wp_coord, offset
+    
     # ------------------------------------------------------------------
 
     def _wp_initialize(self) -> bool:
@@ -460,11 +558,32 @@ class ITS3Runner:
             log.info("wp_project_bam not set — skipping OpenProject")
 
         # --- 3. InitProbing ---
-        resp = wp.init_probing()
+        # resp = wp.init_probing()
+        # if resp.get("status", "").lower() not in ("success", "ok"):
+        #     log.error("InitProbing failed: %s", resp)
+        #     return False
+
+        #Temporary replacement until DB entries are fixed
+        resp = wp.move_chuck_off_axis() #Temporary replacement until DB entries are fixed
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("InitProbing failed: %s", resp)
             return False
-
+        resp = wp.move_chuck_center() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.auto_focus() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.align_wafer() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
+        resp = wp.find_home() #Temporary replacement until DB entries are fixed
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("InitProbing failed: %s", resp)
+            return False
         return True
 
     # ------------------------------------------------------------------
@@ -622,6 +741,7 @@ class ITS3Runner:
             skip_setup=bool(sc.get("skip_setup", False)),
             connect_attempts=int(sc.get("connect_attempts", 3)),
             connect_backoff_s=float(sc.get("connect_backoff_s", 1.0)),
+            pre_capture_delay_s=float(sc.get("pre_capture_delay_s", 0.0)),
         )
         watcher = ScopeModeWatcher(cap_cfg)
         stop_event = threading.Event()
@@ -673,7 +793,7 @@ class ITS3Runner:
         prog_dir = self.cfg.get("fpga_program_dir",
                                 "/home/its3/mosaix_testing/software/fx3_tools")
         setup = self.cfg.get("fpga_program_setup", "prober_mit")
-        cmd = f"./program_mts.py {setup} {fw_path}"
+        cmd = f"./program_mts.py {setup} {fw_path}" # --no-spi for DME
 
         log.info("Programming FPGA with %s firmware: %s", fw_key, fw_path)
         rc = self._run_cmd(cmd, label=f"fpga:{fw_key}", cwd=prog_dir)
@@ -685,7 +805,7 @@ class ITS3Runner:
 
     # ------------------------------------------------------------------
 
-    def _wp_move_to_die(self, wp_coord: str, chip_type: str) -> bool:
+    def _wp_move_to_die(self, wp_coord: str, chip_type: str, run_ptpa: bool, precise_offset: tuple[float, float] | None = None) -> bool:        
         """Full per-chip sequence:
         MoveChuckSeparation -> MoveChuckOffAxis -> MoveChuckRowColumn ->
         RunPTPA (optional) -> MoveChuckWide -> MoveChuckContact
@@ -711,13 +831,28 @@ class ITS3Runner:
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
 
+        if wp.has_pending_offset():
+            log.error("Chuck still offset from previous die, skipping die")
+            return False
+
+        project = self.cfg.get("wp_project_bam", "") if chip_type.upper() == "BAM" else self.cfg.get("wp_project_seg", "")
+        log.info("Opening project: %s", project)
+        resp = wp.open_project(project)
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("OpenProject failed: %s", resp.get("output", resp))
+            return False
+
+        resp = wp.find_home()
+        if resp.get("status", "").lower() not in ("success", "ok"):
+            log.error("FindHome failed: %s", resp.get("output", resp))
+            return False
+
         resp = wp.go_to_die(col, row)
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("MoveChuckRowColumn failed: %s", resp.get("output", resp))
             return False
 
-        ptpa_key = f"run_ptpa_{chip_type.lower()}"
-        if self.cfg.get(ptpa_key, False):
+        if run_ptpa:
             if self.cfg.get("re_enable_ptpa", False):
                 resp = wp.disable_ptpa()
                 if resp.get("status", "").lower() not in ("success", "ok"):
@@ -745,10 +880,30 @@ class ITS3Runner:
         # if resp.get("status", "").lower() not in ("success", "ok"):
         #     log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
 
-        resp = wp.move_chuck_bottom_left()
-        if resp.get("status", "").lower() not in ("success", "ok"):
-            log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
+        # Manual relative move before contact
+        manual_offsets = {"SEG": (15.0, 0.0), "BAM": (15.0, 0.0)}  # um, Relative -- set your values
+        dx, dy = manual_offsets.get(chip_type.upper(), (0.0, 0.0))
+        if dx or dy:
+            log.info("%s chip: manual relative move before contact: x=%.1f y=%.1f um", chip_type, dx, dy)
+            resp = wp.move_chuck_xy(x=dx, y=dy, position="Relative")
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.warning("MoveChuckXY (manual offset) failed: %s", resp.get("output", resp))
 
+        # if chip_type.upper() == "SEG":
+        #     log.info("SEG chip type detected, moving chuck to bottom-left before contact...")
+        #     # log.info("Moving chuck to bottom-left before contact...")
+        #     resp = wp.move_chuck_bottom_left()
+        #     if resp.get("status", "").lower() not in ("success", "ok"):
+        #         log.warning("MoveChuckBottomLeft failed: %s", resp.get("output", resp))
+
+        if precise_offset is not None:
+            dx, dy = precise_offset
+            log.info("Applying precise relative offset before contact: x=%.3f y=%.3f um", dx, dy)
+            resp = wp.apply_precise_offset(dx, dy)
+            if resp.get("status", "").lower() not in ("success", "ok"):
+                log.error("MoveChuckXYPrecise failed: %s", resp.get("output", resp))
+                return False
+            
         resp = wp.move_chuck_contact()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.error("MoveChuckContact failed: %s", resp.get("output", resp))
@@ -766,6 +921,9 @@ class ITS3Runner:
         resp = wp.move_chuck_off_axis()
         if resp.get("status", "").lower() not in ("success", "ok"):
             log.warning("MoveChuckOffAxis: %s", resp.get("output", resp))
+        if wp.has_pending_offset():
+            log.error("Chuck still offset from previous die, not switching project")
+            return False
         log.info("Switching WP project: %s -> %s (%s)",
                     self._current_project_type, chip_type, new_project)
         resp = wp.open_project(new_project)
@@ -841,6 +999,7 @@ class ITS3Runner:
 
     def run_sequence(self) -> None:
         chips = load_run_list(str(self.run_list_path))
+        wp_by_die = {c["die"]: c["wp"] for c in chips}
         seq_templates = self.cfg.get("Sequence", [])
 
         # sequence steps containing one of these substrings run on the
@@ -877,7 +1036,7 @@ class ITS3Runner:
             log.info("-" * 60)
 
             # --- switch WP project if chip type changed (BAM <-> SEG) ---
-            chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
+            chip_type = "SEG" if chip["die"].startswith(("SEG", "S3G", "S6G")) else "BAM"
             if chip_type != self._current_project_type:
                 project_key = f"wp_project_{chip_type.lower()}"
                 new_project = self.cfg.get(project_key, "")
@@ -896,8 +1055,11 @@ class ITS3Runner:
                 self._current_project_type = chip_type
 
             # --- move prober to die ---
-            chip_type = "SEG" if chip["die"].startswith("SEG") else "BAM"
-            if not self._wp_move_to_die(chip["wp"], chip_type):
+
+            chip_type = "SEG" if chip["die"].startswith(("SEG", "S3G", "S6G")) else "BAM"
+            run_ptpa = self._should_run_ptpa(chip_type, chip["die"])
+            wp_coord, precise_offset = self._resolve_die_override(chip["die"], chip["wp"], wp_by_die)
+            if wp_coord is None or not self._wp_move_to_die(wp_coord, chip_type, run_ptpa, precise_offset):
                 log.error("Failed to move to die %s, skipping chip", chip_name)
                 continue
             
@@ -951,9 +1113,12 @@ class ITS3Runner:
             resp = wp.move_chuck_off_axis()
             if resp.get("status", "").lower() not in ("success", "ok"):
                 log.warning("MoveChuckOffAxis: %s", resp)
-            resp = wp.move_chuck_home()
-            if resp.get("status", "").lower() not in ("success", "ok"):
-                log.warning("MoveChuckHome: %s", resp)
+            if wp.has_pending_offset():
+                log.error("Chuck still offset, skipping MoveChuckHome - park it manually")
+            else:
+                resp = wp.move_chuck_home()
+                if resp.get("status", "").lower() not in ("success", "ok"):
+                    log.warning("MoveChuckHome: %s", resp)
 
             # --- logout last ---
             resp = wp.user_logout()
