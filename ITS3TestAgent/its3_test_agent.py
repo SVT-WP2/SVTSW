@@ -793,7 +793,7 @@ class ITS3Runner:
         prog_dir = self.cfg.get("fpga_program_dir",
                                 "/home/its3/mosaix_testing/software/fx3_tools")
         setup = self.cfg.get("fpga_program_setup", "prober_mit")
-        cmd = f"./program_mts.py {setup} {fw_path} --no-spi"
+        cmd = f"./program_mts.py {setup} {fw_path}" # --no-spi for DME
 
         log.info("Programming FPGA with %s firmware: %s", fw_key, fw_path)
         rc = self._run_cmd(cmd, label=f"fpga:{fw_key}", cwd=prog_dir)
@@ -881,7 +881,7 @@ class ITS3Runner:
         #     log.warning("MoveChuckXY to contact position failed: %s", resp.get("output", resp))
 
         # Manual relative move before contact
-        manual_offsets = {"SEG": (15.0, 5.0), "BAM": (15.0, 5.0)}  # um, Relative -- set your values
+        manual_offsets = {"SEG": (15.0, 0.0), "BAM": (15.0, 0.0)}  # um, Relative -- set your values
         dx, dy = manual_offsets.get(chip_type.upper(), (0.0, 0.0))
         if dx or dy:
             log.info("%s chip: manual relative move before contact: x=%.1f y=%.1f um", chip_type, dx, dy)
