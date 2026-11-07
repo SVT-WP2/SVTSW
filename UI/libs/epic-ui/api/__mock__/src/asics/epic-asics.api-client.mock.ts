@@ -1,12 +1,5 @@
-import {
-    EpicApiPager,
-    EpicApiPageResponse,
-    EpicAsic,
-    EpicAsicCreate,
-    EpicAsicsApiClient,
-    EpicAsicsListQuery,
-    getDefaultEpicApiPager,
-} from 'epic-ui/api'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest, EpicAsicsListQuery } from 'epic-api-types'
+import { EpicAsicsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
 
 
@@ -40,21 +33,22 @@ export class EpicAsicsApiClientMock extends EpicAsicsApiClient {
     ]
 
     override fetchAsicsList(
-        queryFilter?: EpicAsicsListQuery.QueryFilter,
+        queryFilter?: EpicAsicsListQuery,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicAsic>> {
 
         const filteredData = queryFilter
             ? this.asicsList.filter(item => {
                 const fulfilWaferIdFilter = (queryFilter.waferId === item.waferId) || !queryFilter.waferId
-                const fulfilAsicIdFilter = (queryFilter.asicId === item.id) || !queryFilter.asicId
                 const fulfilChipIdFilter = (queryFilter.chipId === item.chipId) || !queryFilter.chipId
-                const fulfilFamilyTypeFilter = !queryFilter.familyTypes || (queryFilter.familyTypes.includes(item.familyType))
-                const fulfilQualityTypeFilter = (queryFilter.quality === item.quality) || !queryFilter.quality
-                return fulfilAsicIdFilter
-                    && fulfilChipIdFilter
+                const fulfilFamilyTypeFilter = !queryFilter.asicFamilyTypes?.length
+                    || queryFilter.asicFamilyTypes.includes(item.familyType)
+                const fulfilQualityFilter = (queryFilter.asicQuality === item.quality) || !queryFilter.asicQuality
+                const fulfilSerialNumberFilter = !queryFilter.serialNumber || item.serialNumber.includes(queryFilter.serialNumber)
+                return fulfilChipIdFilter
                     && fulfilWaferIdFilter
                     && fulfilFamilyTypeFilter
-                    && fulfilQualityTypeFilter
+                    && fulfilQualityFilter
+                    && fulfilSerialNumberFilter
             })
             : this.asicsList
 
@@ -73,7 +67,7 @@ export class EpicAsicsApiClientMock extends EpicAsicsApiClient {
             )
     }
 
-    override create(createRequest: EpicAsicCreate): Observable<EpicAsic> {
+    override create(createRequest: EpicAsicCreateRequest): Observable<EpicAsic> {
         const newEntity: EpicAsic = {
             ...createRequest,
             id: this.asicsList.length ? this.asicsList[this.asicsList.length - 1].id + 1 : 1,

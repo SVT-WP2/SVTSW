@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWafer, EpicWaferCreate, EpicWaferUpdate } from 'epic-ui/api'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferUpdateRequest } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 import moment from 'moment'
 
@@ -77,7 +77,7 @@ export namespace EpicWaferUpdateForm {
         }
     }
 
-    export function formDataToUpdateRequest(formData: FormData): EpicWaferUpdate {
+    export function formDataToUpdateRequest(formData: FormData): EpicWaferUpdateRequest {
         return {
             thinningDate: formData.allowThinningDate ? moment(formData.thinningDate).format('YYYY-MM-DD') : null,
             dicingDate: formData.allowDicingDate ? moment(formData.dicingDate).format('YYYY-MM-DD') : null,
@@ -85,7 +85,7 @@ export namespace EpicWaferUpdateForm {
         }
     }
 
-    export function formDataToCreateRequest(formData: FormData): EpicWaferCreate {
+    export function formDataToCreateRequest(formData: FormData): EpicWaferCreateRequest {
         return {
             waferTypeId: formData.waferType,
             serialNumber: formData.serialNumber,

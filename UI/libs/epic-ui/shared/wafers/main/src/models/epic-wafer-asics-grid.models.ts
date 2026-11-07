@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicAsic } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
@@ -20,7 +20,6 @@ export namespace EpicWaferAsicsGrid {
     export enum CellEventEvent {
         Edit = 'Edit',
         Clone = 'Clone',
-        Delete = 'Delete',
     }
 
     export function getColDefs(): ColDef[] {

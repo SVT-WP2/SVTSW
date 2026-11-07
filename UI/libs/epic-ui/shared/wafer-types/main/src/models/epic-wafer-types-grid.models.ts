@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicWaferType } from 'epic-ui/api'
+import { EpicWaferType } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
@@ -18,9 +18,7 @@ export namespace EpicWaferTypesGrid {
 
     export enum CellEventEvent {
         Details = 'Details',
-        Edit = 'Edit',
         Clone = 'Clone',
-        // Delete = 'Delete',
     }
 
     export function getColDefs(): ColDef[] {
@@ -64,13 +62,6 @@ export namespace EpicWaferTypesGrid {
                             }),
                         },
                         AgIconActionsCell.getMoreAction([
-                            // {
-                            //     icon: 'epic-pencil',
-                            //     title: 'Edit',
-                            //     onClick: () => ({
-                            //         eventName: CellEventEvent.Edit,
-                            //     }),
-                            // },
                             {
                                 icon: 'epic-copy',
                                 title: 'Clone',
@@ -78,13 +69,6 @@ export namespace EpicWaferTypesGrid {
                                     eventName: CellEventEvent.Clone,
                                 }),
                             },
-                            // {
-                            //     icon: 'epic-delete',
-                            //     title: 'Delete',
-                            //     onClick: () => ({
-                            //         eventName: CellEventEvent.Delete,
-                            //     }),
-                            // },
                         ]),
                     ],
                 }),

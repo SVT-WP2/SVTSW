@@ -2,7 +2,7 @@ import { Component, effect, inject, OnDestroy, OnInit, signal, Signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
 import { IDatasource } from 'ag-grid-community'
-import { EpicSvtTestTemplate } from 'epic-ui/api'
+import { EpicSvtTestTemplate } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorMessagePipe,

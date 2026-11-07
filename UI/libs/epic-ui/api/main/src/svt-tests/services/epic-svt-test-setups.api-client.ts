@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest, EpicSvtTestSetupUpdateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicSvtTestSetup, EpicSvtTestSetupCreate, EpicSvtTestSetupUpdate } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -23,12 +23,12 @@ export class EpicSvtTestSetupsApiClient {
         return this.httpClient.get<EpicSvtTestSetup>(url)
     }
 
-    update(entityId: number, update: EpicSvtTestSetupUpdate): Observable<EpicSvtTestSetup> {
+    update(entityId: number, update: EpicSvtTestSetupUpdateRequest): Observable<EpicSvtTestSetup> {
         const url = `${this.baseUrl}/${entityId}`
         return this.httpClient.patch<EpicSvtTestSetup>(url, { ...update })
     }
 
-    create(payload: EpicSvtTestSetupCreate): Observable<EpicSvtTestSetup> {
+    create(payload: EpicSvtTestSetupCreateRequest): Observable<EpicSvtTestSetup> {
         return this.httpClient.post<EpicSvtTestSetup>(this.baseUrl, { ...payload })
     }
 

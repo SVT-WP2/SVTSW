@@ -121,6 +121,9 @@
             "epic/entities": [
                 "libs/epic/entities/src/index.ts"
             ],
+            "epic-api-types": [
+                "libs/epic-api-types/src/index.ts"
+            ],
             "epic-ui/shared/equipment": [
                 "libs/epic-ui/shared/equipment/main/src/index.ts"
             ],

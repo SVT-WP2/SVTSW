@@ -1,13 +1,5 @@
-import { EpicSvtTestResultStatus } from './epic-svt-test-result-status.models'
+import { EpicSvtTestResultStatus, EpicSvtTestStatus } from 'epic-api-types'
 
-
-export enum EpicSvtTestStatus {
-    Pending = 'Pending',
-    Running = 'Running',
-    Completed = 'Completed',
-    Failed = 'Failed',
-    Cancelled = 'Cancelled',
-}
 
 /**
  * `status` is synthetic — it is not stored in the DB, it is derived on the BE from the physical

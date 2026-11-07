@@ -1,11 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { EpicChipCreateManyRequest, EpicChipCreateManyRequestItem } from 'epic-api-types'
 
-import { EpicChipCreateManyEntity, EpicChipCreateManyItemEntity } from '../models'
 
-
-export class EpicChipCreateManyItemDto implements EpicChipCreateManyItemEntity {
+export class EpicChipCreateManyItemDto implements EpicChipCreateManyRequestItem {
 
     @IsString()
     @ApiProperty({ type: 'string' })
@@ -17,7 +16,7 @@ export class EpicChipCreateManyItemDto implements EpicChipCreateManyItemEntity {
 
 }
 
-export class EpicChipCreateManyRequestDto implements EpicChipCreateManyEntity {
+export class EpicChipCreateManyRequestDto implements EpicChipCreateManyRequest {
 
     @IsString()
     @ApiProperty({ type: 'string', description: 'Enum value generalLocation' })

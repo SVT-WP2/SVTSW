@@ -1,10 +1,10 @@
-﻿import { inject, Injectable } from '@angular/core'
+import { inject, Injectable } from '@angular/core'
 import { MatDialog, MatDialogRef } from '@angular/material/dialog'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
-import { first, from, map, merge, of, switchMap, takeUntil, tap } from 'rxjs'
+import { first, from, map, of, switchMap, takeUntil, tap } from 'rxjs'
 
 import { EpicWaferTypeUpdateDialogComponent } from '../dialogs'
 import { EpicWaferTypeUpdateDialog, EpicWaferTypeUpdateForm } from '../models'
@@ -17,6 +17,10 @@ import StoreAction = EpicWaferTypesActions
 import StoreSelectors = EpicWaferTypesSelectors
 
 
+/**
+ * Create / clone only. The Kafka contract has no `UpdateWaferType`, so an existing wafer type can seed a new
+ * one but is never edited in place.
+ */
 @Injectable({ providedIn: 'root' })
 export class EpicWaferTypeCreateDialogService {
 
@@ -29,20 +33,16 @@ export class EpicWaferTypeCreateDialogService {
     protected readonly epicNotificationService = inject(EpicNotificationService)
 
     constructor() {
-        merge(
-            this.actions$.pipe(ofType(StoreAction.createSuccessAction)),
-            this.actions$.pipe(ofType(StoreAction.updateSuccessAction)),
-        )
+        this.actions$
+            .pipe(ofType(StoreAction.createSuccessAction))
             .subscribe(() => {
                 this.dialogRef.componentInstance.isProcessing = false
                 this.epicNotificationService.doneMessage()
                 this.dialogRef.close()
             })
 
-        merge(
-            this.actions$.pipe(ofType(StoreAction.createErrorAction)),
-            this.actions$.pipe(ofType(StoreAction.updateErrorAction)),
-        )
+        this.actions$
+            .pipe(ofType(StoreAction.createErrorAction))
             .subscribe((error) => {
                 this.dialogRef.componentInstance.isProcessing = false
                 this.epicNotificationService.error(error.error.message)
@@ -50,22 +50,22 @@ export class EpicWaferTypeCreateDialogService {
             })
     }
 
-    openDialog(entityId?: number, options?: { isClone?: boolean }): void {
-        const wafer$ = entityId
-            ? this.store.select(StoreSelectors.selectOneWaferType(entityId))
+    openDialog(cloneFromId?: number): void {
+        const waferType$ = cloneFromId
+            ? this.store.select(StoreSelectors.selectOneWaferType(cloneFromId))
             : of(undefined)
 
-        wafer$
+        waferType$
             .pipe(
                 first(),
             )
-            .subscribe((wafer) => {
+            .subscribe((waferType) => {
                 this.dialogRef = MatDialogHelpers.openDialog<EpicWaferTypeUpdateDialogComponent, Dialog.Data>(
                     this.dialog,
                     EpicWaferTypeUpdateDialogComponent,
                     {
-                        formData: wafer ? Form.toFormData(wafer) : undefined,
-                        isClone: options?.isClone || false,
+                        formData: waferType ? Form.toFormData(waferType) : undefined,
+                        isClone: !!waferType,
                     },
                     {
                         ...MatDialogHelpers.getDefaultConfig(DialogSize.Small),
@@ -76,25 +76,8 @@ export class EpicWaferTypeCreateDialogService {
                     .pipe(
                         takeUntil(this.dialogRef.componentInstance.destroyed$),
                         tap(() => this.dialogRef.componentInstance.isProcessing = true),
-                        switchMap((formData) => {
-                            if (wafer && !options?.isClone) {
-                                // update
-                                return from(Form.formDataToUpdateRequest(formData))
-                                    .pipe(
-                                        map(update => StoreAction.updateRequestAction({
-                                            id: wafer.id,
-                                            update,
-                                        })),
-                                    )
-                            }
-                            else {
-                                // create
-                                return from(Form.formDataToCreateRequest(formData))
-                                    .pipe(
-                                        map(create => StoreAction.createRequestAction({ create })),
-                                    )
-                            }
-                        }),
+                        switchMap((formData) => from(Form.formDataToCreateRequest(formData))),
+                        map((create) => StoreAction.createRequestAction({ create })),
                     )
                     .subscribe((action) => {
                         this.store.dispatch(action)

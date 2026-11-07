@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicChipCreateManyItem } from 'epic-ui/api'
+import { EpicChipCreateManyRequestItem } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 
 
@@ -27,7 +27,7 @@ export namespace EpicChipCreateWithFileForm {
         })
     }
 
-    export function parseAsicToChipMapFileContent(csvContent: string[][]): EpicChipCreateManyItem[] {
+    export function parseAsicToChipMapFileContent(csvContent: string[][]): EpicChipCreateManyRequestItem[] {
         return csvContent
             .map(row => ({
                 asicId: +row[0],

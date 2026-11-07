@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { EpicAsic } from 'epic-api-types'
 
-import { EpicAsicEntity } from '../models'
 
-
-export class EpicAsicDto implements EpicAsicEntity {
+export class EpicAsicDto implements EpicAsic {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })
@@ -20,8 +19,8 @@ export class EpicAsicDto implements EpicAsicEntity {
 
     @IsNumber()
     @IsOptional()
-    @ApiProperty({ type: 'number' })
-    chipId?: number
+    @ApiProperty({ type: 'number', required: false, nullable: true })
+    chipId?: number | null
 
     @IsString()
     @ApiProperty({ type: 'string', description: 'Enum value asicFamilyType' })

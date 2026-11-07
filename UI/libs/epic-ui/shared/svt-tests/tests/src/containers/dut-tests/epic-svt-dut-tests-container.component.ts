@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, OnDestroy, OnInit, signal, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { EpicSvtDutEntityName } from 'epic-ui/api'
+import { EpicSvtDutEntityName } from 'epic-api-types'
 import { EpicButtonModule, EpicContentErrorMessagePipe, EpicContentErrorModule, EpicLoaderComponent } from 'epic-ui/common/components'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 

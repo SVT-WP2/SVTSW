@@ -1,9 +1,7 @@
-import { EpicDateString } from '../../common'
+import { EpicEquipmentLocationUpdateRequest } from 'epic-api-types'
 
 
-export type EpicEquipmentLocationUpdate = {
-    generalLocation: string
-    date: EpicDateString | null
-    note: string
+/** Payload of the `UpdateEquipmentLocation` Kafka message — the HTTP request body plus the acting user. */
+export type EpicEquipmentLocationUpdate = EpicEquipmentLocationUpdateRequest & {
     username: string | null
 }

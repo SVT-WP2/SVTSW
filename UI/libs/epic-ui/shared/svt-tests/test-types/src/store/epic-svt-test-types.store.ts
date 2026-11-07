@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity'
 import { createReducer, on } from '@ngrx/store'
-import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-ui/api'
+import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
 
 import { EpicSvtTestTypesActions } from './actions'

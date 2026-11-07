@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName } from 'epic-ui/api'
+import { EpicEnumName } from 'epic-api-types'
 import { EpicEnumsFacade } from 'epic-ui/shared'
 import { EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { SimpleDataSource } from 'epic-ui/utils'

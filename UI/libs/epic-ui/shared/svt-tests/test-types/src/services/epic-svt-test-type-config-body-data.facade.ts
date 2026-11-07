@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestTypeConfigBody, EpicSvtTestTypeConfigsApiClient } from 'epic-ui/api'
+import { EpicSvtTestTypeConfigBody } from 'epic-api-types'
+import { EpicSvtTestTypeConfigsApiClient } from 'epic-ui/api'
 import { Observable, of, tap } from 'rxjs'
 
 

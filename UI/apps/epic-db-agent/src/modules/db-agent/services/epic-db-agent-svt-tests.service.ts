@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicPageData,
-    EpicPager,
-    EpicSvtDutEntityName,
-    EpicSvtTestCreateEntity,
-    EpicSvtTestEntity,
-    EpicSvtTestResultStatus,
-    SvtDbAgentKafkaSvtTests,
-} from 'epic/entities'
+import { EpicPageData, EpicPager, EpicSvtTestCreateEntity, EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic/entities'
+import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
 
 

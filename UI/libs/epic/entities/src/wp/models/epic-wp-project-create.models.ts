@@ -1,12 +1,5 @@
-export type EpicWpProjectCreateEntity = {
-    wpMachineId: number
-    waferTypeId: number
-    name: string
-    asicFamilyType: string
-    orientation: string
-    alignmentDie: string
-    homeDie: string
-    local2GlobalMap: string // JSON string
-}
+import { EpicWpProjectCreateRequest } from 'epic-api-types'
 
 
+/** Payload of the `CreateWpProject` Kafka message — identical to the HTTP request body today. */
+export type EpicWpProjectCreateEntity = EpicWpProjectCreateRequest

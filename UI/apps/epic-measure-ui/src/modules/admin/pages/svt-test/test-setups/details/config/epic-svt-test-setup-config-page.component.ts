@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card'
 import { ActivatedRoute, Router } from '@angular/router'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestSetup, EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'epic-ui/api'
+import { EpicSvtTestSetup, EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,

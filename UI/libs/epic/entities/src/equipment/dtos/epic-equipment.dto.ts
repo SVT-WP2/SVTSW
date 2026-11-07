@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
+import { EpicEquipment } from 'epic-api-types'
 
 
-export class EpicEquipmentDto {
+export class EpicEquipmentDto implements EpicEquipment {
 
     @ApiProperty({ type: 'number' })
     @IsNumber()
@@ -16,13 +17,12 @@ export class EpicEquipmentDto {
     @IsNumber()
     equipmentTypeId: number
 
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({ type: 'string', description: 'Enum value wpGeneralLocation' })
     @IsString()
     generalLocation: string
 
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({ type: 'string', description: 'Stringified JSON' })
     @IsString()
     specification: string
 
 }
-

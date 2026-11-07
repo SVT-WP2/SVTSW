@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicAsicCreateRequestDto,
+    EpicAsicCreateEntity,
     EpicAsicEntity,
     EpicGetAllAsicsQueryFilter,
     EpicPageData,
@@ -50,7 +50,7 @@ export class EpicAsicsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicAsicCreateRequestDto): Observable<EpicAsicEntity> {
+    create(createRequest: EpicAsicCreateEntity): Observable<EpicAsicEntity> {
         const message = new SvtDbAgentKafkaAsics.CreateAsicMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaAsics.CreateAsicReplyMessage>(message)
             .pipe(

@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsOptional } from 'class-validator'
+import { EpicSvtTestTemplatesListQuery } from 'epic-api-types'
 
-import { EpicSvtTestTemplatesGetAllParams } from '../models'
 
-
-export class EpicSvtTestTemplatesGetAllParamsDto implements EpicSvtTestTemplatesGetAllParams {
+export class EpicSvtTestTemplatesGetAllParamsDto implements EpicSvtTestTemplatesListQuery {
 
     @IsArray()
     @ApiProperty({ type: 'number', isArray: true, required: false })

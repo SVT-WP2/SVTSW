@@ -1,4 +1,4 @@
-import { EpicEnumsCollection } from 'epic-ui/api'
+import { EpicEnumsCollection } from 'epic-api-types'
 
 
 export namespace EpicEnumsMock {

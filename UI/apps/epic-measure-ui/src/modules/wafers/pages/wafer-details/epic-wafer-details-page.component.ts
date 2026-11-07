@@ -4,9 +4,9 @@ import { MatDivider } from '@angular/material/divider'
 import { MatPrefix } from '@angular/material/form-field'
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu'
 import { MatTooltip } from '@angular/material/tooltip'
-import { ActivatedRoute, Router } from '@angular/router'
+import { ActivatedRoute } from '@angular/router'
 import { GridApi } from 'ag-grid-community'
-import { EpicAsic, EpicWafer } from 'epic-ui/api'
+import { EpicAsic, EpicWafer } from 'epic-api-types'
 import { EpicAgGridCardHeaderComponent, EpicAgGridCardWrapperComponent } from 'epic-ui/common/ag-grid'
 import {
     EpicButtonModule,
@@ -32,7 +32,6 @@ import {
     EpicWafersStoreFacade,
 } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
-import { takeUntil } from 'rxjs'
 
 
 @Component({
@@ -89,7 +88,6 @@ export class EpicWaferDetailsPageComponent extends BaseComponent {
     protected readonly activatedRoute = inject(ActivatedRoute)
     protected readonly epicWaferLocationHistoryDialogService = inject(EpicWaferLocationHistoryDialogService)
     protected readonly epicChipCreateWithFileDialogService = inject(EpicChipCreateWithFileDialogService)
-    protected readonly router = inject(Router)
     protected gridApi: GridApi<EpicWaferAsicsGrid.RowEntity>
 
     constructor() {
@@ -101,14 +99,6 @@ export class EpicWaferDetailsPageComponent extends BaseComponent {
 
         this.wafersStore.actionFetchOne(this.waferId)
         this.asicsStore.actionFetchAll({ waferId: this.waferId })
-
-        this.wafersStore.deleteProcessingEvents.success$
-            .pipe(
-                takeUntil(this.destroyed$),
-            )
-            .subscribe(() => {
-                void this.router.navigate(['/wafers/list'])
-            })
     }
 
     get waferId(): number {

@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString, ValidateIf } from 'class-validator'
+import { EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
 
-import { EpicSvtTestSetupConfigCreateEntity } from '../models'
 
-
-export class EpicSvtTestSetupConfigCreateDto implements EpicSvtTestSetupConfigCreateEntity {
+export class EpicSvtTestSetupConfigCreateDto implements EpicSvtTestSetupConfigCreateRequest {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

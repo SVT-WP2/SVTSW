@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicAsic, EpicAsicCreate, EpicAsicsApiClient } from 'epic-ui/api'
+import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
+import { EpicAsicsApiClient } from 'epic-ui/api'
 import { BaseStore, EntityStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { catchError, distinctUntilChanged, map, Observable, of, switchMap, throwError } from 'rxjs'
@@ -15,10 +16,8 @@ export class EpicAsicsStoreFacade extends BaseStore<Store.State> {
     readonly asicsList$: Observable<EpicAsic[]>
     readonly fetchAllProcessing$: Observable<ProcessingStore.EventProcessingState>
     readonly fetchOneProcessing$: Observable<ProcessingStore.EventProcessingState>
-    readonly deleteProcessing$: Observable<ProcessingStore.EventProcessingState>
     readonly updateProcessing$: Observable<ProcessingStore.EventProcessingState>
 
-    readonly deleteProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
     readonly updateProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
 
     // DI
@@ -44,17 +43,6 @@ export class EpicAsicsStoreFacade extends BaseStore<Store.State> {
                 map((state) => state.fetchOneProcessing),
                 distinctUntilChanged((left, right) => isEqual(left, right)),
             )
-
-        this.deleteProcessing$ = this.state$
-            .pipe(
-                map((state) => state.deleteProcessing),
-                distinctUntilChanged((left, right) => isEqual(left, right)),
-            )
-
-        this.deleteProcessingEvents = ProcessingStore.createProcessingEvents(
-            this.state$,
-            (state => state.deleteProcessing),
-        )
 
         this.updateProcessing$ = this.state$
             .pipe(
@@ -137,7 +125,7 @@ export class EpicAsicsStoreFacade extends BaseStore<Store.State> {
             })
     }
 
-    actionCreate(payload: EpicAsicCreate): void {
+    actionCreate(payload: EpicAsicCreateRequest): void {
         this.updateState(
             Store.reduceActionUpdateRequest(this.state),
         )
@@ -154,27 +142,6 @@ export class EpicAsicsStoreFacade extends BaseStore<Store.State> {
             .subscribe((wafer: EpicAsic) => {
                 this.updateState(
                     Store.reduceActionUpdateSuccess(this.state, wafer),
-                )
-            })
-    }
-
-    actionDeleteOne(asicId: number): void {
-        this.updateState(
-            Store.reduceActionDeleteRequest(this.state),
-        )
-
-        this.processDeleteOne(asicId)
-            .pipe(
-                catchError((err) => {
-                    this.updateState(
-                        Store.reduceActionDeleteError(this.state, err.message),
-                    )
-                    return throwError(err)
-                }),
-            )
-            .subscribe((asic: EpicAsic) => {
-                this.updateState(
-                    Store.reduceActionDeleteSuccess(this.state, asicId),
                 )
             })
     }
@@ -210,11 +177,7 @@ export class EpicAsicsStoreFacade extends BaseStore<Store.State> {
         return this.epicAsicsApiClient.fetchOne(asicId)
     }
 
-    protected processDeleteOne(asicId: number): Observable<EpicAsic> {
-        return this.epicAsicsApiClient.deleteOne(asicId)
-    }
-
-    protected processCreate(createRequest: EpicAsicCreate): Observable<EpicAsic> {
+    protected processCreate(createRequest: EpicAsicCreateRequest): Observable<EpicAsic> {
         return this.epicAsicsApiClient.create(createRequest)
     }
 

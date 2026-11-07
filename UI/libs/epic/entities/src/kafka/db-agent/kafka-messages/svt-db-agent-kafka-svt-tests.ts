@@ -1,4 +1,6 @@
-import { EpicDateTimeString, EpicPager } from '../../../common'
+import { EpicDateTimeString } from 'epic-api-types'
+
+import { EpicPager } from '../../../common'
 import { EpicSvtTestCreateEntity, EpicSvtTestEntity } from '../../../svt-tests'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

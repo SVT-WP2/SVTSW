@@ -1,13 +1,13 @@
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms'
 import {
     EpicSvtDutEntityName,
-    EpicSvtTestCreate,
+    EpicSvtTestCreateRequest,
     EpicSvtTestSetup,
     EpicSvtTestSetupConfig,
     EpicSvtTestTemplate,
     EpicSvtTestType,
     EpicSvtTestTypeConfig,
-} from 'epic-ui/api'
+} from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 
 
@@ -164,7 +164,7 @@ export namespace EpicSvtTestCreateForm {
             : null
     }
 
-    export function formDataToCreateRequest(formData: FormData): EpicSvtTestCreate {
+    export function formDataToCreateRequest(formData: FormData): EpicSvtTestCreateRequest {
         return {
             dutEntityName: formData.dutEntityName!,
             dutId: getDutId(formData)!,

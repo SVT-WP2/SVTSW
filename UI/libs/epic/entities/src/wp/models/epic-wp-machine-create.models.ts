@@ -1,13 +1,5 @@
-export type EpicWpMachineCreateEntity = {
-    name: string
-    serialNumber: string
-    hostName: string
-    connectionType: string
-    connectionPort: number
-    generalLocation: string
-    software: string
-    swVersion: string
-    vendor: string
-}
+import { EpicWpMachineCreateRequest } from 'epic-api-types'
 
 
+/** Payload of the `CreateWpMachine` Kafka message — identical to the HTTP request body today. */
+export type EpicWpMachineCreateEntity = EpicWpMachineCreateRequest

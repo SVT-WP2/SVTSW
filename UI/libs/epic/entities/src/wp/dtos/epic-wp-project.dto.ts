@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
+import { EpicWpProject } from 'epic-api-types'
 
-import { EpicWpProjectEntity } from '../models'
 
-
-export class EpicWpProjectDto implements EpicWpProjectEntity {
+export class EpicWpProjectDto implements EpicWpProject {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

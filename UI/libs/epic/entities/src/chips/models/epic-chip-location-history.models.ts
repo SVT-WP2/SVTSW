@@ -1,10 +1,5 @@
-import { EpicDateString } from '../../common'
+import { EpicChipLocationHistoryRecord } from 'epic-api-types'
 
 
-export type EpicChipLocationHistoryRecordEntity = {
-    chipId: number
-    generalLocation: string
-    date: EpicDateString | null
-    note: string
-    username: string | null
-}
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicChipLocationHistoryRecordEntity = EpicChipLocationHistoryRecord

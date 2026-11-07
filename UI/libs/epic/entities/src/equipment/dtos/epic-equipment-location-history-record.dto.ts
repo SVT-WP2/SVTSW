@@ -1,18 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsNumber, IsString } from 'class-validator'
+import { EpicDateString, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
 
-import { EpicDateString } from '../../common'
 
-
-export class EpicEquipmentLocationHistoryRecordDto {
+export class EpicEquipmentLocationHistoryRecordDto implements EpicEquipmentLocationHistoryRecord {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })
     equipmentId: number
-    
+
     @ApiProperty({ type: 'string' })
     @IsString()
-    generalLocation: string | null
+    generalLocation: string
 
     @ApiProperty({ type: 'string' })
     note: string
@@ -22,7 +21,6 @@ export class EpicEquipmentLocationHistoryRecordDto {
     date: EpicDateString | null
 
     @ApiProperty({ required: false, type: 'string', nullable: true })
-    username: EpicDateString | null
+    username: string | null
 
 }
-

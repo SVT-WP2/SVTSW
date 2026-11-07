@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigCreate, EpicSvtTestSetupCreate } from 'epic-ui/api'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigCreateRequest, EpicSvtTestSetupCreateRequest } from 'epic-api-types'
 import { first, merge, Observable, of, switchMap, throwError } from 'rxjs'
 
 import { EpicSvtTestSetupsActions } from '../actions'
@@ -15,7 +15,7 @@ export class EpicSvtTestSetupsStoreFacade {
     protected readonly store = inject(Store)
     protected readonly actions$ = inject(Actions)
 
-    create(create: EpicSvtTestSetupCreate): Observable<StoreActions.CreateSuccessActionPayload> {
+    create(create: EpicSvtTestSetupCreateRequest): Observable<StoreActions.CreateSuccessActionPayload> {
 
         this.store.dispatch(StoreActions.createRequestAction({ create }))
 
@@ -45,7 +45,7 @@ export class EpicSvtTestSetupsStoreFacade {
 
     }
 
-    createConfig(create: EpicSvtTestSetupConfigCreate): Observable<EpicSvtTestSetupConfig> {
+    createConfig(create: EpicSvtTestSetupConfigCreateRequest): Observable<EpicSvtTestSetupConfig> {
 
         this.store.dispatch(StoreActions.createConfigRequestAction({ create }))
 

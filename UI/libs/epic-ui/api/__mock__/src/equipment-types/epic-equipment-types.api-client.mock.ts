@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
-import { EpicEquipmentType, EpicEquipmentTypeCreate, EpicEquipmentTypesApiClient } from 'epic-ui/api'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
+import { EpicEquipmentTypesApiClient } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
 
 
@@ -36,7 +37,7 @@ export class EpicEquipmentTypesApiClientMock extends EpicEquipmentTypesApiClient
             )
     }
 
-    override create(payload: EpicEquipmentTypeCreate): Observable<EpicEquipmentType> {
+    override create(payload: EpicEquipmentTypeCreateRequest): Observable<EpicEquipmentType> {
         const entity: EpicEquipmentType = {
             ...payload,
             id: this.data.length ? this.data[this.data.length - 1].id + 1 : 1,

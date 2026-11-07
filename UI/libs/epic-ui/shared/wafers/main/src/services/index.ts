@@ -1,4 +1,3 @@
-export * from './epic-wafer-delete-dialog.service'
 export * from './epic-wafer-create-dialog.service'
 export * from './epic-wafer-details-dialog.service'
 export * from './epic-wafer-location-update-dialog.service'

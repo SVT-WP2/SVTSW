@@ -1,11 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import {
-    EpicSvtTestTemplate,
-    EpicSvtTestTemplateCreate,
-    EpicSvtTestTemplatesApiClient,
-    EpicSvtTestTemplateUpdate,
-    EpicSvtTestTypeConfigsApiClient,
-} from 'epic-ui/api'
+import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest, EpicSvtTestTemplateUpdateRequest } from 'epic-api-types'
+import { EpicSvtTestTemplatesApiClient, EpicSvtTestTypeConfigsApiClient } from 'epic-ui/api'
 import { delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs'
 
 import { EpicEnumsMock } from '../enums'
@@ -59,7 +54,7 @@ export class EpicSvtTestTemplatesApiClientMock extends EpicSvtTestTemplatesApiCl
         return of(entity).pipe(delay(300))
     }
 
-    override create(payload: EpicSvtTestTemplateCreate): Observable<EpicSvtTestTemplate> {
+    override create(payload: EpicSvtTestTemplateCreateRequest): Observable<EpicSvtTestTemplate> {
         return this.epicSvtTestTypeConfigsApiClient.fetchOne(payload.testTypeConfigId)
             .pipe(
                 switchMap(testTemplateConfig =>
@@ -83,7 +78,7 @@ export class EpicSvtTestTemplatesApiClientMock extends EpicSvtTestTemplatesApiCl
             )
     }
 
-    override update(entityId: number, update: EpicSvtTestTemplateUpdate): Observable<EpicSvtTestTemplate> {
+    override update(entityId: number, update: EpicSvtTestTemplateUpdateRequest): Observable<EpicSvtTestTemplate> {
         const entity = this.data.find(item => item.id === entityId)
         if (!entity) {
             return throwError(() => new Error(`Entity with id ${entityId} not found`))

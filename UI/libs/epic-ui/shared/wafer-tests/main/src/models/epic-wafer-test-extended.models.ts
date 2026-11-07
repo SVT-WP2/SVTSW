@@ -1,4 +1,5 @@
-import { EpicAsicTestType, EpicWafer, EpicWaferTest, EpicWpMachine } from 'epic-ui/api'
+import { EpicWafer, EpicWpMachine } from 'epic-api-types'
+import { EpicAsicTestType, EpicWaferTest } from 'epic-ui/api'
 
 
 export type EpicWaferTestExtended =

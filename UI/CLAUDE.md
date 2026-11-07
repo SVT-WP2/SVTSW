@@ -78,11 +78,19 @@ or `npm run test::affected` scope it.
 ## Cross-cutting rules
 
 - **Never import across libs by relative path.** Use the `tsconfig.base.json` aliases (`epic-ui/api`,
-  `epic-ui/shared/svt-tests`, `epic/entities`, `@env/environment`, …).
-- `libs/epic/*` is the **only** code shared between `epic-measure-api` and `epic-db-agent`. Kafka message
-  contracts and DTOs live there — change them in one place and both sides stay in sync.
+  `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `@env/environment`, …).
+- `libs/epic-api-types` is the **HTTP contract**: the request bodies, query strings and responses of `/api/...`
+  as plain TypeScript types, and the only lib compiled into both the Angular SPA and the NestJS apps. No
+  decorators, no framework imports (lint-enforced). The UI uses these types as its models; a BE DTO class
+  `implements` them, so a field drifting between FE and BE is a compile error. Request bodies end in
+  `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
+  (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
+- `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`. Kafka message contracts,
+  the decorated DTO classes and the `Epic<X>Entity` Kafka wire types live there — the latter are one-line
+  aliases of the `epic-api-types` types for as long as the two shapes are identical.
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
-- Angular UI code must never import from `libs/epic/*` — the UI has its own view models in `epic-ui/api`.
+- Angular UI code must never import from `libs/epic/*`. `epic-ui/api` holds the HTTP clients only — the types
+  come from `epic-api-types`.
 
 ## Two data-loading patterns — pick the right one
 

@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsNumber } from 'class-validator'
+import { EpicApiPageResponse } from 'epic-api-types'
 
 
-export class EpicPageDataDto<T> {
+export class EpicPageDataDto<T> implements EpicApiPageResponse<T> {
 
     @IsArray()
     @ApiProperty({ type: 'array', isArray: true })

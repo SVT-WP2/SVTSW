@@ -1,7 +1,7 @@
 
 import { EntityState } from '@ngrx/entity'
 import { createFeatureSelector, createSelector } from '@ngrx/store'
-import { EpicSvtTestSetup, EpicSvtTestSetupConfig } from 'epic-ui/api'
+import { EpicSvtTestSetup, EpicSvtTestSetupConfig } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
 
 import { EpicSvtTestSetupsStore } from '../epic-svt-test-setups.store'

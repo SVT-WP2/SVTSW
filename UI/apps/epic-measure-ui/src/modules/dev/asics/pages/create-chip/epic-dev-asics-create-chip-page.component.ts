@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core'
 import { MatButton } from '@angular/material/button'
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card'
-import { EpicChipCreate } from 'epic-ui/api'
+import { EpicChipCreateRequest } from 'epic-api-types'
 import {
     EpicChipCreateManyPreviewDialogService,
     EpicChipCreateManyPreviewGridComponent,
@@ -38,7 +38,7 @@ export class EpicDevAsicsCreateChipPageComponent extends BaseComponent {
             `
     })
 
-    readonly createManyData = signal<EpicChipCreate[]>(this.generateCreateMany())
+    readonly createManyData = signal<EpicChipCreateRequest[]>(this.generateCreateMany())
 
     // DI
     protected readonly epicChipCreateWithFileDialogService = inject(EpicChipCreateWithFileDialogService)
@@ -54,7 +54,7 @@ export class EpicDevAsicsCreateChipPageComponent extends BaseComponent {
         })
     }
 
-    private generateCreateMany(): EpicChipCreate[] {
+    private generateCreateMany(): EpicChipCreateRequest[] {
         return [...new Array(100)]
             .map((_, index) => ({
                 asicId: index,

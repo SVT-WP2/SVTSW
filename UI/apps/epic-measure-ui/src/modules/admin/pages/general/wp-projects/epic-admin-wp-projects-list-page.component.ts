@@ -2,7 +2,7 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicWpProject } from 'epic-ui/api'
+import { EpicWpProject } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,

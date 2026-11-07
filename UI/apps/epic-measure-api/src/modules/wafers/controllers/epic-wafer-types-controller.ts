@@ -43,16 +43,4 @@ export class EpicWaferTypesController {
         ))
     }
 
-    // @ApiBody({ type: EpicWaferTypeUpdateRequestDto })
-    // @Patch('/:id')
-    // async update(@Param('id') id: number, @Body() body: EpicWaferTypeUpdateRequestDto) {
-    //     const wafer = await firstValueFrom(this.epicWaferTypesService.update(+id, body))
-    //
-    //     if (!wafer) {
-    //         throw new NotFoundException(`Wafer Type does not exist: ${id}`)
-    //     }
-    //
-    //     return wafer
-    // }
-
 }

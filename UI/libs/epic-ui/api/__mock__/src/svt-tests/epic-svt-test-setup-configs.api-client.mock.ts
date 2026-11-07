@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core'
-import {
-    EpicSvtTestSetupConfig,
-    EpicSvtTestSetupConfigBody,
-    EpicSvtTestSetupConfigCreate,
-    EpicSvtTestSetupConfigsApiClient,
-} from 'epic-ui/api'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
+import { EpicSvtTestSetupConfigsApiClient } from 'epic-ui/api'
 import { omit } from 'lodash-es'
 import moment from 'moment'
 import { delay, Observable, of } from 'rxjs'
@@ -89,7 +85,7 @@ export class EpicSvtTestSetupConfigsApiClientMock extends EpicSvtTestSetupConfig
             )
     }
 
-    override create(payload: EpicSvtTestSetupConfigCreate): Observable<EpicSvtTestSetupConfig> {
+    override create(payload: EpicSvtTestSetupConfigCreateRequest): Observable<EpicSvtTestSetupConfig> {
         const id = this.data.length ? this.data[this.data.length - 1].id + 1 : 1
         const entity: EpicSvtTestSetupConfig = {
             id,

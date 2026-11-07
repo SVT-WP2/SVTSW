@@ -1,7 +1,7 @@
 import { Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { IDatasource, IGetRowsParams } from 'ag-grid-community'
-import { EpicApiPager, EpicApiPageResponse } from 'epic-ui/api'
+import { EpicApiPager, EpicApiPageResponse } from 'epic-api-types'
 import { BaseStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { BehaviorSubject, distinctUntilChanged, map, Observable, take, takeUntil } from 'rxjs'

@@ -8,7 +8,7 @@ import {
     EpicSvtTestStatus,
     EpicSvtTestType,
     EpicSvtTestTypeConfig,
-} from 'epic-ui/api'
+} from 'epic-api-types'
 import {
     AgIconActionsCell,
     AgIconActionsCellComponent,

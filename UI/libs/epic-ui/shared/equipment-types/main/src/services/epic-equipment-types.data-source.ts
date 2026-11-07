@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEquipmentType } from 'epic-ui/api'
+import { EpicEquipmentType } from 'epic-api-types'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 

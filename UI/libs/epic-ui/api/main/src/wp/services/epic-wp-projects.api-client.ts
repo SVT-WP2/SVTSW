@@ -1,9 +1,9 @@
-import { HttpClient, HttpParams } from '@angular/common/http'
+import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { Observable } from 'rxjs'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
+import { map, Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicWpProject, EpicWpProjectCreate, EpicWpProjectsListQuery } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -14,20 +14,19 @@ export class EpicWpProjectsApiClient {
     // DI
     protected readonly httpClient = inject(HttpClient)
 
-    fetchAll(queryFilter?: EpicWpProjectsListQuery.Filter): Observable<EpicWpProject[]> {
-        let queryParams = new HttpParams()
-        if (queryFilter?.wpMachineId) {
-            queryParams = queryParams.append('wpMachineId', queryFilter.wpMachineId.toString())
-        }
-
-        return this.httpClient.get<EpicWpProject[]>(this.baseUrl, { params: queryParams })
+    fetchAll(): Observable<EpicWpProject[]> {
+        return this.httpClient.get<EpicWpProject[]>(this.baseUrl)
     }
 
+    /**
+     * `GET /wp-projects` has no filter (see `EpicWpProjectsController`), so the machine's projects are picked out
+     * of the full list here.
+     */
     fetchWpMachineProjects(wpMachineId: number): Observable<EpicWpProject[]> {
-        const filter: EpicWpProjectsListQuery.Filter = {
-            wpMachineId,
-        }
-        return this.fetchAll(filter)
+        return this.fetchAll()
+            .pipe(
+                map(projects => projects.filter(project => project.wpMachineId === wpMachineId)),
+            )
     }
 
     fetchOne(entityId: number): Observable<EpicWpProject> {
@@ -35,7 +34,7 @@ export class EpicWpProjectsApiClient {
         return this.httpClient.get<EpicWpProject>(url)
     }
 
-    create(payload: EpicWpProjectCreate): Observable<EpicWpProject> {
+    create(payload: EpicWpProjectCreateRequest): Observable<EpicWpProject> {
         return this.httpClient.post<EpicWpProject>(this.baseUrl, { ...payload })
     }
 

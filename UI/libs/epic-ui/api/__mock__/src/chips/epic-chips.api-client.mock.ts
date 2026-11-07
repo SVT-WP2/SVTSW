@@ -1,12 +1,14 @@
 import {
     EpicApiPager,
     EpicApiPageResponse,
-    EpicChip, EpicChipCreate, EpicChipCreateMany,
-    EpicChipLocation, EpicChipLocationUpdate,
-    EpicChipsApiClient,
+    EpicChip,
+    EpicChipCreateManyRequest,
+    EpicChipCreateRequest,
+    EpicChipLocationHistoryRecord,
+    EpicChipLocationUpdateRequest,
     EpicChipsListQuery,
-    getDefaultEpicApiPager,
-} from 'epic-ui/api'
+} from 'epic-api-types'
+import { EpicChipsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import { concat, delay, Observable, of, zipAll } from 'rxjs'
 
 import { EpicEnumsMock } from '../enums'
@@ -18,20 +20,20 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
         ...generateMockChips(100 * 1000, 1),
     ]
 
-    protected chipsLocationHistory: { [chipId: string]: EpicChipLocation[] } = {}
+    protected chipsLocationHistory: { [chipId: string]: EpicChipLocationHistoryRecord[] } = {}
 
     override fetchChipsList(
-        queryFilter?: EpicChipsListQuery.QueryFilter,
+        queryFilter?: EpicChipsListQuery,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicChip>> {
 
         const filteredData = queryFilter
             ? this.entities.filter(item => {
                 const fulfilSerialNumberFilter = !queryFilter.serialNumber
                     || (item.serialNumber.toLowerCase().includes(queryFilter.serialNumber.toLowerCase()))
-                const fulfilChipIdFilter = !queryFilter.chipId || (queryFilter.chipId === item.id)
+                const fulfilIdsFilter = !queryFilter.ids?.length || queryFilter.ids.includes(item.id)
                 const fulfilFamilyTypeFilter = !queryFilter.familyTypes?.length || (queryFilter.familyTypes.includes(item.familyType))
                 const fulfilGeneralLocationFilter = !queryFilter.generalLocation || (queryFilter.generalLocation === item.generalLocation)
-                return fulfilSerialNumberFilter && fulfilFamilyTypeFilter && fulfilGeneralLocationFilter && fulfilChipIdFilter
+                return fulfilSerialNumberFilter && fulfilFamilyTypeFilter && fulfilGeneralLocationFilter && fulfilIdsFilter
             })
             : this.entities
 
@@ -50,7 +52,7 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
             )
     }
 
-    override create(payload: EpicChipCreate): Observable<EpicChip> {
+    override create(payload: EpicChipCreateRequest): Observable<EpicChip> {
         const newEntity: EpicChip = {
             id: this.entities.length ? this.entities[this.entities.length - 1].id + 1 : 1,
             generalLocation: payload.generalLocation,
@@ -65,7 +67,7 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
             )
     }
 
-    override createMany(payload: EpicChipCreateMany): Observable<EpicChip[]> {
+    override createMany(payload: EpicChipCreateManyRequest): Observable<EpicChip[]> {
         return concat(
             payload.items
                 .map(
@@ -85,19 +87,20 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
             )
     }
 
-    override fetchChipLocationHistory(chipId: number): Observable<EpicChipLocation[]> {
+    override fetchChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecord[]> {
         return of(this.chipsLocationHistory[chipId] ?? [])
             .pipe(
                 delay(500),
             )
     }
 
-    override updateChipLocation(chipId: number, update: EpicChipLocationUpdate): Observable<EpicChip> {
+    override updateChipLocation(chipId: number, update: EpicChipLocationUpdateRequest): Observable<EpicChip> {
         this.chipsLocationHistory[chipId] = [
             ...(this.chipsLocationHistory[chipId] ?? []),
             {
                 ...update,
                 chipId,
+                username: null,
             },
         ]
 

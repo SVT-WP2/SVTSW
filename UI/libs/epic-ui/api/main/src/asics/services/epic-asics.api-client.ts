@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest, EpicAsicsListQuery } from 'epic-api-types'
 import { QueryHelpers } from 'epic-ui/utils'
 import { EMPTY, expand, map, Observable, toArray } from 'rxjs'
 
-import { EpicApi, EpicApiPager, EpicApiPageResponse, getDefaultEpicApiPager } from '../../common'
-import { EpicAsic, EpicAsicCreate, EpicAsicsListQuery } from '../models'
+import { EpicApi, getDefaultEpicApiPager } from '../../common'
 
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class EpicAsicsApiClient {
     // DI
     protected readonly httpClient = inject(HttpClient)
 
-    fetchAsicsList(queryFilter?: EpicAsicsListQuery.QueryFilter, pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicAsic>> {
+    fetchAsicsList(queryFilter?: EpicAsicsListQuery, pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicAsic>> {
         const url = `${this.baseUrl}`
         const params = QueryHelpers.applyQueryParams({
             ...queryFilter,
@@ -28,7 +28,7 @@ export class EpicAsicsApiClient {
         return this.httpClient.get<EpicApiPageResponse<EpicAsic>>(url, { params })
     }
 
-    fetchAllAsicsList(queryFilter: EpicAsicsListQuery.QueryFilter = {}, pageSize = 10 * 1000): Observable<EpicAsic[]> {
+    fetchAllAsicsList(queryFilter: EpicAsicsListQuery = {}, pageSize = 10 * 1000): Observable<EpicAsic[]> {
         const pager: EpicApiPager = {
             offset: 0,
             limit: pageSize,
@@ -64,17 +64,9 @@ export class EpicAsicsApiClient {
             )
     }
 
-    create(payload: EpicAsicCreate): Observable<EpicAsic> {
+    create(payload: EpicAsicCreateRequest): Observable<EpicAsic> {
         const url = this.baseUrl
         return this.httpClient.post<EpicAsic>(url, { ...payload })
-            .pipe(
-                map((response) => response),
-            )
-    }
-
-    deleteOne(id: number): Observable<EpicAsic> {
-        const url = `${this.baseUrl}/${id}`
-        return this.httpClient.delete<EpicAsic>(url)
             .pipe(
                 map((response) => response),
             )

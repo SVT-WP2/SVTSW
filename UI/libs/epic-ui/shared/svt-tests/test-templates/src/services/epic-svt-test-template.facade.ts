@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestTemplate, EpicSvtTestTemplatesApiClient } from 'epic-ui/api'
+import { EpicSvtTestTemplate } from 'epic-api-types'
+import { EpicSvtTestTemplatesApiClient } from 'epic-ui/api'
 import { BaseCachedDataFacade } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 
