@@ -1,9 +1,8 @@
-export type EpicEquipmentEntity = {
-    id: number
-    name: string
-    equipmentTypeId: number
-    generalLocation: string
-    specification: string // JSON string
-}
+import { EpicEquipment, EpicEquipmentCreateRequest } from 'epic-api-types'
 
-export type EpicEquipmentCreateEntity = Omit<EpicEquipmentEntity, 'id'>
+
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicEquipmentEntity = EpicEquipment
+
+/** Payload of the `CreateEquipment` Kafka message — identical to the HTTP request body today. */
+export type EpicEquipmentCreateEntity = EpicEquipmentCreateRequest

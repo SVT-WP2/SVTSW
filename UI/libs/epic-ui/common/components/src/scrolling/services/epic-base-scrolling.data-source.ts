@@ -1,6 +1,6 @@
 ﻿import { Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { EpicApiPager } from 'epic-ui/api'
+import { EpicApiPager } from 'epic-api-types'
 import { BaseStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { Observable, Subscription, throwError } from 'rxjs'

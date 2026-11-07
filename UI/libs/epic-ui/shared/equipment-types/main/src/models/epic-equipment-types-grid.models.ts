@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicEquipmentType } from 'epic-ui/api'
+import { EpicEquipmentType } from 'epic-api-types'
 import { EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 

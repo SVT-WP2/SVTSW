@@ -1,11 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { EpicSvtTestTypeCreateRequest, EpicSvtTestTypeDefaultConfigCreateRequest } from 'epic-api-types'
 
-import { EpicSvtTestTypeCreateEntity } from '../models'
 
-
-export class EpicSvtTestTypeDefaultConfigCreateDto {
+export class EpicSvtTestTypeDefaultConfigCreateDto implements EpicSvtTestTypeDefaultConfigCreateRequest {
 
     @IsString()
     @ApiProperty({ type: 'string' })
@@ -22,7 +21,7 @@ export class EpicSvtTestTypeDefaultConfigCreateDto {
 
 }
 
-export class EpicSvtTestTypeCreateDto implements EpicSvtTestTypeCreateEntity {
+export class EpicSvtTestTypeCreateDto implements EpicSvtTestTypeCreateRequest {
 
     @IsString()
     @ApiProperty({ type: 'string' })

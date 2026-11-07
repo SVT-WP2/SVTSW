@@ -1,4 +1,4 @@
-import { EpicAsic } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
 import { EntityStore, ProcessingStore } from 'epic-ui/utils'
 
 
@@ -10,7 +10,6 @@ export namespace EpicAsicsStore {
         fetchAllProcessing: ProcessingStore.EventProcessingState
         fetchOneProcessing: ProcessingStore.EventProcessingState
         updateProcessing: ProcessingStore.EventProcessingState
-        deleteProcessing: ProcessingStore.EventProcessingState
         isAllDataFetched: boolean
         allAsicsForWaferFetched: Record<number, boolean>
     }
@@ -22,7 +21,6 @@ export namespace EpicAsicsStore {
             fetchAllProcessing: ProcessingStore.getDefaultProcessingState(),
             fetchOneProcessing: ProcessingStore.getDefaultProcessingState(),
             updateProcessing: ProcessingStore.getDefaultProcessingState(),
-            deleteProcessing: ProcessingStore.getDefaultProcessingState(),
             isAllDataFetched: false,
             allAsicsForWaferFetched: {},
         }
@@ -112,30 +110,6 @@ export namespace EpicAsicsStore {
         return {
             ...state,
             updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing, error),
-        }
-    }
-
-    // DELETE
-
-    export function reduceActionDeleteRequest(state: State): State {
-        return {
-            ...state,
-            deleteProcessing: ProcessingStore.eventProcessingStart(state.deleteProcessing),
-        }
-    }
-
-    export function reduceActionDeleteSuccess(state: State, entityId: number): State {
-        return {
-            ...state,
-            asics: adapter.removeOne(entityId, state.asics),
-            deleteProcessing: ProcessingStore.eventProcessingFinish(state.deleteProcessing),
-        }
-    }
-
-    export function reduceActionDeleteError(state: State, error: Error): State {
-        return {
-            ...state,
-            deleteProcessing: ProcessingStore.eventProcessingFinish(state.deleteProcessing, error),
         }
     }
 

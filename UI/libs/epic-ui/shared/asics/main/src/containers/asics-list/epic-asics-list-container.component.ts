@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card'
 import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicAsic } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorModule,

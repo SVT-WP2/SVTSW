@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicApiPageResponse, EpicSvtTestsApiClient, EpicSvtTestsListQuery } from 'epic-ui/api'
+import { EpicApiPager, EpicApiPageResponse, EpicSvtTestsListQuery } from 'epic-api-types'
+import { EpicSvtTestsApiClient } from 'epic-ui/api'
 import { EpicAgGridInfiniteDataSource } from 'epic-ui/common/ag-grid'
 import { EpicSvtTestTypeConfigsDataFacade, EpicSvtTestTypesDataFacade } from 'epic-ui/shared/svt-test/test-types'
 import { EpicSvtTestSetupConfigsDataFacade, EpicSvtTestSetupsDataFacade } from 'epic-ui/shared/svt-tests'
@@ -8,7 +9,7 @@ import { forkJoin, map, Observable, of } from 'rxjs'
 import { EpicSvtTestsGrid } from '../models'
 
 
-export type EpicSvtTestsGridDsFilter = EpicSvtTestsListQuery.QueryFilter
+export type EpicSvtTestsGridDsFilter = EpicSvtTestsListQuery
 
 @Injectable({ providedIn: 'root' })
 export class EpicSvtTestsGridDataSource

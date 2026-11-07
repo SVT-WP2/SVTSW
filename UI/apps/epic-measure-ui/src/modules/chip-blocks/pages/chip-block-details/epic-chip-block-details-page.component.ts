@@ -1,12 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import {
-    EpicChip,
-    EpicChipBlock,
-    EpicChipBlocksApiClient,
-    EpicChipsApiClient,
-    EpicSvtDutEntityName,
-} from 'epic-ui/api'
+import { EpicChip, EpicChipBlock, EpicSvtDutEntityName } from 'epic-api-types'
+import { EpicChipBlocksApiClient, EpicChipsApiClient } from 'epic-ui/api'
 import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { catchError, takeUntil, throwError } from 'rxjs'

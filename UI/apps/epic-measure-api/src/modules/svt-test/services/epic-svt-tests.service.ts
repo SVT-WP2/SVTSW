@@ -7,7 +7,6 @@ import {
     EpicSvtTestEntity,
     EpicSvtTestResolvedEntity,
     EpicSvtTestsGetAllParams,
-    EpicSvtTestStatus,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     resolveEpicSvtTestResultStatuses,
@@ -15,6 +14,7 @@ import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaSvtTests,
 } from 'epic/entities'
+import { EpicSvtTestStatus } from 'epic-api-types'
 import { map, Observable, of } from 'rxjs'
 
 import { EpicSvtTestSvc } from '../models'
@@ -45,7 +45,9 @@ export class EpicSvtTestsService implements OnModuleInit {
 
         const data: SvtDbAgentKafkaSvtTests.GetAllSvtTestsData = {
             filter: {
-                ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
+                // the UI hands its search tokens over as typed (see EpicSvtTestsListQuery.ids) and nothing turns them
+                // into numbers on the way to the DB agent yet — the cast only states what has always been sent
+                ...(queryFilter?.ids ? { ids: queryFilter.ids as number[] } : {}),
                 ...(queryFilter?.dutEntityNames ? { dutEntityNames: queryFilter.dutEntityNames } : {}),
                 ...(queryFilter?.dutId ? { dutId: queryFilter.dutId } : {}),
                 ...(testResultStatuses ? { testResultStatuses } : {}),

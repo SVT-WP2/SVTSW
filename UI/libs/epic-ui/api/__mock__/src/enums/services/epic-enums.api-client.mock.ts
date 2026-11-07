@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
-import { EpicEnumsApiClient, EpicEnumsCollection } from 'epic-ui/api'
+import { EpicEnumsCollection } from 'epic-api-types'
+import { EpicEnumsApiClient } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
 
 import { EpicEnumsMock } from '../models'

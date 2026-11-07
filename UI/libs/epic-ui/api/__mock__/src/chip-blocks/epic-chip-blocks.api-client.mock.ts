@@ -1,12 +1,6 @@
 import { Injectable } from '@angular/core'
-import {
-    EpicApiPager,
-    EpicApiPageResponse,
-    EpicChipBlock,
-    EpicChipBlocksApiClient,
-    EpicChipBlocksListQuery,
-    getDefaultEpicApiPager,
-} from 'epic-ui/api'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock, EpicChipBlocksListQuery } from 'epic-api-types'
+import { EpicChipBlocksApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import { delay, Observable, of, throwError } from 'rxjs'
 
 import { EpicEnumsMock } from '../enums'
@@ -35,7 +29,7 @@ export class EpicChipBlocksApiClientMock extends EpicChipBlocksApiClient {
     protected entities: EpicChipBlock[] = [...generateMockChipBlocks(2 * 1000)]
 
     override fetchList(
-        queryFilter?: Partial<EpicChipBlocksListQuery.QueryFilter>,
+        queryFilter?: Partial<EpicChipBlocksListQuery>,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicChipBlock>> {
 
         const filteredData = queryFilter

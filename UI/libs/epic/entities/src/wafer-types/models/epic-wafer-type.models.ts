@@ -1,15 +1,8 @@
-export type EpicWaferTypeEntity = {
-    id: number
-    name: string
-    engineeringRun: string
-    foundry: string
-    technology: string
-}
+import { EpicWaferType, EpicWaferTypeCreateRequest } from 'epic-api-types'
 
-export type EpicWaferTypeCreateEntity = {
-    name: string
-    engineeringRun: string
-    foundry: string
-    technology: string
-    waferMap: string | null
-}
+
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicWaferTypeEntity = EpicWaferType
+
+/** Payload of the `CreateWaferType` Kafka message — identical to the HTTP request body today. */
+export type EpicWaferTypeCreateEntity = EpicWaferTypeCreateRequest

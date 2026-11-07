@@ -2,7 +2,7 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute, Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestSetup } from 'epic-ui/api'
+import { EpicSvtTestSetup } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,

@@ -1,21 +1,11 @@
-export type EpicSvtTestSetupEntity = {
-    id: number
-    name: string
-    defaultConfigId: number
-    generalLocation: string
-}
+import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest, EpicSvtTestSetupUpdateRequest } from 'epic-api-types'
 
-export type EpicSvtTestSetupCreateEntity = {
-    name: string
-    generalLocation: string
-    defaultConfig: {
-        name: string
-        configBody: string // text file content (JSON, JSON5, ...)
-        note: string | null
-    }
 
-}
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicSvtTestSetupEntity = EpicSvtTestSetup
 
-export type EpicSvtTestSetupUpdateEntity = {
-    defaultConfigId: number
-}
+/** Payload of the `CreateSvtTestSetup` Kafka message — identical to the HTTP request body today. */
+export type EpicSvtTestSetupCreateEntity = EpicSvtTestSetupCreateRequest
+
+/** Payload of the `UpdateSvtTestSetup` Kafka message — identical to the HTTP request body today. */
+export type EpicSvtTestSetupUpdateEntity = EpicSvtTestSetupUpdateRequest

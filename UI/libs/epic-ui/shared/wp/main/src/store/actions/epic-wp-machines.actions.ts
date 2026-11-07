@@ -1,9 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import {
-    EpicWpMachine,
-    EpicWpMachineCreate,
-    EpicWpMachineUpdate,
-} from 'epic-ui/api'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 
 
 export namespace EpicWpMachinesActions {
@@ -60,7 +56,7 @@ export namespace EpicWpMachinesActions {
 
     export const createRequestAction = createAction(
         ActionType.createRequest,
-        props<{ create: EpicWpMachineCreate }>(),
+        props<{ create: EpicWpMachineCreateRequest }>(),
     )
 
     export const createSuccessAction = createAction(
@@ -75,7 +71,7 @@ export namespace EpicWpMachinesActions {
 
     export const updateRequestAction = createAction(
         ActionType.updateRequest,
-        props<{ id: number; update: Partial<EpicWpMachineUpdate> }>(),
+        props<{ id: number; update: Partial<EpicWpMachineUpdateRequest> }>(),
     )
 
     export const updateSuccessAction = createAction(

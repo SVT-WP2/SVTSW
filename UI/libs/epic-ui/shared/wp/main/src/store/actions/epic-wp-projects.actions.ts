@@ -1,8 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import {
-    EpicWpProject,
-    EpicWpProjectCreate,
-} from 'epic-ui/api'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
 
 
 export namespace EpicWpProjectsActions {
@@ -33,7 +30,7 @@ export namespace EpicWpProjectsActions {
 
     export const createRequestAction = createAction(
         ActionType.createRequest,
-        props<{ create: EpicWpProjectCreate }>(),
+        props<{ create: EpicWpProjectCreateRequest }>(),
     )
 
     export const createSuccessAction = createAction(

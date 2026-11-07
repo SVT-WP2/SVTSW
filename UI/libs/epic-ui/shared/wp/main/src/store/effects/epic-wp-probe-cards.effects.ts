@@ -50,44 +50,4 @@ export class EpicWpProbeCardsEffects {
             ),
     )
 
-    protected readonly createRequest$ = createEffect(() =>
-        this.actions$
-            .pipe(
-                ofType(StoreAction.createRequestAction),
-                mergeMap(({ create }) => {
-                    return this.epicWpProbeCardsApiClient.create(create)
-                        .pipe(
-                            mapResponse({
-                                next: (entity) => (
-                                    StoreAction.createSuccessAction({ entity })
-                                ),
-                                error: (error: HttpErrorResponse) => (
-                                    StoreAction.createErrorAction({ error })
-                                ),
-                            }),
-                        )
-                }),
-            ),
-    )
-
-    protected readonly updateRequest$ = createEffect(() =>
-        this.actions$
-            .pipe(
-                ofType(StoreAction.updateRequestAction),
-                mergeMap(({ id, update }) => {
-                    return this.epicWpProbeCardsApiClient.update(id, update)
-                        .pipe(
-                            mapResponse({
-                                next: (entity) => (
-                                    StoreAction.updateSuccessAction({ entity })
-                                ),
-                                error: (error: HttpErrorResponse) => (
-                                    StoreAction.updateErrorAction({ error })
-                                ),
-                            }),
-                        )
-                }),
-            ),
-    )
-
 }

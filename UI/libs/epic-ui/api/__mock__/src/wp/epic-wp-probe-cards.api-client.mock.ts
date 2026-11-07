@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core'
-import {
-    EpicWpProbeCardCreate,
-    EpicWpProbeCardUpdate,
-    EpicWpProbeCard,
-    EpicWpProbeCardsApiClient,
-} from 'epic-ui/api'
+import { EpicWpProbeCard } from 'epic-api-types'
+import { EpicWpProbeCardsApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
 
 
@@ -56,36 +52,6 @@ export class EpicWpProbeCardsApiClientMock extends EpicWpProbeCardsApiClient {
                         : throwError(() => new Error(`Entity with id ${entityId} not found`)),
                 ),
                 delay(100),
-            )
-    }
-
-    override create(payload: EpicWpProbeCardCreate): Observable<EpicWpProbeCard> {
-        const entity: EpicWpProbeCard = {
-            ...payload,
-            id: this.entitiesList.length ? this.entitiesList[this.entitiesList.length - 1].id + 1 : 1,
-        }
-        this.entitiesList = [...this.entitiesList, entity]
-        return of(entity)
-            .pipe(
-                delay(500),
-            )
-    }
-
-    override update(id: number, update: Partial<EpicWpProbeCardUpdate>): Observable<EpicWpProbeCard> {
-        let refEntity: EpicWpProbeCard
-        this.entitiesList = this.entitiesList.map(item => {
-            if (item.id === id) {
-                refEntity = {
-                    ...item,
-                    ...update,
-                }
-                return refEntity
-            }
-            return item
-        })
-        return of(refEntity!)
-            .pipe(
-                delay(500),
             )
     }
 

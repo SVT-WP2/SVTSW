@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName } from 'epic-ui/api'
+import { EpicEnumName } from 'epic-api-types'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { map, Observable } from 'rxjs'
 

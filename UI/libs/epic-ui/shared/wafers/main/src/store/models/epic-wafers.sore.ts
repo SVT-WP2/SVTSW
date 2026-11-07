@@ -1,4 +1,4 @@
-import { EpicWafer } from 'epic-ui/api'
+import { EpicWafer } from 'epic-api-types'
 import { EntityStore, ProcessingStore } from 'epic-ui/utils'
 
 
@@ -9,7 +9,6 @@ export namespace EpicWafersStore {
         fetchAllProcessing: ProcessingStore.EventProcessingState
         fetchOneProcessing: ProcessingStore.EventProcessingState
         updateProcessing: ProcessingStore.EventProcessingState
-        deleteProcessing: ProcessingStore.EventProcessingState
         isAllDataFetched: boolean
     }
 
@@ -19,7 +18,6 @@ export namespace EpicWafersStore {
             fetchAllProcessing: ProcessingStore.getDefaultProcessingState(),
             fetchOneProcessing: ProcessingStore.getDefaultProcessingState(),
             updateProcessing: ProcessingStore.getDefaultProcessingState(),
-            deleteProcessing: ProcessingStore.getDefaultProcessingState(),
             isAllDataFetched: false,
         }
     }
@@ -96,30 +94,6 @@ export namespace EpicWafersStore {
         return {
             ...state,
             updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing, error),
-        }
-    }
-
-    // DELETE
-
-    export function reduceActionDeleteRequest(state: State): State {
-        return {
-            ...state,
-            deleteProcessing: ProcessingStore.eventProcessingStart(state.deleteProcessing),
-        }
-    }
-
-    export function reduceActionDeleteSuccess(state: State, waferId: number): State {
-        return {
-            ...state,
-            wafers: adapter.removeOne(waferId, state.wafers),
-            deleteProcessing: ProcessingStore.eventProcessingFinish(state.deleteProcessing),
-        }
-    }
-
-    export function reduceActionDeleteError(state: State, error: Error): State {
-        return {
-            ...state,
-            deleteProcessing: ProcessingStore.eventProcessingFinish(state.deleteProcessing, error),
         }
     }
 

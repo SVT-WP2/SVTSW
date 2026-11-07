@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicWafer, EpicWaferCreate, EpicWaferLocationUpdate, EpicWafersApiClient, EpicWaferUpdate } from 'epic-ui/api'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationUpdateRequest, EpicWaferUpdateRequest } from 'epic-api-types'
+import { EpicWafersApiClient } from 'epic-ui/api'
 import { BaseStore, EntityStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { catchError, distinctUntilChanged, first, map, Observable, of, switchMap, throwError } from 'rxjs'
@@ -15,10 +16,8 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
     readonly wafersList$: Observable<EpicWafer[]>
     readonly fetchAllProcessing$: Observable<ProcessingStore.EventProcessingState>
     readonly fetchOneProcessing$: Observable<ProcessingStore.EventProcessingState>
-    readonly deleteProcessing$: Observable<ProcessingStore.EventProcessingState>
     readonly updateProcessing$: Observable<ProcessingStore.EventProcessingState>
 
-    readonly deleteProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
     readonly updateProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
     readonly fetchOneProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
     readonly fetchAllProcessingEvents: ProcessingStore.ProcessingEvents<Store.State>
@@ -46,17 +45,6 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
                 map((state) => state.fetchOneProcessing),
                 distinctUntilChanged((left, right) => isEqual(left, right)),
             )
-
-        this.deleteProcessing$ = this.state$
-            .pipe(
-                map((state) => state.deleteProcessing),
-                distinctUntilChanged((left, right) => isEqual(left, right)),
-            )
-
-        this.deleteProcessingEvents = ProcessingStore.createProcessingEvents(
-            this.state$,
-            (state => state.deleteProcessing),
-        )
 
         this.updateProcessing$ = this.state$
             .pipe(
@@ -144,7 +132,7 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
             })
     }
 
-    actionCreate(payload: EpicWaferCreate): void {
+    actionCreate(payload: EpicWaferCreateRequest): void {
         this.updateState(
             Store.reduceActionUpdateRequest(this.state),
         )
@@ -165,7 +153,7 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
             })
     }
 
-    actionUpdate(id: number, update: EpicWaferUpdate): void {
+    actionUpdate(id: number, update: EpicWaferUpdateRequest): void {
         this.updateState(
             Store.reduceActionUpdateRequest(this.state),
         )
@@ -186,7 +174,7 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
             })
     }
 
-    actionUpdateLocation(id: number, update: EpicWaferLocationUpdate): void {
+    actionUpdateLocation(id: number, update: EpicWaferLocationUpdateRequest): void {
         this.updateState(
             Store.reduceActionUpdateRequest(this.state),
         )
@@ -203,27 +191,6 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
             .subscribe((wafer: EpicWafer) => {
                 this.updateState(
                     Store.reduceActionUpdateSuccess(this.state, wafer),
-                )
-            })
-    }
-
-    actionDeleteOne(waferId: number): void {
-        this.updateState(
-            Store.reduceActionDeleteRequest(this.state),
-        )
-
-        this.processDeleteOne(waferId)
-            .pipe(
-                catchError((err) => {
-                    this.updateState(
-                        Store.reduceActionDeleteError(this.state, err),
-                    )
-                    return throwError(() => err)
-                }),
-            )
-            .subscribe((wafer: EpicWafer) => {
-                this.updateState(
-                    Store.reduceActionDeleteSuccess(this.state, waferId),
                 )
             })
     }
@@ -270,19 +237,15 @@ export class EpicWafersStoreFacade extends BaseStore<Store.State> {
         return this.epicWafersApiClient.fetchOne(waferId)
     }
 
-    protected processDeleteOne(waferId: number): Observable<EpicWafer> {
-        return this.epicWafersApiClient.deleteOne(waferId)
-    }
-
-    protected processCreate(createRequest: EpicWaferCreate): Observable<EpicWafer> {
+    protected processCreate(createRequest: EpicWaferCreateRequest): Observable<EpicWafer> {
         return this.epicWafersApiClient.create(createRequest)
     }
 
-    protected processUpdate(id: number, update: EpicWaferUpdate): Observable<EpicWafer> {
+    protected processUpdate(id: number, update: EpicWaferUpdateRequest): Observable<EpicWafer> {
         return this.epicWafersApiClient.update(id, update)
     }
 
-    protected processLocationUpdate(id: number, update: EpicWaferLocationUpdate): Observable<EpicWafer> {
+    protected processLocationUpdate(id: number, update: EpicWaferLocationUpdateRequest): Observable<EpicWafer> {
         return this.epicWafersApiClient.updateWaferLocation(id, update)
     }
 

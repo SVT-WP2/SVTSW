@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicChipCreate } from 'epic-ui/api'
+import { EpicChipCreateRequest } from 'epic-api-types'
 import { EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
@@ -11,7 +11,7 @@ export namespace EpicChipCreateManyPreviewGrid {
         generalLocation = 'generalLocation',
     }
 
-    export type RowEntity = EpicChipCreate
+    export type RowEntity = EpicChipCreateRequest
 
     export function getColDefs(): ColDef[] {
         return [

@@ -2,7 +2,7 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicWpProbeCard } from 'epic-ui/api'
+import { EpicWpProbeCard } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -12,7 +12,7 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import {
-    EpicWpProbeCardUpdateDialogService,
+    EpicWpProbeCardDetailsDialogService,
     EpicWpProbeCardsActions,
     EpicWpProbeCardsListComponent,
     EpicWpProbeCardsSelectors,
@@ -45,7 +45,7 @@ export class EpicWpProbeCardsListPageComponent extends BaseComponent {
     // DI
     protected readonly router = inject(Router)
     protected readonly store = inject(Store)
-    protected readonly epicWpProbeCardUpdateDialog = inject(EpicWpProbeCardUpdateDialogService)
+    protected readonly epicWpProbeCardDetailsDialog = inject(EpicWpProbeCardDetailsDialogService)
 
     constructor() {
         super()
@@ -64,23 +64,7 @@ export class EpicWpProbeCardsListPageComponent extends BaseComponent {
     }
 
     onRowDetails(rowData: EpicWpProbeCard): void {
-        this.openDetailsDialog(rowData)
-    }
-
-    onRowClone(rowData: EpicWpProbeCard): void {
-        this.epicWpProbeCardUpdateDialog.openDialog(rowData.id, { isClone: true })
-    }
-
-    onRowEdit(rowData: EpicWpProbeCard): void {
-        this.epicWpProbeCardUpdateDialog.openDialog(rowData.id)
-    }
-
-    onCreate(): void {
-        this.epicWpProbeCardUpdateDialog.openDialog()
-    }
-
-    private openDetailsDialog(entity: EpicWpProbeCard): void {
-        this.epicWpProbeCardUpdateDialog.openDialog(entity.id)
+        this.epicWpProbeCardDetailsDialog.openDialog(rowData)
     }
 
 }

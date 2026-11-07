@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity'
 import { createReducer, on } from '@ngrx/store'
-import { EpicWpProject } from 'epic-ui/api'
+import { EpicWpProject } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
 
 import { EpicWpProjectsActions } from './actions'

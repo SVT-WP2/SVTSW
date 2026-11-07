@@ -10,7 +10,7 @@ import {
     MatLabel,
 } from '@angular/material/form-field'
 import { MatSelect } from '@angular/material/select'
-import { EpicSvtDutEntityName } from 'epic-ui/api'
+import { EpicSvtDutEntityName } from 'epic-api-types'
 import { EpicContentErrorModule, EpicLoaderComponent, EpicNoResultModule, EpicSkeletonLoaderComponent } from 'epic-ui/common/components'
 import { BaseFormWithFactoryComponent, EpicSearchPipe, EpicSelectFormControl } from 'epic-ui/utils'
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search'

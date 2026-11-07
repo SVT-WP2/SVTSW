@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
+import { EpicSvtDutEntityName, EpicSvtTestCreateRequest } from 'epic-api-types'
 
-import { EpicSvtDutEntityName, EpicSvtTestCreateEntity } from '../models'
 
-
-export class EpicSvtTestCreateDto implements EpicSvtTestCreateEntity {
+export class EpicSvtTestCreateDto implements EpicSvtTestCreateRequest {
 
     @IsString()
     @ApiProperty({ type: 'string', description: 'Enum value dutEntityName' })

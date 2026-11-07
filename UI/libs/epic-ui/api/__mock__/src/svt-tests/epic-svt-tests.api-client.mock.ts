@@ -4,13 +4,12 @@ import {
     EpicApiPageResponse,
     EpicSvtDutEntityName,
     EpicSvtTest,
-    EpicSvtTestCreate,
+    EpicSvtTestCreateRequest,
     EpicSvtTestResultStatus,
-    EpicSvtTestsApiClient,
     EpicSvtTestsListQuery,
     EpicSvtTestStatus,
-    getDefaultEpicApiPager,
-} from 'epic-ui/api'
+} from 'epic-api-types'
+import { EpicSvtTestsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import moment from 'moment'
 import { delay, Observable, of, throwError } from 'rxjs'
 
@@ -153,7 +152,7 @@ export class EpicSvtTestsApiClientMock extends EpicSvtTestsApiClient {
     ]
 
     override fetchList(
-        queryFilter?: Partial<EpicSvtTestsListQuery.QueryFilter>,
+        queryFilter?: Partial<EpicSvtTestsListQuery>,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicSvtTest>> {
 
         const filteredData = queryFilter
@@ -183,7 +182,7 @@ export class EpicSvtTestsApiClientMock extends EpicSvtTestsApiClient {
         return of(entity).pipe(delay(300))
     }
 
-    override create(payload: EpicSvtTestCreate): Observable<EpicSvtTest> {
+    override create(payload: EpicSvtTestCreateRequest): Observable<EpicSvtTest> {
         const id = this.data.length ? this.data[this.data.length - 1].id + 1 : 1
         const entity: EpicSvtTest = {
             id,
@@ -241,7 +240,7 @@ function fulfilsDateRange(value: string, from?: string | null, to?: string | nul
         && (!to || timestamp < new Date(to).getTime())
 }
 
-function fulfilsFilter(item: EpicSvtTest, queryFilter: Partial<EpicSvtTestsListQuery.QueryFilter>): boolean {
+function fulfilsFilter(item: EpicSvtTest, queryFilter: Partial<EpicSvtTestsListQuery>): boolean {
     // ids arrive as the user typed them, so they are compared as text — a term that is not an id matches nothing
     const fulfilIdsFilter = !queryFilter.ids?.length
         || queryFilter.ids.map(String).includes(String(item.id))

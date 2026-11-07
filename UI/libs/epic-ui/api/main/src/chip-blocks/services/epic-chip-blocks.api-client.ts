@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock, EpicChipBlocksListQuery } from 'epic-api-types'
 import { QueryHelpers } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 
-import { EpicApi, EpicApiPager, EpicApiPageResponse, getDefaultEpicApiPager } from '../../common'
-import { EpicChipBlock, EpicChipBlocksListQuery } from '../models'
+import { EpicApi, getDefaultEpicApiPager } from '../../common'
 
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +16,7 @@ export class EpicChipBlocksApiClient {
     protected readonly httpClient = inject(HttpClient)
 
     fetchList(
-        queryFilter?: Partial<EpicChipBlocksListQuery.QueryFilter>,
+        queryFilter?: Partial<EpicChipBlocksListQuery>,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicChipBlock>> {
 
         const params = QueryHelpers.applyQueryParams({

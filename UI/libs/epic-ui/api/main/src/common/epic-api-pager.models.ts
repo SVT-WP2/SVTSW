@@ -1,7 +1,5 @@
-export type EpicApiPager = {
-    limit: number
-    offset: number
-}
+import { EpicApiPager } from 'epic-api-types'
+
 
 export function getDefaultEpicApiPager(): EpicApiPager {
     return {

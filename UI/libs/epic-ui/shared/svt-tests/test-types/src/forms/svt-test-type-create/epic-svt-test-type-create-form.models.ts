@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicSvtTestType, EpicSvtTestTypeCreate } from 'epic-ui/api'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
 
 
@@ -49,7 +49,7 @@ export namespace EpicSvtTestTypeCreateForm {
         }
     }
 
-    export async function formDataToCreateRequest(formData: FormData): Promise<EpicSvtTestTypeCreate> {
+    export async function formDataToCreateRequest(formData: FormData): Promise<EpicSvtTestTypeCreateRequest> {
         const configBody = await FileHelpers.extractFileStringContent(formData.configBody!)
         return {
             name: formData.name,

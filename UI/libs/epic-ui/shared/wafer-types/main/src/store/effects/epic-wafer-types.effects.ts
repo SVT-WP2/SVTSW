@@ -70,24 +70,4 @@ export class EpicWaferTypesEffects {
             ),
     )
 
-    protected readonly updateRequest$ = createEffect(() =>
-        this.actions$
-            .pipe(
-                ofType(StoreAction.updateRequestAction),
-                mergeMap(({ id, update }) => {
-                    return this.epicWaferTopographiesApiClient.update(id, update)
-                        .pipe(
-                            mapResponse({
-                                next: (entity) => (
-                                    StoreAction.updateSuccessAction({ entity })
-                                ),
-                                error: (error: HttpErrorResponse) => (
-                                    StoreAction.updateErrorAction({ error })
-                                ),
-                            }),
-                        )
-                }),
-            ),
-    )
-
 }

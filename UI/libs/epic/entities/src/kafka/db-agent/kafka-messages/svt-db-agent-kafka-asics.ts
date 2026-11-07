@@ -1,4 +1,4 @@
-import { EpicAsicCreateRequestDto, EpicAsicEntity, EpicGetAllAsicsQueryFilter } from '../../../asics'
+import { EpicAsicCreateEntity, EpicAsicEntity, EpicGetAllAsicsQueryFilter } from '../../../asics'
 import { EpicPager } from '../../../common'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
@@ -38,7 +38,7 @@ export namespace SvtDbAgentKafkaAsics {
     // CREATE
 
     export type CreateAsicMessageData = {
-        create: EpicAsicCreateRequestDto
+        create: EpicAsicCreateEntity
     }
 
     export class CreateAsicMessage extends EpicKafkaMessageClass<CreateAsicMessageData> {

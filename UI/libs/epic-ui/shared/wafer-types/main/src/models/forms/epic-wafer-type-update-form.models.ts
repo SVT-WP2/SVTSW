@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWaferType, EpicWaferTypeCreate, EpicWaferTypeUpdate } from 'epic-ui/api'
+import { EpicWaferType, EpicWaferTypeCreateRequest } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
 
 
@@ -49,21 +49,13 @@ export namespace EpicWaferTypeUpdateForm {
         }
     }
 
-    export async function formDataToCreateRequest(formData: FormData): Promise<EpicWaferTypeCreate> {
+    export async function formDataToCreateRequest(formData: FormData): Promise<EpicWaferTypeCreateRequest> {
         const waferMap = await FileHelpers.extractFileStringContent(formData.waferMap!)
         return {
             name: formData.name,
             engineeringRun: formData.engineeringRun,
             foundry: formData.foundry,
             technology: formData.technology,
-            waferMap,
-        }
-    }
-
-    export async function formDataToUpdateRequest(formData: FormData): Promise<EpicWaferTypeUpdate> {
-        const waferMap = await FileHelpers.extractFileStringContent(formData.waferMap!)
-        return {
-            name: formData.name,
             waferMap,
         }
     }

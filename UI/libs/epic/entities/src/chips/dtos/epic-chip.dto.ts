@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
+import { EpicChip } from 'epic-api-types'
 
-import { EpicChipEntity } from '../models'
 
-
-export class EpicChipDto implements EpicChipEntity {
+export class EpicChipDto implements EpicChip {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

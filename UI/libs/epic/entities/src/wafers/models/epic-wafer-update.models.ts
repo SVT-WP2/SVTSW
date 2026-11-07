@@ -1,8 +1,5 @@
-import { EpicDateString } from '../../common'
+import { EpicWaferUpdateRequest } from 'epic-api-types'
 
 
-export type EpicWaferUpdateEntity = {
-    thinningDate?: EpicDateString | null
-    dicingDate?: EpicDateString | null
-    productionDate?: EpicDateString | null
-}
+/** Payload of the `UpdateWafer` Kafka message — identical to the HTTP request body today. */
+export type EpicWaferUpdateEntity = EpicWaferUpdateRequest

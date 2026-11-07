@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWpMachine, EpicWpMachineCreate, EpicWpMachineUpdate } from 'epic-ui/api'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 
 
@@ -69,7 +69,7 @@ export namespace EpicWpMachineUpdateForm {
         }
     }
 
-    export function formDataToCreateRequest(formData: FormData): EpicWpMachineCreate {
+    export function formDataToCreateRequest(formData: FormData): EpicWpMachineCreateRequest {
         return {
             name: formData.name,
             serialNumber: formData.serialNumber,
@@ -83,7 +83,7 @@ export namespace EpicWpMachineUpdateForm {
         }
     }
 
-    export function formDataToUpdateRequest(formData: FormData): EpicWpMachineUpdate {
+    export function formDataToUpdateRequest(formData: FormData): EpicWpMachineUpdateRequest {
         return {
             hostName: formData.hostName,
             connectionType: formData.connectionType,

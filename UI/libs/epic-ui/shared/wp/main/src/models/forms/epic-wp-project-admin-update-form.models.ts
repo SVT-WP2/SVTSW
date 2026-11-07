@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWaferType, EpicWpMachine, EpicWpProject, EpicWpProjectCreate } from 'epic-ui/api'
+import { EpicWaferType, EpicWpMachine, EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
 
 
@@ -64,7 +64,7 @@ export namespace EpicWpProjectAdminUpdateForm {
         }
     }
 
-    export async function formDataToCreateRequest(formData: FormData): Promise<EpicWpProjectCreate> {
+    export async function formDataToCreateRequest(formData: FormData): Promise<EpicWpProjectCreateRequest> {
         const local2GlobalMap = await FileHelpers.extractFileStringContent(formData.local2GlobalMap)
         return {
             wpMachineId: formData.wpMachineId,

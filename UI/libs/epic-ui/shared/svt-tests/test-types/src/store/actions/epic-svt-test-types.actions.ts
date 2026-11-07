@@ -2,10 +2,10 @@ import { createAction, emptyProps, props } from '@ngrx/store'
 import {
     EpicSvtTestType,
     EpicSvtTestTypeConfig,
-    EpicSvtTestTypeConfigCreate,
-    EpicSvtTestTypeCreate,
-    EpicSvtTestTypeUpdate,
-} from 'epic-ui/api'
+    EpicSvtTestTypeConfigCreateRequest,
+    EpicSvtTestTypeCreateRequest,
+    EpicSvtTestTypeUpdateRequest,
+} from 'epic-api-types'
 
 
 export namespace EpicSvtTestTypesActions {
@@ -52,7 +52,7 @@ export namespace EpicSvtTestTypesActions {
 
     export const createRequestAction = createAction(
         ActionType.createRequest,
-        props<{ create: EpicSvtTestTypeCreate }>(),
+        props<{ create: EpicSvtTestTypeCreateRequest }>(),
     )
 
     export type CreateSuccessActionPayload = {
@@ -72,7 +72,7 @@ export namespace EpicSvtTestTypesActions {
 
     export const updateRequestAction = createAction(
         ActionType.updateRequest,
-        props<{ id: number; update: EpicSvtTestTypeUpdate }>(),
+        props<{ id: number; update: EpicSvtTestTypeUpdateRequest }>(),
     )
 
     export const updateSuccessAction = createAction(
@@ -87,7 +87,7 @@ export namespace EpicSvtTestTypesActions {
 
     export const createConfigRequestAction = createAction(
         ActionType.createConfigRequest,
-        props<{ create: EpicSvtTestTypeConfigCreate }>(),
+        props<{ create: EpicSvtTestTypeConfigCreateRequest }>(),
     )
 
     export const createConfigSuccessAction = createAction(

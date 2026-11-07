@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core'
+import { EpicSvtDutEntityName } from 'epic-api-types'
 import {
-    EpicSvtDutEntityName,
     EpicSvtTestSetupConfigsApiClient,
     EpicSvtTestSetupsApiClient,
     EpicSvtTestTemplatesApiClient,

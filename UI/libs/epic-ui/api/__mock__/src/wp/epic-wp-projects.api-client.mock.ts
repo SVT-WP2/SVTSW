@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicWpProject, EpicWpProjectCreate, EpicWpProjectsApiClient } from 'epic-ui/api'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
+import { EpicWpProjectsApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
-
-import { getMockEpicWaferTypes } from '../wafer-types'
-
-import { getMockEpicWpMachinesList } from './epic-wp-machines.api-client.mock'
 
 
 export function getMockEpicWpProjectsList(): EpicWpProject[] {
@@ -19,8 +16,6 @@ export function getMockEpicWpProjectsList(): EpicWpProject[] {
             alignmentDie: '1.1',
             homeDie: '3.3',
             local2GlobalMap: JSON.stringify({ field: 'value' }),
-            wpMachine: getMockEpicWpMachinesList().find(item => item.id === 1),
-            waferType: getMockEpicWaferTypes().find(item => item.id === 1),
         },
         {
             id: 2,
@@ -32,8 +27,6 @@ export function getMockEpicWpProjectsList(): EpicWpProject[] {
             alignmentDie: '1.1',
             homeDie: '3.3',
             local2GlobalMap: JSON.stringify({ field: 'value' }),
-            wpMachine: getMockEpicWpMachinesList().find(item => item.id === 1),
-            waferType: getMockEpicWaferTypes().find(item => item.id === 1),
         },
         {
             id: 3,
@@ -45,8 +38,6 @@ export function getMockEpicWpProjectsList(): EpicWpProject[] {
             alignmentDie: '1.1',
             homeDie: '3.3',
             local2GlobalMap: JSON.stringify({ field: 'value' }),
-            wpMachine: getMockEpicWpMachinesList().find(item => item.id === 2),
-            waferType: getMockEpicWaferTypes().find(item => item.id === 1),
         },
     ]
 }
@@ -76,12 +67,10 @@ export class EpicWpProjectsApiClientMock extends EpicWpProjectsApiClient {
             )
     }
 
-    override create(payload: EpicWpProjectCreate): Observable<EpicWpProject> {
+    override create(payload: EpicWpProjectCreateRequest): Observable<EpicWpProject> {
         const entity: EpicWpProject = {
             ...payload,
             id: this.entitiesList.length ? this.entitiesList[this.entitiesList.length - 1].id + 1 : 1,
-            waferType: getMockEpicWaferTypes().find(item => item.id === payload.waferTypeId),
-            wpMachine: getMockEpicWpMachinesList().find(item => item.id === payload.wpMachineId),
         }
         this.entitiesList = [...this.entitiesList, entity]
         return of(entity)

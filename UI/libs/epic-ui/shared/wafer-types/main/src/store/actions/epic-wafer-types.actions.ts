@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import { EpicWaferType, EpicWaferTypeCreate, EpicWaferTypeUpdate } from 'epic-ui/api'
+import { EpicWaferType, EpicWaferTypeCreateRequest } from 'epic-api-types'
 
 
 export namespace EpicWaferTypesActions {
@@ -14,9 +14,6 @@ export namespace EpicWaferTypesActions {
         createRequest = '[WaferTypes] createRequest',
         createSuccess = '[WaferTypes] createSuccess',
         createError = '[WaferTypes] createError',
-        updateRequest = '[WaferTypes] updateRequest',
-        updateSuccess = '[WaferTypes] updateSuccess',
-        updateError = '[WaferTypes] updateError',
     }
 
     export const fetchAllRequestAction = createAction(
@@ -50,7 +47,7 @@ export namespace EpicWaferTypesActions {
 
     export const createRequestAction = createAction(
         ActionType.createRequest,
-        props<{ create: EpicWaferTypeCreate }>(),
+        props<{ create: EpicWaferTypeCreateRequest }>(),
     )
 
     export const createSuccessAction = createAction(
@@ -60,21 +57,6 @@ export namespace EpicWaferTypesActions {
 
     export const createErrorAction = createAction(
         ActionType.createError,
-        props<{ error: Error }>(),
-    )
-
-    export const updateRequestAction = createAction(
-        ActionType.updateRequest,
-        props<{ id: number; update: Partial<EpicWaferTypeUpdate> }>(),
-    )
-
-    export const updateSuccessAction = createAction(
-        ActionType.updateSuccess,
-        props<{ entity: EpicWaferType }>(),
-    )
-
-    export const updateErrorAction = createAction(
-        ActionType.updateError,
         props<{ error: Error }>(),
     )
 

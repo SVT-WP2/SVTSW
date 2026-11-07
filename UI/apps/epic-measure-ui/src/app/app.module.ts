@@ -22,12 +22,12 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { EpicAuthService } from 'epic-ui/common/auth'
 import { EpicMenuLightModule, EpicNotificationModule, provideEpicDefaultIcons } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
-import { EpicAsicCreateDialogService, EpicAsicDeleteDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
+import { EpicAsicCreateDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
 import { provideEpicSvtTestTypesStore } from 'epic-ui/shared/svt-test/test-types'
 import { provideEpicSvtTestSetupsStore } from 'epic-ui/shared/svt-tests'
 import { provideEpicWaferTestsStore } from 'epic-ui/shared/wafer-tests'
 import { provideEpicWaferTypesStore } from 'epic-ui/shared/wafer-types'
-import { EpicWaferDeleteDialogService, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
+import { EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { provideEpicWpStore } from 'epic-ui/shared/wp'
 import { provideSystemColors } from 'epic-ui/utils/colors'
 import { getMatDefaultProviders } from 'epic-ui/utils/material'
@@ -87,9 +87,7 @@ echarts.use([BarChart, LineChart, GaugeChart, PieChart, LegendComponent, Tooltip
         provideEpicDefaultIcons(),
         ...getMatDefaultProviders(),
         EpicAuthService,
-        EpicWaferDeleteDialogService,
         EpicAsicCreateDialogService,
-        EpicAsicDeleteDialogService,
         // NGRX
         provideStore(
             {

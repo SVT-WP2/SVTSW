@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsString } from 'class-validator'
+import { EpicSvtTestTypeUpdateRequest } from 'epic-api-types'
 
-import { EpicSvtTestTypeUpdateEntity } from '../models'
 
-
-export class EpicSvtTestTypeUpdateDto implements EpicSvtTestTypeUpdateEntity {
+export class EpicSvtTestTypeUpdateDto implements EpicSvtTestTypeUpdateRequest {
 
     @IsArray()
     @IsString({ each: true })

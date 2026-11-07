@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
-import { EpicWpMachine, EpicWpMachineCreate, EpicWpMachinesApiClient, EpicWpMachineUpdate } from 'epic-ui/api'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+import { EpicWpMachinesApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
 
 import { EpicEnumsMock } from '../enums'
@@ -62,7 +63,7 @@ export class EpicWpMachinesApiClientMock extends EpicWpMachinesApiClient {
             )
     }
 
-    override create(payload: EpicWpMachineCreate): Observable<EpicWpMachine> {
+    override create(payload: EpicWpMachineCreateRequest): Observable<EpicWpMachine> {
         const entity: EpicWpMachine = {
             ...payload,
             id: this.entitiesList.length ? this.entitiesList[this.entitiesList.length - 1].id + 1 : 1,
@@ -76,7 +77,7 @@ export class EpicWpMachinesApiClientMock extends EpicWpMachinesApiClient {
             )
     }
 
-    override update(id: number, update: Partial<EpicWpMachineUpdate>): Observable<EpicWpMachine> {
+    override update(id: number, update: Partial<EpicWpMachineUpdateRequest>): Observable<EpicWpMachine> {
         let refEntity: EpicWpMachine
         this.entitiesList = this.entitiesList.map(item => {
             if (item.id === id) {

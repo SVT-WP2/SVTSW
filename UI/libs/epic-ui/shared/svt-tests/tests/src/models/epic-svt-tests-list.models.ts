@@ -1,4 +1,4 @@
-import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'epic-ui/api'
+import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'epic-api-types'
 import { EpicInlineFilterDateRange, toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { SelectOptionLabelValue } from 'epic-ui/utils'
 import { uniq } from 'lodash-es'
@@ -195,7 +195,7 @@ export function toEpicSvtTestSetupConfigIdsFilter(
  */
 export function toEpicSvtTestsListQueryFilter(
     filterValue: EpicSvtTestsListFilterValue,
-    filterData?: EpicSvtTestsListFilterData | null): EpicSvtTestsListQuery.QueryFilter {
+    filterData?: EpicSvtTestsListFilterData | null): EpicSvtTestsListQuery {
 
     return {
         ids: toEpicSvtTestIdsFilter(filterValue.searchTerm),
@@ -218,7 +218,7 @@ export function toEpicSvtTestsListQueryFilter(
  * nothing down, `*From` is inclusive and `*To` is exclusive.
  */
 export function matchesEpicSvtTestsListQueryFilter(
-    test: EpicSvtTest, queryFilter: EpicSvtTestsListQuery.QueryFilter): boolean {
+    test: EpicSvtTest, queryFilter: EpicSvtTestsListQuery): boolean {
 
     return matchesFilterList<string>(String(test.id), queryFilter.ids?.map(String))
         && matchesFilterList<string>(test.dutEntityName, queryFilter.dutEntityNames)

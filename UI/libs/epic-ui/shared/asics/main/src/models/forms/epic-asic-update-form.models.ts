@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicAsic, EpicAsicCreate, EpicAsicUpdate } from 'epic-ui/api'
+import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { EpicWaferRef } from 'epic-ui/shared/wafers'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 
@@ -50,13 +50,7 @@ export namespace EpicAsicUpdateForm {
         }
     }
 
-    export function formDataToUpdateRequest(formData: FormData): EpicAsicUpdate {
-        return {
-            waferMapPosition: formData.waferMapPosition,
-        }
-    }
-
-    export function formDataToCreateRequest(formData: FormData): EpicAsicCreate {
+    export function formDataToCreateRequest(formData: FormData): EpicAsicCreateRequest {
         return {
             serialNumber: formData.serialNumber,
             waferId: formData.waferId!,
