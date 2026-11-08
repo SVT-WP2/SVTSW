@@ -18,9 +18,12 @@ async function bootstrap() {
     app.enableShutdownHooks()
 
     // The Kafka consumer (`svt.db-agent.request`) and the heartbeat; an unreachable broker ends the boot, as it
-    // did for the C++ agent, and the container restarts.
+    // did for the C++ agent, and the container restarts. The application is initialised (handlers registered
+    // by the dispatcher's module-init hook) *before* the consumer starts: a record consumed earlier would be
+    // answered "unknown request type".
     const kafka = configService.get('kafka', { infer: true })
     app.connectMicroservice(buildSvtDbAgentNextKafkaOptions(kafka.brokers), { inheritAppConfig: true })
+    await app.init()
     await app.startAllMicroservices()
     await app.get(SvtDbAgentNextHeartbeatService).start()
 
