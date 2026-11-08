@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName, EpicEnumsCollection, EpicEnumsCollectionResponse } from 'epic-api-types'
 import { map, Observable } from 'rxjs'
+import { EpicEnumName, EpicEnumsCollection, EpicEnumsCollectionResponse } from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 

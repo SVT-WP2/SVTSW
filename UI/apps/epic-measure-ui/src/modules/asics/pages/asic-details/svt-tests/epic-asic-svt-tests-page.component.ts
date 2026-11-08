@@ -1,10 +1,10 @@
 import { Component, inject, Signal, viewChild } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { ActivatedRoute } from '@angular/router'
-import { EpicSvtDutEntityName } from 'epic-api-types'
 import { EpicSvtDutTestsContainerComponent } from 'epic-ui/shared/svt-test/tests'
 import { BaseComponent } from 'epic-ui/utils'
 import { map } from 'rxjs'
+import { EpicSvtDutEntityName } from 'svt-ts-types'
 
 
 @Component({

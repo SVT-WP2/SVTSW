@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypeUpdateRequest } from 'epic-api-types'
 import { EpicSvtTestTypeConfigsApiClient, EpicSvtTestTypesApiClient } from 'epic-ui/api'
 import { EpicEnumsMock } from 'epic-ui/api/__mock__'
 import { delay, map, Observable, of, throwError } from 'rxjs'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypeUpdateRequest } from 'svt-ts-types'
 
 
 export function getMockEpicSvtTestType(): EpicSvtTestType[] {

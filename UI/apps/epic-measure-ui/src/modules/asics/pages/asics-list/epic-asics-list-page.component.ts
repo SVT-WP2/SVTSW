@@ -3,7 +3,6 @@ import { toSignal } from '@angular/core/rxjs-interop'
 import { MatCardModule } from '@angular/material/card'
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
-import { EpicAsic } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -15,6 +14,7 @@ import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicAsicCreateDialogService, EpicAsicsListComponent, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
 import { EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicAsic } from 'svt-ts-types'
 
 
 @Component({

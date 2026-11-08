@@ -1,5 +1,12 @@
 # 02. Domain model
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page is the C++ agent's view of the
+> domain at the freeze. It is **not** the authority for the domain model or the glossary of SVTSW:
+> those are [`Documentation/domain-model.md`](../../Documentation/domain-model.md) and
+> [`Documentation/glossary.md`](../../Documentation/glossary.md). Entities, relations and rules change
+> only in the re-implementation, and this page does not follow them.
+> [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 What the data means, in the language of the ITS3 / SVT wafer-probing and module-testing workflow.
 Table and column names are given for orientation; the full schema is in
 [03-database-schema.md](03-database-schema.md).

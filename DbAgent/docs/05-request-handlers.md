@@ -1,5 +1,8 @@
 # 05. Request handlers, entity by entity
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the C++ agent, not the
+> system under development. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 For each entity: the DTO **declaration** (what the generic engine of [04](04-request-engine.md) is
 parameterised with), the **messages** it serves, and the exact algorithm of every handler that is
 not the plain generic one. `data` means the `data` object of the request payload.
@@ -285,7 +288,8 @@ if (data.loadedWaferId == null) {                                        // UNLO
     if (machine.loadedWaferId == null) throw 'WARN! No Wafer was loaded in the machine. Ignoring action.'
     insertRow(waferLoadedDto, { ...hist, status: 'Unloaded', waferId: machine.loadedWaferId })
 } else {                                                                 // LOAD (or swap)
-    if (data.loadedWaferOrientation == null) throw 'ERROR: Mising orientation for the loaded wafer'
+    if (data.loadedWaferOrientation === null) throw 'ERROR: Mising orientation for the loaded wafer'
+    // only an explicit null throws: a request WITHOUT the key was accepted in the recorded run, orientation stored as NULL
     if (machine.loadedWaferId != null) log.warn('Create entry for unloaded action …')
     // Q-H8a: the intended Unloaded row for the previous wafer is overwritten before insert; only ONE row is written:
     insertRow(waferLoadedDto, { ...hist, status: 'Loaded', waferId: data.loadedWaferId, orientation: data.loadedWaferOrientation })
@@ -388,8 +392,8 @@ Author (Q18): `specification` is free-form for now.
 | Message | Algorithm |
 |---|---|
 | `GetAllSvtTestSetups` | generic list with relation. Items: `{ defaultConfigId, generalLocation, id, name }` |
-| `CreateSvtTestSetup` | custom, below |
-| `UpdateSvtTestSetup` | relation-table update: `data.id`, `data.update.defaultConfigId` → `UPDATE SvtTestSetupDefaultConfig SET defaultConfigId WHERE setupId = id` (no upsert, Q-U1); reply entity |
+| `CreateSvtTestSetup` | custom, below. **Always fails** (Q-R2), after it wrote the setup row. |
+| `UpdateSvtTestSetup` | relation-table update: `data.id`, `data.update.defaultConfigId` → `UPDATE SvtTestSetupDefaultConfig SET defaultConfigId WHERE setupId = id` (no upsert, Q-U1); reply entity. For a setup without a default-config row the update changes nothing and the re-read throws (Q-R2): `BadRequest`, `vector::_M_range_check…`. |
 | `GetEquipmentListForTestSetup` | `data.setupId` required (`Missing field setupId`) → `{ items: [{ equipId, setupId }, …], totalCount }`. **Q-H11**: the contract promises `EquipmentDto` items. |
 
 No message adds equipment to a setup; `SvtTestSetupEquipList` is not populated at all today
@@ -404,12 +408,22 @@ not check that.
 ```ts
 const body = data.create; if (body == null) throw 'Wrong request message format'
 const cfg = body.defaultConfig; delete body.defaultConfig          // recursive delete
-const setup = createAndReturn(setupDto, body)                       // required count 2
+const setup = createAndReturn(setupDto, body)                       // required count 2. THROWS HERE, see below
 cfg.setupId = setup.id
 const config = createAndReturn(setupConfigDto, cfg)                 // required count 4: setupId, name, note, configBody (note must be present, Q-H19)
 addRelationValues(defaultConfigRel, setup.id, config.id)            // inserts the SvtTestSetupDefaultConfig row
 return { entity: getById(setupDto, setup.id) }                       // { defaultConfigId, generalLocation, id, name }
 ```
+
+**The handler never gets past its first line.** `createAndReturn` inserts the setup row and then
+re-reads it through the list path ([04 §5](04-request-engine.md#5-create), step 5.7), which merges the
+scalar relation `defaultConfigId`. The row of `SvtTestSetupDefaultConfig` does not exist yet, so the
+merge throws (Q-R2) and the reply is `BadRequest`, `vector::_M_range_check: __n (which is 0) >=
+this->size() (which is 0)`. The setup row stays (no transaction), without a config and without a
+default-config row; from then on `GetAllSvtTestSetups` fails whenever that setup is selected, until a
+default-config row is added in the database. Recorded on 2026-11-14 (`flow/test-setup-create`,
+`flow/test-setup-created`). The three setups of the dev database were therefore not created by this
+code.
 
 ---
 
@@ -429,7 +443,7 @@ Identical structure, two tables.
 |---|---|
 | `GetAllSvtTestSetupConfigs` / `GetAllSvtTestTypeConfigs` | generic list. Items: `{ createdAt: "YYYY-MM-DD", id, name, note, setupId | testTypeId }` |
 | `CreateSvtTestSetupConfig` / `CreateSvtTestTypeConfig` | generic create. `note` key must be present (may be `null`). `configBody` string or object. Reply entity without `configBody`. |
-| `GetSvtTestSetupConfigBody` / `GetSvtTestTypeConfigBody` | `data.id` (int, required) → `{ entity: { configBody: "<json text>", id } }`; an unknown id yields `{ entity: {} }` with `Success` (Q-H20) |
+| `GetSvtTestSetupConfigBody` / `GetSvtTestTypeConfigBody` | `data.id` (int, required) → `{ entity: { configBody: "<json text>", id } }`; an unknown id yields `{ entity: null }` with `Success` (Q-H20) |
 
 ---
 
@@ -444,9 +458,9 @@ Identical structure, two tables.
 
 | Message | Algorithm |
 |---|---|
-| `GetAllSvtTestTypes` | generic list unless `filter.dutTypes` is present; then **Q-H9**: the code reads `filter.dutType` (singular, absent → null → no WHERE), collects every `testTypeId` in the DUT-type table, and recurses with a malformed payload that ends up applying **no filter**. Net effect: with any DUT-type rows present the reply is all test types; with none, an empty list. The contract's `dutTypes` filter is a no-op. |
+| `GetAllSvtTestTypes` | generic list unless `filter.dutTypes` is present; then **Q-H9**: the code reads `filter.dutType` (singular, absent → null) and asks the DUT-type relation table for it. `dutType` is not a declared filter of that table, so the lookup fails (`Invalid filter: dutType`, only logged) and returns no rows. The handler then replies with that empty list: `{ items: [] }`, without `totalCount`, whatever DUT types were sent. The branch that would collect the type ids and recurse is never reached. Recorded on 2026-11-14 (`svt-test-types/filter-dutTypes-*`). |
 | `CreateSvtTestType` | custom, below |
-| `UpdateSvtTestType` | **Q-H10**: reads `data.testTypeId` and `data.dutTypes` (the contract says `data.id` and `data.update.dutTypes`); appends missing DUT types (never removes); reply entity. With the contract's shape `data.testTypeId` is null → type error → `BadRequest`. |
+| `UpdateSvtTestType` | **Q-H10**: reads `data.testTypeId` and `data.dutTypes` (the contract says `data.id` and `data.update.dutTypes`); appends missing DUT types (never removes); reply entity. With the contract's shape `data.testTypeId` is null → type error → `BadRequest` (`[json.exception.type_error.302] type must be number, but is number`, sic). |
 
 Author (Q22): the `dutTypes` filter is meant to return the test types associated with the given DUT
 type(s); whether the update replaces the set or only adds to it, and which request shape is

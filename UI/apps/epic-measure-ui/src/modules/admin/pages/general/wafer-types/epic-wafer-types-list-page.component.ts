@@ -2,7 +2,6 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicWaferType } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -19,6 +18,7 @@ import {
     EpicWaferTypesSelectors,
 } from 'epic-ui/shared/wafer-types'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicWaferType } from 'svt-ts-types'
 
 import StoreActions = EpicWaferTypesActions
 import StoreSelectors = EpicWaferTypesSelectors

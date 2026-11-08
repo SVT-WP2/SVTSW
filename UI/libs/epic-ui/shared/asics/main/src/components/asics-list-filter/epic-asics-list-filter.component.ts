@@ -4,7 +4,6 @@ import { MatCardModule } from '@angular/material/card'
 import { MatDivider } from '@angular/material/divider'
 import { MatTooltip } from '@angular/material/tooltip'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicWafer } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -14,6 +13,7 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicWafer } from 'svt-ts-types'
 
 import {
     EpicAsicsListFilterData,

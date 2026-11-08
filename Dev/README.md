@@ -18,6 +18,7 @@ all on a shared Docker network.
 | `docker-compose.postgres.yml` | A Postgres 17 database in a container. | Optional - only if you do **not** have Postgres installed natively. |
 | `docker-compose.swtsw.yml` | The application services (`svt-db-agent`, `svt-ui`, ...), built from each team's folder. Reads its DB connection from `.env`. | Yes |
 | `.env.example` | Template for the variables (DB host/password, ports). Copy to `.env`. | Yes (copy once) |
+| `docker-compose.e2e.yml` | The Kafka broker of the epic-measure-api e2e suite (localhost:9185, own compose project `svt-e2e`, no network of its own to share). See `UI/apps/epic-measure-api/test-e2e/README.md`. | Only for that suite |
 
 There is **no separate native-DB compose file** - switching between a containerised
 and a native Postgres is one variable in `.env`.

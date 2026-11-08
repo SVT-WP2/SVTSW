@@ -6,57 +6,75 @@ and [../CLAUDE.md](../CLAUDE.md) (conventions).
 ## 1. System context
 
 `UI/` is one workspace inside the larger `SVTSW` repo. In production the Angular app and the NestJS BFF
-are packaged into a **single container** (nginx serving the SPA + the Node API), which talks to the rest
-of the SVT system exclusively over Kafka.
+are packaged into a **single container** (nginx serving the SPA + the Node API). The BFF talks to one other
+service, the DB agent, and only over Kafka.
 
 ```mermaid
 flowchart LR
     B["Browser<br/>Angular SPA"]
     A["epic-measure-api<br/>NestJS BFF"]
     K(["Kafka broker"])
-    D["Real DB Agent<br/>(SVTSW/DbAgent)"]
+    D["DB agent<br/>svt-db-agent-next<br/>(../DbAgentNext)"]
+    P[("PostgreSQL")]
     M["epic-db-agent<br/>MOCK, dev only"]
-    O["Other SVT services<br/>Supervisor / TestAgent / WPAgent"]
 
     B -->|"HTTP /api"| A
     B -.->|"WebSocket /ws"| A
     A <-->|"svt.db-agent.request<br/>+ .reply"| K
     K <--> D
+    D <--> P
     K <-.-> M
-    K <--> O
 ```
 
+The DB agent is `svt-db-agent-next`, the standalone NestJS app [`../DbAgentNext`](../../DbAgentNext/README.md). It
+is the DB agent of every environment, and the only service that connects to PostgreSQL. It is not part of this
+workspace: the two share the contract types of `../Shared/svt-ts-types` and nothing else. Its data model, its
+database schema and what it does for each message are in
+[`../DbAgentNext/docs`](../../DbAgentNext/docs/README.md).
+
+The C++ agent in `../DbAgent` is frozen and gets no support. Do not build on its code, its docs or its contract.
+
 `epic-db-agent` exists so the whole stack can run on a laptop with nothing but a Kafka broker. It implements
-the same Kafka contract as the real DB Agent, backed by in-memory arrays.
+the same Kafka contract as the DB agent, backed by in-memory arrays.
+
+The other services of the repo (WPAgent, TestAgent) are clients of the same DB agent. The UI has no link to them:
+see [`../Documentation/system-overview.md`](../../Documentation/system-overview.md).
 
 ## 2. Workspace layout
 
 ```
 UI/
 ├── apps/
-│   ├── epic-measure-ui/      Angular 19 SPA
+│   ├── epic-measure-ui/      Angular 21 SPA
 │   ├── epic-measure-api/     NestJS BFF (HTTP + Kafka client)
 │   └── epic-db-agent/        NestJS Kafka microservice — mock DB agent
 ├── libs/
-│   ├── epic-api-types/       HTTP contract types shared by the SPA and the Node apps (plain TS only)
 │   ├── epic/                 Node-side shared code (API ↔ db-agent)
-│   │   ├── entities/         DTO classes, Kafka wire types, Kafka message contracts
+│   │   ├── entities/         DTO classes, RxJS / NestJS helpers around the Kafka contract
 │   │   └── core/             low-level helpers (TCP connection factory)
 │   └── epic-ui/              Angular-side shared code
-│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from epic-api-types
+│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from svt-ts-types
 │       ├── common/           auth, layout, ag-grid, design-system components
 │       ├── shared/<domain>/  feature domain libs (the bulk of the UI)
 │       └── utils/            base classes, pipes, directives, material, colors
 └── docker/                   nginx template + entrypoint for the prod image
+
+../Shared/svt-ts-types/       contract types as plain TS only, outside the workspace — two entry points
+├── main/                     HTTP contract types shared by the SPA and the Node apps — `svt-ts-types`
+└── kafka/                    Kafka contract of the Node apps — `svt-ts-types/kafka`
 ```
 
+The contract types are outside `UI/` because the DB agent, the standalone app `../DbAgentNext`, compiles them too
+(`../Documentation/decisions/2026-11-repository-layout.md`). The workspace reaches them through the two aliases of
+`tsconfig.base.json` only; how each tool handles a file outside `UI/` is in `../Shared/svt-ts-types/README.md`.
+
 **The hard boundary:** `libs/epic/*` is Node-only and shared by the two NestJS apps. `libs/epic-ui/*` is
-Angular-only. They never import each other. What they *share* is `libs/epic-api-types`: the request / query /
+Angular-only. They never import each other. What they *share* is `../Shared/svt-ts-types`: the request / query /
 response types of the DB-agent-backed HTTP API as plain TypeScript, with no decorators and no framework imports
-(the root `eslint.config.mjs` rejects them). The UI uses those types as its models; a BE DTO class `implements`
+(`npm run lint:shared` rejects them). The UI uses those types as its models; a BE DTO class `implements`
 them (and, where the type has optional members, `libs/epic/entities/src/contract` checks that the two declare the
-same members — `implements` cannot); the Kafka wire types in
-`libs/epic/entities` alias them while the shapes are identical. A field drifting between FE and BE is a
+same members — `implements` cannot); the Kafka messages
+(`svt-ts-types/kafka`) carry them directly while the wire shape equals the HTTP one. A field drifting between FE and BE is a
 compile error instead of a silently ignored query param. (`iv-mnt` and `tcp` are not DB-agent operations; their
 types still live in `libs/epic-ui/api`.)
 
@@ -88,23 +106,32 @@ sequenceDiagram
     AC-->>C: EpicSvtTest[]
 ```
 
+The receiver in this diagram is the mock DB agent. With the DB agent (`../DbAgentNext`) the BFF side is the same:
+the same message goes to the same topic. The dispatcher of the agent then calls the handler of the message type
+(`../DbAgentNext/docs/05-implementation-notes.md`, §3).
+
 ### Files involved, in order
 
 | Step | File |
 |---|---|
 | Grid data source | `libs/epic-ui/shared/svt-tests/tests/src/services/epic-svt-tests-grid.data-source.ts` |
 | HTTP client | `libs/epic-ui/api/main/src/svt-tests/services/epic-svt-tests.api-client.ts` |
-| HTTP contract type (FE + BE) | `libs/epic-api-types/src/svt-tests/responses/epic-svt-test.models.ts` |
+| HTTP contract type (FE + BE) | `../Shared/svt-ts-types/main/src/svt-tests/responses/epic-svt-test.models.ts` |
 | Controller | `apps/epic-measure-api/src/modules/svt-test/controllers/epic-svt-tests-controller.ts` |
 | DTO (`implements` the contract type) | `libs/epic/entities/src/svt-tests/dtos/epic-svt-test.dto.ts` |
 | Nest service | `apps/epic-measure-api/src/modules/svt-test/services/epic-svt-tests.service.ts` |
-| Kafka contract | `libs/epic/entities/src/kafka/db-agent/kafka-messages/svt-db-agent-kafka-svt-tests.ts` |
+| Kafka contract | `../Shared/svt-ts-types/kafka/src/db-agent/kafka-messages/svt-db-agent-kafka-svt-tests.ts` |
 | Mock handler | `apps/epic-db-agent/src/modules/db-agent/services/epic-db-agent-svt-tests.service.ts` |
+| DB agent handler | `../DbAgentNext/src/modules/handlers/svt-tests/svt-db-agent-next-svt-tests.handlers.ts` |
 
 ## 4. The Kafka layer
 
+The contract — envelope, message namespaces, wire types — is plain TypeScript in `../Shared/svt-ts-types/kafka`,
+imported as `svt-ts-types/kafka` by the Node apps only (ESLint rejects it in Angular code). The RxJS operators and
+`processKafkaReplyError()` used below stay in `libs/epic/entities`.
+
 Everything goes through **two topics**, declared in
-`libs/epic/entities/src/kafka/db-agent/kafka-messages/svt-db-agent-kafka.ts`:
+`../Shared/svt-ts-types/kafka/src/db-agent/kafka-messages/svt-db-agent-kafka.ts`:
 
 ```ts
 svt.db-agent.request         // API → DB Agent
@@ -146,14 +173,17 @@ protected sendMessageAndGetReply<TReply>(message: SvtDbAgentKafkaSvtTests.Messag
 Note the manual `JSON.stringify`. Each service must also `subscribeToResponseOf(TopicName.Request)` in
 `onModuleInit()`.
 
-### Receiving, in the DB Agent
+### Receiving, in the mock DB agent
 
 There is **one** controller (`epic-db-agent-wafers.controller.ts` — the name is historical; it handles
 everything) with a single `@MessagePattern(SvtDbAgentKafka.TopicName.Request)` and a big `switch` on
 `message.type` dispatching to per-domain services.
 
+The DB agent (`../DbAgentNext`) does not use this controller. It has a dispatcher with one handler entry for each
+message type (`../DbAgentNext/docs/05-implementation-notes.md`).
+
 > The authoritative contract lives outside this workspace, in
-> `../Documentation/Kafka/SvtKafkaConventions.md` and `svt.db-agent.kafka.yaml`. Consult it before adding
+> `../Documentation/Kafka/SvtKafkaConventions.md` and `svt.db-agent-next.kafka.yaml` (`svt.db-agent.kafka.yaml` is the contract of the frozen C++ agent). Consult it before adding
 > a message type.
 
 ## 5. NestJS API structure
@@ -175,7 +205,8 @@ Kafka microservice with consumer group `epic-ui`.
 Controllers use `@UseInterceptors(ClassSerializerInterceptor)` + `@SerializeOptions({ type: XxxDto })` so the
 DTO class controls what goes over the wire.
 
-Registered modules: `Health`, `IvMnt`, `Tcp`, `Wafers`, `Asics`, `Wp`, `Enums`, `Chips`, `Equipment`, `SvtTest`.
+Registered modules: `Health`, `IvMnt`, `Tcp`, `Wafers`, `Asics`, `Wp`, `Enums`, `Chips`, `ChipBlocks`, `Equipment`,
+`SvtTest`.
 
 ## 6. Angular structure
 
@@ -255,12 +286,13 @@ Defined in `tsconfig.base.json`. Always import through these.
 | Alias | Points at |
 |---|---|
 | `@env`, `@env/*` | `apps/epic-measure-ui/src/environments` |
-| `epic-api-types` | `libs/epic-api-types` — HTTP contract types, compiled into both sides |
+| `svt-ts-types` | `../Shared/svt-ts-types/main` — HTTP contract types, compiled into both sides |
+| `svt-ts-types/kafka` | `../Shared/svt-ts-types/kafka` — Kafka contract (envelope, messages, wire types), Node side only |
 | `epic/core`, `epic/entities` | `libs/epic/*` (Node side) |
 | `epic-ui/api`, `epic-ui/api/__mock__` | HTTP clients (+ mocks) |
 | `epic-ui/common`, `.../auth`, `.../ag-grid`, `.../components`, `.../layout` | design system |
 | `epic-ui/utils`, `.../colors`, `.../material` | base classes and helpers |
-| `epic-ui/shared/<domain>` | feature libs — `wafers`, `wafer-tests`, `wafer-types`, `asics`, `asic-tests`, `chips`, `wp`, `equipment`, `equipment-types`, `iv-mnt`, `kafka`, `tcp`, `location` |
+| `epic-ui/shared/<domain>` | feature libs — `wafers`, `wafer-tests`, `wafer-types`, `asics`, `asic-tests`, `chips`, `chip-blocks`, `wp`, `equipment`, `equipment-types`, `iv-mnt`, `kafka`, `tcp`, `location` |
 | `epic-ui/shared/svt-tests` | SVT test **setups** |
 | `epic-ui/shared/svt-test/test-types` | SVT test types |
 | `epic-ui/shared/svt-test/test-templates` | SVT test templates |
@@ -277,21 +309,36 @@ Defined in `tsconfig.base.json`. Always import through these.
 | Dev proxy `/api` → | `apps/epic-measure-ui/proxy.conf.json` | `http://localhost:7373` |
 | API dev port | `apps/epic-measure-api/.env.development` | `SVT_UI_API_PORT=7373` |
 | API fallback port | `apps/epic-measure-api/src/main.ts` | 9393 |
-| Kafka broker (dev) | `.env.development`, both Nest apps | `localhost:9095` |
-| Kafka broker (compose-internal) | `docker-compose.yml` | `kafka:9096` |
-| Kafka UI | `docker-compose.yml` | http://localhost:8088 |
-| Prod container | `docker-compose.yml` | UI 8096, API 9393, `KAFKA_BROKER=kafka:9096` |
+| API port in the container | `Dockerfile` | `SVT_UI_API_PORT=9393`; nginx passes `/api/` to it |
+| Kafka broker (dev) | `.env.development`, both Nest apps | `localhost:9085`, the broker of `../Dev/docker-compose.kafka-local.yml` |
+| Kafka broker (inside the local network) | `../Dev/docker-compose.kafka-local.yml` | `kafka:9084` |
+| Kafka UI (local) | `../Dev/docker-compose.kafka-local.yml` | http://localhost:8087 |
+| Kafka broker (BFF e2e) | `apps/epic-measure-api/.env.test`, `../Dev/docker-compose.e2e.yml` | `localhost:9185` |
+| DB agent (local) | `../DbAgentNext`, `npm start` | Kafka `localhost:9085`, PostgreSQL `localhost:5500`, http://localhost:7676/health |
+| `svt-ui` container, local | `../Dev/docker-compose.swtsw.yml` | UI 7575, `KAFKA_BROKER=kafka:9084` |
+| `svt-ui` container, dev server | `../Environment/Dev/docker-compose-svtsw-dev.yml` | UI 8090, `KAFKA_BROKER=kafka:9094` |
+| `svt-ui` container, prod server | `../Environment/Prod/docker-compose-svtsw-prod.yml` | UI 80, `KAFKA_BROKER=kafka:9094` |
+
+This folder has no compose file. The local stack is in `../Dev` and the server stacks are in `../Environment`.
 
 `.env.{development,production,test}` are committed for both Nest apps — they hold ports and broker
-addresses only.
+addresses. `.env.test` of the API also holds the settings of the e2e database.
 
-Consumer groups: `epic-ui` (API), `epic-ui.fake-db-agent` (mock agent).
+Which DB agent a server runs is in `../Environment/README.md`: the dev server and the prod server run
+`svt-db-agent-next`.
+
+Consumer groups: `epic-ui` (API), `epic-ui.fake-db-agent` (mock agent), `svt.db-agent.request` (the DB agent). Run
+only one DB agent on a broker, the mock or `svt-db-agent-next`. Their groups are different, so each of them receives
+each request and each of them sends a reply.
 
 ## 9. Build & test
 
 - Angular build: `@angular-devkit/build-angular:application` → `dist/apps/epic-measure-ui`.
   Production swaps `environment.ts` → `environment.prod.ts`.
-- API/db-agent build: `webpack-cli` via `nx:run-commands`.
+- API and mock DB agent build: `webpack-cli` via `nx:run-commands`. The DB agent (`../DbAgentNext`) has its own
+  build, tests and image, outside this workspace.
+- BFF e2e: `npm run e2e::api` — HTTP → Kafka → the DB agent (`../DbAgentNext`) → PostgreSQL
+  (`apps/epic-measure-api/test-e2e/README.md`).
 - Tests: Vitest, jsdom environment, `@analogjs/vite-plugin-angular` for Angular compilation.
   One root `vitest.config.ts` + `test-setup.ts` covers the whole workspace — libs do **not**
   carry their own config. `npm test` runs everything in a single process; `nx test <project>`

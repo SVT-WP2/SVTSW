@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Patch,
     Post,
     SerializeOptions,
@@ -19,10 +20,9 @@ import {
     EpicWaferLocationUpdateRequestDto,
     EpicWaferUpdateRequestDto,
     processKafkaReplyError,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWafers,
 } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
 import { EpicWafersService } from '../services'
 
@@ -47,7 +47,7 @@ export class EpicWafersController {
     @ApiResponse({ type: EpicWaferDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWaferDto })
-    async getOne(@Param('waferId') waferId: number): Promise<EpicWaferDto> {
+    async getOne(@Param('waferId', ParseIntPipe) waferId: number): Promise<EpicWaferDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWafersService.getAll({ ids: [+waferId] }),
@@ -64,7 +64,7 @@ export class EpicWafersController {
     }
 
     @Post()
-    @ApiBody({ type: EpicWaferUpdateRequestDto })
+    @ApiBody({ type: EpicWaferCreateRequestDto })
     @ApiResponse({ type: EpicWaferDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWaferDto })
@@ -76,7 +76,7 @@ export class EpicWafersController {
 
     @Patch('/:waferId')
     @ApiBody({ type: EpicWaferUpdateRequestDto })
-    async update(@Param('waferId') waferId: number, @Body() body: EpicWaferUpdateRequestDto) {
+    async update(@Param('waferId', ParseIntPipe) waferId: number, @Body() body: EpicWaferUpdateRequestDto) {
         const wafer = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWafersService.update(+waferId, body),
@@ -92,7 +92,7 @@ export class EpicWafersController {
 
     @Post('/:waferId/location')
     @ApiBody({ type: EpicWaferLocationUpdateRequestDto })
-    async updateLocation(@Param('waferId') waferId: number, @Body() body: EpicWaferLocationUpdateRequestDto) {
+    async updateLocation(@Param('waferId', ParseIntPipe) waferId: number, @Body() body: EpicWaferLocationUpdateRequestDto) {
         const wafer = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWafersService.updateWaferLocation(
@@ -116,7 +116,7 @@ export class EpicWafersController {
     @ApiResponse({ type: EpicWaferLocationHistoryRecordDto, isArray: true })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWaferLocationHistoryRecordDto })
-    async getLocationHistory(@Param('waferId') waferId: number): Promise<EpicWaferLocationHistoryRecordDto[]> {
+    async getLocationHistory(@Param('waferId', ParseIntPipe) waferId: number): Promise<EpicWaferLocationHistoryRecordDto[]> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicWafersService.getWaferLocationHistory(+waferId))
         ))

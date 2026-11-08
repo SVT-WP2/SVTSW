@@ -1,0 +1,104 @@
+{
+    "source": "Dev/db-example/2026-11-08-backup_prod.dump, main.\"Asic\" rows of this wafer (wafer type ER2, map Configurations/WaferTypeMappings/ER2WaferMap_v0.json)",
+    "waferSerialNumber": "HS02697-24A0",
+    "count": 3421,
+    "qualityCounts": {
+        "MechanicallyDamaged": 90,
+        "MechanicallyInteger": 3147,
+        "CoveredByGreenLayer": 184
+    },
+    "sha256OfSortedLines": "7086a0d60ca9fc6a5d52d0bf2233cc160fd9a3d2eee3546c2edde4145c933800",
+    "lineFormat": "serialNumber|waferMapPosition|familyType|quality, sorted with the default JavaScript sort, joined with \\n",
+    "samples": [
+        {
+            "serialNumber": "HS02697-24A0_0_0",
+            "waferMapPosition": "0_0",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_0_1",
+            "waferMapPosition": "0_1",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_3_0",
+            "waferMapPosition": "3_0",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_3_1",
+            "waferMapPosition": "3_1",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "babyMOSAIX-1_1_HS02697-24A0",
+            "waferMapPosition": "3_2",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "babyMOSAIX-1_2_HS02697-24A0",
+            "waferMapPosition": "3_3",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "babyMOSAIX-1_3_HS02697-24A0",
+            "waferMapPosition": "3_4",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "HS02697-24A0_6_0",
+            "waferMapPosition": "6_0",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_13_0",
+            "waferMapPosition": "13_0",
+            "familyType": "MOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "MOSAIX-1_HS02697-24A0",
+            "waferMapPosition": "16_0",
+            "familyType": "MOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "MOSAIX-2_HS02697-24A0",
+            "waferMapPosition": "17_0",
+            "familyType": "MOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "MOSAIX-5_HS02697-24A0",
+            "waferMapPosition": "20_0",
+            "familyType": "MOSAIX",
+            "quality": "MechanicallyInteger"
+        },
+        {
+            "serialNumber": "HS02697-24A0_23_0",
+            "waferMapPosition": "23_0",
+            "familyType": "MOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_30_0",
+            "waferMapPosition": "30_0",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        },
+        {
+            "serialNumber": "HS02697-24A0_36_5",
+            "waferMapPosition": "36_5",
+            "familyType": "BABYMOSAIX",
+            "quality": "MechanicallyDamaged"
+        }
+    ]
+}

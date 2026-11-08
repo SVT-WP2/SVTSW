@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsString } from 'class-validator'
-import { EpicSvtTestSetup } from 'epic-api-types'
+import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { EpicSvtTestSetup } from 'svt-ts-types'
 
 
 export class EpicSvtTestSetupDto implements EpicSvtTestSetup {
@@ -9,9 +9,10 @@ export class EpicSvtTestSetupDto implements EpicSvtTestSetup {
     @ApiProperty({ type: 'number' })
     id: number
 
+    @IsOptional()
     @IsNumber()
-    @ApiProperty({ type: 'number' })
-    defaultConfigId: number
+    @ApiProperty({ type: 'number', nullable: true, description: 'null when the setup has no default config' })
+    defaultConfigId: number | null
 
     @IsString()
     @ApiProperty({ type: 'string' })

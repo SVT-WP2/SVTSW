@@ -1,13 +1,16 @@
 # 08. Questions for the author
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page is the record of the questions to
+> the author of the C++ agent and of the answers of 2026-11-08. The question numbers do not change:
+> `DbAgentNext/docs` quotes them. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 Everything in this folder that cannot be settled by reading the code or the database, collected
 in one place. These are questions about **intent, domain rules, operations and history**. Plain
 defects that the code review surfaced (in-memory pagination, error handling, transactions, SQL
 building, crash cases) are deliberately **not** repeated here; they are recorded as observations
 in [07](07-contract-drift-and-quirks.md) and need no explanation.
 
-How to answer: write under **Answer** directly in this file, or reply in the review thread quoting
-the question number. ★ marks the questions that block other work (schema migration, contract
+An answer that arrives after the freeze is written under **Answer** in this file. ★ marks the questions that block other work (schema migration, contract
 clean-up, or the review of the docs themselves). Each question links to where the behaviour or the
 data is described.
 
@@ -413,7 +416,7 @@ contract.
 
 ### Q38. Other consumers
 
-**Context.** Known: `epic-measure-api`, WPAgent, TestAgent ([README](README.md#who-talks-to-the-agent)).
+**Context.** Known: `epic-measure-api`, WPAgent, TestAgent ([README](README.md#who-talked-to-the-agent-at-the-freeze)).
 **Question.** Does anything else talk to the agent or read the database directly (ITS3TestAgent,
 SVTSupervisor, analysis scripts, Grafana)?
 **Answer.** TBD

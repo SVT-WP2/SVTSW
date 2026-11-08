@@ -1,7 +1,6 @@
 ﻿import { Component, inject, Signal, OnInit, OnDestroy } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
-import { EpicEquipmentType } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -16,6 +15,7 @@ import {
     EpicEquipmentTypesListComponent,
 } from 'epic-ui/shared/equipment-types'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicEquipmentType } from 'svt-ts-types'
 
 
 @Component({

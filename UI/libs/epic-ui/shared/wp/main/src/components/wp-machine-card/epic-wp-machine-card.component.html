@@ -40,7 +40,7 @@
                         </span>
                         <mat-label>Loaded Wafer</mat-label>
                         <mat-select class="epic-wp-machine-card__select"
-                                    [ngModel]="entity.loadedWaferId"
+                                    [ngModel]="selectedWaferId"
                                     (ngModelChange)="onLoadedWaferChanged($event)">
                             <mat-option [value]="null">- None -</mat-option>
                             @for (option of [1,2,3]; track option) {
@@ -49,6 +49,25 @@
                                 </mat-option>
                             }
                         </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="w-100"
+                                    [class.epic-wp-machine-card__select--active]="!!entity.loadedWaferOrientation"
+                                    [subscriptSizing]="'dynamic'"
+                                    (click)="$event.stopPropagation()">
+                        <span class="px-3" matPrefix>
+                            <epic-icon class="epic-wp-machine-card__select-icon" [name]="'explore'"/>
+                        </span>
+                        <mat-label>Wafer Orientation</mat-label>
+                        <mat-select class="epic-wp-machine-card__select"
+                                    [ngModel]="selectedOrientation"
+                                    (ngModelChange)="onOrientationChanged($event)">
+                            @for (option of orientationOptions; track option) {
+                                <mat-option [value]="option">{{ option }}</mat-option>
+                            }
+                        </mat-select>
+                        @if (pendingWaferId !== undefined) {
+                            <mat-hint>Choose an orientation to load Wafer # {{ pendingWaferId }}</mat-hint>
+                        }
                     </mat-form-field>
 <!--                    <button mat-icon-button matTooltip="Details">-->
 <!--                        <epic-icon class="epic-color-neutral-300" [name]="'epic-arrow-chevron-right'"/>-->

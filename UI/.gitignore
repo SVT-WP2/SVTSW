@@ -55,3 +55,8 @@ Thumbs.db
 .claude/worktrees
 .nx/polygraph
 .nx/self-healing
+# node_modules anywhere (Vite caches, nested installs)
+node_modules/
+
+# Personal overrides of the epic-measure-api e2e settings (see apps/epic-measure-api/test-e2e/README.md)
+/apps/epic-measure-api/.env.test.local

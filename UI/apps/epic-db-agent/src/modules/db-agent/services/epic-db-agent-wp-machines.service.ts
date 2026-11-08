@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicWpMachineCreateEntity,
-    EpicWpMachineEntity,
-    EpicWpMachineUpdateEntity,
-    EpicWpMachineUpdateInstalledProbeCard,
-    EpicWpMachineUpdateLoadedWafer,
-} from 'epic/entities'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'svt-ts-types/kafka'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 
@@ -14,7 +9,7 @@ import { getEnumsCollection } from './epic-db-agent-enums.service'
 @Injectable()
 export class EpicDbAgentWpMachinesService {
 
-    protected entities: EpicWpMachineEntity[] = [
+    protected entities: EpicWpMachine[] = [
         {
             id: 1,
             name: 'CERN WP',
@@ -27,7 +22,9 @@ export class EpicDbAgentWpMachinesService {
             swVersion: '1.0.0',
             vendor: getEnumsCollection().wpVendor[0],
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         },
         {
             id: 2,
@@ -41,11 +38,13 @@ export class EpicDbAgentWpMachinesService {
             swVersion: '1.0.0',
             vendor: getEnumsCollection().wpVendor[0],
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         },
     ]
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpMachineEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpMachine[]> {
         const result = filter?.ids
             ? this.entities.filter(item => filter.ids.includes(item.id))
             : [...this.entities]
@@ -55,19 +54,21 @@ export class EpicDbAgentWpMachinesService {
             )
     }
 
-    getOneById(waferId: number): Observable<EpicWpMachineEntity | undefined> {
+    getOneById(waferId: number): Observable<EpicWpMachine | undefined> {
         return this.getAll()
             .pipe(
                 map(list => list.find(item => item.id === waferId)),
             )
     }
 
-    create(createRequest: EpicWpMachineCreateEntity): Observable<EpicWpMachineEntity> {
+    create(createRequest: EpicWpMachineCreateRequest): Observable<EpicWpMachine> {
         const newWpMachine = {
             id: (this.entities[this.entities.length - 1]?.id || 0) + 1,
             ...createRequest,
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         }
 
         this.entities.push(newWpMachine)
@@ -78,8 +79,8 @@ export class EpicDbAgentWpMachinesService {
             )
     }
 
-    update(entityId: number, updateRequest: EpicWpMachineUpdateEntity): Observable<EpicWpMachineEntity | null> {
-        let refWpMachine: EpicWpMachineEntity = null
+    update(entityId: number, updateRequest: EpicWpMachineUpdateRequest): Observable<EpicWpMachine | null> {
+        let refWpMachine: EpicWpMachine = null
 
         this.entities = this.entities
             .map(item => {
@@ -99,8 +100,8 @@ export class EpicDbAgentWpMachinesService {
             )
     }
 
-    updateLoadedWafer(payload: EpicWpMachineUpdateLoadedWafer): Observable<EpicWpMachineEntity | null> {
-        let refWpMachine: EpicWpMachineEntity = null
+    updateLoadedWafer(payload: EpicWpMachineUpdateLoadedWafer): Observable<EpicWpMachine | null> {
+        let refWpMachine: EpicWpMachine = null
 
         this.entities = this.entities
             .map(item => {
@@ -108,6 +109,7 @@ export class EpicDbAgentWpMachinesService {
                     refWpMachine = {
                         ...item,
                         loadedWaferId: payload.loadedWaferId,
+                        loadedWaferOrientation: payload.loadedWaferId === null ? null : payload.loadedWaferOrientation,
                     }
                     return refWpMachine
                 }
@@ -120,8 +122,8 @@ export class EpicDbAgentWpMachinesService {
             )
     }
 
-    updateInstalledProbeCard(payload: EpicWpMachineUpdateInstalledProbeCard): Observable<EpicWpMachineEntity | null> {
-        let refWpMachine: EpicWpMachineEntity = null
+    updateInstalledProbeCard(payload: EpicWpMachineUpdateInstalledProbeCard): Observable<EpicWpMachine | null> {
+        let refWpMachine: EpicWpMachine = null
 
         this.entities = this.entities
             .map(item => {
@@ -129,6 +131,9 @@ export class EpicDbAgentWpMachinesService {
                     refWpMachine = {
                         ...item,
                         installedProbeCardId: payload.installedProbeCardId,
+                        installedProbeCardOrientation: payload.installedProbeCardId === null
+                            ? null
+                            : payload.installedProbeCardOrientation ?? null,
                     }
                     return refWpMachine
                 }

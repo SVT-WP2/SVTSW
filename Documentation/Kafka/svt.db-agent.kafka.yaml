@@ -1,8 +1,21 @@
 openapi: "3.0.1"
 info:
-  title: SVT DB Agent
+  title: SVT DB Agent (C++, frozen)
   description: |
-    The Kafka communication layer definitions for `SVT DB Agent Service`.
+    The Kafka communication layer of the C++ `SVT DB Agent Service` (`DbAgent/`, image `svt-db-agent`).
+
+    ### Status: frozen
+    - The C++ agent is frozen since 2026-11-15: its code does not change. Development continues in the NestJS
+      re-implementation `svt-db-agent-next` (`DbAgentNext/`). The contract of that agent is
+      `svt.db-agent-next.kafka.yaml`. Use that file, not this one, for the system under development. The
+      decision, and the way back to the C++, are in `Documentation/decisions/2026-11-db-agent-clone.md`.
+    - This file says what the frozen C++ code does, defects included. It changes only to correct a statement
+      that does not agree with that code.
+    - Before 2026-11-18 this file described the intended behaviour, and the code did something else in many
+      places. `DbAgent/docs/07-contract-drift-and-quirks.md` keeps what this file said then, with an id for each
+      difference: `D-…` (request shape), `R-…` (reply shape), `X-…` (behaviour). Those ids are quoted below.
+    - The statements were checked against the code and against the replies of the C++ agent recorded on
+      2026-11-14 (`DbAgentNext/test-parity/snapshots/cpp.json`).
 
     ### Naming Conventions
     - The path format of routes has the next format `/<KAFKA_TOPIC_NAME>/<MESSAGE_TYPE_NAME>`.
@@ -15,9 +28,90 @@ info:
     - Response
       - if response is specified, the relevant message will be emmited to the relevant *.reply topic as a reply to that message.
 
+    ### Envelope
+    - Request headers: `kafka_correlationId` and `kafka_replyPartition` are required. A request without one of
+      them is answered `BadRequest` with `type: ""`. `kafka_replyTopic` is not read: the reply always goes to
+      `svt.db-agent.request.reply`, to the partition of `kafka_replyPartition`.
+    - Reply headers: `kafka_correlationId`, `kafka_replyPartition` and `kafka_nest-is-disposed` (`00`). Replies
+      are not compressed.
+    - Reply `status` is `Success` or `BadRequest`, nothing else (R-8). Every failure is a `BadRequest`: an
+      invalid request, an id that does not exist, an SQL error, a lost database connection.
+    - `error` is `{ "code": 0, "message": "" }` on success and `{ "code": -1, "message": "<reason>" }` on
+      failure, and `data` is `null` on failure. Many messages start with the C++ source location
+      (`[<file>:<line>]` and a new line). An SQL error carries the message of the database (R-9).
+    - A `type` that no handler serves is answered `BadRequest`, `type: "<type>Reply"`,
+      `Error: Request <type> not Found`. An empty `type` is answered `BadRequest`, `type: ""`, `Empty type`.
+    - A record whose value is not JSON, or has no `type`, or has a `type` that is not a string, gets no reply:
+      the process ends (X-10) and the container starts it again. At start the consumer (group
+      `svt.db-agent.request`) goes to the end of the topic, so the agent does not serve the requests that were
+      produced while it was down.
+    - The agent serves one request at a time. It uses no database transaction: each SQL statement commits on
+      its own, so a request that fails after its first statement leaves the earlier writes (X-1).
+    - Values go into the SQL text without escaping (X-2). A `'` in a string value makes the request a
+      `BadRequest`.
+
+    ### Lists, filters and paging
+    - `data.filter` may hold only the keys declared for the message. Another key is a `BadRequest`
+      (`Error: <key> is not an allowed filter.`).
+    - A list value becomes `IN (…)`. Its values must be all integers or all strings; a mixed list is a
+      `BadRequest`. An empty list is ignored. A number or a string becomes `=`. `null`, a boolean or an object
+      is ignored without an error (X-6).
+    - Every `GetAll*` message except `GetAllEnums` accepts `data.pager = { limit, offset }`, also where the
+      schema below does not show it. With a pager, `limit` defaults to 20 and `offset` to 0. An `offset`
+      greater than the number of matching rows is a `BadRequest`, and so is a `null` `limit`. The agent reads
+      all matching rows and then cuts the page in memory (X-4).
+    - Without a pager the reply holds all matching rows. When more than 5000 rows match, the reply is
+      `items: []` with `totalCount: 0` (R-13).
+    - Every list reply has `totalCount`, the number of rows that match the filter, also where the schema below
+      does not show it (R-12). The location histories are the exception: they have no `totalCount`.
+    - Lists are ordered by `id`, ascending. The location histories have no defined order.
+
+    ### Create and update
+    - `Create*` reads `data.create`. The agent counts the keys of `create`: there must be at least as many as
+      the entity has required columns (`Incorrect number of paramenters. Required: <n> and entry size is: <m>`
+      otherwise). It does not check the names. Thus every key that is marked required below must be present,
+      also where its value may be `null` (D-9, D-10).
+    - On create, a `null`, a boolean, a list or an object is left out of the `INSERT`, and the default of the
+      database applies (X-6). One exception: an object sent as `configBody` is stored as JSON text.
+    - `Update*` reads `data.id` and `data.update`. An unknown id is a `BadRequest`
+      (`Object with id <id> does not found.`). A `null` in `update` is ignored, so a value cannot be cleared.
+      An empty `update` succeeds without a change. The agent does not check the keys of `update`: a key that
+      is not a column of the table fails in the database.
+    - The agent reads the id of a new row with `SELECT MAX(id)` (X-3).
+
+    ### Values on the wire
+    - Dates (`thinningDate`, `dicingDate`, `productionDate`, `arriveDate`, history `date`, config `createdAt`)
+      are strings `YYYY-MM-DD`. The test timestamps (`createdAt`, `startedAt`, `finishedAt` of `SvtTestDto`)
+      are strings in the text form of PostgreSQL, without a time zone, e.g. `2025-06-03 23:59:12.123456` (R-6).
+    - JSON fields (`waferMap`, `configBody`, `specification`, `local2GlobalMap`) are returned as strings, as
+      stored. Send them as strings: an object is left out of the `INSERT`, except for `configBody` (R-7).
+    - Entity keys come in alphabetical order (R-14). Do not depend on the key order.
+    - Enum values are strings. The agent reads the enum types of the database one time, at start: a value added
+      later is not known to it until it starts again (X-11).
+
+    ### Not served
+    These message types were in this file before 2026-11-18. The agent has no handler for them and answers
+    `BadRequest`, `Error: Request <type> not Found`:
+    - `GetAllChipBlocks`. The agent also has no handler for `GetAllBlocks`, the type that the BFF sends and the
+      re-implementation serves.
+    - `GetAllModules`, `CreateModule`, `UpdateModuleLocation`, `GetModuleLocationHistory`: the Module entity is
+      not finished in the code.
+
+    ### Served without a known consumer
+    `UpdateChip`, `UpdateEquipment` and `CreateProbeCard` are handlers of the code that this file did not
+    describe before 2026-11-18. No consumer is known to send them, and the re-implementation does not serve them.
+
+    ### Heartbeat and health
+    - Every 2 s the agent produces `{ "timestamp": "<epoch seconds>.<6 decimals>" }` to
+      `svt.db-agent.heartbeat` (tag *Heartbeat* below).
+    - The Docker health check of the image (`svt-db-agent-healthcheck`) waits for one heartbeat record. It does
+      not check the database connection (X-16).
+
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
+    - The contract of the re-implementation: [svt.db-agent-next.kafka.yaml](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/svt.db-agent-next.kafka.yaml)
+    - The behaviour of the C++ agent in detail: [DbAgent/docs](https://github.com/SVT-WP2/SVTSW/blob/master/DbAgent/docs/README.md)
   version: 0.0.1
 #
 paths:
@@ -57,7 +151,12 @@ paths:
       tags:
         - Wafer Types
       summary: Create WaferType
-      description: Returns the newly created WaferType in the reply message
+      description: >-
+        Returns the newly created WaferType in the reply message, without `waferMap`.
+        The request must also have a `data.waferMap` key, with any value: the agent does not read it, and reads the map
+        from `data.create.waferMap` (D-7). The agent validates the map before it writes: every `FamilyType` must be a
+        value of `asicFamilyType` that the agent knew at start, and `error.message` lists all violations. The type row
+        and the map row are two statements: when the map row fails, the type row stays (X-1).
       requestBody:
         content:
           application/json:
@@ -88,7 +187,9 @@ paths:
       tags:
         - Wafer Types
       summary: Get WaferTypeMap.
-      description: Return the wafer type map for the wafer type id (waferTypeId)
+      description: >-
+        Return the wafer type map for the wafer type id (waferTypeId).
+        An unknown id, or a wafer type without a map, is a `BadRequest` (`Failed to access Wafer location records`).
       requestBody:
         content:
           application/json:
@@ -150,7 +251,11 @@ paths:
       tags:
         - Wafers
       summary: Create Wafer
-      description: Returns the newly created Wafer in the reply message
+      description: >-
+        Returns the newly created Wafer in the reply message.
+        Writes the wafer, its first location row (`note: Location at creation`) and one ASIC for each die of the map
+        of the wafer type. Each row is a statement of its own (X-1). All seven keys of `create` must be present; the
+        three dates may be `null` (D-9).
       requestBody:
         content:
           application/json:
@@ -181,7 +286,9 @@ paths:
       tags:
         - Wafers
       summary: Update Wafer
-      description: Returns updated Wafer in the reply message
+      description: >-
+        Returns updated Wafer in the reply message.
+        `generalLocation` in `update` is a `BadRequest`: use `UpdateWaferLocation`.
       requestBody:
         content:
           application/json:
@@ -212,7 +319,11 @@ paths:
       tags:
         - Wafers
       summary: Update Wafer Location
-      description: Returns updated Wafer in the reply message
+      description: >-
+        Returns updated Wafer in the reply message.
+        Appends a history row. Then it sets `generalLocation` of the wafer to the location of the history row with
+        the newest `date`. That row is not always the new row: `date` has day resolution, and a row with a later date
+        wins (X-9). All five keys must be present; `date`, `username` and `note` may be `null` (D-11).
       requestBody:
         content:
           application/json:
@@ -243,7 +354,9 @@ paths:
       tags:
         - Wafers
       summary: Get Wafer Location History Records
-      description: Return list of location records for a wafer
+      description: >-
+        Return list of location records for a wafer.
+        The reply has no `totalCount` and no defined order. An unknown id gives an empty list.
       requestBody:
         content:
           application/json:
@@ -274,7 +387,10 @@ paths:
       tags:
         - Asics
       summary: Get All Asics
-      description: Returns Asics list in the reply message. Optional filter by asicIds and waferId can be applied to return exact set of Asics.
+      description: >-
+        Returns Asics list in the reply message. Optional filter by asicIds and waferId can be applied to return exact set of Asics.
+        The `chipId` filter is a `BadRequest` (D-6). Without a pager, more than 5000 matching ASICs give an empty list
+        (R-13): filter by `waferId` or send a pager.
       requestBody:
         content:
           application/json:
@@ -336,7 +452,9 @@ paths:
       tags:
         - Chips
       summary: Get All Chips
-      description: Returns Chips list in the reply message. Optional filter by chipId can be applied to return exact chip.
+      description: >-
+        Returns Chips list in the reply message. Optional filter by chipId can be applied to return exact chip.
+        The `familyTypes` filter is a `BadRequest` (D-5).
       requestBody:
         content:
           application/json:
@@ -367,7 +485,10 @@ paths:
       tags:
         - Chips
       summary: Create chip
-      description: Returns the newly created chip in the reply message
+      description: >-
+        Returns the newly created chip in the reply message.
+        Writes the chip and its first location row (`note: Location at creation`). It creates no chip blocks: the
+        block generation of the code does not run (X-7).
       requestBody:
         content:
           application/json:
@@ -398,7 +519,10 @@ paths:
       tags:
         - Chips
       summary: Create many chips
-      description: Returns created chip array in the reply message
+      description: >-
+        Creates the chips of `data.create.items` at `data.create.generalLocation`, each as `CreateChip` does.
+        The request must also have a `data.items` key, with any value: the agent does not read it (D-8). The reply
+        lists all chips of the database, not only the new chips (R-2).
       requestBody:
         content:
           application/json:
@@ -424,12 +548,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateChip:
+    post:
+      tags:
+        - Chips
+      summary: Update Chip
+      description: >-
+        Returns updated Chip in the reply message.
+        Not in this file before 2026-11-18. No consumer is known to send it, and the re-implementation does not serve it.
+        `generalLocation` in `update` is a `BadRequest`: use `UpdateChipLocation`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateChipMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateChipReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/UpdateChipLocation:
     post:
       tags:
         - Chips
       summary: Update Chip Location
-      description: Returns updated Chip in the reply message
+      description: >-
+        Returns updated Chip in the reply message.
+        Appends a history row. Then it sets `generalLocation` of the chip to the location of the history row with
+        the newest `date`. That row is not always the new row: `date` has day resolution, and a row with a later date
+        wins (X-9). All five keys must be present; `date`, `username` and `note` may be `null` (D-11).
       requestBody:
         content:
           application/json:
@@ -460,7 +622,9 @@ paths:
       tags:
         - Chips
       summary: Get Chip Location History Records
-      description: Return list of location records for a chip
+      description: >-
+        Return list of location records for a chip.
+        The reply has no `totalCount` and no defined order. An unknown id gives an empty list.
       requestBody:
         content:
           application/json:
@@ -480,162 +644,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
                   - $ref: "#/components/schemas/GetChipLocationHistoryReplyMessage"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/GetAllChipBlocks:
-    post:
-      tags:
-        - ChipBlocks
-      summary: Get All chip blocks
-      description: Returns chip block list in the reply message. Optional filter by chip block ids or chipId can be applied to return exact block list.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllChipBlocksMessage"
-        required: true
-      responses:
-        "200":
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllChipBlocksReplyMessage"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
-  # Modules
-  /svt.db-agent.request/GetAllModules:
-    post:
-      tags:
-        - Modules
-      summary: Get All Modules
-      description: Returns Modules list in the reply message. Optional filter by chipId can be applied to return exact chip.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetAllModulesMessage"
-        required: true
-      responses:
-        "200":
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetAllModulesReplyMessage"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/CreateModule:
-    post:
-      tags:
-        - Modules
-      summary: Create module
-      description: Returns the newly created module in the reply message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/CreateModuleMessage"
-        required: true
-      responses:
-        "200":
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/CreateModuleReplyMessage"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/UpdateModuleLocation:
-    post:
-      tags:
-        - Modules
-      summary: Update Module Location
-      description: Returns updated Module in the reply message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/UpdateModuleLocationMessage"
-        required: true
-      responses:
-        "200":
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/UpdateModuleLocationReplyMessage"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReplyMessage"
-  /svt.db-agent.request/GetModuleLocationHistory:
-    post:
-      tags:
-        - Modules
-      summary: Get Module Location History Records
-      description: Return list of location records for a Module
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/RequestMessage"
-                - $ref: "#/components/schemas/GetModuleLocationHistoryMessage"
-        required: true
-      responses:
-        "200":
-          description: Reply Message
-          content:
-            application/json:
-              schema:
-                type: object
-                allOf:
-                  - $ref: "#/components/schemas/ReplyMessage"
-                  - $ref: "#/components/schemas/GetModuleLocationHistoryReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -710,7 +718,9 @@ paths:
       tags:
         - Wafer Probe Machines
       summary: Update WaferProbeMachine
-      description: Returns updated WaferProbeMachine in the reply message
+      description: >-
+        Returns updated WaferProbeMachine in the reply message.
+        `generalLocation` can be updated here: machines have no location history.
       requestBody:
         content:
           application/json:
@@ -741,7 +751,13 @@ paths:
       tags:
         - Wafer Probe Machines
       summary: Update WaferProbeMachine Loaded Wafer
-      description: Returns updated WaferProbeMachine in the reply message
+      description: >-
+        Returns updated WaferProbeMachine in the reply message.
+        With a `loadedWaferId`, the agent writes one `Loaded` row to `WaferLoadedInMachine` and updates the machine.
+        When another wafer was loaded, it writes no `Unloaded` row for that wafer (X-8). `loadedWaferOrientation: null`
+        is then a `BadRequest`; a request without that key is accepted, and the orientation is stored as `null`.
+        With `loadedWaferId: null`, the agent writes one `Unloaded` row and clears the two columns of the machine; this
+        is a `BadRequest` when no wafer is loaded.
       requestBody:
         content:
           application/json:
@@ -772,7 +788,10 @@ paths:
       tags:
         - Wafer Probe Machines
       summary: Update WaferProbeMachine Installed Probe Card
-      description: Returns updated WaferProbeMachine in the reply message
+      description: >-
+        Returns updated WaferProbeMachine in the reply message.
+        Writes one row to `ProbeCardInstalledInMachine` and updates the machine. `installedProbeCardId: null` is a
+        `BadRequest`: a probe card cannot be removed from a machine through the agent (D-13).
       requestBody:
         content:
           application/json:
@@ -834,7 +853,9 @@ paths:
       tags:
         - Wafer Probe Projects
       summary: Create WaferProbeProject
-      description: Returns the newly created WaferProbeProject in the reply message
+      description: >-
+        Returns the newly created WaferProbeProject in the reply message.
+        Send `local2GlobalMap` as a string: an object is not stored, and the column stays `null` (R-7).
       requestBody:
         content:
           application/json:
@@ -865,7 +886,9 @@ paths:
       tags:
         - Probe Cards
       summary: Get All ProbeCards
-      description: Returns ProbeCards list in the reply message. Optional filter by wafersIds can be applied to return exact set of ProbeCards.
+      description: >-
+        Returns ProbeCards list in the reply message. Optional filter by ids can be applied to return exact set of ProbeCards.
+        The items have `version` and no `asicFamilyTypes`: the agent does not read `ProbeCardFamilyType` (R-3).
       requestBody:
         content:
           application/json:
@@ -885,6 +908,40 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ReplyMessage"
                   - $ref: "#/components/schemas/GetAllProbeCardsReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateProbeCard:
+    post:
+      tags:
+        - Probe Cards
+      summary: Create ProbeCard
+      description: >-
+        Returns the newly created ProbeCard in the reply message.
+        Not in this file before 2026-11-18. No consumer is known to send it, and the re-implementation does not serve it.
+        The family types of a card (`ProbeCardFamilyType`) cannot be written through the agent.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateProbeCardMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateProbeCardReplyMessage"
         default:
           description: Unexpected error
           content:
@@ -989,7 +1046,10 @@ paths:
       tags:
         - Equipment
       summary: Create Equipment
-      description: Returns the newly created Equipment in the reply message
+      description: >-
+        Returns the newly created Equipment in the reply message.
+        Writes the equipment and its first location row (`note: Location at creation`). The `specification` key must
+        be present; its value is a string or `null` (D-10, R-7).
       requestBody:
         content:
           application/json:
@@ -1015,12 +1075,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateEquipment:
+    post:
+      tags:
+        - Equipment
+      summary: Update Equipment
+      description: >-
+        Returns updated Equipment in the reply message.
+        Not in this file before 2026-11-18. No consumer is known to send it, and the re-implementation does not serve it.
+        `generalLocation` in `update` is a `BadRequest`: use `UpdateEquipmentLocation`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateEquipmentMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateEquipmentReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
   /svt.db-agent.request/UpdateEquipmentLocation:
     post:
       tags:
         - Equipment
       summary: Update Equipment Location
-      description: Returns updated Equipment in the reply message
+      description: >-
+        Returns updated Equipment in the reply message.
+        Appends a history row. Then it sets `generalLocation` of the equipment to the location of the history row with
+        the newest `date`. That row is not always the new row: `date` has day resolution, and a row with a later date
+        wins (X-9). All five keys must be present; `date`, `username` and `note` may be `null` (D-11).
       requestBody:
         content:
           application/json:
@@ -1051,7 +1149,9 @@ paths:
       tags:
         - Equipment
       summary: Get Equipment Location History Records
-      description: Return list of location records for a wafer
+      description: >-
+        Return list of location records for an equipment.
+        The reply has no `totalCount` and no defined order. An unknown id gives an empty list.
       requestBody:
         content:
           application/json:
@@ -1083,7 +1183,10 @@ paths:
       tags:
         - SvtTestSetup
       summary: Get All SvtTestSetup
-      description: Returns test setup list in the reply message. Optional filter by setpIds can be applied to return exact set of test setup.
+      description: >-
+        Returns test setup list in the reply message. Optional filter by setup ids can be applied to return exact set of test setup.
+        When one of the selected setups has no row in `SvtTestSetupDefaultConfig`, the whole request is a `BadRequest`
+        (`vector::_M_range_check…`, X-5).
       requestBody:
         content:
           application/json:
@@ -1114,7 +1217,11 @@ paths:
       tags:
         - SvtTestSetup
       summary: Create SvtTestSetup
-      description: Returns the newly created test setup in the reply message
+      description: >-
+        Does not work in the agent: the request is always a `BadRequest` (`vector::_M_range_check…`).
+        The agent writes the setup row and then reads the setup back, before the row of `SvtTestSetupDefaultConfig`
+        exists (X-5). It does not write the default config. The setup row stays (X-1), and from then on
+        `GetAllSvtTestSetups` fails for that setup, until the setup gets a default config directly in the database.
       requestBody:
         content:
           application/json:
@@ -1145,7 +1252,10 @@ paths:
       tags:
         - SvtTestSetup
       summary: Update test setup default configuration
-      description: Returns updated test setup in the reply message
+      description: >-
+        Sets `defaultConfigId` in the row of `SvtTestSetupDefaultConfig` of the setup and returns the test setup.
+        The agent does not create that row (X-13): for a setup without one, the request is a `BadRequest`
+        (`vector::_M_range_check…`). The agent does not check that the config belongs to the setup.
       requestBody:
         content:
           application/json:
@@ -1176,7 +1286,9 @@ paths:
       tags:
         - SvtTestSetup
       summary: Get equipment list belongs to a test setup
-      description: Returns equipment list for a test setup
+      description: >-
+        Returns the rows of `SvtTestSetupEquipList` of a test setup: `{ equipId, setupId }`, not equipment entities (R-1).
+        `data.setupId` is required (`Missing field setupId`). No message writes that table.
       requestBody:
         content:
           application/json:
@@ -1208,7 +1320,9 @@ paths:
       tags:
         - SvtTestSetupConfig
       summary: Get All SvtTestSetup configuration
-      description: Returns test setup configuration list in the reply message. Optional filter by setpIds can be applied to return exact set of test setup configuration.
+      description: >-
+        Returns test setup configuration list in the reply message, without the config bodies.
+        Optional filter by ids or `setupId`.
       requestBody:
         content:
           application/json:
@@ -1239,7 +1353,9 @@ paths:
       tags:
         - SvtTestSetupConfig
       summary: Get SvtTestSetupConfig JSON
-      description: Returns configuration JSON in the reply message.
+      description: >-
+        Returns configuration JSON in the reply message.
+        An unknown id is answered `Success` with `entity: null` (X-12).
       requestBody:
         content:
           application/json:
@@ -1270,7 +1386,10 @@ paths:
       tags:
         - SvtTestSetupConfig
       summary: Create SvtTestSetup configuration
-      description: Returns the newly created test setup configuration in the reply message
+      description: >-
+        Returns the newly created test setup configuration in the reply message, without `configBody`.
+        The `note` key must be present; its value may be `null` (D-10). `configBody` is a string, or an object that the
+        agent stores as JSON text.
       requestBody:
         content:
           application/json:
@@ -1302,7 +1421,9 @@ paths:
       tags:
         - SvtTestType
       summary: Get all test type
-      description: Returns test type list in the reply message. Optional filter by typeId or dutType can be applied to return exact set of test type list.
+      description: >-
+        Returns test type list in the reply message. Optional filter by ids.
+        The `dutTypes` filter does not work: with that key the reply is always `items: []`, without `totalCount` (D-4).
       requestBody:
         content:
           application/json:
@@ -1333,7 +1454,10 @@ paths:
       tags:
         - SvtTestType
       summary: Create SvtTestType
-      description: Returns the newly created test type in the reply message
+      description: >-
+        Returns the newly created test type in the reply message.
+        Writes the type, its DUT types and its first config as separate statements (X-1). The `testTypeConfig.note`
+        key must be present; its value may be `null` (D-10).
       requestBody:
         content:
           application/json:
@@ -1363,8 +1487,11 @@ paths:
     post:
       tags:
         - SvtTestType
-      summary:
-      description:
+      summary: Update SvtTestType
+      description: >-
+        Adds DUT types to a test type and returns the SvtTestType in the reply message.
+        The agent reads `data.testTypeId` and `data.dutTypes`. The shape `{ id, update: { dutTypes } }`, which this
+        file had before 2026-11-18, is a `BadRequest` (D-1). The agent only adds: it never removes a DUT type.
       requestBody:
         content:
           application/json:
@@ -1396,7 +1523,8 @@ paths:
       tags:
         - SvtTestTypeConfig
       summary: Get all SvtTestTypeConfig
-      description:
+      description: >-
+        Returns SvtTestTypeConfig list in the reply message, without the config bodies. Optional filter by ids or `testTypeId`.
       requestBody:
         content:
           application/json:
@@ -1427,7 +1555,9 @@ paths:
       tags:
         - SvtTestTypeConfig
       summary: Get SvtTestTypeConfig JSON
-      description: Returns configuration JSON in the reply message.
+      description: >-
+        Returns configuration JSON in the reply message.
+        An unknown id is answered `Success` with `entity: null` (X-12).
       requestBody:
         content:
           application/json:
@@ -1458,7 +1588,10 @@ paths:
       tags:
         - SvtTestTypeConfig
       summary: Create SvtTestTypeConfig
-      description: Returns the newly created test type configuration in the reply message
+      description: >-
+        Returns the newly created test type configuration in the reply message, without `configBody`.
+        The `note` key must be present; its value may be `null` (D-10). `configBody` is a string, or an object that the
+        agent stores as JSON text.
       requestBody:
         content:
           application/json:
@@ -1490,7 +1623,8 @@ paths:
       tags:
         - SvtTestTemplate
       summary: Get all SvtTestTemplate
-      description:
+      description: >-
+        Returns SvtTestTemplate list in the reply message. Optional filter by ids or DUT types.
       requestBody:
         content:
           application/json:
@@ -1521,7 +1655,10 @@ paths:
       tags:
         - SvtTestTemplate
       summary: Create an entry to the SvtTestTemplate
-      description: Returns the newly created entry to the SvtTestTemplate in the reply message
+      description: >-
+        Returns the newly created entry to the SvtTestTemplate in the reply message.
+        The agent does not store `isEnabled`: a new template is always enabled (D-12). Use `UpdateSvtTestTemplate` to
+        disable it.
       requestBody:
         content:
           application/json:
@@ -1584,7 +1721,10 @@ paths:
       tags:
         - SvtTest
       summary: Get all SvtTest
-      description:
+      description: >-
+        Returns SvtTest list in the reply message, ordered by `id`, ascending.
+        The only filter is `ids`; every other filter key is a `BadRequest` (D-3). A test without a row in
+        `SvtTestListToEntityName` or in `SvtTestListToEntityId` makes the whole request a `BadRequest` (X-5).
       requestBody:
         content:
           application/json:
@@ -1615,7 +1755,10 @@ paths:
       tags:
         - SvtTest
       summary: Create an entry to the SvtTest
-      description: Returns the newly created entry to the SvtTest in the reply message
+      description: >-
+        Returns the newly created entry to the SvtTest in the reply message.
+        The database sets `createdAt`. The agent writes `dutEntityName` and `dutId` to the two link tables after the
+        test row (X-1); it does not check that the device exists.
       requestBody:
         content:
           application/json:
@@ -1646,7 +1789,9 @@ paths:
       tags:
         - SvtTest
       summary: Update entry to the SvtTest with test start info
-      description: Returns the updated entry to the SvtTest in the reply message
+      description: >-
+        Returns the updated entry to the SvtTest in the reply message.
+        A generic update: the agent does not check the order created, started, finished.
       requestBody:
         content:
           application/json:
@@ -1677,7 +1822,10 @@ paths:
       tags:
         - SvtTest
       summary: Update entry to the SvtTest
-      description: Returns the updated entry to the SvtTest in the reply message
+      description: >-
+        Returns the updated entry to the SvtTest in the reply message.
+        A generic update: the agent does not check the order created, started, finished, and it does not check
+        `testResultStatus` (the database does).
       requestBody:
         content:
           application/json:
@@ -1709,7 +1857,10 @@ paths:
       tags:
         - Enums
       summary: Request All Enums.
-      description: Returns All Enums in the reply message according to the relevant filter. If filter is empty all enums will be returned.
+      description: >-
+        Returns the enum types of the database schema with their values, by the type names of the database.
+        The agent reads only `data.enumNames`. A request with `data.filter.enumNames` (what the UI sends) or with
+        `data.enumsNames` gets every enum type (D-2). The values are those that the agent read at start (X-11).
       requestBody:
         content:
           application/json:
@@ -1735,9 +1886,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
+  # Heartbeat
+  /svt.db-agent.heartbeat:
+    post:
+      tags:
+        - Heartbeat
+      summary: Heartbeat record
+      description: >-
+        Produced by the agent every 2 s, without headers or key; nothing is expected back.
+        The Docker health check of the image consumes it.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HeartbeatMessage"
+        required: true
+      responses:
+        "204":
+          description: No reply
 
 components:
   schemas:
+    HeartbeatMessage:
+      type: object
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+          description: Seconds since the epoch with six decimals, as a string, e.g. `1762500000.123456`.
     RequestMessage:
       type: object
       required:
@@ -1752,29 +1929,36 @@ components:
       required:
         - status
         - type
+        - data
+        - error
       properties:
         status:
           $ref: "#/components/schemas/ReplyStatus"
         type:
           type: string
+          description: "`<request type>Reply`; an empty string when a required header is missing or the request `type` is empty."
         data:
           type: object
+          nullable: true
+          description: The reply payload on `Success`, `null` on `BadRequest`.
         error:
           type: object
           required:
+            - code
             - message
           properties:
             code:
               type: number
+              description: "`0` on `Success`, `-1` on `BadRequest`."
             message:
               type: string
+              description: Empty on `Success`. Otherwise the text of the C++ exception, often after a `[<file>:<line>]` prefix, or the message of the database (R-9).
     ReplyStatus:
       type: string
+      description: The agent sends `Success` or `BadRequest` only. It never sends `NotFound` or `UnexpectedError` (R-8).
       enum:
         - Success
         - BadRequest
-        - NotFound
-        - UnexpectedError
     GetAllEnumsRequest:
       properties:
         type:
@@ -1783,8 +1967,11 @@ components:
         data:
           type: object
           properties:
-            enumsNames:
+            enumNames:
               type: array
+              description: >-
+                The enum types to return, by their names in the database. Without this key the reply has every
+                enum type. An unknown name gives an empty list.
               items:
                 $ref: "#/components/schemas/SvtEnumName"
     GetAllEnumsReply:
@@ -1794,6 +1981,10 @@ components:
           default: "GetAllEnumsReply"
         data:
           type: object
+          description: >-
+            One key for each enum type of the database schema, by the name of the type in the database. The keys
+            below are the types of the dev database of 2026-11-08. The prod database of that day had no
+            `dutEntityName` and no `testResultStatus`.
           properties:
             asicFamilyType:
               type: array
@@ -1803,7 +1994,7 @@ components:
               type: array
               items:
                 type: string
-            chipBlockType:
+            blockType:
               type: array
               items:
                 type: string
@@ -1939,9 +2130,14 @@ components:
           default: "CreateWaferType"
         data:
           type: object
+          required:
+            - create
+            - waferMap
           properties:
             create:
               $ref: "#/components/schemas/WaferTypeCreateDto"
+            waferMap:
+              description: Must be present, with any value. The agent does not read it (D-7); it reads `create.waferMap`.
     CreateWaferTypeReplyMessage:
       properties:
         type:
@@ -2116,7 +2312,7 @@ components:
                   description: Optional filter used to fetch all ASICs for the particular wafer
                 chipId:
                   type: number
-                  description: Optional filter used to fetch ASIC related
+                  description: "Declared by the agent, but not usable. A request with this key is a `BadRequest` (`Error: getting entries`, D-6)."
                 quality:
                   type: string
                 serialNumber:
@@ -2171,7 +2367,7 @@ components:
       properties:
         type:
           type: string
-          default: "GetAllChip"
+          default: "GetAllChips"
         data:
           type: object
           properties:
@@ -2189,7 +2385,7 @@ components:
               properties:
                 familyTypes:
                   type: array
-                  description: AsicFamilType values array. If array is empty / undefined => all Chips will be returned.
+                  description: Declared by the agent, but not usable. A request with a list that is not empty is a `BadRequest` (`Invalid filter familyTypes, col familyType non found in Table Chip`, D-5).
                   items:
                     type: string
                 generalLocation:
@@ -2248,7 +2444,12 @@ components:
           default: "CreateManyChips"
         data:
           type: object
+          required:
+            - create
+            - items
           properties:
+            items:
+              description: Must be present, with any value. The agent does not read it (D-8); it reads `create.items`.
             create:
               type: object
               required:
@@ -2271,8 +2472,40 @@ components:
           properties:
             items:
               type: array
+              description: All chips of the database, not only the new chips (R-2).
               items:
                 $ref: "#/components/schemas/ChipDto"
+            totalCount:
+              type: number
+    #
+    # CHIPS :: UPDATE
+    #
+    UpdateChipMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateChip"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: Chip Id
+            update:
+              $ref: "#/components/schemas/ChipUpdateDto"
+    UpdateChipReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateChipReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/ChipDto"
     #
     # CHIPS :: UPDATE LOCAION
     #
@@ -2321,171 +2554,6 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/ChipLocationHistoryRecordDto"
-    #
-    # BLOCK :: LIST
-    #
-    GetAllChipBlocksMessage:
-      properties:
-        type:
-          type: string
-          default: "GetAllChipBlocks"
-        data:
-          type: object
-          properties:
-            filter:
-              type: object
-              properties:
-                chipBlockTypes:
-                  type: array
-                  description: ChipBlockType values array. If array is empty / undefined => all ChipBlocks will be returned.
-                  items:
-                    type: string
-                chipId:
-                  type: integer
-                serialNumber:
-                  type: string
-                  description: Optional filter used to fetch ChipBlock with particular serial number
-                ids:
-                  type: array
-                  description: Chip ids array. If array is empty / undefined => all Chip will be returned.
-                  items:
-                    type: number
-    GetAllChipBlocksReplyMessage:
-      properties:
-        type:
-          type: string
-          default: "GetAllBlocksReply"
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/ChipBlockDto"
-            totalCount:
-              type: number
-    #
-    # MODULE :: LIST
-    #
-    GetAllModulesMessage:
-      properties:
-        type:
-          type: string
-          default: "GetAllModules"
-        data:
-          type: object
-          properties:
-            pager:
-              type: object
-              properties:
-                limit:
-                  type: number
-                  description: Default value is 20. That value will be used if no limit specified.
-                offset:
-                  type: number
-                  description: Default value is 0. That value will be used if no offset specified.
-            filter:
-              type: object
-              properties:
-                moduleTypes:
-                  type: array
-                  description: ModuleType values array. If array is empty / undefined => all Modules will be returned.
-                  items:
-                    type: string
-                generalLocation:
-                  type: string
-                serialNumber:
-                  type: string
-                ids:
-                  type: array
-                  description: Chip ids array. If array is empty / undefined => all Chip will be returned.
-                  items:
-                    type: number
-    GetAllModulesReplyMessage:
-      properties:
-        type:
-          type: string
-          default: "GetAllModulesReply"
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/ModuleDto"
-            totalCount:
-              type: number
-    #
-    # MODULE :: CREATE
-    #
-    CreateModuleMessage:
-      properties:
-        type:
-          type: string
-          default: "CreateModule"
-        data:
-          type: object
-          properties:
-            create:
-              $ref: "#/components/schemas/ModuleCreateDto"
-    CreateModuleReplyMessage:
-      properties:
-        type:
-          type: string
-          default: "CreateModuleReply"
-        data:
-          type: object
-          properties:
-            entity:
-              $ref: "#/components/schemas/ModuleDto"
-    #
-    # MODULE :: UPDATE LOCAION
-    #
-    UpdateModuleLocationMessage:
-      properties:
-        type:
-          type: string
-          default: "UpdateModuleLocation"
-        data:
-          $ref: "#/components/schemas/ModuleUpdateLocationDto"
-    UpdateModuleLocationReplyMessage:
-      properties:
-        type:
-          type: string
-          default: "UpdateModuleLocationReply"
-        data:
-          type: object
-          properties:
-            entity:
-              $ref: "#/components/schemas/ModuleDto"
-    #
-    # MODULE LOCATION RECORDS
-    #
-    GetModuleLocationHistoryMessage:
-      properties:
-        type:
-          type: string
-          default: "GetModuleLocationHistory"
-        data:
-          type: object
-          required:
-            - modId
-          properties:
-            modId:
-              type: number
-              description: Module id
-    GetModuleLocationHistoryReplyMessage:
-      properties:
-        type:
-          type: string
-          default: "GetModuleLocationHistoryReply"
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/ModuleLocationHistoryRecordDto"
     #
     # WAFER PROBE MACHINES :: LIST
     #
@@ -2704,6 +2772,29 @@ components:
               items:
                 $ref: "#/components/schemas/ProbeCardDto"
     #
+    # WAFER PROBE CARDS :: CREATE
+    #
+    CreateProbeCardMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateProbeCard"
+        data:
+          type: object
+          properties:
+            create:
+              $ref: "#/components/schemas/ProbeCardCreateDto"
+    CreateProbeCardReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateProbeCardReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/ProbeCardDto"
+    #
     # EQUIPMENT TYPES :: LIST
     #
     GetAllEquipmentTypesMessage:
@@ -2806,6 +2897,35 @@ components:
         type:
           type: string
           default: "CreateEquipmentReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/EquipmentDto"
+    #
+    # EQUIPMENT :: UPDATE
+    #
+    UpdateEquipmentMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateEquipment"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+              description: Equipment Id
+            update:
+              $ref: "#/components/schemas/EquipmentUpdateDto"
+    UpdateEquipmentReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateEquipmentReply"
         data:
           type: object
           properties:
@@ -2952,6 +3072,8 @@ components:
           default: "GetEquipmentListForTestSetup"
         data:
           type: object
+          required:
+            - setupId
           properties:
             setupId:
               type: number
@@ -2965,8 +3087,19 @@ components:
           properties:
             items:
               type: array
+              description: The rows of `SvtTestSetupEquipList`, not equipment entities (R-1).
               items:
-                $ref: "#/components/schemas/EquipmentDto"
+                type: object
+                required:
+                  - equipId
+                  - setupId
+                properties:
+                  equipId:
+                    type: number
+                  setupId:
+                    type: number
+            totalCount:
+              type: number
     #
     # TEST_SETUP_CONFIG :: LIST
     #
@@ -3026,7 +3159,10 @@ components:
           type: object
           properties:
             entity:
-              $ref: "#/components/schemas/SvtTestSetupConfigBodyDto"
+              allOf:
+                - $ref: "#/components/schemas/SvtTestSetupConfigBodyDto"
+              nullable: true
+              description: "`null` for an unknown id (X-12)."
 
     #
     # TEST_SETUP_CONFIG :: CREATE
@@ -3058,7 +3194,7 @@ components:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestType"
+          default: "GetAllSvtTestTypes"
         data:
           type: object
           properties:
@@ -3072,14 +3208,14 @@ components:
                     type: number
                 dutTypes:
                   type: array
+                  description: "Declared in the code, but not usable. With this key the reply is always `items: []`, without `totalCount` (D-4)."
                   items:
                     type: string
-                    description: dutTypes list (ASIC family type or block type).
     GetAllSvtTestTypesReplyMessage:
       properties:
         type:
           type: string
-          default: "GetAllSvtTestTypeReply"
+          default: "GetAllSvtTestTypesReply"
         data:
           type: object
           properties:
@@ -3189,7 +3325,10 @@ components:
           type: object
           properties:
             entity:
-              $ref: "#/components/schemas/SvtTestTypeConfigBodyDto"
+              allOf:
+                - $ref: "#/components/schemas/SvtTestTypeConfigBodyDto"
+              nullable: true
+              description: "`null` for an unknown id (X-12)."
     #
     # TEST_TYPE_CONFIG :: CREATE
     #
@@ -3323,53 +3462,16 @@ components:
                   description: Default value is 0. That value will be used if no offset specified.
             filter:
               type: object
+              description: >-
+                `ids` is the only filter of the agent. The other filters that this file had before 2026-11-18
+                (`dutEntityNames`, `dutId`, `testResultStatuses`, `testTypeConfigIds`, `testSetupConfigIds` and
+                the date ranges) are a `BadRequest` (D-3).
               properties:
                 ids:
                   type: array
+                  description: SvtTest ids array. If array is empty / undefined => all tests will be returned.
                   items:
                     type: number
-                    description: SvtTest ids array. If array is empty / undefined => all test list will be returned.
-                dutEntityNames:
-                  type: array
-                  items:
-                    type: string
-                    description: Test device type (Asic, Chip, ChipBlock).
-                dutId:
-                  type: number
-                  description: Optional filter used to fetch tests of the particular DUT. DUT ids are unique per DUT entity only, so it is meant to be combined with dutEntityNames.
-                testResultStatuses:
-                  type: array
-                  description: TestResultStatus values array. If array is empty / undefined => tests with any result status will be returned.
-                  items:
-                    type: string
-                testTypeConfigIds:
-                  type: array
-                  description: SvtTestTypeConfig ids array. If array is empty / undefined => tests of any test type configuration will be returned.
-                  items:
-                    type: number
-                testSetupConfigIds:
-                  type: array
-                  description: SvtTestSetupConfig ids array. If array is empty / undefined => tests of any test setup configuration will be returned.
-                  items:
-                    type: number
-                createdAtFrom:
-                  type: string
-                  description: Optional lower bound of the createdAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
-                createdAtTo:
-                  type: string
-                  description: Optional upper bound of the createdAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
-                startedAtFrom:
-                  type: string
-                  description: Optional lower bound of the startedAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
-                startedAtTo:
-                  type: string
-                  description: Optional upper bound of the startedAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
-                finishedAtFrom:
-                  type: string
-                  description: Optional lower bound of the finishedAt filter range, inclusive. Date in format `2025-06-03T23:59:12.Z`
-                finishedAtTo:
-                  type: string
-                  description: Optional upper bound of the finishedAt filter range, exclusive. Date in format `2025-06-03T23:59:12.Z`
     GetAllSvtTestsReplyMessage:
       properties:
         type:
@@ -3484,17 +3586,22 @@ components:
         engineeringRun:
           type: string
         foundry:
-          type: number
+          type: string
+          description: A value of the `foundryName` enum.
         technology:
-          type: number
+          type: string
+          description: A value of the `waferTech` enum.
     WaferTypeMapDto:
       type: object
       required:
         - waferMap
+        - waferTypeId
       properties:
         waferMap:
           type: string
-          description: Stringified JSON in the correct format.
+          description: Stringified JSON, as stored.
+        waferTypeId:
+          type: number
     WaferTypeCreateDto:
       type: object
       required:
@@ -3509,9 +3616,11 @@ components:
         engineeringRun:
           type: string
         foundry:
-          type: number
+          type: string
+          description: A value of the `foundryName` enum.
         technology:
-          type: number
+          type: string
+          description: A value of the `waferTech` enum.
         waferMap:
           type: string
           description: Stringified JSON in the correct format.
@@ -3536,20 +3645,27 @@ components:
           type: string
         thinningDate:
           type: string
+          nullable: true
           description: Date only in format `2025-06-03`
         dicingDate:
           type: string
+          nullable: true
           description: Date only in format `2025-06-03`
         productionDate:
           type: string
+          nullable: true
           description: Date only in format `2025-06-03`
     WaferCreateDto:
       type: object
+      description: All seven keys must be present (the agent counts them, D-9); the three dates may be `null`.
       required:
         - serialNumber
         - batchNumber
         - waferTypeId
         - generalLocation
+        - thinningDate
+        - dicingDate
+        - productionDate
       properties:
         serialNumber:
           type: string
@@ -3570,6 +3686,9 @@ components:
           nullable: true
     WaferUpdateDto:
       type: object
+      description: >-
+        Any column of `Wafer` except `generalLocation`; the agent does not check the keys. A `null` value is
+        ignored, so a date cannot be cleared.
       properties:
         thinningDate:
           type: string
@@ -3582,9 +3701,11 @@ components:
           nullable: true
     WaferUpdateLocationDto:
       type: object
+      description: All five keys must be present (the agent counts them, D-11).
       required:
         - waferId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -3592,20 +3713,24 @@ components:
           type: number
         generalLocation:
           type: string
+          description: A value of the `wpGeneralLocation` enum.
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          description: Calendar date `YYYY-MM-DD`. With `null` the database stores the current date.
           nullable: true
         username:
           type: string
+          nullable: true
         note:
           type: string
           description: General comment/reason about the location update.
+          nullable: true
     WaferLocationHistoryRecordDto:
       type: object
       required:
         - waferId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -3615,13 +3740,14 @@ components:
           type: string
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
-          nullable: true
+          description: Calendar date `YYYY-MM-DD`.
         username:
           type: string
+          nullable: true
         note:
           type: string
-          description: General comment/reason about the location update.
+          description: General comment/reason about the location update; `Location at creation` for the row that a `Create*` message writes.
+          nullable: true
     AsicDto:
       type: object
       required:
@@ -3670,16 +3796,20 @@ components:
       type: object
       required:
         - id
+        - asicId
         - serialNumber
         - familyType
         - generalLocation
       properties:
         id:
           type: number
+        asicId:
+          type: number
         serialNumber:
           type: string
         familyType:
           type: string
+          description: The family type of the chip's ASIC.
         generalLocation:
           type: string
     ChipCreateDto:
@@ -3705,11 +3835,23 @@ components:
           type: string
         asicId:
           type: number
+    ChipUpdateDto:
+      type: object
+      description: >-
+        Any column of `Chip` except `generalLocation`; the agent does not check the keys. A `null` value is
+        ignored.
+      properties:
+        serialNumber:
+          type: string
+        asicId:
+          type: number
     ChipUpdateLocationDto:
       type: object
+      description: All five keys must be present (the agent counts them, D-11).
       required:
         - chipId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -3717,20 +3859,24 @@ components:
           type: number
         generalLocation:
           type: string
+          description: A value of the `wpGeneralLocation` enum.
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          description: Calendar date `YYYY-MM-DD`. With `null` the database stores the current date.
           nullable: true
         username:
           type: string
+          nullable: true
         note:
           type: string
           description: General comment/reason about the location update.
+          nullable: true
     ChipLocationHistoryRecordDto:
       type: object
       required:
         - chipId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -3740,109 +3886,14 @@ components:
           type: string
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
-          nullable: true
+          description: Calendar date `YYYY-MM-DD`.
         username:
           type: string
-        note:
-          type: string
-          description: General comment/reason about the location update.
-    # CHIP BLOCK :: DTO
-    ChipBlockDto:
-      type: object
-      required:
-        - id
-        - chipId
-        - chipBlockType
-        - serialNumber
-      properties:
-        id:
-          type: integer
-        chipId:
-          type: integer
-        chipBlockType:
-          type: string
-        serialNumber:
-          type: string
-    # MODULE :: DTO
-    ModuleDto:
-      type: object
-      required:
-        - id
-        - modType
-        - serialNumber
-        - generalLocation
-        - chips
-      properties:
-        id:
-          type: number
-        modType:
-          type: string
-        serialNumber:
-          type: string
-        generalLocation:
-          type: string
-        chips:
-          type: array
-          items:
-            type: integer
-    ModuleCreateDto:
-      type: object
-      required:
-        - modType
-        - chips
-        - generalLocation
-      properties:
-        modType:
-          type: string
-        chips:
-          type: array
-          items:
-            type: integer
-        generalLocation:
-          type: string
-    ModuleUpdateLocationDto:
-      type: object
-      required:
-        - modId
-        - generalLocation
-        - username
-        - note
-      properties:
-        modId:
-          type: number
-        generalLocation:
-          type: string
-        date:
-          type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
           nullable: true
-        username:
-          type: string
         note:
           type: string
-          description: General comment/reason about the location update.
-    ModuleLocationHistoryRecordDto:
-      type: object
-      required:
-        - modId
-        - generalLocation
-        - username
-        - note
-      properties:
-        modId:
-          type: number
-        generalLocation:
-          type: string
-        date:
-          type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          description: General comment/reason about the location update; `Location at creation` for the row that a `Create*` message writes.
           nullable: true
-        username:
-          type: string
-        note:
-          type: string
-          description: General comment/reason about the location update.
     # WAFER_PROBE_MACHINE :: DTO
     WaferProbeMachineDto:
       type: object
@@ -3927,13 +3978,9 @@ components:
           type: string
     WaferProbeMachineUpdateDto:
       type: object
-      required:
-        - hostName
-        - connectionType
-        - connectionPort
-        - generalLocation
-        - software
-        - swVersion
+      description: >-
+        Any column of `WaferProbeMachine`; the agent requires no key and does not check the keys. A `null` value
+        is ignored.
       properties:
         hostName:
           type: string
@@ -3959,9 +4006,14 @@ components:
         loadedWaferId:
           type: number
           nullable: true
+          description: The wafer to load, or `null` to unload the wafer that is loaded.
         loadedWaferOrientation:
           type: string
           nullable: true
+          description: >-
+            A value of the `waferMapOrientation` enum. With a wafer to load, `null` is a `BadRequest`
+            (`ERROR: Mising orientation for the loaded wafer`). A request without this key is accepted, and the
+            orientation is stored as `null`.
     WpMachineInstalledProbeCardUpdateDto:
       type: object
       required:
@@ -3973,10 +4025,11 @@ components:
           type: number
         installedProbeCardId:
           type: number
-          nullable: true
+          description: The probe card to install. `null` is a `BadRequest` (D-13).
         installedProbeCardOrientation:
           type: string
           nullable: true
+          description: A value of the `waferMapOrientation` enum.
     WaferProbeProjectDto:
       type: object
       required:
@@ -4008,7 +4061,8 @@ components:
           type: string
         local2GlobalMap:
           type: string
-          description: Stringified JSON in the correct format.
+          nullable: true
+          description: Stringified JSON, as stored. `null` when the project was created with an object (R-7).
     WaferProbeProjectCreateDto:
       type: object
       required:
@@ -4037,7 +4091,7 @@ components:
           type: string
         local2GlobalMap:
           type: string
-          description: Stringified JSON in the correct format.
+          description: Stringified JSON. An object is not stored (R-7).
     ProbeCardDto:
       type: object
       required:
@@ -4045,36 +4099,77 @@ components:
         - name
         - serialNumber
         - model
+        - version
         - arriveDate
         - location
         - type
         - vendorCleaningInterval
         - vendor
-        - asicFamilyTypes
       properties:
         id:
           type: number
         name:
           type: string
+          description: A value of the `pcName` enum.
         serialNumber:
           type: string
         model:
           type: string
+          description: A value of the `pcModel` enum.
+        version:
+          type: number
         arriveDate:
           type: string
           description: Date only in format `2025-06-03`
         location:
           type: string
+          description: A value of the `pcLocation` enum.
         type:
           type: string
+          description: A value of the `pcType` enum.
         vendorCleaningInterval:
           type: number
         vendor:
           type: string
-        asicFamilyTypes:
-          type: array
-          items:
-            type: string
+          description: A value of the `pcVendor` enum.
+    ProbeCardCreateDto:
+      type: object
+      description: All nine keys must be present (the agent counts them).
+      required:
+        - name
+        - serialNumber
+        - model
+        - version
+        - arriveDate
+        - location
+        - type
+        - vendorCleaningInterval
+        - vendor
+      properties:
+        name:
+          type: string
+          description: A value of the `pcName` enum.
+        serialNumber:
+          type: string
+        model:
+          type: string
+          description: A value of the `pcModel` enum.
+        version:
+          type: number
+        arriveDate:
+          type: string
+          description: Date only in format `2025-06-03`
+        location:
+          type: string
+          description: A value of the `pcLocation` enum.
+        type:
+          type: string
+          description: A value of the `pcType` enum.
+        vendorCleaningInterval:
+          type: number
+        vendor:
+          type: string
+          description: A value of the `pcVendor` enum.
     EquipmentTypeDto:
       type: object
       required:
@@ -4111,9 +4206,11 @@ components:
           type: string
         specification:
           type: string
-          description: Stringified JSON with equipment's description
+          nullable: true
+          description: Stringified JSON with equipment's description, as stored.
     EquipmentCreateDto:
       type: object
+      description: All four keys must be present (the agent counts them, D-10); `specification` may be `null`.
       required:
         - name
         - equipmentTypeId
@@ -4129,11 +4226,26 @@ components:
         specification:
           type: string
           nullable: true
+    EquipmentUpdateDto:
+      type: object
+      description: >-
+        Any column of `Equipment` except `generalLocation`; the agent does not check the keys. A `null` value is
+        ignored.
+      properties:
+        name:
+          type: string
+        equipmentTypeId:
+          type: number
+        specification:
+          type: string
+          description: Stringified JSON.
     EquipmentUpdateLocationDto:
       type: object
+      description: All five keys must be present (the agent counts them, D-11).
       required:
         - equipmentId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -4141,20 +4253,24 @@ components:
           type: number
         generalLocation:
           type: string
+          description: A value of the `wpGeneralLocation` enum.
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
+          description: Calendar date `YYYY-MM-DD`. With `null` the database stores the current date.
           nullable: true
         username:
           type: string
+          nullable: true
         note:
           type: string
           description: General comment/reason about the location update.
+          nullable: true
     EquipmentLocationHistoryRecordDto:
       type: object
       required:
         - equipmentId
         - generalLocation
+        - date
         - username
         - note
       properties:
@@ -4164,13 +4280,14 @@ components:
           type: string
         date:
           type: string
-          description: Date in UTC format, example `2025-06-03T23-59:12.z`
-          nullable: true
+          description: Calendar date `YYYY-MM-DD`.
         username:
           type: string
+          nullable: true
         note:
           type: string
-          description: General comment/reason about the location update.
+          description: General comment/reason about the location update; `Location at creation` for the row that a `Create*` message writes.
+          nullable: true
     # TEST_SETUP :: DTO
     SvtTestSetupDto:
       type: object
@@ -4204,12 +4321,13 @@ components:
           required:
             - name
             - configBody
+            - note
           properties:
             name:
               type: string
             configBody:
               type: string
-              description: Stringified JSON with default configuration for the test setup, in the correct format.
+              description: Stringified JSON with default configuration for the test setup.
             note:
               type: string
               nullable: true
@@ -4267,6 +4385,7 @@ components:
           type: string
         configBody:
           type: string
+          description: Stringified JSON. The agent also accepts an object and stores it as JSON text.
         note:
           type: string
           nullable: true
@@ -4284,6 +4403,7 @@ components:
           type: string
         dutTypes:
           type: array
+          description: The DUT types of the test type. A test type without DUT types has the key `dutType` with an empty list instead (R-4).
           items:
             type: string
     SvtTestTypeCreateDto:
@@ -4316,18 +4436,16 @@ components:
     SvtTestTypeUpdateDto:
       type: object
       required:
-        - id
-        - update
+        - testTypeId
+        - dutTypes
       properties:
-        id:
+        testTypeId:
           type: number
-        update:
-          type: object
-          properties:
-            dutTypes:
-              type: array
-              items:
-                type: string
+        dutTypes:
+          type: array
+          description: The DUT types to add to the test type. The agent keeps the DUT types that the test type has.
+          items:
+            type: string
     # TEST_TYPE_CONFIG :: DTO
     SvtTestTypeConfigDto:
       type: object
@@ -4375,6 +4493,7 @@ components:
           type: string
         configBody:
           type: string
+          description: Stringified JSON. The agent also accepts an object and stores it as JSON text.
         note:
           type: string
           nullable: true
@@ -4401,7 +4520,6 @@ components:
       required:
         - dutType
         - testTypeConfigId
-        - isEnabled
       properties:
         dutType:
           type: string
@@ -4409,6 +4527,7 @@ components:
           type: number
         isEnabled:
           type: boolean
+          description: Not stored (D-12). A new template is always enabled.
     SvtTestTemplateUpdateDto:
       required:
         - isEnabled
@@ -4433,6 +4552,7 @@ components:
           type: number
         dutEntityName:
           type: string
+          description: A value of the `dutEntityName` enum (`Asic`, `Chip`, `ChipBlock`).
         dutId:
           type: number
         testTypeConfigId:
@@ -4441,17 +4561,26 @@ components:
           type: number
         createdAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          description: Timestamp in the text form of PostgreSQL, without a time zone, e.g. `2025-06-03 23:59:12.123456` (R-6). Set by the database.
         startedAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          nullable: true
+          description: Same form as `createdAt`; `null` until the test is started.
         finishedAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          nullable: true
+          description: Same form as `createdAt`; `null` until the test is finished.
         pathToResult:
           type: string
+          nullable: true
+          description: "`null` until the test is finished."
         testResultStatus:
           type: string
+          nullable: true
+          description: >-
+            `null` until the test is finished. A value of the `testResultStatus` enum of the database. At the
+            freeze the values were `SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR`; a migration of the
+            re-implementation adds `CANCELLED` to the database.
     SvtTestCreateDto:
       required:
         - dutEntityName
@@ -4473,7 +4602,7 @@ components:
       properties:
         startedAt:
           type: string
-          description: Date only in format `2025-06-03`
+          description: A timestamp that PostgreSQL can read, e.g. `2025-06-03T23:59:12Z`. The column has no time zone.
     SvtTestFinishUpdateDto:
       required:
         - finishedAt
@@ -4482,19 +4611,20 @@ components:
       properties:
         finishedAt:
           type: string
-          description: Date only in format `2025-06-03`
+          description: A timestamp that PostgreSQL can read, e.g. `2025-06-03T23:59:12Z`. The column has no time zone.
         pathToResult:
           type: string
         testResultStatus:
           type: string
-
+          description: The agent does not check the value; the database rejects a value that is not in its `testResultStatus` enum.
     # ENUM :: DTO
     SvtEnumName:
       type: string
+      description: The enum types of the database schema, by their names in the database (R-11).
       enum:
         - asicFamilyType
         - asicQuality
-        - chipBlockType
+        - blockType
         - moduleType
         - dutType
         - dutEntityName

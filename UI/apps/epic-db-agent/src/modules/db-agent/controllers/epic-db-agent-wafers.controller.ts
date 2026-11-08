@@ -1,5 +1,6 @@
 import { Controller } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
+import { map } from 'rxjs'
 import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaAsics,
@@ -8,9 +9,9 @@ import {
     SvtDbAgentKafkaEnums,
     SvtDbAgentKafkaEquipment,
     SvtDbAgentKafkaEquipmentTypes,
+    SvtDbAgentKafkaSvtTests,
     SvtDbAgentKafkaSvtTestSetupConfigs,
     SvtDbAgentKafkaSvtTestSetups,
-    SvtDbAgentKafkaSvtTests,
     SvtDbAgentKafkaSvtTestTemplates,
     SvtDbAgentKafkaSvtTestTypeConfigs,
     SvtDbAgentKafkaSvtTestTypes,
@@ -19,8 +20,7 @@ import {
     SvtDbAgentKafkaWpMachines,
     SvtDbAgentKafkaWpProbeCards,
     SvtDbAgentKafkaWpProjects,
-} from 'epic/entities'
-import { map } from 'rxjs'
+} from 'svt-ts-types/kafka'
 
 import {
     EpicDbAgentAsicsService,

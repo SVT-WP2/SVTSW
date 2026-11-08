@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
-import { EpicChipCreateManyRequest, EpicChipCreateManyRequestItem } from 'epic-api-types'
+import { EpicChipCreateManyRequest, EpicChipCreateManyRequestItem } from 'svt-ts-types'
 
 
 export class EpicChipCreateManyItemDto implements EpicChipCreateManyRequestItem {

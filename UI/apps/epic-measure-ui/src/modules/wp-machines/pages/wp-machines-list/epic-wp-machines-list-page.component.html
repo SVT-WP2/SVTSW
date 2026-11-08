@@ -20,6 +20,7 @@
             <div class="container">
                 @for(entity of entitiesList(); track entity.id) {
                     <epic-wp-machine-card [entity]="entity"
+                                          [orientationOptions]="orientationOptions()"
                                           (installedProbeCardChanged$)="onInstalledProbeCardChanged(entity.id, $event)"
                                           (loadedWaferChanged$)="onLoadedWaferChanged(entity.id, $event)"
                                           class="mb-3" />

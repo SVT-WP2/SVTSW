@@ -17,14 +17,14 @@ This is UI for EpicMeasure project. Project represents **2 services**: front-end
 
 ## Environment Requirements
 
-- [Node.js](https://nodejs.org/en/]sdcsdscsdc) ^20.19.0 (20.19@latest is good enough)
+- [Node.js](https://nodejs.org/en/) ^20.19.0, ^22.12.0 or >= 24 (`engines` in `package.json`); CI and the Docker image use Node 22
 
 ## Development
 
 - Ensure that you have install all the dependencies: `npm install`
 - Start both FE and BE: `npm run start` => browser will be open automatically `http://localhost:7755/app`
 - Start FE: `npm run start::ui` => the app will be running: `http://localhost:7755/app`
-- Start BE: `npm run start::api` => the app will be running: `http://localhost:9393/api`
+- Start BE: `npm run start::api` => the app will be running: `http://localhost:7373/api`
 
 > **_NOTE:_**  
 > Kafka broker should be running before yuo start project (BE side).
@@ -39,12 +39,16 @@ This is UI for EpicMeasure project. Project represents **2 services**: front-end
 
 Fake db agent, used just for testing purposes. You can run the project with the command: start::db-agent
 
+The DB agent itself (`svt-db-agent-next`) is not part of this workspace: it is the standalone app
+[`../DbAgentNext`](../DbAgentNext/README.md), with its own `package.json`, image and pipelines. Both compile the
+contract types of [`../Shared/svt-ts-types`](../Shared/svt-ts-types/README.md).
+
 ## Docker
 
 
 ```
-# Build
-docker build -t epic-measure .
+# Build, from the repository root (the image also compiles ../Shared/svt-ts-types)
+docker build -f UI/Dockerfile -t epic-measure .
 
 # Run (default port 8080)
 docker run -p 8080:8080 epic-measure

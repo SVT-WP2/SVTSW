@@ -10,11 +10,11 @@ import {
     MatLabel,
 } from '@angular/material/form-field'
 import { MatSelect } from '@angular/material/select'
-import { EpicSvtDutEntityName } from 'epic-api-types'
 import { EpicContentErrorModule, EpicLoaderComponent, EpicNoResultModule, EpicSkeletonLoaderComponent } from 'epic-ui/common/components'
 import { BaseFormWithFactoryComponent, EpicSearchPipe, EpicSelectFormControl } from 'epic-ui/utils'
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search'
 import { catchError, debounceTime, map, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
+import { EpicSvtDutEntityName } from 'svt-ts-types'
 
 import { EpicSvtTestCreateFormFactory } from './epic-svt-test-create-form.factory'
 import { EpicSvtTestCreateForm } from './epic-svt-test-create-form.models'

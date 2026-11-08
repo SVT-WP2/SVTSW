@@ -1,19 +1,15 @@
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { WsAdapter } from '@nestjs/platform-ws'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import * as bodyParser from 'body-parser'
 
-import { AppModule } from './app/app.module'
+import { AppModule, configureEpicMeasureApiApp, EPIC_MEASURE_API_GLOBAL_PREFIX } from './app'
 
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true })
-    const globalPrefix = 'api'
-    app.setGlobalPrefix(globalPrefix)
-    app.set('query parser', 'extended')
+    configureEpicMeasureApiApp(app)
 
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.KAFKA,
@@ -30,20 +26,6 @@ async function bootstrap() {
         },
     })
 
-    // max post upload size
-    app.use(bodyParser.json({ limit: '50mb' }))
-    app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
-
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            transform: true,
-            transformOptions: { enableImplicitConversion: true },
-        }),
-    )
-
-    app.useWebSocketAdapter(new WsAdapter(app))
-    app.enableCors()
     // Swagger
     const config = new DocumentBuilder()
         .setTitle('EpicMeasure API')
@@ -56,7 +38,7 @@ async function bootstrap() {
     await app.startAllMicroservices()
     await app.listen(port)
     Logger.log(
-        `🚀 API is running on: http://localhost:${port}/${globalPrefix}`,
+        `🚀 API is running on: http://localhost:${port}/${EPIC_MEASURE_API_GLOBAL_PREFIX}`,
     )
 }
 

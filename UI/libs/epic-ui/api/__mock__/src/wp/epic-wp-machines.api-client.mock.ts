@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { EpicWpMachinesApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
+import {
+    EpicWpMachine,
+    EpicWpMachineCreateRequest,
+    EpicWpMachineUpdateInstalledProbeCardRequest,
+    EpicWpMachineUpdateLoadedWaferRequest,
+    EpicWpMachineUpdateRequest,
+} from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 
@@ -20,7 +26,9 @@ export function getMockEpicWpMachinesList(): EpicWpMachine[] {
             swVersion: '1.0.0',
             vendor: EpicEnumsMock.getEnumsCollection().wpVendor[0],
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         },
         {
             id: 2,
@@ -34,7 +42,9 @@ export function getMockEpicWpMachinesList(): EpicWpMachine[] {
             swVersion: '1.0.0',
             vendor: EpicEnumsMock.getEnumsCollection().wpVendor[0],
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         },
     ]
 }
@@ -68,7 +78,9 @@ export class EpicWpMachinesApiClientMock extends EpicWpMachinesApiClient {
             ...payload,
             id: this.entitiesList.length ? this.entitiesList[this.entitiesList.length - 1].id + 1 : 1,
             loadedWaferId: null,
+            loadedWaferOrientation: null,
             installedProbeCardId: null,
+            installedProbeCardOrientation: null,
         }
         this.entitiesList = [...this.entitiesList, entity]
         return of(entity)
@@ -95,13 +107,19 @@ export class EpicWpMachinesApiClientMock extends EpicWpMachinesApiClient {
             )
     }
 
-    override updateLoadedWafer(id: number, loadedWaferId: number | null): Observable<EpicWpMachine> {
+    override updateLoadedWafer(id: number, { loadedWaferId, loadedWaferOrientation }: EpicWpMachineUpdateLoadedWaferRequest)
+        : Observable<EpicWpMachine> {
+        if (loadedWaferId !== null && !loadedWaferOrientation) {
+            // as the DB agent answers: loading needs an orientation
+            return throwError(() => new Error('loadedWaferOrientation is required to load a wafer')).pipe(delay(500))
+        }
         let refEntity: EpicWpMachine
         this.entitiesList = this.entitiesList.map(item => {
             if (item.id === id) {
                 refEntity = {
                     ...item,
                     loadedWaferId,
+                    loadedWaferOrientation: loadedWaferId === null ? null : loadedWaferOrientation,
                 }
                 return refEntity
             }
@@ -113,13 +131,15 @@ export class EpicWpMachinesApiClientMock extends EpicWpMachinesApiClient {
             )
     }
 
-    override updateInstalledProbeCard(id: number, installedProbeCardId: number | null): Observable<EpicWpMachine> {
+    override updateInstalledProbeCard(id: number, update: EpicWpMachineUpdateInstalledProbeCardRequest): Observable<EpicWpMachine> {
+        const { installedProbeCardId, installedProbeCardOrientation } = update
         let refEntity: EpicWpMachine
         this.entitiesList = this.entitiesList.map(item => {
             if (item.id === id) {
                 refEntity = {
                     ...item,
                     installedProbeCardId,
+                    installedProbeCardOrientation: installedProbeCardId === null ? null : installedProbeCardOrientation ?? null,
                 }
                 return refEntity
             }

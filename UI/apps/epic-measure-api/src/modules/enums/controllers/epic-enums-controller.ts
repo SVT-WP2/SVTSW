@@ -10,13 +10,9 @@ import {
     ValidationPipe,
 } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
-import {
-    EpicEnumsCollectionQueryFilterDto,
-    EpicEnumsCollectionResponseDto,
-    EpicKafkaReplyMessage,
-    EpicKafkaReplyStatus,
-} from 'epic/entities'
+import { EpicEnumsCollectionQueryFilterDto, EpicEnumsCollectionResponseDto } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
+import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 import { EpicEnumsService } from '../services'
 

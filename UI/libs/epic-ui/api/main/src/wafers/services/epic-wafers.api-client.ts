@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { Observable } from 'rxjs'
 import {
     EpicWafer,
     EpicWaferCreateRequest,
     EpicWaferLocationHistoryRecord,
     EpicWaferLocationUpdateRequest,
     EpicWaferUpdateRequest,
-} from 'epic-api-types'
-import { Observable } from 'rxjs'
+} from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 

@@ -1,6 +1,16 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Post, SerializeOptions, UseInterceptors } from '@nestjs/common'
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    SerializeOptions,
+    UseInterceptors,
+} from '@nestjs/common'
 import { ApiBody, ApiResponse } from '@nestjs/swagger'
-import { EpicWaferDto, EpicWaferTypeCreateRequestDto, EpicWaferTypeDto, EpicWaferTypeMapDto, processKafkaReplyError } from 'epic/entities'
+import { EpicWaferTypeCreateRequestDto, EpicWaferTypeDto, EpicWaferTypeMapDto, processKafkaReplyError } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
 
 import { EpicWaferTypesService } from '../services'
@@ -34,10 +44,10 @@ export class EpicWaferTypesController {
     }
 
     @Get('/:waferTypeId/wafer-map')
-    @ApiResponse({ type: EpicWaferDto })
+    @ApiResponse({ type: EpicWaferTypeMapDto })
     @UseInterceptors(ClassSerializerInterceptor)
-    @SerializeOptions({ type: EpicWaferDto })
-    async getWaferTypeMap(@Param('waferTypeId') waferTypeId: number): Promise<EpicWaferTypeMapDto> {
+    @SerializeOptions({ type: EpicWaferTypeMapDto })
+    async getWaferTypeMap(@Param('waferTypeId', ParseIntPipe) waferTypeId: number): Promise<EpicWaferTypeMapDto> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicWaferTypesService.getWaferTypeMap(+waferTypeId))
         ))

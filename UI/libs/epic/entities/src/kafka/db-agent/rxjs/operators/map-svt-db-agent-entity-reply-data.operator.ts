@@ -1,6 +1,5 @@
 import { map, Observable, OperatorFunction } from 'rxjs'
-
-import { SvtDbAgentKafka } from '../../kafka-messages'
+import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 
 export function mapSvtDbAgentEntityReplyData<TSource extends SvtDbAgentKafka.OneEntityReplyMessageData

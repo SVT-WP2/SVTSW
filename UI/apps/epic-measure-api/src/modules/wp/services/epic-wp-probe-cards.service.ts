@@ -1,13 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import {
-    EpicWpProbeCardEntity,
-    mapEpicKafkaMessageData,
-    mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWpProbeCards,
-} from 'epic/entities'
+import { mapEpicKafkaMessageData, mapSvtDbAgentListReplyData } from 'epic/entities'
 import { Observable } from 'rxjs'
+import { EpicWpProbeCard } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'svt-ts-types/kafka'
 
 import { EpicWpSvc } from '../models'
 
@@ -20,7 +16,7 @@ export class EpicWpProbeCardsService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpProbeCardEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpProbeCard[]> {
         const message = new SvtDbAgentKafkaWpProbeCards.GetAllWpProbeCardsMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpProbeCards.GetAllWpProbeCardsReplyMessage>(message)
             .pipe(

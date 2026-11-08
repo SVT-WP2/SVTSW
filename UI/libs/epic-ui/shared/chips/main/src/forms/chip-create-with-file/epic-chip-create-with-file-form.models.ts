@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicChipCreateManyRequestItem } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
+import { EpicChipCreateManyRequestItem } from 'svt-ts-types'
 
 
 export namespace EpicChipCreateWithFileForm {

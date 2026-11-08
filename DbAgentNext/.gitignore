@@ -1,0 +1,7 @@
+# Build output and dependencies
+/dist
+/node_modules
+/coverage
+
+# Personal e2e database credentials (see test-e2e/README.md)
+.env.*.local

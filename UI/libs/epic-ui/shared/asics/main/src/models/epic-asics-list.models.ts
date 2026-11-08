@@ -1,5 +1,5 @@
-import { EpicWafer } from 'epic-api-types'
 import { SelectOptionLabelValue } from 'epic-ui/utils'
+import { EpicWafer } from 'svt-ts-types'
 
 
 export type EpicAsicsListFilterValue = {

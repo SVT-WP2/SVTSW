@@ -1,16 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsISO8601, IsNumber, IsOptional, IsString, Max } from 'class-validator'
-import { EpicSvtTestsListQuery } from 'epic-api-types'
+import { IsArray, IsEnum, IsInt, IsISO8601, IsNumber, IsOptional, IsString, Max } from 'class-validator'
+import { EpicSvtTestsListQuery, EpicSvtTestStatus } from 'svt-ts-types'
+
+import { TransformQueryNumberArray, TransformQueryStringArray } from '../../common'
 
 
 export class EpicSvtTestsGetAllParamsDto implements EpicSvtTestsListQuery {
 
     @IsArray()
+    @IsInt({ each: true })
+    @TransformQueryNumberArray()
     @ApiProperty({ type: 'number', isArray: true, required: false })
     @IsOptional()
     ids?: number[]
 
     @IsArray()
+    @IsString({ each: true })
+    @TransformQueryStringArray()
     @ApiProperty({ type: 'string', isArray: true, required: false })
     @IsOptional()
     dutEntityNames?: string[]
@@ -20,17 +26,22 @@ export class EpicSvtTestsGetAllParamsDto implements EpicSvtTestsListQuery {
     @IsOptional()
     dutId?: number
 
-    @IsString({ each: true })
-    @ApiProperty({ type: 'string', isArray: true, required: false, description: 'Enum values of EpicSvtTestStatus' })
+    @IsEnum(EpicSvtTestStatus, { each: true })
+    @TransformQueryStringArray()
+    @ApiProperty({ enum: EpicSvtTestStatus, isArray: true, required: false, description: 'Enum values of EpicSvtTestStatus' })
     @IsOptional()
     statuses?: string[]
 
     @IsArray()
+    @IsInt({ each: true })
+    @TransformQueryNumberArray()
     @ApiProperty({ type: 'number', isArray: true, required: false })
     @IsOptional()
     testTypeConfigIds?: number[]
 
     @IsArray()
+    @IsInt({ each: true })
+    @TransformQueryNumberArray()
     @ApiProperty({ type: 'number', isArray: true, required: false })
     @IsOptional()
     testSetupConfigIds?: number[]

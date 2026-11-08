@@ -1,4 +1,13 @@
-import { ClassSerializerInterceptor, Controller, Get, NotFoundException, Param, SerializeOptions, UseInterceptors } from '@nestjs/common'
+import {
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    NotFoundException,
+    Param,
+    ParseIntPipe,
+    SerializeOptions,
+    UseInterceptors,
+} from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { EpicWpProbeCardDto, processKafkaReplyError } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
@@ -26,7 +35,7 @@ export class EpicWpProbeCardsController {
     @ApiResponse({ type: EpicWpProbeCardDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpProbeCardDto })
-    async getOne(@Param('id') id: number): Promise<EpicWpProbeCardDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicWpProbeCardDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWpProbeCardsService.getAll(),

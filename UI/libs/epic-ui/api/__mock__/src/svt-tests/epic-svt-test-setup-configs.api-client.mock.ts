@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core'
-import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
 import { EpicSvtTestSetupConfigsApiClient } from 'epic-ui/api'
 import { omit } from 'lodash-es'
 import moment from 'moment'
 import { delay, Observable, of } from 'rxjs'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'svt-ts-types'
 
 
 export function getMockEpicSvtTestSetupConfig(): EpicSvtTestSetupConfig[] {

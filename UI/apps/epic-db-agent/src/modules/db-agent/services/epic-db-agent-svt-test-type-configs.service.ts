@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestTypeConfigBodyEntity,
-    EpicSvtTestTypeConfigCreateEntity,
-    EpicSvtTestTypeConfigEntity,
-    EpicSvtTestTypeConfigsGetAllParams,
-} from 'epic/entities'
 import { omit } from 'lodash-es'
 import moment from 'moment/moment'
 import { delay, map, Observable, of } from 'rxjs'
+import {
+    EpicSvtTestTypeConfig,
+    EpicSvtTestTypeConfigBody,
+    EpicSvtTestTypeConfigCreateRequest,
+    EpicSvtTestTypeConfigsListQuery,
+} from 'svt-ts-types'
 
 
 @Injectable()
 export class EpicDbAgentSvtTestTypeConfigsService {
 
-    protected data: EpicSvtTestTypeConfigEntity[] = [
+    protected data: EpicSvtTestTypeConfig[] = [
         {
             id: 1,
             testTypeId: 1,
@@ -58,10 +58,10 @@ export class EpicDbAgentSvtTestTypeConfigsService {
         },
     ]
 
-    protected configBodyData: EpicSvtTestTypeConfigBodyEntity[] = this.data
+    protected configBodyData: EpicSvtTestTypeConfigBody[] = this.data
         .map(({ id }) => ({ id, configBody: JSON.stringify({ key1: 'value1' }) }))
 
-    getAll(queryFilter?: EpicSvtTestTypeConfigsGetAllParams): Observable<EpicSvtTestTypeConfigEntity[]> {
+    getAll(queryFilter?: EpicSvtTestTypeConfigsListQuery): Observable<EpicSvtTestTypeConfig[]> {
         const result = this.data
             .filter(item =>
                 (!queryFilter?.ids || queryFilter.ids.includes(item.id))
@@ -74,23 +74,23 @@ export class EpicDbAgentSvtTestTypeConfigsService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicSvtTestTypeConfigEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicSvtTestTypeConfig | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    getConfigBody(entityId: number): Observable<EpicSvtTestTypeConfigBodyEntity | undefined> {
+    getConfigBody(entityId: number): Observable<EpicSvtTestTypeConfigBody | undefined> {
         return of(this.configBodyData.find(item => item.id === entityId))
             .pipe(
                 delay(50),
             )
     }
 
-    create(createRequest: EpicSvtTestTypeConfigCreateEntity): Observable<EpicSvtTestTypeConfigEntity> {
+    create(createRequest: EpicSvtTestTypeConfigCreateRequest): Observable<EpicSvtTestTypeConfig> {
         const id = this.data.length ? this.data[this.data.length - 1].id + 1 : 1
-        const newConfig: EpicSvtTestTypeConfigEntity = {
+        const newConfig: EpicSvtTestTypeConfig = {
             id,
             ...omit(createRequest, 'configBody'),
             createdAt: moment().toISOString(),

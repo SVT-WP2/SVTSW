@@ -1,0 +1,55 @@
+import { MigrationObject } from '@mikro-orm/core'
+import { ReflectMetadataProvider } from '@mikro-orm/decorators/legacy'
+import { Options, PostgreSqlDriver } from '@mikro-orm/postgresql'
+
+import { SvtDbOrmConfig } from './models'
+import { SvtDbNamingStrategy } from './svt-db-naming-strategy'
+
+
+/** The explicit entity list the application passes in; no glob discovery, so the webpack bundle works. */
+export type SvtDbOrmEntities = NonNullable<Options['entities']>
+
+/** The explicit migration list the application passes in; no file discovery, for the same reason. */
+export type SvtDbOrmMigrations = MigrationObject[]
+
+/**
+ * Runtime MikroORM options shared by the application module and the integration tests.
+ *
+ * - `schema: main` and the {@link SvtDbNamingStrategy}: the database uses quoted camelCase identifiers
+ *   (`"waferId"`, `main."WaferType"`) and PostgreSQL's default constraint names; every entity names its
+ *   table explicitly.
+ * - Entities are listed, not discovered from files, because the app ships as one bundle. They use the
+ *   legacy (`experimentalDecorators`) decorators, hence the explicit `ReflectMetadataProvider`
+ *   (MikroORM 7 no longer defaults to it); every scalar property also declares its `type`.
+ * - Connections are lazy (MikroORM 7 always), so the module initialises without a database. The application
+ *   needs one at start, to apply the migrations. `ensureDatabase: false` so a connection never creates a
+ *   database; the migrator ignores the option, hence the check in `SvtDbOrmMigrationsService`.
+ * - `forceUtcTimezone`: `timestamp without time zone` values are never shifted by the host zone.
+ * - Migrations are listed too (`SvtDbOrmMigrationsService` applies them); without a list there is none to apply.
+ */
+export function buildSvtDbOrmOptions(config: SvtDbOrmConfig, entities: SvtDbOrmEntities, migrations: SvtDbOrmMigrations = []): Options {
+    return {
+        driver: PostgreSqlDriver,
+        metadataProvider: ReflectMetadataProvider,
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        dbName: config.dbName,
+        schema: config.schema,
+        namingStrategy: SvtDbNamingStrategy,
+        entities,
+        discovery: {
+            warnWhenNoEntities: false,
+        },
+        forceUtcTimezone: true,
+        allowGlobalContext: false,
+        ensureDatabase: false,
+        debug: config.debug,
+        migrations: {
+            tableName: 'mikro_orm_migrations',
+            migrationsList: migrations,
+            snapshot: false,
+        },
+    }
+}

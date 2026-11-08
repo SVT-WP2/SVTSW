@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicWpProbeCard } from 'epic-api-types'
 import { EpicWpProbeCardsApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 export function getMockEpicWpProbeCardsList(): EpicWpProbeCard[] {

@@ -121,8 +121,11 @@
             "epic/entities": [
                 "libs/epic/entities/src/index.ts"
             ],
-            "epic-api-types": [
-                "libs/epic-api-types/src/index.ts"
+            "svt-ts-types": [
+                "../Shared/svt-ts-types/main/src/index.ts"
+            ],
+            "svt-ts-types/kafka": [
+                "../Shared/svt-ts-types/kafka/src/index.ts"
             ],
             "epic-ui/shared/equipment": [
                 "libs/epic-ui/shared/equipment/main/src/index.ts"
@@ -144,8 +147,7 @@
             ]
         },
         "useDefineForClassFields": false,
-        "resolveJsonModule": true,
-        "rootDir": "."
+        "resolveJsonModule": true
     },
     "angularCompilerOptions": {
         "fullTemplateTypeCheck": true,

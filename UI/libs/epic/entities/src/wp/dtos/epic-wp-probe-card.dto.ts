@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsNumber, IsString } from 'class-validator'
-import { EpicWpProbeCard } from 'epic-api-types'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 export class EpicWpProbeCardDto implements EpicWpProbeCard {

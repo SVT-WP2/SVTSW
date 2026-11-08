@@ -1,7 +1,7 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWafer, EpicWpMachine } from 'epic-api-types'
 import { EpicAsicTestType, EpicWaferTest, EpicWaferTestCreate, EpicWaferTestUpdate } from 'epic-ui/api'
 import { EpicSelectFormControl } from 'epic-ui/utils'
+import { EpicWafer, EpicWpMachine } from 'svt-ts-types'
 
 
 export namespace EpicWaferTestUpdateForm {

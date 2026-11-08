@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest, EpicSvtTestTemplateUpdateRequest } from 'epic-api-types'
 import { EpicSvtTestTemplatesApiClient, EpicSvtTestTypeConfigsApiClient } from 'epic-ui/api'
 import { delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs'
+import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest, EpicSvtTestTemplateUpdateRequest } from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 

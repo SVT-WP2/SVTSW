@@ -1,15 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
 import {
-    EpicSvtDutEntityName,
-    EpicSvtTest,
-    EpicSvtTestResultStatus,
-    EpicSvtTestSetup,
-    EpicSvtTestSetupConfig,
-    EpicSvtTestStatus,
-    EpicSvtTestType,
-    EpicSvtTestTypeConfig,
-} from 'epic-api-types'
-import {
     AgIconActionsCell,
     AgIconActionsCellComponent,
     AgLabelCell,
@@ -23,6 +13,16 @@ import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'
 import { keyBy } from 'lodash-es'
 import moment from 'moment'
+import {
+    EpicSvtDutEntityName,
+    EpicSvtTest,
+    EpicSvtTestResultStatus,
+    EpicSvtTestSetup,
+    EpicSvtTestSetupConfig,
+    EpicSvtTestStatus,
+    EpicSvtTestType,
+    EpicSvtTestTypeConfig,
+} from 'svt-ts-types'
 
 
 export namespace EpicSvtTestsGrid {
@@ -120,15 +120,17 @@ export namespace EpicSvtTestsGrid {
         }
     }
 
-    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus | undefined): StatusLabelConfig {
+    export function getResultStatusLabelConfig(resultStatus: EpicSvtTestResultStatus | null | undefined): StatusLabelConfig {
         switch (resultStatus) {
-            case EpicSvtTestResultStatus.Completed:
+            case EpicSvtTestResultStatus.Success:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
-            case EpicSvtTestResultStatus.Failed:
-                return { color: DEFAULT_SYSTEM_COLORS.ERROR_400, bgColor: DEFAULT_SYSTEM_COLORS.ERROR_50 }
+            case EpicSvtTestResultStatus.PartialSuccess:
             case EpicSvtTestResultStatus.Cancelled:
                 return { color: DEFAULT_SYSTEM_COLORS.WARNING_400, bgColor: DEFAULT_SYSTEM_COLORS.WARNING_50 }
-            // EpicSvtTestResultStatus.None and the not yet loaded row
+            case EpicSvtTestResultStatus.Failure:
+            case EpicSvtTestResultStatus.Error:
+                return { color: DEFAULT_SYSTEM_COLORS.ERROR_400, bgColor: DEFAULT_SYSTEM_COLORS.ERROR_50 }
+            // no result yet (null) and the not yet loaded row
             default:
                 return { color: DEFAULT_SYSTEM_COLORS.NEUTRAL_300, bgColor: DEFAULT_SYSTEM_COLORS.NEUTRAL_30 }
         }

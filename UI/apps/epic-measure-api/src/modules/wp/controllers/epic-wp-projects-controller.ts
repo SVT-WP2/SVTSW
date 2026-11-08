@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Post,
     SerializeOptions,
     UseInterceptors,
@@ -36,7 +37,7 @@ export class EpicWpProjectsController {
     @ApiResponse({ type: EpicWpProjectDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpProjectDto })
-    async getOne(@Param('id') id: number): Promise<EpicWpProjectDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicWpProjectDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWpProjectsService.getAll(),

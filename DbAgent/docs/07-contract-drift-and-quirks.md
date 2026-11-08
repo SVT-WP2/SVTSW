@@ -1,18 +1,32 @@
 # 07. Contract drift and observed quirks
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the C++ agent, not the
+> system under development. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 Consolidated list of everything where the contract, the C++ code, the database and the consumers
 disagree, and of behaviours observed in the code that are worth confirming with its author. The
 **Effect** column is from the point of view of a consumer today: **breaks** (a documented call
 fails), **wrong** (succeeds with a wrong result or side effect), **cosmetic**.
 
+**The contract was aligned with the code on 2026-11-18.** Since that day
+`Documentation/Kafka/svt.db-agent.kafka.yaml` states the **Code** column of the tables below, and quotes
+their ids. The **Contract** columns keep what the file said before (git: `850572ad`). That is the
+behaviour the consumers were written against, and the behaviour the re-implementation took as the
+intended one. In this folder, "the contract" always means the file before the alignment.
+
+The ids (`D-…`, `R-…`, `X-…`) do not change: both contracts and `DbAgentNext/docs` quote them.
+
 ## 1. Message types: contract vs code
 
-| Message type | Contract | Code | Consumers calling it | Effect |
+| Message type | Contract before 2026-11-18 | Code | Consumers calling it | Effect |
 |---|---|---|---|---|
-| `GetAllChipBlocks` | yes | **no handler** → `Error: Request GetAllChipBlocks not Found` | epic-measure-api (chip-blocks module) | breaks |
+| `GetAllChipBlocks` | yes | **no handler** → `Error: Request GetAllChipBlocks not Found`. The BFF sends `GetAllBlocks`, which has no handler either. | epic-measure-api (chip-blocks module) | breaks |
 | `GetAllModules`, `CreateModule`, `UpdateModuleLocation`, `GetModuleLocationHistory` | yes | no (DTO unfinished, unregistered) | none yet | breaks (future) |
-| `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` | **no** | yes, generic | none known | cosmetic; decide whether to adopt into the contract or drop |
-| Everything else (48 types) | yes | yes | | |
+| `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` | **no** | yes, generic | none known | cosmetic |
+| Everything else (50 types) | yes | yes | | |
+
+The aligned contract has the 53 types the code serves: it dropped the five types of the first two
+rows and describes the three of the third row, marked as without a known consumer.
 
 Also outside this contract: the TestAgent's `db_client.py` sends `GetAllTests`,
 `GetAll<Chip>Tests`, `GetAll<Chip>TestConfigurations`, `Create<Chip>Test` to the same topics. None
@@ -27,12 +41,12 @@ contract only if a consumer needs them.
 
 ## 2. Request shape drift
 
-| Id | Message | Contract says | Code does | Effect |
+| Id | Message | Contract said (before 2026-11-18) | Code does | Effect |
 |---|---|---|---|---|
-| D-1 | `UpdateSvtTestType` | `{ id, update: { dutTypes } }` | reads `data.testTypeId`, `data.dutTypes` | breaks with contract shape |
+| D-1 | `UpdateSvtTestType` | `{ id, update: { dutTypes } }` | reads `data.testTypeId`, `data.dutTypes`; only adds DUT types | breaks with contract shape (`[json.exception.type_error.302] type must be number, but is number`) |
 | D-2 | `GetAllEnums` | `data.enumsNames` (typo) | reads `data.enumNames`; UI sends `data.filter.enumNames` | wrong: filter ignored, all enums returned (harmless today) |
 | D-3 | `GetAllSvtTests` filters | `ids, dutEntityNames, dutId, testResultStatuses, testTypeConfigIds, testSetupConfigIds, createdAtFrom/To, startedAtFrom/To, finishedAtFrom/To` | only `ids` | breaks for any other filter |
-| D-4 | `GetAllSvtTestTypes` filter `dutTypes` | filters by DUT type | no-op (Q-H9) | wrong |
+| D-4 | `GetAllSvtTestTypes` filter `dutTypes` | filters by DUT type | always replies `items: []`, without `totalCount` (Q-H9) | wrong |
 | D-5 | `GetAllChips` filter `familyTypes` | filters by family type | error (Q-H3, by code reading) | breaks |
 | D-6 | `GetAllAsics` filter `chipId` | filters by chip | SQL error (Q-H4, by code reading) | breaks |
 | D-7 | `CreateWaferType` | `data.create.waferMap` | additionally requires `data.waferMap` to exist (Q-H1) | breaks unless the client sends both |
@@ -49,7 +63,7 @@ D-13 — a status such as "PC not installed" is the suggested representation (Q1
 
 ## 3. Reply shape drift
 
-| Id | Message | Contract says | Code returns | Effect |
+| Id | Message | Contract said (before 2026-11-18) | Code returns | Effect |
 |---|---|---|---|---|
 | R-1 | `GetEquipmentListForTestSetup` | `items: EquipmentDto[]` | `items: { equipId, setupId }[]` (Q-H11) | wrong |
 | R-2 | `CreateManyChips` | the created chips | **all** chips (≤ 5000) (Q-H6) | wrong |
@@ -78,15 +92,15 @@ to keep (Q30).
 | X-2 | engine | SQL built by string concatenation without escaping (Q-S1): `'` in any value breaks the statement; filter values from clients are injectable. | breaks / security |
 | X-3 | engine | New id via `SELECT MAX(id)` after insert (Q-C2): wrong under concurrent writers. | wrong (latent) |
 | X-4 | engine | Pagination in memory after fetching all rows and N+1 relation queries ([04 §4.5](04-request-engine.md#45-page)). | performance |
-| X-5 | engine | Scalar relations throw on zero rows (Q-R2): one bad row hides a whole list (`GetAllSvtTestSetups`, `GetAllSvtTests`). | breaks |
+| X-5 | engine | Scalar relations throw on zero rows (Q-R2): one bad row hides a whole list (`GetAllSvtTestSetups`, `GetAllSvtTests`). `CreateSvtTestSetup` hits this on its own new row and **always fails**, after it wrote the setup ([05 §11](05-request-handlers.md#11-svttestsetup)). | breaks |
 | X-6 | engine | Booleans dropped on create (Q-C1); `null`/`true`/objects ignored as filters (Q-F1). | wrong |
 | X-7 | `CreateChip` | Block generation never runs (Q-H5); wrong table name `Block`. | wrong (feature missing) |
 | X-8 | `UpdateWpMachineLoadedWafer` | Swap loses the `Unloaded` history row (Q-H8a). | wrong |
 | X-9 | `Update*Location` | "Latest" location chosen by `ORDER BY date DESC` at day resolution; two moves on one day may set the wrong current location (Q-H7). | wrong |
 | X-10 | envelope | Non-JSON payload, missing `type`/`data`, or non-string `type` crash the process ([01 §7](01-architecture.md#7-failure-and-recovery-behaviour)). | breaks (availability) |
 | X-11 | `GetAllEnums` | Cache never refreshed; naive `enum_range` parsing (Q-H14). | wrong (operational) |
-| X-12 | `Get*ConfigBody` | Unknown id → `Success` with `entity: {}` (Q-H20). | wrong |
-| X-13 | `UpdateSvtTestSetup` | Relation update without upsert: silently updates 0 rows (Q-U1). | wrong |
+| X-12 | `Get*ConfigBody` | Unknown id → `Success` with `entity: null` (Q-H20). | wrong |
+| X-13 | `UpdateSvtTestSetup` | Relation update without upsert: for a setup without a default-config row it updates 0 rows, and the re-read then fails as X-5 (Q-U1). | wrong |
 | X-14 | reads | `int8` columns decoded through 32-bit `int` ([04 §3](04-request-engine.md#3-reading-rows-from-postgresql)). | latent |
 | X-15 | three list queries | Schema `main` hardcoded (Q-H21). | cosmetic |
 | X-16 | health | Healthcheck proves Kafka liveness only, not DB connectivity ([01 §8](01-architecture.md#8-heartbeat-and-health-check)). | operational |
@@ -116,14 +130,14 @@ and `text` in dev (S10); nothing else differs. Author (Q31, Q27): prod is outdat
 | TestAgent (`db_client.py`) | its own names (§1) | nothing it sends is served; it is to move to the contract (Q36) |
 | Docker healthcheck | heartbeat topic | X-16 |
 
-The NestJS mock (`UI/apps/epic-db-agent`) implements the **contract**, not the C++ behaviour; it
-already differs from production on every row of §2 and §3. Code written against the mock may break
-against the real agent, and vice versa.
+The NestJS mock (`UI/apps/epic-db-agent`) implements the contract as it was before the alignment, not
+the C++ behaviour; it differs from the C++ agent on every row of §2 and §3. Code written against the
+mock may break against the C++ agent, and vice versa.
 
 ## 7. What happens with these findings
 
-Decisions on which of these behaviours a re-implementation should preserve or change are kept
-outside this folder, in [UI/docs/db-agent-clone](../../UI/docs/db-agent-clone/README.md), and what
-the re-implementation actually does is its own contract,
+The decisions on which of these behaviours the re-implementation keeps or changes are outside this
+folder, in [DbAgentNext/docs](../../DbAgentNext/docs/README.md). What the re-implementation does is
+in its own contract,
 [Documentation/Kafka/svt.db-agent-next.kafka.yaml](../../Documentation/Kafka/svt.db-agent-next.kafka.yaml),
-which quotes the ids of this document. This document only records what runs today.
+which quotes the ids of this document. This document only records what the C++ agent does.

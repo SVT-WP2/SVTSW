@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
 import { EpicEquipmentTypesApiClient } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'svt-ts-types'
 
 
 export function getMockEpicEquipmentTypes(): EpicEquipmentType[] {

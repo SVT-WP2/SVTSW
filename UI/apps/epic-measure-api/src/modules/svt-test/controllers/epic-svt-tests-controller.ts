@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Post,
     Query,
     SerializeOptions,
@@ -63,7 +64,7 @@ export class EpicSvtTestsController {
     @ApiResponse({ type: EpicSvtTestDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestDto })
-    async getOne(@Param('id') id: number): Promise<EpicSvtTestDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestDto> {
         const list = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestsService.getAll({ ids: [+id] }),

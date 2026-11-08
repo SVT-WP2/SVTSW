@@ -1,5 +1,8 @@
 # 04. The generic request engine
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the C++ agent, not the
+> system under development. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 Almost every message type is served by one of three generic algorithms (list, create, update)
 parameterised by a per-entity **DTO declaration**. This doc specifies those algorithms exactly.
 [05-request-handlers.md](05-request-handlers.md) then only has to state each entity's declaration
@@ -223,7 +226,8 @@ function createAndReturn(dto, body): Entry {
     for (const rel of dto.relations)
         if (body[rel.colName] !== undefined) addRelationValues(rel, id, body[rel.colName])
 
-    // 5.7 re-read through the list path (custom query + relations apply)
+    // 5.7 re-read through the list path (custom query + relations apply).
+    //     A scalar relation whose row was not written by 5.6 throws here (Q-R2): CreateSvtTestSetup, 05 §11
     return getById(dto, id)
 }
 
@@ -289,7 +293,8 @@ request").
 
 Relation-table update (`UpdateSvtTestSetup` only):
 `UPDATE <relTable> SET "<colName>" = v WHERE "<pkName>" = id`. If no row exists nothing is inserted
-and the reply is still `Success` (Q-U1).
+(Q-U1); the handler then re-reads the entity, and the missing scalar relation makes that re-read
+throw (Q-R2), so the reply is `BadRequest`.
 
 ## 7. Transaction semantics
 

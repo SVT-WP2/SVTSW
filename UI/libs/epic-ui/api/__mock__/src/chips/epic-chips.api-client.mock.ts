@@ -1,3 +1,5 @@
+import { EpicChipsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
+import { concat, delay, Observable, of, zipAll } from 'rxjs'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -7,9 +9,7 @@ import {
     EpicChipLocationHistoryRecord,
     EpicChipLocationUpdateRequest,
     EpicChipsListQuery,
-} from 'epic-api-types'
-import { EpicChipsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
-import { concat, delay, Observable, of, zipAll } from 'rxjs'
+} from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 

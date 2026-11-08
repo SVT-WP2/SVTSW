@@ -1,5 +1,11 @@
 # 03. Database schema
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the databases of
+> 2026-11-08 as the C++ agent uses them. It is **not** the authority for the schema: the schema changes
+> through the migrations of the re-implementation
+> ([DbAgentNext/docs/02](../../DbAgentNext/docs/02-database-migration.md)), and this page does not
+> follow them. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 PostgreSQL, schema `main`. The DDL below comes from the three dumps in `Dev/db-example/`
 (see its [README](../../Dev/db-example/README.md)), extracted with `pg_restore --schema-only`:
 **june** (`db-example-2026-06-01.dump`), **dev** (`2026-11-08-backup.dump`, database

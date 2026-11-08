@@ -1,7 +1,5 @@
 import { Observable, of, OperatorFunction, switchMap, throwError } from 'rxjs'
-
-import { EpicKafkaReplyMessage } from '../../epic-kafka-reply-message.models'
-import { EpicKafkaReplyStatus } from '../../epic-kafka-reply-status.models'
+import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 
 export function mapEpicKafkaMessageData<TSource extends EpicKafkaReplyMessage = EpicKafkaReplyMessage>()

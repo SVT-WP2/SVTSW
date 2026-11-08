@@ -1,5 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { QueryHelpers } from 'epic-ui/utils'
+import { map, Observable } from 'rxjs'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -9,9 +11,7 @@ import {
     EpicChipLocationHistoryRecord,
     EpicChipLocationUpdateRequest,
     EpicChipsListQuery,
-} from 'epic-api-types'
-import { QueryHelpers } from 'epic-ui/utils'
-import { map, Observable } from 'rxjs'
+} from 'svt-ts-types'
 
 import { EpicApi, getDefaultEpicApiPager } from '../../common'
 

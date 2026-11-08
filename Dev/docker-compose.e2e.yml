@@ -1,0 +1,45 @@
+# Kafka broker of the epic-measure-api e2e suite (UI/apps/epic-measure-api/test-e2e): one KRaft node on
+# localhost:9185, no named volumes (its data goes with the container).
+#
+#   docker compose -f Dev/docker-compose.e2e.yml up -d
+#
+# Separate from docker-compose.kafka-local.yml (9085) on purpose: the DB agent consumes as the fixed group
+# svt.db-agent.request and the BFF's reply consumers use fixed groups too, so a dev agent or dev BFF on the same
+# broker would share them with the suite and could answer its requests against the dev database.
+# The Postgres of docker-compose.postgres.yml (5500) serves the suite; the harness creates its own database.
+# Its own project name: the other files of Dev/ share the default one ("dev"), so a `down --remove-orphans` here
+# would remove their containers.
+name: svt-e2e
+
+services:
+  kafka-e2e:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: svt.kafka-broker--e2e
+    restart: unless-stopped
+    ports:
+      - "9185:9185"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9183
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9185,CONTROLLER://0.0.0.0:9183
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9185
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Every spec file boots the BFF, whose clients join their groups anew: no 3 s wait for more members.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # List replies exceed Kafka's 1 MB default (see docker-compose.kafka-local.yml).
+      KAFKA_MESSAGE_MAX_BYTES: 52428800
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 52428800
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+      CLUSTER_ID: "RTJFRTJFRTJFRTJFRTJFRQ"
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9185", "--list"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 15s
