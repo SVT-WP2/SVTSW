@@ -16,15 +16,17 @@ API. Building all 34 entities first and all 55 handlers afterwards would postpon
 
 | Piece | What it does |
 |---|---|
-| `utils/test-setup.ts` `TestSetup` | `init()` boots the real `AppModule` with `@nestjs/testing` against the database of `.env.test` and applies `src/migrations` to it; `clearDatabase()` truncates every table of `main` (identities restarted); `send(message)` hands a request envelope to `SvtDbAgentNextRequestDispatcher` and returns the reply envelope, both after a JSON round trip; `em()` / `query()` for seeding and assertions. |
+| `utils/test-setup.ts` `TestSetup` | `init()` boots the real `AppModule` with `@nestjs/testing` against the database of `.env.test` and applies `src/migrations` to it; `clearDatabase()` truncates every table of `main` (identities restarted); `send(message)` hands a request envelope to `SvtDbAgentNextRequestDispatcher` and returns the reply envelope, both after a JSON round trip; `em()` / `query()` for seeding and assertions. Options: `env` (variables set for the boot, e.g. a feature flag), `kafka` (also connect the Kafka microservice and start the heartbeat, for the smoke spec only). |
 | `utils/e2e-env.ts` | `setupFiles`: `NODE_ENV=test`, loads the app's `.env.test.local` (git-ignored, personal credentials) then `.env.test`, refuses any database whose name does not end with `_e2e_test`. |
 | `vitest.e2e.config.ts` | Node environment, **swc** transform (NestJS needs `design:paramtypes` metadata; esbuild emits none), aliases from `tsconfig.base.json`, sequential files, 30 s timeouts. Specs are `test-e2e/**/*.e2e-spec.ts`, which the unit config's `*.spec.ts` glob never matches. |
 
-Kafka is **not** in the loop: `send()` calls the dispatcher the Kafka controller (phase 4) delegates to,
-so a spec covers everything the agent does with a message except the transport. That is deliberate:
-the transport is NestJS's `ServerKafka`, the protocol is its own request/reply convention, and a broker
-in the test loop would make the suite slow and flaky for no coverage of our code. A broker-backed smoke
-test (one message end to end, env-gated like rentaly's live R2 specs) is a later, separate addition.
+Kafka is **not** in the loop of the domain specs: `send()` calls the dispatcher the Kafka controller
+delegates to, so a spec covers everything the agent does with a message except the transport. That is
+deliberate: the transport is NestJS's `ServerKafka`, the protocol is its own request/reply convention, and
+a broker in every test would make the suite slow and flaky for no coverage of our code. The transport has
+its own broker-backed smoke spec, `test-e2e/kafka/kafka.e2e-spec.ts`, run only with
+`SVT_DB_AGENT_E2E_KAFKA=1` against the broker of `.env.test` (`Dev/docker-compose.kafka-local.yml`);
+see [04-kafka-layer.md](04-kafka-layer.md), Outcome.
 
 Database: `localhost:5500`, `postgres`/`postgres`, **`svt_sw_db_e2e_test`** (the compose Postgres of
 `Dev/docker-compose.postgres.yml`; create the database once). A developer whose instance differs (e.g. a

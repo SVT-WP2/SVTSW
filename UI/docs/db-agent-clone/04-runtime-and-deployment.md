@@ -42,6 +42,10 @@ compatible with the single request topic.
 
 ## 3. Heartbeat and health
 
+*Status 2026-11-08:* implemented as decided below — the heartbeat record every 2 s with the C++ topic
+retention, `GET /health` with `database` (a `select 1`) and `kafka` (an admin call), the compose
+`HEALTHCHECK` on that endpoint ([dev-plan/04-kafka-layer.md](dev-plan/04-kafka-layer.md), Outcome).
+
 - Keep producing `{ "timestamp": "<epoch seconds>.<6 decimals>" }` as a **string** to
   `svt.db-agent.heartbeat` every 2 s. The compose `HEALTHCHECK` consumes it and nothing else does,
   so the payload is free to gain fields but must keep `timestamp` a string until the healthcheck

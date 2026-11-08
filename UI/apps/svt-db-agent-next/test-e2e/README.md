@@ -48,6 +48,25 @@ Never put a real password into `.env.test`: it is committed and CI reads it.
 
 CI runs the same suite against a `postgres:17` service container (see `.github/workflows/db-agent-next.yml`).
 
+## Kafka
+
+The domain specs never touch a broker. The one spec that does, `kafka/kafka.e2e-spec.ts`, is skipped
+unless `SVT_DB_AGENT_E2E_KAFKA=1` is set; it then boots the application with the Kafka microservice
+connected (`new TestSetup({ kafka: true })`) and plays a kafkajs client against it, using the broker of
+`.env.test` (`localhost:9085`, the one `Dev/docker-compose.kafka-local.yml` starts):
+
+```bash
+docker compose -f ../Dev/docker-compose.kafka-local.yml up -d
+```
+
+```bash
+SVT_DB_AGENT_E2E_KAFKA=1 npx vitest run --config apps/svt-db-agent-next/vitest.e2e.config.ts apps/svt-db-agent-next/test-e2e/kafka
+```
+
+It checks the reply envelope and its correlation id, an unknown type and a non-JSON value (both
+`BadRequest`, the agent keeps serving), a write through Kafka, and the heartbeat record. CI has no
+broker, so the flag stays off there.
+
 ## Writing a spec for a new slice
 
 ```ts

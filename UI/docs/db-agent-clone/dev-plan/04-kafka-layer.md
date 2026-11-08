@@ -157,3 +157,40 @@ against the agent.
   in [00-context.md §13](00-context.md#13-open-questions-that-may-change-the-plan);
 - changing anything under `UI/libs/epic/entities`;
 - running the agent against a broker or database that is not local.
+
+## Outcome (2026-11-08)
+
+Delivered differently from the layout above, because phases 3 and 4 were built slice by slice
+([05-e2e-testing.md](05-e2e-testing.md)): the dispatcher, the envelope and the validation helpers live in
+`modules/dispatch/` since the first slice, every handlers class is discovered through the
+`@SvtDbAgentNextHandlers()` decorator (no `register(dispatcher)`), and the request context is opened by the
+dispatcher (no `@CreateRequestContext()` on the controller). What `modules/kafka/` adds:
+
+| Piece | What it does |
+|---|---|
+| `svt-db-agent-next-kafka.models.ts` | `buildSvtDbAgentNextKafkaOptions(brokers)`: `Transport.KAFKA`, client id `svt-db-agent-next`, consumer group **`svt.db-agent.request`** (the C++ agent's, so a deployment swap is a consumer handover), 10 MiB / 50 MiB fetch limits, gzip replies, `fromBeginning: false`. `buildSvtDbAgentNextHeartbeat()`: `{ timestamp: '<seconds>.<6 decimals>' }`. |
+| `svt-db-agent-next-kafka.controller.ts` | `@MessagePattern('svt.db-agent.request')`: hands the payload to the dispatcher, logs type, status, duration and correlation id, returns the reply as a **string**; never throws (a dispatcher failure becomes an `UnexpectedError` envelope). |
+| `svt-db-agent-next-heartbeat.service.ts` | kafkajs producer, one record every 2 s; creates the heartbeat topic with `retention.ms=60000`, `segment.ms=120000` when the broker lacks it. Started by `main.ts` after the microservice is up, never by the e2e harness. |
+| `svt-db-agent-next-kafka.health-indicator.ts` | `kafka` in `GET /health`: `admin.listTopics()` with a 3 s timeout, client created on first use and dropped after a failure. |
+| `main.ts` | `connectMicroservice(...)`, `startAllMicroservices()`, heartbeat `start()`, then the HTTP listener. An unreachable broker ends the boot (as for the C++ agent) and the container restarts. |
+
+Reply routing is NestJS's: the reply goes to the request's `kafka_replyTopic` with `kafka_correlationId`
+and `kafka_replyPartition` copied from the request. The C++ ignored the topic header and always used
+`svt.db-agent.request.reply`; every client in the repository (the BFF, WPAgent's `WPDbKafkaClient`) sends
+the header with that value, so nothing changes for them. A request without `kafka_replyTopic` is treated
+as an event and gets no reply; a client that omits it would need a custom `ServerKafka`.
+
+A value that is not JSON reaches the dispatcher as a string and gets the `BadRequest` envelope
+(`Malformed request: missing string "type"`); the process keeps serving (the C++ exited).
+
+**Tests.** Unit: the options builder, the heartbeat format, the controller (never throws). e2e:
+`test-e2e/kafka/kafka.e2e-spec.ts` is the broker-backed smoke spec, run only with
+`SVT_DB_AGENT_E2E_KAFKA=1` against the broker of `.env.test` (`Dev/docker-compose.kafka-local.yml`,
+`localhost:9085`): it plays a kafkajs client with the conventions' headers against the agent's real
+microservice (`TestSetup({ kafka: true })`) and checks the envelope and correlation, an unknown type and a
+non-JSON value with the agent still serving afterwards, a write through Kafka, and the heartbeat record.
+CI has no broker, so the flag stays off there.
+
+**Still open from this page.** 4d: the parity run against the C++ agent on the same dump
+([../03-parity-testing.md](../03-parity-testing.md)) and the UI documentation updates that follow it.
+Intentional differences so far are the findings sections of [05-e2e-testing.md](05-e2e-testing.md).

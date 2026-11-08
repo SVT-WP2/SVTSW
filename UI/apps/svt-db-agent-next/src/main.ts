@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app'
 import { getSvtDbAgentNextLogLevels, SvtDbAgentNextConfig } from './config'
+import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService } from './modules/kafka'
 
 
 async function bootstrap() {
@@ -16,12 +17,20 @@ async function bootstrap() {
     app.useLogger(configService.get('logLevels', { infer: true }))
     app.enableShutdownHooks()
 
-    // Phase 4 connects the Kafka microservice here (`connectMicroservice` + `startAllMicroservices`).
+    // The Kafka consumer (`svt.db-agent.request`) and the heartbeat; an unreachable broker ends the boot, as it
+    // did for the C++ agent, and the container restarts.
+    const kafka = configService.get('kafka', { infer: true })
+    app.connectMicroservice(buildSvtDbAgentNextKafkaOptions(kafka.brokers), { inheritAppConfig: true })
+    await app.startAllMicroservices()
+    await app.get(SvtDbAgentNextHeartbeatService).start()
 
     const httpPort = configService.get('httpPort', { infer: true })
     await app.listen(httpPort)
     const version = process.env.APP_VERSION ?? 'local'
-    Logger.log(`🚀 SvtDbAgentNext ${version} is running on: http://localhost:${httpPort} (GET /health)`)
+    Logger.log(`🚀 SvtDbAgentNext ${version} is running on: http://localhost:${httpPort} (GET /health), Kafka ${kafka.brokers.join(',')}`)
 }
 
-void bootstrap()
+bootstrap().catch((error: unknown) => {
+    Logger.error('SvtDbAgentNext failed to start', error instanceof Error ? error.stack : String(error))
+    process.exit(1)
+})

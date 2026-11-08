@@ -13,7 +13,7 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 | `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
-| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++); `GET /health` on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context `UI/`), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
+| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++): consumes `svt.db-agent.request` (consumer group `svt.db-agent.request`, the C++ one), produces the heartbeat, `GET /health` (database + Kafka) on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context `UI/`), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
 
 The browser never talks to Kafka. Flow is always:
 
@@ -40,11 +40,11 @@ npm run start::db-agent   # fake DB agent — needs Kafka running
 ```
 
 ```bash
-npm run start::db-agent-next   # real DB agent (in development), http://localhost:7676/health
+npm run start::db-agent-next   # real DB agent (in development) — needs Postgres on 5500 and Kafka on 9085 (../Dev/docker-compose.kafka-local.yml); http://localhost:7676/health
 ```
 
 ```bash
-npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 (.env.test; override in .env.test.local) with database svt_sw_db_e2e_test
+npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 (.env.test; override in .env.test.local) with database svt_sw_db_e2e_test; SVT_DB_AGENT_E2E_KAFKA=1 adds the broker-backed smoke spec (Kafka on 9085)
 ```
 
 ```bash

@@ -7,6 +7,7 @@ import { getSvtDbAgentNextConfigFactory, SvtDbAgentNextConfig, validateSvtDbAgen
 import { SvtDbAgentNextDispatchModule } from '../modules/dispatch'
 import { SvtDbAgentNextHandlersModule } from '../modules/handlers'
 import { SvtDbAgentNextHealthModule } from '../modules/health'
+import { SvtDbAgentNextKafkaModule } from '../modules/kafka'
 
 
 @Module({
@@ -26,6 +27,7 @@ import { SvtDbAgentNextHealthModule } from '../modules/health'
         }),
         SvtDbAgentNextDispatchModule,
         SvtDbAgentNextHandlersModule,
+        SvtDbAgentNextKafkaModule,
         SvtDbAgentNextHealthModule,
     ],
     controllers: [],

@@ -14,6 +14,7 @@ import { buildSvtDbOrmOptions } from 'svt-db/orm'
 import { AppModule } from '../../src/app/app.module'
 import { SvtDbAgentNextConfig } from '../../src/config'
 import { SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../../src/modules/dispatch'
+import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService } from '../../src/modules/kafka'
 
 
 /** A request envelope as a client would send it; the typed message classes of `epic/entities` fit too. */
@@ -25,6 +26,12 @@ export type TestSetupOptions = {
      * (`SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'true'`). The configuration is built from `process.env` per boot.
      */
     env?: Record<string, string>
+    /**
+     * Also connect the Kafka microservice and start the heartbeat, exactly as `main.ts` does, against the
+     * broker of `.env.test`. Only the broker-backed smoke spec asks for it; every other spec talks to the
+     * dispatcher directly.
+     */
+    kafka?: boolean
 }
 
 /**
@@ -64,7 +71,15 @@ export class TestSetup {
 
         const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile()
         this.app = moduleFixture.createNestApplication({ logger: ['error', 'warn'] })
+        if (this.options.kafka) {
+            const { brokers } = this.app.get(ConfigService<SvtDbAgentNextConfig, true>).get('kafka', { infer: true })
+            this.app.connectMicroservice(buildSvtDbAgentNextKafkaOptions(brokers), { inheritAppConfig: true })
+        }
         await this.app.init()
+        if (this.options.kafka) {
+            await this.app.startAllMicroservices()
+            await this.app.get(SvtDbAgentNextHeartbeatService).start()
+        }
 
         this.orm = this.app.get(MikroORM)
         this.dispatcher = this.app.get(SvtDbAgentNextRequestDispatcher)
