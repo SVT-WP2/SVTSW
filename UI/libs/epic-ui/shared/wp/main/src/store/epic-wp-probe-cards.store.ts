@@ -1,7 +1,7 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity'
 import { createReducer, on } from '@ngrx/store'
-import { EpicWpProbeCard } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 import { EpicWpProbeCardsActions } from './actions'
 

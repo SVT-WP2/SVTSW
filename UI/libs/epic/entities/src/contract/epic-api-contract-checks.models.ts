@@ -12,7 +12,8 @@ import type {
     EpicSvtTestTypeConfigsListQuery,
     EpicSvtTestTypesListQuery,
     EpicWaferUpdateRequest,
-} from 'epic-api-types'
+    EpicWpMachineUpdateInstalledProbeCardRequest,
+} from 'svt-ts-types'
 
 import type { EpicAsicDto, EpicAsicsGetAllParamsDto } from '../asics'
 import type { EpicChipBlocksGetAllParamsDto } from '../chip-blocks'
@@ -27,6 +28,7 @@ import type {
     EpicSvtTestTypesGetAllParamsDto,
 } from '../svt-tests'
 import type { EpicWaferUpdateRequestDto } from '../wafers'
+import type { EpicWpMachineUpdateInstalledProbeCardDto } from '../wp'
 
 
 type EpicKeysOnlyIn<TA, TB> = Exclude<keyof TA, keyof TB>
@@ -42,7 +44,7 @@ export type EpicSameKeys<TDto, TContract> = [EpicKeysOnlyIn<TDto, TContract>, Ep
 type EpicAllTrue<T extends true[]> = T
 
 /**
- * Compile-time guard for the DTOs whose `epic-api-types` type has optional members — the one case `implements`
+ * Compile-time guard for the DTOs whose `svt-ts-types` type has optional members — the one case `implements`
  * cannot see.
  *
  * When every member of a type is required, `class XDto implements X` already fails on a missing or renamed member.
@@ -66,4 +68,5 @@ export type EpicApiContractChecks = EpicAllTrue<[
     EpicSameKeys<EpicSvtTestTypeConfigsGetAllParamsDto, EpicSvtTestTypeConfigsListQuery>,
     EpicSameKeys<EpicSvtTestTypesGetAllParamsDto, EpicSvtTestTypesListQuery>,
     EpicSameKeys<EpicWaferUpdateRequestDto, EpicWaferUpdateRequest>,
+    EpicSameKeys<EpicWpMachineUpdateInstalledProbeCardDto, EpicWpMachineUpdateInstalledProbeCardRequest>,
 ]>

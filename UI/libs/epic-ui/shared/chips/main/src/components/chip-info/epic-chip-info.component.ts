@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core'
-import { EpicChip } from 'epic-api-types'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicChip } from 'svt-ts-types'
 
 
 @Component({

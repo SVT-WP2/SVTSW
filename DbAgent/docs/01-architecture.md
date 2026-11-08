@@ -1,5 +1,8 @@
 # 01. Runtime architecture
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the C++ agent, not the
+> system under development. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 How the agent process runs, from config to reply. Source files: `app/src/svt_db_agent.cpp`,
 `app/src/DbAgentService/*`, `common/C++/kafka/*`, `app/src/Database/DbInterface.cpp`.
 
@@ -141,7 +144,9 @@ sequenceDiagram
   `kafka_replyTopic` is read by nobody.
 - `type` must be a string. `data` must be an object. **Quirk**: a payload without `type` or without
   `data` is undefined behaviour in the C++ (unchecked `operator[]` on a const JSON object); a `type`
-  that is not a string throws outside the guarded block and kills the process (§7).
+  that is not a string throws outside the guarded block and kills the process (§7). In the recorded
+  run of 2026-11-14, a payload without `type` and one with a numeric `type` got no reply and the
+  process restarted; a `GetAllWaferTypes` without `data` was served as a list without a filter.
 
 ### Reply
 
@@ -193,7 +198,8 @@ must not depend on key order.
 | Event | Behaviour today |
 |---|---|
 | Payload is not valid JSON | Exception escapes the consumer thread → `std::terminate` → **process exits**. Docker `restart: unless-stopped` restarts it; on restart the consumer seeks to the end, so the poison message and anything queued behind it are skipped. |
-| `type` is missing, or not a string; `data` missing | Undefined / process exit (see §5). |
+| `type` is missing, or not a string | No reply, process exit (see §5). |
+| `data` is missing | Undefined (see §5); a list request was served as without a filter. |
 | Handler exception | `BadRequest` reply, agent continues. |
 | DB connection lost | `executeQuery` notices `!is_open()`, tries one reconnect, `dbapi::doGenericQuery` retries the statement once. If still failing → handler exception → `BadRequest`. |
 | Kafka broker unreachable at startup | Topic creation times out after 5 s → exit 1. |

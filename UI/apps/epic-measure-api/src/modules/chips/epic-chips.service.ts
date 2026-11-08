@@ -3,19 +3,13 @@ import { ClientKafka } from '@nestjs/microservices'
 import {
     EpicChipCreateManyRequestDto,
     EpicChipCreateRequestDto,
-    EpicChipEntity,
-    EpicChipLocationHistoryRecordEntity,
-    EpicChipLocationUpdate,
-    EpicGetAllChipsQueryFilter,
-    EpicPageData,
-    EpicPager,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaChips,
 } from 'epic/entities'
 import { Observable } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChip, EpicChipLocationHistoryRecord } from 'svt-ts-types'
+import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'svt-ts-types/kafka'
 
 import { EpicChipsSvc } from './models'
 
@@ -30,7 +24,7 @@ export class EpicChipsService implements OnModuleInit {
 
     getAll(
         queryFilter?: EpicGetAllChipsQueryFilter,
-        pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicChip>> {
         const data: SvtDbAgentKafkaChips.GetAllChipsMessageData = {
             filter: {
                 ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
@@ -52,7 +46,7 @@ export class EpicChipsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicChipCreateRequestDto): Observable<EpicChipEntity> {
+    create(createRequest: EpicChipCreateRequestDto): Observable<EpicChip> {
         const message = new SvtDbAgentKafkaChips.CreateChipMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaChips.CreateChipReplyMessage>(message)
             .pipe(
@@ -61,7 +55,7 @@ export class EpicChipsService implements OnModuleInit {
             )
     }
 
-    createMany(createRequest: EpicChipCreateManyRequestDto): Observable<EpicChipEntity[]> {
+    createMany(createRequest: EpicChipCreateManyRequestDto): Observable<EpicChip[]> {
         const message = new SvtDbAgentKafkaChips.CreateManyChipsMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaChips.CreateManyChipsReplyMessage>(message)
             .pipe(
@@ -70,7 +64,7 @@ export class EpicChipsService implements OnModuleInit {
             )
     }
 
-    getChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecordEntity[]> {
+    getChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecord[]> {
         const message = new SvtDbAgentKafkaChips.GetChipLocationHistoryMessage({ chipId })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaChips.GetChipLocationHistoryReplyMessage>(message)
             .pipe(
@@ -79,7 +73,7 @@ export class EpicChipsService implements OnModuleInit {
             )
     }
 
-    updateChipLocation(chipId: number, update: EpicChipLocationUpdate): Observable<EpicChipEntity> {
+    updateChipLocation(chipId: number, update: EpicChipLocationUpdate): Observable<EpicChip> {
         const message = new SvtDbAgentKafkaChips.UpdateChipLocationMessage({
             chipId,
             ...update,

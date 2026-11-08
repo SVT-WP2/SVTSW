@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsString } from 'class-validator'
-import { EpicEquipment } from 'epic-api-types'
+import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { EpicEquipment } from 'svt-ts-types'
 
 
 export class EpicEquipmentDto implements EpicEquipment {
@@ -21,8 +21,9 @@ export class EpicEquipmentDto implements EpicEquipment {
     @IsString()
     generalLocation: string
 
-    @ApiProperty({ type: 'string', description: 'Stringified JSON' })
+    @ApiProperty({ type: 'string', nullable: true, description: 'Stringified JSON; null when the equipment has no specification' })
+    @IsOptional()
     @IsString()
-    specification: string
+    specification: string | null
 
 }

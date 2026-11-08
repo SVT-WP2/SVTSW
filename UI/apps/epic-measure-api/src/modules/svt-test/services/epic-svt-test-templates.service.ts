@@ -1,17 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import {
-    EpicSvtTestTemplateCreateEntity,
-    EpicSvtTestTemplateEntity,
-    EpicSvtTestTemplatesGetAllParams,
-    EpicSvtTestTemplateUpdateEntity,
-    mapEpicKafkaMessageData,
-    mapSvtDbAgentEntityReplyData,
-    mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestTemplates,
-} from 'epic/entities'
+import { mapEpicKafkaMessageData, mapSvtDbAgentEntityReplyData, mapSvtDbAgentListReplyData } from 'epic/entities'
 import { Observable } from 'rxjs'
+import {
+    EpicSvtTestTemplate,
+    EpicSvtTestTemplateCreateRequest,
+    EpicSvtTestTemplatesListQuery,
+    EpicSvtTestTemplateUpdateRequest,
+} from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTemplates } from 'svt-ts-types/kafka'
 
 import { EpicSvtTestSvc } from '../models'
 
@@ -24,7 +21,7 @@ export class EpicSvtTestTemplatesService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: EpicSvtTestTemplatesGetAllParams): Observable<EpicSvtTestTemplateEntity[]> {
+    getAll(filter?: EpicSvtTestTemplatesListQuery): Observable<EpicSvtTestTemplate[]> {
         const message = new SvtDbAgentKafkaSvtTestTemplates.GetAllSvtTestTemplatesMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTemplates.GetAllSvtTestTemplatesReplyMessage>(message)
             .pipe(
@@ -33,7 +30,7 @@ export class EpicSvtTestTemplatesService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicSvtTestTemplateCreateEntity): Observable<EpicSvtTestTemplateEntity> {
+    create(createRequest: EpicSvtTestTemplateCreateRequest): Observable<EpicSvtTestTemplate> {
         const message = new SvtDbAgentKafkaSvtTestTemplates.CreateSvtTestTemplateMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTemplates.CreateSvtTestTemplateReplyMessage>(message)
             .pipe(
@@ -42,7 +39,7 @@ export class EpicSvtTestTemplatesService implements OnModuleInit {
             )
     }
 
-    update(id: number, update: EpicSvtTestTemplateUpdateEntity): Observable<EpicSvtTestTemplateEntity> {
+    update(id: number, update: EpicSvtTestTemplateUpdateRequest): Observable<EpicSvtTestTemplate> {
         const message = new SvtDbAgentKafkaSvtTestTemplates.UpdateSvtTestTemplateMessage({ id, update })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTemplates.UpdateSvtTestTemplateReplyMessage>(message)
             .pipe(

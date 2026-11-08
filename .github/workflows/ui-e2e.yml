@@ -1,0 +1,117 @@
+name: UI e2e
+
+# The e2e suite of the BFF epic-measure-api (UI/apps/epic-measure-api/test-e2e):
+# HTTP -> BFF -> Kafka -> svt-db-agent-next -> PostgreSQL -> back. The harness
+# boots the BFF in-process and runs DbAgentNext/ as a child process, so a change
+# in either app (or in the contract types both compile) runs it. Separate from
+# ui.yml because it needs DbAgentNext/ and two service containers; local runs
+# use the same broker settings (Dev/docker-compose.e2e.yml).
+#
+# Release commits of either app (svt-ui@<v>, svt-db-agent-next@<v>) are a no-op:
+# the commit before them already ran the suite.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'UI/**'
+      - 'DbAgentNext/**'
+      - 'Shared/**'
+      - 'Dev/docker-compose.e2e.yml'
+      - '.github/workflows/ui-e2e.yml'
+  pull_request:
+    paths:
+      - 'UI/**'
+      - 'DbAgentNext/**'
+      - 'Shared/**'
+      - 'Dev/docker-compose.e2e.yml'
+      - '.github/workflows/ui-e2e.yml'
+
+concurrency:
+  group: ui-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Both apps: MikroORM 7 (DbAgentNext) needs Node >= 22.17.
+  NODE_VERSION: '22.17'
+
+jobs:
+  e2e:
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && !startsWith(github.event.head_commit.message, 'svt-ui@')
+          && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@'))
+    runs-on: ubuntu-latest
+    services:
+      # UI/apps/epic-measure-api/.env.test: localhost:5500, postgres/postgres. The harness creates its database
+      # (svt_sw_db_api_e2e_test) and migrates it with the agent's migrations.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5500:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      # The broker of Dev/docker-compose.e2e.yml: one KRaft node on localhost:9185.
+      kafka:
+        image: confluentinc/cp-kafka:7.4.0
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9183
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9185,CONTROLLER://0.0.0.0:9183
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9185
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_MESSAGE_MAX_BYTES: 52428800
+          KAFKA_REPLICA_FETCH_MAX_BYTES: 52428800
+          KAFKA_HEAP_OPTS: '-Xmx512m -Xms256m'
+          CLUSTER_ID: RTJFRTJFRTJFRTJFRTJFRQ
+        ports:
+          - 9185:9185
+        options: >-
+          --health-cmd "kafka-topics --bootstrap-server localhost:9185 --list"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 20
+          --health-start-period 15s
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            UI/package-lock.json
+            DbAgentNext/package-lock.json
+      - name: Install UI
+        working-directory: UI
+        run: npm ci --prefer-offline --force
+      - name: Install DbAgentNext
+        working-directory: DbAgentNext
+        run: npm ci --prefer-offline
+      # The harness builds the agent itself when dist/ is stale; built here so a compile error shows as its own step.
+      - name: Build DbAgentNext
+        working-directory: DbAgentNext
+        run: npm run build
+      # Type-checks test-e2e/, then runs it (nx e2e epic-measure-api).
+      - name: e2e
+        working-directory: UI
+        run: npm run e2e::api
+      - name: Upload the agent log
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: svt-db-agent-next-log
+          path: UI/tmp/epic-measure-api-e2e/
+          retention-days: 7

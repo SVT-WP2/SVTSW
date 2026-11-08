@@ -1,0 +1,67 @@
+import { SvtDbAsicEntity } from './asics'
+import {
+    SvtDbAsicFamilyTypeBlockListEntity,
+    SvtDbChipBlockEntity,
+    SvtDbChipEntity,
+    SvtDbChipLocationEntity,
+} from './chips'
+import { SvtDbEquipmentEntity, SvtDbEquipmentLocationEntity, SvtDbEquipmentTypeEntity } from './equipment'
+import {
+    SvtDbSvtTestSetupConfigEntity,
+    SvtDbSvtTestSetupDefaultConfigEntity,
+    SvtDbSvtTestSetupEntity,
+} from './svt-test-setups'
+import {
+    SvtDbSvtTestTemplateEntity,
+    SvtDbSvtTestTypeConfigEntity,
+    SvtDbSvtTestTypeDutTypeEntity,
+    SvtDbSvtTestTypeEntity,
+} from './svt-test-types'
+import { SvtDbSvtTestDutEntityNameEntity, SvtDbSvtTestDutIdEntity, SvtDbSvtTestEntity } from './svt-tests'
+import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
+import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
+import {
+    SvtDbWpMachineEntity,
+    SvtDbWpProbeCardEntity,
+    SvtDbWpProbeCardFamilyTypeEntity,
+    SvtDbWpProbeCardInstalledInMachineEntity,
+    SvtDbWpProjectEntity,
+    SvtDbWpWaferLoadedInMachineEntity,
+} from './wp'
+
+
+/**
+ * Every entity of the SVT database, in the order they are registered with MikroORM. The application
+ * passes this list to `SvtDbOrmModule.forRoot`; the CLI discovers the same classes from the sources.
+ * Each slice appends its entities here.
+ */
+export const SVT_DB_ENTITIES = [
+    SvtDbWaferTypeEntity,
+    SvtDbWaferTypeMapEntity,
+    SvtDbWaferEntity,
+    SvtDbWaferLocationEntity,
+    SvtDbAsicEntity,
+    SvtDbChipEntity,
+    SvtDbChipLocationEntity,
+    SvtDbChipBlockEntity,
+    SvtDbAsicFamilyTypeBlockListEntity,
+    SvtDbWpProbeCardEntity,
+    SvtDbWpProbeCardFamilyTypeEntity,
+    SvtDbWpMachineEntity,
+    SvtDbWpWaferLoadedInMachineEntity,
+    SvtDbWpProbeCardInstalledInMachineEntity,
+    SvtDbWpProjectEntity,
+    SvtDbEquipmentTypeEntity,
+    SvtDbEquipmentEntity,
+    SvtDbEquipmentLocationEntity,
+    SvtDbSvtTestSetupEntity,
+    SvtDbSvtTestSetupConfigEntity,
+    SvtDbSvtTestSetupDefaultConfigEntity,
+    SvtDbSvtTestTypeEntity,
+    SvtDbSvtTestTypeDutTypeEntity,
+    SvtDbSvtTestTypeConfigEntity,
+    SvtDbSvtTestTemplateEntity,
+    SvtDbSvtTestEntity,
+    SvtDbSvtTestDutEntityNameEntity,
+    SvtDbSvtTestDutIdEntity,
+]

@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Post,
     SerializeOptions,
     UseInterceptors,
@@ -41,7 +42,7 @@ export class EpicSvtTestSetupConfigsController {
     @ApiResponse({ type: EpicSvtTestSetupConfigDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestSetupConfigDto })
-    async getOne(@Param('id') id: number): Promise<EpicSvtTestSetupConfigDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestSetupConfigDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestSetupConfigsService.getAll({ ids: [+id] }),
@@ -51,7 +52,7 @@ export class EpicSvtTestSetupConfigsController {
         const entity = result?.find(item => item.id === +id)
 
         if (!entity) {
-            throw new NotFoundException(`SvtTestSetup does not exist: ${id}`)
+            throw new NotFoundException(`SvtTestSetupConfig does not exist: ${id}`)
         }
 
         return entity
@@ -61,7 +62,7 @@ export class EpicSvtTestSetupConfigsController {
     @ApiResponse({ type: EpicSvtTestSetupConfigBodyDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestSetupConfigBodyDto })
-    async getConfigBody(@Param('id') id: number): Promise<EpicSvtTestSetupConfigBodyDto> {
+    async getConfigBody(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestSetupConfigBodyDto> {
         const entity = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestSetupConfigsService.getConfigBody(+id),

@@ -1,15 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import {
-    EpicChipBlockEntity,
-    EpicGetAllChipBlocksQueryFilter,
-    EpicPageData,
-    EpicPager,
-    mapEpicKafkaMessageData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaChipBlocks,
-} from 'epic/entities'
+import { mapEpicKafkaMessageData } from 'epic/entities'
 import { Observable } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'svt-ts-types'
+import { EpicGetAllChipBlocksQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'svt-ts-types/kafka'
 
 import { EpicChipBlocksSvc } from '../models'
 
@@ -24,7 +18,7 @@ export class EpicChipBlocksService implements OnModuleInit {
 
     getAll(
         queryFilter?: EpicGetAllChipBlocksQueryFilter,
-        pager?: EpicPager): Observable<EpicPageData<EpicChipBlockEntity>> {
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicChipBlock>> {
         const data: SvtDbAgentKafkaChipBlocks.GetAllChipBlocksMessageData = {
             filter: {
                 ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),

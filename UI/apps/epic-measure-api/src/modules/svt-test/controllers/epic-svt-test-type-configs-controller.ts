@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Post,
     Query,
     SerializeOptions,
@@ -46,7 +47,7 @@ export class EpicSvtTestTypeConfigsController {
     @ApiResponse({ type: EpicSvtTestTypeConfigDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestTypeConfigDto })
-    async getOne(@Param('id') id: number): Promise<EpicSvtTestTypeConfigDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestTypeConfigDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestTypeConfigsService.getAll({ ids: [+id] }),
@@ -66,7 +67,7 @@ export class EpicSvtTestTypeConfigsController {
     @ApiResponse({ type: EpicSvtTestTypeConfigBodyDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestTypeConfigBodyDto })
-    async getConfigBody(@Param('id') id: number): Promise<EpicSvtTestTypeConfigBodyDto> {
+    async getConfigBody(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestTypeConfigBodyDto> {
         const entity = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestTypeConfigsService.getConfigBody(+id),

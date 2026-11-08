@@ -6,7 +6,7 @@
   
     "General": {
       // it defines the type of wafer following the convention defined here:
-      // https://github.com/SVT-WP2/SVTSW/blob/main/Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt */
+      // https://github.com/SVT-WP2/SVTSW/blob/main/DbAgentNext/docs/database-schema.md */
       "Name": ["string","string"], // If left blank all WaferType names are allowed, else it limits to a specific set of WaferType names
       "EngineeringRun": "string",  // See source of truth for allowed values
       "Foundry": "string",         // See source of truth for allowed values

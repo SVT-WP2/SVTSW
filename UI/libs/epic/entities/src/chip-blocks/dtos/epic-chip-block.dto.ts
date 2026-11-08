@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
-import { EpicChipBlock } from 'epic-api-types'
+import { EpicChipBlock } from 'svt-ts-types'
 
 
 export class EpicChipBlockDto implements EpicChipBlock {

@@ -24,29 +24,34 @@ export const DEFAULT_DIRECTIVE_SELECTORS = [
 ]
 
 /**
- * `libs/epic-api-types` is compiled into BOTH the Angular SPA and the NestJS apps, so it must stay free of runtime
- * framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers only.
- * Shared by the root config below (what `npm run lint` and CI use) and the lib's own config (`nx lint`).
+ * `../Shared/svt-ts-types` is compiled into BOTH the Angular SPA and the NestJS apps (and the DB agent), so it must stay
+ * free of runtime framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers
+ * only. Used by the library's own config (`../Shared/svt-ts-types/eslint.config.mjs`, `npm run lint:shared`).
  */
-export const EPIC_API_TYPES_RESTRICTED_IMPORTS = [
+export const SVT_TS_TYPES_RESTRICTED_IMPORTS = [
     'error',
     {
         patterns: [
             {
                 group: ['@angular/*', '@ngrx/*', 'rxjs', 'rxjs/*'],
-                message: 'epic-api-types is shared with the NestJS apps — no Angular / rxjs imports here.',
+                message: 'svt-ts-types is shared with the NestJS apps — no Angular / rxjs imports here.',
             },
             {
                 group: ['@nestjs/*', 'class-validator', 'class-transformer', 'kafkajs'],
-                message: 'epic-api-types is shared with the Angular SPA — no NestJS / class-validator imports here.',
+                message: 'svt-ts-types is shared with the Angular SPA — no NestJS / class-validator imports here.',
             },
             {
                 group: ['epic/*', 'epic-ui/*', '@env', '@env/*'],
-                message: 'epic-api-types is the lowest layer — it must not depend on epic/* or epic-ui/*.',
+                message: 'svt-ts-types is the lowest layer — it must not depend on epic/* or epic-ui/*.',
             },
         ],
     },
 ]
+
+const RXJS_RX_RESTRICTED_PATH = {
+    name: 'rxjs/Rx',
+    message: 'Please import directly from \'rxjs\' instead',
+}
 
 export const ROOT_CONFIG = tseslint.config(
     {
@@ -83,10 +88,7 @@ export const ROOT_CONFIG = tseslint.config(
                 'error',
                 {
                     'paths': [
-                        {
-                            'name': 'rxjs/Rx',
-                            'message': 'Please import directly from \'rxjs\' instead'
-                        }
+                        RXJS_RX_RESTRICTED_PATH,
                     ]
                 }
             ],
@@ -252,11 +254,22 @@ export const ROOT_CONFIG = tseslint.config(
         }
     },
     {
-        // Here and not only in libs/epic-api-types/eslint.config.mjs: ESLint 9 reads the config of the directory it
-        // runs from, and `npm run lint` runs from the workspace root, so a lib's own config never applies there.
-        files: ['libs/epic-api-types/**/*.ts'],
+        // The Kafka contract is for the Node apps only: the browser never talks to Kafka, so its message classes must
+        // not reach the SPA bundle. The `rxjs/Rx` path is repeated because this block replaces the options above.
+        files: ['apps/epic-measure-ui/**/*.ts', 'libs/epic-ui/**/*.ts'],
         rules: {
-            'no-restricted-imports': EPIC_API_TYPES_RESTRICTED_IMPORTS,
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        RXJS_RX_RESTRICTED_PATH,
+                        {
+                            name: 'svt-ts-types/kafka',
+                            message: 'svt-ts-types/kafka is the Kafka contract of the Node apps — Angular code imports svt-ts-types only.',
+                        },
+                    ],
+                },
+            ],
         },
     },
 )

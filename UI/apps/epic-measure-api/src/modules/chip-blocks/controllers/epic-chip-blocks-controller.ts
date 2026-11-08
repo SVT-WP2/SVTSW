@@ -4,6 +4,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Query,
     SerializeOptions,
     UseInterceptors,
@@ -54,7 +55,7 @@ export class EpicChipBlocksController {
     @SerializeOptions({ type: EpicChipBlockDto })
     // swagger
     @ApiResponse({ type: EpicChipBlockDto })
-    async getOne(@Param('chipBlockId') chipBlockId?: number): Promise<EpicChipBlockDto> {
+    async getOne(@Param('chipBlockId', ParseIntPipe) chipBlockId: number): Promise<EpicChipBlockDto> {
         const list = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicChipBlocksService.getAll({ ids: chipBlockId ? [+chipBlockId] : undefined }),

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Transform } from 'class-transformer'
 import { IsArray, IsOptional, IsString } from 'class-validator'
-import { EpicEnumsCollectionQuery } from 'epic-api-types'
+import { EpicEnumsCollectionQuery } from 'svt-ts-types'
+
+import { TransformQueryStringArray } from '../../common'
 
 
 export class EpicEnumsCollectionQueryFilterDto implements EpicEnumsCollectionQuery {
@@ -10,7 +11,7 @@ export class EpicEnumsCollectionQueryFilterDto implements EpicEnumsCollectionQue
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
-    @Transform(({ value }) => value.split(','))
+    @TransformQueryStringArray()
     enumNames?: string[]
 
 }

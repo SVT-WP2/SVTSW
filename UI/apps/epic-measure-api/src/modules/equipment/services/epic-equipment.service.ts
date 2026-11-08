@@ -1,17 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import {
-    EpicEquipmentCreateEntity,
-    EpicEquipmentEntity,
-    EpicEquipmentLocationHistoryRecordEntity,
-    EpicEquipmentLocationUpdate,
-    mapEpicKafkaMessageData,
-    mapSvtDbAgentEntityReplyData,
-    mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaEquipment,
-} from 'epic/entities'
+import { mapEpicKafkaMessageData, mapSvtDbAgentEntityReplyData, mapSvtDbAgentListReplyData } from 'epic/entities'
 import { Observable } from 'rxjs'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
+import { EpicEquipmentLocationUpdate, SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'svt-ts-types/kafka'
 
 import { EpicEquipmentSvc } from '../models'
 
@@ -24,7 +16,7 @@ export class EpicEquipmentService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicEquipment[]> {
         const message = new SvtDbAgentKafkaEquipment.GetAllEquipmentMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaEquipment.GetAllEquipmentReplyMessage>(message)
             .pipe(
@@ -33,7 +25,7 @@ export class EpicEquipmentService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicEquipmentCreateEntity): Observable<EpicEquipmentEntity> {
+    create(createRequest: EpicEquipmentCreateRequest): Observable<EpicEquipment> {
         const message = new SvtDbAgentKafkaEquipment.CreateEquipmentMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaEquipment.CreateEquipmentReplyMessage>(message)
             .pipe(
@@ -42,7 +34,7 @@ export class EpicEquipmentService implements OnModuleInit {
             )
     }
 
-    getEquipmentLocationHistory(equipmentId: number): Observable<EpicEquipmentLocationHistoryRecordEntity[]> {
+    getEquipmentLocationHistory(equipmentId: number): Observable<EpicEquipmentLocationHistoryRecord[]> {
         const message = new SvtDbAgentKafkaEquipment.GetEquipmentLocationHistoryMessage({ equipmentId })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaEquipment.GetEquipmentLocationHistoryReplyMessage>(message)
             .pipe(
@@ -51,7 +43,7 @@ export class EpicEquipmentService implements OnModuleInit {
             )
     }
 
-    updateEquipmentLocation(equipmentId: number, update: EpicEquipmentLocationUpdate): Observable<EpicEquipmentEntity> {
+    updateEquipmentLocation(equipmentId: number, update: EpicEquipmentLocationUpdate): Observable<EpicEquipment> {
         const message = new SvtDbAgentKafkaEquipment.UpdateEquipmentLocationMessage({
             equipmentId,
             ...update,

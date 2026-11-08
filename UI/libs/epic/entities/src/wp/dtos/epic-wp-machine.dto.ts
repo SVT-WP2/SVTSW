@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsString } from 'class-validator'
-import { EpicWpMachine } from 'epic-api-types'
+import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { EpicWpMachine } from 'svt-ts-types'
 
 
 export class EpicWpMachineDto implements EpicWpMachine {
@@ -49,8 +49,18 @@ export class EpicWpMachineDto implements EpicWpMachine {
     @ApiProperty({ type: 'number', nullable: true })
     loadedWaferId: number
 
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ type: 'string', nullable: true, description: 'Enum value of waferMapOrientation' })
+    loadedWaferOrientation: string | null
+
     @IsNumber()
     @ApiProperty({ type: 'number', nullable: true })
     installedProbeCardId: number
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ type: 'string', nullable: true, description: 'Enum value of waferMapOrientation' })
+    installedProbeCardOrientation: string | null
 
 }

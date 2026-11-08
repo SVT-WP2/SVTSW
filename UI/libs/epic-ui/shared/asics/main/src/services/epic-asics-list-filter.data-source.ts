@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName } from 'epic-api-types'
 import { EpicEnumsFacade } from 'epic-ui/shared'
 import { EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { forkJoin, Observable, of } from 'rxjs'
 import { map } from 'rxjs/operators'
+import { EpicEnumName } from 'svt-ts-types'
 
 import { EpicAsicsListFilterData } from '../models'
 

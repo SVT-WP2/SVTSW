@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
 import { map, Observable } from 'rxjs'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 

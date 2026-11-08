@@ -1,4 +1,15 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Post, Query, SerializeOptions, UseInterceptors } from '@nestjs/common'
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    SerializeOptions,
+    UseInterceptors,
+} from '@nestjs/common'
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception'
 import { ApiBody, ApiResponse } from '@nestjs/swagger'
 import {
@@ -50,7 +61,7 @@ export class EpicChipsController {
     @SerializeOptions({ type: EpicChipDto })
     // swagger
     @ApiResponse({ type: EpicChipDto })
-    async getOne(@Param('chipId') chipId?: number): Promise<EpicChipDto> {
+    async getOne(@Param('chipId', ParseIntPipe) chipId: number): Promise<EpicChipDto> {
         const list = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicChipsService.getAll({ ids: chipId ? [+chipId] : undefined }),
@@ -97,7 +108,7 @@ export class EpicChipsController {
     // swagger
     @ApiBody({ type: EpicChipLocationUpdateRequestDto })
     @ApiResponse({ type: EpicChipDto })
-    async updateLocation(@Param('chipId') chipId: number, @Body() body: EpicChipLocationUpdateRequestDto) {
+    async updateLocation(@Param('chipId', ParseIntPipe) chipId: number, @Body() body: EpicChipLocationUpdateRequestDto) {
         const chip = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicChipsService.updateChipLocation(
@@ -122,7 +133,7 @@ export class EpicChipsController {
     @SerializeOptions({ type: EpicChipLocationHistoryRecordDto })
     //swagger
     @ApiResponse({ type: EpicChipLocationHistoryRecordDto, isArray: true })
-    async getLocationHistory(@Param('chipId') chipId: number): Promise<EpicChipLocationHistoryRecordDto[]> {
+    async getLocationHistory(@Param('chipId', ParseIntPipe) chipId: number): Promise<EpicChipLocationHistoryRecordDto[]> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicChipsService.getChipLocationHistory(+chipId))
         ))

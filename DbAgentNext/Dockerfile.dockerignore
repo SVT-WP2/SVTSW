@@ -1,0 +1,15 @@
+# Ignore file of DbAgentNext/Dockerfile (BuildKit reads <Dockerfile>.dockerignore next to the Dockerfile).
+# The build context is the repository root: send DbAgentNext/ and Shared/ only, and of DbAgentNext/ only what
+# the production build reads.
+*
+!DbAgentNext
+!Shared
+
+**/node_modules
+**/*.md
+DbAgentNext/dist
+DbAgentNext/docs
+DbAgentNext/test-e2e
+DbAgentNext/test-parity
+DbAgentNext/**/*.spec.ts
+DbAgentNext/.env*

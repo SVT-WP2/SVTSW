@@ -4,8 +4,11 @@ import {
     Controller,
     Get,
     NotFoundException,
-    Param, Patch,
-    Post, Query,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
     SerializeOptions,
     UseInterceptors,
 } from '@nestjs/common'
@@ -45,7 +48,7 @@ export class EpicSvtTestTypesController {
     @ApiResponse({ type: EpicSvtTestTypeDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestTypeDto })
-    async getOne(@Param('id') id: number): Promise<EpicSvtTestTypeDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestTypeDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestTypesService.getAll({ ids: [+id] }),
@@ -77,7 +80,7 @@ export class EpicSvtTestTypesController {
     @ApiResponse({ type: EpicSvtTestTypeDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestTypeDto })
-    async update(@Param('id') id: number, @Body() body: EpicSvtTestTypeUpdateDto): Promise<EpicSvtTestTypeDto> {
+    async update(@Param('id', ParseIntPipe) id: number, @Body() body: EpicSvtTestTypeUpdateDto): Promise<EpicSvtTestTypeDto> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicSvtTestTypesService.update(+id, body))
         ))

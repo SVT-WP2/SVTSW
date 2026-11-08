@@ -1,0 +1,66 @@
+import { Injectable } from '@nestjs/common'
+import { EpicWpProbeCard } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'svt-ts-types/kafka'
+
+import { SvtDbWpProbeCardsRepository, SvtDbWpProbeCardWithFamilyTypes } from '../../../db/data'
+import {
+    optionalIntegerList,
+    optionalPager,
+    optionalRecord,
+    requireAllowedFilterKeys,
+    SvtDbAgentNextHandlerDefinition,
+    SvtDbAgentNextHandlers,
+    SvtDbAgentNextMessageHandlers,
+} from '../../dispatch'
+
+
+import MessageType = SvtDbAgentKafkaWpProbeCards.MessageType
+
+
+/** `ProbeCardDto` of the Kafka contract: the TypeScript `EpicWpProbeCard` plus `asicFamilyTypes` (R-3). */
+export type SvtDbAgentNextWpProbeCardWire = EpicWpProbeCard & {
+    asicFamilyTypes: string[]
+}
+
+/**
+ * `GetAllProbeCards` (`docs/messages.md` §3.7). Items carry the `asicFamilyTypes` of
+ * `ProbeCardFamilyType`, which the C++ left out (Q-H15). The contract has no write message for probe cards.
+ */
+@Injectable()
+@SvtDbAgentNextHandlers()
+export class SvtDbAgentNextWpProbeCardsHandlers implements SvtDbAgentNextMessageHandlers {
+
+    constructor(private readonly probeCards: SvtDbWpProbeCardsRepository) {
+    }
+
+    getHandlerDefinitions(): SvtDbAgentNextHandlerDefinition<unknown, unknown>[] {
+        return [
+            { type: MessageType.GetAllWpProbeCards, replyType: MessageType.GetAllWpProbeCardsReply, handle: (data) => this.getAll(data) },
+        ]
+    }
+
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<SvtDbAgentNextWpProbeCardWire>> {
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
+        requireAllowedFilterKeys(filter, ['ids'])
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.probeCards.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
+    }
+
+}
+
+function toWire({ probeCard, asicFamilyTypes }: SvtDbWpProbeCardWithFamilyTypes): SvtDbAgentNextWpProbeCardWire {
+    return {
+        id: probeCard.id,
+        serialNumber: probeCard.serialNumber,
+        name: probeCard.name,
+        vendor: probeCard.vendor,
+        model: probeCard.model,
+        arriveDate: probeCard.arriveDate,
+        location: probeCard.location,
+        type: probeCard.type,
+        vendorCleaningInterval: probeCard.vendorCleaningInterval,
+        asicFamilyTypes,
+    }
+}

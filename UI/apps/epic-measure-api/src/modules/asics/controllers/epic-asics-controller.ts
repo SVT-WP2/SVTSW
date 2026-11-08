@@ -1,4 +1,15 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Post, Query, SerializeOptions, UseInterceptors } from '@nestjs/common'
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    SerializeOptions,
+    UseInterceptors,
+} from '@nestjs/common'
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception'
 import { ApiBody, ApiResponse } from '@nestjs/swagger'
 import {
@@ -46,7 +57,7 @@ export class EpicAsicsController {
     @ApiResponse({ type: EpicAsicDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicAsicDto })
-    async getOne(@Param('asicId') asicId?: number): Promise<EpicAsicDto> {
+    async getOne(@Param('asicId', ParseIntPipe) asicId: number): Promise<EpicAsicDto> {
         const list = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicAsicsService.getAll({ ids: asicId ? [+asicId] : undefined }),

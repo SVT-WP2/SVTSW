@@ -1,5 +1,8 @@
 # 06. Wafer type map: format, validation, ASIC generation
 
+> **Frozen reference** (C++ DB agent, frozen 2026-11-15). This page describes the C++ agent, not the
+> system under development. [What this folder is, and what it is not](README.md#what-this-folder-is-not).
+
 The wafer type map is the one piece of real domain logic in the agent. It is a JSON document
 stored per wafer type (`WaferTypeMap.waferMap`) that describes every die on a wafer of that type.
 When a wafer is registered (`CreateWafer`), the agent reads the map of the wafer's type and

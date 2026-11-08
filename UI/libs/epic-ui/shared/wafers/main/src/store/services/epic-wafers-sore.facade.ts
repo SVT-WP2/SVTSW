@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationUpdateRequest, EpicWaferUpdateRequest } from 'epic-api-types'
 import { EpicWafersApiClient } from 'epic-ui/api'
 import { BaseStore, EntityStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { catchError, distinctUntilChanged, first, map, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationUpdateRequest, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 import { EpicWafersStore } from '../models'
 

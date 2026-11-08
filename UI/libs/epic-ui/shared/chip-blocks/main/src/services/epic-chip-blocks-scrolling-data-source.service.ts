@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicChipBlock } from 'epic-api-types'
 import { EpicChipBlocksApiClient } from 'epic-ui/api'
 import { EpicBaseScrollingDataSource, EpicScrollData } from 'epic-ui/common/components'
 import { map, Observable } from 'rxjs'
+import { EpicApiPager, EpicChipBlock } from 'svt-ts-types'
 
 
 export type EpicChipBlocksScrollingDsFilter = {

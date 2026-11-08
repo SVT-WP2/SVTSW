@@ -1,4 +1,15 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Post, Query, SerializeOptions, UseInterceptors } from '@nestjs/common'
+import {
+    Body,
+    ClassSerializerInterceptor,
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    SerializeOptions,
+    UseInterceptors,
+} from '@nestjs/common'
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception'
 import { ApiBody, ApiResponse } from '@nestjs/swagger'
 import {
@@ -50,7 +61,7 @@ export class EpicEquipmentController {
     // swagger
     @ApiBody({ type: EpicEquipmentLocationUpdateRequestDto })
     @ApiResponse({ type: EpicEquipmentDto })
-    async updateLocation(@Param('equipmentId') equipmentId: number, @Body() body: EpicEquipmentLocationUpdateRequestDto) {
+    async updateLocation(@Param('equipmentId', ParseIntPipe) equipmentId: number, @Body() body: EpicEquipmentLocationUpdateRequestDto) {
         const equipment = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicEquipmentService.updateEquipmentLocation(
@@ -75,7 +86,7 @@ export class EpicEquipmentController {
     @SerializeOptions({ type: EpicEquipmentLocationHistoryRecordDto })
     //swagger
     @ApiResponse({ type: EpicEquipmentLocationHistoryRecordDto, isArray: true })
-    async getLocationHistory(@Param('equipmentId') equipmentId: number): Promise<EpicEquipmentLocationHistoryRecordDto[]> {
+    async getLocationHistory(@Param('equipmentId', ParseIntPipe) equipmentId: number): Promise<EpicEquipmentLocationHistoryRecordDto[]> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicEquipmentService.getEquipmentLocationHistory(+equipmentId))
         ))

@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName } from 'epic-api-types'
 import { EpicEnumsFacade } from 'epic-ui/shared'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
+import { EpicEnumName } from 'svt-ts-types'
 
 import { EpicChipsListFilterData } from '../components'
 

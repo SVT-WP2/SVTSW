@@ -94,8 +94,9 @@ export class EpicWpMachinesEffects {
         this.actions$
             .pipe(
                 ofType(StoreAction.updateInstalledProbeCardRequestAction),
-                mergeMap(({ wpMachineId, installedProbeCardId }) => {
-                    return this.epicWpMachinesApiClient.updateInstalledProbeCard(wpMachineId, installedProbeCardId)
+                mergeMap(({ wpMachineId, installedProbeCardId, installedProbeCardOrientation }) => {
+                    return this.epicWpMachinesApiClient
+                        .updateInstalledProbeCard(wpMachineId, { installedProbeCardId, installedProbeCardOrientation })
                         .pipe(
                             mapResponse({
                                 next: (entity) => (
@@ -115,11 +116,14 @@ export class EpicWpMachinesEffects {
             .pipe(
                 ofType(StoreAction.updateLoadedWaferRequestAction),
                 concatLatestFrom(({wpMachineId}) => (this.store.pipe(select(StoreSelectors.selectOneEntityById(wpMachineId))))),
-                mergeMap(([{ wpMachineId, loadedWaferId }, wpMachine]) => {
+                mergeMap(([{ wpMachineId, loadedWaferId, loadedWaferOrientation }, wpMachine]) => {
 
-                    const wpMachine$ = wpMachine?.loadedWaferId === loadedWaferId
-                        ? of({...wpMachine})
-                        : this.epicWpMachinesApiClient.updateLoadedWafer(wpMachineId, loadedWaferId)
+                    // nothing to record: the same wafer in the same orientation, or an unload with nothing loaded
+                    const unchanged = wpMachine?.loadedWaferId === loadedWaferId
+                        && (loadedWaferId === null || wpMachine?.loadedWaferOrientation === loadedWaferOrientation)
+                    const wpMachine$ = unchanged
+                        ? of({ ...wpMachine })
+                        : this.epicWpMachinesApiClient.updateLoadedWafer(wpMachineId, { loadedWaferId, loadedWaferOrientation })
 
                     return wpMachine$
                         .pipe(

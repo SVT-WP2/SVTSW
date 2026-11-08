@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString } from 'class-validator'
-import { EpicWaferTypeCreateRequest } from 'epic-api-types'
+import { EpicWaferTypeCreateRequest } from 'svt-ts-types'
 
 
 export class EpicWaferTypeCreateRequestDto implements EpicWaferTypeCreateRequest {

@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigCreateRequest, EpicSvtTestTypeCreateRequest } from 'epic-api-types'
 import { first, merge, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigCreateRequest, EpicSvtTestTypeCreateRequest } from 'svt-ts-types'
 
 import { EpicSvtTestTypesActions } from '../actions'
 

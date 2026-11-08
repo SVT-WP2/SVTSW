@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core'
 import { RouterModule, Routes } from '@angular/router'
-import { EpicEnumName } from 'epic-api-types'
+import { EpicEnumName } from 'svt-ts-types'
 
 import {
     EpicAdminEnumsPageComponent,

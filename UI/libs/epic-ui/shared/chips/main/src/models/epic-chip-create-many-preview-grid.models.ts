@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicChipCreateRequest } from 'epic-api-types'
 import { EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicChipCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicChipCreateManyPreviewGrid {

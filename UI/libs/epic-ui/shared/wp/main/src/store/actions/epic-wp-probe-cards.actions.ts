@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import { EpicWpProbeCard } from 'epic-api-types'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 export namespace EpicWpProbeCardsActions {

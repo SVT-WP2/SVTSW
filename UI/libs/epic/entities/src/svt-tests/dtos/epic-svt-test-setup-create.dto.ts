@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsOptional, IsString, ValidateNested } from 'class-validator'
-import { EpicSvtTestSetupCreateRequest, EpicSvtTestSetupDefaultConfigCreateRequest } from 'epic-api-types'
+import { EpicSvtTestSetupCreateRequest, EpicSvtTestSetupDefaultConfigCreateRequest } from 'svt-ts-types'
 
 
 export class EpicSvtTestSetupDefaultConfigCreateDto implements EpicSvtTestSetupDefaultConfigCreateRequest {
@@ -11,7 +11,7 @@ export class EpicSvtTestSetupDefaultConfigCreateDto implements EpicSvtTestSetupD
     name!: string
 
     @IsString()
-    @ApiProperty({ type: 'string', description: 'Config file content as a plain text (JSON, JSON5 or any other text file format)' })
+    @ApiProperty({ type: 'string', description: 'Config file content as plain text: JSON or JSON5' })
     configBody!: string
 
     @IsString()

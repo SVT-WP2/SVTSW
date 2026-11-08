@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicAsic } from 'epic-api-types'
 import { EpicAsicsApiClient } from 'epic-ui/api'
 import { EpicBaseScrollingDataSource, EpicScrollData } from 'epic-ui/common/components'
 import { map, Observable } from 'rxjs'
+import { EpicApiPager, EpicAsic } from 'svt-ts-types'
 
 
 export type EpicAsicsScrollingDsFilter = {

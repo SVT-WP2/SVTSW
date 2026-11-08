@@ -4,7 +4,9 @@ import {
     Controller,
     Get,
     NotFoundException,
-    Param, Patch,
+    Param,
+    ParseIntPipe,
+    Patch,
     Post,
     SerializeOptions,
     UseInterceptors,
@@ -36,7 +38,7 @@ export class EpicSvtTestSetupsController {
     @ApiResponse({ type: EpicSvtTestSetupDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestSetupDto })
-    async getOne(@Param('id') id: number): Promise<EpicSvtTestSetupDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicSvtTestSetupDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicSvtTestSetupsService.getAll({ ids: [+id] }),
@@ -68,7 +70,7 @@ export class EpicSvtTestSetupsController {
     @ApiResponse({ type: EpicSvtTestSetupDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicSvtTestSetupDto })
-    async update(@Param('id') id: number, @Body() body: EpicSvtTestSetupUpdateDto): Promise<EpicSvtTestSetupDto> {
+    async update(@Param('id', ParseIntPipe) id: number, @Body() body: EpicSvtTestSetupUpdateDto): Promise<EpicSvtTestSetupDto> {
         return processKafkaReplyError(() => (
             firstValueFrom(this.epicSvtTestSetupsService.update(+id, body))
         ))

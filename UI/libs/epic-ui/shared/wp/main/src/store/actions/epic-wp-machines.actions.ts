@@ -1,5 +1,11 @@
 import { createAction, props } from '@ngrx/store'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+import {
+    EpicWpMachine,
+    EpicWpMachineCreateRequest,
+    EpicWpMachineUpdateInstalledProbeCardRequest,
+    EpicWpMachineUpdateLoadedWaferRequest,
+    EpicWpMachineUpdateRequest,
+} from 'svt-ts-types'
 
 
 export namespace EpicWpMachinesActions {
@@ -86,7 +92,7 @@ export namespace EpicWpMachinesActions {
     
     export const updateInstalledProbeCardRequestAction = createAction(
         ActionType.updateInstalledProbeCardRequest,
-        props<{ wpMachineId: number; installedProbeCardId: number | null }>(),
+        props<{ wpMachineId: number } & EpicWpMachineUpdateInstalledProbeCardRequest>(),
     )
 
     export const updateInstalledProbeCardSuccessAction = createAction(
@@ -101,7 +107,7 @@ export namespace EpicWpMachinesActions {
 
     export const updateLoadedWaferRequestAction = createAction(
         ActionType.updateLoadedWaferRequest,
-        props<{ wpMachineId: number; loadedWaferId: number | null }>(),
+        props<{ wpMachineId: number } & EpicWpMachineUpdateLoadedWaferRequest>(),
     )
 
     export const updateLoadedWaferSuccessAction = createAction(

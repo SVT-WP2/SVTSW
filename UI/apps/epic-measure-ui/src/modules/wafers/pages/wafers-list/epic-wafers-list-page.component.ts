@@ -1,8 +1,8 @@
 import { Component, inject, OnDestroy, OnInit, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { EpicWafer } from 'epic-api-types'
 import { EpicWaferCreateDialogService, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicWafer } from 'svt-ts-types'
 
 
 @Component({

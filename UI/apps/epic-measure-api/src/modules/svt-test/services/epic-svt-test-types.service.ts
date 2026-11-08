@@ -1,17 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import {
-    EpicSvtTestTypeCreateEntity,
-    EpicSvtTestTypeEntity,
-    EpicSvtTestTypesGetAllParams,
-    EpicSvtTestTypeUpdateEntity,
-    mapEpicKafkaMessageData,
-    mapSvtDbAgentEntityReplyData,
-    mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestTypes,
-} from 'epic/entities'
+import { mapEpicKafkaMessageData, mapSvtDbAgentEntityReplyData, mapSvtDbAgentListReplyData } from 'epic/entities'
 import { Observable } from 'rxjs'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypesListQuery, EpicSvtTestTypeUpdateRequest } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'svt-ts-types/kafka'
 
 import { EpicSvtTestSvc } from '../models'
 
@@ -24,7 +16,7 @@ export class EpicSvtTestTypesService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: EpicSvtTestTypesGetAllParams): Observable<EpicSvtTestTypeEntity[]> {
+    getAll(filter?: EpicSvtTestTypesListQuery): Observable<EpicSvtTestType[]> {
         const message = new SvtDbAgentKafkaSvtTestTypes.GetAllSvtTestTypesMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypes.GetAllSvtTestTypesReplyMessage>(message)
             .pipe(
@@ -33,7 +25,7 @@ export class EpicSvtTestTypesService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicSvtTestTypeCreateEntity): Observable<EpicSvtTestTypeEntity> {
+    create(createRequest: EpicSvtTestTypeCreateRequest): Observable<EpicSvtTestType> {
         const message = new SvtDbAgentKafkaSvtTestTypes.CreateSvtTestTypeMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypes.CreateSvtTestTypeReplyMessage>(message)
             .pipe(
@@ -42,7 +34,7 @@ export class EpicSvtTestTypesService implements OnModuleInit {
             )
     }
 
-    update(id: number, update: EpicSvtTestTypeUpdateEntity): Observable<EpicSvtTestTypeEntity> {
+    update(id: number, update: EpicSvtTestTypeUpdateRequest): Observable<EpicSvtTestType> {
         const message = new SvtDbAgentKafkaSvtTestTypes.UpdateSvtTestTypeMessage({ id, update })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypes.UpdateSvtTestTypeReplyMessage>(message)
             .pipe(

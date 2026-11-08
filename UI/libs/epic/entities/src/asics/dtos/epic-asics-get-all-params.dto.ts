@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString, Max } from 'class-validator'
-import { EpicApiPager, EpicAsicsListQuery } from 'epic-api-types'
+import { EpicApiPager, EpicAsicsListQuery } from 'svt-ts-types'
+
+import { TransformQueryStringArray } from '../../common'
 
 
 /**
@@ -27,6 +29,7 @@ export class EpicAsicsGetAllParamsDto implements EpicAsicsListQuery, Partial<Epi
 
     @IsString({ each: true })
     @IsOptional()
+    @TransformQueryStringArray()
     @ApiProperty({ isArray: true, items: { type: 'string' }, required: false })
     asicFamilyTypes?: string[]
 

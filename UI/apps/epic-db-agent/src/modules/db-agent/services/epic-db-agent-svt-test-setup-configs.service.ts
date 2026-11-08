@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestSetupConfigBodyEntity, EpicSvtTestSetupConfigCreateEntity, EpicSvtTestSetupConfigEntity } from 'epic/entities'
 import { omit } from 'lodash-es'
 import moment from 'moment/moment'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'svt-ts-types'
 
 
 @Injectable()
 export class EpicDbAgentSvtTestSetupConfigsService {
 
-    protected data: EpicSvtTestSetupConfigEntity[] = [
+    protected data: EpicSvtTestSetupConfig[] = [
         {
             id: 1,
             setupId: 1,
@@ -67,10 +67,10 @@ export class EpicDbAgentSvtTestSetupConfigsService {
         },
     ]
 
-    protected configBodyData: EpicSvtTestSetupConfigBodyEntity[] = this.data
+    protected configBodyData: EpicSvtTestSetupConfigBody[] = this.data
         .map(({ id }) => ({ id, configBody: JSON.stringify({ key1: 'value1' }) }))
 
-    getAll(queryFilter?: { ids?: number[]; setupId?: number }): Observable<EpicSvtTestSetupConfigEntity[]> {
+    getAll(queryFilter?: { ids?: number[]; setupId?: number }): Observable<EpicSvtTestSetupConfig[]> {
         const result = this.data
             .filter(item =>
                 (!queryFilter?.ids || queryFilter.ids.includes(item.id))
@@ -83,23 +83,23 @@ export class EpicDbAgentSvtTestSetupConfigsService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicSvtTestSetupConfigEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicSvtTestSetupConfig | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    getConfigBody(entityId: number): Observable<EpicSvtTestSetupConfigBodyEntity | undefined> {
+    getConfigBody(entityId: number): Observable<EpicSvtTestSetupConfigBody | undefined> {
         return of(this.configBodyData.find(item => item.id === entityId))
             .pipe(
                 delay(50),
             )
     }
 
-    create(createRequest: EpicSvtTestSetupConfigCreateEntity): Observable<EpicSvtTestSetupConfigEntity> {
+    create(createRequest: EpicSvtTestSetupConfigCreateRequest): Observable<EpicSvtTestSetupConfig> {
         const id = this.data.length ? this.data[this.data.length - 1].id + 1 : 1
-        const newSvtTestSetup: EpicSvtTestSetupConfigEntity = {
+        const newSvtTestSetup: EpicSvtTestSetupConfig = {
             id,
             ...omit(createRequest, 'configBody'),
             createdAt: moment().toISOString(),

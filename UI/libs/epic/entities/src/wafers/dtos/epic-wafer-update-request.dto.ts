@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsOptional } from 'class-validator'
-import { EpicDateString, EpicWaferUpdateRequest } from 'epic-api-types'
+import { EpicDateString, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 
 export class EpicWaferUpdateRequestDto implements EpicWaferUpdateRequest {

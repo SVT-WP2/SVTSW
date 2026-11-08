@@ -1,0 +1,5 @@
+export * from './svt-db-svt-test-setup-config.entity'
+export * from './svt-db-svt-test-setup-configs.repository'
+export * from './svt-db-svt-test-setup-default-config.entity'
+export * from './svt-db-svt-test-setup.entity'
+export * from './svt-db-svt-test-setups.repository'

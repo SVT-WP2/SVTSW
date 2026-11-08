@@ -1,7 +1,13 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
+import {
+    EpicWpMachine,
+    EpicWpMachineCreateRequest,
+    EpicWpMachineUpdateInstalledProbeCardRequest,
+    EpicWpMachineUpdateLoadedWaferRequest,
+    EpicWpMachineUpdateRequest,
+} from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 
@@ -28,14 +34,14 @@ export class EpicWpMachinesApiClient {
         return this.httpClient.patch<EpicWpMachine>(url, { ...update })
     }
 
-    updateLoadedWafer(entityId: number, loadedWaferId: number | null): Observable<EpicWpMachine> {
+    updateLoadedWafer(entityId: number, update: EpicWpMachineUpdateLoadedWaferRequest): Observable<EpicWpMachine> {
         const url = `${this.baseUrl}/${entityId}/loaded-wafer`
-        return this.httpClient.post<EpicWpMachine>(url, { loadedWaferId })
+        return this.httpClient.post<EpicWpMachine>(url, { ...update })
     }
 
-    updateInstalledProbeCard(entityId: number, installedProbeCardId: number | null): Observable<EpicWpMachine> {
+    updateInstalledProbeCard(entityId: number, update: EpicWpMachineUpdateInstalledProbeCardRequest): Observable<EpicWpMachine> {
         const url = `${this.baseUrl}/${entityId}/installed-probe-card`
-        return this.httpClient.post<EpicWpMachine>(url, { installedProbeCardId })
+        return this.httpClient.post<EpicWpMachine>(url, { ...update })
     }
 
     create(payload: EpicWpMachineCreateRequest): Observable<EpicWpMachine> {

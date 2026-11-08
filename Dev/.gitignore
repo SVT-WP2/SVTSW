@@ -7,10 +7,12 @@
 !.env.example
 !docker-compose.kafka-local.yml
 !docker-compose.postgres.yml
+!docker-compose.e2e.yml
 !docker-compose.swtsw.yml
 !db-example/
 db-example/*
 !db-example/*.dump
+!db-example/README.md
 
 # As a result, your personal files stay local and out of git:
 #   - .env

@@ -12,10 +12,10 @@ import {
 import { MatInputModule } from '@angular/material/input'
 import { MatSelect } from '@angular/material/select'
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'
-import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-api-types'
 import { EpicContentErrorModule, EpicLoaderComponent, EpicNoResultModule } from 'epic-ui/common/components'
 import { BaseFormWithFactoryComponent } from 'epic-ui/utils'
 import { takeUntil } from 'rxjs'
+import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'svt-ts-types'
 
 import { EpicSvtTestTemplateUpdateForm } from '../../models'
 

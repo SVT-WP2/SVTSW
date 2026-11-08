@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicWaferType } from 'epic-api-types'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
+import { EpicWaferType } from 'svt-ts-types'
 
 import { EpicWaferTypeDetailsDialogComponent } from '../dialogs'
 import { EpicWaferTypeDetailsDialog } from '../models'

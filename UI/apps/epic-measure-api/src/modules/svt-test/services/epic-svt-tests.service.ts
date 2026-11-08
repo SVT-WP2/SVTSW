@@ -1,21 +1,21 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicPageData,
-    EpicPager,
-    EpicSvtTestCreateEntity,
-    EpicSvtTestEntity,
-    EpicSvtTestResolvedEntity,
-    EpicSvtTestsGetAllParams,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     resolveEpicSvtTestResultStatuses,
     resolveEpicSvtTestStatus,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTests,
 } from 'epic/entities'
-import { EpicSvtTestStatus } from 'epic-api-types'
 import { map, Observable, of } from 'rxjs'
+import {
+    EpicApiPager,
+    EpicApiPageResponse,
+    EpicSvtTest,
+    EpicSvtTestCreateRequest,
+    EpicSvtTestsListQuery,
+    EpicSvtTestStatus,
+} from 'svt-ts-types'
+import { EpicSvtTestEntity, SvtDbAgentKafka, SvtDbAgentKafkaSvtTests } from 'svt-ts-types/kafka'
 
 import { EpicSvtTestSvc } from '../models'
 
@@ -29,8 +29,8 @@ export class EpicSvtTestsService implements OnModuleInit {
     }
 
     getAll(
-        queryFilter?: EpicSvtTestsGetAllParams,
-        pager?: EpicPager): Observable<EpicPageData<EpicSvtTestResolvedEntity>> {
+        queryFilter?: EpicSvtTestsListQuery,
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicSvtTest>> {
 
         // the API filters by the synthetic status, the DB agent only knows the physical result status
         const testResultStatuses = queryFilter?.statuses?.length
@@ -45,9 +45,7 @@ export class EpicSvtTestsService implements OnModuleInit {
 
         const data: SvtDbAgentKafkaSvtTests.GetAllSvtTestsData = {
             filter: {
-                // the UI hands its search tokens over as typed (see EpicSvtTestsListQuery.ids) and nothing turns them
-                // into numbers on the way to the DB agent yet — the cast only states what has always been sent
-                ...(queryFilter?.ids ? { ids: queryFilter.ids as number[] } : {}),
+                ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
                 ...(queryFilter?.dutEntityNames ? { dutEntityNames: queryFilter.dutEntityNames } : {}),
                 ...(queryFilter?.dutId ? { dutId: queryFilter.dutId } : {}),
                 ...(testResultStatuses ? { testResultStatuses } : {}),
@@ -78,7 +76,7 @@ export class EpicSvtTestsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicSvtTestCreateEntity): Observable<EpicSvtTestResolvedEntity> {
+    create(createRequest: EpicSvtTestCreateRequest): Observable<EpicSvtTest> {
         const message = new SvtDbAgentKafkaSvtTests.CreateSvtTestMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessage>(message)
             .pipe(
@@ -96,7 +94,7 @@ export class EpicSvtTestsService implements OnModuleInit {
      * The DB agent only knows the physical `testResultStatus`. The synthetic `status` is resolved here, on the
      * BFF — this is the seam where, later, the live processing state of other services gets folded in.
      */
-    protected resolveEntity(entity: EpicSvtTestEntity): EpicSvtTestResolvedEntity {
+    protected resolveEntity(entity: EpicSvtTestEntity): EpicSvtTest {
         return {
             ...entity,
             status: resolveEpicSvtTestStatus(entity.testResultStatus),

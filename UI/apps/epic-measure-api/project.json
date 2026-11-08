@@ -46,6 +46,18 @@
                 "command": "vitest run --dir apps/epic-measure-api",
                 "cwd": "{workspaceRoot}"
             }
+        },
+        "e2e": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+                "commands": [
+                    "tsc -p apps/epic-measure-api/tsconfig.e2e.json",
+                    "vitest run --config apps/epic-measure-api/vitest.e2e.config.ts"
+                ],
+                "parallel": false,
+                "cwd": "{workspaceRoot}"
+            }
         }
     }
 }

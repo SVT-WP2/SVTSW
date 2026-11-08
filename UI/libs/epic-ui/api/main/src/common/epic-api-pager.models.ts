@@ -1,4 +1,4 @@
-import { EpicApiPager } from 'epic-api-types'
+import { EpicApiPager } from 'svt-ts-types'
 
 
 export function getDefaultEpicApiPager(): EpicApiPager {

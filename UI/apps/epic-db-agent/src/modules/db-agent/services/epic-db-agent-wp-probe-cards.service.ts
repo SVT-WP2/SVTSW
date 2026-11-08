@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProbeCardEntity } from 'epic/entities'
 import { delay, Observable, of } from 'rxjs'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 @Injectable()
 export class EpicDbAgentWpProbeCardsService {
 
-    protected entities: EpicWpProbeCardEntity[] = [
+    protected entities: EpicWpProbeCard[] = [
         {
             id: 1,
             name: 'Probe Card #1',
@@ -31,7 +31,7 @@ export class EpicDbAgentWpProbeCardsService {
         },
     ]
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpProbeCardEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpProbeCard[]> {
         const result = filter?.ids
             ? this.entities.filter(item => filter.ids.includes(item.id))
             : [...this.entities]

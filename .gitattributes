@@ -8,3 +8,6 @@
 *.service text eol=lf
 Environment/**/*.yml text eol=lf
 Environment/**/*.example text eol=lf
+
+# Git hooks run under sh (Git Bash on Windows): a CR ends every line of an if/then block with a syntax error.
+UI/.husky/* text eol=lf

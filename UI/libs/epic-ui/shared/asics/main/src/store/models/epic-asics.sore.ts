@@ -1,5 +1,5 @@
-import { EpicAsic } from 'epic-api-types'
 import { EntityStore, ProcessingStore } from 'epic-ui/utils'
+import { EpicAsic } from 'svt-ts-types'
 
 
 export namespace EpicAsicsStore {

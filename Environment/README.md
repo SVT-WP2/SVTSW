@@ -10,7 +10,7 @@ as systemd services on the same host:
 | Stack | Compose file | systemd unit | Contents |
 | ----- | ------------ | ------------ | -------- |
 | kafka | `docker-compose-kafka-<env>.yml` | `svt.kafka--<env>.service` | Kafka broker (KRaft) + Kafka UI; **owns** the `svt-network--<env>` network |
-| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, `svt-db-agent` (joins the network as `external`) |
+| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui` and the DB agent `svt-db-agent-next` (join the network as `external`) |
 
 On the server each environment is one self-contained folder:
 
@@ -53,12 +53,46 @@ Ownership is strict:
    the versions that were last deployed.
 
 Services can therefore be deployed/redeployed one by one — from the Actions UI
-(`UI :: Manual` / `DbAgent :: Manual` → `deploy-dev--manual` /
-`deploy-prod--manual`) or on the server itself:
+(`UI :: Manual` / `DbAgent Next :: Manual` → `deploy-dev--manual` /
+`deploy-prod--manual`) or on the
+server itself:
 
 ```bash
 bash Environment/deploy-service.sh dev svt-ui 1a2b3c4d
 ```
+
+## The two DB agent services
+
+The DB agent is developed as the NestJS app `DbAgentNext/` (docs in
+`DbAgentNext/docs/`). The C++ agent `DbAgent/` is frozen
+([fork note](../Documentation/decisions/2026-11-db-agent-clone.md)) and gets no
+support: `svt-db-agent-next` is the DB agent of every environment
+([decision](../Documentation/decisions/2026-11-db-agent-next-only.md)). The compose
+files of both environments define `svt-db-agent-next`, and no compose file
+defines the C++ `svt-db-agent`:
+
+| | `svt-db-agent-next` | `svt-db-agent` (C++, frozen) |
+| --- | --- | --- |
+| Compose service / container | `svt-db-agent-next` / `svt.db-agent-next--<env>` | none; its container was `svt.db-agent--<env>` |
+| Image | `ghcr.io/svt-wp2/svt-db-agent-next` (built from the repository root, `DbAgentNext/Dockerfile`) | `ghcr.io/svt-wp2/svt-db-agent` (no workflow builds it) |
+| `versions.env` line | `SVT_DB_AGENT_NEXT_VERSION` | `SVT_DB_AGENT_VERSION` (nothing reads it) |
+| Workflows | `db-agent-next.yml`, `DbAgent Next :: Manual`, `DbAgent Next :: Release` | none: `db-agent.yml` only compiles the C++ code, it pushes no image |
+| Deploys | dev: automatic on master pushes and release tags, or manual. prod: manual only (`deploy-prod--manual`) | no workflow |
+
+Both read the same `SVT_DB_*` values from `.env`; the new one has no log
+volume (stdout only) and exposes `GET /health` on port 7676 inside the network.
+`svt-db-agent-next` applies its pending database migrations at each start, so
+`SVT_DB_USER` must own the schema `main` with its tables and enum types, and
+must have the CREATE privilege on the database. A migration that fails
+ends the start and changes nothing; deploy the previous version then
+([`DbAgentNext/docs/02`](../DbAgentNext/docs/02-database-migration.md#1-baseline-from-the-live-database-not-from-the-files)).
+
+The first deploy of `svt-db-agent-next` to a server that ran the C++ agent
+recreates one service only, so the old C++ container is removed once, by hand:
+[`Dev/README.md`](Dev/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next),
+[`Prod/README.md`](Prod/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next).
+The full procedure, with the release, is in
+[`DbAgentNext/docs/04`](../DbAgentNext/docs/04-runtime-and-deployment.md#7-swap-procedure).
 
 ## First-time server setup
 
@@ -88,7 +122,7 @@ For **prod**, first replace the bootstrap `latest` tags in
 want running.
 
 > **Registry credentials (once per host):** the app packages
-> (`ghcr.io/svt-wp2/svt-ui`, `svt-db-agent`) are private. Install a long-lived
+> (`ghcr.io/svt-wp2/svt-ui`, `svt-db-agent`, `svt-db-agent-next`) are private. Install a long-lived
 > pull login for root — a classic PAT with only `read:packages` (ideally on a
 > service account): `sudo docker login ghcr.io -u <account>` (paste the PAT at
 > the password prompt). The systemd units' boot-time pulls use it. CI deploys

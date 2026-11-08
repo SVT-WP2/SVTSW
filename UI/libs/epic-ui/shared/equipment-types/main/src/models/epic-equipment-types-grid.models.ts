@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicEquipmentType } from 'epic-api-types'
 import { EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicEquipmentType } from 'svt-ts-types'
 
 
 export namespace EpicEquipmentTypesGrid {

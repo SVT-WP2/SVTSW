@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName, EpicEnumsCollection } from 'epic-api-types'
 import { EpicEnumsApiClient } from 'epic-ui/api'
 import { BaseCachedDataFacade } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
+import { EpicEnumName, EpicEnumsCollection } from 'svt-ts-types'
 
 
 @Injectable({ providedIn: 'root' })

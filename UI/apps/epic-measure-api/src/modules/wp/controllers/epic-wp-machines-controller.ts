@@ -5,6 +5,7 @@ import {
     Get,
     NotFoundException,
     Param,
+    ParseIntPipe,
     Patch,
     Post,
     SerializeOptions,
@@ -45,7 +46,7 @@ export class EpicWpMachinesController {
     @ApiResponse({ type: EpicWpMachineDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpMachineDto })
-    async getOne(@Param('id') id: number): Promise<EpicWpMachineDto> {
+    async getOne(@Param('id', ParseIntPipe) id: number): Promise<EpicWpMachineDto> {
         const result = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWpMachinesService.getAll(),
@@ -77,7 +78,7 @@ export class EpicWpMachinesController {
     @ApiResponse({ type: EpicWpMachineDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpMachineDto })
-    async update(@Param('id') id: number, @Body() body: EpicWpMachineUpdateRequestDto): Promise<EpicWpMachineDto> {
+    async update(@Param('id', ParseIntPipe) id: number, @Body() body: EpicWpMachineUpdateRequestDto): Promise<EpicWpMachineDto> {
         const entity = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWpMachinesService.update(+id, body),
@@ -85,7 +86,7 @@ export class EpicWpMachinesController {
         ))
 
         if (!entity) {
-            throw new NotFoundException(`Wafer does not exist: ${id}`)
+            throw new NotFoundException(`WpMachine does not exist: ${id}`)
         }
 
         return entity
@@ -96,18 +97,22 @@ export class EpicWpMachinesController {
     @ApiResponse({ type: EpicWpMachineDto })
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpMachineDto })
-    async updateLoadedWafer(@Param('id') id: number, @Body() body: EpicWpMachineUpdateLoadedWaferDto): Promise<EpicWpMachineDto> {
+    async updateLoadedWafer(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() body: EpicWpMachineUpdateLoadedWaferDto): Promise<EpicWpMachineDto> {
         const entity = await processKafkaReplyError(() => (
             firstValueFrom(
                 this.epicWpMachinesService.updateLoadedWafer({
                     wpMachineId: +id,
                     loadedWaferId: !isNil(body.loadedWaferId) ? body.loadedWaferId : null,
+                    // required by the DB agent to load; it ignores the value when unloading
+                    loadedWaferOrientation: !isNil(body.loadedWaferOrientation) ? body.loadedWaferOrientation : null,
                 }),
             )
         ))
 
         if (!entity) {
-            throw new NotFoundException(`Wafer does not exist: ${id}`)
+            throw new NotFoundException(`WpMachine does not exist: ${id}`)
         }
 
         return entity
@@ -119,7 +124,7 @@ export class EpicWpMachinesController {
     @UseInterceptors(ClassSerializerInterceptor)
     @SerializeOptions({ type: EpicWpMachineDto })
     async updateInstalledProbeCard(
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() body: EpicWpMachineUpdateInstalledProbeCardDto): Promise<EpicWpMachineDto> {
 
         const entity = await processKafkaReplyError(() => (
@@ -127,12 +132,13 @@ export class EpicWpMachinesController {
                 this.epicWpMachinesService.updateInstalledProbeCard({
                     wpMachineId: +id,
                     installedProbeCardId: !isNil(body.installedProbeCardId) ? body.installedProbeCardId : null,
+                    installedProbeCardOrientation: !isNil(body.installedProbeCardOrientation) ? body.installedProbeCardOrientation : null,
                 }),
             )
         ))
 
         if (!entity) {
-            throw new NotFoundException(`Wafer does not exist: ${id}`)
+            throw new NotFoundException(`WpMachine does not exist: ${id}`)
         }
 
         return entity

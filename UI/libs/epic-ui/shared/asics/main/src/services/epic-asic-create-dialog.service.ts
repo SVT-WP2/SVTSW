@@ -1,11 +1,11 @@
 ﻿import { HttpErrorResponse } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicAsic } from 'epic-api-types'
 import { EpicAsicsApiClient } from 'epic-ui/api'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
 import { catchError, switchMap, takeUntil, tap, throwError } from 'rxjs'
+import { EpicAsic } from 'svt-ts-types'
 
 
 import { EpicAsicUpdateDialogComponent } from '../dialogs'

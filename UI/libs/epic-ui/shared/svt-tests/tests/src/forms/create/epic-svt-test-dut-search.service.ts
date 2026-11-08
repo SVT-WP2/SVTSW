@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicAsic, EpicChip, EpicChipBlock, EpicSvtDutEntityName } from 'epic-api-types'
 import { EpicAsicsApiClient, EpicChipBlocksApiClient, EpicChipsApiClient } from 'epic-ui/api'
 import { map, Observable } from 'rxjs'
+import { EpicApiPager, EpicAsic, EpicChip, EpicChipBlock, EpicSvtDutEntityName } from 'svt-ts-types'
 
 import { EpicSvtTestCreateForm } from './epic-svt-test-create-form.models'
 

@@ -5,8 +5,8 @@ by the Angular app.
 
 | Folder | Holds | Rule |
 |---|---|---|
-| `<domain>/models` | `Epic<X>Entity`, `Epic<X>CreateEntity`, … — the **Kafka wire types** (DB agent ↔ BFF) | While a wire type equals the HTTP contract type, it is a one-line alias of the `epic-api-types` type (`type EpicWaferEntity = EpicWafer`). Turn it into a real type only when the two shapes diverge — `EpicSvtTestEntity` (no `status`) and the `*LocationUpdate` types (extra `username`) are the examples. |
-| `<domain>/dtos` | `Epic<X>Dto`, `Epic<X>CreateRequestDto`, `Epic<X>sGetAllParamsDto` — the **HTTP shape** as decorated classes | Each one `implements` its `epic-api-types` type, so a field drifting from the contract fails to compile. They drive Swagger and the `ClassSerializerInterceptor`. |
-| `kafka/` | Message envelopes, per-domain `SvtDbAgentKafka<X>` namespaces, reply helpers | The authoritative contract is `../Documentation/Kafka/svt.db-agent.kafka.yaml`. Kafka filter types (`EpicGetAll<X>QueryFilter`) stay here even when they look like the HTTP query — they belong to that contract. |
+| `<domain>/dtos` | `Epic<X>Dto`, `Epic<X>CreateRequestDto`, `Epic<X>sGetAllParamsDto` — the **HTTP shape** as decorated classes | Each one `implements` its `svt-ts-types` type, so a field drifting from the contract fails to compile. They drive Swagger and the `ClassSerializerInterceptor`. |
+| `svt-tests/models` | `resolveEpicSvtTestStatus()`, `resolveEpicSvtTestResultStatuses()` | The BFF-side mapping between the stored `testResultStatus` and the synthetic `status` of the HTTP contract. |
+| `kafka/` | The helpers around the Kafka contract that need RxJS or NestJS: `mapEpicKafkaMessageData()`, `mapSvtDbAgentListReplyData()`, `mapSvtDbAgentEntityReplyData()`, `processKafkaReplyError()`, `EpicKafkaReplyMessageBusService` | The contract itself — message envelope, per-domain `SvtDbAgentKafka<X>` namespaces, wire types and Kafka filters — is dependency-free and lives in `svt-ts-types/kafka`. |
 
-The field lists themselves live in `libs/epic-api-types` — see its README.
+The field lists themselves live in `../Shared/svt-ts-types` — see its README.

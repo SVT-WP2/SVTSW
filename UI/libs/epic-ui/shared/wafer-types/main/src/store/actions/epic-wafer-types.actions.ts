@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import { EpicWaferType, EpicWaferTypeCreateRequest } from 'epic-api-types'
+import { EpicWaferType, EpicWaferTypeCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicWaferTypesActions {

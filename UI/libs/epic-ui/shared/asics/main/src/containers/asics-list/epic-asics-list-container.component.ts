@@ -5,7 +5,6 @@ import { MatCardModule } from '@angular/material/card'
 import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicAsic } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorModule,
@@ -19,6 +18,7 @@ import {
 } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicAsic } from 'svt-ts-types'
 
 import { EpicAsicsScrollingDataSource, EpicAsicsScrollingDsFilter } from '../../services'
 

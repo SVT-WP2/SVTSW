@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsBoolean } from 'class-validator'
-import { EpicSvtTestTemplateUpdateRequest } from 'epic-api-types'
+import { EpicSvtTestTemplateUpdateRequest } from 'svt-ts-types'
 
 
 export class EpicSvtTestTemplateUpdateDto implements EpicSvtTestTemplateUpdateRequest {
