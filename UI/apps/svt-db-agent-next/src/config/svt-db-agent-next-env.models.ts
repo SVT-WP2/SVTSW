@@ -2,7 +2,7 @@
 import 'reflect-metadata'
 
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator'
+import { IsBooleanString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator'
 
 
 /**
@@ -87,5 +87,15 @@ export class SvtDbAgentNextEnvVars {
     @Min(1)
     @Max(65535)
     SVT_DB_AGENT_HTTP_PORT?: number
+
+    // Feature flags (new). `true`/`1` enables, anything else is rejected; absent means off.
+
+    /**
+     * Write the `ChipBlock` rows of a new chip from `AsicFamilyTypeBlockList`, named `<blockType>_<chipSN>`.
+     * Off until the naming is confirmed (`docs/db-agent-clone/dev-plan/00-context.md`, Q6).
+     */
+    @IsOptional()
+    @IsBooleanString()
+    SVT_DB_AGENT_FEATURE_CHIP_BLOCKS?: string
 
 }

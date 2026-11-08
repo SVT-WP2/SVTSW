@@ -19,6 +19,7 @@ const COMPLETE_ENV: Record<string, string> = {
     SVT_DB_AGENT_LOGGER_TERM_VERBOSITY: 'VERBOSE',
     SVT_DB_AGENT_LOGGER_FILE_VERBOSITY: 'DEBUG',
     SVT_DB_AGENT_HTTP_PORT: '7777',
+    SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'false',
 }
 
 const omit = (env: Record<string, string>, ...keys: string[]): Record<string, string> =>
@@ -44,7 +45,27 @@ describe('createSvtDbAgentNextConfig', () => {
                 port: 9085,
                 brokers: ['kafka.example:9085'],
             },
+            features: {
+                chipBlocks: false,
+            },
         })
+    })
+
+    it('keeps every feature off unless its flag is true or 1', () => {
+        const chipBlocks = (value?: string) => createSvtDbAgentNextConfig(
+            value === undefined
+                ? omit(COMPLETE_ENV, 'SVT_DB_AGENT_FEATURE_CHIP_BLOCKS')
+                : { ...COMPLETE_ENV, SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: value },
+        ).features.chipBlocks
+        expect(chipBlocks()).toBe(false)
+        expect(chipBlocks('0')).toBe(false)
+        expect(chipBlocks('true')).toBe(true)
+        expect(chipBlocks('1')).toBe(true)
+    })
+
+    it('rejects a feature flag that is not a boolean string and names the variable', () => {
+        expect(() => createSvtDbAgentNextConfig({ ...COMPLETE_ENV, SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'yes' }))
+            .toThrow(/SVT_DB_AGENT_FEATURE_CHIP_BLOCKS/)
     })
 
     it('defaults the HTTP port and the log levels when the optional variables are absent', () => {

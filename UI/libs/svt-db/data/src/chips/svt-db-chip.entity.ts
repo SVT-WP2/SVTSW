@@ -6,8 +6,8 @@ import { SVT_DB_ENUM_VALUES } from '../enums'
 
 
 /**
- * `main."Chip"`: a diced ASIC. Needed here for the ASICs slice (`Asic.chipId` is the id of the chip made from
- * the ASIC); the chips slice adds its location history, blocks and repository.
+ * `main."Chip"`: a diced ASIC (`asicId`) with its current `generalLocation`. The history is `ChipLocation`,
+ * the blocks `ChipBlock`; the `familyType` on the wire is the ASIC's (the C++ agent's LEFT JOIN column).
  */
 @Entity({ tableName: 'Chip' })
 export class SvtDbChipEntity {

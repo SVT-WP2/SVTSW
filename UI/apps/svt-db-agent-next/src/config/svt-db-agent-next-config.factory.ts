@@ -65,12 +65,20 @@ export function createSvtDbAgentNextConfig(source: Record<string, unknown>): Svt
             port: env.SVT_DB_AGENT_KAFKA_PORT,
             brokers: [`${env.SVT_DB_AGENT_KAFKA_SERVER}:${env.SVT_DB_AGENT_KAFKA_PORT}`],
         },
+        features: {
+            chipBlocks: isFeatureEnabled(env.SVT_DB_AGENT_FEATURE_CHIP_BLOCKS),
+        },
     }
 }
 
 /** `load` entry of `ConfigModule.forRoot`: the typed configuration built from `process.env`. */
 export function getSvtDbAgentNextConfigFactory(): ConfigFactory<SvtDbAgentNextConfig> {
     return () => createSvtDbAgentNextConfig(process.env)
+}
+
+/** A validated `@IsBooleanString()` flag: `true` or `1` enables, `false`, `0` and absent do not. */
+function isFeatureEnabled(value: string | undefined): boolean {
+    return value === 'true' || value === '1'
 }
 
 function isLoggerVerbosity(value: string | undefined): value is SvtDbAgentNextLoggerVerbosity {

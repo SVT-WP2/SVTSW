@@ -3,7 +3,7 @@ import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
 import { SvtDbChipEntity } from '../chips'
-import { SvtDbPage, SvtDbPager } from '../common'
+import { escapeLike, SvtDbPage, SvtDbPager } from '../common'
 
 import { SvtDbAsicEntity } from './svt-db-asic.entity'
 
@@ -43,7 +43,8 @@ export class SvtDbAsicsRepository {
     }
 
     async findPage(filter: SvtDbAsicsFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbAsicWithChip>> {
-        let ids = filter.ids
+        // An empty list is no restriction (contract: 'empty / undefined => all').
+        let ids = filter.ids?.length ? filter.ids : undefined
         if (filter.chipId !== undefined) {
             const chip = await this.em.findOne(SvtDbChipEntity, { id: filter.chipId })
             if (!chip) {
@@ -62,7 +63,7 @@ export class SvtDbAsicsRepository {
         if (filter.waferId !== undefined) {
             where.wafer = filter.waferId
         }
-        if (filter.familyTypes) {
+        if (filter.familyTypes?.length) {
             where.familyType = { $in: filter.familyTypes }
         }
         if (filter.quality !== undefined) {
@@ -79,6 +80,14 @@ export class SvtDbAsicsRepository {
         })
         const chipIds = await this.chipIdsByAsic(asics.map((asic) => asic.id))
         return { items: asics.map((asic) => ({ asic, chipId: chipIds.get(asic.id) ?? null })), totalCount }
+    }
+
+    /** The ASICs with the given ids, in id order; ids without an ASIC are simply absent. */
+    findByIds(ids: number[]): Promise<SvtDbAsicEntity[]> {
+        if (ids.length === 0) {
+            return Promise.resolve([])
+        }
+        return this.em.find(SvtDbAsicEntity, { id: { $in: ids } }, { orderBy: { id: 'asc' } })
     }
 
     async create(input: SvtDbAsicCreateInput): Promise<SvtDbAsicWithChip> {
@@ -105,8 +114,4 @@ export class SvtDbAsicsRepository {
         return new Map(chips.map((chip) => [chip.asic.id, chip.id]))
     }
 
-}
-
-function escapeLike(term: string): string {
-    return term.replace(/[\\%_]/g, (character) => `\\${character}`)
 }

@@ -75,6 +75,8 @@ services:
       SVT_DB_AGENT_KAFKA_PORT: "${SVT_KAFKA_PORT:-9094}"
       # PRODUCTION | STANDARD | VERBOSE | DEBUG, mapped onto Nest log levels.
       SVT_DB_AGENT_LOGGER_TERM_VERBOSITY: "${SVT_DB_AGENT_NEXT_LOG_VERBOSITY:-STANDARD}"
+      # true | false: write a new chip's ChipBlock rows from AsicFamilyTypeBlockList (naming unconfirmed, off by default).
+      SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: "${SVT_DB_AGENT_NEXT_FEATURE_CHIP_BLOCKS:-false}"
       # The agent reports its own version; keep it in lockstep with the image tag.
       APP_VERSION: "${SVT_DB_AGENT_NEXT_VERSION}"
       NODE_ENV: production

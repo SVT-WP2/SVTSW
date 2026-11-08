@@ -73,6 +73,10 @@ describe('Wafers (e2e)', () => {
 - Add the new message types to the list in `dispatch/dispatch.e2e-spec.ts`.
 - Use the typed message classes of `epic/entities` where they fit; a plain `{ type, data }` object is
   fine where a class is awkward.
+- A spec that needs a feature flag boots its own application with it:
+  `new TestSetup({ env: { SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'true' } })` sets the variable before `init()`
+  and restores it in `close()` (`chip-blocks/chip-blocks.e2e-spec.ts`); the default stays covered by the
+  domain's own spec.
 
 ## How the runner differs from the unit config
 

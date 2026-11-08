@@ -19,6 +19,14 @@ import { SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../../src/
 /** A request envelope as a client would send it; the typed message classes of `epic/entities` fit too. */
 export type E2eRequest = EpicKafkaMessage | { type: string; data?: unknown }
 
+export type TestSetupOptions = {
+    /**
+     * Environment variables set before the application boots and restored by `close()`, e.g. a feature flag
+     * (`SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'true'`). The configuration is built from `process.env` per boot.
+     */
+    env?: Record<string, string>
+}
+
 /**
  * Lifecycle, database and messaging helpers for the e2e specs, after rentaly's `TestSetup`:
  *
@@ -41,10 +49,19 @@ export class TestSetup {
     private app!: INestApplication
     private orm!: MikroORM
     private dispatcher!: SvtDbAgentNextRequestDispatcher
+    private previousEnv: Record<string, string | undefined> = {}
+
+    constructor(private readonly options: TestSetupOptions = {}) {
+    }
 
     // ── Lifecycle ───────────────────────────────────────────────
 
     async init(): Promise<void> {
+        for (const [key, value] of Object.entries(this.options.env ?? {})) {
+            this.previousEnv[key] = process.env[key]
+            process.env[key] = value
+        }
+
         const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile()
         this.app = moduleFixture.createNestApplication({ logger: ['error', 'warn'] })
         await this.app.init()
@@ -57,6 +74,15 @@ export class TestSetup {
 
     async close(): Promise<void> {
         await this.app?.close()
+        for (const [key, value] of Object.entries(this.previousEnv)) {
+            if (value === undefined) {
+                delete process.env[key]
+            }
+            else {
+                process.env[key] = value
+            }
+        }
+        this.previousEnv = {}
     }
 
     // ── Database ────────────────────────────────────────────────

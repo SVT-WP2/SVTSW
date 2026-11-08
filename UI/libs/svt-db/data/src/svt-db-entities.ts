@@ -1,5 +1,10 @@
 import { SvtDbAsicEntity } from './asics'
-import { SvtDbChipEntity } from './chips'
+import {
+    SvtDbAsicFamilyTypeBlockListEntity,
+    SvtDbChipBlockEntity,
+    SvtDbChipEntity,
+    SvtDbChipLocationEntity,
+} from './chips'
 import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
 import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
 
@@ -16,4 +21,7 @@ export const SVT_DB_ENTITIES = [
     SvtDbWaferLocationEntity,
     SvtDbAsicEntity,
     SvtDbChipEntity,
+    SvtDbChipLocationEntity,
+    SvtDbChipBlockEntity,
+    SvtDbAsicFamilyTypeBlockListEntity,
 ]

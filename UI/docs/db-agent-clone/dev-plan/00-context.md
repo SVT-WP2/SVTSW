@@ -128,6 +128,7 @@ files need no change.
 | `SVT_DB_AGENT_KAFKA_SERVER`, `_KAFKA_PORT` | broker host and port, joined into `bootstrap.servers` | `localhost`, `9085` |
 | `SVT_DB_AGENT_LOGGER_FILE_PATH`, `_LOGGER_TERM_VERBOSITY`, `_LOGGER_FILE_VERBOSITY` | accepted for compatibility; the clone logs to stdout; verbosity maps `PRODUCTION`/`STANDARD`/`VERBOSE`/`DEBUG` onto Nest log levels | unset |
 | `SVT_DB_AGENT_HTTP_PORT` | new: the `/health` HTTP port | `7676` |
+| `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS` | new, optional: `true`/`1` makes `CreateChip`/`CreateManyChips` write the chip's `ChipBlock` rows from `AsicFamilyTypeBlockList` (Q6, unconfirmed naming) | unset (off) |
 | `NODE_ENV` | selects `.env.<NODE_ENV>` as in the other apps | `development` |
 
 All are read through `@nestjs/config` and validated at boot (class-validator on an env class, as in

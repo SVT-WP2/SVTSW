@@ -22,6 +22,12 @@ export type SvtDbAgentNextKafkaConfig = {
     brokers: string[]
 }
 
+/** Behaviour that is switched on per environment (`SVT_DB_AGENT_FEATURE_*`), all off by default. */
+export type SvtDbAgentNextFeaturesConfig = {
+    /** `CreateChip`/`CreateManyChips` also write the chip's `ChipBlock` rows (unconfirmed naming, Q6). */
+    chipBlocks: boolean
+}
+
 /** Typed configuration of the application, built once from the validated environment. */
 export type SvtDbAgentNextConfig = {
     /** Port of the HTTP side (`GET /health`). */
@@ -30,4 +36,5 @@ export type SvtDbAgentNextConfig = {
     logLevels: LogLevel[]
     database: SvtDbAgentNextDatabaseConfig
     kafka: SvtDbAgentNextKafkaConfig
+    features: SvtDbAgentNextFeaturesConfig
 }

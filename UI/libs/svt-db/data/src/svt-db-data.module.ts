@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { SvtDbAsicsRepository } from './asics'
+import { SvtDbChipBlocksRepository, SvtDbChipsRepository } from './chips'
 import { SvtDbEnumsService } from './enums'
 import { SvtDbWaferTypesRepository } from './wafer-types'
 import { SvtDbWafersRepository } from './wafers'
@@ -11,6 +12,8 @@ const PROVIDERS = [
     SvtDbWaferTypesRepository,
     SvtDbWafersRepository,
     SvtDbAsicsRepository,
+    SvtDbChipsRepository,
+    SvtDbChipBlocksRepository,
 ]
 
 /**

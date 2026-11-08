@@ -21,6 +21,12 @@ describe('Request dispatch (e2e)', () => {
             'UpdateWaferLocation',
             'CreateAsic',
             'GetAllAsics',
+            'GetAllChips',
+            'CreateChip',
+            'CreateManyChips',
+            'UpdateChipLocation',
+            'GetChipLocationHistory',
+            'GetAllBlocks',
         ]))
     })
 

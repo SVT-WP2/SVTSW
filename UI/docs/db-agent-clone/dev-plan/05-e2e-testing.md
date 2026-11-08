@@ -74,9 +74,9 @@ The Kafka controller of phase 4 becomes one method:
 5. Pure domain logic (wafer-map validation, ASIC generation) also gets a unit spec next to it.
 
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
-generation (done) → ASICs (done; a minimal `Chip` entity exists for `chipId`) → chips + chip blocks →
-wafer-probe machines, probe cards, projects → equipment types + equipment → SVT test setups/configs,
-test types/configs, templates → SVT tests → modules (read only).
+generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
+projects → equipment types + equipment → SVT test setups/configs, test types/configs, templates → SVT
+tests → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -117,3 +117,32 @@ test types/configs, templates → SVT tests → modules (read only).
   (`requireAllowedFilterKeys`), now also on `GetAllWafers` and `GetAllWaferTypes`.
 - `CreateAsic` checks `asicFamilyType` and `asicQuality` against the live catalog and the wafer's
   existence before inserting; the reply carries `chipId: null`.
+
+## 7. Findings from the chips + chip blocks slice
+
+- Entities `Chip`, `ChipLocation`, `ChipBlock` and `AsicFamilyTypeBlockList` (composite primary key of two
+  enums: `@Enum({ primary: true })` twice plus `[PrimaryKeyProp]`); the schema diff stays empty.
+- `GetAllChips` items are the contract's `{ id, serialNumber, generalLocation, familyType }`; `familyType`
+  comes from a populated `asic` relation and the `familyTypes` filter is a condition on that relation
+  (D-5, Q-H3 fixed). The C++ also sent `asicId`, which the contract's `ChipDto` does not list, so it is not
+  sent; the ASIC of a chip is `GetAllAsics { filter: { chipId } }`. An empty `ids` / `familyTypes` list
+  means "all", as the contract says (now also in the ASICs repository).
+- **One chip per ASIC.** `CreateChip` and `CreateManyChips` reject an ASIC that already has a chip
+  (`BadRequest`: `Asic 1 already has a chip (1)`) and an ASIC listed twice in one request. The database has
+  no unique constraint on `Chip.asicId` and the C++ did not check, but `Asic.chipId` on the wire is a single
+  value, so a second chip would be invisible. New behaviour, to be confirmed by the author.
+- `CreateManyChips` is one transaction (chips, location rows, blocks): a duplicate serial number leaves
+  nothing behind. The reply lists the chips created, with `totalCount` (R-2, Q-H6); the extra top-level
+  `data.items` key the C++ demanded is tolerated (D-8); an empty `items` list succeeds with an empty reply,
+  a missing one is a `BadRequest`.
+- **Chip blocks are behind `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS`** (default off, `true`/`1` enables). When on,
+  a new chip gets one `ChipBlock` row per `AsicFamilyTypeBlockList` entry of its ASIC's family type, named
+  `<blockType>_<chipSerialNumber>` (`generateChipBlocks`, the rule of the never-executed C++ code). The three
+  dev rows are named differently (`SLDO_AncMPW2-W1_0_0`), hence the flag (Q6). The e2e harness boots the
+  application with the flag for `chip-blocks.e2e-spec.ts` (`new TestSetup({ env })`); `chips.e2e-spec.ts`
+  covers the default. `GetAllBlocks` (the contract's `GetAllChipBlocks`, never implemented in C++) lists the
+  rows with the filters `ids`, `chipId`, `chipBlockTypes`, `serialNumber` (substring) and the pager.
+- `UpdateChip` exists in the C++ code only (not in the contract, `01-behaviour-decisions.md` "ask"): not
+  implemented until the contract has it.
+- Location history: the wafer pattern reused (`appendLocation`, `findLocationHistory`, first row
+  `Location at creation`); `SvtDbLocationInput` and that note moved to `libs/svt-db/data/src/common`.

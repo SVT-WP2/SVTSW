@@ -2,7 +2,7 @@ import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
 import { SvtDbAsicEntity } from '../asics'
-import { SvtDbPage, SvtDbPager } from '../common'
+import { SVT_DB_LOCATION_AT_CREATION_NOTE, SvtDbLocationInput, SvtDbPage, SvtDbPager } from '../common'
 import { SvtDbGeneratedAsic } from '../wafer-maps'
 
 import { SvtDbWaferLocationEntity } from './svt-db-wafer-location.entity'
@@ -25,16 +25,6 @@ export type SvtDbWaferCreateInput = {
 }
 
 export type SvtDbWaferUpdateInput = Partial<Pick<SvtDbWaferEntity, 'thinningDate' | 'dicingDate' | 'productionDate'>>
-
-/** A location change: `date` omitted or `null` lets the database stamp the current day. */
-export type SvtDbLocationInput = {
-    generalLocation: string
-    date?: string | null
-    username?: string | null
-    note?: string | null
-}
-
-export const SVT_DB_LOCATION_AT_CREATION_NOTE = 'Location at creation'
 
 /**
  * Wafers, their location history and the ASICs created with them. Runs on the request context the dispatcher
