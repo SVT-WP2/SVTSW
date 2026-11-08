@@ -240,7 +240,7 @@ function matchesFilterList<TValue>(value: TValue, filterValues?: TValue[] | null
 }
 
 /** A date that is not set (a test that has not been started / finished yet) fulfils no bound at all. */
-function matchesDateRange(value: string, from?: string | null, to?: string | null): boolean {
+function matchesDateRange(value: string | null, from?: string | null, to?: string | null): boolean {
     if (!from && !to) {
         return true
     }

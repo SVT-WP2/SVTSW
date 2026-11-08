@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsString } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator'
 import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestResultStatus, EpicSvtTestStatus } from 'epic-api-types'
 
 
@@ -26,27 +26,35 @@ export class EpicSvtTestDto implements EpicSvtTest {
     testSetupConfigId: number
 
     @IsString()
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({ type: 'string', description: 'ISO 8601 date-time (UTC)' })
     createdAt: string
 
+    @IsOptional()
     @IsString()
-    @ApiProperty({ type: 'string' })
-    startedAt: string
+    @ApiProperty({ type: 'string', nullable: true, description: 'ISO 8601 date-time (UTC); null until the test is started' })
+    startedAt: string | null
 
+    @IsOptional()
     @IsString()
-    @ApiProperty({ type: 'string' })
-    finishedAt: string
+    @ApiProperty({ type: 'string', nullable: true, description: 'ISO 8601 date-time (UTC); null until the test has finished' })
+    finishedAt: string | null
 
+    @IsOptional()
     @IsString()
-    @ApiProperty({ type: 'string' })
-    pathToResult: string
+    @ApiProperty({ type: 'string', nullable: true, description: 'null until the test has finished' })
+    pathToResult: string | null
 
-    @IsString()
-    @ApiProperty({ type: 'string', description: 'Enum value testResultStatus (physical, stored in the DB)' })
-    testResultStatus: EpicSvtTestResultStatus
+    @IsOptional()
+    @IsEnum(EpicSvtTestResultStatus)
+    @ApiProperty({
+        enum: EpicSvtTestResultStatus,
+        nullable: true,
+        description: 'Physical result status, stored in the DB (enum testResultStatus); null until the test has finished',
+    })
+    testResultStatus: EpicSvtTestResultStatus | null
 
-    @IsString()
-    @ApiProperty({ type: 'string', description: 'Enum value status (synthetic, derived on the BE from testResultStatus)' })
+    @IsEnum(EpicSvtTestStatus)
+    @ApiProperty({ enum: EpicSvtTestStatus, description: 'Synthetic status, derived on the BE from testResultStatus' })
     status: EpicSvtTestStatus
 
 }

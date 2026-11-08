@@ -26,7 +26,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             startedAt: moment().subtract(3, 'day').add(1, 'minute').toISOString(),
             finishedAt: moment().subtract(3, 'day').add(5, 'minute').toISOString(),
             pathToResult: '/results/test-1',
-            testResultStatus: EpicSvtTestResultStatus.Completed,
+            testResultStatus: EpicSvtTestResultStatus.Success,
             status: EpicSvtTestStatus.Completed,
         },
         {
@@ -39,7 +39,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             startedAt: moment().subtract(2, 'day').add(1, 'minute').toISOString(),
             finishedAt: moment().subtract(2, 'day').add(10, 'minute').toISOString(),
             pathToResult: '/results/test-2',
-            testResultStatus: EpicSvtTestResultStatus.Failed,
+            testResultStatus: EpicSvtTestResultStatus.Failure,
             status: EpicSvtTestStatus.Failed,
         },
         {
@@ -52,7 +52,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             startedAt: moment().subtract(1, 'day').add(1, 'minute').toISOString(),
             finishedAt: moment().subtract(1, 'day').add(20, 'minute').toISOString(),
             pathToResult: '/results/test-3',
-            testResultStatus: EpicSvtTestResultStatus.Completed,
+            testResultStatus: EpicSvtTestResultStatus.Success,
             status: EpicSvtTestStatus.Completed,
         },
         {
@@ -62,10 +62,10 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             testTypeConfigId: 2,
             testSetupConfigId: 2,
             createdAt: moment().subtract(1, 'hour').toISOString(),
-            startedAt: '',
-            finishedAt: '',
-            pathToResult: '',
-            testResultStatus: EpicSvtTestResultStatus.None,
+            startedAt: null,
+            finishedAt: null,
+            pathToResult: null,
+            testResultStatus: null,
             status: EpicSvtTestStatus.Running,
         },
         {
@@ -75,10 +75,10 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             testTypeConfigId: 2,
             testSetupConfigId: 2,
             createdAt: moment().subtract(1, 'hour').toISOString(),
-            startedAt: '',
-            finishedAt: '',
-            pathToResult: '',
-            testResultStatus: EpicSvtTestResultStatus.None,
+            startedAt: null,
+            finishedAt: null,
+            pathToResult: null,
+            testResultStatus: null,
             status: EpicSvtTestStatus.Pending,
         },
     ]
@@ -107,9 +107,10 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
     const dutEntityNames = Object.values(EpicSvtDutEntityName)
     // a test that has already run always ends up with one of the final result statuses
     const finalResultStatuses = [
-        EpicSvtTestResultStatus.Completed,
-        EpicSvtTestResultStatus.Failed,
-        EpicSvtTestResultStatus.Cancelled,
+        EpicSvtTestResultStatus.Success,
+        EpicSvtTestResultStatus.Failure,
+        EpicSvtTestResultStatus.PartialSuccess,
+        EpicSvtTestResultStatus.Error,
     ]
     const result: EpicSvtTest[] = []
     // the list is ordered newest first, so only the newest tests are still waiting to be run
@@ -121,7 +122,7 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
         // everything the DUT itself does not decide is picked with this one, see the constant above
         const spread = i % ATTRIBUTES_SPREAD
         const testResultStatus = isPending
-            ? EpicSvtTestResultStatus.None
+            ? null
             : finalResultStatuses[spread % finalResultStatuses.length]
         const createdAt = moment().subtract(i, 'hour')
 
@@ -132,9 +133,9 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
             testTypeConfigId: (spread % 2) + 1,
             testSetupConfigId: (spread % 3) + 1,
             createdAt: createdAt.toISOString(),
-            startedAt: isPending ? '' : createdAt.clone().add(1, 'minute').toISOString(),
-            finishedAt: isPending ? '' : createdAt.clone().add(10, 'minute').toISOString(),
-            pathToResult: isPending ? '' : `/results/test-${i}`,
+            startedAt: isPending ? null : createdAt.clone().add(1, 'minute').toISOString(),
+            finishedAt: isPending ? null : createdAt.clone().add(10, 'minute').toISOString(),
+            pathToResult: isPending ? null : `/results/test-${i}`,
             testResultStatus,
             status: resolveTestStatus(testResultStatus),
         })
@@ -188,10 +189,10 @@ export class EpicSvtTestsApiClientMock extends EpicSvtTestsApiClient {
             id,
             ...payload,
             createdAt: moment().toISOString(),
-            startedAt: '',
-            finishedAt: '',
-            pathToResult: '',
-            testResultStatus: EpicSvtTestResultStatus.None,
+            startedAt: null,
+            finishedAt: null,
+            pathToResult: null,
+            testResultStatus: null,
             status: EpicSvtTestStatus.Pending,
         }
 
@@ -208,24 +209,24 @@ export class EpicSvtTestsApiClientMock extends EpicSvtTestsApiClient {
 /**
  * Mirrors the `status` resolution the BFF does — a test never reaches the UI without the synthetic status.
  */
-function resolveTestStatus(testResultStatus: EpicSvtTestResultStatus): EpicSvtTestStatus {
+function resolveTestStatus(testResultStatus: EpicSvtTestResultStatus | null): EpicSvtTestStatus {
     switch (testResultStatus) {
-        case EpicSvtTestResultStatus.None:
-            return EpicSvtTestStatus.Pending
-        case EpicSvtTestResultStatus.Completed:
+        case EpicSvtTestResultStatus.Success:
+        case EpicSvtTestResultStatus.PartialSuccess:
             return EpicSvtTestStatus.Completed
-        case EpicSvtTestResultStatus.Failed:
+        case EpicSvtTestResultStatus.Failure:
+        case EpicSvtTestResultStatus.Error:
             return EpicSvtTestStatus.Failed
-        case EpicSvtTestResultStatus.Cancelled:
-            return EpicSvtTestStatus.Cancelled
+        default:
+            return EpicSvtTestStatus.Pending
     }
 }
 
 /**
  * The date range bounds mirror the Kafka contract: `*From` is inclusive, `*To` is exclusive. An entity whose
- * date is empty (not started / not finished yet) never fulfils a range bound on that date.
+ * date is null (not started / not finished yet) never fulfils a range bound on that date.
  */
-function fulfilsDateRange(value: string, from?: string | null, to?: string | null): boolean {
+function fulfilsDateRange(value: string | null, from?: string | null, to?: string | null): boolean {
     if (!from && !to) {
         return true
     }

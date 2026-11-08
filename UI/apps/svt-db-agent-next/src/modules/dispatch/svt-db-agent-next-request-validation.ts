@@ -118,3 +118,14 @@ export function optionalDateTime(value: unknown, path: string): Date | undefined
     }
     return date
 }
+
+/** Like {@link optionalStringList}, but the list may hold `null` entries (e.g. "no value yet" in a status filter). */
+export function optionalStringOrNullList(value: unknown, path: string): (string | null)[] | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+    if (!Array.isArray(value) || !value.every((item) => item === null || typeof item === 'string')) {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a list of strings or nulls`)
+    }
+    return value as (string | null)[]
+}

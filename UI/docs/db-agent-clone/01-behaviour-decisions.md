@@ -67,7 +67,7 @@ Recommendations are in the last column and are proposals.
 | Date and timestamp formats (R-6) | Postgres text (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS.ffffff`) | preserve / ISO 8601 UTC | **ask**: the contract says ISO 8601; the UI parses today's format. Coordinate the switch, or emit ISO and verify the UI's parsing accepts both. *Status:* dates stay `YYYY-MM-DD`; `SvtTestList` timestamps are ISO 8601 UTC (the UI mocks already produce ISO; dev-plan/05 §11). |
 | JSON fields on the wire (R-7) | strings; objects silently dropped on write (except `configBody`) | strings / objects | **preserve** strings on the wire for now (WPAgent and the UI expect strings); **fix** by rejecting objects with `BadRequest` instead of dropping them. |
 | Location `username` | never written by `Create*` (NULL); written by `Update*Location` | n/a | **preserve**; consider taking the creator's name from the create request later. |
-| Test state machine | not enforced | preserve / enforce | **preserve** (TestAgent drives it); log out-of-order transitions. *Status:* done; the `testResultStatus` vocabularies of the database enum and the TypeScript contract disagree (dev-plan/05 §11). |
+| Test state machine | not enforced | preserve / enforce | **preserve** (TestAgent drives it); log out-of-order transitions. *Status:* done. `testResultStatus` is one enum end to end (the database's values, `null` for no result yet; yaml, TypeScript contract, BFF and UI aligned 2026-11-08, dev-plan/05 §11). |
 
 ## 4. Schema-affecting items
 

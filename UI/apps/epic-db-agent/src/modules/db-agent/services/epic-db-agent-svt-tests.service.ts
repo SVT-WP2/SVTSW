@@ -51,10 +51,10 @@ export class EpicDbAgentSvtTestsService {
             testTypeConfigId: createRequest.testTypeConfigId,
             testSetupConfigId: createRequest.testSetupConfigId,
             createdAt: now,
-            startedAt: '',
-            finishedAt: '',
-            pathToResult: '',
-            testResultStatus: EpicSvtTestResultStatus.None,
+            startedAt: null,
+            finishedAt: null,
+            pathToResult: null,
+            testResultStatus: null,
         }
 
         this.data.push(newEntity)
@@ -69,9 +69,9 @@ export class EpicDbAgentSvtTestsService {
 
 /**
  * The date range bounds mirror the Kafka contract: `*From` is inclusive, `*To` is exclusive. An entity whose
- * date is empty (not started / not finished yet) never fulfils a range bound on that date.
+ * date is null (not started / not finished yet) never fulfils a range bound on that date.
  */
-function fulfilsDateRange(value: string, from?: string, to?: string): boolean {
+function fulfilsDateRange(value: string | null, from?: string, to?: string): boolean {
     if (!from && !to) {
         return true
     }
@@ -93,6 +93,7 @@ function fulfilsFilter(item: EpicSvtTestEntity, queryFilter: SvtDbAgentKafkaSvtT
     const fulfilDutEntityNamesFilter = !queryFilter.dutEntityNames?.length
         || queryFilter.dutEntityNames.includes(item.dutEntityName)
     const fulfilDutIdFilter = !queryFilter.dutId || queryFilter.dutId === item.dutId
+    // `null` in the list selects the tests without a result yet, as the real agent does
     const fulfilTestResultStatusesFilter = !queryFilter.testResultStatuses?.length
         || queryFilter.testResultStatuses.includes(item.testResultStatus)
     const fulfilTestTypeConfigIdsFilter = !queryFilter.testTypeConfigIds?.length
@@ -115,9 +116,10 @@ export function generateSvtTests(totalCount: number, idStartsFrom = 1): EpicSvtT
     const dutEntityNames = Object.values(EpicSvtDutEntityName)
     // a test that has already run always ends up with one of the final result statuses
     const finalResultStatuses = [
-        EpicSvtTestResultStatus.Completed,
-        EpicSvtTestResultStatus.Failed,
-        EpicSvtTestResultStatus.Cancelled,
+        EpicSvtTestResultStatus.Success,
+        EpicSvtTestResultStatus.Failure,
+        EpicSvtTestResultStatus.PartialSuccess,
+        EpicSvtTestResultStatus.Error,
     ]
     // fixed base timestamp — the generated list stays stable between restarts
     const baseTime = new Date('2026-01-01T00:00:00.000Z').getTime()
@@ -129,11 +131,11 @@ export function generateSvtTests(totalCount: number, idStartsFrom = 1): EpicSvtT
         // a test with no result yet has not been started nor finished
         const isPending = i >= firstPendingId
         const testResultStatus = isPending
-            ? EpicSvtTestResultStatus.None
+            ? null
             : finalResultStatuses[i % finalResultStatuses.length]
         const createdAt = new Date(baseTime + i * 60 * 60 * 1000).toISOString()
-        const startedAt = isPending ? '' : new Date(baseTime + i * 60 * 60 * 1000 + 60 * 1000).toISOString()
-        const finishedAt = isPending ? '' : new Date(baseTime + i * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString()
+        const startedAt = isPending ? null : new Date(baseTime + i * 60 * 60 * 1000 + 60 * 1000).toISOString()
+        const finishedAt = isPending ? null : new Date(baseTime + i * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString()
 
         result.push({
             id: i,
@@ -144,7 +146,7 @@ export function generateSvtTests(totalCount: number, idStartsFrom = 1): EpicSvtT
             createdAt,
             startedAt,
             finishedAt,
-            pathToResult: isPending ? '' : `/results/test-${i}`,
+            pathToResult: isPending ? null : `/results/test-${i}`,
             testResultStatus,
         })
     }

@@ -204,9 +204,7 @@ Column details: `DbAgent/docs/03-database-schema.md` §3.
 | `SvtDbChipLocationEntity` | `ChipLocation` | id (new) | → Chip |
 | `SvtDbChipBlockEntity` | `ChipBlock` | id | → Chip; blockType enum; serialNumber UK |
 | `SvtDbAsicFamilyTypeBlockListEntity` | `AsicFamilyTypeBlockList` | (asicFamilyType, blockType) | configuration table |
-| `SvtDbModuleEntity` | `Module` | id | modType enum; serialNumber UK NOT NULL; generalLocation |
-| `SvtDbModuleChipListEntity` | `ModuleChipList` | (modId, chipId) | → Module, → Chip |
-| `SvtDbModuleLocationEntity` | `ModuleLocation` | id (new) | → Module |
+| ~~`SvtDbModuleEntity`, `SvtDbModuleChipListEntity`, `SvtDbModuleLocationEntity`~~ | `Module`, `ModuleChipList`, `ModuleLocation` | — | **not mapped**: modules are out of scope (decided 2026-11-08) |
 | `SvtDbWaferProbeMachineEntity` | `WaferProbeMachine` | id | serialNumber UK, name UK; 5 enums; nullable → Wafer (`loadedWaferId`), → ProbeCard (`installedProbeCardId`), two orientation enums |
 | `SvtDbWaferLoadedInMachineEntity` | `WaferLoadedInMachine` | id (new) | → Machine, → Wafer; orientation, date, username, status enum |
 | `SvtDbProbeCardInstalledInMachineEntity` | `ProbeCardInstalledInMachine` | id (new) | → Machine, → ProbeCard; orientation, date, username |
@@ -288,7 +286,7 @@ assumptions below; when an answer arrives, update the plan.
 | Question | Assumption used by the phases |
 |---|---|
 | Q6 chip block naming | `<blockType>_<chipSN>` as in the code; generation implemented but **disabled by a config flag** until confirmed |
-| Q9 module design | entities and read messages only; `CreateModule` returns `BadRequest` "not implemented" until the serial-number rule exists |
+| Q9 module design | **dropped** (2026-11-08): the UI has no module concept; no entities, no messages |
 | Q21, Q24 DUT model | dev layout: one `SvtTestListToEntityName` and one `SvtTestListToEntityId` row per test |
 | Q25 result status | DB enum values `SUCCESS/PARTIAL_SUCCESS/FAILURE/ERROR` |
 | Q27 configBody type | `json`; strings on the wire |

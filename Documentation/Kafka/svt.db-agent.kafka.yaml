@@ -3339,9 +3339,13 @@ components:
                   description: Optional filter used to fetch tests of the particular DUT. DUT ids are unique per DUT entity only, so it is meant to be combined with dutEntityNames.
                 testResultStatuses:
                   type: array
-                  description: TestResultStatus values array. If array is empty / undefined => tests with any result status will be returned.
+                  description: >-
+                    TestResultStatus values array (`null` selects the tests without a result yet). If array is empty /
+                    undefined => tests with any result status will be returned.
                   items:
-                    type: string
+                    allOf:
+                      - $ref: "#/components/schemas/SvtTestResultStatus"
+                    nullable: true
                 testTypeConfigIds:
                   type: array
                   description: SvtTestTypeConfig ids array. If array is empty / undefined => tests of any test type configuration will be returned.
@@ -4441,17 +4445,24 @@ components:
           type: number
         createdAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          description: ISO 8601 date-time in UTC, e.g. `2025-06-03T23:59:12.000Z`
         startedAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          nullable: true
+          description: ISO 8601 date-time in UTC; `null` until the test is started
         finishedAt:
           type: string
-          description: Date only in format `2025-06-03T23:59:12.Z`
+          nullable: true
+          description: ISO 8601 date-time in UTC; `null` until the test has finished
         pathToResult:
           type: string
+          nullable: true
+          description: "`null` until the test has finished"
         testResultStatus:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/SvtTestResultStatus"
+          nullable: true
+          description: "`null` until the test has finished"
     SvtTestCreateDto:
       required:
         - dutEntityName
@@ -4473,7 +4484,7 @@ components:
       properties:
         startedAt:
           type: string
-          description: Date only in format `2025-06-03`
+          description: ISO 8601 date-time, e.g. `2025-06-03T23:59:12Z`
     SvtTestFinishUpdateDto:
       required:
         - finishedAt
@@ -4482,11 +4493,20 @@ components:
       properties:
         finishedAt:
           type: string
-          description: Date only in format `2025-06-03`
+          description: ISO 8601 date-time, e.g. `2025-06-03T23:59:12Z`
         pathToResult:
           type: string
         testResultStatus:
-          type: string
+          $ref: "#/components/schemas/SvtTestResultStatus"
+    # TEST :: RESULT STATUS (the PostgreSQL enum `testResultStatus`)
+    SvtTestResultStatus:
+      type: string
+      description: The physical result of a test run, as the test agents report it and the DB agent stores it.
+      enum:
+        - SUCCESS
+        - PARTIAL_SUCCESS
+        - FAILURE
+        - ERROR
 
     # ENUM :: DTO
     SvtEnumName:

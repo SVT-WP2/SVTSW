@@ -92,7 +92,6 @@ functions in `wafer-maps/`.
 | `SvtDbAsicsRepository` | `findPage(filter: { ids, waferId, chipId, serialNumber, familyTypes, quality }, pager)` with the LEFT JOIN to Chip for `chipId`; `insertMany(asics)` for wafer creation (one `INSERT … VALUES` batch, inside the caller's transaction) |
 | `SvtDbChipsRepository` | `findPage(filter: { ids, generalLocation, serialNumber, familyTypes })` with the join to Asic for `familyType`; location helpers |
 | `SvtDbChipBlocksRepository` | `findPage(filter: { ids, chipId, chipBlockTypes, serialNumber })`; `findBlockTypesForFamily(familyType)` |
-| `SvtDbModulesRepository` | `findPage(filter)` with `chips: number[]` populated from `ModuleChipList`; location helpers |
 | `SvtDbWaferProbeMachinesRepository` | `findPage({ ids })`; `recordWaferLoaded(machineId, waferId, orientation, status)`; `recordProbeCardInstalled(...)` |
 | `SvtDbProbeCardsRepository` | `findPage({ ids })` with `asicFamilyTypes: string[]` populated |
 | `SvtDbWaferProbeProjectsRepository` | `findPage({ ids })` |

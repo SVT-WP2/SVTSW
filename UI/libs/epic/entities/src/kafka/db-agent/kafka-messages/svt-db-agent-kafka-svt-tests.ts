@@ -1,7 +1,7 @@
-import { EpicDateTimeString } from 'epic-api-types'
+import { EpicDateTimeString, EpicSvtTestResultStatus } from 'epic-api-types'
 
 import { EpicPager } from '../../../common'
-import { EpicSvtTestCreateEntity, EpicSvtTestEntity } from '../../../svt-tests'
+import { EpicSvtTestCreateEntity, EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../../../svt-tests'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -14,6 +14,10 @@ export namespace SvtDbAgentKafkaSvtTests {
         GetAllSvtTestsReply = 'GetAllSvtTestsReply',
         CreateSvtTest = 'CreateSvtTest',
         CreateSvtTestReply = 'CreateSvtTestReply',
+        UpdateSvtTestStart = 'UpdateSvtTestStart',
+        UpdateSvtTestStartReply = 'UpdateSvtTestStartReply',
+        UpdateSvtTestFinish = 'UpdateSvtTestFinish',
+        UpdateSvtTestFinishReply = 'UpdateSvtTestFinishReply',
     }
 
     // GET ALL
@@ -28,8 +32,8 @@ export namespace SvtDbAgentKafkaSvtTests {
         dutEntityNames?: string[]
         /** DUT ids are unique per DUT entity only, so it is meant to be combined with `dutEntityNames`. */
         dutId?: number
-        /** Enum values of `EpicSvtTestResultStatus`. */
-        testResultStatuses?: string[]
+        /** Stored result statuses; `null` in the list selects the tests without a result yet. */
+        testResultStatuses?: (EpicSvtTestResultStatus | null)[]
         testTypeConfigIds?: number[]
         testSetupConfigIds?: number[]
         /** Lower bound of the `createdAt` filter range, inclusive. */
@@ -87,17 +91,62 @@ export namespace SvtDbAgentKafkaSvtTests {
 
     }
 
+    // UPDATE START (sent by the test agent when a test starts running)
+
+    export type UpdateSvtTestStartMessageData = {
+        id: number
+        update: EpicSvtTestStartUpdate
+    }
+
+    export class UpdateSvtTestStartMessage extends EpicKafkaMessageClass<UpdateSvtTestStartMessageData> {
+
+        readonly type = MessageType.UpdateSvtTestStart
+
+    }
+
+    export type UpdateSvtTestStartReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestEntity>
+
+    export class UpdateSvtTestStartReplyMessage extends EpicKafkaReplyMessageClass<UpdateSvtTestStartReplyMessageData> {
+
+        readonly type = MessageType.UpdateSvtTestStartReply
+
+    }
+
+    // UPDATE FINISH (sent by the test agent when a test has run)
+
+    export type UpdateSvtTestFinishMessageData = {
+        id: number
+        update: EpicSvtTestFinishUpdate
+    }
+
+    export class UpdateSvtTestFinishMessage extends EpicKafkaMessageClass<UpdateSvtTestFinishMessageData> {
+
+        readonly type = MessageType.UpdateSvtTestFinish
+
+    }
+
+    export type UpdateSvtTestFinishReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestEntity>
+
+    export class UpdateSvtTestFinishReplyMessage extends EpicKafkaReplyMessageClass<UpdateSvtTestFinishReplyMessageData> {
+
+        readonly type = MessageType.UpdateSvtTestFinishReply
+
+    }
+
     export type RequestMessage =
         | GetAllSvtTestsMessage
         | CreateSvtTestMessage
+        | UpdateSvtTestStartMessage
+        | UpdateSvtTestFinishMessage
 
     export type ReplyMessage =
         | GetAllSvtTestsReplyMessage
         | CreateSvtTestReplyMessage
+        | UpdateSvtTestStartReplyMessage
+        | UpdateSvtTestFinishReplyMessage
 
     export type Message =
         | RequestMessage
         | ReplyMessage
 
 }
-

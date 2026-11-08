@@ -15,7 +15,8 @@ export type SvtDbSvtTestsFilter = {
     dutEntityNames?: string[]
     /** Meant to be combined with `dutEntityNames`: DUT ids are unique per DUT entity only. */
     dutId?: number
-    testResultStatuses?: string[]
+    /** Stored result statuses; `null` selects the tests without a result yet. */
+    testResultStatuses?: (string | null)[]
     testTypeConfigIds?: number[]
     testSetupConfigIds?: number[]
     /** Range bounds: `From` inclusive, `To` exclusive. A test whose timestamp is NULL never matches a bound. */
@@ -76,7 +77,14 @@ export class SvtDbSvtTestsRepository {
             where.id = { $in: ids }
         }
         if (filter.testResultStatuses?.length) {
-            where.testResultStatus = { $in: filter.testResultStatuses }
+            const values = filter.testResultStatuses.filter((status): status is string => status !== null)
+            const withoutResult = filter.testResultStatuses.includes(null)
+            if (withoutResult && values.length > 0) {
+                where.$or = [{ testResultStatus: { $in: values } }, { testResultStatus: null }]
+            }
+            else {
+                where.testResultStatus = withoutResult ? null : { $in: values }
+            }
         }
         if (filter.testTypeConfigIds?.length) {
             where.testTypeConfig = { $in: filter.testTypeConfigIds }

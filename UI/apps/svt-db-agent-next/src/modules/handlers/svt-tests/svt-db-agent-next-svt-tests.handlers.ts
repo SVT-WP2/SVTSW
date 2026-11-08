@@ -1,5 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { EpicSvtTestCreateDto, EpicSvtTestEntity, SvtDbAgentKafka, SvtDbAgentKafkaSvtTests } from 'epic/entities'
+import {
+    EpicSvtTestCreateDto,
+    EpicSvtTestEntity,
+    EpicSvtTestFinishUpdateDto,
+    EpicSvtTestStartUpdateDto,
+    SvtDbAgentKafkaSvtTests,
+} from 'epic/entities'
+import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
 import {
     SvtDbAsicsRepository,
     SvtDbChipBlocksRepository,
@@ -18,6 +25,7 @@ import {
     optionalPager,
     optionalRecord,
     optionalStringList,
+    optionalStringOrNullList,
     requireAllowedFilterKeys,
     requireInteger,
     requireRecord,
@@ -28,18 +36,9 @@ import {
     validateRequestData,
 } from '../../dispatch'
 
-import { SvtDbAgentNextSvtTestFinishDto, SvtDbAgentNextSvtTestStartDto } from './svt-db-agent-next-svt-tests.dtos'
-
 
 import MessageType = SvtDbAgentKafkaSvtTests.MessageType
 
-
-/**
- * The two messages TestAgent sends when a test runs (`svt.db-agent.kafka.yaml`); `epic/entities` has no class
- * for them yet, so their names live here.
- */
-export const SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_START = 'UpdateSvtTestStart'
-export const SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_FINISH = 'UpdateSvtTestFinish'
 
 const FILTER_KEYS = [
     'ids', 'dutEntityNames', 'dutId', 'testResultStatuses', 'testTypeConfigIds', 'testSetupConfigIds',
@@ -50,7 +49,8 @@ const FILTER_KEYS = [
  * `GetAllSvtTests`, `CreateSvtTest`, `UpdateSvtTestStart`, `UpdateSvtTestFinish`
  * (`DbAgent/docs/05-request-handlers.md` §15). Every contract filter works (Q-H12: the C++ had `ids` only);
  * timestamps travel as ISO 8601 UTC (R-6); the test's device must exist; the state machine is not enforced
- * (TestAgent drives it), out-of-order transitions are logged.
+ * (TestAgent drives it), out-of-order transitions are logged. `testResultStatus` is the contract enum, which
+ * mirrors the database enum; `null` means no result yet.
  */
 @Injectable()
 @SvtDbAgentNextHandlers()
@@ -74,19 +74,19 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
             { type: MessageType.GetAllSvtTests, replyType: MessageType.GetAllSvtTestsReply, handle: (data) => this.getAll(data) },
             { type: MessageType.CreateSvtTest, replyType: MessageType.CreateSvtTestReply, handle: (data) => this.create(data) },
             {
-                type: SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_START,
-                replyType: `${SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_START}Reply`,
+                type: MessageType.UpdateSvtTestStart,
+                replyType: MessageType.UpdateSvtTestStartReply,
                 handle: (data) => this.updateStart(data),
             },
             {
-                type: SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_FINISH,
-                replyType: `${SVT_DB_AGENT_NEXT_UPDATE_SVT_TEST_FINISH}Reply`,
+                type: MessageType.UpdateSvtTestFinish,
+                replyType: MessageType.UpdateSvtTestFinishReply,
                 handle: (data) => this.updateFinish(data),
             },
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafkaSvtTests.GetAllSvtTestsReplyMessageData> {
         const body = optionalRecord(data, 'data')
         const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, FILTER_KEYS)
@@ -96,7 +96,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
             ids: optionalIntegerList(filter['ids'], 'data.filter.ids'),
             dutEntityNames: optionalStringList(filter['dutEntityNames'], 'data.filter.dutEntityNames'),
             dutId: optionalInteger(filter['dutId'], 'data.filter.dutId'),
-            testResultStatuses: optionalStringList(filter['testResultStatuses'], 'data.filter.testResultStatuses'),
+            testResultStatuses: optionalStringOrNullList(filter['testResultStatuses'], 'data.filter.testResultStatuses'),
             testTypeConfigIds: optionalIntegerList(filter['testTypeConfigIds'], 'data.filter.testTypeConfigIds'),
             testSetupConfigIds: optionalIntegerList(filter['testSetupConfigIds'], 'data.filter.testSetupConfigIds'),
             createdAtFrom: optionalDateTime(filter['createdAtFrom'], 'data.filter.createdAtFrom'),
@@ -130,10 +130,10 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
     }
 
     /** `data.id` + `data.update.startedAt`. */
-    private async updateStart(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestEntity>> {
+    private async updateStart(data: unknown): Promise<SvtDbAgentKafkaSvtTests.UpdateSvtTestStartReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(SvtDbAgentNextSvtTestStartDto, body['update'], 'data.update')
+        const update = validateRequestData(EpicSvtTestStartUpdateDto, body['update'], 'data.update')
 
         const current = await this.requireTest(id)
         if (current.test.startedAt) {
@@ -144,10 +144,11 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
     }
 
     /** `data.id` + `data.update.{ finishedAt, pathToResult, testResultStatus }`. */
-    private async updateFinish(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestEntity>> {
+    private async updateFinish(data: unknown): Promise<SvtDbAgentKafkaSvtTests.UpdateSvtTestFinishReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(SvtDbAgentNextSvtTestFinishDto, body['update'], 'data.update')
+        const update = validateRequestData(EpicSvtTestFinishUpdateDto, body['update'], 'data.update')
+        // the contract enum mirrors the database enum; the live catalog catches the two drifting apart
         const statuses = await this.enums.getValues('testResultStatus')
         if (!statuses.includes(update.testResultStatus)) {
             throw SvtDbAgentNextRequestError.badRequest(`${update.testResultStatus} is not a value of the testResultStatus enum`)
@@ -197,7 +198,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
 function toWire({ test, dutEntityName, dutId }: SvtDbSvtTestWithDut): EpicSvtTestEntity {
     return {
         id: test.id,
-        dutEntityName,
+        dutEntityName: dutEntityName as EpicSvtDutEntityName,
         dutId,
         testTypeConfigId: test.testTypeConfig.id,
         testSetupConfigId: test.testSetupConfig.id,
@@ -205,8 +206,8 @@ function toWire({ test, dutEntityName, dutId }: SvtDbSvtTestWithDut): EpicSvtTes
         startedAt: toIso(test.startedAt),
         finishedAt: toIso(test.finishedAt),
         pathToResult: test.pathToResult,
-        testResultStatus: test.testResultStatus,
-    } as EpicSvtTestEntity
+        testResultStatus: test.testResultStatus as EpicSvtTestResultStatus | null,
+    }
 }
 
 function toIso(date: Date | null): string | null {

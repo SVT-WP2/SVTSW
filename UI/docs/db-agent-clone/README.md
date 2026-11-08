@@ -73,8 +73,9 @@ other release.
    prod to be migrated before or as part of the swap?
 2. Every row marked **ask** in [01-behaviour-decisions.md](01-behaviour-decisions.md): they change
    a consumer-visible result and need the UI, WPAgent or TestAgent owners to agree.
-3. Whether the Module feature is in scope for the first release (it has a contract but no working
-   implementation and no serial-number rule).
+3. ~~Whether the Module feature is in scope for the first release~~ — decided 2026-11-08: **out of
+   scope**. The UI has no module concept, the C++ handler was never reachable, and no serial-number rule
+   exists; the `Module*` tables stay unmapped.
 4. ~~Where the code lives and how it is versioned~~ — decided 2026-11-08, see
    [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning):
    `apps/svt-db-agent-next` in the UI workspace, own image, version and pipelines, deployed to dev.

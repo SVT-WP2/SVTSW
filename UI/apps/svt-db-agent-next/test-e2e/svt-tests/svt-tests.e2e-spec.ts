@@ -9,7 +9,7 @@ import {
     SvtDbAgentKafkaWafers,
     SvtDbAgentKafkaWaferTypes,
 } from 'epic/entities'
-import { EpicSvtTestCreateRequest } from 'epic-api-types'
+import { EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
 
 import { SVT_TEST_SETUP_CREATE, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 
@@ -32,8 +32,12 @@ const SMALL_MAP = JSON.stringify({
 
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
-const CREATE: EpicSvtTestCreateRequest = { dutEntityName: 'Asic', dutId: 1, testTypeConfigId: 1, testSetupConfigId: 1 }
-const CHIP_TEST_CREATE: EpicSvtTestCreateRequest = { dutEntityName: 'Chip', dutId: 1, testTypeConfigId: 2, testSetupConfigId: 1 }
+const CREATE: EpicSvtTestCreateRequest = {
+    dutEntityName: EpicSvtDutEntityName.Asic, dutId: 1, testTypeConfigId: 1, testSetupConfigId: 1,
+}
+const CHIP_TEST_CREATE: EpicSvtTestCreateRequest = {
+    dutEntityName: EpicSvtDutEntityName.Chip, dutId: 1, testTypeConfigId: 2, testSetupConfigId: 1,
+}
 
 /** A freshly created test: nothing started, nothing finished, no result. */
 const FRESH = { startedAt: null, finishedAt: null, pathToResult: null, testResultStatus: null }
@@ -143,7 +147,12 @@ describe('SVT tests (e2e)', () => {
             expect(await ids({ filter: { testTypeConfigIds: [2] } })).toEqual([2])
             expect(await ids({ filter: { testSetupConfigIds: [1] } })).toEqual([3, 2, 1])
             expect(await ids({ filter: { testSetupConfigIds: [999] } })).toEqual([])
-            expect(await ids({ filter: { testResultStatuses: ['SUCCESS', 'FAILURE'] } })).toEqual([3])
+            expect(await ids({ filter: { testResultStatuses: [EpicSvtTestResultStatus.Success, EpicSvtTestResultStatus.Failure] } }))
+                .toEqual([3])
+            expect(await ids({ filter: { testResultStatuses: [null] } })).toEqual([2, 1])
+            expect(await ids({ filter: { testResultStatuses: [null, EpicSvtTestResultStatus.Success] } }))
+                .toEqual([3, 2, 1])
+            expect(await ids({ filter: { testResultStatuses: [EpicSvtTestResultStatus.Error] } })).toEqual([])
             expect(await ids({ filter: { ids: [], dutEntityNames: [], testResultStatuses: [] } })).toEqual([3, 2, 1])
         })
 
@@ -203,7 +212,7 @@ describe('SVT tests (e2e)', () => {
             )
 
             const chip = await createTest(CHIP_TEST_CREATE)
-            const block = await createTest({ ...CREATE, dutEntityName: 'ChipBlock', dutId: 1 })
+            const block = await createTest({ ...CREATE, dutEntityName: EpicSvtDutEntityName.ChipBlock, dutId: 1 })
 
             expect(chip).toMatchObject({ dutEntityName: 'Chip', dutId: 1 })
             expect(block).toMatchObject({ dutEntityName: 'ChipBlock', dutId: 1 })
@@ -272,7 +281,11 @@ describe('SVT tests (e2e)', () => {
 
     describe('UpdateSvtTestFinish', () => {
 
-        const finish = { finishedAt: '2026-03-01T11:00:00.500Z', pathToResult: '/results/test-1', testResultStatus: 'PARTIAL_SUCCESS' }
+        const finish = {
+            finishedAt: '2026-03-01T11:00:00.500Z',
+            pathToResult: '/results/test-1',
+            testResultStatus: EpicSvtTestResultStatus.PartialSuccess,
+        }
 
         it('records the finish time, the result path and the result status', async () => {
             await createTest(CREATE)
@@ -288,10 +301,10 @@ describe('SVT tests (e2e)', () => {
             expect(await ids({ filter: { testResultStatuses: ['PARTIAL_SUCCESS'] } })).toEqual([1])
         })
 
-        it('rejects a status outside the database enum (the UI vocabulary differs), a missing field and an unknown test', async () => {
+        it('rejects a status outside the contract enum, a missing field and an unknown test', async () => {
             await createTest(CREATE)
             const cases: [Record<string, unknown>, string, string][] = [
-                [{ id: 1, update: { ...finish, testResultStatus: 'Completed' } }, 'BadRequest', 'Completed is not a value of the'],
+                [{ id: 1, update: { ...finish, testResultStatus: 'Completed' } }, 'BadRequest', 'testResultStatus'],
                 [{ id: 1, update: { finishedAt: finish.finishedAt, testResultStatus: 'SUCCESS' } }, 'BadRequest', 'pathToResult'],
                 [{ id: 1, update: { ...finish, finishedAt: 'later' } }, 'BadRequest', 'finishedAt'],
                 [{ id: 999, update: finish }, 'NotFound', 'Test 999 not found'],

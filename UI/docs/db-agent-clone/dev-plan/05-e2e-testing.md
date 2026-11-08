@@ -76,7 +76,8 @@ The Kafka controller of phase 4 becomes one method:
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
 generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
 projects (done) → equipment types + equipment (done) → SVT test setups/configs, test types/configs,
-templates (done) → SVT tests (done) → modules (read only).
+templates (done) → SVT tests (done). Modules are **out of scope** (decided 2026-11-08: the UI has no such
+concept and the C++ handler was never reachable); their tables stay unmapped.
 
 ## 4. Findings from the first slice
 
@@ -247,19 +248,20 @@ templates (done) → SVT tests (done) → modules (read only).
   Columns are `timestamp without time zone`, read and written as UTC (`forceUtcTimezone`); a client's
   `2026-03-01T10:15:30Z` is stored as `2026-03-01 10:15:30` and comes back as `2026-03-01T10:15:30.000Z`.
   Sub-millisecond precision is lost (JavaScript `Date`).
-- `UpdateSvtTestStart` and `UpdateSvtTestFinish` are in the yaml but have **no TypeScript message class**
-  (`SvtDbAgentKafkaSvtTests` lists two messages); nothing in this repository sends them yet (TestAgent and
-  SVTSupervisor have no reference). The agent handles them under their yaml names with app-local DTOs
-  (`data.id` + `data.update`), validates `testResultStatus` against the **database enum**, and only logs
-  out-of-order transitions (decision: TestAgent drives the state machine).
-- **Result-status vocabularies disagree.** The database enum (`SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`,
-  `ERROR`, created by migration 1 as on dev; the ITS3TestAgent logs use the same words) and the TypeScript
-  `EpicSvtTestResultStatus` (`None`, `Completed`, `Failed`, `Cancelled`, which the BFF maps onto the UI's
-  status) share no value. Both dev rows are NULL, so nothing has ever stored a status. The agent stores and
-  returns the database values and answers `BadRequest` to `Completed`; a fresh test has `testResultStatus:
-  null` (there is no `None` in the enum), which the BFF's `resolveEpicSvtTestStatus` does not map. **To be
-  settled by the contract author**: either the enum gains the UI's values (migration) or the contract and
-  BFF adopt the database's.
+- `UpdateSvtTestStart` and `UpdateSvtTestFinish` now have message classes and DTOs in `epic/entities`
+  (`SvtDbAgentKafkaSvtTests`, `EpicSvtTestStartUpdateDto`, `EpicSvtTestFinishUpdateDto`); nothing in this
+  repository sends them yet (TestAgent and SVTSupervisor have no reference). The agent validates
+  `testResultStatus` with the contract enum and, as a drift check, against the live database enum, and only
+  logs out-of-order transitions (decision: TestAgent drives the state machine).
+- **Result status: one vocabulary, decided 2026-11-08.** `EpicSvtTestResultStatus` now mirrors the
+  PostgreSQL enum `testResultStatus` (`SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR`, created by
+  migration 1 as on dev; the test agents' run logs use the same words); its earlier values (`None`,
+  `Completed`, `Failed`, `Cancelled`) never existed in any database. A test without a result has
+  `testResultStatus: null` (so do `startedAt`, `finishedAt` and `pathToResult` until reached), and `null` in
+  the `testResultStatuses` filter selects those tests. The BFF derives the UI status from it (`SUCCESS`,
+  `PARTIAL_SUCCESS` → Completed; `FAILURE`, `ERROR` → Failed; `null` → Pending; nothing stored resolves to
+  Running or Cancelled yet). The yaml declares the `SvtTestResultStatus` enum component and references it
+  from the test DTO, the finish-update DTO and the list filter.
 - `CreateSvtTest` checks that the device exists in the table its `dutEntityName` names (ASIC, chip or
   chip block; no foreign key can) and that both configs exist, then writes the test and its two link rows in
   one transaction; `createdAt` comes back from the database default.
