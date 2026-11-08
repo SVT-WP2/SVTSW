@@ -75,8 +75,8 @@ The Kafka controller of phase 4 becomes one method:
 
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
 generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
-projects (done) → equipment types + equipment → SVT test setups/configs, test types/configs, templates →
-SVT tests → modules (read only).
+projects (done) → equipment types + equipment (done) → SVT test setups/configs, test types/configs,
+templates → SVT tests → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -178,3 +178,19 @@ SVT tests → modules (read only).
   `BadRequest`, the C++ silently stored `NULL`); it is stored in the `json` column and re-serialised in
   replies, so the text may differ in whitespace from what was sent. Machine, wafer type and both enum
   values are checked before the insert.
+
+## 9. Findings from the equipment slice (equipment types, equipment)
+
+- Entities `EquipmentType`, `Equipment` and `EquipmentLocation` in `libs/svt-db/data/src/equipment/`; the
+  schema diff stays empty. The location pattern of wafers and chips is reused unchanged (`Location at
+  creation` row on create, `appendLocation`, history ordered by `id`).
+- `CreateEquipment` is validated with an app-local DTO (`SvtDbAgentNextEquipmentCreateDto`): the Kafka
+  yaml's `EquipmentCreateDto` marks `specification` nullable and the C++ accepted `null`, while the
+  `epic/entities` DTO requires a string. A string must hold valid JSON (R-7: an object is a `BadRequest`,
+  the C++ silently stored `NULL`); `null` is stored as `NULL` and comes back as `null`. The equipment type
+  must exist and the location must be an enum value, both checked before the insert.
+- `GetAllEquipment` and `GetAllEquipmentTypes` take `filter.ids` only (no pager in the contract) and
+  answer `{ items, totalCount }`; `specification` is re-serialised from the `json` column.
+- `UpdateEquipment` exists in the C++ code only (not in the contract, decisions §1 "ask"): not
+  implemented until the contract has it. `GetEquipmentListForTestSetup` belongs to the test-setup slice
+  (its data is `SvtTestSetupEquipList`, R-1 still open).

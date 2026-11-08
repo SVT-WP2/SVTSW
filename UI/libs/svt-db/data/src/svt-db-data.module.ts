@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common'
 import { SvtDbAsicsRepository } from './asics'
 import { SvtDbChipBlocksRepository, SvtDbChipsRepository } from './chips'
 import { SvtDbEnumsService } from './enums'
+import { SvtDbEquipmentRepository, SvtDbEquipmentTypesRepository } from './equipment'
 import { SvtDbWaferTypesRepository } from './wafer-types'
 import { SvtDbWafersRepository } from './wafers'
 import { SvtDbWpMachinesRepository, SvtDbWpProbeCardsRepository, SvtDbWpProjectsRepository } from './wp'
@@ -18,6 +19,8 @@ const PROVIDERS = [
     SvtDbWpMachinesRepository,
     SvtDbWpProbeCardsRepository,
     SvtDbWpProjectsRepository,
+    SvtDbEquipmentTypesRepository,
+    SvtDbEquipmentRepository,
 ]
 
 /**

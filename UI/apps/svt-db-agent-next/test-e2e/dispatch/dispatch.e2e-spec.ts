@@ -35,6 +35,12 @@ describe('Request dispatch (e2e)', () => {
             'GetAllProbeCards',
             'GetAllWaferProbeProjects',
             'CreateWaferProbeProject',
+            'GetAllEquipmentTypes',
+            'CreateEquipmentType',
+            'GetAllEquipment',
+            'CreateEquipment',
+            'UpdateEquipmentLocation',
+            'GetEquipmentLocationHistory',
         ]))
     })
 

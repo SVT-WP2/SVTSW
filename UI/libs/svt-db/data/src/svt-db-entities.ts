@@ -5,6 +5,7 @@ import {
     SvtDbChipEntity,
     SvtDbChipLocationEntity,
 } from './chips'
+import { SvtDbEquipmentEntity, SvtDbEquipmentLocationEntity, SvtDbEquipmentTypeEntity } from './equipment'
 import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
 import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
 import {
@@ -38,4 +39,7 @@ export const SVT_DB_ENTITIES = [
     SvtDbWpWaferLoadedInMachineEntity,
     SvtDbWpProbeCardInstalledInMachineEntity,
     SvtDbWpProjectEntity,
+    SvtDbEquipmentTypeEntity,
+    SvtDbEquipmentEntity,
+    SvtDbEquipmentLocationEntity,
 ]
