@@ -4,6 +4,8 @@ import { SVT_DB_ENTITIES } from 'svt-db/data'
 import { SvtDbOrmModule } from 'svt-db/orm'
 
 import { getSvtDbAgentNextConfigFactory, SvtDbAgentNextConfig, validateSvtDbAgentNextEnv } from '../config'
+import { SvtDbAgentNextDispatchModule } from '../modules/dispatch'
+import { SvtDbAgentNextHandlersModule } from '../modules/handlers'
 import { SvtDbAgentNextHealthModule } from '../modules/health'
 
 
@@ -22,6 +24,8 @@ import { SvtDbAgentNextHealthModule } from '../modules/health'
             inject: [ConfigService],
             entities: SVT_DB_ENTITIES,
         }),
+        SvtDbAgentNextDispatchModule,
+        SvtDbAgentNextHandlersModule,
         SvtDbAgentNextHealthModule,
     ],
     controllers: [],

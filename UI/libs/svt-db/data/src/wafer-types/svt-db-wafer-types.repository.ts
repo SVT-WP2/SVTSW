@@ -1,29 +1,47 @@
-import { InjectRepository } from '@mikro-orm/nestjs'
-import { EntityRepository } from '@mikro-orm/postgresql'
+import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbWaferTypeMapEntity } from './svt-db-wafer-type-map.entity'
 import { SvtDbWaferTypeEntity } from './svt-db-wafer-type.entity'
 
 
+export type SvtDbWaferTypesFilter = {
+    ids?: number[]
+}
+
+export type SvtDbWaferTypeCreateInput = Pick<SvtDbWaferTypeEntity, 'name' | 'engineeringRun' | 'foundry' | 'technology'>
+
 /**
- * Pilot repository: list and get wafer types with their map. Phase 3 defines the common repository
- * shape (pagination, filters) and extends this one; keep it minimal until then.
- * Register with `SvtDbOrmModule.forFeature([SvtDbWaferTypeEntity])` in the module that provides it.
+ * Wafer types and their maps. Runs on the request context the dispatcher opens per message; writes are
+ * transactional and the id comes back with `RETURNING`.
  */
 @Injectable()
 export class SvtDbWaferTypesRepository {
 
-    constructor(
-        @InjectRepository(SvtDbWaferTypeEntity) private readonly waferTypes: EntityRepository<SvtDbWaferTypeEntity>,
-    ) {
+    constructor(private readonly em: EntityManager) {
     }
 
-    findAll(): Promise<SvtDbWaferTypeEntity[]> {
-        return this.waferTypes.findAll({ populate: ['map'], orderBy: { id: 'asc' } })
+    findAll(filter: SvtDbWaferTypesFilter = {}): Promise<SvtDbWaferTypeEntity[]> {
+        const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
+        return this.em.find(SvtDbWaferTypeEntity, where, { orderBy: { id: 'asc' } })
     }
 
     findById(id: number): Promise<SvtDbWaferTypeEntity | null> {
-        return this.waferTypes.findOne({ id }, { populate: ['map'] })
+        return this.em.findOne(SvtDbWaferTypeEntity, { id })
+    }
+
+    findMap(waferTypeId: number): Promise<SvtDbWaferTypeMapEntity | null> {
+        return this.em.findOne(SvtDbWaferTypeMapEntity, { waferType: waferTypeId })
+    }
+
+    /** Inserts the wafer type and its map in one transaction. */
+    create(input: SvtDbWaferTypeCreateInput, waferMap: unknown): Promise<SvtDbWaferTypeEntity> {
+        return this.em.transactional(async (em) => {
+            const waferType = em.create(SvtDbWaferTypeEntity, input)
+            em.create(SvtDbWaferTypeMapEntity, { waferType, waferMap })
+            await em.flush()
+            return waferType
+        })
     }
 
 }

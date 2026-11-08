@@ -2,8 +2,8 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "outDir": "../../dist/out-tsc",
-        "module": "nodenext",
-        "moduleResolution": "nodenext",
+        "module": "esnext",
+        "moduleResolution": "bundler",
         "skipLibCheck": true,
         "types": [
             "vitest/globals",
@@ -13,6 +13,8 @@
     "include": [
         "src/**/*.test.ts",
         "src/**/*.spec.ts",
-        "src/**/*.d.ts"
+        "src/**/*.d.ts",
+        "test-e2e/**/*.ts",
+        "vitest.e2e.config.ts"
     ]
 }

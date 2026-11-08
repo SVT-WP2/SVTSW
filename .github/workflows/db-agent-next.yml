@@ -64,9 +64,12 @@ defaults:
     working-directory: UI
 
 jobs:
-  # Lint, test and build the app natively (fast, npm-cached). Runs on PRs and on
-  # normal master pushes; skipped on release commits and on tags (the release
-  # image builds straight from the tag in docker-registry-create--release).
+  # Lint, unit-test, build and e2e-test the app natively (fast, npm-cached).
+  # Runs on PRs and on normal master pushes; skipped on release commits and on
+  # tags (the release image builds straight from the tag in
+  # docker-registry-create--release). The e2e suite needs a PostgreSQL service:
+  # apps/svt-db-agent-next/.env.test points at localhost:5500 /
+  # svt_sw_db_e2e_test with postgres/postgres, which the service below provides.
   ci:
     if: >-
       github.event_name == 'pull_request'
@@ -74,6 +77,19 @@ jobs:
           && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
           && !startsWith(github.event.head_commit.message, 'svt-ui@'))
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: svt_sw_db_e2e_test
+        ports:
+          - 5500:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -82,11 +98,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: UI/package-lock.json
       - run: npm ci --prefer-offline
-      # Scoped to the agent and the libs it owns; the shared libs are linted by
-      # ui.yml. libs/svt-db/** appears in phase 2, hence --no-error-on-unmatched-pattern.
+      # Scoped to the agent and the libs it owns; the shared libs are linted by ui.yml.
       - run: npx eslint "apps/svt-db-agent-next/**/*.ts" "libs/svt-db/**/*.ts" --no-error-on-unmatched-pattern --quiet
       - run: npx vitest run apps/svt-db-agent-next libs/svt-db
       - run: rm -rf .nx && npx nx build svt-db-agent-next
+      # Real database: migrations are applied by the harness, every table is truncated per test.
+      - run: npx nx test-e2e svt-db-agent-next
 
   # Pull requests only: build the image the way master will, without pushing,
   # so a broken Dockerfile is caught before merge. Shares the build cache with

@@ -44,6 +44,10 @@ npm run start::db-agent-next   # real DB agent (in development), http://localhos
 ```
 
 ```bash
+npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 with database svt_sw_db_e2e_test
+```
+
+```bash
 docker compose up -d zookeeper kafka kafka-ui   # Kafka broker on 9095 + UI on 8088
 ```
 

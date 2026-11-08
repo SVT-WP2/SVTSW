@@ -1,4 +1,4 @@
-import { DeferMode } from '@mikro-orm/core'
+import { DeferMode, PrimaryKeyProp } from '@mikro-orm/core'
 import { Entity, OneToOne, Property } from '@mikro-orm/decorators/legacy'
 
 import { SvtDbWaferTypeEntity } from './svt-db-wafer-type.entity'
@@ -23,6 +23,8 @@ export class SvtDbWaferTypeMapEntity {
 
     /** Parsed JSON (`json`, not `jsonb`, as in the database); it is a string on the Kafka wire. */
     @Property({ type: 'json', columnType: 'json' })
-    waferMap!: unknown
+    waferMap!: unknown;
+
+    [PrimaryKeyProp]?: 'waferType'
 
 }
