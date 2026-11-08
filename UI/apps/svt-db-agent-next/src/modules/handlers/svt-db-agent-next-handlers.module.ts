@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SvtDbDataModule } from 'svt-db/data'
 
+import { SvtDbAgentNextAsicsHandlers } from './asics'
 import { SvtDbAgentNextEnumsHandlers } from './enums'
 import { SvtDbAgentNextWaferTypesHandlers } from './wafer-types'
 import { SvtDbAgentNextWafersHandlers } from './wafers'
@@ -16,6 +17,7 @@ import { SvtDbAgentNextWafersHandlers } from './wafers'
         SvtDbAgentNextEnumsHandlers,
         SvtDbAgentNextWaferTypesHandlers,
         SvtDbAgentNextWafersHandlers,
+        SvtDbAgentNextAsicsHandlers,
     ],
 })
 export class SvtDbAgentNextHandlersModule {

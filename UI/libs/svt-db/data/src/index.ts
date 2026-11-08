@@ -1,4 +1,5 @@
 export * from './asics'
+export * from './chips'
 export * from './common'
 export * from './enums'
 export * from './svt-db-data.module'

@@ -21,6 +21,7 @@ import {
     optionalIntegerList,
     optionalPager,
     optionalRecord,
+    requireAllowedFilterKeys,
     requireInteger,
     requireRecord,
     SvtDbAgentNextHandlerDefinition,
@@ -75,6 +76,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferEntity>> {
         const body = optionalRecord(data, 'data')
         const filter = optionalRecord(body['filter'], 'data.filter')
+        requireAllowedFilterKeys(filter, ['ids'])
         const ids = optionalIntegerList(filter['ids'], 'data.filter.ids')
         const pager = optionalPager(body['pager'], 'data.pager')
         const page = await this.wafers.findPage({ ids }, pager)

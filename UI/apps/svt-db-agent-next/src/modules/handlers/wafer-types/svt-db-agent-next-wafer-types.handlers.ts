@@ -11,6 +11,7 @@ import { SvtDbEnumsService, SvtDbWaferTypeEntity, SvtDbWaferTypesRepository, val
 import {
     optionalIntegerList,
     optionalRecord,
+    requireAllowedFilterKeys,
     requireInteger,
     requireRecord,
     SvtDbAgentNextHandlerDefinition,
@@ -48,6 +49,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
     /** `data.filter.ids` is the only filter the C++ declares; absent means all. */
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferTypeEntity>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        requireAllowedFilterKeys(filter, ['ids'])
         const ids = optionalIntegerList(filter['ids'], 'data.filter.ids')
         const items = await this.waferTypes.findAll({ ids })
         return { items: items.map(toWire), totalCount: items.length }

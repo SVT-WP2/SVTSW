@@ -28,6 +28,32 @@ export function requireInteger(value: unknown, path: string): number {
     return value
 }
 
+export function optionalInteger(value: unknown, path: string): number | undefined {
+    return value === undefined || value === null ? undefined : requireInteger(value, path)
+}
+
+export function optionalString(value: unknown, path: string): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+    if (typeof value !== 'string') {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string`)
+    }
+    return value
+}
+
+/**
+ * A `filter` object may only carry the keys the contract declares for that list; the message text is the
+ * C++ agent's (`04-request-engine.md` §8), kept for parity.
+ */
+export function requireAllowedFilterKeys(filter: Record<string, unknown>, allowed: readonly string[]): void {
+    for (const key of Object.keys(filter)) {
+        if (!allowed.includes(key)) {
+            throw SvtDbAgentNextRequestError.badRequest(`Error: ${key} is not an allowed filter.`)
+        }
+    }
+}
+
 export function optionalIntegerList(value: unknown, path: string): number[] | undefined {
     if (value === undefined || value === null) {
         return undefined

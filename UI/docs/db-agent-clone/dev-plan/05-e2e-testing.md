@@ -74,7 +74,7 @@ The Kafka controller of phase 4 becomes one method:
 5. Pure domain logic (wafer-map validation, ASIC generation) also gets a unit spec next to it.
 
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
-generation (done; the `Asic` entity exists, its messages come next) → ASICs → chips + chip blocks →
+generation (done) → ASICs (done; a minimal `Chip` entity exists for `chipId`) → chips + chip blocks →
 wafer-probe machines, probe cards, projects → equipment types + equipment → SVT test setups/configs,
 test types/configs, templates → SVT tests → modules (read only).
 
@@ -104,3 +104,16 @@ test types/configs, templates → SVT tests → modules (read only).
   contract's record DTO has no validators on `note` and `username`, which the whitelist would reject.
 - Lists take `data.pager` (`optionalPager`, defaults `limit 20`, `offset 0` when present) and answer
   `{ items, totalCount }` counted database-side; location histories carry `totalCount` too.
+
+## 6. Findings from the ASICs slice
+
+- `GetAllAsics` implements every contract filter: `ids`, `waferId`, `chipId` (Q-H4 fixed: the chip is
+  looked up and its ASIC id intersected with `ids`), `familyTypes`, `quality`, and `serialNumber` as a
+  **case-insensitive substring** (`ILIKE`, wildcards escaped), the way the contract describes it; the C++
+  only did equality.
+- `chipId` on every item comes from one extra query per page (`Chip` rows for the page's ASIC ids), not
+  from a join; `SvtDbChipEntity` exists for that and is extended by the chips slice.
+- Unknown `filter` keys are rejected with the C++ text `Error: <key> is not an allowed filter.`
+  (`requireAllowedFilterKeys`), now also on `GetAllWafers` and `GetAllWaferTypes`.
+- `CreateAsic` checks `asicFamilyType` and `asicQuality` against the live catalog and the wafer's
+  existence before inserting; the reply carries `chipId: null`.
