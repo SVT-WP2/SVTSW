@@ -111,6 +111,7 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
         EpicSvtTestResultStatus.Failure,
         EpicSvtTestResultStatus.PartialSuccess,
         EpicSvtTestResultStatus.Error,
+        EpicSvtTestResultStatus.Cancelled,
     ]
     const result: EpicSvtTest[] = []
     // the list is ordered newest first, so only the newest tests are still waiting to be run

@@ -120,6 +120,7 @@ export function generateSvtTests(totalCount: number, idStartsFrom = 1): EpicSvtT
         EpicSvtTestResultStatus.Failure,
         EpicSvtTestResultStatus.PartialSuccess,
         EpicSvtTestResultStatus.Error,
+        EpicSvtTestResultStatus.Cancelled,
     ]
     // fixed base timestamp — the generated list stays stable between restarts
     const baseTime = new Date('2026-01-01T00:00:00.000Z').getTime()

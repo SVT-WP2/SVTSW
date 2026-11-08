@@ -254,14 +254,16 @@ concept and the C++ handler was never reachable); their tables stay unmapped.
   `testResultStatus` with the contract enum and, as a drift check, against the live database enum, and only
   logs out-of-order transitions (decision: TestAgent drives the state machine).
 - **Result status: one vocabulary, decided 2026-11-08.** `EpicSvtTestResultStatus` now mirrors the
-  PostgreSQL enum `testResultStatus` (`SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR`, created by
-  migration 1 as on dev; the test agents' run logs use the same words); its earlier values (`None`,
-  `Completed`, `Failed`, `Cancelled`) never existed in any database. A test without a result has
+  PostgreSQL enum `testResultStatus`: `SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR` (created by
+  migration 1 as on dev; the test agents' run logs use the same words) plus `CANCELLED`, which
+  **migration 2** adds for the UI's Cancelled status. The enum's earlier values (`None`, `Completed`,
+  `Failed`, `Cancelled`) never existed in any database. A test without a result has
   `testResultStatus: null` (so do `startedAt`, `finishedAt` and `pathToResult` until reached), and `null` in
   the `testResultStatuses` filter selects those tests. The BFF derives the UI status from it (`SUCCESS`,
-  `PARTIAL_SUCCESS` → Completed; `FAILURE`, `ERROR` → Failed; `null` → Pending; nothing stored resolves to
-  Running or Cancelled yet). The yaml declares the `SvtTestResultStatus` enum component and references it
-  from the test DTO, the finish-update DTO and the list filter.
+  `PARTIAL_SUCCESS` → Completed; `FAILURE`, `ERROR` → Failed; `CANCELLED` → Cancelled; `null` → Pending;
+  nothing stored resolves to Running yet). The yaml declares the `SvtTestResultStatus` enum component and
+  references it from the test DTO, the finish-update DTO and the list filter. The enum snapshot
+  `svt-db-enum-values.ts` lists `CANCELLED` too, so the schema diff stays empty once migration 2 has run.
 - `CreateSvtTest` checks that the device exists in the table its `dutEntityName` names (ASIC, chip or
   chip block; no foreign key can) and that both configs exist, then writes the test and its two link rows in
   one transaction; `createdAt` comes back from the database default.

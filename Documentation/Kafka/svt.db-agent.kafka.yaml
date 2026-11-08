@@ -4507,6 +4507,7 @@ components:
         - PARTIAL_SUCCESS
         - FAILURE
         - ERROR
+        - CANCELLED
 
     # ENUM :: DTO
     SvtEnumName:

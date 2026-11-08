@@ -137,6 +137,11 @@ describe('SVT tests (e2e)', () => {
                 type: 'UpdateSvtTestFinish',
                 data: { id: 3, update: { finishedAt: '2026-03-01T12:00:00Z', pathToResult: '/results/3', testResultStatus: 'SUCCESS' } },
             })
+            const cancelled = await setup.send({
+                type: 'UpdateSvtTestFinish',
+                data: { id: 2, update: { finishedAt: '2026-03-01T12:00:00Z', pathToResult: '', testResultStatus: 'CANCELLED' } },
+            })
+            expect(cancelled.status, cancelled.error.message).toBe('Success')
 
             expect(await ids({ filter: { ids: [1, 3] } })).toEqual([3, 1])
             expect(await ids({ filter: { dutEntityNames: ['Asic'] } })).toEqual([3, 1])
@@ -149,9 +154,10 @@ describe('SVT tests (e2e)', () => {
             expect(await ids({ filter: { testSetupConfigIds: [999] } })).toEqual([])
             expect(await ids({ filter: { testResultStatuses: [EpicSvtTestResultStatus.Success, EpicSvtTestResultStatus.Failure] } }))
                 .toEqual([3])
-            expect(await ids({ filter: { testResultStatuses: [null] } })).toEqual([2, 1])
+            expect(await ids({ filter: { testResultStatuses: [EpicSvtTestResultStatus.Cancelled] } })).toEqual([2])
+            expect(await ids({ filter: { testResultStatuses: [null] } })).toEqual([1])
             expect(await ids({ filter: { testResultStatuses: [null, EpicSvtTestResultStatus.Success] } }))
-                .toEqual([3, 2, 1])
+                .toEqual([3, 1])
             expect(await ids({ filter: { testResultStatuses: [EpicSvtTestResultStatus.Error] } })).toEqual([])
             expect(await ids({ filter: { ids: [], dutEntityNames: [], testResultStatuses: [] } })).toEqual([3, 2, 1])
         })

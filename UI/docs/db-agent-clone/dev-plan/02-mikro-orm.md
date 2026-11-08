@@ -64,7 +64,8 @@ apps/svt-db-agent-next/
 └── src/
     ├── migrations/
     │   ├── Migration20261108000000_baseline_prod.ts
-    │   └── Migration20261108000001_dev_layout_and_surrogate_ids.ts
+    │   ├── Migration20261108000001_dev_layout_and_surrogate_ids.ts
+    │   └── Migration20261108000002_test_result_status_cancelled.ts   (CANCELLED joins the testResultStatus enum)
     └── modules/health/svt-db-agent-next-health.controller.ts   + MikroOrmHealthIndicator (@nestjs/terminus) → "database"
 ```
 

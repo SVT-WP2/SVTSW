@@ -125,6 +125,7 @@ export namespace EpicSvtTestsGrid {
             case EpicSvtTestResultStatus.Success:
                 return { color: DEFAULT_SYSTEM_COLORS.SUCCESS_400, bgColor: DEFAULT_SYSTEM_COLORS.SUCCESS_50 }
             case EpicSvtTestResultStatus.PartialSuccess:
+            case EpicSvtTestResultStatus.Cancelled:
                 return { color: DEFAULT_SYSTEM_COLORS.WARNING_400, bgColor: DEFAULT_SYSTEM_COLORS.WARNING_50 }
             case EpicSvtTestResultStatus.Failure:
             case EpicSvtTestResultStatus.Error:

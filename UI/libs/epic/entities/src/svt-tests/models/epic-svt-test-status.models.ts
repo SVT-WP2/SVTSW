@@ -7,8 +7,7 @@ import { EpicSvtTestResultStatus, EpicSvtTestStatus } from 'epic-api-types'
  *
  * - testResultStatus === null  => the test has no result yet, so it is Pending. Later, once a processing
  *   service reports the test is being executed, this is where null turns into Running.
- * - SUCCESS and PARTIAL_SUCCESS => Completed; FAILURE and ERROR => Failed. Nothing stored resolves to
- *   Cancelled yet: the test agents do not record a cancellation.
+ * - SUCCESS and PARTIAL_SUCCESS => Completed; FAILURE and ERROR => Failed; CANCELLED => Cancelled.
  */
 export function resolveEpicSvtTestStatus(testResultStatus: EpicSvtTestResultStatus | null): EpicSvtTestStatus {
     switch (testResultStatus) {
@@ -18,6 +17,8 @@ export function resolveEpicSvtTestStatus(testResultStatus: EpicSvtTestResultStat
         case EpicSvtTestResultStatus.Failure:
         case EpicSvtTestResultStatus.Error:
             return EpicSvtTestStatus.Failed
+        case EpicSvtTestResultStatus.Cancelled:
+            return EpicSvtTestStatus.Cancelled
         default:
             return EpicSvtTestStatus.Pending
     }
@@ -28,9 +29,9 @@ export function resolveEpicSvtTestStatus(testResultStatus: EpicSvtTestResultStat
  * into the physical one the DB agent stores: which `testResultStatus` values can currently resolve to any of
  * the requested statuses. `null` in the result selects the tests without a result yet (Pending).
  *
- * `Running` and `Cancelled` have no counterpart — no stored value resolves to them today, so asking only for
- * them matches nothing. Once the live processing state of the other services is folded into `status`, this is
- * the place that has to learn about it, together with `resolveEpicSvtTestStatus`.
+ * `Running` has no counterpart — no stored value resolves to it today, so asking only for Running matches
+ * nothing. Once the live processing state of the other services is folded into `status`, this is the place
+ * that has to learn about it, together with `resolveEpicSvtTestStatus`.
  */
 export function resolveEpicSvtTestResultStatuses(statuses: EpicSvtTestStatus[]): (EpicSvtTestResultStatus | null)[] {
     const testResultStatuses = new Set<EpicSvtTestResultStatus | null>()
@@ -48,9 +49,11 @@ export function resolveEpicSvtTestResultStatuses(statuses: EpicSvtTestStatus[]):
                 testResultStatuses.add(EpicSvtTestResultStatus.Failure)
                 testResultStatuses.add(EpicSvtTestResultStatus.Error)
                 break
-            case EpicSvtTestStatus.Running:
             case EpicSvtTestStatus.Cancelled:
-                // nothing stored resolves to these yet — see the note above
+                testResultStatuses.add(EpicSvtTestResultStatus.Cancelled)
+                break
+            case EpicSvtTestStatus.Running:
+                // nothing stored resolves to Running yet — see the note above
                 break
         }
     })
