@@ -58,6 +58,7 @@ export function createSvtDbAgentNextConfig(source: Record<string, unknown>): Svt
             password: env.SVT_DB_AGENT_DB_PASS,
             dbName: env.SVT_DB_AGENT_DB_NAME,
             schema: env.SVT_DB_AGENT_DB_SCHEMA,
+            debug: env.SVT_DB_AGENT_LOGGER_TERM_VERBOSITY === SvtDbAgentNextLoggerVerbosity.DEBUG,
         },
         kafka: {
             server: env.SVT_DB_AGENT_KAFKA_SERVER,

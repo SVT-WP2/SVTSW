@@ -11,6 +11,8 @@ export type SvtDbAgentNextDatabaseConfig = {
     dbName: string
     /** Schema holding every table; `main` in every environment. */
     schema: string
+    /** Log every SQL statement; on when the terminal verbosity is `DEBUG`. */
+    debug: boolean
 }
 
 export type SvtDbAgentNextKafkaConfig = {

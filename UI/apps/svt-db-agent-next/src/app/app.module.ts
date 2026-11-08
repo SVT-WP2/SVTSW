@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { SVT_DB_ENTITIES } from 'svt-db/data'
+import { SvtDbOrmModule } from 'svt-db/orm'
 
-import { getSvtDbAgentNextConfigFactory, validateSvtDbAgentNextEnv } from '../config'
+import { getSvtDbAgentNextConfigFactory, SvtDbAgentNextConfig, validateSvtDbAgentNextEnv } from '../config'
 import { SvtDbAgentNextHealthModule } from '../modules/health'
 
 
@@ -14,6 +16,11 @@ import { SvtDbAgentNextHealthModule } from '../modules/health'
             envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
             load: [getSvtDbAgentNextConfigFactory()],
             validate: validateSvtDbAgentNextEnv,
+        }),
+        SvtDbOrmModule.forRoot({
+            useFactory: (configService: ConfigService<SvtDbAgentNextConfig, true>) => configService.get('database', { infer: true }),
+            inject: [ConfigService],
+            entities: SVT_DB_ENTITIES,
         }),
         SvtDbAgentNextHealthModule,
     ],

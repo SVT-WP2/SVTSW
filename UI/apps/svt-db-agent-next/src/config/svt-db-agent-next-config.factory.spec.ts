@@ -37,6 +37,7 @@ describe('createSvtDbAgentNextConfig', () => {
                 password: 'secret',
                 dbName: 'svt_sw_db',
                 schema: 'main',
+                debug: false,
             },
             kafka: {
                 server: 'kafka.example',
@@ -57,6 +58,11 @@ describe('createSvtDbAgentNextConfig', () => {
         const config = createSvtDbAgentNextConfig(env)
         expect(config.httpPort).toBe(7676)
         expect(config.logLevels).toEqual(['error', 'warn', 'log'])
+    })
+
+    it('turns SQL logging on for the DEBUG verbosity only', () => {
+        expect(createSvtDbAgentNextConfig({ ...COMPLETE_ENV, SVT_DB_AGENT_LOGGER_TERM_VERBOSITY: 'DEBUG' }).database.debug).toBe(true)
+        expect(createSvtDbAgentNextConfig({ ...COMPLETE_ENV, SVT_DB_AGENT_LOGGER_TERM_VERBOSITY: 'VERBOSE' }).database.debug).toBe(false)
     })
 
     it('accepts an empty database password', () => {

@@ -228,3 +228,31 @@ with a wrong DB password the app logs the error and `/health` reports `down`.
 Record in the PR: the exact MikroORM versions, whether `@Enum({ nativeEnumName })` or the
 `columnType` fallback was needed, whether identity columns diffed cleanly, and the final shape of
 `SvtDbOrmModule.forRoot`.
+
+## Outcome (done 2026-11-08)
+
+- Versions: `@mikro-orm/{core,postgresql,migrations,cli,reflection}` **6.6.17**, `@mikro-orm/nestjs`
+  **6.1.2**, `pg` 8.23.1, `dotenv` 16.4.7 (the version `@nestjs/config` already ships). MikroORM 7 exists
+  (7.2.x) but the plan, rentaly and the team's experience are v6; upgrading is a separate decision, best
+  taken before phase 3 multiplies the entity count.
+- `@Enum({ nativeEnumName, items })` diffs cleanly against the `main."<type>"` enums; no `columnType`
+  fallback needed.
+- Identity columns did **not** diff cleanly with `autoincrement: true` alone (MikroORM wanted to re-add
+  `id serial`); `generated: 'by default as identity'` on the primary key fixes it. `json` columns need
+  `columnType: 'json'` (default would be `jsonb`).
+- Constraint names: added `SvtDbNamingStrategy` (`svt-db/orm`) producing PostgreSQL's default
+  `_pkey` / `_key` / `_fkey` names, so entities need no explicit constraint names. Relations declare
+  `deferMode: INITIALLY_IMMEDIATE` and `no action` rules to match the `DEFERRABLE` FKs.
+- Every scalar property declares `type` explicitly: Vitest (esbuild) emits no decorator metadata.
+  Database specs use `const describeWithDatabase = url ? describe : describe.skip` (the Angular zone
+  setup rejects `describe.skipIf` and the options form).
+- `SvtDbOrmModule.forRoot({ useFactory, inject, entities })` → `MikroOrmModule.forRootAsync` with
+  `registerRequestContext: false`, `connect: false`, `ensureDatabase: false` (the app boots with the
+  database down and `/health` reports it); `forFeature(entities)` delegates to `MikroOrmModule.forFeature`.
+- Verified on a private PostgreSQL 17 instance: both migrations apply on the restored prod dump and on an
+  empty database, the two resulting schemas are byte-identical (`pg_dump --schema-only`), and
+  `schema:update --dump --safe` reports "Schema is up-to-date" on both. `/health` → `database: up`, and
+  `503` with `Not connected to database` when the port is wrong.
+- Not done here: running the migrations against the **dev server's** database and wiring a migration
+  step into the container start (`node main.js` does not migrate). Operations decision for phase 4 / the
+  runtime notes.

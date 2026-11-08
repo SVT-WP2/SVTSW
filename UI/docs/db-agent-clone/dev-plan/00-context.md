@@ -87,7 +87,9 @@ and `eslint.config.mjs` for a lib with lint and test targets.
 - Tests: Vitest from the **single root** `UI/vitest.config.ts`. Its default environment is
   `jsdom` with the Angular plugin; Node-only specs start with `// @vitest-environment node`.
   `nx test <project>` runs `vitest run --dir <project root>`. Database tests must be skipped when
-  `SVT_DB_AGENT_TEST_DB_URL` is unset (`describe.skipIf(!process.env.SVT_DB_AGENT_TEST_DB_URL)`).
+  `SVT_DB_AGENT_TEST_DB_URL` is unset: alias `const describeWithDatabase = url ? describe : describe.skip`
+  (the Angular zone setup wraps `describe` and rejects both `describe.skipIf` and the `{ skip }` options
+  form; see `libs/svt-db/data/src/wafer-types/svt-db-wafer-types.repository.spec.ts`).
 - `@nestjs/microservices` is currently a **devDependency** in `UI/package.json`; the agent ships
   it, so phase 1 moves it to `dependencies`.
 - After pulling a branch that bumps Angular or Nx: `npx nx reset && rm -rf .angular/cache`.

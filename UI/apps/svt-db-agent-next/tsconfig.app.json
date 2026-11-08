@@ -11,7 +11,8 @@
         "target": "es2021"
     },
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "mikro-orm.config.ts"
     ],
     "exclude": [
         "src/**/*.spec.ts",
