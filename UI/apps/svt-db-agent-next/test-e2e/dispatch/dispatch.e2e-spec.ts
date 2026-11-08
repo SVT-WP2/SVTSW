@@ -14,6 +14,11 @@ describe('Request dispatch (e2e)', () => {
             'GetAllEnums',
             'GetAllWaferTypes',
             'GetWaferTypeMap',
+            'CreateWafer',
+            'GetAllWafers',
+            'GetWaferLocationHistory',
+            'UpdateWafer',
+            'UpdateWaferLocation',
         ]))
     })
 

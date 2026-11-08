@@ -73,9 +73,10 @@ The Kafka controller of phase 4 becomes one method:
    message types to `dispatch/dispatch.e2e-spec.ts`.
 5. Pure domain logic (wafer-map validation, ASIC generation) also gets a unit spec next to it.
 
-Order of slices (dependencies first): wafer types + enums (done) → wafers (+ location, ASIC generation) →
-ASICs → chips + chip blocks → wafer-probe machines, probe cards, projects → equipment types +
-equipment → SVT test setups/configs, test types/configs, templates → SVT tests → modules (read only).
+Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
+generation (done; the `Asic` entity exists, its messages come next) → ASICs → chips + chip blocks →
+wafer-probe machines, probe cards, projects → equipment types + equipment → SVT test setups/configs,
+test types/configs, templates → SVT tests → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -86,3 +87,20 @@ equipment → SVT test setups/configs, test types/configs, templates → SVT tes
   stored text verbatim). No client compares the text.
 - `CreateWaferType` validates enum values before inserting (clear `BadRequest` instead of a driver
   error) and tolerates the extra top-level `data.waferMap` key the C++ demanded (D-7).
+
+## 5. Findings from the wafers slice
+
+- `generateAsics` (`libs/svt-db/data/src/wafer-maps`) reproduces the production rows exactly: the unit spec
+  regenerates a prod ER2 wafer and compares a digest of all 3421 dies with the fixture in `__fixtures__`
+  (generated from the dump), and the e2e spec does the same against the rows `CreateWafer` writes.
+- `CreateWafer` is one transaction: wafer, `Location at creation` row and all ASICs (`em.insertMany`); a
+  duplicate wafer or ASIC serial number leaves nothing behind (the C++ left partial writes).
+- `CreateWafer` requires `generalLocation` (`BadRequest` when `null`): the C++ failed too, on the location
+  row's `NOT NULL`, but after inserting the wafer. It also rejects an unknown wafer type or a type without
+  a map before writing.
+- The location pattern (`appendLocation`, `findLocationHistory` ordered by `id`, the written row becomes the
+  current location) is in `SvtDbWafersRepository`; chips, equipment and modules reuse it.
+- `UpdateWaferLocation` is validated with an app-local DTO (`SvtDbAgentNextWaferLocationRecordDto`): the
+  contract's record DTO has no validators on `note` and `username`, which the whitelist would reject.
+- Lists take `data.pager` (`optionalPager`, defaults `limit 20`, `offset 0` when present) and answer
+  `{ items, totalCount }` counted database-side; location histories carry `totalCount` too.

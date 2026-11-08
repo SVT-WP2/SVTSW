@@ -1,5 +1,6 @@
 export * from './svt-db-agent-next-dispatch.module'
 export * from './svt-db-agent-next-handler.models'
+export * from './svt-db-agent-next-pager.dto'
 export * from './svt-db-agent-next-request-dispatcher.service'
 export * from './svt-db-agent-next-request-error'
 export * from './svt-db-agent-next-request-validation'

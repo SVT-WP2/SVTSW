@@ -3,17 +3,19 @@ import { SvtDbDataModule } from 'svt-db/data'
 
 import { SvtDbAgentNextEnumsHandlers } from './enums'
 import { SvtDbAgentNextWaferTypesHandlers } from './wafer-types'
+import { SvtDbAgentNextWafersHandlers } from './wafers'
 
 
 /**
  * One provider per domain, each marked with `@SvtDbAgentNextHandlers()`; the dispatcher discovers them.
- * Phase 3 adds a domain per slice, together with its e2e spec.
+ * Each slice adds a domain here, together with its e2e spec.
  */
 @Module({
     imports: [SvtDbDataModule],
     providers: [
         SvtDbAgentNextEnumsHandlers,
         SvtDbAgentNextWaferTypesHandlers,
+        SvtDbAgentNextWafersHandlers,
     ],
 })
 export class SvtDbAgentNextHandlersModule {
