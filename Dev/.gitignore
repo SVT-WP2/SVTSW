@@ -11,6 +11,7 @@
 !db-example/
 db-example/*
 !db-example/*.dump
+!db-example/README.md
 
 # As a result, your personal files stay local and out of git:
 #   - .env

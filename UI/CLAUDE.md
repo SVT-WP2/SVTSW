@@ -135,3 +135,6 @@ Don't add a NgRx store for a single grid.
   Check it before inventing a message type.
 - `../Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt` — DB schema.
 - `../Dev/` — auxiliary compose files (Kafka, Postgres).
+- `../DbAgent/docs/` — behavioural documentation of the **real** DB Agent (current state, pending its
+  author's review). The authority on what the C++ actually does, quirks included.
+- `docs/db-agent-clone/` — working notes for re-implementing the DB Agent in this workspace (proposal).
