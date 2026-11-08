@@ -75,8 +75,8 @@ The Kafka controller of phase 4 becomes one method:
 
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
 generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
-projects → equipment types + equipment → SVT test setups/configs, test types/configs, templates → SVT
-tests → modules (read only).
+projects (done) → equipment types + equipment → SVT test setups/configs, test types/configs, templates →
+SVT tests → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -146,3 +146,35 @@ tests → modules (read only).
   implemented until the contract has it.
 - Location history: the wafer pattern reused (`appendLocation`, `findLocationHistory`, first row
   `Location at creation`); `SvtDbLocationInput` and that note moved to `libs/svt-db/data/src/common`.
+
+## 8. Findings from the wafer-probe slice (machines, probe cards, projects)
+
+- Entities `WaferProbeMachine`, `ProbeCard`, `ProbeCardFamilyType` (composite key of a relation and an
+  enum), `WaferLoadedInMachine`, `ProbeCardInstalledInMachine`, `WaferProbeProject` in
+  `libs/svt-db/data/src/wp/`; the schema diff stays empty. Lists take `filter.ids` only (no pager in the
+  contract) and answer `{ items, totalCount }`.
+- **Machine reply carries the orientations.** The Kafka yaml's `WaferProbeMachineDto` requires
+  `loadedWaferOrientation` and `installedProbeCardOrientation` and WPAgent reads them, but the TypeScript
+  `EpicWpMachine` of `epic-api-types` does not list them. The agent sends them (typed as
+  `SvtDbAgentNextWpMachineWire`); the contract type should gain the two fields.
+- **Probe cards carry `asicFamilyTypes`** from `ProbeCardFamilyType` (R-3, Q-H15 fixed), in the enum's
+  order; the yaml's `ProbeCardDto` requires it, the TypeScript `EpicWpProbeCard` lacks it. There is no
+  message to create a probe card or its family types (`CreateProbeCard` is code-only, decisions §1
+  "ask"); the e2e seeds them with SQL (`test-e2e/utils/wp-fixtures.ts`).
+- **Wafer swap writes both rows** (X-8 fixed): `UpdateWpMachineLoadedWafer` with a wafer already loaded
+  writes `Unloaded` for it (orientation `null`, as the C++ did), then `Loaded` for the new one. Loading
+  needs an existing wafer and an orientation; unloading (`loadedWaferId: null`) with nothing loaded is a
+  `BadRequest`, as in the C++. The payload is validated with an app-local DTO: the `epic/entities` DTO
+  lacks `wpMachineId` and the TypeScript type lacks `loadedWaferOrientation`, which WPAgent sends.
+- **Probe-card uninstall works but leaves no history row** (D-13): `installedProbeCardId: null` clears
+  the machine's two columns; `ProbeCardInstalledInMachine.probeCardId` is NOT NULL and the table has no
+  status column, so the uninstall itself is not recorded until the schema change of
+  [02-database-migration.md](../02-database-migration.md) §2 is agreed with the WPAgent team (the C++
+  failed the whole request). The install orientation is optional (dev data has `NULL`s).
+- `UpdateWaferProbeMachine` validates `data.update` with the contract DTO, whose six fields are all
+  required (the C++ accepted any subset); `generalLocation` is updatable here, there is no location
+  history for machines.
+- `CreateWaferProbeProject`: `local2GlobalMap` must be a string holding valid JSON (R-7: an object is a
+  `BadRequest`, the C++ silently stored `NULL`); it is stored in the `json` column and re-serialised in
+  replies, so the text may differ in whitespace from what was sent. Machine, wafer type and both enum
+  values are checked before the insert.

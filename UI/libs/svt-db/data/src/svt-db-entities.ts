@@ -7,6 +7,14 @@ import {
 } from './chips'
 import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
 import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
+import {
+    SvtDbWpMachineEntity,
+    SvtDbWpProbeCardEntity,
+    SvtDbWpProbeCardFamilyTypeEntity,
+    SvtDbWpProbeCardInstalledInMachineEntity,
+    SvtDbWpProjectEntity,
+    SvtDbWpWaferLoadedInMachineEntity,
+} from './wp'
 
 
 /**
@@ -24,4 +32,10 @@ export const SVT_DB_ENTITIES = [
     SvtDbChipLocationEntity,
     SvtDbChipBlockEntity,
     SvtDbAsicFamilyTypeBlockListEntity,
+    SvtDbWpProbeCardEntity,
+    SvtDbWpProbeCardFamilyTypeEntity,
+    SvtDbWpMachineEntity,
+    SvtDbWpWaferLoadedInMachineEntity,
+    SvtDbWpProbeCardInstalledInMachineEntity,
+    SvtDbWpProjectEntity,
 ]

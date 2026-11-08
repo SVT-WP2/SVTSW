@@ -27,6 +27,14 @@ describe('Request dispatch (e2e)', () => {
             'UpdateChipLocation',
             'GetChipLocationHistory',
             'GetAllBlocks',
+            'GetAllWaferProbeMachines',
+            'CreateWaferProbeMachine',
+            'UpdateWaferProbeMachine',
+            'UpdateWpMachineLoadedWafer',
+            'UpdateWpMachineInstalledProbeCard',
+            'GetAllProbeCards',
+            'GetAllWaferProbeProjects',
+            'CreateWaferProbeProject',
         ]))
     })
 

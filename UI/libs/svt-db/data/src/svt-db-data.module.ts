@@ -5,6 +5,7 @@ import { SvtDbChipBlocksRepository, SvtDbChipsRepository } from './chips'
 import { SvtDbEnumsService } from './enums'
 import { SvtDbWaferTypesRepository } from './wafer-types'
 import { SvtDbWafersRepository } from './wafers'
+import { SvtDbWpMachinesRepository, SvtDbWpProbeCardsRepository, SvtDbWpProjectsRepository } from './wp'
 
 
 const PROVIDERS = [
@@ -14,6 +15,9 @@ const PROVIDERS = [
     SvtDbAsicsRepository,
     SvtDbChipsRepository,
     SvtDbChipBlocksRepository,
+    SvtDbWpMachinesRepository,
+    SvtDbWpProbeCardsRepository,
+    SvtDbWpProjectsRepository,
 ]
 
 /**

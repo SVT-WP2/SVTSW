@@ -7,6 +7,9 @@ import { SvtDbAgentNextChipsHandlers } from './chips'
 import { SvtDbAgentNextEnumsHandlers } from './enums'
 import { SvtDbAgentNextWaferTypesHandlers } from './wafer-types'
 import { SvtDbAgentNextWafersHandlers } from './wafers'
+import { SvtDbAgentNextWpMachinesHandlers } from './wp-machines'
+import { SvtDbAgentNextWpProbeCardsHandlers } from './wp-probe-cards'
+import { SvtDbAgentNextWpProjectsHandlers } from './wp-projects'
 
 
 /**
@@ -22,6 +25,9 @@ import { SvtDbAgentNextWafersHandlers } from './wafers'
         SvtDbAgentNextAsicsHandlers,
         SvtDbAgentNextChipsHandlers,
         SvtDbAgentNextChipBlocksHandlers,
+        SvtDbAgentNextWpMachinesHandlers,
+        SvtDbAgentNextWpProbeCardsHandlers,
+        SvtDbAgentNextWpProjectsHandlers,
     ],
 })
 export class SvtDbAgentNextHandlersModule {
