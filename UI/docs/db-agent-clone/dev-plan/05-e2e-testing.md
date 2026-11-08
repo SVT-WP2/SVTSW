@@ -76,7 +76,7 @@ The Kafka controller of phase 4 becomes one method:
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
 generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
 projects (done) → equipment types + equipment (done) → SVT test setups/configs, test types/configs,
-templates → SVT tests → modules (read only).
+templates (done) → SVT tests → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -194,3 +194,40 @@ templates → SVT tests → modules (read only).
 - `UpdateEquipment` exists in the C++ code only (not in the contract, decisions §1 "ask"): not
   implemented until the contract has it. `GetEquipmentListForTestSetup` belongs to the test-setup slice
   (its data is `SvtTestSetupEquipList`, R-1 still open).
+
+## 10. Findings from the SVT test-setup slice (setups, setup configs, types, type configs, templates)
+
+- Entities in `libs/svt-db/data/src/svt-test-setups/` (`SvtTestSetup`, `SvtTestSetupConfig`,
+  `SvtTestSetupDefaultConfig`) and `svt-test-types/` (`SvtTestType`, `SvtTestTypeDUTTypeList`,
+  `SvtTestTypeConfig`, `SvtTestTemplate`); the schema diff stays empty. Two `CREATE UNIQUE INDEX`es need
+  their names declared (`@Unique({ name })`): a type config's name is unique **per test type**
+  (`SvtTestTypeConfig_testTypeId_name_idx`, while a setup config's name is unique globally) and a template's
+  DUT type + configuration pair is unique (`SvtTestTemplate_dutType_testTypeConfigId_idx`).
+- **Config bodies round-trip byte for byte.** `configBody` is a `json` column mapped with
+  `SvtDbJsonTextType` (`libs/svt-db/data/src/common`): the string is written as is (PostgreSQL's `json`
+  keeps the text, `jsonb` would not) and selected with `::text` (`convertToJSValueSQL`), so indentation
+  and key order survive, as with the C++. The property is `lazy`: lists never load it, the two
+  `Get*ConfigBody` messages populate it. Handlers still `JSON.parse` the text first, so an invalid document
+  is a `BadRequest` and an object a validation error (R-7), never a PostgreSQL error.
+- `GetAllSvtTestSetups` lists a setup without a default-config row with `defaultConfigId: null` (Q-R2,
+  Q-H13: the C++ failed the whole list); `UpdateSvtTestSetup` creates that row when it is missing (Q-U1)
+  and rejects a config that does not belong to the setup (new check: a default from another setup makes no
+  sense). `CreateSvtTestSetup` is one transaction (setup, config, default row); a duplicate config name
+  leaves nothing behind. A missing nested `defaultConfig` / `testTypeConfig` is a `BadRequest`: the contract
+  DTOs declare them `@ValidateNested()` without `@IsDefined()`, so the handler checks presence itself.
+- `GetAllSvtTestTypes`: the `dutTypes` filter works (D-4, Q-H9 fixed: a type matches when it has any of
+  them); a type without DUT types lists `dutTypes: []` (R-4). DUT types come back in the enum's order and
+  duplicates in a request are collapsed.
+- **`UpdateSvtTestType` takes the contract shape and replaces the list** (D-1): `data.id` +
+  `data.update.dutTypes`, and the DUT types become exactly that list (an empty list clears them). The C++
+  read `data.testTypeId` / `data.dutTypes` and only appended, which no client sends (the BFF uses the
+  contract shape, so the operation never worked end to end). Replace is what a PATCH with the full list
+  means for the UI; **to be confirmed by the author** (the decision row asked for add-only vs replace).
+- `Get*ConfigBody` with an unknown id is `NotFound` (Q-H20; the C++ replied Success with `entity: {}`).
+  `Create*Config` requires the `note` key (may be `null`), as the contract DTO's `@ValidateIf` does; the
+  nested config of `CreateSvtTestSetup` / `CreateSvtTestType` may omit it.
+- `CreateSvtTestTemplate` honours `isEnabled` (D-12, Q-H17: the C++ dropped it); `testTypeId` on the wire
+  comes from the template's configuration; a NULL `isEnabled` (never written by the agent) reads as the
+  database default `true`.
+- `GetEquipmentListForTestSetup` is still not implemented: it exists in the yaml only (no TypeScript message
+  class), its reply shape is open (R-1, Q-H11) and nothing writes `SvtTestSetupEquipList`.

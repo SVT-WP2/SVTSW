@@ -4,6 +4,12 @@ import { SvtDbAsicsRepository } from './asics'
 import { SvtDbChipBlocksRepository, SvtDbChipsRepository } from './chips'
 import { SvtDbEnumsService } from './enums'
 import { SvtDbEquipmentRepository, SvtDbEquipmentTypesRepository } from './equipment'
+import { SvtDbSvtTestSetupConfigsRepository, SvtDbSvtTestSetupsRepository } from './svt-test-setups'
+import {
+    SvtDbSvtTestTemplatesRepository,
+    SvtDbSvtTestTypeConfigsRepository,
+    SvtDbSvtTestTypesRepository,
+} from './svt-test-types'
 import { SvtDbWaferTypesRepository } from './wafer-types'
 import { SvtDbWafersRepository } from './wafers'
 import { SvtDbWpMachinesRepository, SvtDbWpProbeCardsRepository, SvtDbWpProjectsRepository } from './wp'
@@ -21,6 +27,11 @@ const PROVIDERS = [
     SvtDbWpProjectsRepository,
     SvtDbEquipmentTypesRepository,
     SvtDbEquipmentRepository,
+    SvtDbSvtTestSetupsRepository,
+    SvtDbSvtTestSetupConfigsRepository,
+    SvtDbSvtTestTypesRepository,
+    SvtDbSvtTestTypeConfigsRepository,
+    SvtDbSvtTestTemplatesRepository,
 ]
 
 /**

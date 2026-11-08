@@ -93,3 +93,16 @@ function formatValidationError(error: ValidationError): string[] {
     const nested = (error.children ?? []).flatMap(formatValidationError)
     return [...own, ...nested]
 }
+
+/**
+ * A JSON document sent as a string (R-7: JSON travels as text on the wire). Returns the parsed value;
+ * throws `BadRequest` when the text is not valid JSON. Callers that store the text itself ignore the result.
+ */
+export function parseJsonOrBadRequest(text: string, path: string): unknown {
+    try {
+        return JSON.parse(text)
+    }
+    catch {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string holding valid JSON`)
+    }
+}

@@ -41,6 +41,21 @@ describe('Request dispatch (e2e)', () => {
             'CreateEquipment',
             'UpdateEquipmentLocation',
             'GetEquipmentLocationHistory',
+            'GetAllSvtTestSetups',
+            'CreateSvtTestSetup',
+            'UpdateSvtTestSetup',
+            'GetAllSvtTestSetupConfigs',
+            'CreateSvtTestSetupConfig',
+            'GetSvtTestSetupConfigBody',
+            'GetAllSvtTestTypes',
+            'CreateSvtTestType',
+            'UpdateSvtTestType',
+            'GetAllSvtTestTypeConfigs',
+            'CreateSvtTestTypeConfig',
+            'GetSvtTestTypeConfigBody',
+            'GetAllSvtTestTemplates',
+            'CreateSvtTestTemplate',
+            'UpdateSvtTestTemplate',
         ]))
     })
 

@@ -24,7 +24,7 @@ Recommendations are in the last column and are proposals.
 | Booleans on create ([Q-C1](../../../DbAgent/docs/04-request-engine.md#5-create), D-12) | dropped from INSERT | n/a | **fix**. |
 | Null, boolean, object filter values ([Q-F1](../../../DbAgent/docs/04-request-engine.md#43-selectentries--where-generation)) | silently ignored | preserve / reject | **fix**: reject with `BadRequest` (a `null` filter that matches everything is a trap). |
 | Empty-array filter | ignored (all rows) | preserve / match nothing | **ask**: the UI may rely on "empty selection = no filter". |
-| Relation-table update without row ([Q-U1](../../../DbAgent/docs/04-request-engine.md#6-update), X-13) | updates 0 rows, replies `Success` | preserve / upsert | **fix**: upsert. |
+| Relation-table update without row ([Q-U1](../../../DbAgent/docs/04-request-engine.md#6-update), X-13) | updates 0 rows, replies `Success` | preserve / upsert | **fix**: upsert. *Status:* `UpdateSvtTestSetup` creates the default-config row (dev-plan/05 §10). |
 | `int8` decoding ([X-14](../../../DbAgent/docs/04-request-engine.md#3-reading-rows-from-postgresql)) | 32-bit | n/a | irrelevant with an ORM; note that JS numbers are safe to 2^53. |
 | Entity key order (R-14) | alphabetical | n/a | irrelevant. |
 
@@ -47,20 +47,20 @@ Recommendations are in the last column and are proposals.
 | `GetAllChipBlocks`, Module messages (07 §1) | not implemented | n/a | **fix**: implement `GetAllChipBlocks` (the UI calls it). Module: see README open question 3. |
 | `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` (07 §1) | code only, not in contract | drop / add to contract | **ask**: add them to the contract; harmless generic operations. |
 | `GetAllSvtTests` filters (D-3) | `ids` only | preserve / implement | **fix**: implement all contract filters including the date ranges. |
-| `GetAllSvtTestTypes.dutTypes` (D-4, Q-H9) | no-op | n/a | **fix**. |
+| `GetAllSvtTestTypes.dutTypes` (D-4, Q-H9) | no-op | n/a | **fix**. *Status:* done, any-match (dev-plan/05 §10). |
 | `GetAllChips.familyTypes` (D-5, Q-H3), `GetAllAsics.chipId` (D-6, Q-H4) | error | n/a | **fix**. |
 | `CreateWaferType` extra key `data.waferMap` (D-7), `CreateManyChips` extra key `data.items` (D-8) | required | preserve / drop | **fix**: accept the contract shape; tolerate the extra keys. |
-| `UpdateSvtTestType` shape (D-1, Q-H10) | `data.testTypeId`, `data.dutTypes` | code shape / contract shape | **ask**: contract shape, after checking no client sends the code shape. Also decide add-only vs replace semantics. |
+| `UpdateSvtTestType` shape (D-1, Q-H10) | `data.testTypeId`, `data.dutTypes` | code shape / contract shape | **ask**: contract shape, after checking no client sends the code shape. Also decide add-only vs replace semantics. *Status:* contract shape (the BFF is the only client and uses it) with **replace** semantics, to be confirmed (dev-plan/05 §10). |
 | `GetEquipmentListForTestSetup` reply (R-1, Q-H11) | `(setupId, equipId)` pairs | pairs / `EquipmentDto[]` | **ask**: contract shape; confirm with the UI. Add a message to set a setup's equipment list, which does not exist today. |
 | `CreateManyChips` reply (R-2, Q-H6) | all chips | all / created | **fix**: created chips. |
 | `asicFamilyTypes` on probe cards (R-3, Q-H15) | absent | omit / read `ProbeCardFamilyType` | **fix**: read it; add a way to write it. *Status:* read (dev-plan/05 §8); no write message in the contract yet. |
-| `dutType: []` key on empty relation (R-4, Q-R1) | wrong key | n/a | **fix**: `dutTypes: []`. |
+| `dutType: []` key on empty relation (R-4, Q-R1) | wrong key | n/a | **fix**: `dutTypes: []`. *Status:* done. |
 | Chip block generation ([X-7](../../../DbAgent/docs/05-request-handlers.md#5-chip), Q-H5) | never runs | leave inert / implement the apparent rule | **ask**: the code's rule is `<blockType>_<chipSN>`, but the three existing dev `ChipBlock` rows use `<blockType without family prefix>_<chipSN>` (`SLDO_AncMPW2-W1_0_0`). Confirm the naming and that `AsicFamilyTypeBlockList` is maintained (3 rows in dev, 0 in prod) before enabling it. *Status:* implemented with the code's rule behind `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS` (default off); see dev-plan/05 §7. |
 | Machine wafer swap history ([X-8](../../../DbAgent/docs/05-request-handlers.md#7-waferprobemachine), Q-H8a) | one `Loaded` row, no `Unloaded` | preserve / fix | **fix**: `Unloaded` for the old wafer, then `Loaded`. Agree with the WPAgent team. *Status:* implemented (dev-plan/05 §8). |
 | Uninstall probe card (D-13, Q-H8b) | fails on `NOT NULL` | preserve / allow | **fix**: needs a schema change (nullable `probeCardId` or a status column, see [02](02-database-migration.md)). Agree with the WPAgent team. *Status:* the uninstall clears the machine's columns and succeeds; no history row until the schema change (dev-plan/05 §8). |
 | Current location after `Update*Location` ([X-9](../../../DbAgent/docs/05-request-handlers.md#1-shared-pattern-location-tracked-entities), Q-H7) | newest by `date` (day resolution) | preserve / use the row just inserted | **fix**: the row just written is the current location. Consider `timestamptz` for history dates ([02](02-database-migration.md)). |
-| `isEnabled` on `CreateSvtTestTemplate` (D-12, Q-H17) | dropped | n/a | **fix**. |
-| `Get*ConfigBody` unknown id ([X-12](../../../DbAgent/docs/05-request-handlers.md#12-svttestsetupconfig-and-svttesttypeconfig), Q-H20) | `Success` with `entity: {}` | preserve / `NotFound` | **fix**: `NotFound`. |
+| `isEnabled` on `CreateSvtTestTemplate` (D-12, Q-H17) | dropped | n/a | **fix**. *Status:* done. |
+| `Get*ConfigBody` unknown id ([X-12](../../../DbAgent/docs/05-request-handlers.md#12-svttestsetupconfig-and-svttesttypeconfig), Q-H20) | `Success` with `entity: {}` | preserve / `NotFound` | **fix**: `NotFound`. *Status:* done. |
 | Enum cache ([X-11](../../../DbAgent/docs/05-request-handlers.md#16-enums), Q-H14) | loaded at startup, never refreshed; naive `enum_range` parsing | per-request query / short TTL / startup | **fix**: query `pg_enum` per request (cheap) or cache with a short TTL. Use `enumlabel` rows, not `enum_range` text. |
 | `GetAllEnums` request key (D-2) | reads `data.enumNames`; contract `enumsNames`; UI sends `filter.enumNames` | pick one | **ask**: fix the contract typo and accept `filter.enumNames`; keep returning everything when no names are given. |
 | Enum names `chipBlockType` vs `blockType` (R-11, S15) | DB says `blockType` | rename DB type / rename in contract | **ask**: one name end to end. Renaming in the contract and UI is cheaper than renaming a DB type. |

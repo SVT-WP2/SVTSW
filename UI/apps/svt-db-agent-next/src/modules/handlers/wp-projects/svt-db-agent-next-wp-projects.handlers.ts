@@ -11,6 +11,7 @@ import {
 import {
     optionalIntegerList,
     optionalRecord,
+    parseJsonOrBadRequest,
     requireAllowedFilterKeys,
     requireRecord,
     SvtDbAgentNextHandlerDefinition,
@@ -85,15 +86,6 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
         return { entity: toWire(project) }
     }
 
-}
-
-function parseJsonOrBadRequest(text: string, path: string): unknown {
-    try {
-        return JSON.parse(text)
-    }
-    catch {
-        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string holding valid JSON`)
-    }
 }
 
 function toWire(project: SvtDbWpProjectEntity): EpicWpProjectEntity {

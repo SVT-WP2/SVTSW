@@ -7,6 +7,11 @@ import { SvtDbAgentNextChipsHandlers } from './chips'
 import { SvtDbAgentNextEnumsHandlers } from './enums'
 import { SvtDbAgentNextEquipmentHandlers } from './equipment'
 import { SvtDbAgentNextEquipmentTypesHandlers } from './equipment-types'
+import { SvtDbAgentNextSvtTestSetupConfigsHandlers } from './svt-test-setup-configs'
+import { SvtDbAgentNextSvtTestSetupsHandlers } from './svt-test-setups'
+import { SvtDbAgentNextSvtTestTemplatesHandlers } from './svt-test-templates'
+import { SvtDbAgentNextSvtTestTypeConfigsHandlers } from './svt-test-type-configs'
+import { SvtDbAgentNextSvtTestTypesHandlers } from './svt-test-types'
 import { SvtDbAgentNextWaferTypesHandlers } from './wafer-types'
 import { SvtDbAgentNextWafersHandlers } from './wafers'
 import { SvtDbAgentNextWpMachinesHandlers } from './wp-machines'
@@ -32,6 +37,11 @@ import { SvtDbAgentNextWpProjectsHandlers } from './wp-projects'
         SvtDbAgentNextWpProjectsHandlers,
         SvtDbAgentNextEquipmentTypesHandlers,
         SvtDbAgentNextEquipmentHandlers,
+        SvtDbAgentNextSvtTestSetupsHandlers,
+        SvtDbAgentNextSvtTestSetupConfigsHandlers,
+        SvtDbAgentNextSvtTestTypesHandlers,
+        SvtDbAgentNextSvtTestTypeConfigsHandlers,
+        SvtDbAgentNextSvtTestTemplatesHandlers,
     ],
 })
 export class SvtDbAgentNextHandlersModule {

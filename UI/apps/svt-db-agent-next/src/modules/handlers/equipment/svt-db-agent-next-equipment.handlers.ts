@@ -11,6 +11,7 @@ import {
 import {
     optionalIntegerList,
     optionalRecord,
+    parseJsonOrBadRequest,
     requireAllowedFilterKeys,
     requireInteger,
     requireRecord,
@@ -121,15 +122,6 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
         }
     }
 
-}
-
-function parseJsonOrBadRequest(text: string, path: string): unknown {
-    try {
-        return JSON.parse(text)
-    }
-    catch {
-        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string holding valid JSON`)
-    }
 }
 
 function toWire(equipment: SvtDbEquipmentEntity): EpicEquipmentEntity {

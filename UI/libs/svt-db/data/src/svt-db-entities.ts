@@ -6,6 +6,17 @@ import {
     SvtDbChipLocationEntity,
 } from './chips'
 import { SvtDbEquipmentEntity, SvtDbEquipmentLocationEntity, SvtDbEquipmentTypeEntity } from './equipment'
+import {
+    SvtDbSvtTestSetupConfigEntity,
+    SvtDbSvtTestSetupDefaultConfigEntity,
+    SvtDbSvtTestSetupEntity,
+} from './svt-test-setups'
+import {
+    SvtDbSvtTestTemplateEntity,
+    SvtDbSvtTestTypeConfigEntity,
+    SvtDbSvtTestTypeDutTypeEntity,
+    SvtDbSvtTestTypeEntity,
+} from './svt-test-types'
 import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
 import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
 import {
@@ -42,4 +53,11 @@ export const SVT_DB_ENTITIES = [
     SvtDbEquipmentTypeEntity,
     SvtDbEquipmentEntity,
     SvtDbEquipmentLocationEntity,
+    SvtDbSvtTestSetupEntity,
+    SvtDbSvtTestSetupConfigEntity,
+    SvtDbSvtTestSetupDefaultConfigEntity,
+    SvtDbSvtTestTypeEntity,
+    SvtDbSvtTestTypeDutTypeEntity,
+    SvtDbSvtTestTypeConfigEntity,
+    SvtDbSvtTestTemplateEntity,
 ]
