@@ -9,8 +9,9 @@
 #   bash Environment/deploy-service.sh <dev|prod> <compose-service> <image-tag>
 #
 # Examples:
-#   bash Environment/deploy-service.sh dev  svt-ui       1a2b3c4d
-#   bash Environment/deploy-service.sh prod svt-db-agent 1.4.0
+#   bash Environment/deploy-service.sh dev  svt-ui            1a2b3c4d
+#   bash Environment/deploy-service.sh dev  svt-db-agent-next 1a2b3c4d
+#   bash Environment/deploy-service.sh prod svt-db-agent      1.4.0
 #
 # What it does (idempotent):
 #   1. Syncs the environment's compose files from this checkout to

@@ -6,12 +6,16 @@ on:
       - master
     paths:
       - 'UI/**'
+      # The DB agent app in the workspace has its own pipeline (db-agent-next.yml);
+      # changes confined to it must not rebuild and redeploy the UI image.
+      - '!UI/apps/svt-db-agent-next/**'
       - '.github/workflows/ui.yml'
     tags:
       - 'svt-ui-*'
   pull_request:
     paths:
       - 'UI/**'
+      - '!UI/apps/svt-db-agent-next/**'
       - '.github/workflows/ui.yml'
 
 concurrency:

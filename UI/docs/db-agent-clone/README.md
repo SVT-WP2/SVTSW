@@ -43,8 +43,9 @@ judged strong enough to keep the C++, but the first two should be stated to the 
   WPAgent, TestAgent) are not touched by the swap. Contract corrections are a separate stream.
 - The database. The clone starts on the existing schema; schema changes go through migrations
   and are applied while the C++ agent still runs wherever they are invisible to it.
-- The `SVT_DB_AGENT_*` environment variables, the heartbeat topic and the healthcheck semantics,
-  so the compose service definition stays the same.
+- The `SVT_DB_AGENT_*` environment variables and the heartbeat topic, so the server-side `.env`
+  stays the same. The compose service itself is a new one (`svt-db-agent-next`, own image and
+  healthcheck), see [04 §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning).
 
 ## Phases
 
@@ -74,5 +75,6 @@ other release.
    a consumer-visible result and need the UI, WPAgent or TestAgent owners to agree.
 3. Whether the Module feature is in scope for the first release (it has a contract but no working
    implementation and no serial-number rule).
-4. Where the code lives and how it is versioned, see
-   [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning).
+4. ~~Where the code lives and how it is versioned~~ — decided 2026-11-08, see
+   [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning):
+   `apps/svt-db-agent-next` in the UI workspace, own image, version and pipelines, deployed to dev.

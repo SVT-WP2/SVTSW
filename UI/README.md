@@ -216,3 +216,27 @@ sequenceDiagram
 > The release image is built by `ui.yml`'s `docker-registry-create--release` whenever a `svt-ui-*` tag
 > is pushed — by `UI :: Release` (via `RELEASE_PAT`) or by hand. Without `RELEASE_PAT`, `UI :: Release`
 > still creates the tag, but the build won't start until the tag is (re)pushed by a PAT or a user.
+
+## SvtDbAgentNext (`apps/svt-db-agent-next`) — CI/CD
+
+The re-implementation of the DB Agent lives in this workspace but ships as its **own service**
+(image `ghcr.io/svt-wp2/svt-db-agent-next`, container `svt.db-agent-next--<env>`), with its own
+version in `apps/svt-db-agent-next/package.json` and the same three-workflow layout as the UI:
+
+| Workflow file | Trigger | Purpose |
+|---|---|---|
+| `db-agent-next.yml` (`DbAgent Next`) | PR, push to `master`, `svt-db-agent-next-*` tag | CI (scoped eslint, vitest, `nx build`; image build without push on PRs); build & push + deploy to dev on master pushes and on tags |
+| `db-agent-next-release.yml` (`DbAgent Next :: Release`) | Manual | Bump `apps/svt-db-agent-next/package.json` → commit `svt-db-agent-next@<v>` + tag `svt-db-agent-next-<v>` + push (needs `RELEASE_PAT`) |
+| `db-agent-next-manual.yml` (`DbAgent Next :: Manual`) | Manual | Build a short-SHA image, deploy an image to dev, deploy a release to prod |
+
+> Path filter: the app folder, `libs/epic/**`, `libs/epic-api-types/**`, `libs/svt-db/**` and the
+> workspace build files (`package.json`, `package-lock.json`, `tsconfig*.json`, `nx.json`, …). SPA-only
+> changes do not trigger it; conversely `ui.yml` ignores `apps/svt-db-agent-next/**`. `svt-ui@` and
+> `svt-db-agent-next@` release commits are skipped by both pipelines' master jobs.
+>
+> Image: `docker build -f apps/svt-db-agent-next/Dockerfile .` from `UI/` (Node 22 alpine, multi-stage,
+> `HEALTHCHECK` on `GET /health`). The container is configured with the `SVT_DB_AGENT_*` variables only.
+>
+> Where it runs: **dev** (`Environment/Dev/`, in place of the C++ `svt-db-agent`); prod keeps the C++
+> agent until the swap described in [docs/db-agent-clone/04-runtime-and-deployment.md](docs/db-agent-clone/04-runtime-and-deployment.md).
+> Operator notes: [`../Environment/README.md`](../Environment/README.md#the-two-db-agent-services).

@@ -68,9 +68,15 @@ All DbAgent automation lives in [`.github/workflows`](../.github/workflows):
 
 | Workflow file | Trigger | Purpose |
 |---|---|---|
-| `db-agent.yml` (`DbAgent`) | PR, push to `master`, `svt-db-agent-*` tag | CI (compile gate on PR + master); dev build & deploy on master pushes and on `svt-db-agent-*` tags |
+| `db-agent.yml` (`DbAgent`) | PR, push to `master`, `svt-db-agent-*` tag | CI (compile gate on PR + master); image build & push on master pushes and on `svt-db-agent-*` tags. **No automatic deploy** (see below) |
 | `db-agent-release.yml` (`DbAgent :: Release`) | Manual (`workflow_dispatch`) | Create a release: bump → commit + tag + push (no image; `db-agent.yml` builds it from the tag) |
-| `db-agent-manual.yml` (`DbAgent :: Manual`) | Manual (`workflow_dispatch`) | Manual ops: build a short-SHA image, deploy an image to dev, deploy a release to prod |
+| `db-agent-manual.yml` (`DbAgent :: Manual`) | Manual (`workflow_dispatch`) | Manual ops: build a short-SHA image, deploy a release to prod |
+
+> **Since 2026-11 the dev environment runs the NestJS re-implementation** `svt-db-agent-next`
+> (built from `UI/apps/svt-db-agent-next`, pipelines `db-agent-next*.yml`), so the C++ agent is no
+> longer deployed to dev — neither automatically nor manually — and is deployed to **prod only**, by
+> hand. See [`Environment/README.md`](../Environment/README.md#the-two-db-agent-services). The
+> dev-deploy steps that used to be described here were removed from the workflows.
 
 > `db-agent.yml` runs for PRs/pushes only when they touch `DbAgent/**` or `.github/workflows/db-agent.yml`.
 > (Per GitHub, path filters are **not** evaluated for tag pushes.)
@@ -86,10 +92,10 @@ All DbAgent automation lives in [`.github/workflows`](../.github/workflows):
 ```mermaid
 flowchart LR
     E1["Pull request<br/>(DbAgent/** changed)"] --> W1["db-agent.yml<br/>CI only (compile)"]
-    E2["Push to master<br/>(DbAgent/** changed)"] --> W2["db-agent.yml<br/>CI + build + deploy to dev"]
+    E2["Push to master<br/>(DbAgent/** changed)"] --> W2["db-agent.yml<br/>CI + build & push image"]
     E3["Run 'DbAgent :: Release'<br/>(manual, pick a bump)"] --> W3["db-agent-release.yml<br/>commit + tag + push (no image)"]
-    W3 -->|"pushes svt-db-agent-* tag via PAT"| W5["db-agent.yml<br/>build & push image<br/>+ auto-deploy to dev"]
-    E4["Run 'DbAgent :: Manual'<br/>(workflow_dispatch)"] --> W4["db-agent-manual.yml<br/>manual build / deploy dev / deploy prod"]
+    W3 -->|"pushes svt-db-agent-* tag via PAT"| W5["db-agent.yml<br/>build & push image"]
+    E4["Run 'DbAgent :: Manual'<br/>(workflow_dispatch)"] --> W4["db-agent-manual.yml<br/>manual build / deploy prod"]
 ```
 
 ### Scenario 1 — Pull request
@@ -99,7 +105,8 @@ A PR touching `DbAgent/**` runs **CI only**: it builds the `db-agent-build` Dock
 
 ### Scenario 2 — Push to master
 
-The same compile check runs, then the runtime image is built and **deployed to dev automatically**.
+The same compile check runs, then the runtime image is built and pushed. Nothing is deployed: dev
+runs `svt-db-agent-next`, and prod deploys are manual (Scenario 4).
 
 ```mermaid
 flowchart TD
@@ -109,16 +116,15 @@ flowchart TD
     G -->|"no"| A["build<br/>(compile the db-agent-build stage,<br/>no push)"]
     A --> Q{"push to master?"}
     Q -->|yes| E["docker-registry-create<br/>build & push :dev + :short-sha"]
-    E --> F["deploy-dev<br/>redeploy svt.db-agent--dev container"]
-    Q -->|"no (PR)"| Z["CI only — no dev build"]
+    Q -->|"no (PR)"| Z["CI only — no image push"]
 ```
 
 - `docker-registry-create` builds the `db-agent` runtime stage and pushes
-  `ghcr.io/svt-wp2/svt-db-agent:dev` and `:<short-sha>` (with `VERSION=<short-sha>`).
-- `deploy-dev` redeploys the `svt.db-agent--dev` container on the self-hosted runner.
+  `ghcr.io/svt-wp2/svt-db-agent:dev` and `:<short-sha>` (with `VERSION=<short-sha>`). The `:dev` tag
+  is kept for compatibility; no environment pulls it automatically.
 - **Release commits are a no-op here:** every job skips `svt-db-agent@` master-push commits (the gate
-  above), so a release never triggers CI or a dev build/deploy on `master` — the `svt-db-agent-*` tag
-  does the build + dev-deploy (Scenario 3).
+  above), so a release never triggers CI or an image build on `master` — the `svt-db-agent-*` tag
+  does the build (Scenario 3).
 
 ### Scenario 3 — Create a release
 
@@ -153,7 +159,6 @@ flowchart TD
     S2 --> S3["tag: svt-db-agent-VERSION"]
     S3 --> P1["push #1 (PAT): release commit + tag<br/>(major/minor also: release/svt-db-agent/VERSION branch)"]
     P1 --> T["db-agent.yml: docker-registry-create--release<br/>builds & pushes svt-db-agent:VERSION"]
-    T --> TD["db-agent.yml: deploy-dev--release<br/>deploys svt-db-agent:VERSION to dev"]
     P1 --> Q{"major or minor?"}
     Q -->|yes| S5["next-preminor-version<br/>commit: svt-db-agent@NEXT-SNAPSHOT.0 + [skip ci]"]
     S5 --> P2["push #2: dev commit only<br/>[skip ci] → no build, no deploy"]
@@ -174,21 +179,20 @@ Key points:
   that release and doesn't trigger CI — `db-agent.yml` only watches `master`.
 - The image is built from the **released** commit (push #1), so e.g. `svt-db-agent:2.0.0` contains
   `2.0.0` — not the snapshot.
-- Every release **auto-deploys to dev**: after the image is built, `deploy-dev--release` runs it on the
-  `svt.db-agent--dev` container (any release type, including SNAPSHOTs). Prod stays manual (Scenario 4).
+- A release deploys **nowhere by itself**: the image is only pushed to ghcr.io. Dev runs
+  `svt-db-agent-next`; prod is deployed by hand (Scenario 4).
 - `:latest` is moved only by **stable** releases (`next-major-version` / `next-minor-version` /
   `next-patch-version`); the SNAPSHOT bumps (`next-preminor-version` / `next-snapshot-version`) don't touch it.
-- Releases **skip CI**: the `svt-db-agent-*` tag build (`docker-registry-create--release` →
-  `deploy-dev--release`) runs **without** the compile gate — `db-agent.yml` builds the runtime image
-  straight from the tag. The release commit's own master push is a no-op (all jobs skip `svt-db-agent@`
+- Releases **skip CI**: the `svt-db-agent-*` tag build (`docker-registry-create--release`) runs
+  **without** the compile gate — `db-agent.yml` builds the runtime image straight from the tag. The release commit's own master push is a no-op (all jobs skip `svt-db-agent@`
   commits; a skipped run entry still shows). The compile gate runs on PRs and normal master pushes.
 - The workflow must exist on the **default branch** for its Run button to appear, and it pushes
   straight to the branch you run it from.
 
 ### Scenario 4 — Deploy a release to production
 
-Dev is deployed automatically — on every master push (Scenario 2) **and on every release** (via
-`deploy-dev--release`). **Production is always manual** and gated by the `prod` environment approval:
+The C++ agent runs in **prod only** (dev runs `svt-db-agent-next`). **Production is always manual**
+and gated by the `prod` environment approval:
 **Actions → `DbAgent :: Manual` → Run workflow → `job = deploy-prod--manual`,
 `image_tag = <version>` (e.g. `1.4.1`).**
 
@@ -204,7 +208,6 @@ sequenceDiagram
     REL->>REL: bump, commit, tag svt-db-agent-1.4.1
     REL->>DA: push svt-db-agent-1.4.1 tag via PAT (triggers db-agent.yml)
     DA->>R: build & push image svt-db-agent:1.4.1
-    DA->>DA: deploy-dev--release → svt.db-agent--dev (auto)
     Note over M,P: When ready to ship to production
     M->>MAN: Run deploy-prod--manual (image_tag=1.4.1)
     MAN->>MAN: prod environment approval gate
@@ -217,7 +220,6 @@ sequenceDiagram
 | Job (`job` input) | `image_tag` | What it does |
 |---|---|---|
 | `docker-registry-create--manual` | ignored | Build & push `:<short-sha>` from the selected ref |
-| `deploy-dev--manual` | optional (defaults to short-sha) | Deploy an existing image to **dev** |
 | `deploy-prod--manual` | **required** | Deploy an existing release image to **prod** (approval gate) |
 
 > The release image is built by `db-agent.yml`'s `docker-registry-create--release` whenever a

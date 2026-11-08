@@ -146,8 +146,10 @@ against the agent.
    (with the decision row) or fix it.
 2. Update `UI/CLAUDE.md` (apps table: the mock is now optional; the real agent runs locally against
    Postgres), `UI/docs/ARCHITECTURE.md` §1 diagram and §4, and `../README.md` status.
-3. Hand over to the runtime phase: `../04-runtime-and-deployment.md` §6 and §7 (image, CI,
-   versioning, dev swap) are the next decisions; nothing in this phase builds an image.
+3. Hand over to the runtime phase: the image, CI and the dev deployment exist since phase 1
+   (`../04-runtime-and-deployment.md` §6), so merging this phase to `master` makes the dev container
+   a working DB agent. What remains is `../04-runtime-and-deployment.md` §7: parity on dev, then the
+   prod swap.
 
 ## Ask before…
 

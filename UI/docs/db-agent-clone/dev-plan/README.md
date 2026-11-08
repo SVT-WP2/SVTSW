@@ -31,7 +31,7 @@ produced it: [00-context.md](00-context.md) carries the context.
 | 2 | [02-mikro-orm.md](02-mikro-orm.md) | `libs/svt-db/orm`: MikroORM module, configuration and CLI setup; migration 0 (production baseline) and migration 1 (bring production to the dev layout); one pilot entity proving the chain; the DB health indicator. | 1 |
 | 3 | [03-data-layer.md](03-data-layer.md) | `libs/svt-db/data`: every entity of the schema, repositories, the enum-values service, and the pure domain logic (wafer-map validation and ASIC generation) with tests. | 2 |
 | 4 | [04-kafka-layer.md](04-kafka-layer.md) | The agent: Kafka transport, the request/reply envelope, all 55 message handlers, heartbeat, health, error mapping; parity against the C++ agent. | 3 |
-| later | [../03-parity-testing.md](../03-parity-testing.md), [../04-runtime-and-deployment.md](../04-runtime-and-deployment.md) | Docker image, CI, versioning, dev and prod swap. Not part of these four phases. | 4 |
+| later | [../03-parity-testing.md](../03-parity-testing.md), [../04-runtime-and-deployment.md](../04-runtime-and-deployment.md) | Parity harness and the prod swap. The Docker image, CI, versioning and the **dev** deployment already exist since phase 1 (`apps/svt-db-agent-next/Dockerfile`, `.github/workflows/db-agent-next*.yml`, `Environment/Dev/`; see 04 §6): every phase merged to `master` is deployed to dev automatically, so keep `main.ts` bootable at every step. | 4 |
 
 ## Scope interpretation (correct here if wrong)
 

@@ -78,19 +78,34 @@ Two options, both viable; this is an open decision:
 | CLAUDE.md note "epic-db-agent never ships to prod" | must change | n/a |
 | Blast radius | a UI refactor of `libs/epic/*` can break the agent build (and vice versa); CI must build both | isolated |
 
-Recommendation: promote the mock, because the contract types are the one thing that must never
-drift between BFF and agent, and keeping them in one workspace is how that is enforced. Give the
-agent its own `VERSION` file and image (`ghcr.io/svt-wp2/svt-db-agent`, same name as today) so
-`Environment/*` and `deploy-service.sh` are untouched, and keep the `db-agent*.yml` workflows with a
-changed build context.
+**Decision (2026-11-08): the first column, with its own name.** The agent lives in the UI workspace
+as `apps/svt-db-agent-next` (the contract types stay in one workspace), but it is a **separate
+service** rather than a drop-in image under the C++ name:
+
+| | Value |
+|---|---|
+| Image | `ghcr.io/svt-wp2/svt-db-agent-next`, built from `UI/apps/svt-db-agent-next/Dockerfile` with context `UI/` (Node 22 alpine, multi-stage, `npm ci` + `nx build`, runtime `npm install --omit=dev` on the generated `package.json` because the generated lock is incomplete, runs as `node`) |
+| Health | `HEALTHCHECK` calls `GET /health` on `SVT_DB_AGENT_HTTP_PORT` (7676) with busybox `wget`; replaces the `svt-db-agent-healthcheck` binary |
+| Version | `UI/apps/svt-db-agent-next/package.json`, independent of the workspace's `svt-ui@` version; bumped by `DbAgent Next :: Release` (`svt-db-agent-next@<v>` commit, `svt-db-agent-next-<v>` tag, `release/svt-db-agent-next/<v>` branch for major/minor) |
+| Workflows | `.github/workflows/db-agent-next.yml` (CI: scoped eslint, vitest, nx build; PR image build without push; master → `:dev` + `:<sha>` and deploy to dev; tag → `:<version>` [+ `:latest`] and deploy to dev), `db-agent-next-manual.yml`, `db-agent-next-release.yml`. Path filter: the app, `libs/epic/**`, `libs/epic-api-types/**`, `libs/svt-db/**` and the workspace build files; `ui.yml` ignores `UI/apps/svt-db-agent-next/**` |
+| Compose | service `svt-db-agent-next`, container `svt.db-agent-next--<env>`, `SVT_DB_AGENT_NEXT_VERSION` in `versions.env`, same `SVT_DB_*` values from `.env`, optional `SVT_DB_AGENT_NEXT_LOG_VERBOSITY`; no log volume |
+| Where it runs | **dev only** for now, in place of the C++ service (`Environment/Dev/`); prod keeps `svt-db-agent`. `db-agent.yml` still builds the C++ image but no longer deploys to dev |
+
+Details for operators: [`Environment/README.md`](../../../Environment/README.md#the-two-db-agent-services).
 
 ## 7. Swap procedure
 
-1. Deploy the Node image to **dev** via `DbAgent :: Manual → deploy-dev--manual` with the new tag;
-   the C++ container is replaced in place (same compose service name).
-2. Run the parity harness against dev.
-3. Production: `deploy-prod--manual` with the release tag. Rollback is the same action with the
-   previous C++ tag; nothing else needs to change as long as migration 1 only added columns the
-   C++ ignores.
-4. After a quiet period, archive `DbAgent/` (keep `DbAgent/docs` as the historical specification
-   or move it next to the clone).
+1. **Dev (done 2026-11-08 at the compose level):** `Environment/Dev/docker-compose-svtsw-dev.yml`
+   defines `svt-db-agent-next` instead of `svt-db-agent`; every master push touching the agent
+   deploys it. The old C++ container has to be removed once by hand
+   ([`Environment/Dev/README.md`](../../../Environment/Dev/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next)).
+   Until phase 4 lands, dev has no Kafka consumer for `svt.db-agent.request`.
+2. Run the parity harness against dev once phase 4 is deployed.
+3. **Production:** add the `svt-db-agent-next` service to `Environment/Prod/docker-compose-svtsw-prod.yml`
+   and `SVT_DB_AGENT_NEXT_VERSION` to `Prod/versions.env.example`, deploy a release via
+   `DbAgent Next :: Manual → deploy-prod--manual`, remove `svt.db-agent--prod` once, then drop the
+   `svt-db-agent` service from the prod compose file. Rollback before that last step is
+   `DbAgent :: Manual → deploy-prod--manual` with the previous C++ tag; nothing else needs to change
+   as long as migration 1 only added columns the C++ ignores.
+4. After a quiet period, archive `DbAgent/` and its workflows (keep `DbAgent/docs` as the historical
+   specification or move it next to the clone).

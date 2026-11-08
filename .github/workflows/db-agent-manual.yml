@@ -1,22 +1,25 @@
 name: 'DbAgent :: Manual'
 
-# Manual-only operations, run from the Actions UI (Run workflow → pick a job).
-# Extracted from db-agent.yml so that workflow stays automatic-only (push / PR /
-# tag), mirroring the ui.yml / ui-manual.yml split.
+# Manual-only operations for the C++ DbAgent, run from the Actions UI (Run
+# workflow → pick a job). Extracted from db-agent.yml so that workflow stays
+# automatic-only (push / PR / tag), mirroring the ui.yml / ui-manual.yml split.
+#
+# There is no dev deploy here any more: since 2026-11 the dev environment runs
+# svt-db-agent-next (db-agent-next-manual.yml) and its compose file no longer
+# defines the svt-db-agent service. The C++ agent is deployed to prod only.
 on:
   workflow_dispatch:
     inputs:
       job:
         description: 'Manual job to run'
         required: true
-        default: 'deploy-dev--manual'
+        default: 'deploy-prod--manual'
         type: choice
         options:
           - docker-registry-create--manual
-          - deploy-dev--manual
           - deploy-prod--manual
       image_tag:
-        description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-registry-create--manual (always builds short SHA).'
+        description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Ignored by docker-registry-create--manual (always builds short SHA).'
         required: false
         type: string
 
@@ -63,37 +66,15 @@ jobs:
           cache-to: type=gha,mode=max,scope=db-agent
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
 
-  # Deploys pin the image version in /opt/docker/svtsw/<env>/versions.env and
-  # recreate ONLY this service inside the svt-svtsw--<env> compose project (see
-  # Environment/README.md). App config + secrets live in the server-side .env,
-  # not in GitHub.
-  deploy-dev--manual:
-    if: inputs.job == 'deploy-dev--manual'
-    runs-on: self-hosted
-    environment: dev
-    steps:
-      # The deploy needs Environment/ (compose files + deploy-service.sh) from
-      # the repo; sparse-checkout keeps the checkout on the runner minimal.
-      - uses: actions/checkout@v5
-        with:
-          sparse-checkout: Environment
-      - name: Deploy svt-db-agent to dev
-        # Override the workflow-level `defaults.run.working-directory: DbAgent`
-        # — the sparse checkout only materialises Environment/ and root files.
-        working-directory: ${{ github.workspace }}
-        env:
-          INPUT_TAG: ${{ inputs.image_tag }}
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          IMAGE_TAG="${INPUT_TAG:-${GITHUB_SHA::8}}"
-          bash Environment/deploy-service.sh dev svt-db-agent "${IMAGE_TAG}"
-
   # Manual production deploy. Run from the Actions UI once a release image exists
   # for a `svt-db-agent-*` tag. Requires `image_tag` input (the release version,
   # e.g. 1.2.3) and the `environment: prod` approval gate (configure Required
   # reviewers in repo Settings -> Environments -> prod).
+  #
+  # The deploy pins the image version in /opt/docker/svtsw/prod/versions.env and
+  # recreates ONLY this service inside the svt-svtsw--prod compose project (see
+  # Environment/README.md). App config + secrets live in the server-side .env,
+  # not in GitHub.
   deploy-prod--manual:
     if: inputs.job == 'deploy-prod--manual'
     runs-on: self-hosted

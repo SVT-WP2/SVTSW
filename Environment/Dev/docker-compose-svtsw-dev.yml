@@ -50,17 +50,20 @@ services:
         max-size: "50m"
         max-file: "5"
 
-  svt-db-agent:
-    image: ghcr.io/svt-wp2/svt-db-agent:${SVT_DB_AGENT_VERSION:?missing - set it in versions.env}
-    container_name: svt.db-agent--dev
+  # The DB agent of this environment is svt-db-agent-next, the NestJS
+  # re-implementation built from UI/apps/svt-db-agent-next (prod still runs the
+  # C++ svt-db-agent). Same SVT_DB_AGENT_* variables as the C++ container, no log
+  # volume (it logs to stdout), and GET /health on port 7676 inside the network
+  # (not published; the image's HEALTHCHECK probes it).
+  svt-db-agent-next:
+    image: ghcr.io/svt-wp2/svt-db-agent-next:${SVT_DB_AGENT_NEXT_VERSION:?missing - set it in versions.env}
+    container_name: svt.db-agent-next--dev
     restart: unless-stopped
     networks:
       - svt-network--dev
     # Lets SVT_DB_HOST=host.docker.internal reach a native Postgres on the host.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    volumes:
-      - /var/log/svt-db-agent/dev:/var/log/svt-db-agent
     environment:
       SVT_DB_AGENT_DB_HOST: "${SVT_DB_HOST:?missing - set it in .env}"
       SVT_DB_AGENT_DB_PORT: "${SVT_DB_PORT:-5432}"
@@ -70,6 +73,11 @@ services:
       SVT_DB_AGENT_DB_SCHEMA: "${SVT_DB_SCHEMA:?missing - set it in .env}"
       SVT_DB_AGENT_KAFKA_SERVER: "${SVT_KAFKA_HOST:-kafka}"
       SVT_DB_AGENT_KAFKA_PORT: "${SVT_KAFKA_PORT:-9094}"
+      # PRODUCTION | STANDARD | VERBOSE | DEBUG, mapped onto Nest log levels.
+      SVT_DB_AGENT_LOGGER_TERM_VERBOSITY: "${SVT_DB_AGENT_NEXT_LOG_VERBOSITY:-STANDARD}"
+      # The agent reports its own version; keep it in lockstep with the image tag.
+      APP_VERSION: "${SVT_DB_AGENT_NEXT_VERSION}"
+      NODE_ENV: production
     logging:
       driver: "json-file"
       options:

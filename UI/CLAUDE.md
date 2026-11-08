@@ -13,7 +13,7 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 | `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
-| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++); `GET /health` on **7676**. Config via `SVT_DB_AGENT_*`. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
+| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++); `GET /health` on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context `UI/`), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
 
 The browser never talks to Kafka. Flow is always:
 

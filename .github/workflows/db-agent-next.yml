@@ -1,0 +1,250 @@
+name: DbAgent Next
+
+# Automatic CI/build/deploy for svt-db-agent-next, the NestJS re-implementation
+# of the DB Agent that lives in the UI Nx workspace (UI/apps/svt-db-agent-next).
+# Manual ops (one-off build, deploy to dev/prod) live in db-agent-next-manual.yml,
+# releases in db-agent-next-release.yml, mirroring the ui.yml / db-agent.yml split.
+#
+# The app is built from the UI workspace (shared libs, one package-lock.json),
+# so the path filter covers the app, the Node-side libs it imports and the
+# workspace files that change how it is built. SPA-only changes do not trigger
+# it; ui.yml in turn ignores UI/apps/svt-db-agent-next/**.
+#
+# Release commits (svt-db-agent-next@<version>, pushed to master by
+# DbAgent Next :: Release) are a no-op here: every master-push job skips them,
+# because the release image is built straight from the svt-db-agent-next-* tag
+# (docker-registry-create--release), not from the commit. The UI's release
+# commits (svt-ui@<version>) touch UI/package.json and are skipped too.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'UI/apps/svt-db-agent-next/**'
+      - 'UI/libs/epic/**'
+      - 'UI/libs/epic-api-types/**'
+      - 'UI/libs/svt-db/**'
+      - 'UI/package.json'
+      - 'UI/package-lock.json'
+      - 'UI/tsconfig*.json'
+      - 'UI/nx.json'
+      - 'UI/eslint.config.mjs'
+      - 'UI/vitest.config.ts'
+      - 'UI/.dockerignore'
+      - '.github/workflows/db-agent-next.yml'
+    tags:
+      - 'svt-db-agent-next-*'
+  pull_request:
+    paths:
+      - 'UI/apps/svt-db-agent-next/**'
+      - 'UI/libs/epic/**'
+      - 'UI/libs/epic-api-types/**'
+      - 'UI/libs/svt-db/**'
+      - 'UI/package.json'
+      - 'UI/package-lock.json'
+      - 'UI/tsconfig*.json'
+      - 'UI/nx.json'
+      - 'UI/eslint.config.mjs'
+      - 'UI/vitest.config.ts'
+      - 'UI/.dockerignore'
+      - '.github/workflows/db-agent-next.yml'
+
+concurrency:
+  group: db-agent-next-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: svt-wp2/svt-db-agent-next
+  NODE_VERSION: '22.13'
+
+defaults:
+  run:
+    working-directory: UI
+
+jobs:
+  # Lint, test and build the app natively (fast, npm-cached). Runs on PRs and on
+  # normal master pushes; skipped on release commits and on tags (the release
+  # image builds straight from the tag in docker-registry-create--release).
+  ci:
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
+          && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: UI/package-lock.json
+      - run: npm ci --prefer-offline
+      # Scoped to the agent and the libs it owns; the shared libs are linted by
+      # ui.yml. libs/svt-db/** appears in phase 2, hence --no-error-on-unmatched-pattern.
+      - run: npx eslint "apps/svt-db-agent-next/**/*.ts" "libs/svt-db/**/*.ts" --no-error-on-unmatched-pattern --quiet
+      - run: npx vitest run apps/svt-db-agent-next libs/svt-db
+      - run: rm -rf .nx && npx nx build svt-db-agent-next
+
+  # Pull requests only: build the image the way master will, without pushing,
+  # so a broken Dockerfile is caught before merge. Shares the build cache with
+  # the push jobs below.
+  docker-build:
+    if: github.event_name == 'pull_request'
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/apps/svt-db-agent-next/Dockerfile
+          push: false
+          build-args: |
+            APP_VERSION=${{ github.sha }}
+          cache-from: type=gha,scope=db-agent-next
+          cache-to: type=gha,mode=max,scope=db-agent-next
+
+  # Runtime image build + push for dev. Master push only; skipped on release
+  # commits (that image is built from the tag below).
+  docker-registry-create:
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
+      && !startsWith(github.event.head_commit.message, 'svt-ui@')
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.vars.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        run: echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/apps/svt-db-agent-next/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.short_sha }}
+          cache-from: type=gha,scope=db-agent-next
+          cache-to: type=gha,mode=max,scope=db-agent-next
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.short_sha }}
+
+  # Runtime image build + push for release. Tag pushes only. Builds straight
+  # from the tag (no CI gate, mirroring ui.yml). Publishes :<version>, plus
+  # :latest only for stable (non-SNAPSHOT) releases.
+  docker-registry-create--release:
+    if: startsWith(github.ref, 'refs/tags/svt-db-agent-next-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        # Strip the `svt-db-agent-next-` prefix so the image tag matches the
+        # semver (svt-db-agent-next-1.2.3 -> 1.2.3). Stable releases also
+        # publish :latest; SNAPSHOT releases do not.
+        run: |
+          TAG="${GITHUB_REF#refs/tags/svt-db-agent-next-}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+          if ! echo "$TAG" | grep -qi "SNAPSHOT"; then
+            TAGS="${TAGS}"$'\n'"${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: UI
+          file: UI/apps/svt-db-agent-next/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.tag }}
+          cache-from: type=gha,scope=db-agent-next
+          cache-to: type=gha,mode=max,scope=db-agent-next
+          tags: ${{ steps.vars.outputs.tags }}
+
+  # Deploys pin the image version in /opt/docker/svtsw/dev/versions.env and
+  # recreate ONLY this service inside the svt-svtsw--dev compose project (see
+  # Environment/README.md). App config + secrets live in the server-side .env,
+  # not in GitHub.
+  deploy-dev:
+    # Same guard as docker-registry-create: don't deploy version-bump commits.
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
+      && !startsWith(github.event.head_commit.message, 'svt-ui@')
+    needs: docker-registry-create
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-db-agent-next to dev
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
+        env:
+          IMAGE_TAG: ${{ needs.docker-registry-create.outputs.image_tag }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          bash Environment/deploy-service.sh dev svt-db-agent-next "${IMAGE_TAG}"
+
+  # Auto-deploy a release image to dev as soon as it's built. Runs on every
+  # svt-db-agent-next-* tag (any release type), after
+  # docker-registry-create--release has pushed the image. Deploys the
+  # release-versioned image (svt-db-agent-next:<version>), replacing whatever
+  # the master-push deploy-dev last pinned for the service.
+  deploy-dev--release:
+    if: startsWith(github.ref, 'refs/tags/svt-db-agent-next-')
+    needs: docker-registry-create--release
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      # The deploy needs Environment/ (compose files + deploy-service.sh) from
+      # the repo; sparse-checkout keeps the checkout on the runner minimal.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Deploy svt-db-agent-next to dev
+        # Override the workflow-level `defaults.run.working-directory: UI`
+        # — the sparse checkout only materialises Environment/ and root files.
+        working-directory: ${{ github.workspace }}
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/svt-db-agent-next-}"
+          bash Environment/deploy-service.sh dev svt-db-agent-next "${VERSION}"

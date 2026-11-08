@@ -1,5 +1,5 @@
 [Unit]
-Description=SVTSW Application Stack for Dev Environment (svt-ui, svt-db-agent)
+Description=SVTSW Application Stack for Dev Environment (svt-ui, svt-db-agent-next)
 Requires=docker.service
 # Kafka first: the kafka stack owns the svt-network--dev network these
 # containers join. Wants= (not Requires=) so a flapping kafka unit doesn't

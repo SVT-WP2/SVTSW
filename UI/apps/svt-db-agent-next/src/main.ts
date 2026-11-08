@@ -20,7 +20,8 @@ async function bootstrap() {
 
     const httpPort = configService.get('httpPort', { infer: true })
     await app.listen(httpPort)
-    Logger.log(`🚀 SvtDbAgentNext is running on: http://localhost:${httpPort} (GET /health)`)
+    const version = process.env.APP_VERSION ?? 'local'
+    Logger.log(`🚀 SvtDbAgentNext ${version} is running on: http://localhost:${httpPort} (GET /health)`)
 }
 
 void bootstrap()

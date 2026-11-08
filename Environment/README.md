@@ -10,7 +10,7 @@ as systemd services on the same host:
 | Stack | Compose file | systemd unit | Contents |
 | ----- | ------------ | ------------ | -------- |
 | kafka | `docker-compose-kafka-<env>.yml` | `svt.kafka--<env>.service` | Kafka broker (KRaft) + Kafka UI; **owns** the `svt-network--<env>` network |
-| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, `svt-db-agent` (joins the network as `external`) |
+| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui` and the DB agent: `svt-db-agent-next` on dev, `svt-db-agent` on prod (join the network as `external`) |
 
 On the server each environment is one self-contained folder:
 
@@ -53,12 +53,39 @@ Ownership is strict:
    the versions that were last deployed.
 
 Services can therefore be deployed/redeployed one by one — from the Actions UI
-(`UI :: Manual` / `DbAgent :: Manual` → `deploy-dev--manual` /
-`deploy-prod--manual`) or on the server itself:
+(`UI :: Manual` / `DbAgent Next :: Manual` → `deploy-dev--manual` /
+`deploy-prod--manual`; `DbAgent :: Manual` → `deploy-prod--manual`) or on the
+server itself:
 
 ```bash
 bash Environment/deploy-service.sh dev svt-ui 1a2b3c4d
 ```
+
+## The two DB agent services
+
+The DB agent is being re-implemented in NestJS inside the UI workspace
+(`UI/apps/svt-db-agent-next`, notes in `UI/docs/db-agent-clone/`). During the
+transition the two environments run different agents:
+
+| | dev | prod |
+| --- | --- | --- |
+| Compose service / container | `svt-db-agent-next` / `svt.db-agent-next--dev` | `svt-db-agent` / `svt.db-agent--prod` |
+| Image | `ghcr.io/svt-wp2/svt-db-agent-next` (built from `UI/`, `UI/apps/svt-db-agent-next/Dockerfile`) | `ghcr.io/svt-wp2/svt-db-agent` (built from `DbAgent/`) |
+| `versions.env` line | `SVT_DB_AGENT_NEXT_VERSION` | `SVT_DB_AGENT_VERSION` |
+| Workflows | `db-agent-next.yml`, `DbAgent Next :: Manual`, `DbAgent Next :: Release` | `db-agent.yml` (build only), `DbAgent :: Manual`, `DbAgent :: Release` |
+| Deploys | automatic on master pushes and release tags, or manual | manual only (`deploy-prod--manual`) |
+
+Both read the same `SVT_DB_*` values from `.env`; the new one has no log
+volume (stdout only) and exposes `GET /health` on port 7676 inside the network.
+The one-time cleanup of the old dev container is described in
+[`Dev/README.md`](Dev/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next).
+
+Moving prod later means: add the `svt-db-agent-next` service to
+`Prod/docker-compose-svtsw-prod.yml` and `SVT_DB_AGENT_NEXT_VERSION` to
+`Prod/versions.env.example` (copy the dev definitions, `--prod` suffixes),
+deploy a release with `DbAgent Next :: Manual → deploy-prod--manual`, remove
+the C++ container once (`sudo docker rm -f svt.db-agent--prod`), then drop the
+`svt-db-agent` service from the prod compose file.
 
 ## First-time server setup
 
@@ -88,7 +115,7 @@ For **prod**, first replace the bootstrap `latest` tags in
 want running.
 
 > **Registry credentials (once per host):** the app packages
-> (`ghcr.io/svt-wp2/svt-ui`, `svt-db-agent`) are private. Install a long-lived
+> (`ghcr.io/svt-wp2/svt-ui`, `svt-db-agent`, `svt-db-agent-next`) are private. Install a long-lived
 > pull login for root — a classic PAT with only `read:packages` (ideally on a
 > service account): `sudo docker login ghcr.io -u <account>` (paste the PAT at
 > the password prompt). The systemd units' boot-time pulls use it. CI deploys
