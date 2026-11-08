@@ -44,7 +44,7 @@ npm run start::db-agent-next   # real DB agent (in development), http://localhos
 ```
 
 ```bash
-npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 with database svt_sw_db_e2e_test
+npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 (.env.test; override in .env.test.local) with database svt_sw_db_e2e_test
 ```
 
 ```bash

@@ -22,10 +22,21 @@ So `setup.send(message)` is to this agent what `request().post(url)` is to an HT
 
 ## Database
 
-`.env.test` points at `localhost:5500`, user `postgres` / `postgres`, database **`svt_sw_db_e2e_test`**
-(the compose Postgres of `Dev/docker-compose.postgres.yml`; create the database once with
-`CREATE DATABASE svt_sw_db_e2e_test OWNER postgres`). The harness refuses to run unless the database
-name ends with `_e2e_test`, because it **truncates every table** of schema `main` before each test.
+`.env.test` points at `localhost:5500` (the compose Postgres of `Dev/docker-compose.postgres.yml`), user
+`postgres` / `postgres`, database **`svt_sw_db_e2e_test`**; create the database once with
+`CREATE DATABASE svt_sw_db_e2e_test OWNER postgres`. The harness refuses to run unless the database name
+ends with `_e2e_test`, because it **truncates every table** of schema `main` before each test.
+
+Credentials or a port that differ on your machine go into **`apps/svt-db-agent-next/.env.test.local`**
+(git-ignored, same keys), which wins over `.env.test`; variables already set in the shell win over both.
+For example, to use a native PostgreSQL on its default port instead:
+
+```
+SVT_DB_AGENT_DB_PORT=5432
+SVT_DB_AGENT_DB_PASS=<your password>
+```
+
+Never put a real password into `.env.test`: it is committed and CI reads it.
 
 - `TestSetup.init()` applies the application's migrations (`src/migrations`) to that database, so the
   schema is always the one the code expects; nothing is generated from entities.
@@ -67,6 +78,6 @@ describe('Wafers (e2e)', () => {
 
 `vitest.e2e.config.ts` uses the **swc** plugin instead of Vitest's esbuild transform: NestJS resolves
 constructor injection from decorator metadata (`design:paramtypes`), which esbuild never emits.
-`.env.test` is loaded by `utils/e2e-env.ts` (a `setupFiles` entry) with `NODE_ENV=test`; variables already
-in the environment win, so CI or a developer can point the suite at another database. Spec files run
-sequentially (`fileParallelism: false`) because they share one database.
+`utils/e2e-env.ts` (a `setupFiles` entry) sets `NODE_ENV=test` and loads `.env.test.local` then `.env.test`;
+variables already in the environment win, so CI or a developer can point the suite at another database.
+Spec files run sequentially (`fileParallelism: false`) because they share one database.

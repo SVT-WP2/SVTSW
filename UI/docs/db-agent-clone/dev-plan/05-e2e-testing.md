@@ -17,7 +17,7 @@ API. Building all 34 entities first and all 55 handlers afterwards would postpon
 | Piece | What it does |
 |---|---|
 | `utils/test-setup.ts` `TestSetup` | `init()` boots the real `AppModule` with `@nestjs/testing` against the database of `.env.test` and applies `src/migrations` to it; `clearDatabase()` truncates every table of `main` (identities restarted); `send(message)` hands a request envelope to `SvtDbAgentNextRequestDispatcher` and returns the reply envelope, both after a JSON round trip; `em()` / `query()` for seeding and assertions. |
-| `utils/e2e-env.ts` | `setupFiles`: `NODE_ENV=test`, loads the app's `.env.test`, refuses any database whose name does not end with `_e2e_test`. |
+| `utils/e2e-env.ts` | `setupFiles`: `NODE_ENV=test`, loads the app's `.env.test.local` (git-ignored, personal credentials) then `.env.test`, refuses any database whose name does not end with `_e2e_test`. |
 | `vitest.e2e.config.ts` | Node environment, **swc** transform (NestJS needs `design:paramtypes` metadata; esbuild emits none), aliases from `tsconfig.base.json`, sequential files, 30 s timeouts. Specs are `test-e2e/**/*.e2e-spec.ts`, which the unit config's `*.spec.ts` glob never matches. |
 
 Kafka is **not** in the loop: `send()` calls the dispatcher the Kafka controller (phase 4) delegates to,
@@ -27,8 +27,9 @@ in the test loop would make the suite slow and flaky for no coverage of our code
 test (one message end to end, env-gated like rentaly's live R2 specs) is a later, separate addition.
 
 Database: `localhost:5500`, `postgres`/`postgres`, **`svt_sw_db_e2e_test`** (the compose Postgres of
-`Dev/docker-compose.postgres.yml`; create the database once). CI provides the same through a
-`postgres:17` service container in `db-agent-next.yml`.
+`Dev/docker-compose.postgres.yml`; create the database once). A developer whose instance differs (e.g. a
+native PostgreSQL on 5432) overrides the keys in the git-ignored `.env.test.local`. CI provides the same
+through a `postgres:17` service container in `db-agent-next.yml`.
 
 Seeding: no shared fixtures. Each test creates what it needs, through the agent's own messages when a
 `Create*` message exists (that also tests the message), otherwise through `setup.em()` or SQL.

@@ -242,4 +242,5 @@ version in `apps/svt-db-agent-next/package.json` and the same three-workflow lay
 > Operator notes: [`../Environment/README.md`](../Environment/README.md#the-two-db-agent-services).
 >
 > e2e: `npm run e2e::db-agent-next` runs [apps/svt-db-agent-next/test-e2e](apps/svt-db-agent-next/test-e2e/README.md)
-> against a real PostgreSQL (`svt_sw_db_e2e_test` on port 5500); CI runs it against a service container.
+> against a real PostgreSQL (`svt_sw_db_e2e_test`, connection in `.env.test`, personal overrides in the
+> git-ignored `.env.test.local`); CI runs it against a service container.

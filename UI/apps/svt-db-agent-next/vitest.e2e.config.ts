@@ -45,6 +45,8 @@ export default defineConfig({
     resolve: {
         alias,
     },
+    // Vite would otherwise create node_modules/.vite under the app folder (the test root).
+    cacheDir: resolve(workspaceRoot, 'node_modules/.vite/svt-db-agent-next-e2e'),
     test: {
         root: __dirname,
         environment: 'node',
