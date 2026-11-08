@@ -36,7 +36,8 @@ UI/
 ├── apps/
 │   ├── epic-measure-ui/      Angular 19 SPA
 │   ├── epic-measure-api/     NestJS BFF (HTTP + Kafka client)
-│   └── epic-db-agent/        NestJS Kafka microservice — mock DB agent
+│   ├── epic-db-agent/        NestJS Kafka microservice — mock DB agent
+│   └── svt-db-agent-next/    NestJS re-implementation of the real DB Agent (in development, see docs/db-agent-clone)
 ├── libs/
 │   ├── epic-api-types/       HTTP contract types shared by the SPA and the Node apps (plain TS only)
 │   ├── epic/                 Node-side shared code (API ↔ db-agent)

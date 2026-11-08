@@ -1,0 +1,52 @@
+{
+    "name": "svt-db-agent-next",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/svt-db-agent-next/src",
+    "projectType": "application",
+    "tags": [],
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "webpack-cli build",
+                "args": [
+                    "node-env=production"
+                ]
+            },
+            "configurations": {
+                "development": {
+                    "args": [
+                        "node-env=development"
+                    ]
+                }
+            }
+        },
+        "serve": {
+            "executor": "@nx/js:node",
+            "defaultConfiguration": "development",
+            "dependsOn": [
+                "build"
+            ],
+            "options": {
+                "buildTarget": "svt-db-agent-next:build",
+                "runBuildTargetDependencies": false,
+                "port": 9697
+            },
+            "configurations": {
+                "development": {
+                    "buildTarget": "svt-db-agent-next:build:development"
+                },
+                "production": {
+                    "buildTarget": "svt-db-agent-next:build:production"
+                }
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "vitest run --dir apps/svt-db-agent-next",
+                "cwd": "{workspaceRoot}"
+            }
+        }
+    }
+}

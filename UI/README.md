@@ -39,6 +39,9 @@ This is UI for EpicMeasure project. Project represents **2 services**: front-end
 
 Fake db agent, used just for testing purposes. You can run the project with the command: start::db-agent
 
+`apps/svt-db-agent-next` is the real DB Agent being re-implemented in this workspace (`npm run start::db-agent-next`,
+health on <http://localhost:7676/health>); see [docs/db-agent-clone/README.md](docs/db-agent-clone/README.md).
+
 ## Docker
 
 

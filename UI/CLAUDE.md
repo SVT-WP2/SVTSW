@@ -6,13 +6,14 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 > This directory (`UI/`) is the Nx workspace. It lives inside the larger `SVTSW` repo, whose siblings
 > (`SVTSupervisor`, `TestAgent`, `DbAgent`, `WPAgent`, …) are the real services this UI talks to in production.
 
-## The three apps
+## The apps
 
 | App | Stack | Role |
 |---|---|---|
 | `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
+| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++); `GET /health` on **7676**. Config via `SVT_DB_AGENT_*`. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
 
 The browser never talks to Kafka. Flow is always:
 
@@ -36,6 +37,10 @@ npm run start::api     # NestJS only, http://localhost:7373/api (Swagger: /api/s
 
 ```bash
 npm run start::db-agent   # fake DB agent — needs Kafka running
+```
+
+```bash
+npm run start::db-agent-next   # real DB agent (in development), http://localhost:7676/health
 ```
 
 ```bash
@@ -114,8 +119,9 @@ Don't add a NgRx store for a single grid.
 
 - Dev API port is **7373** (`.env.development`), not the `9393` fallback in `main.ts`. `proxy.conf.json`
   targets 7373 — keep them in sync.
-- `.env.development` / `.env.production` / `.env.test` **are committed** for both `epic-measure-api` and
-  `epic-db-agent`. Don't put secrets there.
+- `.env.development` / `.env.production` / `.env.test` **are committed** for `epic-measure-api`,
+  `epic-db-agent` and `svt-db-agent-next`. Don't put secrets there. `nx serve` loads the project's
+  `.env.<configuration>` itself; the `envFilePath` in `app.module.ts` is for containers.
 - New SCSS in a lib needs its `styles/` dir added to `stylePreprocessorOptions.includePaths` in
   `apps/epic-measure-ui/project.json`; new lib `assets/` needs an entry in the same file's `assets` array.
 - Kafka payloads are `JSON.stringify`'d by hand before `.send()` — the reply comes back needing
