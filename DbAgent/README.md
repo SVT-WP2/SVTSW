@@ -4,6 +4,13 @@ C++ service that bridges Kafka and the project database for EpicMeasure: it cons
 messages from Kafka, runs the matching database operations, and publishes the results back. It is
 built and shipped as a Docker image the same way the [UI](../UI/README.md) is.
 
+## Documentation
+
+[docs/README.md](docs/README.md) is a behavioural specification of the agent written for
+re-implementation: runtime architecture, domain model, database schema with ER diagrams, the
+generic list/create/update engine, every Kafka message handler, the wafer-map format and ASIC
+generation rules, and a consolidated list of contract drift and known quirks.
+
 ## Docker Usage
 
 ```
