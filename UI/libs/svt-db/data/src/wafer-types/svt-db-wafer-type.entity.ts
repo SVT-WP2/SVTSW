@@ -1,4 +1,5 @@
-import { Entity, Enum, OneToOne, OptionalProps, PrimaryKey, Property } from '@mikro-orm/core'
+import { OptionalProps } from '@mikro-orm/core'
+import { Entity, Enum, OneToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
 
 import { SVT_DB_ENUM_VALUES } from '../enums'
 

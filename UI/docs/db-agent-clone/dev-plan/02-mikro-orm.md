@@ -231,10 +231,25 @@ Record in the PR: the exact MikroORM versions, whether `@Enum({ nativeEnumName }
 
 ## Outcome (done 2026-11-08)
 
-- Versions: `@mikro-orm/{core,postgresql,migrations,cli,reflection}` **6.6.17**, `@mikro-orm/nestjs`
-  **6.1.2**, `pg` 8.23.1, `dotenv` 16.4.7 (the version `@nestjs/config` already ships). MikroORM 7 exists
-  (7.2.x) but the plan, rentaly and the team's experience are v6; upgrading is a separate decision, best
-  taken before phase 3 multiplies the entity count.
+- Versions: first delivered on MikroORM **6.6.17** / `@mikro-orm/nestjs` 6.1.2, then **upgraded the same
+  day to 7.2.8 / 7.1.0** (plus `@mikro-orm/decorators` 7.2.8), `pg` 8.23.1, `dotenv` 16.4.7 (the version
+  `@nestjs/config` already ships). What the v7 upgrade changed:
+  - MikroORM 7 is ESM-first and needs **Node ≥ 22.17** (`engines` in `UI/package.json`, `NODE_VERSION: '22'`
+    in the agent's workflows, `node:22-alpine` image). The CommonJS bundle still works through Node's
+    `require(esm)`.
+  - Decorators come from `@mikro-orm/decorators/legacy`; `ReflectMetadataProvider` (same package) is set
+    explicitly in the runtime options. `connect` and `discovery.disableDynamicFileAccess` are gone
+    (connections are always lazy; entities are classes).
+  - The app and the `svt-db/*` libs use `module`/`moduleResolution: nodenext` + `skipLibCheck` (the
+    legacy `node` resolution cannot see v7's `exports` subpaths, which surfaced as a bogus
+    `SqlSchemaGenerator` type error in `MikroOrmModule.forRootAsync`). The rest of the workspace is untouched.
+  - `MikroOrmModule.forRootAsync` needs the explicit `driver: PostgreSqlDriver` next to `useFactory`.
+  - CLI: `preferTs: true` replaces `useTsNode`; the TypeScript loader is auto-detected (`swc`, via the
+    workspace's `@swc-node/register`).
+  - Terminus's `MikroOrmHealthIndicator` reports `down` on an idle lazy connection; `/health` uses the app's
+    own `SvtDbAgentNextDatabaseHealthIndicator` (`orm.checkConnection()` with a 3 s timeout) instead.
+  - The migrations themselves did not change; only MikroORM's `mikro_orm_migrations` table definition
+    differs slightly (`NOT NULL`, `timestamp(6)`).
 - `@Enum({ nativeEnumName, items })` diffs cleanly against the `main."<type>"` enums; no `columnType`
   fallback needed.
 - Identity columns did **not** diff cleanly with `autoincrement: true` alone (MikroORM wanted to re-add

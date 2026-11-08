@@ -44,6 +44,7 @@ export class SvtDbOrmModule {
                         ...buildSvtDbOrmOptions(configService.getConfig(), options.entities),
                         registerRequestContext: false,
                     }),
+                    // Required next to useFactory so the module can import the driver-specific EntityManager.
                     driver: PostgreSqlDriver,
                 }),
             ],

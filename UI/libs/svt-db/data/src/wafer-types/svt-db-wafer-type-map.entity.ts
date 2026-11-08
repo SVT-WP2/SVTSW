@@ -1,4 +1,5 @@
-import { DeferMode, Entity, OneToOne, Property } from '@mikro-orm/core'
+import { DeferMode } from '@mikro-orm/core'
+import { Entity, OneToOne, Property } from '@mikro-orm/decorators/legacy'
 
 import { SvtDbWaferTypeEntity } from './svt-db-wafer-type.entity'
 

@@ -56,7 +56,8 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: svt-wp2/svt-db-agent-next
-  NODE_VERSION: '22.13'
+  # MikroORM 7 needs Node >= 22.17; the UI pipeline still pins 22.13.
+  NODE_VERSION: '22'
 
 defaults:
   run:

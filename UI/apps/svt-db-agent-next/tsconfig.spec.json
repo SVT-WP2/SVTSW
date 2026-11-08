@@ -2,7 +2,9 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "outDir": "../../dist/out-tsc",
-        "moduleResolution": "node10",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "skipLibCheck": true,
         "types": [
             "vitest/globals",
             "node"

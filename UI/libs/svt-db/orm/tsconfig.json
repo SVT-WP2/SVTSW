@@ -7,7 +7,10 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "skipLibCheck": true
     },
     "files": [],
     "include": [],

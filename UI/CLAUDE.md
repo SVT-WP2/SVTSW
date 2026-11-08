@@ -133,6 +133,10 @@ Don't add a NgRx store for a single grid.
 - Every dependency must satisfy the Angular 21 peer ranges so plain `npm i` / `npm ci` resolve. If you add
   or bump a package, check its peers — a single stale one (e.g. a lib still pinned to `@angular/*@^19`)
   forces the whole workspace onto `npm i --force` and hides every other conflict behind it.
+- `svt-db-agent-next` uses **MikroORM 7**, which is ESM-first and needs **Node ≥ 22.17** (`engines` in
+  `package.json`). Import its decorators from `@mikro-orm/decorators/legacy`; `apps/svt-db-agent-next` and
+  `libs/svt-db/*` compile with `moduleResolution: nodenext` because v7's types are invisible to the legacy
+  `node` resolution the rest of the workspace uses. Conventions for entities: `docs/db-agent-clone/dev-plan/03-data-layer.md`.
 - Release/CI details live in [README.md](README.md); don't duplicate them here.
 
 ## External sources of truth (outside this workspace)

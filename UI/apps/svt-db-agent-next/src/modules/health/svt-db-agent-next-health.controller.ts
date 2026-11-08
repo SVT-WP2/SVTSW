@@ -1,17 +1,19 @@
 import { Controller, Get } from '@nestjs/common'
-import { HealthCheck, HealthCheckResult, HealthCheckService, MikroOrmHealthIndicator } from '@nestjs/terminus'
+import { HealthCheck, HealthCheckResult, HealthCheckService } from '@nestjs/terminus'
+
+import { SvtDbAgentNextDatabaseHealthIndicator } from './svt-db-agent-next-database.health-indicator'
 
 
 /**
  * `GET /health`: the endpoint the container `HEALTHCHECK` calls.
- * `database` pings PostgreSQL through MikroORM; phase 4 adds the Kafka consumer.
+ * `database` is a round trip to PostgreSQL through MikroORM; phase 4 adds the Kafka consumer.
  */
 @Controller('health')
 export class SvtDbAgentNextHealthController {
 
     constructor(
         private readonly health: HealthCheckService,
-        private readonly database: MikroOrmHealthIndicator,
+        private readonly database: SvtDbAgentNextDatabaseHealthIndicator,
     ) {
     }
 
@@ -19,7 +21,7 @@ export class SvtDbAgentNextHealthController {
     @HealthCheck()
     check(): Promise<HealthCheckResult> {
         return this.health.check([
-            () => this.database.pingCheck('database', { timeout: 3000 }),
+            () => this.database.isHealthy('database'),
         ])
     }
 

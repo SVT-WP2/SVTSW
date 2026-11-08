@@ -78,7 +78,8 @@ and `eslint.config.mjs` for a lib with lint and test targets.
 
 ## 5. Build, run and test facts
 
-- Nx 22, Node 22 (`^20.19 || ^22.12 || >=24`), npm. Apps build with webpack through
+- Nx 22, Node **≥ 22.17** (MikroORM 7 is ESM-first and requires it; `engines` in `UI/package.json` says
+  `^22.17.0 || >=24.0.0`), npm. Apps build with webpack through
   `NxAppWebpackPlugin` (`compiler: 'tsc'`, `target: 'node'`, `generatePackageJson: true`);
   `nx serve <app>` runs `@nx/js:node` on the build output. `tsconfig.app.json` of the mock already
   sets `experimentalDecorators`, `emitDecoratorMetadata`, `module: commonjs`, `target: es2021`.

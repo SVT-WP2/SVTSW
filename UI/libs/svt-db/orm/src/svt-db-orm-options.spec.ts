@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { ReflectMetadataProvider } from '@mikro-orm/decorators/legacy'
 import { PostgreSqlDriver } from '@mikro-orm/postgresql'
 
 import { SvtDbOrmConfig } from './models'
@@ -41,15 +42,15 @@ describe('buildSvtDbOrmOptions', () => {
         expect(buildSvtDbOrmOptions(CONFIG, []).namingStrategy).toBe(SvtDbNamingStrategy)
     })
 
-    it('uses the explicit entity list without file discovery', () => {
+    it('uses the explicit entity list with the legacy-decorator metadata provider', () => {
         const options = buildSvtDbOrmOptions(CONFIG, [FakeEntity])
         expect(options.entities).toEqual([FakeEntity])
-        expect(options.discovery).toEqual({ disableDynamicFileAccess: true, warnWhenNoEntities: false })
+        expect(options.metadataProvider).toBe(ReflectMetadataProvider)
+        expect(options.discovery).toEqual({ warnWhenNoEntities: false })
     })
 
-    it('boots without a connection and never creates the database', () => {
+    it('never creates the database and keeps timestamps in UTC', () => {
         const options = buildSvtDbOrmOptions(CONFIG, [])
-        expect(options.connect).toBe(false)
         expect(options.ensureDatabase).toBe(false)
         expect(options.allowGlobalContext).toBe(false)
         expect(options.forceUtcTimezone).toBe(true)

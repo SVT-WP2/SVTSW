@@ -42,7 +42,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '22.13'
+  NODE_VERSION: '22'
   TAG_PREFIX: 'svt-db-agent-next-'
   COMMIT_PREFIX: 'svt-db-agent-next@'
 

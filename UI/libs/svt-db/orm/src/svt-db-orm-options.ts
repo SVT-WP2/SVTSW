@@ -1,3 +1,4 @@
+import { ReflectMetadataProvider } from '@mikro-orm/decorators/legacy'
 import { Options, PostgreSqlDriver } from '@mikro-orm/postgresql'
 
 import { SvtDbOrmConfig } from './models'
@@ -13,14 +14,18 @@ export type SvtDbOrmEntities = NonNullable<Options['entities']>
  * - `schema: main` and the {@link SvtDbNamingStrategy}: the database uses quoted camelCase identifiers
  *   (`"waferId"`, `main."WaferType"`) and PostgreSQL's default constraint names; every entity names its
  *   table explicitly.
- * - No dynamic file access: entities are listed, not discovered, because the app ships as one bundle.
- * - `connect: false`: the pool connects on first use, so the application boots and `/health` reports
- *   `down` while the database is unreachable instead of crashing at start.
+ * - Entities are listed, not discovered from files, because the app ships as one bundle. They use the
+ *   legacy (`experimentalDecorators`) decorators, hence the explicit `ReflectMetadataProvider`
+ *   (MikroORM 7 no longer defaults to it); every scalar property also declares its `type`.
+ * - Connections are lazy (MikroORM 7 always), so the application boots and `/health` reports `down`
+ *   while the database is unreachable instead of crashing at start; `ensureDatabase: false` so it never
+ *   creates a database either.
  * - `forceUtcTimezone`: `timestamp without time zone` values are never shifted by the host zone.
  */
 export function buildSvtDbOrmOptions(config: SvtDbOrmConfig, entities: SvtDbOrmEntities): Options {
     return {
         driver: PostgreSqlDriver,
+        metadataProvider: ReflectMetadataProvider,
         host: config.host,
         port: config.port,
         user: config.user,
@@ -30,12 +35,10 @@ export function buildSvtDbOrmOptions(config: SvtDbOrmConfig, entities: SvtDbOrmE
         namingStrategy: SvtDbNamingStrategy,
         entities,
         discovery: {
-            disableDynamicFileAccess: true,
             warnWhenNoEntities: false,
         },
         forceUtcTimezone: true,
         allowGlobalContext: false,
-        connect: false,
         ensureDatabase: false,
         debug: config.debug,
         migrations: {
