@@ -106,3 +106,15 @@ export function parseJsonOrBadRequest(text: string, path: string): unknown {
         throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string holding valid JSON`)
     }
 }
+
+/** An optional ISO 8601 date-time (e.g. a filter bound) as a `Date`; `null` and absent mean "not given". */
+export function optionalDateTime(value: unknown, path: string): Date | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+    const date = typeof value === 'string' && value.trim() !== '' ? new Date(value) : new Date(NaN)
+    if (Number.isNaN(date.getTime())) {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be an ISO 8601 date-time`)
+    }
+    return date
+}

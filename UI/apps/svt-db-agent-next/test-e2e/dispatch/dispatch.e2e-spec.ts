@@ -56,6 +56,10 @@ describe('Request dispatch (e2e)', () => {
             'GetAllSvtTestTemplates',
             'CreateSvtTestTemplate',
             'UpdateSvtTestTemplate',
+            'GetAllSvtTests',
+            'CreateSvtTest',
+            'UpdateSvtTestStart',
+            'UpdateSvtTestFinish',
         ]))
     })
 

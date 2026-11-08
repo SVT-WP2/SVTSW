@@ -10,6 +10,7 @@ import {
     SvtDbSvtTestTypeConfigsRepository,
     SvtDbSvtTestTypesRepository,
 } from './svt-test-types'
+import { SvtDbSvtTestsRepository } from './svt-tests'
 import { SvtDbWaferTypesRepository } from './wafer-types'
 import { SvtDbWafersRepository } from './wafers'
 import { SvtDbWpMachinesRepository, SvtDbWpProbeCardsRepository, SvtDbWpProjectsRepository } from './wp'
@@ -32,6 +33,7 @@ const PROVIDERS = [
     SvtDbSvtTestTypesRepository,
     SvtDbSvtTestTypeConfigsRepository,
     SvtDbSvtTestTemplatesRepository,
+    SvtDbSvtTestsRepository,
 ]
 
 /**

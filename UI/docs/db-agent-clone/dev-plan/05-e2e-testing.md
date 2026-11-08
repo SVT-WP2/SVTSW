@@ -76,7 +76,7 @@ The Kafka controller of phase 4 becomes one method:
 Order of slices (dependencies first): wafer types + enums (done) → wafers with location history and ASIC
 generation (done) → ASICs (done) → chips + chip blocks (done) → wafer-probe machines, probe cards,
 projects (done) → equipment types + equipment (done) → SVT test setups/configs, test types/configs,
-templates (done) → SVT tests → modules (read only).
+templates (done) → SVT tests (done) → modules (read only).
 
 ## 4. Findings from the first slice
 
@@ -231,3 +231,35 @@ templates (done) → SVT tests → modules (read only).
   database default `true`.
 - `GetEquipmentListForTestSetup` is still not implemented: it exists in the yaml only (no TypeScript message
   class), its reply shape is open (R-1, Q-H11) and nothing writes `SvtTestSetupEquipList`.
+
+## 11. Findings from the SVT tests slice (`SvtTestList`)
+
+- Entities `SvtTestList`, `SvtTestListToEntityName` (composite key of the enum and the test) and
+  `SvtTestListToEntityId` (surrogate `id` from migration 1) in `libs/svt-db/data/src/svt-tests/`; the
+  schema diff stays empty with `type: 'datetime', columnType: 'timestamp'` for the three naive timestamps.
+- **Every contract filter works** (Q-H12: the C++ had `ids` only): `ids`, `dutEntityNames`, `dutId` (meant
+  to be combined with the names), `testResultStatuses`, `testTypeConfigIds`, `testSetupConfigIds` and the
+  six timestamp bounds (`From` inclusive, `To` exclusive, ISO 8601; a NULL timestamp never matches). The
+  two device filters are resolved through the link tables first and intersected with `ids`; the rest is one
+  `findAndCount`. Lists come **newest first** (`id desc`): the UI grid keeps the order it receives and
+  documents it as newest first. A test missing a link row lists with `null`s (Q-R2).
+- **Timestamps are ISO 8601 UTC on the wire** (R-6: the contract says so, the C++ sent PostgreSQL text).
+  Columns are `timestamp without time zone`, read and written as UTC (`forceUtcTimezone`); a client's
+  `2026-03-01T10:15:30Z` is stored as `2026-03-01 10:15:30` and comes back as `2026-03-01T10:15:30.000Z`.
+  Sub-millisecond precision is lost (JavaScript `Date`).
+- `UpdateSvtTestStart` and `UpdateSvtTestFinish` are in the yaml but have **no TypeScript message class**
+  (`SvtDbAgentKafkaSvtTests` lists two messages); nothing in this repository sends them yet (TestAgent and
+  SVTSupervisor have no reference). The agent handles them under their yaml names with app-local DTOs
+  (`data.id` + `data.update`), validates `testResultStatus` against the **database enum**, and only logs
+  out-of-order transitions (decision: TestAgent drives the state machine).
+- **Result-status vocabularies disagree.** The database enum (`SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`,
+  `ERROR`, created by migration 1 as on dev; the ITS3TestAgent logs use the same words) and the TypeScript
+  `EpicSvtTestResultStatus` (`None`, `Completed`, `Failed`, `Cancelled`, which the BFF maps onto the UI's
+  status) share no value. Both dev rows are NULL, so nothing has ever stored a status. The agent stores and
+  returns the database values and answers `BadRequest` to `Completed`; a fresh test has `testResultStatus:
+  null` (there is no `None` in the enum), which the BFF's `resolveEpicSvtTestStatus` does not map. **To be
+  settled by the contract author**: either the enum gains the UI's values (migration) or the contract and
+  BFF adopt the database's.
+- `CreateSvtTest` checks that the device exists in the table its `dutEntityName` names (ASIC, chip or
+  chip block; no foreign key can) and that both configs exist, then writes the test and its two link rows in
+  one transaction; `createdAt` comes back from the database default.

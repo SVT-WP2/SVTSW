@@ -12,6 +12,7 @@ import { SvtDbAgentNextSvtTestSetupsHandlers } from './svt-test-setups'
 import { SvtDbAgentNextSvtTestTemplatesHandlers } from './svt-test-templates'
 import { SvtDbAgentNextSvtTestTypeConfigsHandlers } from './svt-test-type-configs'
 import { SvtDbAgentNextSvtTestTypesHandlers } from './svt-test-types'
+import { SvtDbAgentNextSvtTestsHandlers } from './svt-tests'
 import { SvtDbAgentNextWaferTypesHandlers } from './wafer-types'
 import { SvtDbAgentNextWafersHandlers } from './wafers'
 import { SvtDbAgentNextWpMachinesHandlers } from './wp-machines'
@@ -42,6 +43,7 @@ import { SvtDbAgentNextWpProjectsHandlers } from './wp-projects'
         SvtDbAgentNextSvtTestTypesHandlers,
         SvtDbAgentNextSvtTestTypeConfigsHandlers,
         SvtDbAgentNextSvtTestTemplatesHandlers,
+        SvtDbAgentNextSvtTestsHandlers,
     ],
 })
 export class SvtDbAgentNextHandlersModule {

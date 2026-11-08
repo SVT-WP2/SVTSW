@@ -64,10 +64,10 @@ Recommendations are in the last column and are proposals.
 | Enum cache ([X-11](../../../DbAgent/docs/05-request-handlers.md#16-enums), Q-H14) | loaded at startup, never refreshed; naive `enum_range` parsing | per-request query / short TTL / startup | **fix**: query `pg_enum` per request (cheap) or cache with a short TTL. Use `enumlabel` rows, not `enum_range` text. |
 | `GetAllEnums` request key (D-2) | reads `data.enumNames`; contract `enumsNames`; UI sends `filter.enumNames` | pick one | **ask**: fix the contract typo and accept `filter.enumNames`; keep returning everything when no names are given. |
 | Enum names `chipBlockType` vs `blockType` (R-11, S15) | DB says `blockType` | rename DB type / rename in contract | **ask**: one name end to end. Renaming in the contract and UI is cheaper than renaming a DB type. |
-| Date and timestamp formats (R-6) | Postgres text (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS.ffffff`) | preserve / ISO 8601 UTC | **ask**: the contract says ISO 8601; the UI parses today's format. Coordinate the switch, or emit ISO and verify the UI's parsing accepts both. |
+| Date and timestamp formats (R-6) | Postgres text (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS.ffffff`) | preserve / ISO 8601 UTC | **ask**: the contract says ISO 8601; the UI parses today's format. Coordinate the switch, or emit ISO and verify the UI's parsing accepts both. *Status:* dates stay `YYYY-MM-DD`; `SvtTestList` timestamps are ISO 8601 UTC (the UI mocks already produce ISO; dev-plan/05 §11). |
 | JSON fields on the wire (R-7) | strings; objects silently dropped on write (except `configBody`) | strings / objects | **preserve** strings on the wire for now (WPAgent and the UI expect strings); **fix** by rejecting objects with `BadRequest` instead of dropping them. |
 | Location `username` | never written by `Create*` (NULL); written by `Update*Location` | n/a | **preserve**; consider taking the creator's name from the create request later. |
-| Test state machine | not enforced | preserve / enforce | **preserve** (TestAgent drives it); log out-of-order transitions. |
+| Test state machine | not enforced | preserve / enforce | **preserve** (TestAgent drives it); log out-of-order transitions. *Status:* done; the `testResultStatus` vocabularies of the database enum and the TypeScript contract disagree (dev-plan/05 §11). |
 
 ## 4. Schema-affecting items
 

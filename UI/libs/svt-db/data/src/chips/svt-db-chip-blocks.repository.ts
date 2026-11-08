@@ -46,4 +46,8 @@ export class SvtDbChipBlocksRepository {
         return { items, totalCount }
     }
 
+    findById(id: number): Promise<SvtDbChipBlockEntity | null> {
+        return this.em.findOne(SvtDbChipBlockEntity, { id })
+    }
+
 }
