@@ -45,9 +45,7 @@ export class EpicSvtTestsService implements OnModuleInit {
 
         const data: SvtDbAgentKafkaSvtTests.GetAllSvtTestsData = {
             filter: {
-                // the UI hands its search tokens over as typed (see EpicSvtTestsListQuery.ids) and nothing turns them
-                // into numbers on the way to the DB agent yet — the cast only states what has always been sent
-                ...(queryFilter?.ids ? { ids: queryFilter.ids as number[] } : {}),
+                ...(queryFilter?.ids ? { ids: queryFilter.ids } : {}),
                 ...(queryFilter?.dutEntityNames ? { dutEntityNames: queryFilter.dutEntityNames } : {}),
                 ...(queryFilter?.dutId ? { dutId: queryFilter.dutId } : {}),
                 ...(testResultStatuses ? { testResultStatuses } : {}),

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsNumber, IsOptional, IsString, Max } from 'class-validator'
+import { IsArray, IsInt, IsNumber, IsOptional, IsString, Max } from 'class-validator'
 import { EpicApiPager, EpicChipsListQuery } from 'epic-api-types'
+
+import { TransformQueryNumberArray, TransformQueryStringArray } from '../../common'
 
 
 /**
@@ -21,12 +23,15 @@ export class EpicChipsGetAllParamsDto implements EpicChipsListQuery, Partial<Epi
     generalLocation?: string
 
     @IsArray()
+    @IsInt({ each: true })
     @IsOptional()
+    @TransformQueryNumberArray()
     @ApiProperty({ isArray: true, items: { type: 'number' }, required: false })
     ids?: number[]
 
     @IsString({ each: true })
     @IsOptional()
+    @TransformQueryStringArray()
     @ApiProperty({ isArray: true, items: { type: 'string' }, required: false })
     familyTypes?: string[]
 

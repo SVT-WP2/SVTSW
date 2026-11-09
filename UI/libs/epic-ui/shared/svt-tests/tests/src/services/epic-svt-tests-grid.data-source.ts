@@ -32,12 +32,14 @@ export class EpicSvtTestsGridDataSource
     protected fetchDataBlock(
         pager: EpicApiPager, filter: EpicSvtTestsGridDsFilter): Observable<EpicApiPageResponse<EpicSvtTestsGrid.RowEntity>> {
 
-        // an explicit but empty list of config ids means no config can satisfy the filter, so nothing matches —
-        // passing it on would read as "any config" and bring the whole list back (see toEpicSvtTestsListQueryFilter)
-        const hasImpossibleConfigFilter = (filter.testTypeConfigIds && !filter.testTypeConfigIds.length)
+        // an explicit but empty list of ids (a search term that is no id) or of config ids (an owner without
+        // configs) means nothing can satisfy the filter — passing it on would read as "any" and bring the whole
+        // list back (see toEpicSvtTestsListQueryFilter)
+        const hasImpossibleFilter = (filter.ids && !filter.ids.length)
+            || (filter.testTypeConfigIds && !filter.testTypeConfigIds.length)
             || (filter.testSetupConfigIds && !filter.testSetupConfigIds.length)
 
-        if (hasImpossibleConfigFilter) {
+        if (hasImpossibleFilter) {
             return of({ items: [], totalCount: 0 })
         }
 

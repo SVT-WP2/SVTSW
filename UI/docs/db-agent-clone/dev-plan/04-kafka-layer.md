@@ -214,3 +214,15 @@ load their lists from the agent. Fixed on the way:
 - BFF: the `enumNames` query filter of `GET /api/enums` failed with `value.split is not a function` for
   every form (the ValidationPipe's implicit conversion had already made it an array); the DTO transform now
   accepts strings, comma lists and arrays.
+- BFF: every list-query DTO rejected a one-item array filter (`GET /api/svt-tests?dutEntityNames=ChipBlock&dutId=1`,
+  the chip-block details page, was a 400 `dutEntityNames must be an array`): the UI appends the key once per
+  item, so one item reaches the BFF as a plain string, and the number arrays went on to the agent as strings.
+  `TransformQueryStringArray()` / `TransformQueryNumberArray()` (`libs/epic/entities/src/common/dtos`) now
+  normalise string, comma-list and array forms on all nine query DTOs. The svt-tests `ids` filter is `number[]`
+  end to end now (contract, DTO with `@IsInt({ each: true })`, UI): the UI's search box turns its integer tokens
+  into ids and keeps the others from reaching the API (an explicit empty list, answered locally with no rows).
+- A filter value that is no value of its enum type (`GetAllChips` with `familyTypes: ['ChipBlock']`) made the
+  database throw and the agent answer `UnexpectedError`; the dispatcher now maps Postgres `22P02`
+  (`invalid_text_representation`) to `BadRequest` — `Error: "ChipBlock" is not a value of the asicFamilyType enum`
+  — alongside the unique-constraint mapping it already had. The enum catalogue the UI picks from matches the
+  database, so the UI never sends such a value; Swagger users do.

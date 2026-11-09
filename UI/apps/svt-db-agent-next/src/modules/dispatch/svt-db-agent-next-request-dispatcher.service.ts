@@ -1,4 +1,4 @@
-import { MikroORM, RequestContext, UniqueConstraintViolationException } from '@mikro-orm/core'
+import { DriverException, MikroORM, RequestContext, UniqueConstraintViolationException } from '@mikro-orm/core'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { DiscoveryService } from '@nestjs/core'
 import { EpicKafkaReplyError, EpicKafkaReplyStatus } from 'epic/entities'
@@ -7,6 +7,12 @@ import { SvtDbAgentNextHandlerDefinition, SvtDbAgentNextHandlers, SvtDbAgentNext
 import { SvtDbAgentNextRequestError } from './svt-db-agent-next-request-error'
 import { isRecord } from './svt-db-agent-next-request-validation'
 
+
+/**
+ * Postgres SQLSTATE `invalid_text_representation`: a value that cannot be read as its column's type, such as an
+ * enum value that does not exist.
+ */
+const INVALID_TEXT_REPRESENTATION = '22P02'
 
 /** The reply envelope as it goes on the wire: `data` is `null` on failure, `error` is always present. */
 export type SvtDbAgentNextReply<TData = Record<string, any>> = {
@@ -94,6 +100,10 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
                 'Failed entry creation: an entry with the same unique value already exists',
             )
         }
+        if (error instanceof DriverException && error.code === INVALID_TEXT_REPRESENTATION) {
+            this.logger.warn(`${requestType}: ${error.message}`)
+            return failure(replyType, EpicKafkaReplyStatus.BadRequest, describeInvalidTextRepresentation(error.message))
+        }
         this.logger.error(`${requestType} failed`, error instanceof Error ? error.stack : String(error))
         return failure(replyType, EpicKafkaReplyStatus.UnexpectedError, `Unexpected error while processing ${requestType}`)
     }
@@ -102,4 +112,16 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
 
 function failure(type: string, status: EpicKafkaReplyStatus, message: string, code = -1): SvtDbAgentNextReply {
     return { type, status, data: null, error: { code, message } }
+}
+
+/**
+ * The reply message for a Postgres `22P02`: the one the handlers meet is a filter value that is no value of its
+ * enum type (`invalid input value for enum main."asicFamilyType": "ChipBlock"`); anything else gets a generic
+ * line, the database's own message stays in the log.
+ */
+function describeInvalidTextRepresentation(message: string): string {
+    const match = /invalid input value for enum (?:\w+\.)?"?(\w+)"?: "([^"]*)"/.exec(message)
+    return match
+        ? `Error: "${match[2]}" is not a value of the ${match[1]} enum`
+        : 'Error: a value does not fit the type of its column'
 }

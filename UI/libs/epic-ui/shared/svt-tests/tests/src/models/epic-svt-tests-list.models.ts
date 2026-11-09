@@ -111,17 +111,25 @@ export function getEpicSvtTestStatusSelectOptions(): SelectOptionLabelValue[] {
 }
 
 /**
- * The search box narrows the list down by test id. What was typed is passed on as it is — only trimmed, and
- * split on commas so several ids can be entered at once. Nothing is validated or dropped here on purpose: a
- * term that is not an id is answered by the API with an empty list, instead of quietly filtering by nothing.
+ * The search box narrows the list down by test id. What was typed is split on commas, so several ids can be
+ * entered at once, and every token that is an integer becomes an id. A token that is no id (`abc`) matches no
+ * test: on its own it gives an explicit empty list, which `EpicSvtTestsGridDataSource` and
+ * `matchesEpicSvtTestsListQueryFilter` answer with no rows — instead of quietly filtering by nothing, or of
+ * having the API reject the request (`ids` is `number[]` all the way down).
  */
-export function toEpicSvtTestIdsFilter(searchTerm: string): string[] | undefined {
-    const ids = (searchTerm || '')
+export function toEpicSvtTestIdsFilter(searchTerm: string): number[] | undefined {
+    const tokens = (searchTerm || '')
         .split(',')
         .map(item => item.trim())
         .filter(item => item.length)
 
-    return ids.length ? ids : undefined
+    if (!tokens.length) {
+        return undefined
+    }
+
+    return tokens
+        .filter(item => /^\d+$/.test(item))
+        .map(item => Number(item))
 }
 
 /**
@@ -220,7 +228,7 @@ export function toEpicSvtTestsListQueryFilter(
 export function matchesEpicSvtTestsListQueryFilter(
     test: EpicSvtTest, queryFilter: EpicSvtTestsListQuery): boolean {
 
-    return matchesFilterList<string>(String(test.id), queryFilter.ids?.map(String))
+    return matchesFilterList<number>(test.id, queryFilter.ids)
         && matchesFilterList<string>(test.dutEntityName, queryFilter.dutEntityNames)
         && (!queryFilter.dutId || queryFilter.dutId === test.dutId)
         && matchesFilterList<string>(test.status, queryFilter.statuses)

@@ -243,9 +243,8 @@ function fulfilsDateRange(value: string | null, from?: string | null, to?: strin
 }
 
 function fulfilsFilter(item: EpicSvtTest, queryFilter: Partial<EpicSvtTestsListQuery>): boolean {
-    // ids arrive as the user typed them, so they are compared as text — a term that is not an id matches nothing
     const fulfilIdsFilter = !queryFilter.ids?.length
-        || queryFilter.ids.map(String).includes(String(item.id))
+        || queryFilter.ids.includes(item.id)
     const fulfilDutEntityNamesFilter = !queryFilter.dutEntityNames?.length
         || queryFilter.dutEntityNames.includes(item.dutEntityName)
     const fulfilDutIdFilter = !queryFilter.dutId || queryFilter.dutId === item.dutId

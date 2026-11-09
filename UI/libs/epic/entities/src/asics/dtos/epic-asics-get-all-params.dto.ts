@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString, Max } from 'class-validator'
 import { EpicApiPager, EpicAsicsListQuery } from 'epic-api-types'
 
+import { TransformQueryStringArray } from '../../common'
+
 
 /**
  * `GET /asics` query string: the shared filter (`EpicAsicsListQuery`) plus paging (`EpicApiPager`). Its pair in
@@ -27,6 +29,7 @@ export class EpicAsicsGetAllParamsDto implements EpicAsicsListQuery, Partial<Epi
 
     @IsString({ each: true })
     @IsOptional()
+    @TransformQueryStringArray()
     @ApiProperty({ isArray: true, items: { type: 'string' }, required: false })
     asicFamilyTypes?: string[]
 

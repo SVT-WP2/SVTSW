@@ -1,12 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsOptional } from 'class-validator'
+import { IsInt, IsOptional } from 'class-validator'
 import { EpicEquipmentTypesListQuery } from 'epic-api-types'
+
+import { TransformQueryNumberArray } from '../../common'
 
 
 export class EpicEquipmentTypesGetAllParamsDto implements EpicEquipmentTypesListQuery {
 
-    @IsNumber({}, { each: true })
+    @IsInt({ each: true })
     @IsOptional()
+    @TransformQueryNumberArray()
     @ApiProperty({ type: 'number', isArray: true, required: false })
     ids?: number[]
 

@@ -9,11 +9,8 @@ import { EpicDateTimeString } from '../../common'
  * translates it into the physical `testResultStatus` values the DB agent stores.
  */
 export type EpicSvtTestsListQuery = {
-    /**
-     * Test ids. The UI passes the tokens of its search box as typed — the API is the one deciding what is a
-     * valid id, nothing is validated or dropped on the way there.
-     */
-    ids?: (number | string)[] | null
+    /** Test ids. The UI's search box feeds this one — a token that is no integer never leaves the UI. */
+    ids?: number[] | null
     /** Enum values of `EpicSvtDutEntityName`. */
     dutEntityNames?: string[] | null
     /** DUT ids are unique per DUT entity only, so it is meant to be combined with `dutEntityNames`. */

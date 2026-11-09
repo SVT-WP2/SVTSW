@@ -140,15 +140,20 @@ describe('Chips (e2e)', () => {
                 .toEqual({ items: [CHIP_1], totalCount: 1 })
         })
 
-        it('rejects an unknown filter key with the C++ message, and wrongly typed filters', async () => {
+        it('rejects an unknown filter key with the C++ message, wrongly typed filters and an unknown enum value', async () => {
             const unknown = await setup.send({ type: 'GetAllChips', data: { filter: { asicId: 1 } } })
             const wrongType = await setup.send({ type: 'GetAllChips', data: { filter: { familyTypes: 'MOSAIX' } } })
+            const unknownValue = await setup.send({ type: 'GetAllChips', data: { filter: { familyTypes: ['ChipBlock'] } } })
 
             expect(unknown).toMatchObject({
                 status: 'BadRequest', data: null, error: { message: 'Error: asicId is not an allowed filter.' },
             })
             expect(wrongType).toMatchObject({
                 status: 'BadRequest', error: { message: 'data.filter.familyTypes must be a list of strings' },
+            })
+            // the database rejects the value (SQLSTATE 22P02); the dispatcher answers BadRequest, not UnexpectedError
+            expect(unknownValue).toMatchObject({
+                status: 'BadRequest', data: null, error: { message: 'Error: "ChipBlock" is not a value of the asicFamilyType enum' },
             })
         })
 
