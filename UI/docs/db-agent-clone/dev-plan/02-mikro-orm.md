@@ -65,7 +65,8 @@ apps/svt-db-agent-next/
     ├── migrations/
     │   ├── Migration20261108000000_baseline_prod.ts
     │   ├── Migration20261108000001_dev_layout_and_surrogate_ids.ts
-    │   └── Migration20261108000002_test_result_status_cancelled.ts   (CANCELLED joins the testResultStatus enum)
+    │   ├── Migration20261108000002_test_result_status_cancelled.ts   (CANCELLED joins the testResultStatus enum)
+    │   └── Migration20261108000003_june_layout_leftovers.ts          (June-dump databases: arriveDate, pcModel/pcName values)
     └── modules/health/svt-db-agent-next-health.controller.ts   + MikroOrmHealthIndicator (@nestjs/terminus) → "database"
 ```
 

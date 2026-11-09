@@ -23,6 +23,17 @@ describe('Enums (e2e)', () => {
             expect(reply.data['asicFamilyType']).toEqual(SVT_DB_ENUM_VALUES.asicFamilyType)
         })
 
+        it('treats an empty enumNames list as "all" (what the BFF sends for an unfiltered request)', async () => {
+            const all = await setup.send<Record<string, string[]>>(new SvtDbAgentKafkaEnums.GetAllEnumsMessage({}))
+            const empty = await setup.send<Record<string, string[]>>(
+                new SvtDbAgentKafkaEnums.GetAllEnumsMessage({ filter: { enumNames: [] } }),
+            )
+
+            expect(empty.status).toBe('Success')
+            expect(Object.keys(empty.data).length).toBeGreaterThan(10)
+            expect(empty.data).toEqual(all.data)
+        })
+
         it('filters by data.filter.enumNames (contract) and leaves unknown names out', async () => {
             const reply = await setup.send<Record<string, string[]>>(
                 new SvtDbAgentKafkaEnums.GetAllEnumsMessage({ filter: { enumNames: ['foundryName', 'noSuchEnum'] } }),

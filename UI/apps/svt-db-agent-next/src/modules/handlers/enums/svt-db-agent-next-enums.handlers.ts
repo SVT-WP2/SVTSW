@@ -37,7 +37,9 @@ export class SvtDbAgentNextEnumsHandlers implements SvtDbAgentNextMessageHandler
         const names = optionalStringList(filter['enumNames'], 'data.filter.enumNames')
             ?? optionalStringList(body['enumNames'], 'data.enumNames')
             ?? optionalStringList(body['enumsNames'], 'data.enumsNames')
-        return this.enums.getAll(names)
+        // An empty list means every enum type, as for every other list filter of the contract (the BFF sends
+        // `enumNames: []` when the UI asks for all of them).
+        return this.enums.getAll(names?.length ? names : undefined)
     }
 
 }

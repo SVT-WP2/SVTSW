@@ -194,3 +194,23 @@ CI has no broker, so the flag stays off there.
 **Still open from this page.** 4d: the parity run against the C++ agent on the same dump
 ([../03-parity-testing.md](../03-parity-testing.md)) and the UI documentation updates that follow it.
 Intentional differences so far are the findings sections of [05-e2e-testing.md](05-e2e-testing.md).
+
+### End-to-end run (2026-11-09, local)
+
+Postgres (`Dev/docker-compose.postgres.yml`, `svt_sw_db` restored from the June 2026 dump, migrations 0–3
+applied with `npm run db-next:migration:up`), Kafka (`Dev/docker-compose.kafka-local.yml`, `localhost:9085`),
+`npm run start::db-agent-next`, `npm run start::api`, `npm run start::ui`. Through the BFF, `GET /api/wafer-types`,
+`/api/wafers`, `/api/asics?waferId=4` and `/api/enums` return the database's data (3 wafer types, 4 wafers,
+3421 ASICs of wafer 4, 21 enum types); `GET /health` is `ok` with `database` and `kafka` up; the UI's pages
+load their lists from the agent. Fixed on the way:
+
+- `GetAllEnums` with `enumNames: []` (what the BFF sends for an unfiltered request) returned nothing: an empty
+  list now means "all", as for every other list filter.
+- A record consumed before the dispatcher's module-init hook had registered the handlers was answered
+  `Unknown request type` (seen after a dev-server restart, when the consumer-group rejoin took 21 s):
+  `main.ts` now awaits `app.init()` before `startAllMicroservices()`, as the e2e harness always did.
+- Migration 3 for databases restored from the June dump (`ProbeCard.arrivalDate`, missing `pcModel` and
+  `pcName` values), guarded, no-op elsewhere.
+- BFF: the `enumNames` query filter of `GET /api/enums` failed with `value.split is not a function` for
+  every form (the ValidationPipe's implicit conversion had already made it an array); the DTO transform now
+  accepts strings, comma lists and arrays.
