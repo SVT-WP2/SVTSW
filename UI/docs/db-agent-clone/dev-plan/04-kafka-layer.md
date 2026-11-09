@@ -226,3 +226,11 @@ load their lists from the agent. Fixed on the way:
   (`invalid_text_representation`) to `BadRequest` — `Error: "ChipBlock" is not a value of the asicFamilyType enum`
   — alongside the unique-constraint mapping it already had. The enum catalogue the UI picks from matches the
   database, so the UI never sends such a value; Swagger users do.
+
+UI pages walked through afterwards (Chrome, logged in): wafers list and details, chips list and details,
+chip-block details, SVT tests list (a search term that is no id makes no API call and shows no rows; `1, x`
+asks for `ids=1`), admin test setups (list, details, config body), test types (list, config body), test
+templates, wafer types, equipment types, equipment, WP machines, WP projects, WP probe cards and enums. Every
+`/api` call answered 200. The one console error, `couldn't load module ace/theme/ace/theme/github` on the two
+config-body pages, comes from the ace editor's theme loading under the dev server and has nothing to do with the
+agent; the editor shows the body regardless.
