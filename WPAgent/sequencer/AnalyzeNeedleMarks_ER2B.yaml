@@ -1,0 +1,45 @@
+# AnalyzeNeedleMarks_ER2B.yaml
+#
+# Needle-mark analysis of already stitched LEC images, one die after the other.
+# For every die: the newest Imaging/<wafer>/<die>/*_LEC.tif is analysed and the
+# reports (<image>_marks.json / _marks.csv / _overlay.tif) are written next to it.
+# No prober movement: it can be re-run any time on the images on disk.
+#
+# Override the list at run time, e.g.
+#   python main.py send RunSequencerYAML --data='{"filepath":"sequencer/AnalyzeNeedleMarks.yaml",
+#       "user":"<user>","waferAgentName":"<agent>","wafer":"Wafer","dies":["BAM00","BAM01"]}'
+
+params:
+  user:
+  waferAgentName:
+  # Images and reports: Imaging/<wafer>/<die>/
+  wafer: "Wafer"
+  dies: ["BAM00","BAM01","BAM02","BAM03","BAM04","BAM05","BAM06","BAM07","BAM08","BAM09",
+         "BAM10","BAM11","BAM12","BAM13",
+         "S3G0","S3G1","S3G2","S3G3","S3G4","S3G5","S3G6","S3G7","S3G8",
+         "S6G0","S6G1","S6G2","S6G3","S6G4","S6G5","S6G6","S6G7","S6G8"]
+  # needle_mark config: built-in name or path to a JSON config
+  config: "lec"
+  # also write <image>_contrast.tif (what the detection sees, for tuning)
+  contrast: false
+  # true: stop the sequence at a die whose pad detection is doubtful
+  require_ok: false
+  # top folder: "Imaging" (local, before archiving) or the EOS archive
+  root: "/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging"
+
+steps:
+
+  - foreach: $dies
+    as: die
+    steps:
+
+      - command: AnalyzeNeedleMarks
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          folder: $die
+          wafer: $wafer
+          config: $config
+          contrast: $contrast
+          require_ok: $require_ok
+          root: $root

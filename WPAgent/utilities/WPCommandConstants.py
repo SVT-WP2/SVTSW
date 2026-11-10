@@ -84,6 +84,8 @@ SEQUENCE_COMMANDS: set[str] = {
     "TakeImageL0_1-3",
     "TakeImageL0_2-4",
     "BrightnessCorrection",
+    "TakeImageLECDie",
+    "NeedleOffsetMeasureER2B",
 }
 EXPERT_COMMANDS |= SEQUENCE_COMMANDS
 

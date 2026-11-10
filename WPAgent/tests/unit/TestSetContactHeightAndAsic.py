@@ -154,6 +154,16 @@ class _Rec(MockProberImpl):
 
 
 ASIC_OK = {"serialNumber": "BAM00", "waferId": 7}
+ER2_BAM_PROJECT = "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+
+
+def _open_er2_project(g):
+    """Die labels are resolved with the die map of the open project: open an ER2
+    babyMOSAIX project, with the wafer / probe card orientations it requires."""
+    from utilities.WPValidator import get_validator
+    g.projectName = ER2_BAM_PROJECT
+    g.wafer_orientation, g.probe_card_orientation = (
+        get_validator()._extract_orientations_from_project_name(ER2_BAM_PROJECT))
 
 
 class TestMoveChuckAsic:
@@ -165,6 +175,7 @@ class TestMoveChuckAsic:
     def test_full_sequence_then_wide_with_ptpa_state(self, globals_instance, state):
         _login(globals_instance)
         globals_instance.loaded_wafer_id = 7
+        _open_er2_project(globals_instance)
         sm.force_state(state)
         mp = _Rec()
         with patch("actions.WPDataBaseActions.get_asic_by_id", return_value=ASIC_OK):
@@ -201,6 +212,7 @@ class TestMoveChuckAsic:
 
         _login(globals_instance)
         globals_instance.loaded_wafer_id = 7
+        _open_er2_project(globals_instance)
         sm.force_state(S.Aligned)
         mp = Boom()
         with patch("actions.WPDataBaseActions.get_asic_by_id", return_value=ASIC_OK):

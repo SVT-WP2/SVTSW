@@ -5,7 +5,6 @@ import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPValidationDecorator import validate_command
-from utilities.WPMapConverter import get_converter
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober

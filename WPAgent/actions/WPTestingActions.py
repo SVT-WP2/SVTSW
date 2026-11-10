@@ -2,7 +2,7 @@ from utilities.WPResponseBuilder import ResponseBuilder
 import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from utilities.WPValidationDecorator import validate_command, validate_command_with_name, get_reply_type
-from utilities.WPMapConverter import get_converter
+from utilities.WPDieMaps import label_to_coordinates
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
@@ -20,125 +20,6 @@ def _ensure_initialized():
     if not is_ready:
         from utilities.WPResponseBuilder import ResponseBuilder
         return ResponseBuilder.error("NotInitializedReply", message, 503)
-    return None
-
-
-def _parse_svt_label(label: str):
-    """
-    Parse an SVT label string into (sn_prefix, row_svt, column_svt).
-
-    Format:
-        MOSAIX    → "MOSAIX-{row_svt}_ER2-W{n}"         column_svt is always 1
-        babyMOSAIX → "babyMOSAIX-{row_svt}_{col_svt}_ER2-W{n}"
-
-    Examples:
-        "MOSAIX-1_ER2-W1"         → ("MOSAIX",     1, 1)
-        "babyMOSAIX-1_1_ER2-W1"   → ("babyMOSAIX", 1, 1)
-        "babyMOSAIX-3_2_ER2-W5"   → ("babyMOSAIX", 3, 2)
-    """
-    if label.startswith("babyMOSAIX-"):
-        remainder = label[len("babyMOSAIX-"):]  # "1_1_ER2-W1"
-        parts = remainder.split("_")  # ["1", "1", "ER2-W1"]
-        return "babyMOSAIX", int(parts[0]), int(parts[1])
-
-    elif label.startswith("MOSAIX-"):
-        remainder = label[len("MOSAIX-"):]  # "1_ER2-W1"
-        parts = remainder.split("_")  # ["1", "ER2-W1"]
-        return "MOSAIX", int(parts[0]), 1  # column_svt always 1 for MOSAIX
-
-    else:
-        raise ValueError(f"Unknown ASIC type in SVT label: '{label}'")
-
-
-def _parse_its3_label(label: str):
-    """
-    Parse an ITS3 label string into (sn_prefix, id_its3).
-
-    Format:
-        BAM → babyMOSAIX, two-digit zero-padded index  e.g. "BAM00", "BAM19"
-        SEG → MOSAIX,     single digit index            e.g. "SEG0",  "SEG4"
-
-    Examples:
-        "BAM00" → ("babyMOSAIX", 0)
-        "BAM19" → ("babyMOSAIX", 19)
-        "SEG0"  → ("MOSAIX", 0)
-        "SEG4"  → ("MOSAIX", 4)
-    """
-    if label.startswith("BAM"):
-        return "babyMOSAIX", int(label[3:])  # int("00") == 0, int("19") == 19
-
-    elif label.startswith("SEG"):
-        return "MOSAIX", int(label[3:])
-
-    else:
-        raise ValueError(f"Unknown ITS3 label format: '{label}'")
-
-
-def _label_to_coordinates(label: str):
-    """
-    Auto-detect label type and convert to (col, row).
-
-    Supports:
-    - SVT labels: "babyMOSAIX-1_1_ER2-W1", "MOSAIX-1_ER2-W1"
-    - ITS3 labels: "BAM00", "BAM19", "SEG0", "SEG4"
-
-    Args:
-        label: Label string
-
-    Returns:
-        (col, row) tuple or None if invalid
-    """
-    # Try SVT format first (contains '-' and '_')
-    if "-" in label and "_" in label:
-        try:
-            sn_prefix, row_svt, column_svt = _parse_svt_label(label)
-
-            # Convert SVT to local coordinates
-            converter = get_converter()
-            if not converter.conversion_map:
-                import pathlib
-
-                _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
-                MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
-                converter.load_conversion_map(MAP_CONVERSION_PATH)
-
-            result = converter.svt_to_local(row_svt, column_svt, sn_prefix)
-            if result:
-                row_local, col_local, _ = result
-                print(
-                    f"   📍 SVT label '{label}' → SVT({row_svt}, {column_svt}) → Local({row_local}, {col_local})"
-                )
-                return col_local, row_local
-        except (ValueError, IndexError):
-            # Not SVT format, try ITS3
-            pass
-
-    # Try ITS3 format (starts with BAM or SEG)
-    if label.startswith("BAM") or label.startswith("SEG"):
-        try:
-            sn_prefix, id_its3 = _parse_its3_label(label)
-
-            # Convert ITS3 to local coordinates
-            converter = get_converter()
-            if not converter.conversion_map:
-                import pathlib
-
-                _HERE = pathlib.Path(__file__).parent.parent  # WPAgent/
-                MAP_CONVERSION_PATH = str(_HERE / "configs" / "WPMapConversion.json")
-                converter.load_conversion_map(MAP_CONVERSION_PATH)
-
-            result = converter.its3_to_local(id_its3, sn_prefix)
-            if result:
-                row_local, col_local, _ = result
-                print(
-                    f"   📍 ITS3 label '{label}' → ID({id_its3}) → Local({row_local}, {col_local})"
-                )
-                return col_local, row_local
-        except (ValueError, IndexError):
-            # Not ITS3 format either
-            pass
-
-    # Unknown format
     return None
 
 
@@ -563,22 +444,13 @@ def move_chuck_die(
 
     if has_label:
 
-        # Auto-detect label type and convert to col/row
-        result = _label_to_coordinates(label)
+        # Die label -> col/row, with the die map of the open project (utilities/WPDieMaps.py)
+        try:
+            col, row = label_to_coordinates(label, g.projectName)
+        except ValueError as e:
+            return ResponseBuilder.error(reply, str(e), 400)
 
-        if result is None:
-            # List available label formats to help user
-            return ResponseBuilder.error(
-                reply,
-                f"Invalid label format: '{label}'\n\n"
-                "Supported formats:\n"
-                f"  SVT: 'babyMOSAIX-1_1_ER2-W1' or 'MOSAIX-1_ER2-W1'\n"
-                f"  ITS3: 'BAM00', 'BAM19', 'SEG0', 'SEG4'",
-                400,
-            )
-
-        col, row = result
-        print(f"   ✅ Converted to global coordinates: col={col}, row={row}")
+        print(f"   ✅ Converted to local coordinates: col={col}, row={row}")
     else:
         print(f"\n🎯 Using global coordinates: col={col}, row={row}")
 
@@ -1599,18 +1471,12 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
 
     print(f"   Serial Number: {serial_number}")
 
-    # Convert serial number to local coordinates
-    # Reuse existing _label_to_coordinates helper!
-    result = _label_to_coordinates(serial_number)
+    # Serial number -> col/row, with the die map of the open project (utilities/WPDieMaps.py)
+    try:
+        col, row = label_to_coordinates(serial_number, g.projectName)
+    except ValueError as e:
+        return ResponseBuilder.error(reply, f"Cannot place ASIC '{serial_number}': {e}", 400)
 
-    if result is None:
-        return ResponseBuilder.error(
-            reply,
-            f"Cannot parse ASIC serial number '{serial_number}'",
-            400,
-        )
-
-    col, row = result
     print(f"   ✅ Converted: col={col}, row={row}")
 
     # Full sequence: MoveChuckOffAxis -> MoveChuckRowColumn -> AutoFocus -> RunPTPA -> MoveChuckWide

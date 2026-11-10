@@ -1,0 +1,32 @@
+{
+  "_help": "Die map of one wafer type: die labels -> local die coordinates (col, row) of the SENTIO project the die belongs to (SN_prefix: babyMOSAIX dies -> the babyMOSAIX project, MOSAIX dies -> the MOSAIX project). Chosen from the open project by utilities/WPDieMaps.py: project 'ER2_...' -> WPMapConversion_ER2.json, 'ER2B_...' -> WPMapConversion_ER2B.json. A die is found by its label or by one of its aliases; SVT serial numbers are matched without their wafer suffix (e.g. 'babyMOSAIX-1_1_ER2-W1' -> alias 'babyMOSAIX-1_1').",
+  "wafer_type": "ER2",
+  "source": "configs/WPMapConversion.json (+ labels, SVT aliases); matches ITS3TestAgent/run_list.csv",
+  "dies": [
+    {"label": "SEG0", "aliases": ["MOSAIX-1"], "asic_type": "MOSAIX", "SN_prefix": "MOSAIX", "column_local": 0, "row_local": 2, "row_global": 16, "column_global": 1, "row_svt": 1, "column_svt": 1, "id_its3": 0},
+    {"label": "SEG1", "aliases": ["MOSAIX-2"], "asic_type": "MOSAIX", "SN_prefix": "MOSAIX", "column_local": 0, "row_local": 1, "row_global": 17, "column_global": 1, "row_svt": 2, "column_svt": 1, "id_its3": 1},
+    {"label": "SEG2", "aliases": ["MOSAIX-3"], "asic_type": "MOSAIX", "SN_prefix": "MOSAIX", "column_local": 0, "row_local": 0, "row_global": 18, "column_global": 1, "row_svt": 3, "column_svt": 1, "id_its3": 2},
+    {"label": "SEG3", "aliases": ["MOSAIX-4"], "asic_type": "MOSAIX", "SN_prefix": "MOSAIX", "column_local": 0, "row_local": -1, "row_global": 19, "column_global": 1, "row_svt": 4, "column_svt": 1, "id_its3": 3},
+    {"label": "SEG4", "aliases": ["MOSAIX-5"], "asic_type": "MOSAIX", "SN_prefix": "MOSAIX", "column_local": 0, "row_local": -2, "row_global": 20, "column_global": 1, "row_svt": 5, "column_svt": 1, "id_its3": 4},
+    {"label": "BAM00", "aliases": ["babyMOSAIX-1_4"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -3, "row_local": 0, "row_global": 3, "column_global": 5, "row_svt": 1, "column_svt": 4, "id_its3": 0},
+    {"label": "BAM01", "aliases": ["babyMOSAIX-1_3"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -2, "row_local": 0, "row_global": 3, "column_global": 4, "row_svt": 1, "column_svt": 3, "id_its3": 1},
+    {"label": "BAM02", "aliases": ["babyMOSAIX-1_2"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -1, "row_local": 0, "row_global": 3, "column_global": 3, "row_svt": 1, "column_svt": 2, "id_its3": 2},
+    {"label": "BAM03", "aliases": ["babyMOSAIX-1_1"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 0, "row_local": 0, "row_global": 3, "column_global": 2, "row_svt": 1, "column_svt": 1, "id_its3": 3},
+    {"label": "BAM04", "aliases": ["babyMOSAIX-2_6"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -4, "row_local": 1, "row_global": 6, "column_global": 7, "row_svt": 2, "column_svt": 6, "id_its3": 4},
+    {"label": "BAM05", "aliases": ["babyMOSAIX-2_5"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -3, "row_local": 1, "row_global": 6, "column_global": 6, "row_svt": 2, "column_svt": 5, "id_its3": 5},
+    {"label": "BAM06", "aliases": ["babyMOSAIX-2_4"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -2, "row_local": 1, "row_global": 6, "column_global": 5, "row_svt": 2, "column_svt": 4, "id_its3": 6},
+    {"label": "BAM07", "aliases": ["babyMOSAIX-2_3"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -1, "row_local": 1, "row_global": 6, "column_global": 4, "row_svt": 2, "column_svt": 3, "id_its3": 7},
+    {"label": "BAM08", "aliases": ["babyMOSAIX-2_2"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 0, "row_local": 1, "row_global": 6, "column_global": 3, "row_svt": 2, "column_svt": 2, "id_its3": 8},
+    {"label": "BAM09", "aliases": ["babyMOSAIX-2_1"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 1, "row_local": 1, "row_global": 6, "column_global": 2, "row_svt": 2, "column_svt": 1, "id_its3": 9},
+    {"label": "BAM10", "aliases": ["babyMOSAIX-3_6"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -4, "row_local": 9, "row_global": 30, "column_global": 7, "row_svt": 3, "column_svt": 6, "id_its3": 10},
+    {"label": "BAM11", "aliases": ["babyMOSAIX-3_5"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -3, "row_local": 9, "row_global": 30, "column_global": 6, "row_svt": 3, "column_svt": 5, "id_its3": 11},
+    {"label": "BAM12", "aliases": ["babyMOSAIX-3_4"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -2, "row_local": 9, "row_global": 30, "column_global": 5, "row_svt": 3, "column_svt": 4, "id_its3": 12},
+    {"label": "BAM13", "aliases": ["babyMOSAIX-3_3"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -1, "row_local": 9, "row_global": 30, "column_global": 4, "row_svt": 3, "column_svt": 3, "id_its3": 13},
+    {"label": "BAM14", "aliases": ["babyMOSAIX-3_2"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 0, "row_local": 9, "row_global": 30, "column_global": 3, "row_svt": 3, "column_svt": 2, "id_its3": 14},
+    {"label": "BAM15", "aliases": ["babyMOSAIX-3_1"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 1, "row_local": 9, "row_global": 30, "column_global": 2, "row_svt": 3, "column_svt": 1, "id_its3": 15},
+    {"label": "BAM16", "aliases": ["babyMOSAIX-4_4"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -3, "row_local": 10, "row_global": 33, "column_global": 5, "row_svt": 4, "column_svt": 4, "id_its3": 16},
+    {"label": "BAM17", "aliases": ["babyMOSAIX-4_3"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -2, "row_local": 10, "row_global": 33, "column_global": 4, "row_svt": 4, "column_svt": 3, "id_its3": 17},
+    {"label": "BAM18", "aliases": ["babyMOSAIX-4_2"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -1, "row_local": 10, "row_global": 33, "column_global": 3, "row_svt": 4, "column_svt": 2, "id_its3": 18},
+    {"label": "BAM19", "aliases": ["babyMOSAIX-4_1"], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 0, "row_local": 10, "row_global": 33, "column_global": 2, "row_svt": 4, "column_svt": 1, "id_its3": 19}
+  ]
+}

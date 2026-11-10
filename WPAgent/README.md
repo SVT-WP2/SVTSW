@@ -149,7 +149,7 @@ WPAgent/
 ├── configs/
 │   ├── ProbeConfig*.json            # Per-machine/env configs — {"name", "kafka_broker"}, see Configuration
 │   ├── WPUserHierarchy.json         # User → hierarchy level mapping
-│   ├── WPMapConversion.json
+│   ├── WPMapConversion_<wafer>.json  # die maps per wafer type (ER2, ER2B), chosen from the open project
 │   └── WPProbesConfigs.json         # Legacy, no longer read by the code (see Configuration)
 │
 └── tests/                           # pytest suite — FSM, login/testing actions, mock prober, etc.

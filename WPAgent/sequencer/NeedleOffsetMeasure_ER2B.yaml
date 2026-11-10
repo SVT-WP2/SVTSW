@@ -1,0 +1,127 @@
+# NeedleOffsetMeasure_ER2B.yaml
+#
+# Part 1 of pad-target contacting: measure where the needles land on one die and
+# compute the chuck offset to the wanted spot on the pads. Starts from Aligned.
+#
+#   open project -> find home -> die -> PTPA -> save the position (off-axis, after PTPA)
+#   -> wide -> contact -> separation -> off-axis
+#   -> LEC imaging of this die + archive (TakeImageLECDie)
+#   -> needle-mark analysis on the archive (AnalyzeNeedleMarks)
+#   -> offset to the target (ComputePadTargetOffset)
+#
+# Results: Contacting/<project>/positions.json  (position `position_name`)
+#          Contacting/<project>/offsets.json    (offset `offset_name`, incl. ptpa_offset_x/y)
+#          <archive_dir>/<wafer>/<die>/          (LEC image + marks JSON / CSV / overlay)
+#
+# Default die: BAMTest (configs/WPMapConversion_ER2B.json). Another die: EITHER a label
+# OR col + row (set label to "" then), and its folder name, e.g.
+#   --data='{"user":"..","waferAgentName":"..","label":"BAM05","die":"BAM05","wafer":"WaferX"}'
+#   --data='{"user":"..","waferAgentName":"..","label":"","col":0,"row":0,"die":"C0R0","wafer":"WaferX"}'
+
+params:
+  user:
+  waferAgentName:
+  project: "ER2B_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+  # die selection: label OR col + row; `die` names its folder
+  label: "BAMTest"
+  col:
+  row:
+  die: "BAMTest"
+  wafer: "Wafer"
+  # where TakeImageLECDie archives, and where the analysis reads from
+  archive_dir: "/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging"
+  # needle-mark analysis
+  config: "lec"
+  contrast: false
+  # target on the pads
+  corner: "bottom_left"
+  inset_um: 20
+  # names in Contacting/<project>/
+  position_name: "ptpa_ref"
+  offset_name: "pad_target"
+
+steps:
+
+  - command: OpenProject
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      projectName: $project
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckRowColumn
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: $label
+      col: $col
+      row: $row
+
+  - command: RunPTPA
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  # reference for part 2: off-axis, right after PTPA
+  - command: SaveChuckPosition
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      name: $position_name
+      label: $die
+
+  - command: MoveChuckWide
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckContact
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckSeparation
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: MoveChuckOffAxis
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: TakeImageLECDie
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      label: $label
+      col: $col
+      row: $row
+      die: $die
+      wafer: $wafer
+      archive_dir: $archive_dir
+
+  - command: AnalyzeNeedleMarks
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $die
+      wafer: $wafer
+      root: $archive_dir
+      config: $config
+      contrast: $contrast
+
+  - command: ComputePadTargetOffset
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      folder: $die
+      wafer: $wafer
+      root: $archive_dir
+      corner: $corner
+      inset_um: $inset_um
+      name: $offset_name
