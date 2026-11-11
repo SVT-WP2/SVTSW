@@ -35,6 +35,6 @@
     {"label": "BAM11", "aliases": [], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 1, "row_local": 10},
     {"label": "BAM12", "aliases": [], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -1, "row_local": 11},
     {"label": "BAM13", "aliases": [], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": 0, "row_local": 11},
-    {"label": "BAMTest", "aliases": [], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -2, "row_local": 11}
+    {"label": "BAMTest", "aliases": [], "asic_type": "BABYMOSAIX", "SN_prefix": "babyMOSAIX", "column_local": -4, "row_local": 1}
   ]
 }
