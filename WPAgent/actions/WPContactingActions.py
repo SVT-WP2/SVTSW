@@ -8,11 +8,10 @@ Storage (per project, in Contacting/<projectName>/) is in utilities/WPContacting
 import glob
 import json
 import os
-from pathlib import Path
 
 from utilities.WPResponseBuilder import ResponseBuilder
 from utilities.WPValidationDecorator import validate_command, get_reply_type
-from utilities.WPContacting import pad_target_offset, save_offset, save_position
+from utilities.WPContacting import load_criteria, pad_target_offset, save_offset, save_position
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
@@ -150,42 +149,44 @@ def _die_folder(root, wafer, folder):
 
 
 @validate_command
-def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_left", inset_um=20,
-                              name="pad_target", max_aspect=1.5, min_valid_fraction=1.0,
-                              max_spread_um=5.0, chuck_sign_x=-1, chuck_sign_y=1,
+def compute_pad_target_offset(folder, wafer="", root="Imaging", name="pad_target",
+                              corner=None, inset_um=None, max_aspect=None, min_valid_fraction=None,
+                              max_spread_um=None, chuck_sign_x=None, chuck_sign_y=None,
                               user=None, waferAgentName=None, **kwargs):
     """
-    Chuck offset that brings the needle to a target on the pads, from the newest
+    Chuck offset that brings the needles to a target on the pads, from the newest
     needle-mark report of a die (<root>/<wafer>/<folder>/*_marks.json, written by
     AnalyzeNeedleMarks). Saved in Contacting/<project>/offsets.json under `name`;
     moves nothing.
 
-    Use case: one touchdown on every pad, right after PTPA. Success requires every
-    pad (min_valid_fraction) to show exactly one round mark, clear of the pad edge,
-    and the pads to agree (max_spread_um).
+    Criteria (corner, inset_um, max_aspect, min_valid_fraction, max_spread_um,
+    chuck_sign_x/_y) come from configs/WPContactingConfig.json, where each is
+    explained; a parameter given here overrides it for this call. The criteria
+    used are saved with the offset.
 
-    Target: `inset_um` inside the pad from both edges of `corner` (bottom_left,
-    bottom_right, top_left, top_right) or the pad centre (center). Per pad the
-    needle displacement is target - mark offset (image axes, measured pad size);
-    the median over the pads is converted to a chuck move with
-        chuck dx = chuck_sign_x * image dx,   chuck dy = chuck_sign_y * image dy
-    Defaults: chuck +x moves the needle to the pad's left (-x in the image), chuck
-    +y moves it to the pad's bottom (+y in the image), so a needle at the pad
-    centre needs a (+, +) chuck move to reach the bottom-left corner.
+    Use case: one touchdown on every pad, right after PTPA. A pad is used if it has
+    exactly one round mark clear of the edge; at least min_valid_fraction of the pads
+    must be usable, and the needles must land consistently (spread <= max_spread_um).
+    One move serves all pads: per axis the most constrained pad decides, so no needle
+    ends closer than inset_um to the corner edges (utilities/WPContacting.pad_target_offset).
+    Image -> chuck: chuck dx = chuck_sign_x * image dx, chuck dy = chuck_sign_y * image dy.
 
-    Also saved: ptpa_offset_x_um / ptpa_offset_y_um, the chuck move that would
-    centre the needle on the pads (independent of the chosen corner).
-
-    Args:
-        folder / wafer / root: die folder, as for AnalyzeNeedleMarks
-        corner, inset_um:      where to land
-        name:                  name of the saved offset
-        max_aspect:            a mark is round if its box is at most this elongated
-        min_valid_fraction:    fraction of pads that must have one round mark (1.0 = all)
-        max_spread_um:         largest allowed disagreement between pads (95th percentile)
-        chuck_sign_x/_y:       image -> chuck direction of each axis (+1 or -1)
+    Saved: dx_um / dy_um, the chuck move from the PTPA position to the target, and
+    offset_to_center_x_um / _y_um, the chuck move that would centre the needles on the
+    pads (the PTPA error; already contained in dx_um / dy_um, NOT to be added to them).
     """
     reply = get_reply_type()
+
+    try:
+        crit = load_criteria(corner=corner, inset_um=inset_um, max_aspect=max_aspect,
+                             min_valid_fraction=min_valid_fraction, max_spread_um=max_spread_um,
+                             chuck_sign_x=chuck_sign_x, chuck_sign_y=chuck_sign_y)
+    except (OSError, ValueError) as e:
+        return ResponseBuilder.error(reply, f"Contacting criteria: {e}", 400)
+    corner, inset_um = crit["corner"], crit["inset_um"]
+    max_aspect, min_valid_fraction = crit["max_aspect"], crit["min_valid_fraction"]
+    max_spread_um = crit["max_spread_um"]
+    chuck_sign_x, chuck_sign_y = crit["chuck_sign_x"], crit["chuck_sign_y"]
 
     g = SvtWPAagentGlobalParameters.getInstance()
     if not g.projectName:
@@ -216,8 +217,8 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
         record = {
             "dx_um": round(sx * result["dx_um"], 2),
             "dy_um": round(sy * result["dy_um"], 2),
-            "ptpa_offset_x_um": round(sx * result["center_dx_um"], 2),
-            "ptpa_offset_y_um": round(sy * result["center_dy_um"], 2),
+            "offset_to_center_x_um": round(sx * result["center_dx_um"], 2),
+            "offset_to_center_y_um": round(sy * result["center_dy_um"], 2),
             "corner": corner,
             "inset_um": float(inset_um),
             "image_dx_um": result["dx_um"],
@@ -229,6 +230,7 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
             "n_pads_used": result["n_used"],
             "n_pads": result["n_pads"],
             "rejected_pads": result["rejected"],
+            "criteria": crit,
             "die": folder,
             "wafer": wafer,
             "report": reports[-1],
@@ -248,9 +250,9 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
     message = " | ".join([
         f"{folder}: offset '{name}' to {corner} (inset {float(inset_um):g} um): "
         f"chuck dx={record['dx_um']:+.2f} um, dy={record['dy_um']:+.2f} um",
-        f"ptpa offset x={record['ptpa_offset_x_um']:+.2f}, "
-        f"y={record['ptpa_offset_y_um']:+.2f} um",
-        f"{result['n_used']}/{result['n_pads']} pads, spread {result['spread_um']} um -> {path}",
+        f"offset to center x={record['offset_to_center_x_um']:+.2f}, "
+        f"y={record['offset_to_center_y_um']:+.2f} um",
+        f"{result['n_used']}/{result['n_pads']} pads, spread {result['spread_um']} um, "
         f"inset x {result['inset_x_um']} um, y {result['inset_y_um']} um -> {path}",
     ])
     print(f"   🎯 {message}")

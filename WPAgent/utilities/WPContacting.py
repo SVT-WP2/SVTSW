@@ -109,6 +109,42 @@ def _write_json(path, data):
     os.replace(tmp, path)
 
 
+# --- offset criteria (configs/WPContactingConfig.json) -------------------------
+
+CRITERIA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "configs", "WPContactingConfig.json")
+
+
+def load_criteria(path=CRITERIA_PATH, **overrides):
+    """Offset criteria from configs/WPContactingConfig.json, with the non-None overrides on top.
+
+    Keys starting with "_" are comments. Raises ValueError for unknown keys or bad values.
+    """
+    with open(path, encoding="utf-8") as f:
+        crit = {k: v for k, v in json.load(f).items() if not k.startswith("_")}
+    given = {k: v for k, v in overrides.items() if v is not None}
+    unknown = sorted(set(given) - set(crit))
+    if unknown:
+        raise ValueError(f"unknown contacting criteria {unknown}, known: {sorted(crit)}")
+    crit.update(given)
+
+    if crit["corner"] not in CORNERS:
+        raise ValueError(f"corner '{crit['corner']}' not in {sorted(CORNERS)}")
+    for key in ("inset_um", "max_aspect", "min_valid_fraction", "max_spread_um"):
+        crit[key] = float(crit[key])
+    for key in ("chuck_sign_x", "chuck_sign_y"):
+        crit[key] = int(crit[key])
+        if crit[key] not in (-1, 1):
+            raise ValueError(f"{key} must be +1 or -1, got {crit[key]}")
+    if crit["max_aspect"] < 1:
+        raise ValueError("max_aspect must be >= 1")
+    if not 0 < crit["min_valid_fraction"] <= 1:
+        raise ValueError("min_valid_fraction must be in (0, 1]")
+    if crit["max_spread_um"] <= 0:
+        raise ValueError("max_spread_um must be > 0")
+    return crit
+
+
 # --- pad-target maths --------------------------------------------------------------
 
 # Corner directions in image axes (+x right, +y down)

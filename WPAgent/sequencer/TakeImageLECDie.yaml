@@ -8,8 +8,8 @@
 #   images go to Imaging/<wafer>/<die>/, then ArchiveImaging moves Imaging/ to archive_dir
 #   (keeping <wafer>/<die>/).
 #
-# The raster parameters are those of TakeImageLEC.yaml (ER2 LEC column).
-# CHECK start_x_um / start_y_um before using it on another chip layout (e.g. ER2B).
+# Raster start (start_x_um / start_y_um) set for the ER2B LEC column (BAMTest);
+# TakeImageLEC.yaml keeps the ER2 values (-21100, -27250). Check them for another layout.
 
 params:
   user:

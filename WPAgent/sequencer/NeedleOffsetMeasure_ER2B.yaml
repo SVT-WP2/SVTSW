@@ -10,7 +10,7 @@
 #   -> offset to the target (ComputePadTargetOffset)
 #
 # Results: Contacting/<project>/positions.json  (position `position_name`)
-#          Contacting/<project>/offsets.json    (offset `offset_name`, incl. ptpa_offset_x/y)
+#          Contacting/<project>/offsets.json    (offset `offset_name`, incl. offset_to_center_x/y)
 #          <archive_dir>/<wafer>/<die>/          (LEC image + marks JSON / CSV / overlay)
 #
 # Default die: BAMTest (configs/WPMapConversion_ER2B.json). Another die: EITHER a label
@@ -33,9 +33,12 @@ params:
   # needle-mark analysis
   config: "lec"
   contrast: false
-  # target on the pads
-  corner: "bottom_left"
-  inset_um: 20
+  # offset criteria: empty = configs/WPContactingConfig.json; set to override for this run
+  corner:
+  inset_um:
+  max_aspect:
+  min_valid_fraction:
+  max_spread_um:
   # names in Contacting/<project>/
   position_name: "ptpa_ref"
   offset_name: "pad_target"
@@ -124,4 +127,7 @@ steps:
       root: $archive_dir
       corner: $corner
       inset_um: $inset_um
+      max_aspect: $max_aspect
+      min_valid_fraction: $min_valid_fraction
+      max_spread_um: $max_spread_um
       name: $offset_name

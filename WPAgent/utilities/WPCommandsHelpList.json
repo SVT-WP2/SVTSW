@@ -388,17 +388,20 @@
   },
 
   "ComputePadTargetOffset": {
-    "description": "Chuck offset to a target on the pads (corner + inset, or center) from the newest needle-mark report of a die. Requires one round mark per pad. Saved in Contacting/<project>/offsets.json. No prober movement.",
+    "description": "Chuck offset to a target on the pads (corner + inset, or center) from the newest needle-mark report of a die. Criteria from configs/WPContactingConfig.json, overridable per call. Saved in Contacting/<project>/offsets.json with dx_um/dy_um and offset_to_center_x_um/_y_um. No prober movement.",
     "category": "Contacting",
     "data": {
       "folder":             {"required": true,  "type": "string", "description": "Die folder, e.g. C0R0"},
       "wafer":              {"required": false, "type": "string", "description": "Wafer folder"},
       "root":               {"required": false, "type": "string", "description": "Top folder: Imaging (default) or the EOS archive"},
-      "corner":             {"required": false, "type": "string", "description": "bottom_left (default), bottom_right, top_left, top_right, center"},
-      "inset_um":           {"required": false, "type": "float",  "description": "Distance from both pad edges of the corner (default 20)"},
+      "corner":             {"required": false, "type": "string", "description": "bottom_left, bottom_right, top_left, top_right, center (default: configs/WPContactingConfig.json)"},
+      "inset_um":           {"required": false, "type": "float",  "description": "Distance of the mark centre from both pad edges of the corner (default: configs/WPContactingConfig.json)"},
       "name":               {"required": false, "type": "string", "description": "Name of the saved offset (default pad_target)"},
-      "min_valid_fraction": {"required": false, "type": "float",  "description": "Fraction of pads that must have one round mark (default 1.0)"},
-      "max_spread_um":      {"required": false, "type": "float",  "description": "Largest allowed disagreement between pads (default 5)"}
+      "max_aspect":         {"required": false, "type": "float",  "description": "A mark is round if long / short side <= this (default: configs/WPContactingConfig.json)"},
+      "min_valid_fraction": {"required": false, "type": "float",  "description": "Fraction of pads that must have one round mark clear of the edge (default: configs/WPContactingConfig.json)"},
+      "max_spread_um":      {"required": false, "type": "float",  "description": "Largest allowed spread of the marks, 95th percentile (default: configs/WPContactingConfig.json)"},
+      "chuck_sign_x":       {"required": false, "type": "int",    "description": "Chuck X per image X, +1 or -1 (default: configs/WPContactingConfig.json)"},
+      "chuck_sign_y":       {"required": false, "type": "int",    "description": "Chuck Y per image Y, +1 or -1 (default: configs/WPContactingConfig.json)"}
     },
     "example": "python main.py send ComputePadTargetOffset --data='{\"folder\":\"C0R0\",\"wafer\":\"Wafer\",\"root\":\"/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging\"}'",
     "execution_time": "< 1 second"
