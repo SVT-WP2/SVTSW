@@ -139,21 +139,35 @@ def is_round(mark, max_aspect):
     return min(w, h) > 0 and max(w, h) / min(w, h) <= max_aspect
 
 
-def pad_target_offset(pads, corner, inset_um, max_aspect=1.5):
-    """Needle displacement that brings the mark of every pad to its target.
+def pad_target_offset(pads, corner, inset_um, max_aspect=2.0):
+    """Needle displacement that brings the needle of EVERY pad at least inset_um inside `corner`.
 
     A pad is used only if it has exactly one mark, the mark is round and it does
-    not touch the pad edge. For each used pad p (image axes, um):
-        target_p     = corner_target(pad size_p, corner, inset_um)
-        displacement = target_p - mark offset_p
-    The result is the median over the used pads, robust to a few odd pads.
+    not touch the pad edge. Per used pad p (image axes, um):
+        target_p = corner_target(pad size_p, corner, inset_um)   (relative to the pad centre)
+        d_p      = target_p - mark offset_p                        (displacement for that pad)
+    One chuck move serves all pads, which may differ in size (e.g. wide and narrow pads
+    aligned on one edge), so per axis the most constrained pad decides:
+        towards -x (left corner): dx = max(d_p)  -> no needle ends closer than inset_um to its left edge
+        towards +x (right):       dx = min(d_p)
+        "center":                 dx = median(d_p)
+    (same for y). The other pads end up deeper inside; see inset_x_um / inset_y_um.
 
-    Returns a dict: dx_um, dy_um (displacement), center_dx_um, center_dy_um
-    (displacement that would centre the needle), spread_um (95th percentile of the
-    pads' distance from the median displacement), n_used, n_pads, rejected
-    ([[pad index, reason], ...]).
+    Returns a dict:
+        dx_um, dy_um                displacement to the target (image axes)
+        center_dx_um, center_dy_um  displacement that would centre the needles (median)
+        spread_um                   95th percentile of the marks' distance from their median
+                                    offset to the pad centre: how consistently the needles
+                                    land, independent of the pad sizes
+        inset_x_um, inset_y_um      [min, max] distance from the corner edges after the move
+                                    over the used pads (None for "center")
+        n_used, n_pads, rejected    ([[pad index, reason], ...])
     """
-    used, rejected = [], []
+    sx, sy = CORNERS.get(corner, (None, None))
+    if sx is None:
+        raise ValueError(f"unknown corner '{corner}', use one of {sorted(CORNERS)}")
+
+    used, rejected = [], []        # used: (d_x, d_y, mark dx, mark dy, pad w, pad h)
     for pad in pads:
         index, marks = pad["index"], pad["marks"]
         if len(marks) != 1:
@@ -166,18 +180,35 @@ def pad_target_offset(pads, corner, inset_um, max_aspect=1.5):
         if mark.get("at_edge"):
             rejected.append([index, "mark at the pad edge"])
             continue
-        tx, ty = corner_target(pad["size_um"][0], pad["size_um"][1], corner, inset_um)
-        used.append((tx - mark["dx_um"], ty - mark["dy_um"], -mark["dx_um"], -mark["dy_um"]))
+        w, h = pad["size_um"]
+        tx, ty = corner_target(w, h, corner, inset_um)
+        used.append((tx - mark["dx_um"], ty - mark["dy_um"], mark["dx_um"], mark["dy_um"], w, h))
 
     result = {"n_used": len(used), "n_pads": len(pads), "rejected": rejected}
     if not used:
         return result
-    dx, dy = median(u[0] for u in used), median(u[1] for u in used)
-    distances = sorted(((u[0] - dx) ** 2 + (u[1] - dy) ** 2) ** 0.5 for u in used)
+
+    def pick(values, s):           # most constrained pad along the corner's direction
+        values = list(values)
+        return max(values) if s < 0 else min(values) if s > 0 else median(values)
+
+    dx, dy = pick((u[0] for u in used), sx), pick((u[1] for u in used), sy)
+
+    # how consistently the needles land: marks around their median offset from the pad centre
+    mx, my = median(u[2] for u in used), median(u[3] for u in used)
+    distances = sorted(((u[2] - mx) ** 2 + (u[3] - my) ** 2) ** 0.5 for u in used)
+
+    def inset_range(s, d, k, half):  # distance from the corner edge after the move
+        if s == 0:
+            return None
+        insets = [u[half] / 2 - s * (u[k] + d) for u in used]
+        return [round(min(insets), 1), round(max(insets), 1)]
+
     result.update({
         "dx_um": round(dx, 2), "dy_um": round(dy, 2),
-        "center_dx_um": round(median(u[2] for u in used), 2),
-        "center_dy_um": round(median(u[3] for u in used), 2),
+        "center_dx_um": round(-mx, 2), "center_dy_um": round(-my, 2),
         "spread_um": round(distances[min(len(distances) - 1, int(0.95 * len(distances)))], 2),
+        "inset_x_um": inset_range(sx, dx, 2, 4),
+        "inset_y_um": inset_range(sy, dy, 3, 5),
     })
     return result

@@ -26,8 +26,8 @@ params:
   num_rows: 9
   column_spacing_um: -2968
   row_spacing_um: 2476
-  start_x_um: -21100
-  start_y_um: -27250
+  start_x_um: 29750
+  start_y_um: -27500
   col_settle_time_s: 0.1
   row_settle_time_s: 0.1
   snapshot_type: "CameraRaw"

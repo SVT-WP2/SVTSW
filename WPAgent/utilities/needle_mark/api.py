@@ -54,8 +54,14 @@ def load_config(config: str | Path | dict | Config | None = None, **overrides) -
 
 
 def latest_image(folder: str | Path, pattern: str = "*_LEC.tif") -> Path:
-    """Newest file matching pattern in folder, e.g. the LEC stitch of a die folder."""
-    matches = sorted(Path(folder).glob(pattern), key=lambda p: p.stat().st_mtime)
+    """Newest file matching pattern in folder, e.g. the LEC stitch of a die folder.
+
+    Hidden entries are skipped: on EOS every written file gets a hidden version
+    folder `.sys.v#.<name>` next to it, which also matches the pattern.
+    """
+    matches = sorted((p for p in Path(folder).glob(pattern)
+                      if p.is_file() and not p.name.startswith(".")),
+                     key=lambda p: p.stat().st_mtime)
     if not matches:
         raise NeedleMarkError(f"no '{pattern}' image in {folder}")
     return matches[-1]

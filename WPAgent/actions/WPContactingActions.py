@@ -8,6 +8,7 @@ Storage (per project, in Contacting/<projectName>/) is in utilities/WPContacting
 import glob
 import json
 import os
+from pathlib import Path
 
 from utilities.WPResponseBuilder import ResponseBuilder
 from utilities.WPValidationDecorator import validate_command, get_reply_type
@@ -191,7 +192,9 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
         return ResponseBuilder.error(reply, "An open project is required to save the offset", 400)
 
     die_folder = _die_folder(root, wafer, folder)
-    reports = sorted(glob.glob(os.path.join(die_folder, "*_marks.json")), key=os.path.getmtime)
+    reports = sorted((p for p in glob.glob(os.path.join(die_folder, "*_marks.json"))
+                      if os.path.isfile(p) and not os.path.basename(p).startswith(".")),
+                     key=os.path.getmtime)
     if not reports:
         return ResponseBuilder.error(
             reply, f"No needle-mark report in '{die_folder}': run AnalyzeNeedleMarks first", 400)
@@ -221,6 +224,8 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
             "image_dy_um": result["dy_um"],
             "chuck_signs": [sx, sy],
             "spread_um": result["spread_um"],
+            "inset_x_um": result["inset_x_um"],
+            "inset_y_um": result["inset_y_um"],
             "n_pads_used": result["n_used"],
             "n_pads": result["n_pads"],
             "rejected_pads": result["rejected"],
@@ -246,6 +251,7 @@ def compute_pad_target_offset(folder, wafer="", root="Imaging", corner="bottom_l
         f"ptpa offset x={record['ptpa_offset_x_um']:+.2f}, "
         f"y={record['ptpa_offset_y_um']:+.2f} um",
         f"{result['n_used']}/{result['n_pads']} pads, spread {result['spread_um']} um -> {path}",
+        f"inset x {result['inset_x_um']} um, y {result['inset_y_um']} um -> {path}",
     ])
     print(f"   🎯 {message}")
     return ResponseBuilder.success(reply, message)

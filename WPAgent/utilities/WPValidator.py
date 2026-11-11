@@ -293,6 +293,8 @@ class WPCommandValidator:
         for param_name, param_value in params.items():
             if param_name in schema:
                 expected_type = schema[param_name].get("type")
+                if param_value is None and not schema[param_name].get("required", False):
+                    continue
                 if expected_type and not self._check_type(param_value, expected_type):
                     return ResponseBuilder.error(
                         reply_type,
