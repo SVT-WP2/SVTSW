@@ -1,4 +1,8 @@
-# TakeImageWafer.yaml
+# TakeImageWafer_ER2.yaml
+#
+# ER2 wafers only: the raster is placed relative to the ER2 die SEG4 (projects
+# ER2_babyMOSAIX / ER2_MOSAIX), with its own start and wafer centre below; it does
+# not use configs/WPImagingConfig.json.
 #
 # Full 300 mm wafer mosaic using a square grid with circular mask.
 #

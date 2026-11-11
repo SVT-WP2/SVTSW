@@ -1,0 +1,47 @@
+# MoveToPadTarget.yaml
+#
+# Part 2 of pad-target contacting, XY only: bring the needles above the target on
+# the pads measured by NeedleOffsetMeasure_ER2B.yaml. Z is NOT touched: wide /
+# contact are left to the caller.
+#
+#   MoveChuckToSavedPosition  closed-loop move to the PTPA position (positions.json, `position_name`)
+#   MoveChuckBySavedOffset    closed-loop relative move by the chuck dx_um / dy_um (offsets.json, `offset_name`)
+#
+# Start: chuck in separation, in the work area the position was saved in (off-axis
+# after NeedleOffsetMeasure_ER2B); when it may run is left to the state machine.
+# An offset above max_offset_um puts the agent in error, nothing moves.
+# End: same work area, needles at the target once the chuck goes to probing (the
+# off-axis -> wide move is rigid and keeps the offset).
+
+params:
+  user:
+  waferAgentName:
+  position_name: "ptpa_ref"
+  offset_name: "pad_target"
+  # larger offset on either axis -> error state (MoveChuckBySavedOffset)
+  max_offset_um: 40
+  # closed-loop moves (MoveChuckXYPrecise)
+  precision_um: 0.15
+  max_iterations: 10
+  correction_settle_s: 0.1
+
+steps:
+
+  - command: MoveChuckToSavedPosition
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      name: $position_name
+      precision_um: $precision_um
+      max_iterations: $max_iterations
+      correction_settle_s: $correction_settle_s
+
+  - command: MoveChuckBySavedOffset
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      name: $offset_name
+      max_offset_um: $max_offset_um
+      precision_um: $precision_um
+      max_iterations: $max_iterations
+      correction_settle_s: $correction_settle_s

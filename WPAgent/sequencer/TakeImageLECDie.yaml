@@ -8,8 +8,8 @@
 #   images go to Imaging/<wafer>/<die>/, then ArchiveImaging moves Imaging/ to archive_dir
 #   (keeping <wafer>/<die>/).
 #
-# Raster start (start_x_um / start_y_um) set for the ER2B LEC column (BAMTest);
-# TakeImageLEC.yaml keeps the ER2 values (-21100, -27250). Check them for another layout.
+# Raster start (start_x_um / start_y_um): empty = "LEC" in configs/WPImagingConfig.json,
+# shared by all ER2 / ER2B imaging (edit it there after moving the probe card).
 
 params:
   user:
@@ -26,8 +26,9 @@ params:
   num_rows: 9
   column_spacing_um: -2968
   row_spacing_um: 2476
-  start_x_um: 29750
-  start_y_um: -27500
+  # raster start: empty = "LEC" in configs/WPImagingConfig.json (all ER2 / ER2B dies)
+  start_x_um:
+  start_y_um:
   col_settle_time_s: 0.1
   row_settle_time_s: 0.1
   snapshot_type: "CameraRaw"

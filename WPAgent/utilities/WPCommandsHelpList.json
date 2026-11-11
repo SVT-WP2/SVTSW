@@ -371,6 +371,45 @@
     "execution_time": "< 1 second"
   },
 
+  "MoveChuckToSavedPosition": {
+    "description": "Closed-loop XY move (MoveChuckXYPrecise, Zero reference) to a position saved by SaveChuckPosition in Contacting/<project>/positions.json. No Z move. When it may be used is left to the state machine.",
+    "category": "Contacting",
+    "data": {
+      "name":                {"required": false, "type": "string", "description": "Saved position (default: ptpa_ref)"},
+      "precision_um":        {"required": false, "type": "float",  "description": "Accepted error per axis (default 0.15)"},
+      "max_iterations":      {"required": false, "type": "int",    "description": "Max correction moves (default 10)"},
+      "correction_settle_s": {"required": false, "type": "float",  "description": "Settle time after each correction (default 0.1)"}
+    },
+    "example": "python main.py send MoveChuckToSavedPosition --data='{\"name\":\"ptpa_ref\"}'",
+    "execution_time": "1-5 seconds"
+  },
+
+  "MoveChuckBySavedOffset": {
+    "description": "Closed-loop relative XY move by an offset saved by ComputePadTargetOffset (chuck dx_um / dy_um in Contacting/<project>/offsets.json). No Z move. Meant right after MoveChuckToSavedPosition. An offset above max_offset_um puts the agent in error state, nothing moves.",
+    "category": "Contacting",
+    "data": {
+      "name":                  {"required": false, "type": "string", "description": "Saved offset (default: pad_target)"},
+      "max_offset_um":         {"required": false, "type": "float",  "description": "Largest offset per axis; above it: error state (default 40)"},
+      "precision_um":          {"required": false, "type": "float",  "description": "Accepted error per axis (default 0.15)"},
+      "max_iterations":        {"required": false, "type": "int",    "description": "Max correction moves (default 10)"},
+      "correction_settle_s":   {"required": false, "type": "float",  "description": "Settle time after each correction (default 0.1)"}
+    },
+    "example": "python main.py send MoveChuckBySavedOffset --data='{\"name\":\"pad_target\"}'",
+    "execution_time": "1-5 seconds"
+  },
+
+  "MoveToPadTarget": {
+    "description": "Sequence (sequencer/MoveToPadTarget.yaml): MoveChuckToSavedPosition (ptpa_ref) then MoveChuckBySavedOffset (pad_target). XY only: wide / contact are not included.",
+    "category": "Contacting",
+    "data": {
+      "position_name": {"required": false, "type": "string", "description": "Saved position (default: ptpa_ref)"},
+      "offset_name":   {"required": false, "type": "string", "description": "Saved offset (default: pad_target)"},
+      "max_offset_um": {"required": false, "type": "float",  "description": "Largest offset per axis; above it: error state (default 40)"}
+    },
+    "example": "python main.py send MoveToPadTarget --data='{}'",
+    "execution_time": "2-10 seconds"
+  },
+
   "AnalyzeNeedleMarks": {
     "description": "Needle-mark analysis of the newest stitched LEC image of a die folder. Reports (JSON, CSV, overlay) are written next to the image in Imaging/<wafer>/<folder>/. No prober movement.",
     "category": "Contacting",

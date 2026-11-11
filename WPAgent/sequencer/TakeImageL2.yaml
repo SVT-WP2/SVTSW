@@ -8,8 +8,9 @@ params:
   num_rows: 41
   column_spacing_um: -2968
   row_spacing_um: 2476
-  start_x_um: -21100
-  start_y_um: -27250
+  # raster start: empty = "LEC" in configs/WPImagingConfig.json (all ER2 / ER2B dies)
+  start_x_um:
+  start_y_um:
   col_settle_time_s: 0.1
   row_settle_time_s: 0.1
   snapshot_type: "CameraRaw"

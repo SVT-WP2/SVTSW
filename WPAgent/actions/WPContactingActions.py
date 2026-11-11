@@ -11,7 +11,10 @@ import os
 
 from utilities.WPResponseBuilder import ResponseBuilder
 from utilities.WPValidationDecorator import validate_command, get_reply_type
-from utilities.WPContacting import load_criteria, pad_target_offset, save_offset, save_position
+from utilities.WPContacting import (load_criteria, load_offset, load_position, pad_target_offset,
+                                    save_offset, save_position)
+from utilities.WPMessagesStatus import WPMessagesStatus
+from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
@@ -85,6 +88,97 @@ def save_chuck_position(name="contact", label=None, user=None, waferAgentName=No
         import traceback
         traceback.print_exc()
         return ResponseBuilder.error(reply, f"Could not save position '{name}': {e}", 500)
+
+
+# --- moving to saved positions / offsets ------------------------------------------
+
+
+@validate_command
+def move_chuck_to_saved_position(name="ptpa_ref", precision_um=0.15, max_iterations=10,
+                                 correction_settle_s=0.1, user=None, waferAgentName=None, **kwargs):
+    """
+    Closed-loop XY move (MoveChuckXYPrecise, Zero reference) to a position saved by
+    SaveChuckPosition in Contacting/<project>/positions.json. No Z move.
+    When it may be used (work area, Z state, ...) is left to the state machine.
+
+    Args:
+        name: saved position, e.g. "ptpa_ref" (saved after PTPA, off-axis)
+        precision_um, max_iterations, correction_settle_s: as for MoveChuckXYPrecise
+    """
+    reply = get_reply_type()
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+    try:
+        pos = load_position(g.projectName, name)
+    except (KeyError, OSError, ValueError) as e:
+        return ResponseBuilder.error(reply, f"Cannot move to position '{name}': {e}", 400)
+
+    x, y = float(pos["x_um"]), float(pos["y_um"])
+    print(f"   📍 Moving to saved position '{name}': ({x:.2f}, {y:.2f}) um")
+    return _move_precise(reply, x, y, "Zero", precision_um, max_iterations, correction_settle_s,
+                         f"At saved position '{name}'")
+
+
+@validate_command
+def move_chuck_by_saved_offset(name="pad_target", max_offset_um=40.0, precision_um=0.15, max_iterations=10,
+                               correction_settle_s=0.1, user=None, waferAgentName=None, **kwargs):
+    """
+    Closed-loop relative XY move (MoveChuckXYPrecise) by an offset computed by
+    ComputePadTargetOffset (chuck dx_um / dy_um in Contacting/<project>/offsets.json).
+    No Z move. Meant right after MoveChuckToSavedPosition (the offset is measured
+    from the PTPA position); when it may be used is left to the state machine.
+
+    An offset larger than max_offset_um on either axis means something is wrong
+    (wrong offset, needles far off the pads): nothing moves and the agent goes to
+    the error state.
+
+    Args:
+        name:          saved offset, e.g. "pad_target"
+        max_offset_um: largest offset accepted on either axis (default 40)
+        precision_um, max_iterations, correction_settle_s: as for MoveChuckXYPrecise
+    """
+    reply = get_reply_type()
+    error = _ensure_initialized()
+    if error:
+        return error
+
+    g = SvtWPAagentGlobalParameters.getInstance()
+    try:
+        off = load_offset(g.projectName, name)
+        dx, dy = float(off["dx_um"]), float(off["dy_um"])
+    except (KeyError, OSError, ValueError) as e:
+        return ResponseBuilder.error(reply, f"Cannot apply offset '{name}': {e}", 400)
+
+    limit = float(max_offset_um)
+    if abs(dx) > limit or abs(dy) > limit:
+        message = f"Offset '{name}' ({dx:+.2f}, {dy:+.2f}) um exceeds max_offset_um={limit:g}: not applied"
+        agentStateMachine.enter_error_state(message)
+        return ResponseBuilder.error(reply, message, 500)
+
+    print(f"   🎯 Applying offset '{name}' ({dx:+.2f}, {dy:+.2f}) um "
+          f"[{off.get('corner', '?')}, inset {off.get('inset_um', '?')} um, die {off.get('die', '?')}]")
+    return _move_precise(reply, dx, dy, "Relative", precision_um, max_iterations, correction_settle_s,
+                         f"Applied offset '{name}' ({dx:+.2f}, {dy:+.2f}) um")
+
+
+def _move_precise(reply, x, y, position, precision_um, max_iterations, correction_settle_s, done):
+    """MoveChuckXYPrecise, answered with this command's reply type."""
+    from actions.WPImagingActions import move_chuck_xy_precise
+    result = move_chuck_xy_precise(x, y, position=position, precision_um=precision_um,
+                                   max_iterations=max_iterations, correction_settle_s=correction_settle_s)
+    message = result["error"]["message"]
+    if result["status"] != WPMessagesStatus.Success:
+        return ResponseBuilder.error(reply, f"{done} failed: {message}", result["error"]["code"])
+    try:
+        prober = get_current_prober()
+        update_current_info(currentProber=prober)
+        prober.local_mode()
+    except Exception:
+        pass                                         # the move is done; the state refreshes later
+    return ResponseBuilder.success(reply, f"{done}: {message}")
 
 
 @validate_command
