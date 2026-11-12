@@ -192,6 +192,20 @@ class SentioProberImpl(AbstractProber):
             # Last resort - convert to string
             return str(resp)
 
+    def get_die_size(self):
+        """Die size (index size / pitch) of the wafer map: (width, height) in um.
+        SENTIO: map:get_index_size"""
+        w, h = self.prober.map.get_index_size()
+        return float(w), float(h)
+
+    def get_map_axis_orient(self):
+        """Axis orientation of the wafer map: "UR", "UL", "DR" or "DL" (map:get_axis_orient)"""
+        return self.prober.map.get_axis_orient().toSentioAbbr()
+
+    def get_grid_origin(self):
+        """(col, row) of the wafer map grid origin (map:get_grid_origin)"""
+        return self.prober.map.get_grid_origin()
+
     def get_dies_number(self):
 
         resp = self.prober.map.get_num_dies(DieNumber.Selected)

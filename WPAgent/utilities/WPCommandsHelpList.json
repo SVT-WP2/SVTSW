@@ -398,6 +398,14 @@
     "execution_time": "1-5 seconds"
   },
 
+  "GetDieSize": {
+    "description": "Read the die size (index size / pitch) of the open project's wafer map from SENTIO, its axis orientation, grid origin, the current die and the column/row steps learned by precise MoveChuckRowColumn moves. Moves nothing.",
+    "category": "Contacting",
+    "data": {},
+    "example": "python main.py send GetDieSize",
+    "execution_time": "< 1 second"
+  },
+
   "MoveToPadTarget": {
     "description": "Sequence (sequencer/MoveToPadTarget.yaml): MoveChuckToSavedPosition (ptpa_ref) then MoveChuckBySavedOffset (pad_target). XY only: wide / contact are not included.",
     "category": "Contacting",

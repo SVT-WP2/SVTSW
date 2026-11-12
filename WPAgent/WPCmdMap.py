@@ -10,6 +10,7 @@ import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
 import actions.WPImagingActions as imaging_actions
 import actions.WPContactingActions as contacting_actions
+import actions.WPDieGridActions as die_grid_actions
 
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 from utilities.WPValidationDecorator import validate_command_with_name
@@ -124,6 +125,9 @@ COMMAND_ROUTER = {
     "MoveChuckBySavedOffset": contacting_actions.move_chuck_by_saved_offset,
     "AnalyzeNeedleMarks": contacting_actions.analyze_needle_marks,
     "ComputePadTargetOffset": contacting_actions.compute_pad_target_offset,
+
+    # Die size of the wafer map (precise die moves: MoveChuckRowColumn precise=true)
+    "GetDieSize": die_grid_actions.get_die_size,
 
     # FSM State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent,

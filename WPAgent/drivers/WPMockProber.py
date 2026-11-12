@@ -259,6 +259,16 @@ class MockProberImpl:
         self._die_index = col * 10 + row
         return f"{self._die_index},{col},{row},{subsite}"
 
+    def get_die_size(self):
+        """Die size (index size) of the mock wafer map, (width, height) in um."""
+        return getattr(self, "_die_size", (3000.0, 2500.0))
+
+    def get_map_axis_orient(self) -> str:
+        return "UR"
+
+    def get_grid_origin(self):
+        return (0, 0)
+
     def get_current_index(self) -> str:
         """
         Return current die as 'index,col,row'.
