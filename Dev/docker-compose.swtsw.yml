@@ -23,6 +23,15 @@ services:
     networks:
       - svt-network--local
 
+  wp-agent:
+    container_name: svt.wp-agent
+    build:
+      context: ../WPAgent
+      dockerfile: Dockerfile
+    #   docker compose run wp-agent listen --config=configs/ProbeConfigCERN_DEV.json
+    networks:
+      - svt-network--local
+
   svt-ui:
     container_name: svt.ui
     build:
