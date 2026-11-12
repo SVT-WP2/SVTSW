@@ -145,7 +145,8 @@ Don't add a NgRx store for a single grid.
 
 ## External sources of truth (outside this workspace)
 
-- `../Documentation/Kafka/SvtKafkaConventions.md` + `svt.db-agent.kafka.yaml` — **the** Kafka contract.
+- `../Documentation/Kafka/SvtKafkaConventions.md` + `svt.db-agent.kafka.yaml` — **the** Kafka contract (the C++ agent's;
+  `svt.db-agent-next.kafka.yaml` next to it documents what `svt-db-agent-next` does where it differs).
   Check it before inventing a message type.
 - `../Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt` — DB schema.
 - `../Dev/` — auxiliary compose files (Kafka, Postgres).

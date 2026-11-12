@@ -154,7 +154,7 @@ everything) with a single `@MessagePattern(SvtDbAgentKafka.TopicName.Request)` a
 `message.type` dispatching to per-domain services.
 
 > The authoritative contract lives outside this workspace, in
-> `../Documentation/Kafka/SvtKafkaConventions.md` and `svt.db-agent.kafka.yaml`. Consult it before adding
+> `../Documentation/Kafka/SvtKafkaConventions.md` and `svt.db-agent.kafka.yaml` (the C++ agent; `svt.db-agent-next.kafka.yaml` is the re-implementation's). Consult it before adding
 > a message type.
 
 ## 5. NestJS API structure
