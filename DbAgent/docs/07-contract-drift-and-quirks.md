@@ -21,6 +21,10 @@ of these exist in the agent, so those calls can only be answered by its own loca
 `CreateSLDOTest`, …) that nothing implements. Three contract documents therefore exist
 for one topic pair.
 
+Author (Q36, Q37): `svt.db-agent.kafka.yaml` is the only contract; the ancASIC file is obsolete and
+the TestAgent is expected to move to the main contract. The three code-only types are added to the
+contract only if a consumer needs them.
+
 ## 2. Request shape drift
 
 | Id | Message | Contract says | Code does | Effect |
@@ -38,6 +42,10 @@ for one topic pair.
 | D-11 | `Update*Location.date` | nullable | key must be present (Q-H7) | breaks if omitted |
 | D-12 | `CreateSvtTestTemplate.isEnabled` | honoured | dropped; DB default `true` (Q-H17) | wrong |
 | D-13 | `UpdateWpMachineInstalledProbeCard` with `installedProbeCardId: null` | uninstall | fails on NOT NULL (Q-H8b) | breaks |
+
+Author's answers: D-4 — the filter should return the test types associated with the given DUT
+type(s) (Q22); D-1 — the intended update shape and replace-vs-add semantics are still open (Q22);
+D-13 — a status such as "PC not installed" is the suggested representation (Q14).
 
 ## 3. Reply shape drift
 
@@ -57,6 +65,10 @@ for one topic pair.
 | R-12 | `totalCount` | only on paged lists | on every list except location histories | harmless extra |
 | R-13 | list without `pager` and more than 5000 rows | all rows | `items: [], totalCount: 0` (Q-P1) | wrong, silent |
 | R-14 | entity key order | n/a | alphabetical | cosmetic |
+
+Author's answers: R-1 — the equipment list is future development and the table is unused (Q19);
+R-6 — the timestamps are believed to be UTC, unconfirmed (Q39); R-11 — `chipBlockType` is the name
+to keep (Q30).
 
 ## 4. Observed behaviours independent of the contract
 
@@ -80,6 +92,9 @@ for one topic pair.
 | X-16 | health | Healthcheck proves Kafka liveness only, not DB connectivity ([01 §8](01-architecture.md#8-heartbeat-and-health-check)). | operational |
 | X-17 | `DbModuleDto` | Dead code with copy-pasted request names; would shadow `SvtTestList` handlers if ever registered (Q-H16). | latent |
 
+Author's answers: X-8 — a `Loaded` row implies the unload, so the single row is by design (Q13);
+X-9 — several relocations on one day are not expected (Q10).
+
 ## 5. Schema drift
 
 See [03 §5](03-database-schema.md#5-where-dump-doc-and-code-disagree) (S1–S16), resolved against
@@ -89,7 +104,8 @@ and `…Id`, the `dutEntityName` and `testResultStatus` enums, the FK on `testSe
 dev has. The code on `master` cannot serve `GetAllSvtTests` or `CreateSvtTest` against prod's
 schema. Prod has no test rows, so nothing is lost yet, but the agent build and the schema deployed
 in prod have to move together. Two further dev/prod differences: `configBody` is `json` in prod
-and `text` in dev (S10); nothing else differs.
+and `text` in dev (S10); nothing else differs. Author (Q31, Q27): prod is outdated and
+`SVT_DB_Tables_SourceOfTruth.txt` is the schema to deploy, which settles S10 on `text`.
 
 ## 6. Who depends on what
 
@@ -97,7 +113,7 @@ and `text` in dev (S10); nothing else differs.
 |---|---|---|
 | epic-measure-api (UI BFF) | all 55 of the contract | D-2 (sends `filter.enumNames`, works by accident), GetAllChipBlocks (breaks), D-3/D-4/D-5/D-6 if the UI exposes those filters, R-1, R-3, R-6, R-13 |
 | WPAgent (`WPDbKafkaClient.py`) | `GetAllWaferProbeProjects`, `GetAllWaferProbeMachines`, `GetAllAsics` (`ids` + pager), `UpdateWpMachineLoadedWafer`, `UpdateWpMachineInstalledProbeCard` | X-8 (history), D-13 (cannot uninstall a probe card) |
-| TestAgent (`db_client.py`) | its own names (§1) | nothing it sends is served |
+| TestAgent (`db_client.py`) | its own names (§1) | nothing it sends is served; it is to move to the contract (Q36) |
 | Docker healthcheck | heartbeat topic | X-16 |
 
 The NestJS mock (`UI/apps/epic-db-agent`) implements the **contract**, not the C++ behaviour; it
@@ -107,5 +123,7 @@ against the real agent, and vice versa.
 ## 7. What happens with these findings
 
 Decisions on which of these behaviours a re-implementation should preserve or change are kept
-outside this folder, in [UI/docs/db-agent-clone](../../UI/docs/db-agent-clone/README.md). This
-document only records what runs today.
+outside this folder, in [UI/docs/db-agent-clone](../../UI/docs/db-agent-clone/README.md), and what
+the re-implementation actually does is its own contract,
+[Documentation/Kafka/svt.db-agent-next.kafka.yaml](../../Documentation/Kafka/svt.db-agent-next.kafka.yaml),
+which quotes the ids of this document. This document only records what runs today.

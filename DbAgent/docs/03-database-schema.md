@@ -187,7 +187,7 @@ erDiagram
 | `Chip` | all dumps | id, asicId, asicFamilyType⁺ (virtual, from LEFT JOIN Asic as `familyType`), serialNumber, generalLocation | No uniqueness on `asicId`: the 1:1 with Asic is by convention. |
 | `ChipLocation` | all dumps | chipId, generalLocation, date, username, note | No PK. |
 | `ChipBlock` | all dumps | code registers table **`Block`** with id, chipId, blockType, serialNumber | **Code/DB mismatch** on the table name; the code path is inert anyway (05 §3). |
-| `AsicFamilyTypeBlockList` | all dumps | asicFamilyType, blockType | Configuration data: which blocks each ancillary family type has. Maintained by hand. |
+| `AsicFamilyTypeBlockList` | all dumps | asicFamilyType, blockType | Configuration data: which blocks each ancillary family type has. Maintained by hand by the developer user, per chip design that has blocks (author, Q7). |
 | `Module`, `ModuleChipList`, `ModuleLocation` | dev + prod (empty) | id, modType, serialNumber⁺, generalLocation; relation `ModuleChipList(modId, chipId)` | Added after June. `Module.serialNumber` is `NOT NULL UNIQUE` in the DB while the code registers it optional. Handler unfinished. |
 
 ### 3.2 Prober
@@ -388,7 +388,7 @@ erDiagram
 In every dump: `WaferLocation`, `ChipLocation`, `EquipmentLocation`, `WaferLoadedInMachine`,
 `ProbeCardInstalledInMachine`. In dev and prod also `ModuleLocation`; in dev also
 `SvtTestListToEntityId`. They are append-only logs the agent only inserts into and lists; no code
-path names an `id` on them.
+path names an `id` on them. Author (Q32): deliberate, for simplicity.
 
 ## 5. Where dump, doc and code disagree
 
@@ -399,7 +399,7 @@ changed on 2026-09-27 (commit `fc14b6be`: `createdAt`, the `SvtTestListToEntity*
 | # | Subject | june | prod 2026-11-08 | dev 2026-11-08 | doc | code | Status |
 |---|---|---|---|---|---|---|---|
 | S1 | `ProbeCard` date column | `arrivalDate` | `arriveDate` | `arriveDate` | `arriveDate` | `arriveDate` | **Resolved**: `arriveDate` everywhere live. |
-| S2 | `SvtTestList` creation column | `createsAt` | `createsAt` | `createdAt` | `createsAt` | `createdAt` | **Prod and master disagree.** Master's `GetAllSvtTests` / `CreateSvtTest` cannot run against prod. Prod has no test rows, so no data is affected yet. Open: which agent build runs in prod, and when prod is migrated. |
+| S2 | `SvtTestList` creation column | `createsAt` | `createsAt` | `createdAt` | `createsAt` | `createdAt` | **Prod and master disagree.** Master's `GetAllSvtTests` / `CreateSvtTest` cannot run against prod. Prod has no test rows, so no data is affected yet. Author (Q31): prod is outdated and the schema doc is the one to deploy; which build runs in prod was not said. |
 | S3 | `SvtTestList.testSetupConfigId` | nullable, no FK | nullable, no FK | NOT NULL, FK → `SvtTestSetupConfig` | NOT NULL, FK | required on create | Prod lags dev. |
 | S4 | `SvtTestList.testResultStatus` | `varchar(50)` | `varchar(50)` | enum `testResultStatus` | enum | free string | Prod lags dev. |
 | S5 | Test ↔ DUT link | `SvtAsicTestList`, `SvtChipTestList`, `SvtChipBlockTestList` | same three, empty | `SvtTestListToEntityName`, `SvtTestListToEntityId` | the two dev tables | the two dev tables | Prod lags dev; master's `CreateSvtTest` cannot run against prod. |
@@ -407,19 +407,20 @@ changed on 2026-09-27 (commit `fc14b6be`: `createdAt`, the `SvtTestListToEntity*
 | S7 | Enums `dutEntityName`, `testResultStatus`, `moduleType` | absent | `moduleType` only | all three | all three | `dutEntityName` used as a value column | Prod lags dev for `dutEntityName`, `testResultStatus`. |
 | S8 | `pcModel` values | 6 | 7 | 7 | 7 | n/a | **Resolved**: prod, dev and doc agree. |
 | S9 | `pcName` values | 3 | 4 | 4 | 4 | n/a | **Resolved**: agree. |
-| S10 | `configBody` type (both config tables) | `json` | `json` | **`text`** | `text` | writes a string | **Dev and prod differ.** Both accept the strings the agent writes. Open: which is intended. |
-| S11 | `SvtTestTemplate.testTypeConfigId` | nullable | nullable | nullable | NOT NULL | required | Doc is stricter than every database. |
+| S10 | `configBody` type (both config tables) | `json` | `json` | **`text`** | `text` | writes a string | **Dev and prod differ.** Both accept the strings the agent writes. Author (Q27, Q31): `text` is intended; dev is the version under test and prod follows once it is validated. |
+| S11 | `SvtTestTemplate.testTypeConfigId` | nullable | nullable | nullable | NOT NULL | required | Doc is stricter than every database. Author (Q33): probably NOT NULL. |
 | S12 | `SvtTestSetupDefaultConfig` | PK(`setupId`) | PK(`setupId`) | PK(`setupId`) | no PK | scalar relation (assumes ≤ 1) | **Resolved**: PK exists everywhere. |
 | S13 | `ChipBlock` table name | `ChipBlock` | `ChipBlock` | `ChipBlock` | `ChipBlock` | `Block` (DbBlockDto) | Code refers to a table that does not exist; the path is inert (05 §5). |
 | S14 | `WaferLoadedInMachine` / `ProbeCardInstalledInMachine` orientation column | `orientation` | `orientation` | `orientation` | `orientation` | registers `waferOrientation` / `probeCardOrientation`, inserts `orientation` | Harmless: the inserted key matches the DB. |
-| S15 | Enum `blockType` vs contract `chipBlockType` | `blockType` | `blockType` | `blockType` | `blockType` | `blockType` | Naming differs between the contract (`chipBlockType` in `GetAllEnums`, `GetAllChipBlocks`) and the DB. |
+| S15 | Enum `blockType` vs contract `chipBlockType` | `blockType` | `blockType` | `blockType` | `blockType` | `blockType` | Naming differs between the contract (`chipBlockType` in `GetAllEnums`, `GetAllChipBlocks`) and the DB. Author (Q30): `chipBlockType` survives; the DB type and the schema doc are to be renamed. |
 | S16 | Schema name | `main` | `main` | `main` | `main` | `main` hardcoded in 3 queries, configurable elsewhere | Code detail; only matters if the schema is ever renamed. |
 
 ## 6. Enum types and values
 
 Prod, dev and the doc hold **identical values** for every type that exists in prod (the only
 additions since June are `moduleType`, one `pcModel` and one `pcName` value). Dev additionally has
-`dutEntityName` and `testResultStatus`. Values as of 2026-11-08:
+`dutEntityName` and `testResultStatus`. Author (Q29): replacing the Postgres enums by a lookup
+table would be acceptable. Values as of 2026-11-08:
 
 | Type | Values |
 |---|---|
@@ -508,10 +509,13 @@ What the data says:
   [06 §4](06-wafer-map.md#4-asic-generation-algorithm): 12 of 12 prod wafers and 15 of 15 dev
   wafers match exactly on serial number, position, family type and quality.
 - `WaferLoadedInMachine` in prod has two `Loaded` rows and no `Unloaded` row although the loaded
-  wafer changed (05 §7, Q-H8a). `username` is NULL in every history row of both databases.
+  wafer changed (05 §7, Q-H8a; by design according to the author, Q13). `username` is NULL in
+  every history row of both databases (not implemented yet, Q11).
 - The three dev `ChipBlock` serial numbers are `SLDO_AncMPW2-W1_0_0`, `NVBG_…`, `CML_TRANSCEIVER_…`:
   the family prefix of the block type is stripped. The agent's code has always built
-  `<blockType>_<chipSN>`, so these rows did not come from it (05 §5).
+  `<blockType>_<chipSN>`, so these rows did not come from it (05 §5); the author (Q6) confirms
+  they were test data.
 - One dev wafer serial number (`HS02695-19A2`) ends in a tab character; nothing validates
   serial numbers.
-- `ProbeCardFamilyType` is populated (3 rows) although no message type reads or writes it.
+- `ProbeCardFamilyType` is populated (3 rows) although no message type reads or writes it; the rows
+  are entered with psql (author, Q16).

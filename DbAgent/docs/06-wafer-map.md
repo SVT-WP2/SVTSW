@@ -115,6 +115,9 @@ flowchart TD
     K -->|no| OK["valid"]
 ```
 
+Author (Q3): additional checks (indices outside `ExistingAsics`, duplicates, out-of-range indices,
+serial-number collisions) would be welcome.
+
 ## 4. ASIC generation algorithm
 
 Called by `CreateWafer` after the wafer and its first location row are inserted. Inputs: the new
@@ -200,6 +203,10 @@ and 15 of 15 dev wafers (ER1 with 4 436 dies, ER2, and a one-die AncMPW2 map) ma
 number, position, family type and quality, including the `babyMOSAIX-n_k` numbering and the
 `MOSAIX-n` rows. See [03 §7](03-database-schema.md#7-data-in-the-2026-11-08-dumps).
 
+Author (Q1, Q2): the rule is intended for ER2, where mechanically intact MOSAIX and babyMOSAIX dies
+follow the ITS3 naming; what ER3 and later runs will do is not decided yet. The `<row>_<col>`
+position numbering is the convention downstream relies on and must be kept exactly.
+
 ## 5. Worked examples
 
 ### 5.1 `dummy_MPW1_WaferMap.json`
@@ -243,3 +250,6 @@ A row with `SN_prefix: "MOSAIX-3"` and a single intact MOSAIX die yields `MOSAIX
 The maps stored in the databases (2026-11-08) are JSON-identical to these files: prod holds
 `ER2WaferMap_v0.json` (wafer type `ER2`); dev holds `ER1WaferMap_v0.json` and `ER2WaferMap_v0.json`
 plus a one-die `AncMPW2` map in the shape of `dummy_MPW1_WaferMap.json`.
+
+Author (Q4): the maps are written by hand; scripts to derive them from the engineering design were
+being worked on (Stefano), status unknown.

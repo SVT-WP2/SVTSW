@@ -5,9 +5,12 @@ the code and to serve as the reference for anything that talks to it or replaces
 the code on `master` at commit `850572ad` (2026-11-07), the June 2026 example database dump, and
 the Kafka contract in `Documentation/Kafka`.
 
-**Status: draft, pending review by the agent's author.** Everything here was derived by reading
-the code and three database dumps (June 2026, and dev and prod of 2026-11-08); nothing was
-executed against a running agent. One algorithm, the ASIC generation of [06 §4](06-wafer-map.md#4-asic-generation-algorithm),
+**Status: draft; the questions of intent were answered by the author on 2026-11-08**
+([08](08-questions-for-the-author.md): 30 of 43 resolved, their confirmations carried into the other
+docs with `Author (Q-n)` markers; the 13 still open are listed at the top of 08). The behavioural
+claims were derived by reading the code and three database dumps (June 2026, and dev and prod of
+2026-11-08); nothing was executed against a running agent, and the by-code-reading claims below are
+still unconfirmed. One algorithm, the ASIC generation of [06 §4](06-wafer-map.md#4-asic-generation-algorithm),
 was verified by regenerating all 41 052 ASICs of the prod dump from their wafer maps. See
 [How to review](#how-to-review) for the claims that most need confirming.
 
@@ -29,7 +32,7 @@ the local stack, see [../../Dev/README.md](../../Dev/README.md).
 | [05-request-handlers.md](05-request-handlers.md) | Every Kafka message type: table, columns, filters, and the exact algorithm, including the non-generic ones (wafer creation, chip creation, machine load/unload, locations, test setup/type creation, enums). |
 | [06-wafer-map.md](06-wafer-map.md) | The WaferTypeMap JSON format, its validation rules, and the ASIC generation algorithm with a worked example. |
 | [07-contract-drift-and-quirks.md](07-contract-drift-and-quirks.md) | Where contract, code, database and consumers disagree, and observed behaviours worth confirming. |
-| [08-questions-for-the-author.md](08-questions-for-the-author.md) | The questions only the author can answer: intent, domain rules, schema decisions, operations. With space for answers. |
+| [08-questions-for-the-author.md](08-questions-for-the-author.md) | The questions only the author can answer: intent, domain rules, schema decisions, operations. Answered on 2026-11-08; each carries a status, and the open ones are listed at the top. |
 
 ## Three sources of truth, and how they are labelled
 
@@ -39,7 +42,7 @@ in these docs says which one it comes from:
 | Label | Artefact | Status |
 |---|---|---|
 | **code** | `DbAgent/app/**` on `master` | What runs in production today. The authority for behaviour. |
-| **contract** | `Documentation/Kafka/svt.db-agent.kafka.yaml` (55 message types) | What consumers were told. Authored on the UI side. |
+| **contract** | `Documentation/Kafka/svt.db-agent.kafka.yaml` (55 message types) | What consumers were told. Authored on the UI side. The re-implementation documents its own behaviour in `svt.db-agent-next.kafka.yaml` next to it. |
 | **june** | `Dev/db-example/db-example-2026-06-01.dump` | The database as of 2026-06-01. Superseded by the two below; kept for history. |
 | **dev** | `Dev/db-example/2026-11-08-backup.dump` (database `svt_sw_db_test`) | The dev database on 2026-11-08. Matches the code on `master`. |
 | **prod** | `Dev/db-example/2026-11-08-backup_prod.dump` (database `svt_sw_db`) | The production database on 2026-11-08. Lags dev on the `SvtTestList` changes of September ([03 §5](03-database-schema.md#5-where-dump-doc-and-code-disagree)). |
@@ -78,9 +81,9 @@ Schema facts, checked against the dev and prod dumps of 2026-11-08
 
 - [x] S1: the live column is `ProbeCard.arriveDate` (dev and prod)
 - [x] S6, S7, S8, S9, S12: Module tables, `moduleType`, the newer `pcModel` / `pcName` values and the `SvtTestSetupDefaultConfig` PK exist in both
-- [ ] S2, S3, S4, S5: prod still has `createsAt`, a nullable `testSetupConfigId` without FK, a `varchar` `testResultStatus` and the three `Svt*TestList` tables, while `master` and dev use `createdAt`, the FK, the enum and `SvtTestListToEntityName/Id`. Which agent build runs in prod, and is a prod migration planned?
-- [ ] S10: `configBody` is `json` in prod and `text` in dev. Which is intended?
-- [ ] S11: `SvtTestTemplate.testTypeConfigId` is nullable in every database but `NOT NULL` in the schema doc.
+- [x] S2, S3, S4, S5: prod still has `createsAt`, a nullable `testSetupConfigId` without FK, a `varchar` `testResultStatus` and the three `Svt*TestList` tables, while `master` and dev use `createdAt`, the FK, the enum and `SvtTestListToEntityName/Id`. Author (Q31): prod is outdated; the schema doc is the one to deploy. Which build runs in prod was not said.
+- [x] S10: `configBody` is `json` in prod and `text` in dev. Author (Q27, Q31): `text`, as the schema doc says; prod follows once the dev schema is validated.
+- [x] S11: `SvtTestTemplate.testTypeConfigId` is nullable in every database but `NOT NULL` in the schema doc. Author (Q33): probably NOT NULL.
 
 Behaviour verified against data:
 
@@ -105,10 +108,12 @@ Behaviour derived **by code reading**, not observed:
 - [ ] [01 §5](01-architecture.md#5-request--reply-envelope), [§7](01-architecture.md#7-failure-and-recovery-behaviour): a non-JSON payload ends the process; a payload without `type` or `data` is undefined behaviour
 - [ ] [01 §5](01-architecture.md#5-request--reply-envelope): `NotFound` and `UnexpectedError` are never emitted
 
-Questions of **intent**, domain rules, schema decisions and operations are collected, with room
-for answers, in [08-questions-for-the-author.md](08-questions-for-the-author.md). The starred ones
-there (schema divergence between prod and dev, chip block naming, module design, the DUT and test
-model, `configBody` type, location semantics, the authoritative contract) block the next steps.
+Questions of **intent**, domain rules, schema decisions and operations are collected in
+[08-questions-for-the-author.md](08-questions-for-the-author.md); the author answered them on
+2026-11-08. Of the starred ones, the schema divergence (Q31), chip block naming (Q6), module design
+(Q9), the DUT model (Q21), the `configBody` type (Q27), location semantics (Q10) and the
+authoritative contract (Q36) are settled; the test record scheme (Q24) and the result status (Q25)
+are still open.
 
 ## Who talks to the agent
 
@@ -126,3 +131,6 @@ flowchart LR
 WPAgent uses exactly: `GetAllWaferProbeProjects`, `GetAllWaferProbeMachines`, `GetAllAsics`
 (filter `ids` + pager), `UpdateWpMachineLoadedWafer`, `UpdateWpMachineInstalledProbeCard`, and
 `GetAllWaferProbeMachines` again as a connectivity probe (`WPAgent/services/WPDbKafkaClient.py`).
+
+The TestAgent's own message names are not part of the contract: the author confirmed (Q36) that
+`svt.db-agent.kafka.yaml` is the only contract, so the TestAgent is expected to move to it.

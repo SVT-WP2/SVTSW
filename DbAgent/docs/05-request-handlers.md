@@ -65,6 +65,10 @@ function updateLocation(dto, loc, data): EntityReply {
 `data.<idName>` → `{ items: selectEntries(loc, { [idName]: id }) }`. No `ORDER BY`, no `totalCount`.
 Items have the five history columns; `date` is a `"YYYY-MM-DD"` string.
 
+Author (Q10, Q11): several relocations of one component on one day are not expected, so the day
+resolution of `date` stands; `username` is not implemented yet and will be reviewed once the GUI
+provides it.
+
 ---
 
 ## 2. WaferType
@@ -142,6 +146,9 @@ The C++ has a branch for `createWithLocation` returning `false` that would reply
 `data: null`; it is unreachable because the only non-throwing failure it guards against (missing
 `data.create`) throws earlier. Noted for completeness.
 
+Author (Q5): the three dates are filled in later through `UpdateWafer`; `batchNumber` is the foundry
+lot number, and `1` on the first prod wafer is a placeholder.
+
 ---
 
 ## 4. Asic
@@ -162,6 +169,9 @@ The C++ has a branch for `createWithLocation` returning `false` that would reply
 → SQL error → `Error: getting entries`.
 
 Typical WPAgent call: `{ filter: { ids: [asicId] }, pager: { limit: 1, offset: 0 } }`.
+
+Author (Q8): one chip per ASIC in principle, so the `LEFT JOIN` assumption holds; nothing enforces
+it yet.
 
 ---
 
@@ -212,7 +222,9 @@ create a `ChipBlock` with serial number `<blockType>_<chipSerialNumber>`.
 `AncMPW2-W1_0_0` has three `ChipBlock` rows named `SLDO_AncMPW2-W1_0_0`, `NVBG_AncMPW2-W1_0_0`,
 `CML_TRANSCEIVER_AncMPW2-W1_0_0`: the family prefix of the block type is **stripped**. The code has
 always built `<blockType>_<chipSN>` (git history of `blockSN`), so these rows were not produced by
-this handler. Which naming is intended is a question for the author. Prod has no chips and an
+this handler. Author (Q6): the rows were test data and the generation was never exercised; the
+naming is for the future users to define, so the feature stays inert until then. (Q7):
+`AsicFamilyTypeBlockList` is maintained by hand by the developer user. Prod has no chips and an
 empty block list.
 
 ### `CreateManyChips`
@@ -239,7 +251,8 @@ Handlers are registered under `GetAllSvtTests`, `CreateSvtTest`, `UpdateSvtTestS
 this is live (Q-H16). The contract defines `GetAllModules`, `CreateModule`, `UpdateModuleLocation`,
 `GetModuleLocationHistory` with `chips: integer[]`; even if wired, `chips` would not be linked
 because the relation inserts look for key `chipId`. The contract also implies a generated
-`serialNumber` that no code produces.
+`serialNumber` that no code produces. Author (Q9): the module entity is incomplete and needs
+development.
 
 ---
 
@@ -281,7 +294,8 @@ return update(machineDto, { id: data.wpMachineId, update: { loadedWaferId: data.
 ```
 
 Apparent intent on swap (from the overwritten assignments): one `Unloaded` row for the old wafer,
-then one `Loaded` row for the new.
+then one `Loaded` row for the new. Author (Q13): a `Loaded` row implies that the previous wafer was
+unloaded, so the single row is by design, not a defect.
 
 **Data (2026-11-08):** prod's `WaferLoadedInMachine` has two rows, both `Loaded` (wafer 1 on
 2026-05-11, wafer 4 on 2026-10-13) and no `Unloaded` row although the machine's wafer changed;
@@ -299,7 +313,9 @@ insertRow(pcInstalledDto, { machineId: data.wpMachineId, probeCardId: data.insta
 return update(machineDto, { id: data.wpMachineId, update: { installedProbeCardId: …, installedProbeCardOrientation: … } }, allowNull = true)
 ```
 
-No `status` column exists on this history table; it only records installs.
+No `status` column exists on this history table; it only records installs. Author (Q14): a status
+such as "PC not installed" may be the way to represent removal (tentative). (Q15): one orientation
+enum for wafers and probe cards is intended.
 
 ---
 
@@ -316,6 +332,8 @@ No `status` column exists on this history table; it only records installs.
 | `GetAllProbeCards` | generic list. Items lack the contract's `asicFamilyTypes` (Q-H15). |
 | `CreateProbeCard` ⚠ *code only* | generic create |
 
+Author (Q16): probe cards and their `ProbeCardFamilyType` rows are entered with psql today.
+
 ---
 
 ## 9. WaferProbeProject
@@ -330,6 +348,9 @@ No `status` column exists on this history table; it only records installs.
 |---|---|
 | `GetAllWaferProbeProjects` | generic list; `local2GlobalMap` returned as JSON text |
 | `CreateWaferProbeProject` | generic create; `local2GlobalMap` must be sent as a **string**. An object is silently dropped from the INSERT and the (nullable) column is stored as `NULL`. |
+
+Author (Q17): die coordinates and `local2GlobalMap` are written by hand by expert users; the agent
+is not expected to validate them.
 
 ---
 
@@ -350,6 +371,8 @@ No `status` column exists on this history table; it only records installs.
 | `UpdateEquipment` ⚠ *code only* | generic update with location guard |
 | `UpdateEquipmentLocation`, `GetEquipmentLocationHistory` | §1 |
 
+Author (Q18): `specification` is free-form for now.
+
 ---
 
 ## 11. SvtTestSetup
@@ -369,7 +392,10 @@ No `status` column exists on this history table; it only records installs.
 | `UpdateSvtTestSetup` | relation-table update: `data.id`, `data.update.defaultConfigId` → `UPDATE SvtTestSetupDefaultConfig SET defaultConfigId WHERE setupId = id` (no upsert, Q-U1); reply entity |
 | `GetEquipmentListForTestSetup` | `data.setupId` required (`Missing field setupId`) → `{ items: [{ equipId, setupId }, …], totalCount }`. **Q-H11**: the contract promises `EquipmentDto` items. |
 
-No message adds equipment to a setup; `SvtTestSetupEquipList` is populated by hand.
+No message adds equipment to a setup; `SvtTestSetupEquipList` is not populated at all today
+(author, Q19: future development). Author (Q20): the default config is the configuration the
+TestAgent loads when the setup is selected, and it must belong to the same setup; the agent does
+not check that.
 
 ### `CreateSvtTestSetup`
 
@@ -422,6 +448,10 @@ Identical structure, two tables.
 | `CreateSvtTestType` | custom, below |
 | `UpdateSvtTestType` | **Q-H10**: reads `data.testTypeId` and `data.dutTypes` (the contract says `data.id` and `data.update.dutTypes`); appends missing DUT types (never removes); reply entity. With the contract's shape `data.testTypeId` is null → type error → `BadRequest`. |
 
+Author (Q22): the `dutTypes` filter is meant to return the test types associated with the given DUT
+type(s); whether the update replaces the set or only adds to it, and which request shape is
+intended, are still open.
+
 ### `CreateSvtTestType`
 
 `data.create = { name, dutTypes: string[], testTypeConfig: { name, configBody, note } }`
@@ -453,6 +483,9 @@ return { entity: getById(typeDto, type.id) }         // { dutTypes: [...], id, n
 | `CreateSvtTestTemplate` | generic create. **Q-H17**: `isEnabled` is a boolean and is dropped from the INSERT (Q-C1), so every new template is enabled regardless of the request. |
 | `UpdateSvtTestTemplate` | generic update; `isEnabled` works here (`'true'`/`'false'` literals) |
 
+Author (Q23): templates define the list of tests the TestAgent offers; disabling one does not affect
+tests already created from it.
+
 ---
 
 ## 15. SvtTest (table `SvtTestList`)
@@ -474,6 +507,10 @@ return { entity: getById(typeDto, type.id) }         // { dutTypes: [...], id, n
 Timestamps are sent by the client as strings and inserted as literals; Postgres parses ISO
 `2025-06-03T23:59:12Z` fine. They come back in Postgres text form (space separator, no zone).
 
+Author (Q24): the polymorphic DUT reference is a new scheme, to be validated before it reaches
+production. (Q25, Q26): the result-status vocabulary, who enforces the state order, and what
+`pathToResult` points to are still to be decided. (Q39): the timestamps are believed to be UTC.
+
 ---
 
 ## 16. Enums
@@ -490,6 +527,9 @@ reads `data.enumNames`; in practice the filter is ignored and all enums are retu
 never refreshed: a value added with `ALTER TYPE … ADD VALUE` is invisible until restart, and
 `CreateWaferType` validation rejects maps using it until then. Values containing commas or needing
 Postgres double-quoting would be mis-parsed (none exist today).
+
+Author (Q29): replacing the Postgres enums by a lookup table would be acceptable. (Q30):
+`chipBlockType` is the name to keep.
 
 ---
 

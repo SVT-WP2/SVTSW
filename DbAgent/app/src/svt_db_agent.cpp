@@ -113,9 +113,7 @@ int main(int argc, const char *argv[])
                   setupConfig->getFileVebosity());
   logInfo("********************** Svt Db Agent, version:" + version, SvtUtils::SvtLogger::STANDARD);
 
-  // take the DB connection out once integrated with FRED
-  // but just in case, perhaps checking for connection first will prevent
-  // problems
+  // check the DB connection first: a failure here is reported before anything else starts
   std::string psqlHost = dbConfig->getHost();
   std::string psqlPort = dbConfig->getPort();
   std::string psqlUser = dbConfig->getUser();

@@ -15,10 +15,10 @@ Table and column names are given for orientation; the full schema is in
 | **Wafer** | A physical silicon wafer, identified by its foundry serial number and batch number. Has a current location and optional thinning / dicing / production dates. | `Wafer` |
 | **ASIC** | One die on a wafer. Created in bulk from the wafer type map at wafer registration, never individually by users in the normal flow (`CreateAsic` exists but the UI does not use it). Has a family type (the chip design, e.g. `MOSAIX`, `BABYMOSS`, `AncMPW2`), a position on the wafer map (`"<row>_<col>"`) and a mechanical quality. | `Asic` |
 | **ASIC family type** | The chip design an ASIC implements; an enum with ~90 values. Also drives which **blocks** a chip has. | enum `asicFamilyType` |
-| **Chip** | An ASIC after dicing, i.e. a singulated die that is handled as its own object: it gets its own serial number and its own location history. Links back to exactly one ASIC. The schema does not forbid two chips for one ASIC, but the agent's ASIC query assumes at most one (`LEFT JOIN`). | `Chip` |
-| **Chip block** | A functional sub-block of an *ancillary* ASIC (`SLDO`, `NVBG`, `CML_TRANSCEIVER`), tracked as its own test subject. Which blocks a family type has is configuration data (`AsicFamilyTypeBlockList`). Serial number is `<blockType>_<chipSerialNumber>`. | `ChipBlock` |
-| **Module** | An assembly of several chips (`IB0`, `IB1`, `IB2`). Has its own location history. **Work in progress**: tables exist in the schema doc, the C++ handler is unfinished and not wired up. | `Module`, `ModuleChipList` |
-| **General location** | Where an object physically is: an institute or room (`CERN`, `CERN_186_R_E10`, `Prague`, `BNL`, …). Wafers, chips, equipment and modules carry a current `generalLocation` plus an append-only **location history** with date, user and note. | enum `wpGeneralLocation`, `*Location` tables |
+| **Chip** | An ASIC after dicing, i.e. a singulated die that is handled as its own object: it gets its own serial number and its own location history. Links back to exactly one ASIC. The schema does not forbid two chips for one ASIC, but the agent's ASIC query assumes at most one (`LEFT JOIN`). Author (Q8): one chip per ASIC in principle, not enforced; whether to enforce it is left to the UI and DB owners. | `Chip` |
+| **Chip block** | A functional sub-block of an *ancillary* ASIC (`SLDO`, `NVBG`, `CML_TRANSCEIVER`), tracked as its own test subject. Which blocks a family type has is configuration data (`AsicFamilyTypeBlockList`). Serial number is `<blockType>_<chipSerialNumber>` in the code; no naming is decided yet (author, Q6). | `ChipBlock` |
+| **Module** | An assembly of several chips (`IB0`, `IB1`, `IB2`). Has its own location history. **Work in progress**: tables exist in the schema doc, the C++ handler is unfinished and not wired up; the author (Q9) calls the entity incomplete and in need of development. | `Module`, `ModuleChipList` |
+| **General location** | Where an object physically is: an institute or room (`CERN`, `CERN_186_R_E10`, `Prague`, `BNL`, …). Wafers, chips, equipment and modules carry a current `generalLocation` plus an append-only **location history** with date, user and note. Author (Q12): the room-level and institute-level values in one enum, and the separate probe-card enum, are intentional. | enum `wpGeneralLocation`, `*Location` tables |
 | **Wafer probe machine** (WP machine, prober) | A wafer prober station: vendor, software, network address. Carries live state: which wafer is currently loaded (and in which orientation) and which probe card is installed. Each change is appended to a history table. | `WaferProbeMachine`, `WaferLoadedInMachine`, `ProbeCardInstalledInMachine` |
 | **Probe card** | The needle card mounted on a prober. Has vendor, model, type, cleaning interval, and the ASIC family types it can probe. | `ProbeCard`, `ProbeCardFamilyType` |
 | **Wafer probe project** | A prober-side project definition for probing one ASIC family type on one wafer type on one machine: orientation, alignment die, home die, and the local-to-global coordinate map (JSON). | `WaferProbeProject` |
@@ -27,8 +27,8 @@ Table and column names are given for orientation; the full schema is in
 | **Test setup config** | A named JSON configuration body for a setup. Config bodies are large, so lists return metadata only and the body is fetched separately. | `SvtTestSetupConfig` |
 | **Test type** | A kind of test (e.g. an IV scan). Declares which **DUT types** it applies to. | `SvtTestType`, `SvtTestTypeDUTTypeList` |
 | **Test type config** | A named JSON configuration body for a test type. Created together with the test type (first config) or later. | `SvtTestTypeConfig` |
-| **DUT type** | The device-under-test category a test applies to (`MOSAIX`, `BABYMOSAIX`, `AncMPW2_SLDO`). Conceptually a subset of ASIC family type plus block type. | enum `dutType` |
-| **Test template** | "Test type config X is (enabled / disabled) for DUT type Y." The menu of tests the TestAgent may run on a DUT type. | `SvtTestTemplate` |
+| **DUT type** | The device-under-test category a test applies to (`MOSAIX`, `BABYMOSAIX`, `AncMPW2_SLDO`). Author (Q21): a DUT type is a family type or a block type (the union grows with every testable design); `dutEntityName` + `dutId` identify the device, whose DUT type is fixed at creation. | enum `dutType` |
+| **Test template** | "Test type config X is (enabled / disabled) for DUT type Y." The menu of tests the TestAgent may run on a DUT type (author, Q23: disabling a template does not affect tests already created from it). | `SvtTestTemplate` |
 | **Test** (SvtTestList row) | One execution of a test type config on one DUT, on one setup config. The DUT is referenced polymorphically by **entity name** (`Asic`, `Chip`, `ChipBlock`) plus id. Lifecycle: created → started → finished with a result status and a path to results. | `SvtTestList` + link tables |
 | **Enum** | Postgres enum types in the schema; the agent exposes their values so UIs can build dropdowns. Values are added directly in the DB by the DB owner. | `pg_enum` |
 
@@ -173,7 +173,7 @@ stateDiagram-v2
     Finished --> [*]
     note right of Finished
         testResultStatus is one of SUCCESS, PARTIAL_SUCCESS, FAILURE, ERROR
-        (doc says enum, the June DB has varchar(50))
+        (doc says enum, the June DB has varchar(50); the vocabulary and who enforces the order are still open, Q25)
     end note
 ```
 
@@ -198,6 +198,10 @@ flowchart LR
 WPAgent (the prober control software) is the main caller here: it loads machines and projects at
 startup, looks up ASICs by id during probing, and records load/unload events.
 
+Author (Q13, Q14, Q15): a `Loaded` row implies that the previous wafer was unloaded, so a swap
+writes one row by design; removing a probe card could be represented by a status such as "PC not
+installed"; one orientation enum for wafers and probe cards is intended.
+
 ## 4. Identity and keys
 
 - Every top-level entity has an integer surrogate `id` from a Postgres sequence. There are no UUIDs.
@@ -210,6 +214,9 @@ startup, looks up ASICs by id during probing, and records load/unload events.
   [03 §4](03-database-schema.md#4-tables-without-a-primary-key)). The agent never updates or deletes
   rows in them; it only inserts and reads.
 - The agent exposes **no delete** operation of any kind.
+- Author (Q32, Q35): the missing primary keys and the `date` columns are deliberate choices for
+  simplicity; corrections and deletions are manual actions of a DB expert in psql, so through the
+  agent the database is append-only.
 
 ## 5. What the agent does not know about
 
