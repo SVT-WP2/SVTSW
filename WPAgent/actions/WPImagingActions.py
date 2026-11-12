@@ -5,7 +5,6 @@ import os
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPValidationDecorator import validate_command
-from utilities.WPMapConverter import get_converter
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from drivers.WPFactory import get_current_prober
@@ -346,8 +345,10 @@ def generate_raster_steps(
         num_rows=1,
         column_spacing_um=-2968,   # ~15% X overlap (was -2623 / ~25%)
         row_spacing_um=2476,       # ~15% Y overlap (was 2133 / ~27%)
-        start_x_um=-21088,
-        start_y_um=-27245,
+        # None = block `start_config` of configs/WPImagingConfig.json
+        start_x_um=None,
+        start_y_um=None,
+        start_config="LEC",
         settle_time_s=1,
         # Per-move-type settle times.  Both default to settle_time_s so existing
         # YAMLs that only set settle_time_s are unaffected.
@@ -425,6 +426,14 @@ def generate_raster_steps(
     num_rows             = int(num_rows)
     column_spacing_um    = float(column_spacing_um)
     row_spacing_um       = float(row_spacing_um)
+    if start_x_um is None or start_y_um is None:
+        # raster start shared by the die-imaging sequences (configs/WPImagingConfig.json)
+        from utilities.WPImagingConfig import raster_start
+        cfg_x, cfg_y = raster_start(start_config)
+        start_x_um = cfg_x if start_x_um is None else start_x_um
+        start_y_um = cfg_y if start_y_um is None else start_y_um
+        print(f"   📂 Raster start '{start_config}' from configs/WPImagingConfig.json: "
+              f"x={float(start_x_um):.1f} µm  y={float(start_y_um):.1f} µm")
     start_x_um           = float(start_x_um)
     start_y_um           = float(start_y_um)
     settle_time_s        = float(settle_time_s)

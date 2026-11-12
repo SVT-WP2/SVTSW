@@ -73,7 +73,7 @@ EXPERT_COMMANDS: set[str] = {
 # Experts may run them; the developer-only commands used by their steps are allowed
 # only while the sequence runs (see utilities/WPSequenceContext.py).
 SEQUENCE_COMMANDS: set[str] = {
-    "TakeImageWafer",
+    "TakeImageWaferER2",
     "TakeImageBAM",
     "TakeImageSEG",
     "TakeImageLEC",
@@ -84,6 +84,9 @@ SEQUENCE_COMMANDS: set[str] = {
     "TakeImageL0_1-3",
     "TakeImageL0_2-4",
     "BrightnessCorrection",
+    "TakeImageLECDie",
+    "NeedleOffsetMeasureER2B",
+    "MoveToPadTarget",
 }
 EXPERT_COMMANDS |= SEQUENCE_COMMANDS
 

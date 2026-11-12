@@ -1,0 +1,18 @@
+{
+  "_help": {
+    "corner": "where the needles should land: bottom_left, bottom_right, top_left, top_right, or center (pad centre)",
+    "inset_um": "distance of the needle (mark CENTRE) from both edges of `corner`, on the most constrained pad; the mark edge is about half a mark width (~7 um) closer to the pad edge",
+    "max_aspect": "a mark counts as round if long side / short side <= this; 2.0 tolerates pixel steps on ~14 um marks and still rejects scrub tails",
+    "min_valid_fraction": "fraction of pads that must have exactly one round mark clear of the edge; the others are left out and listed in rejected_pads",
+    "max_spread_um": "95th percentile of the marks' distance from their median position: how consistently the needles land; above this the offset is refused",
+    "chuck_sign_x": "chuck X per image X: -1 = chuck +x moves the needle LEFT on the pad",
+    "chuck_sign_y": "chuck Y per image Y: +1 = chuck +y moves the needle DOWN on the pad"
+  },
+  "corner": "bottom_left",
+  "inset_um": 20.0,
+  "max_aspect": 2.0,
+  "min_valid_fraction": 0.95,
+  "max_spread_um": 10.0,
+  "chuck_sign_x": -1,
+  "chuck_sign_y": 1
+}

@@ -360,6 +360,122 @@
     "execution_time": "< 1 second"
   },
 
+  "SaveChuckPosition": {
+    "description": "Read the chuck X/Y (Zero reference), contact height and current die, and save them in Contacting/<project>/positions.json. Moves nothing.",
+    "category": "Contacting",
+    "data": {
+      "name":  {"required": false, "type": "string", "description": "Name of the position (default: contact)"},
+      "label": {"required": false, "type": "string", "description": "Die label, e.g. BAM00 (the prober only reports col/row)"}
+    },
+    "example": "python main.py send SaveChuckPosition --data='{\"name\":\"contact\",\"label\":\"BAM00\"}'",
+    "execution_time": "< 1 second"
+  },
+
+  "MoveChuckToSavedPosition": {
+    "description": "Closed-loop XY move (MoveChuckXYPrecise, Zero reference) to a position saved by SaveChuckPosition in Contacting/<project>/positions.json. No Z move. When it may be used is left to the state machine.",
+    "category": "Contacting",
+    "data": {
+      "name":                {"required": false, "type": "string", "description": "Saved position (default: ptpa_ref)"},
+      "precision_um":        {"required": false, "type": "float",  "description": "Accepted error per axis (default 0.15)"},
+      "max_iterations":      {"required": false, "type": "int",    "description": "Max correction moves (default 10)"},
+      "correction_settle_s": {"required": false, "type": "float",  "description": "Settle time after each correction (default 0.1)"}
+    },
+    "example": "python main.py send MoveChuckToSavedPosition --data='{\"name\":\"ptpa_ref\"}'",
+    "execution_time": "1-5 seconds"
+  },
+
+  "MoveChuckBySavedOffset": {
+    "description": "Closed-loop relative XY move by an offset saved by ComputePadTargetOffset (chuck dx_um / dy_um in Contacting/<project>/offsets.json). No Z move. Meant right after MoveChuckToSavedPosition. An offset above max_offset_um puts the agent in error state, nothing moves.",
+    "category": "Contacting",
+    "data": {
+      "name":                  {"required": false, "type": "string", "description": "Saved offset (default: pad_target)"},
+      "max_offset_um":         {"required": false, "type": "float",  "description": "Largest offset per axis; above it: error state (default 40)"},
+      "precision_um":          {"required": false, "type": "float",  "description": "Accepted error per axis (default 0.15)"},
+      "max_iterations":        {"required": false, "type": "int",    "description": "Max correction moves (default 10)"},
+      "correction_settle_s":   {"required": false, "type": "float",  "description": "Settle time after each correction (default 0.1)"}
+    },
+    "example": "python main.py send MoveChuckBySavedOffset --data='{\"name\":\"pad_target\"}'",
+    "execution_time": "1-5 seconds"
+  },
+
+  "MoveToPadTarget": {
+    "description": "Sequence (sequencer/MoveToPadTarget.yaml): MoveChuckToSavedPosition (ptpa_ref) then MoveChuckBySavedOffset (pad_target). XY only: wide / contact are not included.",
+    "category": "Contacting",
+    "data": {
+      "position_name": {"required": false, "type": "string", "description": "Saved position (default: ptpa_ref)"},
+      "offset_name":   {"required": false, "type": "string", "description": "Saved offset (default: pad_target)"},
+      "max_offset_um": {"required": false, "type": "float",  "description": "Largest offset per axis; above it: error state (default 40)"}
+    },
+    "example": "python main.py send MoveToPadTarget --data='{}'",
+    "execution_time": "2-10 seconds"
+  },
+
+  "AnalyzeNeedleMarks": {
+    "description": "Needle-mark analysis of the newest stitched LEC image of a die folder. Reports (JSON, CSV, overlay) are written next to the image in Imaging/<wafer>/<folder>/. No prober movement.",
+    "category": "Contacting",
+    "data": {
+      "folder":     {"required": true,  "type": "string",  "description": "Die folder, e.g. BAM00"},
+      "wafer":      {"required": false, "type": "string",  "description": "Wafer folder: Imaging/<wafer>/<folder>"},
+      "config":     {"required": false, "type": "string",  "description": "needle_mark config: built-in name (default lec) or JSON path"},
+      "pattern":    {"required": false, "type": "string",  "description": "Stitched image to analyse (default *_LEC.tif, newest is used)"},
+      "contrast":   {"required": false, "type": "boolean", "description": "Also write the contrast image (default false)"},
+      "require_ok": {"required": false, "type": "boolean", "description": "Fail when pad count or sizes do not match the config (default false)"},
+      "root":       {"required": false, "type": "string",  "description": "Top folder: Imaging (default) or the EOS archive"}
+    },
+    "example": "python main.py send AnalyzeNeedleMarks --data='{\"folder\":\"BAM00\",\"wafer\":\"Wafer\"}'",
+    "execution_time": "5-30 seconds"
+  },
+
+  "ComputePadTargetOffset": {
+    "description": "Chuck offset to a target on the pads (corner + inset, or center) from the newest needle-mark report of a die. Criteria from configs/WPContactingConfig.json, overridable per call. Saved in Contacting/<project>/offsets.json with dx_um/dy_um and offset_to_center_x_um/_y_um. No prober movement.",
+    "category": "Contacting",
+    "data": {
+      "folder":             {"required": true,  "type": "string", "description": "Die folder, e.g. C0R0"},
+      "wafer":              {"required": false, "type": "string", "description": "Wafer folder"},
+      "root":               {"required": false, "type": "string", "description": "Top folder: Imaging (default) or the EOS archive"},
+      "corner":             {"required": false, "type": "string", "description": "bottom_left, bottom_right, top_left, top_right, center (default: configs/WPContactingConfig.json)"},
+      "inset_um":           {"required": false, "type": "float",  "description": "Distance of the mark centre from both pad edges of the corner (default: configs/WPContactingConfig.json)"},
+      "name":               {"required": false, "type": "string", "description": "Name of the saved offset (default pad_target)"},
+      "max_aspect":         {"required": false, "type": "float",  "description": "A mark is round if long / short side <= this (default: configs/WPContactingConfig.json)"},
+      "min_valid_fraction": {"required": false, "type": "float",  "description": "Fraction of pads that must have one round mark clear of the edge (default: configs/WPContactingConfig.json)"},
+      "max_spread_um":      {"required": false, "type": "float",  "description": "Largest allowed spread of the marks, 95th percentile (default: configs/WPContactingConfig.json)"},
+      "chuck_sign_x":       {"required": false, "type": "int",    "description": "Chuck X per image X, +1 or -1 (default: configs/WPContactingConfig.json)"},
+      "chuck_sign_y":       {"required": false, "type": "int",    "description": "Chuck Y per image Y, +1 or -1 (default: configs/WPContactingConfig.json)"}
+    },
+    "example": "python main.py send ComputePadTargetOffset --data='{\"folder\":\"C0R0\",\"wafer\":\"Wafer\",\"root\":\"/eos/project/a/aliceits3/ITS3-WP3/MOSAIX/prober_imaging\"}'",
+    "execution_time": "< 1 second"
+  },
+
+  "TakeImageLECDie": {
+    "description": "LEC imaging of one die (label or col+row): raster, stitch, cleanup, archive. Images in Imaging/<wafer>/<die>/, then archived.",
+    "category": "Imaging",
+    "data": {
+      "label": {"required": false, "type": "string", "description": "Die label (or col+row)"},
+      "col":   {"required": false, "type": "int",    "description": "Die column (with row)"},
+      "row":   {"required": false, "type": "int",    "description": "Die row (with col)"},
+      "die":   {"required": false, "type": "string", "description": "Folder name of the die"},
+      "wafer": {"required": false, "type": "string", "description": "Wafer folder"}
+    },
+    "example": "python main.py send TakeImageLECDie --data='{\"col\":0,\"row\":0,\"die\":\"C0R0\",\"wafer\":\"Wafer\"}'",
+    "execution_time": "2-5 minutes"
+  },
+
+  "NeedleOffsetMeasureER2B": {
+    "description": "Part 1 of pad-target contacting on ER2B: PTPA, save position, contact, LEC image of the die, needle-mark analysis and chuck offset to the pad target.",
+    "category": "Contacting",
+    "data": {
+      "label":  {"required": false, "type": "string", "description": "Die label (or col+row)"},
+      "col":    {"required": false, "type": "int",    "description": "Die column (with row)"},
+      "row":    {"required": false, "type": "int",    "description": "Die row (with col)"},
+      "die":    {"required": false, "type": "string", "description": "Folder name of the die"},
+      "wafer":  {"required": false, "type": "string", "description": "Wafer folder"},
+      "corner": {"required": false, "type": "string", "description": "Target corner (default bottom_left)"},
+      "inset_um": {"required": false, "type": "float", "description": "Inset from the corner (default 20)"}
+    },
+    "example": "python main.py send NeedleOffsetMeasureER2B --data='{\"col\":0,\"row\":0,\"die\":\"C0R0\",\"wafer\":\"Wafer\"}'",
+    "execution_time": "5-10 minutes"
+  },
+
   "LocalMode": {
     "description": "Put probe station into local mode",
     "category": "System",

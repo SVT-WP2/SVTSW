@@ -9,6 +9,7 @@ import actions.WPTestingActions as testing_actions
 import actions.WPCommandActions as command_actions
 import actions.WPLoginActions as user_actions
 import actions.WPImagingActions as imaging_actions
+import actions.WPContactingActions as contacting_actions
 
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 from utilities.WPValidationDecorator import validate_command_with_name
@@ -102,7 +103,7 @@ COMMAND_ROUTER = {
     # Imaging
     "TakeScreenshot": imaging_actions.take_screenshot,
     "TakeImage": imaging_actions.take_image,
-    "TakeImageWafer":  _yaml_command("TakeImageWafer", "sequencer/TakeImageWafer.yaml"),
+    "TakeImageWaferER2":  _yaml_command("TakeImageWaferER2", "sequencer/TakeImageWafer_ER2.yaml"),
     "TakeImageBAM":    _yaml_command("TakeImageBAM", "sequencer/TakeImageBAM.yaml"),
     "TakeImageSEG":    _yaml_command("TakeImageSEG", "sequencer/TakeImageSEG.yaml"),
     "TakeImageLEC":    _yaml_command("TakeImageLEC", "sequencer/TakeImageLEC.yaml"),
@@ -112,7 +113,17 @@ COMMAND_ROUTER = {
     "TakeImageL0_0-2":    _yaml_command("TakeImageL0_0-2", "sequencer/TakeImageL0_0-2.yaml"),
     "TakeImageL0_1-3":    _yaml_command("TakeImageL0_1-3", "sequencer/TakeImageL0_1-3.yaml"),
     "TakeImageL0_2-4":    _yaml_command("TakeImageL0_2-4", "sequencer/TakeImageL0_2-4.yaml"),
-    "BrightnessCorrection": _yaml_command("BrightnessCorrection", "sequencer/BrightnessCorrection.yaml"),
+    "BrightnessCorrection":    _yaml_command("BrightnessCorrection", "sequencer/BrightnessCorrection.yaml"),
+    "TakeImageLECDie":    _yaml_command("TakeImageLECDie", "sequencer/TakeImageLECDie.yaml"),
+    "NeedleOffsetMeasureER2B":    _yaml_command("NeedleOffsetMeasureER2B", "sequencer/NeedleOffsetMeasure_ER2B.yaml"),
+    "MoveToPadTarget":    _yaml_command("MoveToPadTarget", "sequencer/MoveToPadTarget.yaml"),
+
+    # Contacting
+    "SaveChuckPosition": contacting_actions.save_chuck_position,
+    "MoveChuckToSavedPosition": contacting_actions.move_chuck_to_saved_position,
+    "MoveChuckBySavedOffset": contacting_actions.move_chuck_by_saved_offset,
+    "AnalyzeNeedleMarks": contacting_actions.analyze_needle_marks,
+    "ComputePadTargetOffset": contacting_actions.compute_pad_target_offset,
 
     # FSM State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent,

@@ -1,0 +1,32 @@
+{
+  "_help": {
+    "expected_pads": "number of pads in the column (0 = unknown); used to pick the right column",
+    "pad_sizes_um": "design pad sizes [x, y] in um, x = horizontal in the image; one entry per pad type",
+    "pad_size_tolerance_um": "a pad is size_ok if measured x and y are within this of a design size",
+    "min_mark_diameter_um": "smallest real needle mark: a circle of this diameter (area, width and height)",
+    "method": "pad segmentation: gray / chroma / black / bgdiff, or auto (try all); pin the one reported in the JSON",
+    "polarity": "pads are the dark or light class: dark / light / auto",
+    "column_tolerance": "max sideways shift between consecutive pads, x pad width",
+    "edge_px": "pad border ignored, in px (blurred pad edge); a mark reaching it is at_edge",
+    "min_contrast": "a pixel stands out from the pad above this colour distance (0..441) ...",
+    "noise_k": "... and above the pad's own noise by this many sigmas. Raise both to shrink boxes / drop specks",
+    "peak_factor": "a region is a mark only if its peak reaches this x the reference threshold. LOWER = accept fainter marks",
+    "peak_reference": "reference threshold for peak_factor: image = median over all pads (robust to noisy pads), pad = each pad's own",
+    "min_clearance_um": "at_edge also for marks closer than this to the pad edge; 0 = only marks reaching the edge",
+    "um_per_px": "force the pixel size; null = from the TIFF tags, else estimated from the pads"
+  },
+  "expected_pads": 152,
+  "pad_sizes_um": [[144, 91], [94, 91]],
+  "pad_size_tolerance_um": 20.0,
+  "min_mark_diameter_um": 8.0,
+  "method": "auto",
+  "polarity": "auto",
+  "column_tolerance": 0.25,
+  "edge_px": 3,
+  "min_contrast": 25.0,
+  "noise_k": 5.0,
+  "peak_factor": 1.5,
+  "peak_reference": "image",
+  "min_clearance_um": 0.0,
+  "um_per_px": null
+}

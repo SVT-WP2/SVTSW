@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# macOS
+.DS_Store
+
+# analysis outputs (never commit image-derived results)
+*_overlay.tif
+*_contrast.tif
+*_marks.csv
+*_marks.json

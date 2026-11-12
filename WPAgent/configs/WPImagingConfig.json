@@ -1,0 +1,9 @@
+{
+  "_help": {
+    "purpose": "Raster start of the die-imaging sequences (TakeImageLEC, TakeImageLECDie, TakeImageBAM, TakeImageSEG, TakeImageL0_*, TakeImageL1_*, TakeImageL2): offset in um from the die position reached by MoveChuckRowColumn to the centre of the first tile. Used by GenerateRasterSteps when start_x_um / start_y_um are left empty.",
+    "LEC": "ER2 and ER2B share the LEC pad pattern and the probe card, so one start serves all their dies and imaging types (LEC, BAM, SEG, L0-L2)",
+    "when to edit": "after moving the probe card or the camera: the die position shifts relative to the camera, so the first tile must be shifted the same way",
+    "not used by": "TakeImageWafer_ER2 (its own start and wafer centre, relative to SEG4), BrightnessCorrection / FlatfieldCalibration (from the wafer centre), the Debug* sequences"
+  },
+  "LEC": {"start_x_um": 29750, "start_y_um": -27500}
+}
