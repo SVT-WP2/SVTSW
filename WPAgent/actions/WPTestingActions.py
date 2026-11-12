@@ -381,7 +381,9 @@ def _go_to_offaxis_side(prober):
 
 @validate_command_with_name("MoveChuckRowColumn", reply_type="MoveChuckDieReply")
 def move_chuck_die(
-        col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None
+        col=None, row=None, label=None, subsite=0, user=None, waferAgentName=None,
+        precise=False, reference=None, precision_um=0.5, max_iterations=10,
+        correction_settle_s=0.1, step_tolerance_um=50.0,
 ):
     """
     Move to specific die using ANY coordinate system.
@@ -398,6 +400,19 @@ def move_chuck_die(
         subsite: Subsite index (default 0)
         user: User performing action
         waferAgentName: Agent name
+        precise: False (default): SENTIO step_die only.
+            True: move by coordinates - target XY = reference XY + d_col / d_row
+            whole die pitches (die size from the wafer map), reached with the
+            closed-loop MoveChuckXYPrecise. The chuck lands on the same point
+            inside the target die as on the reference die. No calibration needed:
+            the step directions are learned from SENTIO's step_die on the way
+            (actions/WPDieGridActions.py, utilities/WPDieGrid.py).
+        reference: (precise only) position saved by SaveChuckPosition in the
+            off-axis area, e.g. "BAMTest"; empty: the current position / die
+        precision_um, max_iterations, correction_settle_s: (precise only) as for
+            MoveChuckXYPrecise
+        step_tolerance_um: (precise only) accepted difference between SENTIO's
+            die-to-die move and the die size (default 50 um)
 
     Returns:
         Response dict
@@ -411,6 +426,9 @@ def move_chuck_die(
 
         # ITS3 label
         move_chuck_die(label="BAM00")
+
+        # Precise: same point inside BAM03 as the saved, PTPA-aligned BAMTest position
+        move_chuck_die(label="BAM03", precise=True, reference="BAMTest")
     """
     reply = get_reply_type()
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -462,10 +480,26 @@ def move_chuck_die(
     if error:
         return error
 
+    if precise and subsite:
+        return ResponseBuilder.error(reply, "precise moves go to the die, not to a subsite", 400)
+
     try:
         prober = get_current_prober()
         _go_to_offaxis_side(prober)
-        prober.go_to_die(col, row)
+        detail = ""
+        if precise:
+            from actions.WPDieGridActions import read_reference, precise_die_move
+            try:
+                ref_die, ref_xy, ref_name = read_reference(prober, g.projectName, reference)
+            except (KeyError, ValueError) as e:
+                prober.local_mode()
+                return ResponseBuilder.error(reply, f"Precise move refused: {e}", 400)
+            detail = f", precise from {ref_name}: " + precise_die_move(
+                prober, g.projectName, ref_die, ref_xy, (col, row),
+                precision_um=precision_um, max_iterations=max_iterations,
+                correction_settle_s=correction_settle_s, step_tolerance_um=step_tolerance_um)
+        else:
+            prober.go_to_die(col, row)
 
         # Update die position
         g.set_current_die(col, row, subsite)
@@ -480,6 +514,7 @@ def move_chuck_die(
             message = f"Moved to die '{label}' (col={col}, row={row})"
         else:
             message = f"Moved to die col={col}, row={row}"
+        message += detail
 
         return ResponseBuilder.success(reply, message)
 

@@ -22,6 +22,7 @@ BYPASS_COMMANDS: set[str] = {
     "ListProbers",
     "ListChipTypes",
     "ListAvailableCommands",
+    "GetDieSize",
     # Hardware ops allowed in any state
     "AutoFocus",
 }

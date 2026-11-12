@@ -337,6 +337,12 @@ class WPCommandValidator:
                 "row": {"type": "int", "required": False},
                 "label": {"type": "str", "required": False},
                 "subsite": {"type": "int", "required": False},
+                "precise": {"type": "bool", "required": False},
+                "reference": {"type": "str", "required": False},
+                "precision_um": {"type": "float", "required": False},
+                "max_iterations": {"type": "int", "required": False},
+                "correction_settle_s": {"type": "float", "required": False},
+                "step_tolerance_um": {"type": "float", "required": False},
             },
             # move_chuck_asic(asicId from DB)
             "MoveChuckAsic": {
