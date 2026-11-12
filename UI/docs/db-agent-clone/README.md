@@ -66,11 +66,13 @@ other release.
 
 ## Open questions before Phase 2
 
-1. Prod and dev do not have the same schema
+1. ~~Prod and dev do not have the same schema~~
    ([DbAgent/docs/03 §5](../../../DbAgent/docs/03-database-schema.md#5-where-dump-doc-and-code-disagree)):
    prod lacks the September `SvtTestList` changes that `master` requires (S2–S5, S7) and stores
-   `configBody` as `json` where dev has `text` (S10). Which agent build runs in prod today, and is
-   prod to be migrated before or as part of the swap?
+   `configBody` as `json` where dev has `text` (S10) — answered 2026-11-08 (Q27, Q31): prod is
+   outdated; `Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt` is the authoritative schema
+   (`configBody` is `text`) and migration 1 brings prod to it. When prod is migrated remains an
+   operations decision ([02](02-database-migration.md)).
 2. Every row marked **ask** in [01-behaviour-decisions.md](01-behaviour-decisions.md): they change
    a consumer-visible result and need the UI, WPAgent or TestAgent owners to agree.
 3. ~~Whether the Module feature is in scope for the first release~~ — decided 2026-11-08: **out of

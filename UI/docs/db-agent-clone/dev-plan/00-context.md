@@ -173,9 +173,9 @@ Full detail: `DbAgent/docs/03-database-schema.md`; migration plan: `../02-databa
 - 19 native enum types in prod, 21 in dev (`dutEntityName`, `testResultStatus` are dev-only until
   migration 1). Values are identical in prod, dev and the schema doc. The list with values:
   `DbAgent/docs/03-database-schema.md` §6.
-- `json` columns: `WaferTypeMap.waferMap`, `Equipment.specification`, `WaferProbeProject.local2GlobalMap`,
-  `SvtTestSetupConfig.configBody`, `SvtTestTypeConfig.configBody` (prod `json`, dev `text`;
-  migration 1 makes them `json`). On the wire they are **strings**.
+- `json` columns: `WaferTypeMap.waferMap`, `Equipment.specification`, `WaferProbeProject.local2GlobalMap`.
+  `SvtTestSetupConfig.configBody` and `SvtTestTypeConfig.configBody` are `text` (prod had `json`;
+  migration 1 converts it since 2026-11-12, after Q27/Q31). On the wire they are all **strings**.
 - `date` columns (day resolution, `DEFAULT CURRENT_DATE`) on history and config tables;
   `timestamp without time zone` on `SvtTestList` (`createdAt`, `startedAt`, `finishedAt`).
 - History tables without a primary key (`WaferLocation`, `ChipLocation`, `EquipmentLocation`,
@@ -217,10 +217,10 @@ Column details: `DbAgent/docs/03-database-schema.md` §3.
 | `SvtDbTestSetupEntity` | `SvtTestSetup` | id | name, generalLocation nullable |
 | `SvtDbTestSetupEquipListEntity` | `SvtTestSetupEquipList` | (setupId, equipId) | → Setup, → Equipment; no message writes it |
 | `SvtDbTestSetupDefaultConfigEntity` | `SvtTestSetupDefaultConfig` | setupId (PK) | → Setup, nullable → SetupConfig |
-| `SvtDbTestSetupConfigEntity` | `SvtTestSetupConfig` | id | → Setup; name UK (global); configBody json; createdAt date |
+| `SvtDbTestSetupConfigEntity` | `SvtTestSetupConfig` | id | → Setup; name UK (global); configBody text; createdAt date |
 | `SvtDbTestTypeEntity` | `SvtTestType` | id | name UK |
 | `SvtDbTestTypeDutTypeListEntity` | `SvtTestTypeDUTTypeList` | (dutType, testTypeId) | → TestType |
-| `SvtDbTestTypeConfigEntity` | `SvtTestTypeConfig` | id | → TestType; (testTypeId, name) UK; configBody json; createdAt date |
+| `SvtDbTestTypeConfigEntity` | `SvtTestTypeConfig` | id | → TestType; (testTypeId, name) UK; configBody text; createdAt date |
 | `SvtDbTestTemplateEntity` | `SvtTestTemplate` | id | dutType enum nullable; → TestTypeConfig (nullable in DB); isEnabled default true; (dutType, testTypeConfigId) UK; virtual `testTypeId` |
 | `SvtDbTestEntity` | `SvtTestList` | id | → TestTypeConfig; → TestSetupConfig; createdAt default now; startedAt, finishedAt, pathToResult, testResultStatus enum |
 | `SvtDbTestToEntityNameEntity` | `SvtTestListToEntityName` | (dutEntityName, testId) | → Test; one row per test in practice |
@@ -289,5 +289,5 @@ assumptions below; when an answer arrives, update the plan.
 | Q9 module design | **dropped** (2026-11-08): the UI has no module concept; no entities, no messages |
 | Q21, Q24 DUT model | dev layout: one `SvtTestListToEntityName` and one `SvtTestListToEntityId` row per test |
 | Q25 result status | DB enum values `SUCCESS/PARTIAL_SUCCESS/FAILURE/ERROR` |
-| Q27 configBody type | `json`; strings on the wire |
+| Q27 configBody type | ~~`json`~~ `text` (answered 2026-11-08: the schema doc is authoritative, Q31); strings on the wire |
 | Q31 prod schema | migration 1 is written; when it runs in prod is an operations decision |

@@ -172,13 +172,26 @@ describe('SVT test setups (e2e)', () => {
             expect(await defaultRows()).toEqual([{ setupId: 1, defaultConfigId: 1 }])
         })
 
-        it('answers NotFound for an unknown setup and BadRequest for an unknown or foreign config or a malformed update', async () => {
+        it('rejects a config of another setup as the default and leaves the default rows untouched (Q20)', async () => {
+            await createSetup(SVT_TEST_SETUP_CREATE)
+            await createSetup(SETUP_2_CREATE)
+
+            const reply = await setup.send<EntityReply>(
+                new SvtDbAgentKafkaSvtTestSetups.UpdateSvtTestSetupMessage({ id: 1, update: { defaultConfigId: 2 } }),
+            )
+
+            expect(reply.status).toBe('BadRequest')
+            expect(reply.error.message).toContain('Test setup config 2 does not belong to test setup 1')
+            expect(await defaultRows()).toEqual([{ setupId: 1, defaultConfigId: 1 }, { setupId: 2, defaultConfigId: 2 }])
+            expect((await getAll()).items).toEqual([SETUP_1, SETUP_2])
+        })
+
+        it('answers NotFound for an unknown setup and BadRequest for an unknown config or a malformed update', async () => {
             await createSetup(SVT_TEST_SETUP_CREATE)
             await createSetup(SETUP_2_CREATE)
             const cases: [Record<string, unknown>, string, string][] = [
                 [{ id: 999, update: { defaultConfigId: 1 } }, 'NotFound', 'Test setup 999 not found'],
                 [{ id: 1, update: { defaultConfigId: 999 } }, 'BadRequest', 'Test setup config 999 does not exist'],
-                [{ id: 1, update: { defaultConfigId: 2 } }, 'BadRequest', 'Test setup config 2 does not belong to test setup 1'],
                 [{ id: 1, update: {} }, 'BadRequest', 'defaultConfigId'],
                 [{ id: 1, update: { defaultConfigId: 1, name: 'renamed' } }, 'BadRequest', 'name'],
             ]

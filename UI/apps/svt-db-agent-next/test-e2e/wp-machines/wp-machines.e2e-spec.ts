@@ -240,7 +240,7 @@ describe('Wafer probe machines (e2e)', () => {
             ])
         })
 
-        it('swaps wafers: an Unloaded row for the previous wafer, then a Loaded row for the new one (X-8)', async () => {
+        it('swaps wafers: one Loaded row for the new wafer and no Unloaded row for the previous one (X-8, Q13)', async () => {
             await setLoadedWafer({ wpMachineId: 1, loadedWaferId: 1, loadedWaferOrientation: 'West' })
 
             const reply = await setLoadedWafer({ wpMachineId: 1, loadedWaferId: 2, loadedWaferOrientation: 'East' })
@@ -248,7 +248,6 @@ describe('Wafer probe machines (e2e)', () => {
             expect(reply.data.entity).toMatchObject({ loadedWaferId: 2, loadedWaferOrientation: 'East' })
             expect((await loadedRows()).map((row) => [row.waferId, row.status, row.orientation])).toEqual([
                 [1, 'Loaded', 'West'],
-                [1, 'Unloaded', null],
                 [2, 'Loaded', 'East'],
             ])
         })

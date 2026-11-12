@@ -11,7 +11,7 @@ import { Migration } from '@mikro-orm/migrations'
  *
  * 1-6: the September 2026 `SvtTestList` changes dev already has (rename `createsAt`, the `dutEntityName` and
  *      `testResultStatus` enums, the two `SvtTestListToEntity*` tables, the `testSetupConfigId` FK, the drop of
- *      the three old per-DUT link tables, `configBody` as `json`).
+ *      the three old per-DUT link tables, `configBody` as `text`).
  * 7-8: surrogate `id` on the history tables and `SvtTestTemplate.testTypeConfigId` NOT NULL.
  */
 export class Migration20261108000001_dev_layout_and_surrogate_ids extends Migration {
@@ -105,16 +105,18 @@ export class Migration20261108000001_dev_layout_and_surrogate_ids extends Migrat
             `)
         }
 
-        // 6. configBody is json everywhere (dev stored text)
+        // 6. configBody is text everywhere, as the schema doc the author declares authoritative says (Q27, Q31;
+        //    prod stored json). `json` keeps the stored text, so `::text` converts verbatim. Until 2026-11-12 this
+        //    step converted the other way; migration 4 repeats this conversion for databases migrated before that.
         for (const table of ['SvtTestSetupConfig', 'SvtTestTypeConfig']) {
             this.addSql(`
                 DO $$ BEGIN
                     IF EXISTS (
                         SELECT 1 FROM information_schema.columns
                         WHERE table_schema = 'main' AND table_name = '${table}' AND column_name = 'configBody'
-                            AND data_type <> 'json'
+                            AND data_type <> 'text'
                     ) THEN
-                        ALTER TABLE main."${table}" ALTER COLUMN "configBody" TYPE json USING "configBody"::json;
+                        ALTER TABLE main."${table}" ALTER COLUMN "configBody" TYPE text USING "configBody"::text;
                     END IF;
                 END $$;
             `)

@@ -164,10 +164,10 @@ concept and the C++ handler was never reachable); their tables stay unmapped.
   order; the yaml's `ProbeCardDto` requires it, the TypeScript `EpicWpProbeCard` lacks it. There is no
   message to create a probe card or its family types (`CreateProbeCard` is code-only, decisions §1
   "ask"); the e2e seeds them with SQL (`test-e2e/utils/wp-fixtures.ts`).
-- **Wafer swap writes both rows** (X-8 fixed): `UpdateWpMachineLoadedWafer` with a wafer already loaded
-  writes `Unloaded` for it (orientation `null`, as the C++ did), then `Loaded` for the new one. Loading
-  needs an existing wafer and an orientation; unloading (`loadedWaferId: null`) with nothing loaded is a
-  `BadRequest`, as in the C++. The payload is validated with an app-local DTO: the `epic/entities` DTO
+- **Wafer swap writes one `Loaded` row** (X-8, Q13: the author confirmed that a load implies the unload of
+  the previous wafer; until 2026-11-12 the clone also wrote an `Unloaded` row). `UpdateWpMachineLoadedWafer`
+  writes `Unloaded` (orientation `null`) only on an explicit unload (`loadedWaferId: null`). Loading needs
+  an existing wafer and an orientation; unloading with nothing loaded is a `BadRequest`, as in the C++. The payload is validated with an app-local DTO: the `epic/entities` DTO
   lacks `wpMachineId` and the TypeScript type lacks `loadedWaferOrientation`, which WPAgent sends.
 - **Probe-card uninstall works but leaves no history row** (D-13): `installedProbeCardId: null` clears
   the machine's two columns; `ProbeCardInstalledInMachine.probeCardId` is NOT NULL and the table has no
@@ -206,12 +206,12 @@ concept and the C++ handler was never reachable); their tables stay unmapped.
   their names declared (`@Unique({ name })`): a type config's name is unique **per test type**
   (`SvtTestTypeConfig_testTypeId_name_idx`, while a setup config's name is unique globally) and a template's
   DUT type + configuration pair is unique (`SvtTestTemplate_dutType_testTypeConfigId_idx`).
-- **Config bodies round-trip byte for byte.** `configBody` is a `json` column mapped with
-  `SvtDbJsonTextType` (`libs/svt-db/data/src/common`): the string is written as is (PostgreSQL's `json`
-  keeps the text, `jsonb` would not) and selected with `::text` (`convertToJSValueSQL`), so indentation
-  and key order survive, as with the C++. The property is `lazy`: lists never load it, the two
-  `Get*ConfigBody` messages populate it. Handlers still `JSON.parse` the text first, so an invalid document
-  is a `BadRequest` and an object a validation error (R-7), never a PostgreSQL error.
+- **Config bodies round-trip byte for byte.** `configBody` is a `text` column since 2026-11-12 (Q27/Q31;
+  until then a `json` column mapped with a custom `SvtDbJsonTextType`, now deleted), declared
+  `@Property({ type: 'text', lazy: true })`: the string is stored and returned as is, so indentation and
+  key order survive, as with the C++. Lists never load it, the two `Get*ConfigBody` messages populate it.
+  Handlers `JSON.parse` the text first, so an invalid document is a `BadRequest` and an object a validation
+  error (R-7); the column itself no longer validates.
 - `GetAllSvtTestSetups` lists a setup without a default-config row with `defaultConfigId: null` (Q-R2,
   Q-H13: the C++ failed the whole list); `UpdateSvtTestSetup` creates that row when it is missing (Q-U1)
   and rejects a config that does not belong to the setup (new check: a default from another setup makes no

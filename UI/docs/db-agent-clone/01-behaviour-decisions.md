@@ -11,6 +11,12 @@ behaviour itself is described in [DbAgent/docs](../../../DbAgent/docs/README.md)
 
 Recommendations are in the last column and are proposals.
 
+On 2026-11-08 the C++ author answered
+[DbAgent/docs/08-questions-for-the-author.md](../../../DbAgent/docs/08-questions-for-the-author.md)
+(branch `370-db-documentation`, commit `1bf4153a`; carried into the rest of `DbAgent/docs` on that
+branch on 2026-11-12). The rows an answer touches cite it as *Author (Qn)* and were updated on
+2026-11-12.
+
 ## 1. Engine-level
 
 | Topic | Today | Options | Recommendation |
@@ -45,36 +51,39 @@ Recommendations are in the last column and are proposals.
 | Topic | Today | Options | Recommendation |
 |---|---|---|---|
 | `GetAllChipBlocks`, Module messages (07 §1) | not implemented | n/a | **fix**: implement `GetAllChipBlocks` (the UI calls it). Module: see README open question 3. |
-| `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` (07 §1) | code only, not in contract | drop / add to contract | **ask**: add them to the contract; harmless generic operations. |
+| `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` (07 §1) | code only, not in contract | drop / add to contract | **decided** (Author Q37: add them to the contract only if a consumer uses them; none does): not implemented, not in the contract, added on demand. No longer an open item (2026-11-12). |
 | `GetAllSvtTests` filters (D-3) | `ids` only | preserve / implement | **fix**: implement all contract filters including the date ranges. |
-| `GetAllSvtTestTypes.dutTypes` (D-4, Q-H9) | no-op | n/a | **fix**. *Status:* done, any-match (dev-plan/05 §10). |
+| `GetAllSvtTestTypes.dutTypes` (D-4, Q-H9) | no-op | n/a | **fix**. *Status:* done, any-match (dev-plan/05 §10); Author (Q22) confirms: a test type matches when it is associated with any of the given DUT types. |
 | `GetAllChips.familyTypes` (D-5, Q-H3), `GetAllAsics.chipId` (D-6, Q-H4) | error | n/a | **fix**. |
 | `CreateWaferType` extra key `data.waferMap` (D-7), `CreateManyChips` extra key `data.items` (D-8) | required | preserve / drop | **fix**: accept the contract shape; tolerate the extra keys. |
-| `UpdateSvtTestType` shape (D-1, Q-H10) | `data.testTypeId`, `data.dutTypes` | code shape / contract shape | **ask**: contract shape, after checking no client sends the code shape. Also decide add-only vs replace semantics. *Status:* contract shape (the BFF is the only client and uses it) with **replace** semantics, to be confirmed (dev-plan/05 §10). |
-| `GetEquipmentListForTestSetup` reply (R-1, Q-H11) | `(setupId, equipId)` pairs | pairs / `EquipmentDto[]` | **ask**: contract shape; confirm with the UI. Add a message to set a setup's equipment list, which does not exist today. |
+| `UpdateSvtTestType` shape (D-1, Q-H10) | `data.testTypeId`, `data.dutTypes` | code shape / contract shape | **ask**: contract shape, after checking no client sends the code shape. Also decide add-only vs replace semantics. *Status:* contract shape (the BFF is the only client and uses it) with **replace** semantics, to be confirmed (dev-plan/05 §10). Author (Q22) answered the filter semantics only; the request shape and add-only vs replace stay open. |
+| `GetEquipmentListForTestSetup` reply (R-1, Q-H11) | `(setupId, equipId)` pairs | pairs / `EquipmentDto[]` | **defer** (Author Q19: `SvtTestSetupEquipList` is not populated, future development): not implemented in the clone (the yaml has the message, the TypeScript contract does not). When the feature is designed, answer the contract shape (`EquipmentDto[]`) and add a message to set the list. |
 | `CreateManyChips` reply (R-2, Q-H6) | all chips | all / created | **fix**: created chips. |
 | `asicFamilyTypes` on probe cards (R-3, Q-H15) | absent | omit / read `ProbeCardFamilyType` | **fix**: read it; add a way to write it. *Status:* read (dev-plan/05 §8); no write message in the contract yet. |
 | `dutType: []` key on empty relation (R-4, Q-R1) | wrong key | n/a | **fix**: `dutTypes: []`. *Status:* done. |
 | Chip block generation ([X-7](../../../DbAgent/docs/05-request-handlers.md#5-chip), Q-H5) | never runs | leave inert / implement the apparent rule | **ask**: the code's rule is `<blockType>_<chipSN>`, but the three existing dev `ChipBlock` rows use `<blockType without family prefix>_<chipSN>` (`SLDO_AncMPW2-W1_0_0`). Confirm the naming and that `AsicFamilyTypeBlockList` is maintained (3 rows in dev, 0 in prod) before enabling it. *Status:* implemented with the code's rule behind `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS` (default off); see dev-plan/05 §7. |
-| Machine wafer swap history ([X-8](../../../DbAgent/docs/05-request-handlers.md#7-waferprobemachine), Q-H8a) | one `Loaded` row, no `Unloaded` | preserve / fix | **fix**: `Unloaded` for the old wafer, then `Loaded`. Agree with the WPAgent team. *Status:* implemented (dev-plan/05 §8). |
-| Uninstall probe card (D-13, Q-H8b) | fails on `NOT NULL` | preserve / allow | **fix**: needs a schema change (nullable `probeCardId` or a status column, see [02](02-database-migration.md)). Agree with the WPAgent team. *Status:* the uninstall clears the machine's columns and succeeds; no history row until the schema change (dev-plan/05 §8). |
-| Current location after `Update*Location` ([X-9](../../../DbAgent/docs/05-request-handlers.md#1-shared-pattern-location-tracked-entities), Q-H7) | newest by `date` (day resolution) | preserve / use the row just inserted | **fix**: the row just written is the current location. Consider `timestamptz` for history dates ([02](02-database-migration.md)). |
+| Machine wafer swap history ([X-8](../../../DbAgent/docs/05-request-handlers.md#7-waferprobemachine), Q-H8a) | one `Loaded` row, no `Unloaded` | preserve / fix | **preserve** (Author Q13: in a swap the `Loaded` row implies that the previous wafer was unloaded; one row by design). An `Unloaded` row is written only on an explicit unload (`loadedWaferId: null`). *Status:* the clone wrote `Unloaded` + `Loaded` on a swap until 2026-11-12; now one `Loaded` row, as the C++. The explicit row comes back only if the WPAgent team asks for it. |
+| Uninstall probe card (D-13, Q-H8b) | fails on `NOT NULL` | preserve / allow | **fix**: needs a schema change; Author (Q14) suggests a status such as "PC not installed" on the history table rather than a nullable `probeCardId` (see [02](02-database-migration.md)). Agree the column with the WPAgent team. *Status:* the uninstall clears the machine's columns and succeeds; no history row until the schema change (dev-plan/05 §8). |
+| Current location after `Update*Location` ([X-9](../../../DbAgent/docs/05-request-handlers.md#1-shared-pattern-location-tracked-entities), Q-H7) | newest by `date` (day resolution) | preserve / use the row just inserted | **fix**: the row just written is the current location. Author (Q10): several relocations of one entity on one day are not expected, and (Q32) history keeps `date` by decision, so `timestamptz` is off the table ([02 §5](02-database-migration.md#5-timestamps-and-history-ordering)). |
 | `isEnabled` on `CreateSvtTestTemplate` (D-12, Q-H17) | dropped | n/a | **fix**. *Status:* done. |
 | `Get*ConfigBody` unknown id ([X-12](../../../DbAgent/docs/05-request-handlers.md#12-svttestsetupconfig-and-svttesttypeconfig), Q-H20) | `Success` with `entity: {}` | preserve / `NotFound` | **fix**: `NotFound`. *Status:* done. |
-| Enum cache ([X-11](../../../DbAgent/docs/05-request-handlers.md#16-enums), Q-H14) | loaded at startup, never refreshed; naive `enum_range` parsing | per-request query / short TTL / startup | **fix**: query `pg_enum` per request (cheap) or cache with a short TTL. Use `enumlabel` rows, not `enum_range` text. |
+| Enum cache ([X-11](../../../DbAgent/docs/05-request-handlers.md#16-enums), Q-H14) | loaded at startup, never refreshed; naive `enum_range` parsing | per-request query / short TTL / startup | **fix**: query `pg_enum` per request (cheap) or cache with a short TTL. Use `enumlabel` rows, not `enum_range` text. Author (Q29): a lookup table would be acceptable later ([02 §4](02-database-migration.md#4-enums-keep-postgres-enums)). |
 | `GetAllEnums` request key (D-2) | reads `data.enumNames`; contract `enumsNames`; UI sends `filter.enumNames` | pick one | **ask**: fix the contract typo and accept `filter.enumNames`; keep returning everything when no names are given. |
-| Enum names `chipBlockType` vs `blockType` (R-11, S15) | DB says `blockType` | rename DB type / rename in contract | **ask**: one name end to end. Renaming in the contract and UI is cheaper than renaming a DB type. |
+| Enum names `chipBlockType` vs `blockType` (R-11, S15) | DB says `blockType` | rename DB type / rename in contract | **fix** (Author Q30: `chipBlockType` survives): the wire name is `chipBlockType` (done for `GetAllChipBlocks`); the DB type `blockType` is to be renamed `chipBlockType`, which also renames the key `GetAllEnums` returns. *Status:* rename migration pending ([02 §2](02-database-migration.md#2-what-migration-1-adds)): the UI (`EpicEnumName.blockType`), the mock agent and the entities still use `blockType`, and all must change in one step. |
 | Date and timestamp formats (R-6) | Postgres text (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS.ffffff`) | preserve / ISO 8601 UTC | **ask**: the contract says ISO 8601; the UI parses today's format. Coordinate the switch, or emit ISO and verify the UI's parsing accepts both. *Status:* dates stay `YYYY-MM-DD`; `SvtTestList` timestamps are ISO 8601 UTC (the UI mocks already produce ISO; dev-plan/05 §11). |
-| JSON fields on the wire (R-7) | strings; objects silently dropped on write (except `configBody`) | strings / objects | **preserve** strings on the wire for now (WPAgent and the UI expect strings); **fix** by rejecting objects with `BadRequest` instead of dropping them. |
-| Location `username` | never written by `Create*` (NULL); written by `Update*Location` | n/a | **preserve**; consider taking the creator's name from the create request later. |
+| JSON fields on the wire (R-7) | strings; objects silently dropped on write (except `configBody`) | strings / objects | **preserve** strings on the wire for now (WPAgent and the UI expect strings); **fix** by rejecting objects with `BadRequest` instead of dropping them. `configBody` is a `text` column since 2026-11-12 (row below); the clone still accepts only a string holding valid JSON for it. |
+| Location `username` | never written by `Create*` (NULL); written by `Update*Location` | n/a | **preserve**; Author (Q11): the user feature is not implemented yet, to be reviewed once the GUI supplies a user. |
 | Test state machine | not enforced | preserve / enforce | **preserve** (TestAgent drives it); log out-of-order transitions. *Status:* done. `testResultStatus` is one enum end to end (the database's values plus `CANCELLED` from migration 2, `null` for no result yet; yaml, TypeScript contract, BFF and UI aligned 2026-11-08, dev-plan/05 §11). |
+| `configBody` column type (S10, Q27, Q31) | `json` in prod, `text` in dev; the body is opaque | json / text | **fix**: `text`. Author (Q31): `Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt` is the authoritative schema and says `text`; prod's `json` is outdated (Q27). Migration 1 converts `json` to `text` (migration 4 for databases migrated earlier); the clone stores and returns the string byte for byte and still requires valid JSON on write. *Status:* done 2026-11-12. |
+| `UpdateSvtTestSetup` with a config of another setup (Q20) | only the pointer changes; no ownership check | preserve / reject | **fix** (Author Q20: the default config is what the TestAgent loads for the setup and must belong to it): `BadRequest` when `defaultConfigId` belongs to another setup. *Status:* done; e2e in `test-e2e/svt-test-setups`. |
 
 ## 4. Schema-affecting items
 
 Decisions that change the database are listed with their migration consequences in
 [02-database-migration.md](02-database-migration.md): surrogate ids on history tables, the
-probe-card uninstall, `testResultStatus` as enum or varchar, history `date` resolution, and the
-S1–S16 discrepancies.
+probe-card uninstall, `testResultStatus` as enum or varchar, history `date` resolution, the
+`configBody` type (`text`, Q27/Q31), the `blockType` → `chipBlockType` enum rename (Q30, pending)
+and the S1–S16 discrepancies.
 
 ## 5. Behaviour notes collected while documenting the C++
 
@@ -93,6 +102,7 @@ Observations that are not decisions but matter for the implementation.
   leaves gaps (indices outside `ExistingAsics`, duplicates, out-of-range indices, serial-number
   collisions). Adding those checks is a strict tightening and safe.
 - `SvtTestSetupEquipList` and `ProbeCardFamilyType` have no write path today. The clone will need
-  messages for them or they stay hand-maintained.
+  messages for them or they stay hand-maintained. Author: the equipment list is future development
+  and the table is not populated (Q19); probe cards and their family types are entered with psql (Q16).
 - The contract's `svt.db-agent.kafka(ancASIC).yaml` and the TestAgent's own message names
   (`GetAllTests`, …) are not served by anything. One contract should survive.

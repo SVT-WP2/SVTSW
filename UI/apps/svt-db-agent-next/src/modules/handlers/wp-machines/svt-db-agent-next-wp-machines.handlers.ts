@@ -54,8 +54,8 @@ const ENUM_BY_FIELD = {
 /**
  * `GetAllWaferProbeMachines`, `CreateWaferProbeMachine`, `UpdateWaferProbeMachine`, `UpdateWpMachineLoadedWafer`,
  * `UpdateWpMachineInstalledProbeCard` (`DbAgent/docs/05-request-handlers.md` §7; decisions X-8 and D-13 in
- * `docs/db-agent-clone/01-behaviour-decisions.md`). A wafer swap writes `Unloaded` then `Loaded`; an uninstall
- * clears the machine's probe-card columns (the history table cannot record it yet).
+ * `docs/db-agent-clone/01-behaviour-decisions.md`). A wafer swap writes one `Loaded` row (the unload is implied,
+ * Q13); an uninstall clears the machine's probe-card columns (the history table cannot record it yet).
  */
 @Injectable()
 @SvtDbAgentNextHandlers()
@@ -136,8 +136,8 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
 
     /**
      * `data = { wpMachineId, loadedWaferId | null, loadedWaferOrientation | null }`. Loading needs an existing
-     * wafer and an orientation; unloading needs a loaded wafer. The history gets an `Unloaded` row for the
-     * previous wafer and a `Loaded` row for the new one.
+     * wafer and an orientation; unloading needs a loaded wafer. The history gets a `Loaded` row for the new
+     * wafer, or an `Unloaded` row for the current one on an unload; a swap writes no `Unloaded` row (X-8, Q13).
      */
     private async updateLoadedWafer(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<SvtDbAgentNextWpMachineWire>> {
         const record = validateRequestData(SvtDbAgentNextWpMachineLoadedWaferDto, data, 'data')

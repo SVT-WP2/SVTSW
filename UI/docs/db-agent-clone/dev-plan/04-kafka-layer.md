@@ -119,8 +119,8 @@ generated with `generateAsics`** in one transaction via `insertMany`; `UpdateWaf
 `generalLocation`; `UpdateWaferLocation`; `UpdateWafer` dates); ASICs; chips (`CreateChip`,
 `CreateManyChips` returning the created chips; block generation behind the
 `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS` flag, default off, Q6); probing (`UpdateWpMachineLoadedWafer`
-writes `Unloaded` for the previous wafer then `Loaded`; `UpdateWpMachineInstalledProbeCard` with a
-null card → `BadRequest` "not supported yet" until D-13 is settled); test setups and configs
+writes one `Loaded` row on a swap and `Unloaded` only on an unload, Q13; `UpdateWpMachineInstalledProbeCard`
+with a null card → `BadRequest` "not supported yet" until D-13 is settled); test setups and configs
 (`CreateSvtTestSetup` with its default config in one transaction, `UpdateSvtTestSetup` upserting
 the default); test types (`CreateSvtTestType` with DUT types and first config; `UpdateSvtTestType`
 accepts both the contract shape `{ id, update: { dutTypes } }` and the code shape

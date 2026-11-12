@@ -34,7 +34,8 @@ import MessageType = SvtDbAgentKafkaSvtTestSetups.MessageType
 /**
  * `GetAllSvtTestSetups`, `CreateSvtTestSetup`, `UpdateSvtTestSetup` (`DbAgent/docs/05-request-handlers.md`
  * §11). A setup without a default-config row lists with `defaultConfigId: null` (Q-R2); `UpdateSvtTestSetup`
- * creates the row when it is missing (Q-U1) and only accepts a config of that setup.
+ * creates the row when it is missing (Q-U1) and only accepts a config of that setup (Q20: the author confirmed
+ * that the default config, which the TestAgent loads for the setup, must belong to it).
  */
 @Injectable()
 @SvtDbAgentNextHandlers()
@@ -84,7 +85,7 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
         return { entity: toWire(created) }
     }
 
-    /** `data.id` + `data.update.defaultConfigId`: the config must exist and belong to the setup. */
+    /** `data.id` + `data.update.defaultConfigId`: the config must exist and belong to the setup (Q20). */
     private async update(data: unknown): Promise<SvtDbAgentKafkaSvtTestSetups.UpdateSvtTestSetupReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')

@@ -82,9 +82,10 @@ export class SvtDbWpMachinesRepository {
     }
 
     /**
-     * Loads a wafer into the machine or unloads the current one, writing the history: an `Unloaded` row for
-     * the wafer that was loaded (if any), then a `Loaded` row for the new one (if any) — a swap writes both
-     * (X-8, the C++ wrote only the `Loaded` row). `null` when the machine does not exist.
+     * Loads a wafer into the machine or unloads the current one, writing the history: a `Loaded` row for the
+     * new wafer, or an `Unloaded` row for the current one when `waferId` is `null`. A swap writes only the
+     * `Loaded` row, as the C++ did: the author confirmed that a load implies the unload of the previous wafer
+     * (X-8, Q13). `null` when the machine does not exist.
      */
     setLoadedWafer(machineId: number, change: SvtDbWpLoadedWaferChange): Promise<SvtDbWpMachineEntity | null> {
         return this.em.transactional(async (em) => {
@@ -92,20 +93,20 @@ export class SvtDbWpMachinesRepository {
             if (!machine) {
                 return null
             }
-            if (machine.loadedWafer) {
-                em.create(SvtDbWpWaferLoadedInMachineEntity, {
-                    machine,
-                    wafer: machine.loadedWafer.id,
-                    orientation: null,
-                    status: SVT_DB_WP_WAFER_UNLOADED,
-                })
-            }
             if (change.waferId !== null) {
                 em.create(SvtDbWpWaferLoadedInMachineEntity, {
                     machine,
                     wafer: change.waferId,
                     orientation: change.orientation,
                     status: SVT_DB_WP_WAFER_LOADED,
+                })
+            }
+            else if (machine.loadedWafer) {
+                em.create(SvtDbWpWaferLoadedInMachineEntity, {
+                    machine,
+                    wafer: machine.loadedWafer.id,
+                    orientation: null,
+                    status: SVT_DB_WP_WAFER_UNLOADED,
                 })
             }
             em.assign(machine, { loadedWafer: change.waferId, loadedWaferOrientation: change.orientation })
