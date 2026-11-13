@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicWaferType } from 'epic-ui/api'
+import { EpicWaferType } from 'epic-api-types'
 import { map, merge, Observable, of, switchMap, take, throwError } from 'rxjs'
 
 import { EpicWaferTypesActions } from '../store'

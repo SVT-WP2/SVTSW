@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicWpMachine } from 'epic-ui/api'
+import { EpicWpMachine } from 'epic-api-types'
 import { map, merge, Observable, of, switchMap, take, throwError } from 'rxjs'
 
 import { EpicWpMachinesActions } from '../store'

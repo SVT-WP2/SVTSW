@@ -1,4 +1,5 @@
-import { EpicAsic, EpicAsicTest } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
+import { EpicAsicTest } from 'epic-ui/api'
 
 
 export type EpicAsicTestExtended =

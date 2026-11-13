@@ -1,5 +1,5 @@
 import { ColDef, GridOptions, ValueGetterParams } from 'ag-grid-community'
-import { EpicWpProject } from 'epic-ui/api'
+import { EpicWaferType, EpicWpMachine, EpicWpProject } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
 
 
@@ -17,7 +17,11 @@ export namespace EpicWpProjectsAdminGrid {
         actions = 'actions',
     }
 
-    export type RowEntity = EpicWpProject
+    /** The API serves ids only — the joined `wpMachine` / `waferType` are a UI-side extension (not populated yet). */
+    export type RowEntity = EpicWpProject & {
+        wpMachine?: EpicWpMachine
+        waferType?: EpicWaferType
+    }
 
     export enum CellEventEvent {
         Details = 'Details',

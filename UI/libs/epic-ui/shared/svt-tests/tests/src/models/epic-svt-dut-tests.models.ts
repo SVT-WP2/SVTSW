@@ -1,4 +1,4 @@
-import { EpicSvtTestStatus } from 'epic-ui/api'
+import { EpicSvtTestStatus } from 'epic-api-types'
 import { AgLabelCell } from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'

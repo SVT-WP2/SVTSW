@@ -1,4 +1,4 @@
-import { EpicWafer } from 'epic-ui/api'
+import { EpicWafer } from 'epic-api-types'
 import { SelectOptionLabelValue } from 'epic-ui/utils'
 
 

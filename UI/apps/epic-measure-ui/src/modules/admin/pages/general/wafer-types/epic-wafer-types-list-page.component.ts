@@ -2,7 +2,7 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicWaferType } from 'epic-ui/api'
+import { EpicWaferType } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -70,12 +70,8 @@ export class EpicWaferTypesListPageComponent extends BaseComponent {
     }
 
     onRowClone(rowData: EpicWaferType): void {
-        this.epicWaferTypeCreateDialogService.openDialog(rowData.id, { isClone: true })
+        this.epicWaferTypeCreateDialogService.openDialog(rowData.id)
     }
-
-    // onRowEdit(rowData: EpicWaferType): void {
-    //     this.epicWaferTypeCreateDialogService.openDialog(rowData.id)
-    // }
 
     onCreate(): void {
         this.epicWaferTypeCreateDialogService.openDialog()

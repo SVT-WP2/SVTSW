@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { QueryHelpers } from 'epic-ui/utils'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreate } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -15,11 +14,8 @@ export class EpicSvtTestSetupConfigsApiClient {
     // DI
     protected readonly httpClient = inject(HttpClient)
 
-    fetchList(queryFilter: { ids?: number[]; setupId?: number } = {}): Observable<EpicSvtTestSetupConfig[]> {
-        const params = QueryHelpers.applyQueryParams({
-            ...queryFilter,
-        })
-        return this.httpClient.get<EpicSvtTestSetupConfig[]>(this.baseUrl, { params })
+    fetchList(): Observable<EpicSvtTestSetupConfig[]> {
+        return this.httpClient.get<EpicSvtTestSetupConfig[]>(this.baseUrl)
     }
 
     fetchOne(entityId: number): Observable<EpicSvtTestSetupConfig> {
@@ -32,7 +28,7 @@ export class EpicSvtTestSetupConfigsApiClient {
         return this.httpClient.get<EpicSvtTestSetupConfigBody>(url)
     }
 
-    create(payload: EpicSvtTestSetupConfigCreate): Observable<EpicSvtTestSetupConfig> {
+    create(payload: EpicSvtTestSetupConfigCreateRequest): Observable<EpicSvtTestSetupConfig> {
         return this.httpClient.post<EpicSvtTestSetupConfig>(this.baseUrl, { ...payload })
     }
 

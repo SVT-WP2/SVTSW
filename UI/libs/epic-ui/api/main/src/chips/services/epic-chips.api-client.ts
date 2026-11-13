@@ -1,10 +1,19 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import {
+    EpicApiPager,
+    EpicApiPageResponse,
+    EpicChip,
+    EpicChipCreateManyRequest,
+    EpicChipCreateRequest,
+    EpicChipLocationHistoryRecord,
+    EpicChipLocationUpdateRequest,
+    EpicChipsListQuery,
+} from 'epic-api-types'
 import { QueryHelpers } from 'epic-ui/utils'
 import { map, Observable } from 'rxjs'
 
-import { EpicApi, EpicApiPager, EpicApiPageResponse, getDefaultEpicApiPager } from '../../common'
-import { EpicChip, EpicChipCreate, EpicChipCreateMany, EpicChipLocation, EpicChipLocationUpdate, EpicChipsListQuery } from '../models'
+import { EpicApi, getDefaultEpicApiPager } from '../../common'
 
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +25,7 @@ export class EpicChipsApiClient {
     protected readonly httpClient = inject(HttpClient)
 
     fetchChipsList(
-        queryFilter?: Partial<EpicChipsListQuery.QueryFilter>,
+        queryFilter?: Partial<EpicChipsListQuery>,
         pager?: Partial<EpicApiPager>): Observable<EpicApiPageResponse<EpicChip>> {
 
         const url = `${this.baseUrl}`
@@ -39,23 +48,23 @@ export class EpicChipsApiClient {
             )
     }
 
-    create(payload: EpicChipCreate): Observable<EpicChip> {
+    create(payload: EpicChipCreateRequest): Observable<EpicChip> {
         return this.httpClient.post<EpicChip>(this.baseUrl, { ...payload })
     }
 
-    createMany(payload: EpicChipCreateMany): Observable<EpicChip[]> {
+    createMany(payload: EpicChipCreateManyRequest): Observable<EpicChip[]> {
         const url = `${this.baseUrl}/create-many`
         return this.httpClient.post<EpicChip[]>(url, { ...payload })
     }
 
-    updateChipLocation(chipId: number, update: EpicChipLocationUpdate): Observable<EpicChip> {
+    updateChipLocation(chipId: number, update: EpicChipLocationUpdateRequest): Observable<EpicChip> {
         const url = `${this.baseUrl}/${chipId}/location`
         return this.httpClient.post<EpicChip>(url, { ...update })
     }
 
-    fetchChipLocationHistory(chipId: number): Observable<EpicChipLocation[]> {
+    fetchChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecord[]> {
         const url = `${this.baseUrl}/${chipId}/location-history`
-        return this.httpClient.get<EpicChipLocation[]>(url)
+        return this.httpClient.get<EpicChipLocationHistoryRecord[]>(url)
     }
 
 }

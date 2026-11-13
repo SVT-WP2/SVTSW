@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core'
 import { MatButton } from '@angular/material/button'
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card'
-import { EpicWaferType } from 'epic-ui/api'
+import { EpicWaferType } from 'epic-api-types'
 import { EpicWaferTypeDetailsDialogService, EpicWaferTypeInfoComponent } from 'epic-ui/shared/wafer-types'
 import { BaseComponent } from 'epic-ui/utils'
 

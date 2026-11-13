@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicSvtTestTemplate, EpicSvtTestTemplateCreate, EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-ui/api'
+import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest, EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 
 
@@ -48,7 +48,7 @@ export namespace EpicSvtTestTemplateUpdateForm {
         }
     }
 
-    export function formDataToCreate(formData: FormData): EpicSvtTestTemplateCreate {
+    export function formDataToCreate(formData: FormData): EpicSvtTestTemplateCreateRequest {
         return {
             dutType: formData.dutType,
             testTypeConfigId: formData.testTypeConfigId,

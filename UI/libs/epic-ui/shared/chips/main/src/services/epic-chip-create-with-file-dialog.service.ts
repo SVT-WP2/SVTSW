@@ -1,7 +1,8 @@
 ﻿import { HttpErrorResponse } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicChip, EpicChipCreate, EpicChipCreateManyItem, EpicChipsApiClient } from 'epic-ui/api'
+import { EpicChip, EpicChipCreateManyRequestItem, EpicChipCreateRequest } from 'epic-api-types'
+import { EpicChipsApiClient } from 'epic-ui/api'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
 import { NgxCsvParser } from 'ngx-csv-parser'
@@ -76,7 +77,7 @@ export class EpicChipCreateWithFileDialogService {
                 map(
                     ([formData, createManyItems]) =>
                         createManyItems
-                            .map<EpicChipCreate>(item => ({
+                            .map<EpicChipCreateRequest>(item => ({
                                 ...item,
                                 generalLocation: formData[Form.FormField.generalLocation],
                             })),
@@ -91,7 +92,7 @@ export class EpicChipCreateWithFileDialogService {
             })
     }
 
-    protected parseAsicToChipMapFile(asicToChipMapFile: File): Observable<EpicChipCreateManyItem[]> {
+    protected parseAsicToChipMapFile(asicToChipMapFile: File): Observable<EpicChipCreateManyRequestItem[]> {
         return this.ngxCsvParser.parse(asicToChipMapFile, { delimiter: ',', header: false })
             .pipe(
                 map(asicToChipMapCsvContent => Form.parseAsicToChipMapFileContent(asicToChipMapCsvContent as string[][])),

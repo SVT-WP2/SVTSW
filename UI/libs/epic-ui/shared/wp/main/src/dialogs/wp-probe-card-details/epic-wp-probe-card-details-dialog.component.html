@@ -1,0 +1,18 @@
+<epic-mat-dialog-header>
+    Probe Card Details
+</epic-mat-dialog-header>
+
+<epic-mat-dialog-content>
+    <div class="p-3">
+        @for (row of rows; track row.label) {
+            <div class="row py-1">
+                <div class="col-lg-6 epic-color-neutral-300 epic-font-body-sm">
+                    {{ row.label }}
+                </div>
+                <div class="col-lg-6 epic-font-label">
+                    {{ row.value }}
+                </div>
+            </div>
+        }
+    </div>
+</epic-mat-dialog-content>

@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit, Signal, ViewContainerRef } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
-import { EpicSvtTestTemplate } from 'epic-ui/api'
+import { EpicSvtTestTemplate } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorMessagePipe,

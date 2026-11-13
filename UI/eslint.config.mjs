@@ -23,6 +23,31 @@ export const DEFAULT_DIRECTIVE_SELECTORS = [
     'ag',
 ]
 
+/**
+ * `libs/epic-api-types` is compiled into BOTH the Angular SPA and the NestJS apps, so it must stay free of runtime
+ * framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers only.
+ * Shared by the root config below (what `npm run lint` and CI use) and the lib's own config (`nx lint`).
+ */
+export const EPIC_API_TYPES_RESTRICTED_IMPORTS = [
+    'error',
+    {
+        patterns: [
+            {
+                group: ['@angular/*', '@ngrx/*', 'rxjs', 'rxjs/*'],
+                message: 'epic-api-types is shared with the NestJS apps — no Angular / rxjs imports here.',
+            },
+            {
+                group: ['@nestjs/*', 'class-validator', 'class-transformer', 'kafkajs'],
+                message: 'epic-api-types is shared with the Angular SPA — no NestJS / class-validator imports here.',
+            },
+            {
+                group: ['epic/*', 'epic-ui/*', '@env', '@env/*'],
+                message: 'epic-api-types is the lowest layer — it must not depend on epic/* or epic-ui/*.',
+            },
+        ],
+    },
+]
+
 export const ROOT_CONFIG = tseslint.config(
     {
         ignores: ['**/node_modules/', '**/assets/', 'dist/', '.angular/', '.nx/'],
@@ -225,6 +250,14 @@ export const ROOT_CONFIG = tseslint.config(
         rules: {
             '@angular-eslint/template/prefer-control-flow': 'off',
         }
+    },
+    {
+        // Here and not only in libs/epic-api-types/eslint.config.mjs: ESLint 9 reads the config of the directory it
+        // runs from, and `npm run lint` runs from the workspace root, so a lib's own config never applies there.
+        files: ['libs/epic-api-types/**/*.ts'],
+        rules: {
+            'no-restricted-imports': EPIC_API_TYPES_RESTRICTED_IMPORTS,
+        },
     },
 )
 

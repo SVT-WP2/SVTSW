@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
-import { EpicWafer } from 'epic-ui/api'
+import { EpicWafer } from 'epic-api-types'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
 
@@ -25,17 +25,12 @@ export class EpicWafersListComponent extends BaseComponent {
 
     @Output() edit$ = new EventEmitter<EpicWafer>()
     @Output() clone$ = new EventEmitter<EpicWafer>()
-    @Output() delete$ = new EventEmitter<EpicWafer>()
 
     readonly colDefs = EpicWafersGrid.getColDefs()
     readonly gridOptions = EpicWafersGrid.getGridOptions()
 
     onCellEvent(event: EpicAgGridCell.CellRendererEvent<EpicWafersGrid.CellEventEvent, any, EpicWafer>): void {
         switch (event.eventName) {
-            case CellEventEvent.Delete:
-                this.delete$.emit(event.rowData)
-                break
-
             case CellEventEvent.Clone:
                 this.clone$.emit(event.rowData)
                 break

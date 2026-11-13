@@ -1,3 +1,5 @@
-export type EpicWaferTypeMapEntity = {
-    waferMap: string
-}
+import { EpicWaferTypeMap } from 'epic-api-types'
+
+
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicWaferTypeMapEntity = EpicWaferTypeMap

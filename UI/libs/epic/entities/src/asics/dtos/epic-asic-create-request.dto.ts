@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
+import { EpicAsicCreateRequest } from 'epic-api-types'
 
-import { EpicAsicCreateEntity } from '../models'
 
-
-export class EpicAsicCreateRequestDto implements EpicAsicCreateEntity {
+export class EpicAsicCreateRequestDto implements EpicAsicCreateRequest {
 
     @IsString()
     @ApiProperty({ type: 'string' })
@@ -27,4 +26,3 @@ export class EpicAsicCreateRequestDto implements EpicAsicCreateEntity {
     quality: string
 
 }
-

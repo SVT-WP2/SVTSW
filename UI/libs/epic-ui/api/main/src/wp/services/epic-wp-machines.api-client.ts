@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicWpMachine, EpicWpMachineCreate, EpicWpMachineUpdate } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -23,7 +23,7 @@ export class EpicWpMachinesApiClient {
         return this.httpClient.get<EpicWpMachine>(url)
     }
 
-    update(entityId: number, update: Partial<EpicWpMachineUpdate>): Observable<EpicWpMachine> {
+    update(entityId: number, update: Partial<EpicWpMachineUpdateRequest>): Observable<EpicWpMachine> {
         const url = `${this.baseUrl}/${entityId}`
         return this.httpClient.patch<EpicWpMachine>(url, { ...update })
     }
@@ -38,7 +38,7 @@ export class EpicWpMachinesApiClient {
         return this.httpClient.post<EpicWpMachine>(url, { installedProbeCardId })
     }
 
-    create(payload: EpicWpMachineCreate): Observable<EpicWpMachine> {
+    create(payload: EpicWpMachineCreateRequest): Observable<EpicWpMachine> {
         return this.httpClient.post<EpicWpMachine>(this.baseUrl, { ...payload })
     }
 

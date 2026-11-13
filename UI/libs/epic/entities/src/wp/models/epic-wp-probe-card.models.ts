@@ -1,13 +1,5 @@
-export type EpicWpProbeCardEntity = {
-    id: number
-    serialNumber: string
-    name: string
-    vendor: string
-    model: string
-    arriveDate: string
-    location: string
-    type: string
-    vendorCleaningInterval: number
-}
+import { EpicWpProbeCard } from 'epic-api-types'
 
 
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicWpProbeCardEntity = EpicWpProbeCard

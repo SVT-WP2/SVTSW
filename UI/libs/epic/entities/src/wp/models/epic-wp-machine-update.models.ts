@@ -1,10 +1,5 @@
-export type EpicWpMachineUpdateEntity = {
-    hostName: string
-    connectionType: string
-    connectionPort: number
-    generalLocation: string
-    software: string
-    swVersion: string
-}
+import { EpicWpMachineUpdateRequest } from 'epic-api-types'
 
 
+/** Payload of the `UpdateWpMachine` Kafka message — identical to the HTTP request body today. */
+export type EpicWpMachineUpdateEntity = EpicWpMachineUpdateRequest

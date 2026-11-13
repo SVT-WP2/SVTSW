@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop'
 import { MatCardModule } from '@angular/material/card'
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
-import { EpicAsic } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,

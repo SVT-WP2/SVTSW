@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core'
-import { EpicAsic } from 'epic-ui/api'
+import { EpicAsic } from 'epic-api-types'
 import { EpicButtonModule } from 'epic-ui/common/components'
 import { BaseComponent } from 'epic-ui/utils'
 

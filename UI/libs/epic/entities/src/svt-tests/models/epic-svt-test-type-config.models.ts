@@ -1,27 +1,18 @@
-import { EpicDateString } from '../../common'
+import {
+    EpicSvtTestTypeConfig,
+    EpicSvtTestTypeConfigBody,
+    EpicSvtTestTypeConfigCreateRequest,
+    EpicSvtTestTypeConfigsListQuery,
+} from 'epic-api-types'
 
 
-export type EpicSvtTestTypeConfigEntity = {
-    id: number
-    testTypeId: number
-    name: string
-    note: string | null
-    createdAt: EpicDateString
-}
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicSvtTestTypeConfigEntity = EpicSvtTestTypeConfig
 
-export type EpicSvtTestTypeConfigBodyEntity = {
-    id: number
-    configBody: string // text file content (JSON, JSON5, ...)
-}
+export type EpicSvtTestTypeConfigBodyEntity = EpicSvtTestTypeConfigBody
 
-export type EpicSvtTestTypeConfigCreateEntity = {
-    testTypeId: number
-    name: string
-    configBody: string // text file content (JSON, JSON5, ...)
-    note: string | null
-}
+/** Payload of the `CreateSvtTestTypeConfig` Kafka message — identical to the HTTP request body today. */
+export type EpicSvtTestTypeConfigCreateEntity = EpicSvtTestTypeConfigCreateRequest
 
-export type EpicSvtTestTypeConfigsGetAllParams = {
-    ids?: number[]
-    testTypeId?: number
-}
+/** The `GetAllSvtTestTypeConfigs` Kafka filter — identical to the HTTP query today. */
+export type EpicSvtTestTypeConfigsGetAllParams = EpicSvtTestTypeConfigsListQuery

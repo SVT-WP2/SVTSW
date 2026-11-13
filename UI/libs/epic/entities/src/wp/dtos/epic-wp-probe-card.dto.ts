@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsNumber, IsString } from 'class-validator'
+import { EpicWpProbeCard } from 'epic-api-types'
 
-import { EpicWpProbeCardEntity } from '../models'
 
-
-export class EpicWpProbeCardDto implements EpicWpProbeCardEntity {
+export class EpicWpProbeCardDto implements EpicWpProbeCard {
 
     @IsNumber()
     @ApiProperty({ type: 'number' })

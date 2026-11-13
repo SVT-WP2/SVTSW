@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEquipment, EpicEquipmentApiClient } from 'epic-ui/api'
+import { EpicEquipment } from 'epic-api-types'
+import { EpicEquipmentApiClient } from 'epic-ui/api'
 import { BaseCachedDataFacade } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 

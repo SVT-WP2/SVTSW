@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicWafer } from 'epic-ui/api'
+import { EpicWafer } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid, EpicAgGridFilter } from 'epic-ui/common/ag-grid'
 
 
@@ -22,7 +22,6 @@ export namespace EpicWafersGrid {
     export enum CellEventEvent {
         Edit = 'Edit',
         Clone = 'Clone',
-        Delete = 'Delete',
     }
 
     export function getColDefs(): ColDef[] {
@@ -104,13 +103,6 @@ export namespace EpicWafersGrid {
                                     eventName: CellEventEvent.Clone,
                                 }),
                             },
-                            // {
-                            //     icon: 'epic-delete',
-                            //     title: 'Delete',
-                            //     onClick: () => ({
-                            //         eventName: CellEventEvent.Delete,
-                            //     }),
-                            // },
                         ]),
                     ],
                 }),

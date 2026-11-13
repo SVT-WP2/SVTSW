@@ -1,12 +1,5 @@
-import { EpicDateString } from '../../common'
+import { EpicWaferCreateRequest } from 'epic-api-types'
 
 
-export type EpicWaferCreateEntity = {
-    serialNumber: string
-    batchNumber: number
-    thinningDate: EpicDateString | null
-    dicingDate: EpicDateString | null
-    productionDate: EpicDateString | null
-    waferTypeId: number
-    generalLocation: string | null
-}
+/** Payload of the `CreateWafer` Kafka message — identical to the HTTP request body today. */
+export type EpicWaferCreateEntity = EpicWaferCreateRequest

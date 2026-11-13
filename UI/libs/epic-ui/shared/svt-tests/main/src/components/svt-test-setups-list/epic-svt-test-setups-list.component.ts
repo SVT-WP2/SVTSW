@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
-import { EpicSvtTestSetup } from 'epic-ui/api'
+import { EpicSvtTestSetup } from 'epic-api-types'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
 

@@ -1,5 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicEquipment, EpicEquipmentType } from 'epic-ui/api'
+import { EpicEquipment, EpicEquipmentType } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 

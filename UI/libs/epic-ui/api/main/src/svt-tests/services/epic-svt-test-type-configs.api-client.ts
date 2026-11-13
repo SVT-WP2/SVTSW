@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody, EpicSvtTestTypeConfigCreateRequest } from 'epic-api-types'
 import { QueryHelpers } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody, EpicSvtTestTypeConfigCreate } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -32,7 +32,7 @@ export class EpicSvtTestTypeConfigsApiClient {
         return this.httpClient.get<EpicSvtTestTypeConfigBody>(url)
     }
 
-    create(payload: EpicSvtTestTypeConfigCreate): Observable<EpicSvtTestTypeConfig> {
+    create(payload: EpicSvtTestTypeConfigCreateRequest): Observable<EpicSvtTestTypeConfig> {
         return this.httpClient.post<EpicSvtTestTypeConfig>(this.baseUrl, { ...payload })
     }
 

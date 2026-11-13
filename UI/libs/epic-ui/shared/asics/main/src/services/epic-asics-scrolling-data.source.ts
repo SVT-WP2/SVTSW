@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicAsic, EpicAsicsApiClient } from 'epic-ui/api'
+import { EpicApiPager, EpicAsic } from 'epic-api-types'
+import { EpicAsicsApiClient } from 'epic-ui/api'
 import { EpicBaseScrollingDataSource, EpicScrollData } from 'epic-ui/common/components'
 import { map, Observable } from 'rxjs'
 

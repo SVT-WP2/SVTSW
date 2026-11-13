@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicEquipment, EpicEquipmentCreate, EpicEquipmentType } from 'epic-ui/api'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentType } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
 
 
@@ -46,7 +46,7 @@ export namespace EpicEquipmentUpdateForm {
         }
     }
 
-    export async function formDataToEpicEquipmentCreate(formData: FormData): Promise<EpicEquipmentCreate> {
+    export async function formDataToEpicEquipmentCreate(formData: FormData): Promise<EpicEquipmentCreateRequest> {
         const specification = await FileHelpers.extractFileStringContent(formData.specification!)
         return {
             name: formData.name,

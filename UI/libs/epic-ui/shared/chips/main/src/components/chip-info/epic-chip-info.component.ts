@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core'
-import { EpicChip } from 'epic-ui/api'
+import { EpicChip } from 'epic-api-types'
 import { BaseComponent } from 'epic-ui/utils'
 
 

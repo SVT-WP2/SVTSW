@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { EpicEnumName, EpicEnumsCollection, EpicEnumsCollectionResponse } from 'epic-api-types'
 import { map, Observable } from 'rxjs'
 
 import { EpicApi } from '../../common'
-import { EpicEnumName, EpicEnumsCollection } from '../models'
 
 
 @Injectable({ providedIn: 'root' })
@@ -16,9 +16,9 @@ export class EpicEnumsApiClient {
 
     fetchAll(): Observable<EpicEnumsCollection> {
         const url = this.baseUrl
-        return this.httpClient.get<{ collection: EpicEnumsCollection }>(url)
+        return this.httpClient.get<EpicEnumsCollectionResponse>(url)
             .pipe(
-                map(({collection}) => collection),
+                map(({ collection }) => collection as EpicEnumsCollection),
             )
     }
 
@@ -27,13 +27,14 @@ export class EpicEnumsApiClient {
         const url = this.baseUrl
         const params = new HttpParams({
             fromObject: {
+                // one comma-separated value, see EpicEnumsCollectionQuery
                 enumNames: enumName,
             },
         })
 
-        return this.httpClient.get<Partial<EpicEnumsCollection>>(url, { params })
+        return this.httpClient.get<EpicEnumsCollectionResponse>(url, { params })
             .pipe(
-                map(item => item[enumName] ?? []),
+                map(({ collection }) => collection[enumName] ?? []),
             )
     }
 

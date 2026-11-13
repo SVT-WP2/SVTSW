@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card'
 import { MatDivider } from '@angular/material/divider'
 import { MatTooltip } from '@angular/material/tooltip'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicWafer } from 'epic-ui/api'
+import { EpicWafer } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,

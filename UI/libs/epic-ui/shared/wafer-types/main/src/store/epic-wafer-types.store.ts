@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity'
 import { createReducer, on } from '@ngrx/store'
-import { EpicWaferType } from 'epic-ui/api'
+import { EpicWaferType } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
 
 import { EpicWaferTypesActions } from './actions'
@@ -60,19 +60,6 @@ export namespace EpicWaferTypesStore {
             updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing),
         })),
         on(EpicWaferTypesActions.createErrorAction, (state, { error }) => ({
-            ...state,
-            updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing, error),
-        })),
-        on(EpicWaferTypesActions.updateRequestAction, (state) => ({
-            ...state,
-            updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing),
-        })),
-        on(EpicWaferTypesActions.updateSuccessAction, (state, { entity }) => ({
-            ...state,
-            waferTypes: adapter.updateOne({ id: entity.id, changes: entity }, state.waferTypes),
-            updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing),
-        })),
-        on(EpicWaferTypesActions.updateErrorAction, (state, { error }) => ({
             ...state,
             updateProcessing: ProcessingStore.eventProcessingFinish(state.updateProcessing, error),
         })),

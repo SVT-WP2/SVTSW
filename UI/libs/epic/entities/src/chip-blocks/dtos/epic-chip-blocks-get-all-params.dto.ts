@@ -1,29 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsNumber, IsOptional, IsString, Max } from 'class-validator'
+import { EpicApiPager, EpicChipBlocksListQuery } from 'epic-api-types'
 
-import { EpicGetAllChipBlocksQueryFilter } from '../models'
 
-
-export class EpicChipBlocksGetAllParamsDto implements EpicGetAllChipBlocksQueryFilter {
+/**
+ * `GET /chip-blocks` query string: the shared filter (`EpicChipBlocksListQuery`) plus paging (`EpicApiPager`).
+ */
+export class EpicChipBlocksGetAllParamsDto implements EpicChipBlocksListQuery, Partial<EpicApiPager> {
 
     @IsArray()
     @IsOptional()
-    @ApiProperty({ isArray: true, items: { type: 'number' } })
+    @ApiProperty({ isArray: true, items: { type: 'number' }, required: false })
     ids?: number[]
 
     @IsNumber()
     @IsOptional()
-    @ApiProperty({ type: 'number' })
+    @ApiProperty({ type: 'number', required: false })
     chipId?: number
 
     @IsString({ each: true })
     @IsOptional()
-    @ApiProperty({ isArray: true, items: { type: 'string' } })
+    @ApiProperty({ isArray: true, items: { type: 'string' }, required: false })
     chipBlockTypes?: string[]
 
     @IsString()
     @IsOptional()
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({ type: 'string', required: false })
     serialNumber?: string
 
     @IsNumber()
@@ -33,7 +35,7 @@ export class EpicChipBlocksGetAllParamsDto implements EpicGetAllChipBlocksQueryF
     limit?: number = 40
 
     @IsNumber()
-    @ApiProperty({ type: 'number', default: 20 })
+    @ApiProperty({ type: 'number', default: 0 })
     @IsOptional()
     offset?: number = 0
 

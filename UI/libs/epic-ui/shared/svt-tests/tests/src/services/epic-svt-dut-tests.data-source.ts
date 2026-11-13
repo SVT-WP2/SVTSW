@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtDutEntityName, EpicSvtTestsApiClient } from 'epic-ui/api'
+import { EpicSvtDutEntityName } from 'epic-api-types'
+import { EpicSvtTestsApiClient } from 'epic-ui/api'
 import { EpicSvtTestTypeConfigsDataFacade, EpicSvtTestTypesDataFacade } from 'epic-ui/shared/svt-test/test-types'
 import { EpicSvtTestSetupConfigsDataFacade, EpicSvtTestSetupsDataFacade } from 'epic-ui/shared/svt-tests'
 import { SimpleDataSource } from 'epic-ui/utils'

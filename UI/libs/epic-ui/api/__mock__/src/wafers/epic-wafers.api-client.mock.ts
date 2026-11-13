@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core'
-import { EpicWafer, EpicWaferCreate, EpicWaferLocation, EpicWaferLocationUpdate, EpicWafersApiClient, EpicWaferUpdate } from 'epic-ui/api'
+import {
+    EpicWafer,
+    EpicWaferCreateRequest,
+    EpicWaferLocationHistoryRecord,
+    EpicWaferLocationUpdateRequest,
+    EpicWaferUpdateRequest,
+} from 'epic-api-types'
+import { EpicWafersApiClient } from 'epic-ui/api'
 import moment from 'moment'
 import { delay, Observable, of } from 'rxjs'
 
@@ -30,8 +37,8 @@ export function getWafersList(totalCount: number, idStartsFrom = 1): EpicWafer[]
 export class EpicWafersApiClientMock extends EpicWafersApiClient {
 
     protected wafers = getWafersList(1000 * 10)
-    protected wafersLocationHistory: { [waferId: string]: EpicWaferLocation[] } = this.wafers
-        .reduce<{ [waferId: string]: EpicWaferLocation[] }>(
+    protected wafersLocationHistory: { [waferId: string]: EpicWaferLocationHistoryRecord[] } = this.wafers
+        .reduce<{ [waferId: string]: EpicWaferLocationHistoryRecord[] }>(
             (acc, wafer) => {
                 return {
                     ...acc,
@@ -54,7 +61,7 @@ export class EpicWafersApiClientMock extends EpicWafersApiClient {
             )
     }
 
-    override create(payload: EpicWaferCreate): Observable<EpicWafer> {
+    override create(payload: EpicWaferCreateRequest): Observable<EpicWafer> {
         const newWafer = {
             ...payload,
             id: this.wafers.length ? this.wafers[this.wafers.length - 1].id + 1 : 1,
@@ -67,7 +74,7 @@ export class EpicWafersApiClientMock extends EpicWafersApiClient {
             )
     }
 
-    override update(id: number, update: EpicWaferUpdate): Observable<EpicWafer> {
+    override update(id: number, update: EpicWaferUpdateRequest): Observable<EpicWafer> {
         return this.genericUpdate(id, update)
     }
 
@@ -79,24 +86,15 @@ export class EpicWafersApiClientMock extends EpicWafersApiClient {
             )
     }
 
-    override deleteOne(id: number): Observable<EpicWafer> {
-        const refWafer = this.wafers.find(item => item.id === id)!
-        this.wafers = this.wafers.filter(item => item.id !== id)
-        return of(refWafer)
-            .pipe(
-                delay(500),
-            )
-    }
-
-    override fetchWaferLocationHistory(waferId: number): Observable<EpicWaferLocation[]> {
+    override fetchWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecord[]> {
         return of(this.wafersLocationHistory[waferId] ?? [])
             .pipe(
                 delay(500),
             )
     }
 
-    override updateWaferLocation(id: number, update: EpicWaferLocationUpdate): Observable<EpicWafer> {
-        const newWaferLocation: EpicWaferLocation = {
+    override updateWaferLocation(id: number, update: EpicWaferLocationUpdateRequest): Observable<EpicWafer> {
+        const newWaferLocation: EpicWaferLocationHistoryRecord = {
             ...update,
             waferId: id,
             username: null,

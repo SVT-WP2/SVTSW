@@ -57,20 +57,39 @@ export namespace SvtDbAgentKafka<Domain>s {
 
 Export it from `kafka-messages/index.ts`.
 
-### 1.2 Entities + DTOs — `libs/epic/entities/src/<domain>s/`
+### 1.2 HTTP contract types — `libs/epic-api-types/src/<domain>s/`
+
+The request bodies, query filters and responses of the HTTP endpoints as plain types — written once, used by
+the BE DTO classes (`implements`) and by the UI directly. The rules are in `libs/epic-api-types/README.md`.
 
 ```
-models/epic-<domain>.models.ts          Epic<Domain>Entity, Epic<Domain>CreateEntity, …GetAllParams
-dtos/epic-<domain>.dto.ts               Epic<Domain>Dto           (class-validator + @ApiProperty)
-dtos/epic-<domain>-create.dto.ts        Epic<Domain>CreateDto
-dtos/epic-<domain>s-get-all-params.dto.ts
+responses/epic-<domain>.models.ts                    Epic<Domain>
+requests/epic-<domain>-create-request.models.ts      Epic<Domain>CreateRequest
+requests/epic-<domain>s-list-query.models.ts         Epic<Domain>sListQuery   (filter only — paging is EpicApiPager)
+requests/index.ts, responses/index.ts, index.ts
+```
+
+Export the domain from `libs/epic-api-types/src/index.ts`. No decorators and no framework imports — the root
+`eslint.config.mjs` rejects them.
+
+### 1.3 Entities + DTOs — `libs/epic/entities/src/<domain>s/`
+
+```
+models/epic-<domain>.models.ts          Epic<Domain>Entity = Epic<Domain>, Epic<Domain>CreateEntity = Epic<Domain>CreateRequest
+dtos/epic-<domain>.dto.ts               Epic<Domain>Dto implements Epic<Domain>                (class-validator + @ApiProperty)
+dtos/epic-<domain>-create.dto.ts        Epic<Domain>CreateDto implements Epic<Domain>CreateRequest
+dtos/epic-<domain>s-get-all-params.dto.ts   … implements Epic<Domain>sListQuery, Partial<EpicApiPager>
 models/index.ts, dtos/index.ts, index.ts
 ```
 
-Models are plain types (the Kafka wire shape). DTOs are decorated classes (the HTTP shape) — they drive
-Swagger *and* the `ClassSerializerInterceptor`. Add the domain to `libs/epic/entities/src/index.ts`.
+Models are the Kafka wire shape — while it equals the HTTP shape, alias the `epic-api-types` type instead of
+repeating the field list. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
+drive Swagger *and* the `ClassSerializerInterceptor`, and `implements` makes a field drifting from the contract
+fail to compile — except a renamed or missing member of a type with optional members (every `<Domain>sListQuery`).
+Pair those DTOs with their type in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts` (a list DTO
+with `<Domain>sListQuery & EpicApiPager`). Add the domain to `libs/epic/entities/src/index.ts`.
 
-### 1.3 Mock DB Agent — `apps/epic-db-agent/src/modules/db-agent/`
+### 1.4 Mock DB Agent — `apps/epic-db-agent/src/modules/db-agent/`
 
 `services/epic-db-agent-<domain>s.service.ts` — an in-memory array plus `of(...).pipe(delay(50))` so the UI
 sees realistic async behaviour:
@@ -101,7 +120,7 @@ case SvtDbAgentKafka<Domain>s.MessageType.GetAll<Domain>s:
         .pipe(map(items => JSON.stringify(new SvtDbAgentKafka<Domain>s.GetAll<Domain>sReplyMessage({ items }))))
 ```
 
-### 1.4 API module — `apps/epic-measure-api/src/modules/<domain>/`
+### 1.5 API module — `apps/epic-measure-api/src/modules/<domain>/`
 
 ```
 models/epic-<domain>-svc.models.ts    export namespace Epic<Domain>Svc { export const SERVICE_NAME = '…' }
@@ -158,12 +177,10 @@ export class Epic<Domain>sController {
 
 Finally register the module in `apps/epic-measure-api/src/app/app.module.ts`.
 
-### 1.5 UI HTTP client — `libs/epic-ui/api/main/src/<domain>s/`
+### 1.6 UI HTTP client — `libs/epic-ui/api/main/src/<domain>s/`
 
 ```
-models/epic-<domain>.models.ts             Epic<Domain>, Epic<Domain>Create  (plain types)
-models/query/epic-<domain>s-list-query.models.ts
-services/epic-<domain>s.api-client.ts
+services/epic-<domain>s.api-client.ts      the types come from `epic-api-types` — no view models here
 index.ts (+ barrels)
 ```
 
@@ -175,7 +192,7 @@ export class Epic<Domain>sApiClient {
 
     protected readonly httpClient = inject(HttpClient)
 
-    fetchList(queryFilter: Epic<Domain>sListQuery.QueryFilter = {}): Observable<Epic<Domain>[]> {
+    fetchList(queryFilter: Epic<Domain>sListQuery = {}): Observable<Epic<Domain>[]> {
         return this.httpClient.get<Epic<Domain>[]>(this.baseUrl, {
             params: QueryHelpers.applyQueryParams({ ...queryFilter }),
         })
@@ -188,12 +205,12 @@ Add a matching `Epic<Domain>sApiClientMock` in `libs/epic-ui/api/__mock__/src/<d
 `{ provide: Epic<Domain>sApiClient, useClass: Epic<Domain>sApiClientMock }` pair into
 `apps/epic-measure-ui/src/app/app.mock.providers.ts`.
 
-### 1.6 UI feature lib — `libs/epic-ui/shared/<domain>s/`
+### 1.7 UI feature lib — `libs/epic-ui/shared/<domain>s/`
 
 See [Recipe 3](#recipe-3--a-new-feature-lib) for scaffolding. Minimum for a list: `models/*-grid.models.ts`,
 `services/*-grid.data-source.ts`, `components/<domain>s-list/`.
 
-### 1.7 Page + route — `apps/epic-measure-ui/src/modules/<domain>s/`
+### 1.8 Page + route — `apps/epic-measure-ui/src/modules/<domain>s/`
 
 ```
 epic-<domain>s.routing.ts
@@ -207,10 +224,11 @@ Register lazily in `src/app/app.routes.ts` and add the sidebar entry in
 ### Checklist
 
 - [ ] Kafka message namespace + barrel export
-- [ ] Entities/models + DTOs + barrels + root `index.ts`
+- [ ] HTTP contract types in `epic-api-types` + barrel export
+- [ ] Entity aliases + DTOs (`implements`; list DTOs also paired in `contract/epic-api-contract-checks.models.ts`) + barrels + root `index.ts`
 - [ ] db-agent service, module provider, controller `case`s + `@Payload()` union
 - [ ] API service, controller, module, registered in `app.module.ts`
-- [ ] `epic-ui/api` client + models + `__mock__` twin + `app.mock.providers.ts`
+- [ ] `epic-ui/api` client (types from `epic-api-types`) + `__mock__` twin + `app.mock.providers.ts`
 - [ ] Feature lib (grid models, data source, list component)
 - [ ] Page component + routing + `app.routes.ts` + sidebar
 - [ ] `npm run pre-pull-request` clean

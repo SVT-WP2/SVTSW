@@ -1,13 +1,5 @@
-export type EpicWpProjectEntity = {
-    id: number
-    wpMachineId: number
-    waferTypeId: number
-    name: string
-    asicFamilyType: string
-    orientation: string
-    alignmentDie: string
-    homeDie: string
-    local2GlobalMap: string // JSON string
-}
+import { EpicWpProject } from 'epic-api-types'
 
 
+/** Kafka wire type (DB agent ↔ BFF). Identical to the HTTP contract type today — see this lib's README. */
+export type EpicWpProjectEntity = EpicWpProject

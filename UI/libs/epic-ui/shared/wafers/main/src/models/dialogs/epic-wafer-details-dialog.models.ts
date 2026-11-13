@@ -1,4 +1,4 @@
-import { EpicWafer, EpicWaferType } from 'epic-ui/api'
+import { EpicWafer, EpicWaferType } from 'epic-api-types'
 
 
 export namespace EpicWaferDetailsDialog {

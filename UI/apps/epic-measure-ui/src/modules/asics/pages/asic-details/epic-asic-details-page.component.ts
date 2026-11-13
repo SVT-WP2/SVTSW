@@ -1,14 +1,10 @@
 ﻿import { Component, computed, effect, inject, signal, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { ActivatedRoute, Router } from '@angular/router'
-import { EpicAsic, EpicChip, EpicChipsApiClient, EpicIvMnt, EpicWafer } from 'epic-ui/api'
+import { ActivatedRoute } from '@angular/router'
+import { EpicAsic, EpicChip, EpicWafer } from 'epic-api-types'
+import { EpicChipsApiClient, EpicIvMnt } from 'epic-ui/api'
 import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
-import {
-    EpicAsicCreateDialogService,
-    EpicAsicDeleteDialogService,
-    EpicAsicIvMntDialogService,
-    EpicAsicsStoreFacade,
-} from 'epic-ui/shared/asics'
+import { EpicAsicIvMntDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
 import { EpicChipCreateDialogService } from 'epic-ui/shared/chips'
 import { EpicWaferRef, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -59,13 +55,10 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
 
     // DI
     protected readonly activatedRoute = inject(ActivatedRoute)
-    protected readonly epicAsicDeleteDialogService = inject(EpicAsicDeleteDialogService)
-    protected readonly epicAsicCreateDialogService = inject(EpicAsicCreateDialogService)
     protected readonly epicChipsApiClient = inject(EpicChipsApiClient)
     protected readonly asicsStore = inject(EpicAsicsStoreFacade)
     protected readonly wafersStore = inject(EpicWafersStoreFacade)
     protected readonly epicAsicIvMntDialogService = inject(EpicAsicIvMntDialogService)
-    protected readonly router = inject(Router)
     protected readonly epicNotificationService = inject(EpicNotificationService)
     protected readonly epicChipCreateDialogService = inject(EpicChipCreateDialogService)
 
@@ -90,14 +83,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
                 this.wafer.set(wafer)
             })
 
-        this.asicsStore.deleteProcessingEvents.success$
-            .pipe(
-                takeUntil(this.destroyed$),
-            )
-            .subscribe(() => {
-                void this.router.navigate(['/asics/list'])
-            })
-
         this.asicsStore.actionFetchOne({ asicId: this.asicId })
 
         effect(() => {
@@ -110,14 +95,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
 
     get asicId(): number {
         return +this.activatedRoute.snapshot.params['asicId']
-    }
-
-    onAsicDelete(): void {
-        this.epicAsicDeleteDialogService.openDialog(this.asicId)
-    }
-
-    onAsicEdit(): void {
-        this.epicAsicCreateDialogService.openDialog({ asic: this.asic() })
     }
 
     openDialog(): void {

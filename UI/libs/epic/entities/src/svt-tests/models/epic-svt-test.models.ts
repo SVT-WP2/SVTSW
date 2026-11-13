@@ -1,68 +1,21 @@
-import { EpicDateTimeString } from 'epic/entities'
+import { EpicSvtTest, EpicSvtTestCreateRequest, EpicSvtTestsListQuery } from 'epic-api-types'
 
-import { EpicSvtTestResultStatus } from './epic-svt-test-result-status.models'
-import { EpicSvtTestStatus } from './epic-svt-test-status.models'
-
-
-export enum EpicSvtDutEntityName {
-    Asic = 'Asic',
-    Chip = 'Chip',
-    ChipBlock = 'ChipBlock',
-}
-
-export type EpicSvtTestEntity = {
-    id: number
-    dutEntityName: EpicSvtDutEntityName
-    dutId: number
-    testTypeConfigId: number
-    testSetupConfigId: number
-    createdAt: EpicDateTimeString
-    startedAt: EpicDateTimeString
-    finishedAt: EpicDateTimeString
-    pathToResult: string
-    testResultStatus: EpicSvtTestResultStatus
-}
 
 /**
- * `EpicSvtTestEntity` as returned by the DB agent carries only physically-stored fields. The BFF enriches it
- * with the synthetic `status` (see resolveEpicSvtTestStatus) before handing it to the UI.
+ * An SVT test as the DB agent stores and serves it over Kafka: every field of the HTTP contract type except the
+ * synthetic `status`, which the BFF derives (see `resolveEpicSvtTestStatus`) before handing the test to the UI.
  */
-export type EpicSvtTestResolvedEntity = EpicSvtTestEntity & {
-    status: EpicSvtTestStatus
-}
+export type EpicSvtTestEntity = Omit<EpicSvtTest, 'status'>
 
-export type EpicSvtTestCreateEntity = {
-    dutEntityName: EpicSvtDutEntityName
-    dutId: number
-    testTypeConfigId: number
-    testSetupConfigId: number
-}
+/** The BFF-side, `status`-enriched test — exactly what the HTTP API returns. */
+export type EpicSvtTestResolvedEntity = EpicSvtTest
+
+/** Payload of the `CreateSvtTest` Kafka message — identical to the HTTP request body today. */
+export type EpicSvtTestCreateEntity = EpicSvtTestCreateRequest
 
 /**
- * The SvtTests list filter as the API exposes it. It is deliberately *not* the Kafka filter: the API speaks in
- * the synthetic `status` the UI shows in the list, and `EpicSvtTestsService` translates that into the physical
- * `testResultStatuses` the DB agent stores (see `SvtDbAgentKafkaSvtTests.GetAllSvtTestsFilter`). Every member
- * is optional — an omitted / empty one means "do not narrow the list down by it".
+ * The HTTP list filter, as `EpicSvtTestsService` receives it from the controller. It is *not* the Kafka filter —
+ * the service translates the synthetic `statuses` into the physical `testResultStatuses` the DB agent stores
+ * (see `SvtDbAgentKafkaSvtTests.GetAllSvtTestsFilter`).
  */
-export type EpicSvtTestsGetAllParams = {
-    ids?: number[]
-    dutEntityNames?: string[]
-    /** DUT ids are unique per DUT entity only, so it is meant to be combined with `dutEntityNames`. */
-    dutId?: number
-    /** Enum values of `EpicSvtTestStatus` — the status the UI shows, not the stored result status. */
-    statuses?: string[]
-    testTypeConfigIds?: number[]
-    testSetupConfigIds?: number[]
-    /** Lower bound of the `createdAt` filter range, inclusive. */
-    createdAtFrom?: EpicDateTimeString
-    /** Upper bound of the `createdAt` filter range, exclusive. */
-    createdAtTo?: EpicDateTimeString
-    /** Lower bound of the `startedAt` filter range, inclusive. */
-    startedAtFrom?: EpicDateTimeString
-    /** Upper bound of the `startedAt` filter range, exclusive. */
-    startedAtTo?: EpicDateTimeString
-    /** Lower bound of the `finishedAt` filter range, inclusive. */
-    finishedAtFrom?: EpicDateTimeString
-    /** Upper bound of the `finishedAt` filter range, exclusive. */
-    finishedAtTo?: EpicDateTimeString
-}
+export type EpicSvtTestsGetAllParams = EpicSvtTestsListQuery

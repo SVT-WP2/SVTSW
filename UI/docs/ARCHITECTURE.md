@@ -38,20 +38,27 @@ UI/
 │   ├── epic-measure-api/     NestJS BFF (HTTP + Kafka client)
 │   └── epic-db-agent/        NestJS Kafka microservice — mock DB agent
 ├── libs/
+│   ├── epic-api-types/       HTTP contract types shared by the SPA and the Node apps (plain TS only)
 │   ├── epic/                 Node-side shared code (API ↔ db-agent)
-│   │   ├── entities/         DTOs, domain models, Kafka message contracts
+│   │   ├── entities/         DTO classes, Kafka wire types, Kafka message contracts
 │   │   └── core/             low-level helpers (TCP connection factory)
 │   └── epic-ui/              Angular-side shared code
-│       ├── api/              HTTP clients + view models  (+ __mock__ twins)
+│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from epic-api-types
 │       ├── common/           auth, layout, ag-grid, design-system components
 │       ├── shared/<domain>/  feature domain libs (the bulk of the UI)
 │       └── utils/            base classes, pipes, directives, material, colors
 └── docker/                   nginx template + entrypoint for the prod image
 ```
 
-**The one hard boundary:** `libs/epic/*` is Node-only and shared by the two NestJS apps.
-`libs/epic-ui/*` is Angular-only. They never import each other — the UI has its own view models that
-mirror the API's DTO shapes.
+**The hard boundary:** `libs/epic/*` is Node-only and shared by the two NestJS apps. `libs/epic-ui/*` is
+Angular-only. They never import each other. What they *share* is `libs/epic-api-types`: the request / query /
+response types of the DB-agent-backed HTTP API as plain TypeScript, with no decorators and no framework imports
+(the root `eslint.config.mjs` rejects them). The UI uses those types as its models; a BE DTO class `implements`
+them (and, where the type has optional members, `libs/epic/entities/src/contract` checks that the two declare the
+same members — `implements` cannot); the Kafka wire types in
+`libs/epic/entities` alias them while the shapes are identical. A field drifting between FE and BE is a
+compile error instead of a silently ignored query param. (`iv-mnt` and `tcp` are not DB-agent operations; their
+types still live in `libs/epic-ui/api`.)
 
 ## 3. Request lifecycle — one round trip
 
@@ -87,9 +94,9 @@ sequenceDiagram
 |---|---|
 | Grid data source | `libs/epic-ui/shared/svt-tests/tests/src/services/epic-svt-tests-grid.data-source.ts` |
 | HTTP client | `libs/epic-ui/api/main/src/svt-tests/services/epic-svt-tests.api-client.ts` |
-| View model | `libs/epic-ui/api/main/src/svt-tests/models/epic-svt-test.models.ts` |
+| HTTP contract type (FE + BE) | `libs/epic-api-types/src/svt-tests/responses/epic-svt-test.models.ts` |
 | Controller | `apps/epic-measure-api/src/modules/svt-test/controllers/epic-svt-tests-controller.ts` |
-| DTO | `libs/epic/entities/src/svt-tests/dtos/epic-svt-test.dto.ts` |
+| DTO (`implements` the contract type) | `libs/epic/entities/src/svt-tests/dtos/epic-svt-test.dto.ts` |
 | Nest service | `apps/epic-measure-api/src/modules/svt-test/services/epic-svt-tests.service.ts` |
 | Kafka contract | `libs/epic/entities/src/kafka/db-agent/kafka-messages/svt-db-agent-kafka-svt-tests.ts` |
 | Mock handler | `apps/epic-db-agent/src/modules/db-agent/services/epic-db-agent-svt-tests.service.ts` |
@@ -248,8 +255,9 @@ Defined in `tsconfig.base.json`. Always import through these.
 | Alias | Points at |
 |---|---|
 | `@env`, `@env/*` | `apps/epic-measure-ui/src/environments` |
+| `epic-api-types` | `libs/epic-api-types` — HTTP contract types, compiled into both sides |
 | `epic/core`, `epic/entities` | `libs/epic/*` (Node side) |
-| `epic-ui/api`, `epic-ui/api/__mock__` | HTTP clients + view models |
+| `epic-ui/api`, `epic-ui/api/__mock__` | HTTP clients (+ mocks) |
 | `epic-ui/common`, `.../auth`, `.../ag-grid`, `.../components`, `.../layout` | design system |
 | `epic-ui/utils`, `.../colors`, `.../material` | base classes and helpers |
 | `epic-ui/shared/<domain>` | feature libs — `wafers`, `wafer-tests`, `wafer-types`, `asics`, `asic-tests`, `chips`, `wp`, `equipment`, `equipment-types`, `iv-mnt`, `kafka`, `tcp`, `location` |
