@@ -4,9 +4,9 @@ import { EpicApiPager, EpicChipsListQuery } from 'epic-api-types'
 
 
 /**
- * `GET /chips` query string: the shared filter (`EpicChipsListQuery`) plus paging (`EpicApiPager`). The `implements`
- * clauses turn a renamed or added filter member into a compile error here instead of a query param the global
- * `ValidationPipe` (`whitelist: true`) silently drops.
+ * `GET /chips` query string: the shared filter (`EpicChipsListQuery`) plus paging (`EpicApiPager`). Its pair in
+ * `contract/epic-api-contract-checks.models.ts` (not `implements` alone — every filter member is optional) turns a
+ * renamed or added filter member into a compile error instead of a param the `ValidationPipe` silently drops.
  */
 export class EpicChipsGetAllParamsDto implements EpicChipsListQuery, Partial<EpicApiPager> {
 

@@ -43,7 +43,7 @@ UI/
 │   │   ├── entities/         DTO classes, Kafka wire types, Kafka message contracts
 │   │   └── core/             low-level helpers (TCP connection factory)
 │   └── epic-ui/              Angular-side shared code
-│       ├── api/              HTTP clients  (+ __mock__ twins) — the types come from epic-api-types
+│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from epic-api-types
 │       ├── common/           auth, layout, ag-grid, design-system components
 │       ├── shared/<domain>/  feature domain libs (the bulk of the UI)
 │       └── utils/            base classes, pipes, directives, material, colors
@@ -52,10 +52,13 @@ UI/
 
 **The hard boundary:** `libs/epic/*` is Node-only and shared by the two NestJS apps. `libs/epic-ui/*` is
 Angular-only. They never import each other. What they *share* is `libs/epic-api-types`: the request / query /
-response types of the HTTP API as plain TypeScript, with no decorators and no framework imports (lint-enforced).
-The UI uses those types as its models; a BE DTO class `implements` them; the Kafka wire types in
+response types of the DB-agent-backed HTTP API as plain TypeScript, with no decorators and no framework imports
+(the root `eslint.config.mjs` rejects them). The UI uses those types as its models; a BE DTO class `implements`
+them (and, where the type has optional members, `libs/epic/entities/src/contract` checks that the two declare the
+same members — `implements` cannot); the Kafka wire types in
 `libs/epic/entities` alias them while the shapes are identical. A field drifting between FE and BE is a
-compile error instead of a silently ignored query param.
+compile error instead of a silently ignored query param. (`iv-mnt` and `tcp` are not DB-agent operations; their
+types still live in `libs/epic-ui/api`.)
 
 ## 3. Request lifecycle — one round trip
 

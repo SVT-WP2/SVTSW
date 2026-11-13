@@ -4,9 +4,9 @@ import { EpicApiPager, EpicAsicsListQuery } from 'epic-api-types'
 
 
 /**
- * `GET /asics` query string: the shared filter (`EpicAsicsListQuery`) plus paging (`EpicApiPager`). The
- * `implements` clauses turn a renamed or added filter member into a compile error here instead of a query
- * param the global `ValidationPipe` (`whitelist: true`) silently drops.
+ * `GET /asics` query string: the shared filter (`EpicAsicsListQuery`) plus paging (`EpicApiPager`). Its pair in
+ * `contract/epic-api-contract-checks.models.ts` (not `implements` alone — every filter member is optional) turns a
+ * renamed or added filter member into a compile error instead of a param the `ValidationPipe` silently drops.
  */
 export class EpicAsicsGetAllParamsDto implements EpicAsicsListQuery, Partial<EpicApiPager> {
 

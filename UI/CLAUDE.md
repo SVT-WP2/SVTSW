@@ -79,18 +79,21 @@ or `npm run test::affected` scope it.
 
 - **Never import across libs by relative path.** Use the `tsconfig.base.json` aliases (`epic-ui/api`,
   `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `@env/environment`, …).
-- `libs/epic-api-types` is the **HTTP contract**: the request bodies, query strings and responses of `/api/...`
-  as plain TypeScript types, and the only lib compiled into both the Angular SPA and the NestJS apps. No
-  decorators, no framework imports (lint-enforced). The UI uses these types as its models; a BE DTO class
-  `implements` them, so a field drifting between FE and BE is a compile error. Request bodies end in
-  `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
+- `libs/epic-api-types` is the **HTTP contract**: the request bodies, query strings and responses of the
+  DB-agent-backed `/api/...` endpoints as plain TypeScript types, and the only lib compiled into both the Angular
+  SPA and the NestJS apps. No decorators, no framework imports (the root `eslint.config.mjs` rejects them). The UI
+  uses these types as its models; a BE DTO class `implements` them, so a member drifting between FE and BE is a
+  compile error. `implements` misses a renamed or missing member of a type with optional members (every
+  `ListQuery`), so those DTOs are also paired in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`.
+  Request bodies end in `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
   (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
 - `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`. Kafka message contracts,
   the decorated DTO classes and the `Epic<X>Entity` Kafka wire types live there — the latter are one-line
   aliases of the `epic-api-types` types for as long as the two shapes are identical.
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
-- Angular UI code must never import from `libs/epic/*`. `epic-ui/api` holds the HTTP clients only — the types
-  come from `epic-api-types`.
+- Angular UI code must never import from `libs/epic/*`. For the DB-agent-backed domains `epic-ui/api` holds the
+  HTTP clients only — the types come from `epic-api-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent
+  operations) and the instruments / measurement / wafer-tests models still keep their types next to their clients.
 
 ## Two data-loading patterns — pick the right one
 

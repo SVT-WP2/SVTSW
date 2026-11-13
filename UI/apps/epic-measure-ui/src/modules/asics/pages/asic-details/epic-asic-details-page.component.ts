@@ -4,11 +4,7 @@ import { ActivatedRoute } from '@angular/router'
 import { EpicAsic, EpicChip, EpicWafer } from 'epic-api-types'
 import { EpicChipsApiClient, EpicIvMnt } from 'epic-ui/api'
 import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
-import {
-    EpicAsicCreateDialogService,
-    EpicAsicIvMntDialogService,
-    EpicAsicsStoreFacade,
-} from 'epic-ui/shared/asics'
+import { EpicAsicIvMntDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
 import { EpicChipCreateDialogService } from 'epic-ui/shared/chips'
 import { EpicWaferRef, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
@@ -59,7 +55,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
 
     // DI
     protected readonly activatedRoute = inject(ActivatedRoute)
-    protected readonly epicAsicCreateDialogService = inject(EpicAsicCreateDialogService)
     protected readonly epicChipsApiClient = inject(EpicChipsApiClient)
     protected readonly asicsStore = inject(EpicAsicsStoreFacade)
     protected readonly wafersStore = inject(EpicWafersStoreFacade)
@@ -100,10 +95,6 @@ export class EpicAsicDetailsPageComponent extends BaseComponent {
 
     get asicId(): number {
         return +this.activatedRoute.snapshot.params['asicId']
-    }
-
-    onAsicEdit(): void {
-        this.epicAsicCreateDialogService.openDialog({ asic: this.asic() })
     }
 
     openDialog(): void {

@@ -1,5 +1,5 @@
 /**
- * A wafer type as `GET /api/wafer-types`, `GET /api/wafer-types/:id` and `POST /api/wafer-types` return it.
+ * A wafer type as `GET /api/wafer-types` and `POST /api/wafer-types` return it.
  */
 export type EpicWaferType = {
     id: number

@@ -69,8 +69,8 @@ requests/epic-<domain>s-list-query.models.ts         Epic<Domain>sListQuery   (f
 requests/index.ts, responses/index.ts, index.ts
 ```
 
-Export the domain from `libs/epic-api-types/src/index.ts`. No decorators and no framework imports — the lib's
-ESLint config rejects them.
+Export the domain from `libs/epic-api-types/src/index.ts`. No decorators and no framework imports — the root
+`eslint.config.mjs` rejects them.
 
 ### 1.3 Entities + DTOs — `libs/epic/entities/src/<domain>s/`
 
@@ -84,8 +84,10 @@ models/index.ts, dtos/index.ts, index.ts
 
 Models are the Kafka wire shape — while it equals the HTTP shape, alias the `epic-api-types` type instead of
 repeating the field list. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
-drive Swagger *and* the `ClassSerializerInterceptor`, and a field drifting from the contract fails to compile.
-Add the domain to `libs/epic/entities/src/index.ts`.
+drive Swagger *and* the `ClassSerializerInterceptor`, and `implements` makes a field drifting from the contract
+fail to compile — except a renamed or missing member of a type with optional members (every `<Domain>sListQuery`).
+Pair those DTOs with their type in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts` (a list DTO
+with `<Domain>sListQuery & EpicApiPager`). Add the domain to `libs/epic/entities/src/index.ts`.
 
 ### 1.4 Mock DB Agent — `apps/epic-db-agent/src/modules/db-agent/`
 
@@ -223,7 +225,7 @@ Register lazily in `src/app/app.routes.ts` and add the sidebar entry in
 
 - [ ] Kafka message namespace + barrel export
 - [ ] HTTP contract types in `epic-api-types` + barrel export
-- [ ] Entity aliases + DTOs (`implements`) + barrels + root `index.ts`
+- [ ] Entity aliases + DTOs (`implements`; list DTOs also paired in `contract/epic-api-contract-checks.models.ts`) + barrels + root `index.ts`
 - [ ] db-agent service, module provider, controller `case`s + `@Payload()` union
 - [ ] API service, controller, module, registered in `app.module.ts`
 - [ ] `epic-ui/api` client (types from `epic-api-types`) + `__mock__` twin + `app.mock.providers.ts`
