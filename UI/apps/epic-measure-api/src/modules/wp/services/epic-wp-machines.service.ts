@@ -1,9 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicWpMachineCreateEntity,
-    EpicWpMachineEntity,
-    EpicWpMachineUpdateEntity,
     EpicWpMachineUpdateInstalledProbeCard,
     EpicWpMachineUpdateLoadedWafer,
     mapEpicKafkaMessageData,
@@ -12,6 +9,7 @@ import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaWpMachines,
 } from 'epic/entities'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicWpSvc } from '../models'
@@ -25,7 +23,7 @@ export class EpicWpMachinesService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpMachineEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpMachine[]> {
         const message = new SvtDbAgentKafkaWpMachines.GetAllWpMachinesMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpMachines.GetAllWpMachinesReplyMessage>(message)
             .pipe(
@@ -34,7 +32,7 @@ export class EpicWpMachinesService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicWpMachineCreateEntity): Observable<EpicWpMachineEntity> {
+    create(createRequest: EpicWpMachineCreateRequest): Observable<EpicWpMachine> {
         const message = new SvtDbAgentKafkaWpMachines.CreateWpMachineMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpMachines.CreateWpMachineReplyMessage>(message)
             .pipe(
@@ -43,7 +41,7 @@ export class EpicWpMachinesService implements OnModuleInit {
             )
     }
 
-    update(entityId: number, updateRequest: EpicWpMachineUpdateEntity): Observable<EpicWpMachineEntity> {
+    update(entityId: number, updateRequest: EpicWpMachineUpdateRequest): Observable<EpicWpMachine> {
         const message = new SvtDbAgentKafkaWpMachines.UpdateWpMachineMessage({ id: entityId, update: updateRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpMachines.UpdateWpMachineReplyMessage>(message)
             .pipe(
@@ -52,7 +50,7 @@ export class EpicWpMachinesService implements OnModuleInit {
             )
     }
 
-    updateLoadedWafer(payload: EpicWpMachineUpdateLoadedWafer): Observable<EpicWpMachineEntity> {
+    updateLoadedWafer(payload: EpicWpMachineUpdateLoadedWafer): Observable<EpicWpMachine> {
         const message = new SvtDbAgentKafkaWpMachines.UpdateWpMachineLoadedWaferMessage(payload)
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpMachines.UpdateWpMachineLoadedWaferReplyMessage>(message)
             .pipe(
@@ -61,7 +59,7 @@ export class EpicWpMachinesService implements OnModuleInit {
             )
     }
 
-    updateInstalledProbeCard(payload: EpicWpMachineUpdateInstalledProbeCard): Observable<EpicWpMachineEntity> {
+    updateInstalledProbeCard(payload: EpicWpMachineUpdateInstalledProbeCard): Observable<EpicWpMachine> {
         const message = new SvtDbAgentKafkaWpMachines.UpdateWpMachineInstalledProbeCardMessage(payload)
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpMachines.UpdateWpMachineInstalledProbeCardReplyMessage>(message)
             .pipe(

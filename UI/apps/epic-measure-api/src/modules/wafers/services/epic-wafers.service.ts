@@ -1,17 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicWaferCreateEntity,
-    EpicWaferEntity,
-    EpicWaferLocationHistoryRecordEntity,
     EpicWaferLocationUpdate,
-    EpicWaferUpdateEntity,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaWafers,
 } from 'epic/entities'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicWafersSvc } from '../models'
@@ -25,7 +22,7 @@ export class EpicWafersService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWaferEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWafer[]> {
         const message = new SvtDbAgentKafkaWafers.GetAllWafersMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWafers.GetAllWafersReplyMessage>(message)
             .pipe(
@@ -34,7 +31,7 @@ export class EpicWafersService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicWaferCreateEntity): Observable<EpicWaferEntity> {
+    create(createRequest: EpicWaferCreateRequest): Observable<EpicWafer> {
         const message = new SvtDbAgentKafkaWafers.CreateWaferMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWafers.CreateWaferReplyMessage>(message)
             .pipe(
@@ -43,7 +40,7 @@ export class EpicWafersService implements OnModuleInit {
             )
     }
 
-    update(waferId: number, updateRequest: EpicWaferUpdateEntity): Observable<EpicWaferEntity> {
+    update(waferId: number, updateRequest: EpicWaferUpdateRequest): Observable<EpicWafer> {
         const message = new SvtDbAgentKafkaWafers.UpdateWaferMessage({ id: waferId, update: updateRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWafers.UpdateWaferReplyMessage>(message)
             .pipe(
@@ -52,7 +49,7 @@ export class EpicWafersService implements OnModuleInit {
             )
     }
 
-    getWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecordEntity[]> {
+    getWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecord[]> {
         const message = new SvtDbAgentKafkaWafers.GetWaferLocationHistoryMessage({ waferId })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWafers.GetWaferLocationHistoryReplyMessage>(message)
             .pipe(
@@ -61,7 +58,7 @@ export class EpicWafersService implements OnModuleInit {
             )
     }
 
-    updateWaferLocation(waferId: number, update: EpicWaferLocationUpdate): Observable<EpicWaferEntity> {
+    updateWaferLocation(waferId: number, update: EpicWaferLocationUpdate): Observable<EpicWafer> {
         const message = new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
             waferId,
             ...update,

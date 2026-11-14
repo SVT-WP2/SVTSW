@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestSetupCreateEntity, EpicSvtTestSetupEntity } from 'epic/entities'
+import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
@@ -9,7 +9,7 @@ import { EpicDbAgentSvtTestSetupConfigsService } from './epic-db-agent-svt-test-
 @Injectable()
 export class EpicDbAgentSvtTestSetupService {
 
-    protected data: EpicSvtTestSetupEntity[] = [
+    protected data: EpicSvtTestSetup[] = [
         {
             id: 1,
             name: 'Test setup #1',
@@ -39,7 +39,7 @@ export class EpicDbAgentSvtTestSetupService {
     constructor(protected readonly epicDbAgentSvtTestSetupConfigsService: EpicDbAgentSvtTestSetupConfigsService) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicSvtTestSetupEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicSvtTestSetup[]> {
         const result = filter?.ids
             ? this.data.filter(item => filter.ids.includes(item.id))
             : this.data
@@ -50,14 +50,14 @@ export class EpicDbAgentSvtTestSetupService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicSvtTestSetupEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicSvtTestSetup | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    create(createRequest: EpicSvtTestSetupCreateEntity): Observable<EpicSvtTestSetupEntity> {
+    create(createRequest: EpicSvtTestSetupCreateRequest): Observable<EpicSvtTestSetup> {
         const setupId = (this.data[this.data.length - 1]?.id || 0) + 1
         return this.epicDbAgentSvtTestSetupConfigsService.create({
             setupId,
@@ -65,7 +65,7 @@ export class EpicDbAgentSvtTestSetupService {
         })
             .pipe(
                 map((testSetupConfig) => {
-                    const newSvtTestSetup: EpicSvtTestSetupEntity = {
+                    const newSvtTestSetup: EpicSvtTestSetup = {
                         id: setupId,
                         name: createRequest.name,
                         generalLocation: createRequest.generalLocation,
@@ -79,8 +79,8 @@ export class EpicDbAgentSvtTestSetupService {
             )
     }
 
-    update(svtTestSetupId: number, updateRequest: Partial<Omit<EpicSvtTestSetupEntity, 'id'>>): Observable<EpicSvtTestSetupEntity | null> {
-        let refSvtTestSetup: EpicSvtTestSetupEntity = null
+    update(svtTestSetupId: number, updateRequest: Partial<Omit<EpicSvtTestSetup, 'id'>>): Observable<EpicSvtTestSetup | null> {
+        let refSvtTestSetup: EpicSvtTestSetup = null
 
         this.data = this.data
             .map(item => {

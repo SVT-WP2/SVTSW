@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipmentTypeCreateEntity, EpicEquipmentTypeEntity } from 'epic/entities'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
 
 
 @Injectable()
 export class EpicDbAgentEquipmentTypesService {
 
-    protected data: EpicEquipmentTypeEntity[] = [
+    protected data: EpicEquipmentType[] = [
         {
             id: 1,
             name: 'Equipment #1',
@@ -27,7 +27,7 @@ export class EpicDbAgentEquipmentTypesService {
 
     protected waferTypeMaps: { [waferTypeId: number]: string | null } = {}
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentTypeEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentType[]> {
         const result = filter?.ids
             ? this.data.filter(item => filter.ids.includes(item.id))
             : this.data
@@ -38,15 +38,15 @@ export class EpicDbAgentEquipmentTypesService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicEquipmentTypeEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicEquipmentType | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    create(createRequest: EpicEquipmentTypeCreateEntity): Observable<EpicEquipmentTypeEntity> {
-        const newEquipment: EpicEquipmentTypeEntity = {
+    create(createRequest: EpicEquipmentTypeCreateRequest): Observable<EpicEquipmentType> {
+        const newEquipment: EpicEquipmentType = {
             id: (this.data[this.data.length - 1]?.id || 0) + 1,
             ...createRequest,
         }

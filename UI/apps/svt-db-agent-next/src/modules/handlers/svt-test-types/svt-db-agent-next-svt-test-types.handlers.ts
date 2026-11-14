@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestTypeCreateDto,
-    EpicSvtTestTypeEntity,
-    EpicSvtTestTypeUpdateDto,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestTypes,
-} from 'epic/entities'
+import { EpicSvtTestTypeCreateDto, EpicSvtTestTypeUpdateDto, SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'epic/entities'
+import { EpicSvtTestType } from 'epic-api-types'
 import { SvtDbEnumsService, SvtDbSvtTestTypesRepository, SvtDbSvtTestTypeWithDutTypes } from 'svt-db/data'
 
 import {
@@ -51,7 +46,7 @@ export class SvtDbAgentNextSvtTestTypesHandlers implements SvtDbAgentNextMessage
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTypeEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestType>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'dutTypes'])
         const items = await this.testTypes.findAll({
@@ -107,6 +102,6 @@ export class SvtDbAgentNextSvtTestTypesHandlers implements SvtDbAgentNextMessage
 
 }
 
-function toWire({ testType, dutTypes }: SvtDbSvtTestTypeWithDutTypes): EpicSvtTestTypeEntity {
+function toWire({ testType, dutTypes }: SvtDbSvtTestTypeWithDutTypes): EpicSvtTestType {
     return { id: testType.id, name: testType.name, dutTypes }
 }

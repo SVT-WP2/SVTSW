@@ -1,5 +1,1 @@
-export * from './epic-wafer.models'
-export * from './epic-wafer-create.models'
-export * from './epic-wafer-update.models'
-export * from './epic-wafer-location-history.models'
 export * from './epic-wafer-location-update.models'

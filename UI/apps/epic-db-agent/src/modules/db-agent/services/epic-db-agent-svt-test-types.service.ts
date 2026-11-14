@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestTypeCreateEntity, EpicSvtTestTypeEntity, EpicSvtTestTypesGetAllParams } from 'epic/entities'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypesListQuery } from 'epic-api-types'
 import { intersection } from 'lodash-es'
 import { delay, map, Observable, of } from 'rxjs'
 
@@ -10,7 +10,7 @@ import { EpicDbAgentSvtTestTypeConfigsService } from './epic-db-agent-svt-test-t
 @Injectable()
 export class EpicDbAgentSvtTestTypesService {
 
-    protected data: EpicSvtTestTypeEntity[] = [
+    protected data: EpicSvtTestType[] = [
         {
             id: 1,
             name: 'Test type #1',
@@ -36,7 +36,7 @@ export class EpicDbAgentSvtTestTypesService {
     constructor(protected readonly epicDbAgentSvtTestTypeConfigsService: EpicDbAgentSvtTestTypeConfigsService) {
     }
 
-    getAll(queryFilter?: EpicSvtTestTypesGetAllParams): Observable<EpicSvtTestTypeEntity[]> {
+    getAll(queryFilter?: EpicSvtTestTypesListQuery): Observable<EpicSvtTestType[]> {
         const result = this.data
             .filter(item =>
                 (!queryFilter?.ids || queryFilter.ids.includes(item.id))
@@ -49,14 +49,14 @@ export class EpicDbAgentSvtTestTypesService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicSvtTestTypeEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicSvtTestType | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    create(createRequest: EpicSvtTestTypeCreateEntity): Observable<EpicSvtTestTypeEntity> {
+    create(createRequest: EpicSvtTestTypeCreateRequest): Observable<EpicSvtTestType> {
         const typeId = (this.data[this.data.length - 1]?.id || 0) + 1
         return this.epicDbAgentSvtTestTypeConfigsService.create({
             testTypeId: typeId,
@@ -64,7 +64,7 @@ export class EpicDbAgentSvtTestTypesService {
         })
             .pipe(
                 map(() => {
-                    const newSvtTestType: EpicSvtTestTypeEntity = {
+                    const newSvtTestType: EpicSvtTestType = {
                         id: typeId,
                         name: createRequest.name,
                         dutTypes: createRequest.dutTypes,
@@ -77,8 +77,8 @@ export class EpicDbAgentSvtTestTypesService {
             )
     }
 
-    update(svtTestTypeId: number, updateRequest: Partial<Omit<EpicSvtTestTypeEntity, 'id'>>): Observable<EpicSvtTestTypeEntity | null> {
-        let refSvtTestType: EpicSvtTestTypeEntity = null
+    update(svtTestTypeId: number, updateRequest: Partial<Omit<EpicSvtTestType, 'id'>>): Observable<EpicSvtTestType | null> {
+        let refSvtTestType: EpicSvtTestType = null
 
         this.data = this.data
             .map(item => {

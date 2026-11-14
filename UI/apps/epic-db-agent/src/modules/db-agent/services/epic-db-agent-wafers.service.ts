@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWaferCreateEntity, EpicWaferEntity, EpicWaferLocationHistoryRecordEntity } from 'epic/entities'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'epic-api-types'
 import moment from 'moment/moment'
 import { delay, map, Observable, of } from 'rxjs'
 
@@ -9,9 +9,9 @@ import { getEnumsCollection } from './epic-db-agent-enums.service'
 @Injectable()
 export class EpicDbAgentWafersService {
 
-    protected wafers: EpicWaferEntity[] = generateWafers(10 * 1000)
-    protected wafersLocationHistory: { [waferId: string]: EpicWaferLocationHistoryRecordEntity[] } = this.wafers
-        .reduce<{ [waferId: string]: EpicWaferLocationHistoryRecordEntity[] }>(
+    protected wafers: EpicWafer[] = generateWafers(10 * 1000)
+    protected wafersLocationHistory: { [waferId: string]: EpicWaferLocationHistoryRecord[] } = this.wafers
+        .reduce<{ [waferId: string]: EpicWaferLocationHistoryRecord[] }>(
             (acc, wafer) => {
                 return {
                     ...acc,
@@ -27,7 +27,7 @@ export class EpicDbAgentWafersService {
             {},
         )
 
-    getAllWafers(filter?: { ids?: number[] }): Observable<EpicWaferEntity[]> {
+    getAllWafers(filter?: { ids?: number[] }): Observable<EpicWafer[]> {
         const result = filter?.ids
             ? this.wafers.filter(item => filter.ids.includes(item.id))
             : this.wafers
@@ -38,14 +38,14 @@ export class EpicDbAgentWafersService {
             )
     }
 
-    getWaferById(waferId: number): Observable<EpicWaferEntity | undefined> {
+    getWaferById(waferId: number): Observable<EpicWafer | undefined> {
         return this.getAllWafers()
             .pipe(
                 map(list => list.find(item => item.id === waferId)),
             )
     }
 
-    createWafer(createRequest: EpicWaferCreateEntity): Observable<EpicWaferEntity> {
+    createWafer(createRequest: EpicWaferCreateRequest): Observable<EpicWafer> {
         const newWafer = {
             id: (this.wafers[this.wafers.length - 1]?.id || 0) + 1,
             ...createRequest,
@@ -59,8 +59,8 @@ export class EpicDbAgentWafersService {
             )
     }
 
-    updateWafer(waferId: number, updateRequest: Partial<Omit<EpicWaferEntity, 'id'>>): Observable<EpicWaferEntity | null> {
-        let refWafer: EpicWaferEntity = null
+    updateWafer(waferId: number, updateRequest: Partial<Omit<EpicWafer, 'id'>>): Observable<EpicWafer | null> {
+        let refWafer: EpicWafer = null
 
         this.wafers = this.wafers
             .map(item => {
@@ -80,14 +80,14 @@ export class EpicDbAgentWafersService {
             )
     }
 
-    getWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecordEntity[]> {
+    getWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecord[]> {
         return of(this.wafersLocationHistory[waferId] ?? [])
             .pipe(
                 delay(500),
             )
     }
 
-    updateWaferLocation(location: EpicWaferLocationHistoryRecordEntity): Observable<EpicWaferEntity> {
+    updateWaferLocation(location: EpicWaferLocationHistoryRecord): Observable<EpicWafer> {
         this.wafersLocationHistory[location.waferId] = [
             ...(this.wafersLocationHistory[location.waferId] ?? []),
             location,
@@ -96,8 +96,8 @@ export class EpicDbAgentWafersService {
         return this.updateWafer(location.waferId, { generalLocation: location.generalLocation })
     }
 
-    // deleteWafer(waferId: number): Observable<EpicWaferEntity> {
-    //     const refWafer: EpicWaferEntity = this.wafers
+    // deleteWafer(waferId: number): Observable<EpicWafer> {
+    //     const refWafer: EpicWafer = this.wafers
     //         .find(item => item.id === waferId)
     //
     //     this.wafers = this.wafers
@@ -111,8 +111,8 @@ export class EpicDbAgentWafersService {
 
 }
 
-export function generateWafers(totalCount: number, idStartsFrom = 1): EpicWaferEntity[] {
-    const result: EpicWaferEntity[] = []
+export function generateWafers(totalCount: number, idStartsFrom = 1): EpicWafer[] {
+    const result: EpicWafer[] = []
 
     for (let i = idStartsFrom; i <= idStartsFrom + totalCount; i++) {
         result.push({

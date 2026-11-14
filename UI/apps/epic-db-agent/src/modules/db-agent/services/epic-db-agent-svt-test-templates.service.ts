@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import {
-    EpicSvtTestTemplateCreateEntity,
-    EpicSvtTestTemplateEntity,
-    EpicSvtTestTemplatesGetAllParams,
-    EpicSvtTestTemplateUpdateEntity,
-} from 'epic/entities'
+    EpicSvtTestTemplate,
+    EpicSvtTestTemplateCreateRequest,
+    EpicSvtTestTemplatesListQuery,
+    EpicSvtTestTemplateUpdateRequest,
+} from 'epic-api-types'
 import { delay, map, Observable, of, tap } from 'rxjs'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
@@ -14,7 +14,7 @@ import { EpicDbAgentSvtTestTypeConfigsService } from './epic-db-agent-svt-test-t
 @Injectable()
 export class EpicDbAgentSvtTestTemplatesService {
 
-    protected data: EpicSvtTestTemplateEntity[] = [
+    protected data: EpicSvtTestTemplate[] = [
         {
             id: 1,
             dutType: getEnumsCollection().dutType[1],
@@ -34,7 +34,7 @@ export class EpicDbAgentSvtTestTemplatesService {
     constructor(private readonly epicDbAgentSvtTestTypeConfigsService: EpicDbAgentSvtTestTypeConfigsService) {
     }
 
-    getAll(queryFilter?: EpicSvtTestTemplatesGetAllParams): Observable<EpicSvtTestTemplateEntity[]> {
+    getAll(queryFilter?: EpicSvtTestTemplatesListQuery): Observable<EpicSvtTestTemplate[]> {
         const result = this.data
             .filter(item =>
                 (!queryFilter?.ids || queryFilter.ids.includes(item.id))
@@ -47,7 +47,7 @@ export class EpicDbAgentSvtTestTemplatesService {
             )
     }
 
-    create(createRequest: EpicSvtTestTemplateCreateEntity): Observable<EpicSvtTestTemplateEntity> {
+    create(createRequest: EpicSvtTestTemplateCreateRequest): Observable<EpicSvtTestTemplate> {
         return this.epicDbAgentSvtTestTypeConfigsService.getOneById(createRequest.testTypeConfigId)
             .pipe(
                 map(testTemplateConfig => ({
@@ -62,8 +62,8 @@ export class EpicDbAgentSvtTestTemplatesService {
             )
     }
 
-    update(id: number, updateRequest: EpicSvtTestTemplateUpdateEntity): Observable<EpicSvtTestTemplateEntity | null> {
-        let refEntity: EpicSvtTestTemplateEntity = null
+    update(id: number, updateRequest: EpicSvtTestTemplateUpdateRequest): Observable<EpicSvtTestTemplate | null> {
+        let refEntity: EpicSvtTestTemplate = null
 
         this.data = this.data
             .map(item => {

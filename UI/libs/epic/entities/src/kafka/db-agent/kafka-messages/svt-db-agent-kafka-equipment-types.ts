@@ -1,4 +1,5 @@
-import { EpicEquipmentTypeCreateEntity, EpicEquipmentTypeEntity } from '../../../equipment-types'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -29,7 +30,7 @@ export namespace SvtDbAgentKafkaEquipmentTypes {
     }
 
     export class GetAllEquipmentTypesReplyMessage
-        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicEquipmentTypeEntity>> {
+        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicEquipmentType>> {
 
         readonly type = MessageType.GetAllEquipmentTypesReply
 
@@ -38,7 +39,7 @@ export namespace SvtDbAgentKafkaEquipmentTypes {
     // CREATE
 
     export type CreateEquipmentTypeMessageData = {
-        create: EpicEquipmentTypeCreateEntity
+        create: EpicEquipmentTypeCreateRequest
     }
 
     export class CreateEquipmentTypeMessage extends EpicKafkaMessageClass<CreateEquipmentTypeMessageData> {
@@ -48,7 +49,7 @@ export namespace SvtDbAgentKafkaEquipmentTypes {
     }
 
     export type CreateEquipmentTypeReplyMessageData = {
-        entity: EpicEquipmentTypeEntity
+        entity: EpicEquipmentType
     }
 
     export class CreateEquipmentTypeReplyMessage extends EpicKafkaReplyMessageClass<CreateEquipmentTypeReplyMessageData> {

@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestTypeConfigBodyEntity,
-    EpicSvtTestTypeConfigCreateDto,
-    EpicSvtTestTypeConfigEntity,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestTypeConfigs,
-} from 'epic/entities'
+import { EpicSvtTestTypeConfigCreateDto, SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'epic/entities'
+import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody } from 'epic-api-types'
 import { SvtDbSvtTestTypeConfigEntity, SvtDbSvtTestTypeConfigsRepository, SvtDbSvtTestTypesRepository } from 'svt-db/data'
 
 import {
@@ -62,7 +57,7 @@ export class SvtDbAgentNextSvtTestTypeConfigsHandlers implements SvtDbAgentNextM
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTypeConfigEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTypeConfig>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'testTypeId'])
         const items = await this.configs.findAll({
@@ -88,7 +83,7 @@ export class SvtDbAgentNextSvtTestTypeConfigsHandlers implements SvtDbAgentNextM
         return { entity: toWire(config) }
     }
 
-    private async getBody(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestTypeConfigBodyEntity>> {
+    private async getBody(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestTypeConfigBody>> {
         const id = requireInteger(requireRecord(data, 'data')['id'], 'data.id')
         const configBody = await this.configs.findBody(id)
         if (configBody === null) {
@@ -99,7 +94,7 @@ export class SvtDbAgentNextSvtTestTypeConfigsHandlers implements SvtDbAgentNextM
 
 }
 
-function toWire(config: SvtDbSvtTestTypeConfigEntity): EpicSvtTestTypeConfigEntity {
+function toWire(config: SvtDbSvtTestTypeConfigEntity): EpicSvtTestTypeConfig {
     return {
         id: config.id,
         testTypeId: config.testType.id,

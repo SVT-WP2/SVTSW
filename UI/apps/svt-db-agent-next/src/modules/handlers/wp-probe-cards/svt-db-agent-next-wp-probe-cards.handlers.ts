@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProbeCardEntity, SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic/entities'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic/entities'
+import { EpicWpProbeCard } from 'epic-api-types'
 import { SvtDbWpProbeCardsRepository, SvtDbWpProbeCardWithFamilyTypes } from 'svt-db/data'
 
 import {
@@ -16,7 +17,7 @@ import MessageType = SvtDbAgentKafkaWpProbeCards.MessageType
 
 
 /** `ProbeCardDto` of the Kafka contract: the TypeScript `EpicWpProbeCard` plus `asicFamilyTypes` (R-3). */
-export type SvtDbAgentNextWpProbeCardWire = EpicWpProbeCardEntity & {
+export type SvtDbAgentNextWpProbeCardWire = EpicWpProbeCard & {
     asicFamilyTypes: string[]
 }
 

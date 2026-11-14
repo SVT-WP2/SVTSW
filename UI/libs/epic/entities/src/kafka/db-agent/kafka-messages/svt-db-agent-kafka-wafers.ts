@@ -1,4 +1,5 @@
-import { EpicWaferCreateEntity, EpicWaferEntity, EpicWaferLocationHistoryRecordEntity, EpicWaferUpdateEntity } from '../../../wafers'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -34,7 +35,7 @@ export namespace SvtDbAgentKafkaWafers {
     }
 
     export type GetAllWafersReplyMessageData = {
-        items: EpicWaferEntity[]
+        items: EpicWafer[]
     }
 
     export class GetAllWafersReplyMessage extends EpicKafkaReplyMessageClass<GetAllWafersReplyMessageData> {
@@ -46,7 +47,7 @@ export namespace SvtDbAgentKafkaWafers {
     // CREATE
 
     export type CreateWaferMessageData = {
-        create: EpicWaferCreateEntity
+        create: EpicWaferCreateRequest
     }
 
     export class CreateWaferMessage extends EpicKafkaMessageClass<CreateWaferMessageData> {
@@ -55,7 +56,7 @@ export namespace SvtDbAgentKafkaWafers {
 
     }
 
-    export type CreateWaferReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferEntity>
+    export type CreateWaferReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWafer>
 
     export class CreateWaferReplyMessage extends EpicKafkaReplyMessageClass<CreateWaferReplyMessageData> {
 
@@ -67,7 +68,7 @@ export namespace SvtDbAgentKafkaWafers {
 
     export type UpdateWaferMessageData = {
         id: number
-        update: Partial<EpicWaferUpdateEntity>
+        update: Partial<EpicWaferUpdateRequest>
     }
 
     export class UpdateWaferMessage extends EpicKafkaMessageClass<UpdateWaferMessageData> {
@@ -76,7 +77,7 @@ export namespace SvtDbAgentKafkaWafers {
 
     }
 
-    export type UpdateWaferReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferEntity>
+    export type UpdateWaferReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWafer>
 
     export class UpdateWaferReplyMessage extends EpicKafkaReplyMessageClass<UpdateWaferReplyMessageData> {
 
@@ -86,13 +87,13 @@ export namespace SvtDbAgentKafkaWafers {
 
     // LOCATION
 
-    export class UpdateWaferLocationMessage extends EpicKafkaMessageClass<EpicWaferLocationHistoryRecordEntity> {
+    export class UpdateWaferLocationMessage extends EpicKafkaMessageClass<EpicWaferLocationHistoryRecord> {
 
         readonly type = MessageType.UpdateWaferLocation
 
     }
 
-    export type UpdateWaferLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferEntity>
+    export type UpdateWaferLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWafer>
 
     export class UpdateWaferLocationReplyMessage extends EpicKafkaReplyMessageClass<UpdateWaferLocationReplyMessageData> {
 
@@ -110,7 +111,7 @@ export namespace SvtDbAgentKafkaWafers {
 
     }
 
-    export type GetWaferLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicWaferLocationHistoryRecordEntity>
+    export type GetWaferLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicWaferLocationHistoryRecord>
 
     export class GetWaferLocationHistoryReplyMessage extends EpicKafkaReplyMessageClass<GetWaferLocationHistoryReplyMessageData> {
 

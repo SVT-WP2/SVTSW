@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicChipBlockEntity, EpicGetAllChipBlocksQueryFilter, EpicPageData, EpicPager } from 'epic/entities'
+import { EpicGetAllChipBlocksQueryFilter } from 'epic/entities'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'epic-api-types'
 import { delay, Observable, of } from 'rxjs'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
@@ -8,11 +9,11 @@ import { getEnumsCollection } from './epic-db-agent-enums.service'
 @Injectable()
 export class EpicDbAgentChipBlocksService {
 
-    protected chipBlocks: EpicChipBlockEntity[] = generateChipBlocks(2 * 1000)
+    protected chipBlocks: EpicChipBlock[] = generateChipBlocks(2 * 1000)
 
     getAll(
         queryFilter?: EpicGetAllChipBlocksQueryFilter,
-        pager?: EpicPager): Observable<EpicPageData<EpicChipBlockEntity>> {
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicChipBlock>> {
 
         const filteredData = queryFilter
             ? this.chipBlocks.filter(item => {
@@ -44,9 +45,9 @@ export class EpicDbAgentChipBlocksService {
 
 }
 
-export function generateChipBlocks(totalCount: number, idStartsFrom = 1): EpicChipBlockEntity[] {
+export function generateChipBlocks(totalCount: number, idStartsFrom = 1): EpicChipBlock[] {
     const blockTypes = getEnumsCollection().blockType
-    const result: EpicChipBlockEntity[] = []
+    const result: EpicChipBlock[] = []
 
     for (let i = idStartsFrom; i <= idStartsFrom + totalCount; i++) {
         result.push({

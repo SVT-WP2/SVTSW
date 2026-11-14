@@ -1,10 +1,6 @@
-import {
-    EpicWpMachineCreateEntity,
-    EpicWpMachineEntity,
-    EpicWpMachineUpdateEntity,
-    EpicWpMachineUpdateInstalledProbeCard,
-    EpicWpMachineUpdateLoadedWafer,
-} from '../../../wp'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from '../../../wp'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -39,7 +35,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     }
 
     export type GetAllWpMachinesReplyMessageData = {
-        items: EpicWpMachineEntity[]
+        items: EpicWpMachine[]
     }
 
     export class GetAllWpMachinesReplyMessage extends EpicKafkaReplyMessageClass<GetAllWpMachinesReplyMessageData> {
@@ -51,7 +47,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     // CREATE
 
     export type CreateWpMachineMessageData = {
-        create: EpicWpMachineCreateEntity
+        create: EpicWpMachineCreateRequest
     }
 
     export class CreateWpMachineMessage extends EpicKafkaMessageClass<CreateWpMachineMessageData> {
@@ -61,7 +57,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     }
 
     export type CreateWpMachineReplyMessageData = {
-        entity: EpicWpMachineEntity
+        entity: EpicWpMachine
     }
 
     export class CreateWpMachineReplyMessage extends EpicKafkaReplyMessageClass<CreateWpMachineReplyMessageData> {
@@ -74,7 +70,7 @@ export namespace SvtDbAgentKafkaWpMachines {
 
     export type UpdateWpMachineMessageData = {
         id: number
-        update: EpicWpMachineUpdateEntity
+        update: EpicWpMachineUpdateRequest
     }
 
     export class UpdateWpMachineMessage extends EpicKafkaMessageClass<UpdateWpMachineMessageData> {
@@ -84,7 +80,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     }
 
     export type UpdateWpMachineReplyMessageData = {
-        entity: EpicWpMachineEntity
+        entity: EpicWpMachine
     }
 
     export class UpdateWpMachineReplyMessage extends EpicKafkaReplyMessageClass<UpdateWpMachineReplyMessageData> {
@@ -102,7 +98,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     }
 
     export type UpdateWpMachineLoadedWaferReplyMessageData = {
-        entity: EpicWpMachineEntity
+        entity: EpicWpMachine
     }
 
     export class UpdateWpMachineLoadedWaferReplyMessage extends EpicKafkaReplyMessageClass<UpdateWpMachineLoadedWaferReplyMessageData> {
@@ -120,7 +116,7 @@ export namespace SvtDbAgentKafkaWpMachines {
     }
 
     export type UpdateWpMachineInstalledProbeCardReplyMessageData = {
-        entity: EpicWpMachineEntity
+        entity: EpicWpMachine
     }
 
     export class UpdateWpMachineInstalledProbeCardReplyMessage

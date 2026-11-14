@@ -1,4 +1,5 @@
-import { EpicSvtTestSetupConfigBodyEntity, EpicSvtTestSetupConfigCreateEntity, EpicSvtTestSetupConfigEntity } from '../../../svt-tests'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -28,7 +29,7 @@ export namespace SvtDbAgentKafkaSvtTestSetupConfigs {
     }
 
     export type GetAllSvtTestSetupConfigsReplyMessageData = {
-        items: EpicSvtTestSetupConfigEntity[]
+        items: EpicSvtTestSetupConfig[]
     }
 
     export class GetAllSvtTestSetupConfigsReplyMessage extends EpicKafkaReplyMessageClass<GetAllSvtTestSetupConfigsReplyMessageData> {
@@ -40,7 +41,7 @@ export namespace SvtDbAgentKafkaSvtTestSetupConfigs {
     // CREATE
 
     export type CreateSvtTestSetupConfigMessageData = {
-        create: EpicSvtTestSetupConfigCreateEntity
+        create: EpicSvtTestSetupConfigCreateRequest
     }
 
     export class CreateSvtTestSetupConfigMessage extends EpicKafkaMessageClass<CreateSvtTestSetupConfigMessageData> {
@@ -50,7 +51,7 @@ export namespace SvtDbAgentKafkaSvtTestSetupConfigs {
     }
 
     export type CreateSvtTestSetupConfigReplyMessageData = {
-        entity: EpicSvtTestSetupConfigEntity
+        entity: EpicSvtTestSetupConfig
     }
 
     export class CreateSvtTestSetupConfigReplyMessage extends EpicKafkaReplyMessageClass<CreateSvtTestSetupConfigReplyMessageData> {
@@ -72,7 +73,7 @@ export namespace SvtDbAgentKafkaSvtTestSetupConfigs {
     }
 
     export type GetSvtTestSetupConfigBodyReplyMessageData = {
-        entity: EpicSvtTestSetupConfigBodyEntity
+        entity: EpicSvtTestSetupConfigBody
     }
 
     export class GetSvtTestSetupConfigBodyReplyMessage extends EpicKafkaReplyMessageClass<GetSvtTestSetupConfigBodyReplyMessageData> {

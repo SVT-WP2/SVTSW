@@ -1,16 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicAsicCreateEntity,
-    EpicAsicEntity,
     EpicGetAllAsicsQueryFilter,
-    EpicPageData,
-    EpicPager,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaAsics,
 } from 'epic/entities'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicAsicsSvc } from './models'
@@ -26,7 +23,7 @@ export class EpicAsicsService implements OnModuleInit {
 
     getAll(
         queryFilter?: EpicGetAllAsicsQueryFilter,
-        pager?: EpicPager): Observable<EpicPageData<EpicAsicEntity>> {
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicAsic>> {
         const data: SvtDbAgentKafkaAsics.GetAllAsicsMessageData = {
             filter: {
                 ...(queryFilter.waferId ? { waferId: queryFilter.waferId } : {}),
@@ -50,7 +47,7 @@ export class EpicAsicsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicAsicCreateEntity): Observable<EpicAsicEntity> {
+    create(createRequest: EpicAsicCreateRequest): Observable<EpicAsic> {
         const message = new SvtDbAgentKafkaAsics.CreateAsicMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaAsics.CreateAsicReplyMessage>(message)
             .pipe(

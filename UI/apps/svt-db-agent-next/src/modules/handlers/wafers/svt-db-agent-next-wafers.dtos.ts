@@ -1,5 +1,5 @@
 import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicWaferLocationHistoryRecordEntity } from 'epic/entities'
+import { EpicWaferLocationHistoryRecord } from 'epic-api-types'
 
 
 /**
@@ -7,7 +7,7 @@ import { EpicWaferLocationHistoryRecordEntity } from 'epic/entities'
  * shape without validators on `note` and `username`, so the request is validated with this one:
  * `date` and `username` may be `null` or absent (the database stamps the day), `note` may be absent.
  */
-export class SvtDbAgentNextWaferLocationRecordDto implements EpicWaferLocationHistoryRecordEntity {
+export class SvtDbAgentNextWaferLocationRecordDto implements EpicWaferLocationHistoryRecord {
 
     @IsInt()
     waferId!: number

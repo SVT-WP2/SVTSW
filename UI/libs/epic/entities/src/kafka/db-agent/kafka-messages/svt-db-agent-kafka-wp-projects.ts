@@ -1,4 +1,5 @@
-import { EpicWpProjectCreateEntity, EpicWpProjectEntity } from '../../../wp'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -27,7 +28,7 @@ export namespace SvtDbAgentKafkaWpProjects {
     }
 
     export type GetAllWpProjectsReplyMessageData = {
-        items: EpicWpProjectEntity[]
+        items: EpicWpProject[]
     }
 
     export class GetAllWpProjectsReplyMessage extends EpicKafkaReplyMessageClass<GetAllWpProjectsReplyMessageData> {
@@ -39,7 +40,7 @@ export namespace SvtDbAgentKafkaWpProjects {
     // CREATE
 
     export type CreateWpProjectMessageData = {
-        create: EpicWpProjectCreateEntity
+        create: EpicWpProjectCreateRequest
     }
 
     export class CreateWpProjectMessage extends EpicKafkaMessageClass<CreateWpProjectMessageData> {
@@ -49,7 +50,7 @@ export namespace SvtDbAgentKafkaWpProjects {
     }
 
     export type CreateWpProjectReplyMessageData = {
-        entity: EpicWpProjectEntity
+        entity: EpicWpProject
     }
 
     export class CreateWpProjectReplyMessage extends EpicKafkaReplyMessageClass<CreateWpProjectReplyMessageData> {

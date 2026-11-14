@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestSetupConfigBodyEntity,
-    EpicSvtTestSetupConfigCreateDto,
-    EpicSvtTestSetupConfigEntity,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestSetupConfigs,
-} from 'epic/entities'
+import { EpicSvtTestSetupConfigCreateDto, SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetupConfigs } from 'epic/entities'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'epic-api-types'
 import { SvtDbSvtTestSetupConfigEntity, SvtDbSvtTestSetupConfigsRepository, SvtDbSvtTestSetupsRepository } from 'svt-db/data'
 
 import {
@@ -62,7 +57,7 @@ export class SvtDbAgentNextSvtTestSetupConfigsHandlers implements SvtDbAgentNext
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestSetupConfigEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestSetupConfig>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'setupId'])
         const items = await this.configs.findAll({
@@ -88,7 +83,7 @@ export class SvtDbAgentNextSvtTestSetupConfigsHandlers implements SvtDbAgentNext
         return { entity: toWire(config) }
     }
 
-    private async getBody(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestSetupConfigBodyEntity>> {
+    private async getBody(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestSetupConfigBody>> {
         const id = requireInteger(requireRecord(data, 'data')['id'], 'data.id')
         const configBody = await this.configs.findBody(id)
         if (configBody === null) {
@@ -99,7 +94,7 @@ export class SvtDbAgentNextSvtTestSetupConfigsHandlers implements SvtDbAgentNext
 
 }
 
-function toWire(config: SvtDbSvtTestSetupConfigEntity): EpicSvtTestSetupConfigEntity {
+function toWire(config: SvtDbSvtTestSetupConfigEntity): EpicSvtTestSetupConfig {
     return {
         id: config.id,
         setupId: config.setup.id,

@@ -1,14 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicWaferTypeCreateEntity,
-    EpicWaferTypeEntity, EpicWaferTypeMapEntity,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaWaferTypes,
 } from 'epic/entities'
+import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicWafersSvc } from '../models'
@@ -22,7 +21,7 @@ export class EpicWaferTypesService implements OnModuleInit {
     ) {
     }
 
-    getAll(): Observable<EpicWaferTypeEntity[]> {
+    getAll(): Observable<EpicWaferType[]> {
         const message = new SvtDbAgentKafkaWaferTypes.GetAllWaferTypesMessage()
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWaferTypes.GetAllWaferTypesReplyMessage>(message)
             .pipe(
@@ -31,7 +30,7 @@ export class EpicWaferTypesService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicWaferTypeCreateEntity): Observable<EpicWaferTypeEntity> {
+    create(createRequest: EpicWaferTypeCreateRequest): Observable<EpicWaferType> {
         const message = new SvtDbAgentKafkaWaferTypes.CreateWaferTypeMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWaferTypes.CreateWaferTypeReplyMessage>(message)
             .pipe(
@@ -40,7 +39,7 @@ export class EpicWaferTypesService implements OnModuleInit {
             )
     }
 
-    getWaferTypeMap(waferTypeId: number): Observable<EpicWaferTypeMapEntity> {
+    getWaferTypeMap(waferTypeId: number): Observable<EpicWaferTypeMap> {
         const message = new SvtDbAgentKafkaWaferTypes.GetWaferTypeMapMessage({ waferTypeId })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWaferTypes.GetWaferTypeMapReplyMessage>(message)
             .pipe(

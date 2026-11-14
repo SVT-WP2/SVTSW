@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicWpMachineCreateRequestDto,
-    EpicWpMachineEntity,
-    EpicWpMachineUpdateRequestDto,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWpMachines,
-} from 'epic/entities'
+import { EpicWpMachineCreateRequestDto, EpicWpMachineUpdateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'epic/entities'
+import { EpicWpMachine } from 'epic-api-types'
 import {
     SvtDbEnumsService,
     SvtDbWafersRepository,
@@ -37,7 +32,7 @@ import MessageType = SvtDbAgentKafkaWpMachines.MessageType
  * The machine on the wire: `WaferProbeMachineDto` of the Kafka contract, which carries the two orientations
  * WPAgent reads; the TypeScript `EpicWpMachine` does not list them yet.
  */
-export type SvtDbAgentNextWpMachineWire = EpicWpMachineEntity & {
+export type SvtDbAgentNextWpMachineWire = EpicWpMachine & {
     loadedWaferOrientation: string | null
     installedProbeCardOrientation: string | null
 }

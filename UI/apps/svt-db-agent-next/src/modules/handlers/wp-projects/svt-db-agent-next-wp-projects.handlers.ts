@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProjectCreateDto, EpicWpProjectEntity, SvtDbAgentKafka, SvtDbAgentKafkaWpProjects } from 'epic/entities'
+import { EpicWpProjectCreateDto, SvtDbAgentKafka, SvtDbAgentKafkaWpProjects } from 'epic/entities'
+import { EpicWpProject } from 'epic-api-types'
 import {
     SvtDbEnumsService,
     SvtDbWaferTypesRepository,
@@ -49,14 +50,14 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWpProjectEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWpProject>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const items = await this.projects.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
         return { items: items.map(toWire), totalCount: items.length }
     }
 
-    private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpProjectEntity>> {
+    private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpProject>> {
         const create = validateRequestData(EpicWpProjectCreateDto, requireRecord(data, 'data')['create'], 'data.create')
 
         const enums = await this.enums.getAll(['asicFamilyType', 'waferMapOrientation'])
@@ -88,7 +89,7 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
 
 }
 
-function toWire(project: SvtDbWpProjectEntity): EpicWpProjectEntity {
+function toWire(project: SvtDbWpProjectEntity): EpicWpProject {
     return {
         id: project.id,
         wpMachineId: project.wpMachine.id,

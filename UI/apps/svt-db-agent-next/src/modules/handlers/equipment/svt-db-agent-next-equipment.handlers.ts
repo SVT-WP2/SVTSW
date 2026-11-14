@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipmentEntity, EpicEquipmentLocationHistoryRecordEntity, SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'epic/entities'
+import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'epic/entities'
+import { EpicEquipment, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
 import {
     SvtDbEnumsService,
     SvtDbEquipmentEntity,
@@ -61,7 +62,7 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipmentEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipment>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const items = await this.equipment.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
@@ -106,7 +107,7 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
 
     private async getLocationHistory(
         data: unknown,
-    ): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipmentLocationHistoryRecordEntity>> {
+    ): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipmentLocationHistoryRecord>> {
         const equipmentId = requireInteger(requireRecord(data, 'data')['equipmentId'], 'data.equipmentId')
         if (!(await this.equipment.findById(equipmentId))) {
             throw SvtDbAgentNextRequestError.notFound(`Equipment ${equipmentId} not found`)
@@ -124,7 +125,7 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
 
 }
 
-function toWire(equipment: SvtDbEquipmentEntity): EpicEquipmentEntity {
+function toWire(equipment: SvtDbEquipmentEntity): EpicEquipment {
     return {
         id: equipment.id,
         name: equipment.name,
@@ -134,7 +135,7 @@ function toWire(equipment: SvtDbEquipmentEntity): EpicEquipmentEntity {
     }
 }
 
-function toWireLocation(row: SvtDbEquipmentLocationEntity): EpicEquipmentLocationHistoryRecordEntity {
+function toWireLocation(row: SvtDbEquipmentLocationEntity): EpicEquipmentLocationHistoryRecord {
     return {
         equipmentId: row.equipment.id,
         generalLocation: row.generalLocation,

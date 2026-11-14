@@ -1,11 +1,6 @@
-import {
-    EpicChipCreateEntity,
-    EpicChipCreateManyEntity,
-    EpicChipEntity,
-    EpicChipLocationHistoryRecordEntity,
-    EpicGetAllChipsQueryFilter,
-} from '../../../chips'
-import { EpicPager } from '../../../common'
+import { EpicApiPager, EpicChip, EpicChipCreateManyRequest, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'epic-api-types'
+
+import { EpicGetAllChipsQueryFilter } from '../../../chips'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -30,7 +25,7 @@ export namespace SvtDbAgentKafkaChips {
 
     export type GetAllChipsMessageData = {
         filter?: EpicGetAllChipsQueryFilter
-        pager?: EpicPager
+        pager?: EpicApiPager
     }
 
     export class GetAllChipsMessage extends EpicKafkaMessageClass<GetAllChipsMessageData> {
@@ -39,7 +34,7 @@ export namespace SvtDbAgentKafkaChips {
 
     }
 
-    export type GetAllChipsReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicChipEntity>
+    export type GetAllChipsReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicChip>
 
     export class GetAllChipsReplyMessage extends EpicKafkaReplyMessageClass<GetAllChipsReplyMessageData> {
 
@@ -50,7 +45,7 @@ export namespace SvtDbAgentKafkaChips {
     // CREATE
 
     export type CreateChipMessageData = {
-        create: EpicChipCreateEntity
+        create: EpicChipCreateRequest
     }
 
     export class CreateChipMessage extends EpicKafkaMessageClass<CreateChipMessageData> {
@@ -59,7 +54,7 @@ export namespace SvtDbAgentKafkaChips {
 
     }
 
-    export type CreateChipReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicChipEntity>
+    export type CreateChipReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicChip>
 
     export class CreateChipReplyMessage extends EpicKafkaReplyMessageClass<CreateChipReplyMessageData> {
 
@@ -70,7 +65,7 @@ export namespace SvtDbAgentKafkaChips {
     // CREATE MANY
 
     export type CreateManyChipsMessageData = {
-        create: EpicChipCreateManyEntity
+        create: EpicChipCreateManyRequest
     }
 
     export class CreateManyChipsMessage extends EpicKafkaMessageClass<CreateManyChipsMessageData> {
@@ -79,7 +74,7 @@ export namespace SvtDbAgentKafkaChips {
 
     }
 
-    export type CreateManyChipsReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicChipEntity>
+    export type CreateManyChipsReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicChip>
 
     export class CreateManyChipsReplyMessage extends EpicKafkaReplyMessageClass<CreateManyChipsReplyMessageData> {
 
@@ -90,13 +85,13 @@ export namespace SvtDbAgentKafkaChips {
 
     // LOCATION
 
-    export class UpdateChipLocationMessage extends EpicKafkaMessageClass<EpicChipLocationHistoryRecordEntity> {
+    export class UpdateChipLocationMessage extends EpicKafkaMessageClass<EpicChipLocationHistoryRecord> {
 
         readonly type = MessageType.UpdateChipLocation
 
     }
 
-    export type UpdateChipLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicChipEntity>
+    export type UpdateChipLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicChip>
 
     export class UpdateChipLocationReplyMessage extends EpicKafkaReplyMessageClass<UpdateChipLocationReplyMessageData> {
 
@@ -114,7 +109,7 @@ export namespace SvtDbAgentKafkaChips {
 
     }
 
-    export type GetChipLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicChipLocationHistoryRecordEntity>
+    export type GetChipLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicChipLocationHistoryRecord>
 
     export class GetChipLocationHistoryReplyMessage extends EpicKafkaReplyMessageClass<GetChipLocationHistoryReplyMessageData> {
 

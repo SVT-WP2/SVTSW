@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProjectCreateDto, EpicWpProjectEntity } from 'epic/entities'
+import { EpicWpProjectCreateDto } from 'epic/entities'
+import { EpicWpProject } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
 
 
 @Injectable()
 export class EpicDbAgentWpProjectsService {
 
-    protected entities: EpicWpProjectEntity[] = [
+    protected entities: EpicWpProject[] = [
         {
             id: 1,
             wpMachineId: 1,
@@ -42,7 +43,7 @@ export class EpicDbAgentWpProjectsService {
         },
     ]
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpProjectEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpProject[]> {
         const result = filter?.ids
             ? this.entities.filter(item => filter.ids.includes(item.id))
             : [...this.entities]
@@ -52,14 +53,14 @@ export class EpicDbAgentWpProjectsService {
             )
     }
 
-    getOneById(waferId: number): Observable<EpicWpProjectEntity | undefined> {
+    getOneById(waferId: number): Observable<EpicWpProject | undefined> {
         return this.getAll()
             .pipe(
                 map(list => list.find(item => item.id === waferId)),
             )
     }
 
-    create(createRequest: EpicWpProjectCreateDto): Observable<EpicWpProjectEntity> {
+    create(createRequest: EpicWpProjectCreateDto): Observable<EpicWpProject> {
         const newWpProject = {
             id: (this.entities[this.entities.length - 1]?.id || 0) + 1,
             ...createRequest,

@@ -1,9 +1,5 @@
-import {
-    EpicSvtTestTypeCreateEntity,
-    EpicSvtTestTypeEntity,
-    EpicSvtTestTypesGetAllParams,
-    EpicSvtTestTypeUpdateEntity,
-} from '../../../svt-tests'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypesListQuery, EpicSvtTestTypeUpdateRequest } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -21,7 +17,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
     // GET ALL
 
     export type GetAllSvtTestTypesData = {
-        filter?: EpicSvtTestTypesGetAllParams
+        filter?: EpicSvtTestTypesListQuery
     }
 
     export class GetAllSvtTestTypesMessage extends EpicKafkaMessageClass<GetAllSvtTestTypesData> {
@@ -31,7 +27,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
     }
 
     export type GetAllSvtTestTypesReplyMessageData = {
-        items: EpicSvtTestTypeEntity[]
+        items: EpicSvtTestType[]
     }
 
     export class GetAllSvtTestTypesReplyMessage extends EpicKafkaReplyMessageClass<GetAllSvtTestTypesReplyMessageData> {
@@ -43,7 +39,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
     // CREATE
 
     export type CreateSvtTestTypeMessageData = {
-        create: EpicSvtTestTypeCreateEntity
+        create: EpicSvtTestTypeCreateRequest
     }
 
     export class CreateSvtTestTypeMessage extends EpicKafkaMessageClass<CreateSvtTestTypeMessageData> {
@@ -53,7 +49,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
     }
 
     export type CreateSvtTestTypeReplyMessageData = {
-        entity: EpicSvtTestTypeEntity
+        entity: EpicSvtTestType
     }
 
     export class CreateSvtTestTypeReplyMessage extends EpicKafkaReplyMessageClass<CreateSvtTestTypeReplyMessageData> {
@@ -66,7 +62,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
 
     export type UpdateSvtTestTypeMessageData = {
         id: number
-        update: EpicSvtTestTypeUpdateEntity
+        update: EpicSvtTestTypeUpdateRequest
     }
 
     export class UpdateSvtTestTypeMessage extends EpicKafkaMessageClass<UpdateSvtTestTypeMessageData> {
@@ -76,7 +72,7 @@ export namespace SvtDbAgentKafkaSvtTestTypes {
     }
 
     export type UpdateSvtTestTypeReplyMessageData = {
-        entity: EpicSvtTestTypeEntity
+        entity: EpicSvtTestType
     }
 
     export class UpdateSvtTestTypeReplyMessage extends EpicKafkaReplyMessageClass<UpdateSvtTestTypeReplyMessageData> {

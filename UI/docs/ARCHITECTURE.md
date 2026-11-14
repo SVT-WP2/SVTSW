@@ -56,8 +56,8 @@ Angular-only. They never import each other. What they *share* is `libs/epic-api-
 response types of the DB-agent-backed HTTP API as plain TypeScript, with no decorators and no framework imports
 (the root `eslint.config.mjs` rejects them). The UI uses those types as its models; a BE DTO class `implements`
 them (and, where the type has optional members, `libs/epic/entities/src/contract` checks that the two declare the
-same members — `implements` cannot); the Kafka wire types in
-`libs/epic/entities` alias them while the shapes are identical. A field drifting between FE and BE is a
+same members — `implements` cannot); the Kafka messages in
+`libs/epic/entities` carry them directly while the wire shape equals the HTTP one. A field drifting between FE and BE is a
 compile error instead of a silently ignored query param. (`iv-mnt` and `tcp` are not DB-agent operations; their
 types still live in `libs/epic-ui/api`.)
 

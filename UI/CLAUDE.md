@@ -96,9 +96,10 @@ or `npm run test::affected` scope it.
   `ListQuery`), so those DTOs are also paired in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`.
   Request bodies end in `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
   (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
-- `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`. Kafka message contracts,
-  the decorated DTO classes and the `Epic<X>Entity` Kafka wire types live there — the latter are one-line
-  aliases of the `epic-api-types` types for as long as the two shapes are identical.
+- `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`. Kafka message contracts
+  and the decorated DTO classes live there. The Kafka messages carry the `epic-api-types` types directly; a
+  separate wire type (`EpicSvtTestEntity`, the `*LocationUpdate` types) exists only where the Kafka shape
+  differs from the HTTP one.
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
 - Angular UI code must never import from `libs/epic/*`. For the DB-agent-backed domains `epic-ui/api` holds the
   HTTP clients only — the types come from `epic-api-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent

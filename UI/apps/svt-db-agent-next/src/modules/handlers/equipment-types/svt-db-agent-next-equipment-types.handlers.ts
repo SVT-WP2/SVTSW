@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicEquipmentTypeCreateRequestDto,
-    EpicEquipmentTypeEntity,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaEquipmentTypes,
-} from 'epic/entities'
+import { EpicEquipmentTypeCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaEquipmentTypes } from 'epic/entities'
+import { EpicEquipmentType } from 'epic-api-types'
 import { SvtDbEquipmentTypeEntity, SvtDbEquipmentTypesRepository } from 'svt-db/data'
 
 import {
@@ -45,7 +41,7 @@ export class SvtDbAgentNextEquipmentTypesHandlers implements SvtDbAgentNextMessa
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipmentTypeEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipmentType>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const items = await this.equipmentTypes.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
@@ -60,6 +56,6 @@ export class SvtDbAgentNextEquipmentTypesHandlers implements SvtDbAgentNextMessa
 
 }
 
-function toWire(equipmentType: SvtDbEquipmentTypeEntity): EpicEquipmentTypeEntity {
+function toWire(equipmentType: SvtDbEquipmentTypeEntity): EpicEquipmentType {
     return { id: equipmentType.id, name: equipmentType.name }
 }

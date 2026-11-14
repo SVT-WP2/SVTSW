@@ -1,4 +1,5 @@
-import { EpicWpProbeCardEntity } from '../../../wp'
+import { EpicWpProbeCard } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -25,7 +26,7 @@ export namespace SvtDbAgentKafkaWpProbeCards {
     }
 
     export type GetAllWpProbeCardsReplyMessageData = {
-        items: EpicWpProbeCardEntity[]
+        items: EpicWpProbeCard[]
     }
 
     export class GetAllWpProbeCardsReplyMessage extends EpicKafkaReplyMessageClass<GetAllWpProbeCardsReplyMessageData> {

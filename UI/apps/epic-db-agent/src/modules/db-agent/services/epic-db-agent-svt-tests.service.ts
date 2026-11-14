@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicPageData, EpicPager, EpicSvtTestCreateEntity, EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic/entities'
-import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
+import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic/entities'
+import { EpicApiPager, EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
 
 
@@ -12,7 +12,10 @@ export class EpicDbAgentSvtTestsService {
 
     protected data: EpicSvtTestEntity[] = generateSvtTests(2 * 1000)
 
-    getAll(queryFilter?: SvtDbAgentKafkaSvtTests.GetAllSvtTestsFilter, pager?: EpicPager): Observable<EpicPageData<EpicSvtTestEntity>> {
+    getAll(
+        queryFilter?: SvtDbAgentKafkaSvtTests.GetAllSvtTestsFilter,
+        pager?: EpicApiPager,
+    ): Observable<EpicApiPageResponse<EpicSvtTestEntity>> {
         const filteredData = queryFilter
             ? this.data.filter(item => fulfilsFilter(item, queryFilter))
             : [...this.data]
@@ -40,7 +43,7 @@ export class EpicDbAgentSvtTestsService {
             )
     }
 
-    create(createRequest: EpicSvtTestCreateEntity): Observable<EpicSvtTestEntity> {
+    create(createRequest: EpicSvtTestCreateRequest): Observable<EpicSvtTestEntity> {
         const newId = (this.data[this.data.length - 1]?.id || 0) + 1
         const now = new Date().toISOString()
 

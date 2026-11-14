@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
+import { EpicGetAllChipsQueryFilter } from 'epic/entities'
 import {
-    EpicChipCreateEntity,
-    EpicChipCreateManyEntity,
-    EpicChipEntity,
-    EpicChipLocationHistoryRecordEntity,
-    EpicGetAllChipsQueryFilter,
-    EpicPageData,
-    EpicPager,
-} from 'epic/entities'
+    EpicApiPager,
+    EpicApiPageResponse,
+    EpicChip,
+    EpicChipCreateManyRequest,
+    EpicChipCreateRequest,
+    EpicChipLocationHistoryRecord,
+} from 'epic-api-types'
 import moment from 'moment/moment'
 import { concat, delay, map, Observable, of, zipAll } from 'rxjs'
 
@@ -18,9 +18,9 @@ import { getEnumsCollection } from './epic-db-agent-enums.service'
 @Injectable()
 export class EpicDbAgentChipsService {
 
-    protected chips: EpicChipEntity[] = generateChips(10 * 1000)
-    protected chipsLocationHistory: { [chipId: string]: EpicChipLocationHistoryRecordEntity[] } = this.chips
-        .reduce<{ [chipId: string]: EpicChipLocationHistoryRecordEntity[] }>(
+    protected chips: EpicChip[] = generateChips(10 * 1000)
+    protected chipsLocationHistory: { [chipId: string]: EpicChipLocationHistoryRecord[] } = this.chips
+        .reduce<{ [chipId: string]: EpicChipLocationHistoryRecord[] }>(
             (acc, chip) => {
                 return {
                     ...acc,
@@ -39,7 +39,7 @@ export class EpicDbAgentChipsService {
     constructor(private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService) {
     }
 
-    getAllChips(queryFilter?: EpicGetAllChipsQueryFilter, pager?: EpicPager): Observable<EpicPageData<EpicChipEntity>> {
+    getAllChips(queryFilter?: EpicGetAllChipsQueryFilter, pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicChip>> {
         const filteredData = queryFilter
             ? this.chips.filter(item => {
                 const fulfilIdsFilter = !queryFilter.ids?.length || (queryFilter.ids.includes(item.id))
@@ -68,14 +68,14 @@ export class EpicDbAgentChipsService {
             )
     }
 
-    getChipById(chipId: number): Observable<EpicChipEntity | undefined> {
+    getChipById(chipId: number): Observable<EpicChip | undefined> {
         return this.getAllChips({ ids: [chipId] })
             .pipe(
                 map(list => list.items[0]),
             )
     }
 
-    createChip(createRequest: EpicChipCreateEntity): Observable<EpicChipEntity> {
+    createChip(createRequest: EpicChipCreateRequest): Observable<EpicChip> {
         return this.epicDbAgentAsicsService.getAllAsics({ ids: [createRequest.asicId] })
             .pipe(
                 map(list => {
@@ -85,7 +85,7 @@ export class EpicDbAgentChipsService {
 
                     const refAsic = list.items[0]
 
-                    const newChip: EpicChipEntity = {
+                    const newChip: EpicChip = {
                         id: (this.chips[this.chips.length - 1]?.id || 0) + 1,
                         ...createRequest,
                         familyType: refAsic.familyType,
@@ -101,7 +101,7 @@ export class EpicDbAgentChipsService {
             )
     }
 
-    createMany(createRequest: EpicChipCreateManyEntity): Observable<EpicChipEntity[]> {
+    createMany(createRequest: EpicChipCreateManyRequest): Observable<EpicChip[]> {
         return concat(
             createRequest.items
                 .map(
@@ -113,8 +113,8 @@ export class EpicDbAgentChipsService {
             )
     }
 
-    updateChip(chipId: number, updateRequest: Partial<Omit<EpicChipEntity, 'id'>>): Observable<EpicChipEntity | null> {
-        let refChip: EpicChipEntity = null
+    updateChip(chipId: number, updateRequest: Partial<Omit<EpicChip, 'id'>>): Observable<EpicChip | null> {
+        let refChip: EpicChip = null
 
         this.chips = this.chips
             .map(item => {
@@ -134,14 +134,14 @@ export class EpicDbAgentChipsService {
             )
     }
 
-    getChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecordEntity[]> {
+    getChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecord[]> {
         return of(this.chipsLocationHistory[chipId] ?? [])
             .pipe(
                 delay(500),
             )
     }
 
-    updateChipLocation(location: EpicChipLocationHistoryRecordEntity): Observable<EpicChipEntity> {
+    updateChipLocation(location: EpicChipLocationHistoryRecord): Observable<EpicChip> {
         this.chipsLocationHistory[location.chipId] = [
             ...(this.chipsLocationHistory[location.chipId] ?? []),
             location,
@@ -150,8 +150,8 @@ export class EpicDbAgentChipsService {
         return this.updateChip(location.chipId, { generalLocation: location.generalLocation })
     }
 
-    // deleteChip(chipId: number): Observable<EpicChipEntity> {
-    //     const refChip: EpicChipEntity = this.chips
+    // deleteChip(chipId: number): Observable<EpicChip> {
+    //     const refChip: EpicChip = this.chips
     //         .find(item => item.id === chipId)
     //
     //     this.chips = this.chips
@@ -165,8 +165,8 @@ export class EpicDbAgentChipsService {
 
 }
 
-export function generateChips(totalCount: number, idStartsFrom = 1): EpicChipEntity[] {
-    const result: EpicChipEntity[] = []
+export function generateChips(totalCount: number, idStartsFrom = 1): EpicChip[] {
+    const result: EpicChip[] = []
 
     for (let i = idStartsFrom; i <= idStartsFrom + totalCount; i++) {
         result.push({

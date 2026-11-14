@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWaferTypeCreateEntity, EpicWaferTypeCreateRequestDto, EpicWaferTypeEntity, EpicWaferTypeMapEntity } from 'epic/entities'
+import { EpicWaferTypeCreateRequestDto } from 'epic/entities'
+import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'epic-api-types'
 import { omit } from 'lodash-es'
 import { delay, map, Observable, of } from 'rxjs'
 
@@ -7,7 +8,7 @@ import { delay, map, Observable, of } from 'rxjs'
 @Injectable()
 export class EpicDbAgentWaferTypesService {
 
-    protected waferTypes: EpicWaferTypeEntity[] = [
+    protected waferTypes: EpicWaferType[] = [
         {
             id: 1,
             name: 'ER1',
@@ -40,7 +41,7 @@ export class EpicDbAgentWaferTypesService {
 
     protected waferTypeMaps: {[waferTypeId: number]: string | null } = {}
 
-    getAll(filter?: { waferIds?: number[] }): Observable<EpicWaferTypeEntity[]> {
+    getAll(filter?: { waferIds?: number[] }): Observable<EpicWaferType[]> {
         const result = filter?.waferIds
             ? this.waferTypes.filter(item => filter.waferIds.includes(item.id))
             : this.waferTypes
@@ -51,14 +52,14 @@ export class EpicDbAgentWaferTypesService {
             )
     }
 
-    getOneById(waferTypeId: number): Observable<EpicWaferTypeEntity | undefined> {
+    getOneById(waferTypeId: number): Observable<EpicWaferType | undefined> {
         return this.getAll()
             .pipe(
                 map(list => list.find(item => item.id === waferTypeId)),
             )
     }
 
-    create(createRequest: EpicWaferTypeCreateEntity): Observable<EpicWaferTypeEntity> {
+    create(createRequest: EpicWaferTypeCreateRequest): Observable<EpicWaferType> {
         const newWafer = {
             id: (this.waferTypes[this.waferTypes.length - 1]?.id || 0) + 1,
             ...omit(createRequest, 'waferMap' satisfies keyof EpicWaferTypeCreateRequestDto),
@@ -73,7 +74,7 @@ export class EpicDbAgentWaferTypesService {
             )
     }
 
-    getWaferTypeMap(waferTypeId: number): Observable<EpicWaferTypeMapEntity | undefined> {
+    getWaferTypeMap(waferTypeId: number): Observable<EpicWaferTypeMap | undefined> {
         return this.getOneById(waferTypeId)
             .pipe(
                 map(item => item

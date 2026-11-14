@@ -1,12 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicPageData,
-    EpicPager,
-    EpicSvtTestCreateEntity,
     EpicSvtTestEntity,
-    EpicSvtTestResolvedEntity,
-    EpicSvtTestsGetAllParams,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     resolveEpicSvtTestResultStatuses,
@@ -14,7 +9,14 @@ import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaSvtTests,
 } from 'epic/entities'
-import { EpicSvtTestStatus } from 'epic-api-types'
+import {
+    EpicApiPager,
+    EpicApiPageResponse,
+    EpicSvtTest,
+    EpicSvtTestCreateRequest,
+    EpicSvtTestsListQuery,
+    EpicSvtTestStatus,
+} from 'epic-api-types'
 import { map, Observable, of } from 'rxjs'
 
 import { EpicSvtTestSvc } from '../models'
@@ -29,8 +31,8 @@ export class EpicSvtTestsService implements OnModuleInit {
     }
 
     getAll(
-        queryFilter?: EpicSvtTestsGetAllParams,
-        pager?: EpicPager): Observable<EpicPageData<EpicSvtTestResolvedEntity>> {
+        queryFilter?: EpicSvtTestsListQuery,
+        pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicSvtTest>> {
 
         // the API filters by the synthetic status, the DB agent only knows the physical result status
         const testResultStatuses = queryFilter?.statuses?.length
@@ -76,7 +78,7 @@ export class EpicSvtTestsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicSvtTestCreateEntity): Observable<EpicSvtTestResolvedEntity> {
+    create(createRequest: EpicSvtTestCreateRequest): Observable<EpicSvtTest> {
         const message = new SvtDbAgentKafkaSvtTests.CreateSvtTestMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessage>(message)
             .pipe(
@@ -94,7 +96,7 @@ export class EpicSvtTestsService implements OnModuleInit {
      * The DB agent only knows the physical `testResultStatus`. The synthetic `status` is resolved here, on the
      * BFF — this is the seam where, later, the live processing state of other services gets folded in.
      */
-    protected resolveEntity(entity: EpicSvtTestEntity): EpicSvtTestResolvedEntity {
+    protected resolveEntity(entity: EpicSvtTestEntity): EpicSvtTest {
         return {
             ...entity,
             status: resolveEpicSvtTestStatus(entity.testResultStatus),

@@ -16,10 +16,12 @@ the one below it exists.
 
 Check `../Documentation/Kafka/SvtKafkaConventions.md` for the agreed message names **before** writing this.
 
-Create `svt-db-agent-kafka-<domain>s.ts`:
+Create `svt-db-agent-kafka-<domain>s.ts`. The messages carry the `epic-api-types` types of step 1.2 directly, so
+write those first:
 
 ```ts
-import { Epic<Domain>CreateEntity, Epic<Domain>Entity, Epic<Domain>sGetAllParams } from '../../../<domain>s'
+import { Epic<Domain>, Epic<Domain>sListQuery } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -32,7 +34,7 @@ export namespace SvtDbAgentKafka<Domain>s {
         Create<Domain>Reply = 'Create<Domain>Reply',
     }
 
-    export type GetAll<Domain>sData = { filter?: Epic<Domain>sGetAllParams }
+    export type GetAll<Domain>sData = { filter?: Epic<Domain>sListQuery }
 
     export class GetAll<Domain>sMessage extends EpicKafkaMessageClass<GetAll<Domain>sData> {
 
@@ -40,7 +42,7 @@ export namespace SvtDbAgentKafka<Domain>s {
 
     }
 
-    export type GetAll<Domain>sReplyMessageData = { items: Epic<Domain>Entity[] }
+    export type GetAll<Domain>sReplyMessageData = { items: Epic<Domain>[] }
 
     export class GetAll<Domain>sReplyMessage extends EpicKafkaReplyMessageClass<GetAll<Domain>sReplyMessageData> {
 
@@ -72,18 +74,18 @@ requests/index.ts, responses/index.ts, index.ts
 Export the domain from `libs/epic-api-types/src/index.ts`. No decorators and no framework imports — the root
 `eslint.config.mjs` rejects them.
 
-### 1.3 Entities + DTOs — `libs/epic/entities/src/<domain>s/`
+### 1.3 DTOs — `libs/epic/entities/src/<domain>s/`
 
 ```
-models/epic-<domain>.models.ts          Epic<Domain>Entity = Epic<Domain>, Epic<Domain>CreateEntity = Epic<Domain>CreateRequest
 dtos/epic-<domain>.dto.ts               Epic<Domain>Dto implements Epic<Domain>                (class-validator + @ApiProperty)
 dtos/epic-<domain>-create.dto.ts        Epic<Domain>CreateDto implements Epic<Domain>CreateRequest
 dtos/epic-<domain>s-get-all-params.dto.ts   … implements Epic<Domain>sListQuery, Partial<EpicApiPager>
-models/index.ts, dtos/index.ts, index.ts
+dtos/index.ts, index.ts
 ```
 
-Models are the Kafka wire shape — while it equals the HTTP shape, alias the `epic-api-types` type instead of
-repeating the field list. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
+There is no model for a Kafka wire shape that equals the HTTP shape — the messages use the `epic-api-types` type.
+Add `models/epic-<domain>.models.ts` only for a wire type that differs from it (`EpicSvtTestEntity`, the
+`*LocationUpdate` types). DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
 drive Swagger *and* the `ClassSerializerInterceptor`, and `implements` makes a field drifting from the contract
 fail to compile — except a renamed or missing member of a type with optional members (every `<Domain>sListQuery`).
 Pair those DTOs with their type in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts` (a list DTO
@@ -98,9 +100,9 @@ sees realistic async behaviour:
 @Injectable()
 export class EpicDbAgent<Domain>sService {
 
-    protected data: Epic<Domain>Entity[] = [ /* 2–3 realistic rows */ ]
+    protected data: Epic<Domain>[] = [ /* 2–3 realistic rows */ ]
 
-    getAll(queryFilter?: Epic<Domain>sGetAllParams): Observable<Epic<Domain>Entity[]> {
+    getAll(queryFilter?: Epic<Domain>sListQuery): Observable<Epic<Domain>[]> {
         const result = this.data.filter(item => !queryFilter?.ids || queryFilter.ids.includes(item.id))
         return of(result).pipe(delay(50))
     }
@@ -139,7 +141,7 @@ export class Epic<Domain>sService implements OnModuleInit {
     constructor(@Inject(Epic<Domain>Svc.SERVICE_NAME) private readonly kafkaClient: ClientKafka) {
     }
 
-    getAll(filter?: Epic<Domain>sGetAllParams): Observable<Epic<Domain>Entity[]> {
+    getAll(filter?: Epic<Domain>sListQuery): Observable<Epic<Domain>[]> {
         const message = new SvtDbAgentKafka<Domain>s.GetAll<Domain>sMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafka<Domain>s.GetAll<Domain>sReplyMessage>(message)
             .pipe(mapEpicKafkaMessageData(), mapSvtDbAgentListReplyData())
@@ -225,7 +227,7 @@ Register lazily in `src/app/app.routes.ts` and add the sidebar entry in
 
 - [ ] Kafka message namespace + barrel export
 - [ ] HTTP contract types in `epic-api-types` + barrel export
-- [ ] Entity aliases + DTOs (`implements`; list DTOs also paired in `contract/epic-api-contract-checks.models.ts`) + barrels + root `index.ts`
+- [ ] DTOs (`implements`; list DTOs also paired in `contract/epic-api-contract-checks.models.ts`) + barrels + root `index.ts`
 - [ ] db-agent service, module provider, controller `case`s + `@Payload()` union
 - [ ] API service, controller, module, registered in `app.module.ts`
 - [ ] `epic-ui/api` client (types from `epic-api-types`) + `__mock__` twin + `app.mock.providers.ts`

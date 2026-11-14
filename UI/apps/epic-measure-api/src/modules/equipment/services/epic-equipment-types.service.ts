@@ -1,14 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicEquipmentTypeCreateEntity,
-    EpicEquipmentTypeEntity,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaEquipmentTypes,
 } from 'epic/entities'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicEquipmentSvc } from '../models'
@@ -22,7 +21,7 @@ export class EpicEquipmentTypesService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentTypeEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentType[]> {
         const message = new SvtDbAgentKafkaEquipmentTypes.GetAllEquipmentTypesMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaEquipmentTypes.GetAllEquipmentTypesReplyMessage>(message)
             .pipe(
@@ -31,7 +30,7 @@ export class EpicEquipmentTypesService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicEquipmentTypeCreateEntity): Observable<EpicEquipmentTypeEntity> {
+    create(createRequest: EpicEquipmentTypeCreateRequest): Observable<EpicEquipmentType> {
         const message = new SvtDbAgentKafkaEquipmentTypes.CreateEquipmentTypeMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaEquipmentTypes.CreateEquipmentTypeReplyMessage>(message)
             .pipe(

@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicWaferTypeCreateRequestDto,
-    EpicWaferTypeEntity,
-    EpicWaferTypeMapEntity,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWaferTypes,
-} from 'epic/entities'
+import { EpicWaferTypeCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic/entities'
+import { EpicWaferType, EpicWaferTypeMap } from 'epic-api-types'
 import { SvtDbEnumsService, SvtDbWaferTypeEntity, SvtDbWaferTypesRepository, validateWaferMap } from 'svt-db/data'
 
 import {
@@ -47,7 +42,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
     }
 
     /** `data.filter.ids` is the only filter the C++ declares; absent means all. */
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferTypeEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferType>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const ids = optionalIntegerList(filter['ids'], 'data.filter.ids')
@@ -81,7 +76,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
         return { entity: toWire(entity) }
     }
 
-    private async getMap(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferTypeMapEntity>> {
+    private async getMap(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferTypeMap>> {
         const waferTypeId = requireInteger(requireRecord(data, 'data')['waferTypeId'], 'data.waferTypeId')
         const map = await this.waferTypes.findMap(waferTypeId)
         if (!map) {
@@ -92,7 +87,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
 
 }
 
-function toWire(entity: SvtDbWaferTypeEntity): EpicWaferTypeEntity {
+function toWire(entity: SvtDbWaferTypeEntity): EpicWaferType {
     return {
         id: entity.id,
         name: entity.name,

@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import {
-    EpicChipCreateManyRequestDto,
-    EpicChipCreateRequestDto,
-    EpicChipEntity,
-    EpicChipLocationHistoryRecordEntity,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaChips,
-} from 'epic/entities'
+import { EpicChipCreateManyRequestDto, EpicChipCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic/entities'
+import { EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
 import {
     SvtDbAsicsRepository,
     SvtDbChipCreateInput,
@@ -88,7 +82,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicChipEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicChip>> {
         const body = optionalRecord(data, 'data')
         const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, FILTER_KEYS)
@@ -148,7 +142,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
         return { entity: toWire(chip) }
     }
 
-    private async getLocationHistory(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicChipLocationHistoryRecordEntity>> {
+    private async getLocationHistory(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicChipLocationHistoryRecord>> {
         const chipId = requireInteger(requireRecord(data, 'data')['chipId'], 'data.chipId')
         if (!(await this.chips.findById(chipId))) {
             throw SvtDbAgentNextRequestError.notFound(`Chip ${chipId} not found`)
@@ -196,7 +190,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
 
 }
 
-function toWire({ chip, familyType }: SvtDbChipWithFamilyType): EpicChipEntity {
+function toWire({ chip, familyType }: SvtDbChipWithFamilyType): EpicChip {
     return {
         id: chip.id,
         serialNumber: chip.serialNumber,
@@ -205,7 +199,7 @@ function toWire({ chip, familyType }: SvtDbChipWithFamilyType): EpicChipEntity {
     }
 }
 
-function toWireLocation(row: SvtDbChipLocationEntity): EpicChipLocationHistoryRecordEntity {
+function toWireLocation(row: SvtDbChipLocationEntity): EpicChipLocationHistoryRecord {
     return {
         chipId: row.chip.id,
         generalLocation: row.generalLocation,

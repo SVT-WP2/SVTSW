@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestSetupCreateDto,
-    EpicSvtTestSetupEntity,
-    EpicSvtTestSetupUpdateDto,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestSetups,
-} from 'epic/entities'
+import { EpicSvtTestSetupCreateDto, EpicSvtTestSetupUpdateDto, SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetups } from 'epic/entities'
+import { EpicSvtTestSetup } from 'epic-api-types'
 import {
     SvtDbEnumsService,
     SvtDbSvtTestSetupConfigsRepository,
@@ -56,7 +51,7 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestSetupEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestSetup>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const items = await this.setups.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
@@ -115,7 +110,7 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
 
 }
 
-function toWire({ setup, defaultConfigId }: SvtDbSvtTestSetupWithDefault): EpicSvtTestSetupEntity {
+function toWire({ setup, defaultConfigId }: SvtDbSvtTestSetupWithDefault): EpicSvtTestSetup {
     return {
         id: setup.id,
         name: setup.name,

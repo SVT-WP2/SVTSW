@@ -1,9 +1,10 @@
 import {
-    EpicSvtTestTypeConfigBodyEntity,
-    EpicSvtTestTypeConfigCreateEntity,
-    EpicSvtTestTypeConfigEntity,
-    EpicSvtTestTypeConfigsGetAllParams,
-} from '../../../svt-tests'
+    EpicSvtTestTypeConfig,
+    EpicSvtTestTypeConfigBody,
+    EpicSvtTestTypeConfigCreateRequest,
+    EpicSvtTestTypeConfigsListQuery,
+} from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 
@@ -21,7 +22,7 @@ export namespace SvtDbAgentKafkaSvtTestTypeConfigs {
     // GET ALL
 
     export type GetAllSvtTestTypeConfigsData = {
-        filter?: EpicSvtTestTypeConfigsGetAllParams
+        filter?: EpicSvtTestTypeConfigsListQuery
     }
 
     export class GetAllSvtTestTypeConfigsMessage extends EpicKafkaMessageClass<GetAllSvtTestTypeConfigsData> {
@@ -31,7 +32,7 @@ export namespace SvtDbAgentKafkaSvtTestTypeConfigs {
     }
 
     export type GetAllSvtTestTypeConfigsReplyMessageData = {
-        items: EpicSvtTestTypeConfigEntity[]
+        items: EpicSvtTestTypeConfig[]
     }
 
     export class GetAllSvtTestTypeConfigsReplyMessage extends EpicKafkaReplyMessageClass<GetAllSvtTestTypeConfigsReplyMessageData> {
@@ -43,7 +44,7 @@ export namespace SvtDbAgentKafkaSvtTestTypeConfigs {
     // CREATE
 
     export type CreateSvtTestTypeConfigMessageData = {
-        create: EpicSvtTestTypeConfigCreateEntity
+        create: EpicSvtTestTypeConfigCreateRequest
     }
 
     export class CreateSvtTestTypeConfigMessage extends EpicKafkaMessageClass<CreateSvtTestTypeConfigMessageData> {
@@ -53,7 +54,7 @@ export namespace SvtDbAgentKafkaSvtTestTypeConfigs {
     }
 
     export type CreateSvtTestTypeConfigReplyMessageData = {
-        entity: EpicSvtTestTypeConfigEntity
+        entity: EpicSvtTestTypeConfig
     }
 
     export class CreateSvtTestTypeConfigReplyMessage extends EpicKafkaReplyMessageClass<CreateSvtTestTypeConfigReplyMessageData> {
@@ -75,7 +76,7 @@ export namespace SvtDbAgentKafkaSvtTestTypeConfigs {
     }
 
     export type GetSvtTestTypeConfigBodyReplyMessageData = {
-        entity: EpicSvtTestTypeConfigBodyEntity
+        entity: EpicSvtTestTypeConfigBody
     }
 
     export class GetSvtTestTypeConfigBodyReplyMessage extends EpicKafkaReplyMessageClass<GetSvtTestTypeConfigBodyReplyMessageData> {

@@ -1,16 +1,18 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicSvtTestTypeConfigBodyEntity,
-    EpicSvtTestTypeConfigCreateEntity,
-    EpicSvtTestTypeConfigEntity,
-    EpicSvtTestTypeConfigsGetAllParams,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaSvtTestTypeConfigs,
 } from 'epic/entities'
+import {
+    EpicSvtTestTypeConfig,
+    EpicSvtTestTypeConfigBody,
+    EpicSvtTestTypeConfigCreateRequest,
+    EpicSvtTestTypeConfigsListQuery,
+} from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicSvtTestSvc } from '../models'
@@ -24,7 +26,7 @@ export class EpicSvtTestTypeConfigsService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: EpicSvtTestTypeConfigsGetAllParams): Observable<EpicSvtTestTypeConfigEntity[]> {
+    getAll(filter?: EpicSvtTestTypeConfigsListQuery): Observable<EpicSvtTestTypeConfig[]> {
         const message = new SvtDbAgentKafkaSvtTestTypeConfigs.GetAllSvtTestTypeConfigsMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypeConfigs.GetAllSvtTestTypeConfigsReplyMessage>(message)
             .pipe(
@@ -33,7 +35,7 @@ export class EpicSvtTestTypeConfigsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicSvtTestTypeConfigCreateEntity): Observable<EpicSvtTestTypeConfigEntity> {
+    create(createRequest: EpicSvtTestTypeConfigCreateRequest): Observable<EpicSvtTestTypeConfig> {
         const message = new SvtDbAgentKafkaSvtTestTypeConfigs.CreateSvtTestTypeConfigMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypeConfigs.CreateSvtTestTypeConfigReplyMessage>(message)
             .pipe(
@@ -42,7 +44,7 @@ export class EpicSvtTestTypeConfigsService implements OnModuleInit {
             )
     }
 
-    getConfigBody(testTypeConfigId: number): Observable<EpicSvtTestTypeConfigBodyEntity> {
+    getConfigBody(testTypeConfigId: number): Observable<EpicSvtTestTypeConfigBody> {
         const message = new SvtDbAgentKafkaSvtTestTypeConfigs.GetSvtTestTypeConfigBodyMessage({ id: testTypeConfigId })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaSvtTestTypeConfigs.GetSvtTestTypeConfigBodyReplyMessage>(message)
             .pipe(

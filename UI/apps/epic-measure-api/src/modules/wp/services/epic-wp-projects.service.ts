@@ -1,14 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import {
-    EpicWpProjectCreateEntity,
-    EpicWpProjectEntity,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaWpProjects,
 } from 'epic/entities'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
 
 import { EpicWpSvc } from '../models'
@@ -22,7 +21,7 @@ export class EpicWpProjectsService implements OnModuleInit {
     ) {
     }
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicWpProjectEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicWpProject[]> {
         const message = new SvtDbAgentKafkaWpProjects.GetAllWpProjectsMessage({ filter })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpProjects.GetAllWpProjectsReplyMessage>(message)
             .pipe(
@@ -31,7 +30,7 @@ export class EpicWpProjectsService implements OnModuleInit {
             )
     }
 
-    create(createRequest: EpicWpProjectCreateEntity): Observable<EpicWpProjectEntity> {
+    create(createRequest: EpicWpProjectCreateRequest): Observable<EpicWpProject> {
         const message = new SvtDbAgentKafkaWpProjects.CreateWpProjectMessage({ create: createRequest })
         return this.sendMessageAndGetReply<SvtDbAgentKafkaWpProjects.CreateWpProjectReplyMessage>(message)
             .pipe(

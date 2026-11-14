@@ -1,5 +1,5 @@
 import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicChipLocationHistoryRecordEntity } from 'epic/entities'
+import { EpicChipLocationHistoryRecord } from 'epic-api-types'
 
 
 /**
@@ -7,7 +7,7 @@ import { EpicChipLocationHistoryRecordEntity } from 'epic/entities'
  * is a reply shape without validators on `note` and `username`, so the request is validated with this one:
  * `date` and `username` may be `null` or absent (the database stamps the day), `note` may be absent.
  */
-export class SvtDbAgentNextChipLocationRecordDto implements EpicChipLocationHistoryRecordEntity {
+export class SvtDbAgentNextChipLocationRecordDto implements EpicChipLocationHistoryRecord {
 
     @IsInt()
     chipId!: number

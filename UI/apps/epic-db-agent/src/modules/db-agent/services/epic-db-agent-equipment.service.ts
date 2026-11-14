@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipmentCreateEntity, EpicEquipmentEntity, EpicEquipmentLocationHistoryRecordEntity } from 'epic/entities'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
 import moment from 'moment'
 import { delay, map, Observable, of } from 'rxjs'
 
@@ -9,7 +9,7 @@ import { getEnumsCollection } from './epic-db-agent-enums.service'
 @Injectable()
 export class EpicDbAgentEquipmentService {
 
-    protected data: EpicEquipmentEntity[] = [
+    protected data: EpicEquipment[] = [
         {
             id: 1,
             name: 'Equipment #1',
@@ -40,8 +40,8 @@ export class EpicDbAgentEquipmentService {
         },
     ]
 
-    protected locationHistory: { [equipmentId: string]: EpicEquipmentLocationHistoryRecordEntity[] } = this.data
-        .reduce<{ [equipmentId: string]: EpicEquipmentLocationHistoryRecordEntity[] }>(
+    protected locationHistory: { [equipmentId: string]: EpicEquipmentLocationHistoryRecord[] } = this.data
+        .reduce<{ [equipmentId: string]: EpicEquipmentLocationHistoryRecord[] }>(
             (acc, equipment) => {
                 return {
                     ...acc,
@@ -57,7 +57,7 @@ export class EpicDbAgentEquipmentService {
             {},
         )
 
-    getAll(filter?: { ids?: number[] }): Observable<EpicEquipmentEntity[]> {
+    getAll(filter?: { ids?: number[] }): Observable<EpicEquipment[]> {
         const result = filter?.ids
             ? this.data.filter(item => filter.ids.includes(item.id))
             : this.data
@@ -68,15 +68,15 @@ export class EpicDbAgentEquipmentService {
             )
     }
 
-    getOneById(entityId: number): Observable<EpicEquipmentEntity | undefined> {
+    getOneById(entityId: number): Observable<EpicEquipment | undefined> {
         return this.getAll({ ids: [entityId] })
             .pipe(
                 map(list => list[0]),
             )
     }
 
-    create(createRequest: EpicEquipmentCreateEntity): Observable<EpicEquipmentEntity> {
-        const newEquipment: EpicEquipmentEntity = {
+    create(createRequest: EpicEquipmentCreateRequest): Observable<EpicEquipment> {
+        const newEquipment: EpicEquipment = {
             id: (this.data[this.data.length - 1]?.id || 0) + 1,
             ...createRequest,
         }
@@ -89,8 +89,8 @@ export class EpicDbAgentEquipmentService {
             )
     }
 
-    update(equipmentId: number, updateRequest: Partial<Omit<EpicEquipmentEntity, 'id'>>): Observable<EpicEquipmentEntity | null> {
-        let refEquipment: EpicEquipmentEntity = null
+    update(equipmentId: number, updateRequest: Partial<Omit<EpicEquipment, 'id'>>): Observable<EpicEquipment | null> {
+        let refEquipment: EpicEquipment = null
 
         this.data = this.data
             .map(item => {
@@ -110,14 +110,14 @@ export class EpicDbAgentEquipmentService {
             )
     }
 
-    getEquipmentLocationHistory(equipmentId: number): Observable<EpicEquipmentLocationHistoryRecordEntity[]> {
+    getEquipmentLocationHistory(equipmentId: number): Observable<EpicEquipmentLocationHistoryRecord[]> {
         return of(this.locationHistory[equipmentId] ?? [])
             .pipe(
                 delay(500),
             )
     }
 
-    updateEquipmentLocation(location: EpicEquipmentLocationHistoryRecordEntity): Observable<EpicEquipmentEntity> {
+    updateEquipmentLocation(location: EpicEquipmentLocationHistoryRecord): Observable<EpicEquipment> {
         this.locationHistory[location.equipmentId] = [
             ...(this.locationHistory[location.equipmentId] ?? []),
             location,

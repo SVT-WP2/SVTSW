@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicSvtTestTemplateCreateDto,
-    EpicSvtTestTemplateEntity,
-    EpicSvtTestTemplateUpdateDto,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaSvtTestTemplates,
-} from 'epic/entities'
+import { EpicSvtTestTemplateCreateDto, EpicSvtTestTemplateUpdateDto, SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTemplates } from 'epic/entities'
+import { EpicSvtTestTemplate } from 'epic-api-types'
 import {
     SvtDbEnumsService,
     SvtDbSvtTestTemplatesRepository,
@@ -67,7 +62,7 @@ export class SvtDbAgentNextSvtTestTemplatesHandlers implements SvtDbAgentNextMes
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTemplateEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTemplate>> {
         const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'dutTypes'])
         const items = await this.templates.findAll({
@@ -110,7 +105,7 @@ export class SvtDbAgentNextSvtTestTemplatesHandlers implements SvtDbAgentNextMes
 
 }
 
-function toWire({ template, testTypeId }: SvtDbSvtTestTemplateWithTestType): EpicSvtTestTemplateEntity {
+function toWire({ template, testTypeId }: SvtDbSvtTestTemplateWithTestType): EpicSvtTestTemplate {
     return {
         id: template.id,
         dutType: template.dutType,

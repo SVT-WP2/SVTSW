@@ -1,7 +1,6 @@
-import { EpicDateTimeString, EpicSvtTestResultStatus } from 'epic-api-types'
+import { EpicApiPager, EpicDateTimeString, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
 
-import { EpicPager } from '../../../common'
-import { EpicSvtTestCreateEntity, EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../../../svt-tests'
+import { EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../../../svt-tests'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -52,7 +51,7 @@ export namespace SvtDbAgentKafkaSvtTests {
 
     export type GetAllSvtTestsData = {
         filter?: GetAllSvtTestsFilter
-        pager?: EpicPager
+        pager?: EpicApiPager
     }
 
     export class GetAllSvtTestsMessage extends EpicKafkaMessageClass<GetAllSvtTestsData> {
@@ -72,7 +71,7 @@ export namespace SvtDbAgentKafkaSvtTests {
     // CREATE
 
     export type CreateSvtTestMessageData = {
-        create: EpicSvtTestCreateEntity
+        create: EpicSvtTestCreateRequest
     }
 
     export class CreateSvtTestMessage extends EpicKafkaMessageClass<CreateSvtTestMessageData> {

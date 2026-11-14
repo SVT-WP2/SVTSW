@@ -1,4 +1,5 @@
-import { EpicWaferTypeCreateEntity, EpicWaferTypeEntity, EpicWaferTypeMapEntity } from '../../../wafer-types'
+import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -28,7 +29,7 @@ export namespace SvtDbAgentKafkaWaferTypes {
     }
 
     export class GetAllWaferTypesReplyMessage
-        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicWaferTypeEntity>> {
+        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicWaferType>> {
 
         readonly type = MessageType.GetAllWaferTypesReply
 
@@ -37,7 +38,7 @@ export namespace SvtDbAgentKafkaWaferTypes {
     // CREATE
 
     export type CreateWaferTypeMessageData = {
-        create: EpicWaferTypeCreateEntity
+        create: EpicWaferTypeCreateRequest
     }
 
     export class CreateWaferTypeMessage extends EpicKafkaMessageClass<CreateWaferTypeMessageData> {
@@ -47,7 +48,7 @@ export namespace SvtDbAgentKafkaWaferTypes {
     }
 
     export type CreateWaferTypeReplyMessageData = {
-        entity: EpicWaferTypeEntity
+        entity: EpicWaferType
     }
 
     export class CreateWaferTypeReplyMessage extends EpicKafkaReplyMessageClass<CreateWaferTypeReplyMessageData> {
@@ -68,7 +69,7 @@ export namespace SvtDbAgentKafkaWaferTypes {
 
     }
 
-    export type GetWaferTypeMapMessageReplyData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferTypeMapEntity>
+    export type GetWaferTypeMapMessageReplyData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWaferTypeMap>
 
     export class GetWaferTypeMapReplyMessage extends EpicKafkaReplyMessageClass<GetWaferTypeMapMessageReplyData> {
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicAsicCreateRequestDto, EpicAsicEntity, SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'epic/entities'
+import { EpicAsicCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'epic/entities'
+import { EpicAsic } from 'epic-api-types'
 import { SvtDbAsicsRepository, SvtDbAsicWithChip, SvtDbEnumsService, SvtDbWafersRepository } from 'svt-db/data'
 
 import {
@@ -47,7 +48,7 @@ export class SvtDbAgentNextAsicsHandlers implements SvtDbAgentNextMessageHandler
         ]
     }
 
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicAsicEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicAsic>> {
         const body = optionalRecord(data, 'data')
         const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, FILTER_KEYS)
@@ -92,7 +93,7 @@ export class SvtDbAgentNextAsicsHandlers implements SvtDbAgentNextMessageHandler
 
 }
 
-function toWire({ asic, chipId }: SvtDbAsicWithChip): EpicAsicEntity {
+function toWire({ asic, chipId }: SvtDbAsicWithChip): EpicAsic {
     return {
         id: asic.id,
         serialNumber: asic.serialNumber,

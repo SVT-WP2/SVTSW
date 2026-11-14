@@ -1,5 +1,6 @@
-import { EpicAsicCreateEntity, EpicAsicEntity, EpicGetAllAsicsQueryFilter } from '../../../asics'
-import { EpicPager } from '../../../common'
+import { EpicApiPager, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
+
+import { EpicGetAllAsicsQueryFilter } from '../../../asics'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -18,7 +19,7 @@ export namespace SvtDbAgentKafkaAsics {
 
     export type GetAllAsicsMessageData = {
         filter?: EpicGetAllAsicsQueryFilter
-        pager?: EpicPager
+        pager?: EpicApiPager
     }
 
     export class GetAllAsicsMessage extends EpicKafkaMessageClass<GetAllAsicsMessageData> {
@@ -27,7 +28,7 @@ export namespace SvtDbAgentKafkaAsics {
 
     }
 
-    export type GetAllAsicsReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicAsicEntity>
+    export type GetAllAsicsReplyMessageData = SvtDbAgentKafka.PageReplyMessageData<EpicAsic>
 
     export class GetAllAsicsReplyMessage extends EpicKafkaReplyMessageClass<GetAllAsicsReplyMessageData> {
 
@@ -38,7 +39,7 @@ export namespace SvtDbAgentKafkaAsics {
     // CREATE
 
     export type CreateAsicMessageData = {
-        create: EpicAsicCreateEntity
+        create: EpicAsicCreateRequest
     }
 
     export class CreateAsicMessage extends EpicKafkaMessageClass<CreateAsicMessageData> {
@@ -48,7 +49,7 @@ export namespace SvtDbAgentKafkaAsics {
     }
 
     export type CreateAsicReplyMessageData = {
-        entity: EpicAsicEntity
+        entity: EpicAsic
     }
 
     export class CreateAsicReplyMessage extends EpicKafkaReplyMessageClass<CreateAsicReplyMessageData> {

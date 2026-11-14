@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import {
-    EpicWaferCreateRequestDto,
-    EpicWaferEntity,
-    EpicWaferLocationHistoryRecordEntity,
-    EpicWaferUpdateRequestDto,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWafers,
-} from 'epic/entities'
+import { EpicWaferCreateRequestDto, EpicWaferUpdateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic/entities'
+import { EpicWafer, EpicWaferLocationHistoryRecord } from 'epic-api-types'
 import {
     generateAsics,
     SvtDbEnumsService,
@@ -73,7 +67,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
     }
 
     /** `data.filter.ids` and `data.pager`, both optional; the page is counted database-side. */
-    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferEntity>> {
+    private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWafer>> {
         const body = optionalRecord(data, 'data')
         const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
@@ -153,7 +147,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
         return { entity: toWire(wafer) }
     }
 
-    private async getLocationHistory(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferLocationHistoryRecordEntity>> {
+    private async getLocationHistory(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferLocationHistoryRecord>> {
         const waferId = requireInteger(requireRecord(data, 'data')['waferId'], 'data.waferId')
         if (!(await this.wafers.findById(waferId))) {
             throw SvtDbAgentNextRequestError.notFound(`Wafer ${waferId} not found`)
@@ -181,7 +175,7 @@ function generateAsicsOrBadRequest(serialNumber: string, map: SvtDbWaferMap) {
     }
 }
 
-function toWire(wafer: SvtDbWaferEntity): EpicWaferEntity {
+function toWire(wafer: SvtDbWaferEntity): EpicWafer {
     return {
         id: wafer.id,
         serialNumber: wafer.serialNumber,
@@ -194,7 +188,7 @@ function toWire(wafer: SvtDbWaferEntity): EpicWaferEntity {
     }
 }
 
-function toWireLocation(row: SvtDbWaferLocationEntity): EpicWaferLocationHistoryRecordEntity {
+function toWireLocation(row: SvtDbWaferLocationEntity): EpicWaferLocationHistoryRecord {
     return {
         waferId: row.wafer.id,
         generalLocation: row.generalLocation,

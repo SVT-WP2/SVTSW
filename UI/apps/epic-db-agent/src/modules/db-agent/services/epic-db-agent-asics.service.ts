@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicAsicCreateEntity, EpicAsicEntity, EpicGetAllAsicsQueryFilter, EpicPageData, EpicPager } from 'epic/entities'
+import { EpicGetAllAsicsQueryFilter } from 'epic/entities'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
@@ -9,7 +10,7 @@ import { EpicDbAgentWafersService } from './epic-db-agent-wafers.service'
 @Injectable()
 export class EpicDbAgentAsicsService {
 
-    protected asics: EpicAsicEntity[] = [
+    protected asics: EpicAsic[] = [
         ...generateAsics(1, 80 * 1000, 1),
         ...generateAsics(2, 80 * 1000, 800 * 1000 + 2),
     ]
@@ -18,7 +19,7 @@ export class EpicDbAgentAsicsService {
     constructor(private readonly epicDbAgentWafersService: EpicDbAgentWafersService) {
     }
 
-    getAllAsics(queryFilter?: EpicGetAllAsicsQueryFilter, pager?: EpicPager ): Observable<EpicPageData<EpicAsicEntity>> {
+    getAllAsics(queryFilter?: EpicGetAllAsicsQueryFilter, pager?: EpicApiPager ): Observable<EpicApiPageResponse<EpicAsic>> {
         const filteredData = queryFilter
             ? this.asics.filter(item => {
                 const fulfilWaferIdFilter = !queryFilter.waferId || (queryFilter.waferId === item.waferId)
@@ -50,9 +51,9 @@ export class EpicDbAgentAsicsService {
             )
     }
 
-    createAsic(createRequest: EpicAsicCreateEntity): Observable<EpicAsicEntity> {
+    createAsic(createRequest: EpicAsicCreateRequest): Observable<EpicAsic> {
 
-        const newEntity: EpicAsicEntity = {
+        const newEntity: EpicAsic = {
             id: (this.asics[this.asics.length - 1]?.id || 0) + 1,
             ...createRequest,
         }
@@ -64,7 +65,7 @@ export class EpicDbAgentAsicsService {
             )
     }
 
-    protected decorateAsic(base: EpicAsicEntity): Observable<EpicAsicEntity> {
+    protected decorateAsic(base: EpicAsic): Observable<EpicAsic> {
         return this.epicDbAgentWafersService.getWaferById(base.waferId)
             .pipe(
                 switchMap(wafer =>
@@ -79,8 +80,8 @@ export class EpicDbAgentAsicsService {
 
 }
 
-export function generateAsics(waferId: number, totalCount: number, idStartsFrom = 1): EpicAsicEntity[] {
-    const result: EpicAsicEntity[] = []
+export function generateAsics(waferId: number, totalCount: number, idStartsFrom = 1): EpicAsic[] {
+    const result: EpicAsic[] = []
 
     for (let i = idStartsFrom; i <= idStartsFrom + totalCount; i++) {
         result.push({

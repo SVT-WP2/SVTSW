@@ -1,4 +1,5 @@
-import { EpicEquipmentCreateEntity, EpicEquipmentEntity, EpicEquipmentLocationHistoryRecordEntity } from '../../../equipment'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
+
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
@@ -33,7 +34,7 @@ export namespace SvtDbAgentKafkaEquipment {
     }
 
     export class GetAllEquipmentReplyMessage
-        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicEquipmentEntity>> {
+        extends EpicKafkaReplyMessageClass<SvtDbAgentKafka.ListReplyMessageData<EpicEquipment>> {
 
         readonly type = MessageType.GetAllEquipmentReply
 
@@ -42,7 +43,7 @@ export namespace SvtDbAgentKafkaEquipment {
     // CREATE
 
     export type CreateEquipmentMessageData = {
-        create: EpicEquipmentCreateEntity
+        create: EpicEquipmentCreateRequest
     }
 
     export class CreateEquipmentMessage extends EpicKafkaMessageClass<CreateEquipmentMessageData> {
@@ -52,7 +53,7 @@ export namespace SvtDbAgentKafkaEquipment {
     }
 
     export type CreateEquipmentReplyMessageData = {
-        entity: EpicEquipmentEntity
+        entity: EpicEquipment
     }
 
     export class CreateEquipmentReplyMessage extends EpicKafkaReplyMessageClass<CreateEquipmentReplyMessageData> {
@@ -64,13 +65,13 @@ export namespace SvtDbAgentKafkaEquipment {
 
     // LOCATION
 
-    export class UpdateEquipmentLocationMessage extends EpicKafkaMessageClass<EpicEquipmentLocationHistoryRecordEntity> {
+    export class UpdateEquipmentLocationMessage extends EpicKafkaMessageClass<EpicEquipmentLocationHistoryRecord> {
 
         readonly type = MessageType.UpdateEquipmentLocation
 
     }
 
-    export type UpdateEquipmentLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicEquipmentEntity>
+    export type UpdateEquipmentLocationReplyMessageData = SvtDbAgentKafka.OneEntityReplyMessageData<EpicEquipment>
 
     export class UpdateEquipmentLocationReplyMessage extends EpicKafkaReplyMessageClass<UpdateEquipmentLocationReplyMessageData> {
 
@@ -88,7 +89,7 @@ export namespace SvtDbAgentKafkaEquipment {
 
     }
 
-    export type GetEquipmentLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicEquipmentLocationHistoryRecordEntity>
+    export type GetEquipmentLocationHistoryReplyMessageData = SvtDbAgentKafka.ListReplyMessageData<EpicEquipmentLocationHistoryRecord>
 
     export class GetEquipmentLocationHistoryReplyMessage extends EpicKafkaReplyMessageClass<GetEquipmentLocationHistoryReplyMessageData> {
 
