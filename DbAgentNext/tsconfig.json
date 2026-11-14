@@ -1,0 +1,43 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "dist/out-tsc",
+        "target": "es2021",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "lib": [
+            "ES2022"
+        ],
+        "types": [
+            "node"
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strictPropertyInitialization": false,
+        "useDefineForClassFields": false,
+        "resolveJsonModule": true,
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "paths": {
+            "svt-ts-types": [
+                "../Shared/svt-ts-types/main/src/index.ts"
+            ],
+            "svt-ts-types/kafka": [
+                "../Shared/svt-ts-types/kafka/src/index.ts"
+            ]
+        }
+    },
+    "files": [],
+    "include": [],
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        },
+        {
+            "path": "./tsconfig.spec.json"
+        }
+    ]
+}

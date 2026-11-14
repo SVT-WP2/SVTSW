@@ -2,7 +2,7 @@
 
 The TypeScript contract types of SVTSW, compiled into more than one deployable: the Angular SPA, the BFF and the
 mock DB agent of `UI/`, and the NestJS DB agent. It lives outside `UI/` because its consumers are not all in
-that workspace ([05-repository-layout-plan.md](../../UI/docs/db-agent-clone/05-repository-layout-plan.md)).
+that workspace ([05-repository-layout-plan.md](../../DbAgentNext/docs/05-repository-layout-plan.md)).
 
 | Entry point | Alias | Holds | Consumers |
 |---|---|---|---|

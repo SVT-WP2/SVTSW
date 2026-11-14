@@ -123,7 +123,7 @@ against the real agent, and vice versa.
 ## 7. What happens with these findings
 
 Decisions on which of these behaviours a re-implementation should preserve or change are kept
-outside this folder, in [UI/docs/db-agent-clone](../../UI/docs/db-agent-clone/README.md), and what
+outside this folder, in [DbAgentNext/docs](../../DbAgentNext/docs/README.md), and what
 the re-implementation actually does is its own contract,
 [Documentation/Kafka/svt.db-agent-next.kafka.yaml](../../Documentation/Kafka/svt.db-agent-next.kafka.yaml),
 which quotes the ids of this document. This document only records what runs today.

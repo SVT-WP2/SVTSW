@@ -51,7 +51,7 @@ services:
         max-file: "5"
 
   # The DB agent of this environment is svt-db-agent-next, the NestJS
-  # re-implementation built from UI/apps/svt-db-agent-next (prod still runs the
+  # re-implementation built from DbAgentNext/ (prod still runs the
   # C++ svt-db-agent). Same SVT_DB_AGENT_* variables as the C++ container, no log
   # volume (it logs to stdout), and GET /health on port 7676 inside the network
   # (not published; the image's HEALTHCHECK probes it).

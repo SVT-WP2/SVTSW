@@ -23,7 +23,7 @@ in [`../README.md`](../README.md) — this page only lists what is dev-specific.
 - App containers reach the broker at `kafka:9094` (in-network INSIDE listener).
 - The DB agent is **`svt-db-agent-next`** (container `svt.db-agent-next--dev`,
   image `ghcr.io/svt-wp2/svt-db-agent-next`), the NestJS re-implementation
-  built from `UI/apps/svt-db-agent-next`. Prod still runs the C++
+  built from `DbAgentNext/`. Prod still runs the C++
   `svt-db-agent`; see [`../README.md`](../README.md#the-two-db-agent-services).
 - Deploys to dev happen automatically on every master push touching a service,
   on every release tag, or manually via the `:: Manual` workflows
@@ -44,7 +44,7 @@ does the same while restarting the whole app stack). Keep the
 `SVT_DB_AGENT_VERSION=` line in `versions.env` or delete it; nothing reads it.
 
 Until the Kafka layer of the re-implementation lands (phase 4 of
-`UI/docs/db-agent-clone/dev-plan/`), the dev stack has **no consumer on
+`DbAgentNext/docs/dev-plan/`), the dev stack has **no consumer on
 `svt.db-agent.request`**: the UI on dev gets no replies. To run the C++ agent
 on dev again in the meantime, restore its service block in the compose file
 from git history and deploy it with `bash Environment/deploy-service.sh dev

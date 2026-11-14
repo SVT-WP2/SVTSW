@@ -73,7 +73,7 @@ All DbAgent automation lives in [`.github/workflows`](../.github/workflows):
 | `db-agent-manual.yml` (`DbAgent :: Manual`) | Manual (`workflow_dispatch`) | Manual ops: build a short-SHA image, deploy a release to prod |
 
 > **Since 2026-11 the dev environment runs the NestJS re-implementation** `svt-db-agent-next`
-> (built from `UI/apps/svt-db-agent-next`, pipelines `db-agent-next*.yml`), so the C++ agent is no
+> (built from `DbAgentNext/`, pipelines `db-agent-next*.yml`), so the C++ agent is no
 > longer deployed to dev — neither automatically nor manually — and is deployed to **prod only**, by
 > hand. See [`Environment/README.md`](../Environment/README.md#the-two-db-agent-services). The
 > dev-deploy steps that used to be described here were removed from the workflows.

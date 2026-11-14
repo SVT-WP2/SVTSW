@@ -3,10 +3,10 @@ info:
   title: SVT DB Agent Next
   description: |
     The Kafka communication layer definitions for `svt-db-agent-next`, the NestJS re-implementation of the
-    `SVT DB Agent Service` (`UI/apps/svt-db-agent-next`). It serves the same topics and message types as the
+    `SVT DB Agent Service` (`DbAgentNext/`). It serves the same topics and message types as the
     C++ agent, whose contract stays in `svt.db-agent.kafka.yaml`; this file describes what the re-implementation
     does, so that every difference from the C++ agent is documented here and not only in the code. The
-    reasoning behind each difference is in `UI/docs/db-agent-clone/01-behaviour-decisions.md`; the ids `D-…`,
+    reasoning behind each difference is in `DbAgentNext/docs/01-behaviour-decisions.md`; the ids `D-…`,
     `R-…`, `X-…` quoted below are the rows of `DbAgent/docs/07-contract-drift-and-quirks.md`, and `Q-n` the
     questions of `DbAgent/docs/08-questions-for-the-author.md`.
 
@@ -78,7 +78,7 @@ info:
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
     - SVT Kafka Naming Conventions: [README](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/SvtKafkaConventions.md)
     - The C++ agent's contract: [svt.db-agent.kafka.yaml](https://github.com/SVT-WP2/SVTSW/blob/master/Documentation/Kafka/svt.db-agent.kafka.yaml)
-    - The decisions behind the differences: [01-behaviour-decisions.md](https://github.com/SVT-WP2/SVTSW/blob/master/UI/docs/db-agent-clone/01-behaviour-decisions.md)
+    - The decisions behind the differences: [01-behaviour-decisions.md](https://github.com/SVT-WP2/SVTSW/blob/master/DbAgentNext/docs/01-behaviour-decisions.md)
   version: 1.0.0
 #
 paths:

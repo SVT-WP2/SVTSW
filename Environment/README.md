@@ -63,14 +63,14 @@ bash Environment/deploy-service.sh dev svt-ui 1a2b3c4d
 
 ## The two DB agent services
 
-The DB agent is being re-implemented in NestJS inside the UI workspace
-(`UI/apps/svt-db-agent-next`, notes in `UI/docs/db-agent-clone/`). During the
+The DB agent is being re-implemented in NestJS as a standalone app
+(`DbAgentNext/`, notes in `DbAgentNext/docs/`). During the
 transition the two environments run different agents:
 
 | | dev | prod |
 | --- | --- | --- |
 | Compose service / container | `svt-db-agent-next` / `svt.db-agent-next--dev` | `svt-db-agent` / `svt.db-agent--prod` |
-| Image | `ghcr.io/svt-wp2/svt-db-agent-next` (built from `UI/`, `UI/apps/svt-db-agent-next/Dockerfile`) | `ghcr.io/svt-wp2/svt-db-agent` (built from `DbAgent/`) |
+| Image | `ghcr.io/svt-wp2/svt-db-agent-next` (built from the repository root, `DbAgentNext/Dockerfile`) | `ghcr.io/svt-wp2/svt-db-agent` (built from `DbAgent/`) |
 | `versions.env` line | `SVT_DB_AGENT_NEXT_VERSION` | `SVT_DB_AGENT_VERSION` |
 | Workflows | `db-agent-next.yml`, `DbAgent Next :: Manual`, `DbAgent Next :: Release` | `db-agent.yml` (build only), `DbAgent :: Manual`, `DbAgent :: Release` |
 | Deploys | automatic on master pushes and release tags, or manual | manual only (`deploy-prod--manual`) |

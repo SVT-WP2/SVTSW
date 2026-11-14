@@ -6,9 +6,6 @@ on:
       - master
     paths:
       - 'UI/**'
-      # The DB agent app in the workspace has its own pipeline (db-agent-next.yml);
-      # changes confined to it must not rebuild and redeploy the UI image.
-      - '!UI/apps/svt-db-agent-next/**'
       # The HTTP contract types, compiled into the SPA and the BFF (tsconfig.base.json aliases).
       - 'Shared/**'
       - '.github/workflows/ui.yml'
@@ -17,7 +14,6 @@ on:
   pull_request:
     paths:
       - 'UI/**'
-      - '!UI/apps/svt-db-agent-next/**'
       - 'Shared/**'
       - '.github/workflows/ui.yml'
 

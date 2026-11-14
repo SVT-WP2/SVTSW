@@ -1,48 +1,33 @@
 name: DbAgent Next
 
 # Automatic CI/build/deploy for svt-db-agent-next, the NestJS re-implementation
-# of the DB Agent that lives in the UI Nx workspace (UI/apps/svt-db-agent-next).
-# Manual ops (one-off build, deploy to dev/prod) live in db-agent-next-manual.yml,
-# releases in db-agent-next-release.yml, mirroring the ui.yml / db-agent.yml split.
+# of the DB Agent (DbAgentNext/, a standalone app with its own package.json and
+# lockfile). Manual ops (one-off build, deploy to dev/prod) live in
+# db-agent-next-manual.yml, releases in db-agent-next-release.yml, mirroring the
+# ui.yml / db-agent.yml split.
 #
-# The app is built from the UI workspace (shared libs, one package-lock.json),
-# so the path filter covers the app, the Node-side libs it imports and the
-# workspace files that change how it is built. SPA-only changes do not trigger
-# it; ui.yml in turn ignores UI/apps/svt-db-agent-next/**.
+# The app also compiles the contract types of Shared/svt-ts-types (path
+# aliases of DbAgentNext/tsconfig.json), so the path filter covers both
+# folders. The image builds with the repository root as context.
 #
 # Release commits (svt-db-agent-next@<version>, pushed to master by
 # DbAgent Next :: Release) are a no-op here: every master-push job skips them,
 # because the release image is built straight from the svt-db-agent-next-* tag
-# (docker-registry-create--release), not from the commit. The UI's release
-# commits (svt-ui@<version>) touch UI/package.json and are skipped too.
+# (docker-registry-create--release), not from the commit.
 on:
   push:
     branches:
       - master
     paths:
-      - 'UI/apps/svt-db-agent-next/**'
-      - 'UI/libs/epic/**'
+      - 'DbAgentNext/**'
       - 'Shared/**'
-      - 'UI/package.json'
-      - 'UI/package-lock.json'
-      - 'UI/tsconfig*.json'
-      - 'UI/nx.json'
-      - 'UI/eslint.config.mjs'
-      - 'UI/vitest.config.ts'
       - '.github/workflows/db-agent-next.yml'
     tags:
       - 'svt-db-agent-next-*'
   pull_request:
     paths:
-      - 'UI/apps/svt-db-agent-next/**'
-      - 'UI/libs/epic/**'
+      - 'DbAgentNext/**'
       - 'Shared/**'
-      - 'UI/package.json'
-      - 'UI/package-lock.json'
-      - 'UI/tsconfig*.json'
-      - 'UI/nx.json'
-      - 'UI/eslint.config.mjs'
-      - 'UI/vitest.config.ts'
       - '.github/workflows/db-agent-next.yml'
 
 concurrency:
@@ -57,21 +42,20 @@ env:
 
 defaults:
   run:
-    working-directory: UI
+    working-directory: DbAgentNext
 
 jobs:
-  # Lint, unit-test, build and e2e-test the app natively (fast, npm-cached).
-  # Runs on PRs and on normal master pushes; skipped on release commits and on
-  # tags (the release image builds straight from the tag in
+  # Lint, type-check, unit-test, build and e2e-test the app natively (fast,
+  # npm-cached). Runs on PRs and on normal master pushes; skipped on release
+  # commits and on tags (the release image builds straight from the tag in
   # docker-registry-create--release). The e2e suite needs a PostgreSQL service:
-  # apps/svt-db-agent-next/.env.test points at localhost:5500 /
-  # svt_sw_db_e2e_test with postgres/postgres, which the service below provides.
+  # DbAgentNext/.env.test points at localhost:5500 / svt_sw_db_e2e_test with
+  # postgres/postgres, which the service below provides.
   ci:
     if: >-
       github.event_name == 'pull_request'
       || (github.event_name == 'push' && github.ref == 'refs/heads/master'
-          && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
-          && !startsWith(github.event.head_commit.message, 'svt-ui@'))
+          && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@'))
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -92,14 +76,16 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: UI/package-lock.json
+          cache-dependency-path: DbAgentNext/package-lock.json
       - run: npm ci --prefer-offline
-      # Scoped to the agent (its database layer is in src/db); the shared libs are linted by ui.yml.
-      - run: npx eslint "apps/svt-db-agent-next/**/*.ts" --no-error-on-unmatched-pattern --quiet
-      - run: npx vitest run apps/svt-db-agent-next
-      - run: rm -rf .nx && npx nx build svt-db-agent-next
+      # The agent's own config; Shared/ is linted by ui.yml (npm run lint:shared).
+      - run: npm run lint
+      # tsconfig.app.json, and src/db/tsconfig.json (strict); the build checks the first one again.
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
       # Real database: migrations are applied by the harness, every table is truncated per test.
-      - run: npx nx test-e2e svt-db-agent-next
+      - run: npm run e2e
 
   # Pull requests only: build the image the way master will, without pushing,
   # so a broken Dockerfile is caught before merge. Shares the build cache with
@@ -114,7 +100,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: UI/apps/svt-db-agent-next/Dockerfile
+          file: DbAgentNext/Dockerfile
           push: false
           build-args: |
             APP_VERSION=${{ github.sha }}
@@ -127,7 +113,6 @@ jobs:
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/master'
       && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
-      && !startsWith(github.event.head_commit.message, 'svt-ui@')
     needs: ci
     runs-on: ubuntu-latest
     permissions:
@@ -148,7 +133,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: UI/apps/svt-db-agent-next/Dockerfile
+          file: DbAgentNext/Dockerfile
           push: true
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.short_sha }}
@@ -196,7 +181,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: UI/apps/svt-db-agent-next/Dockerfile
+          file: DbAgentNext/Dockerfile
           push: true
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.tag }}
@@ -213,7 +198,6 @@ jobs:
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/master'
       && !startsWith(github.event.head_commit.message, 'svt-db-agent-next@')
-      && !startsWith(github.event.head_commit.message, 'svt-ui@')
     needs: docker-registry-create
     runs-on: self-hosted
     environment: dev
@@ -224,7 +208,7 @@ jobs:
         with:
           sparse-checkout: Environment
       - name: Deploy svt-db-agent-next to dev
-        # Override the workflow-level `defaults.run.working-directory: UI`
+        # Override the workflow-level `defaults.run.working-directory: DbAgentNext`
         # — the sparse checkout only materialises Environment/ and root files.
         working-directory: ${{ github.workspace }}
         env:
@@ -252,7 +236,7 @@ jobs:
         with:
           sparse-checkout: Environment
       - name: Deploy svt-db-agent-next to dev
-        # Override the workflow-level `defaults.run.working-directory: UI`
+        # Override the workflow-level `defaults.run.working-directory: DbAgentNext`
         # — the sparse checkout only materialises Environment/ and root files.
         working-directory: ${{ github.workspace }}
         env:

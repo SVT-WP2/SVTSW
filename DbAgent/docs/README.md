@@ -16,7 +16,7 @@ was verified by regenerating all 41 052 ASICs of the prod dump from their wafer 
 
 This folder documents the **current state only**. Notes about re-implementing the agent (what to
 keep, what to change, migration steps) are kept separately in
-[UI/docs/db-agent-clone](../../UI/docs/db-agent-clone/README.md).
+[DbAgentNext/docs](../../DbAgentNext/docs/README.md).
 
 For building, running, versioning and deploying the agent, see [../README.md](../README.md). For
 the local stack, see [../../Dev/README.md](../../Dev/README.md).

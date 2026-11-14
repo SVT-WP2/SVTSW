@@ -1,1 +1,10 @@
 cd "$(dirname "$0")/.." && npm run lint-staged
+
+# DbAgentNext/ is a separate app with its own ESLint config and node_modules: its staged files are linted there.
+if git diff --cached --name-only --diff-filter=ACMR -- ../DbAgentNext | grep -q '\.ts$'; then
+    if [ ! -d ../DbAgentNext/node_modules ]; then
+        echo "DbAgentNext: staged .ts files but no DbAgentNext/node_modules; run npm ci in DbAgentNext/ first." >&2
+        exit 1
+    fi
+    (cd ../DbAgentNext && npm run lint-staged)
+fi
