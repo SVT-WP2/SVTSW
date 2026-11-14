@@ -6,7 +6,7 @@ import {
     SvtDbAgentKafkaSvtTestTypes,
 } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
+import { expectListPaging, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 
 
 const CREATE: EpicSvtTestTemplateCreateRequest = { dutType: 'MOSAIX', testTypeConfigId: 1, isEnabled: false }
@@ -62,6 +62,7 @@ describe('SVT test templates (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaSvtTestTemplates.GetAllSvtTestTemplatesMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllSvtTestTemplatesReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllSvtTestTemplates', reply.data.items)
             expect(reply.data).toEqual({ items: [TEMPLATE_1, TEMPLATE_2], totalCount: 2 })
             expect(Object.keys(reply.data.items[0])).toEqual(['id', 'dutType', 'isEnabled', 'testTypeId', 'testTypeConfigId'])
         })

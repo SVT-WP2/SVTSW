@@ -1,7 +1,7 @@
 import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment, SvtDbAgentKafkaEquipmentTypes } from 'svt-ts-types/kafka'
 
-import { TestSetup } from '../utils'
+import { expectListPaging, TestSetup } from '../utils'
 
 
 const SPECIFICATION = { vendor: 'Enclustra', firmware: '1.2.0', channels: 4 }
@@ -13,8 +13,8 @@ const CREATE: EpicEquipmentCreateRequest = {
     specification: JSON.stringify(SPECIFICATION, null, 2),
 }
 
-/** The reply re-serialises the stored JSON: same document, compact form. */
-const EQUIPMENT_1: EpicEquipment = { id: 1, ...CREATE, specification: JSON.stringify(SPECIFICATION) }
+/** The reply carries the specification byte for byte as it was sent (R-7): the stored text of the `json` column. */
+const EQUIPMENT_1: EpicEquipment = { id: 1, ...CREATE }
 
 type ListReply = SvtDbAgentKafka.PageReplyMessageData<EpicEquipment>
 type EntityReply = SvtDbAgentKafka.OneEntityReplyMessageData<EpicEquipment>
@@ -69,6 +69,7 @@ describe('Equipment (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaEquipment.GetAllEquipmentMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllEquipmentReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllEquipment', reply.data.items)
             expect(reply.data).toEqual({
                 items: [EQUIPMENT_1, { ...EQUIPMENT_1, id: 2, name: 'DAQ-0009012C0D0F301D', specification: '{}' }],
                 totalCount: 2,
@@ -101,8 +102,7 @@ describe('Equipment (e2e)', () => {
             const rows = await setup.query<{ name: string; equipmentTypeId: number; generalLocation: string; specification: string }>(
                 'select name, "equipmentTypeId", "generalLocation", specification::text as specification from main."Equipment"',
             )
-            expect(rows.map((row) => ({ ...row, specification: JSON.parse(row.specification) as unknown })))
-                .toEqual([{ name: CREATE.name, equipmentTypeId: 1, generalLocation: 'CERN', specification: SPECIFICATION }])
+            expect(rows).toEqual([{ name: CREATE.name, equipmentTypeId: 1, generalLocation: 'CERN', specification: CREATE.specification }])
             expect(await locationRows()).toEqual([
                 { equipmentId: 1, generalLocation: 'CERN', date: await today(), username: null, note: 'Location at creation' },
             ])

@@ -5,6 +5,7 @@ import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'svt-ts-types/kafka
 import { SvtDbEnumsService, SvtDbSvtTestTypesRepository, SvtDbSvtTestTypeWithDutTypes } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     optionalStringList,
     parseJsonOrBadRequest,
@@ -49,13 +50,15 @@ export class SvtDbAgentNextSvtTestTypesHandlers implements SvtDbAgentNextMessage
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestType>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'dutTypes'])
-        const items = await this.testTypes.findAll({
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.testTypes.findPage({
             ids: optionalIntegerList(filter['ids'], 'data.filter.ids'),
             dutTypes: optionalStringList(filter['dutTypes'], 'data.filter.dutTypes'),
-        })
-        return { items: items.map(toWire), totalCount: items.length }
+        }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     /** `data.create = { name, dutTypes, testTypeConfig: { name, configBody, note? } }`, one transaction. */

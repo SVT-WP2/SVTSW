@@ -6,7 +6,7 @@
  *
  * An entry covers whole cases. Each one lists only the cases whose every difference the decision explains;
  * a case that also shows a bug or an open question stays out (see `docs/03-parity-testing.md` §5).
- * Classified against the recordings of 2026-11-14.
+ * Classified against the recordings of 2026-11-14 (the clone re-recorded after the paging and JSON fixes).
  */
 export type ParityKnownDifference = {
     /** Case ids, or patterns over them. */
@@ -22,8 +22,6 @@ const LISTS = [
     'wp-projects', 'svt-test-setups', 'svt-test-setup-configs', 'svt-test-types', 'svt-test-type-configs',
     'svt-test-templates', 'svt-tests',
 ]
-/** The lists whose handler applies `data.pager`; the others return every row (open, not a decision). */
-const PAGED_LISTS = ['wafers', 'asics', 'chips', 'svt-tests']
 
 const each = (groups: string[], name: string): string[] => groups.map((group) => `${group}/${name}`)
 
@@ -52,7 +50,7 @@ export const PARITY_KNOWN_DIFFERENCES: ParityKnownDifference[] = [
             + '`GetAllChipBlocks` is served by neither agent.',
     },
     {
-        cases: [...each(PAGED_LISTS, 'pager-beyond'), ...each(LISTS, 'pager-limit-null')],
+        cases: [...each(LISTS, 'pager-beyond'), ...each(LISTS, 'pager-limit-null')],
         decision: 'X-4',
         note: 'Paging in the database: an offset past the end gives `items: []` with the real `totalCount`, and '
             + '`limit: null` falls back to 20; the C++ answered `BadRequest` (offset out of range, JSON type error).',

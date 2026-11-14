@@ -1,7 +1,7 @@
 import { EpicWpMachine, EpicWpMachineUpdateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines } from 'svt-ts-types/kafka'
 
-import { insertProbeCard, TestSetup, WP_MACHINE_CREATE } from '../utils'
+import { expectListPaging, insertProbeCard, TestSetup, WP_MACHINE_CREATE } from '../utils'
 
 
 const SMALL_MAP = JSON.stringify({
@@ -128,6 +128,7 @@ describe('Wafer probe machines (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaWpMachines.GetAllWpMachinesMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllWaferProbeMachinesReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllWaferProbeMachines', reply.data.items)
             expect(reply.data).toEqual({ items: [MACHINE_1, MACHINE_2], totalCount: 2 })
             expect(Object.keys(reply.data.items[0])).toEqual([
                 'id', 'name', 'serialNumber', 'hostName', 'connectionType', 'connectionPort', 'generalLocation', 'software', 'swVersion',

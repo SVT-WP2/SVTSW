@@ -11,8 +11,9 @@ import {
 } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
+    jsonTextOrBadRequest,
     optionalRecord,
-    parseJsonOrBadRequest,
     requireAllowedFilterKeys,
     requireInteger,
     requireRecord,
@@ -63,10 +64,12 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicEquipment>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
-        const items = await this.equipment.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.equipment.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     /** `data.create`: the equipment and its first location row, in one transaction. */
@@ -83,7 +86,7 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
             generalLocation: create.generalLocation,
             specification: create.specification === null || create.specification === undefined
                 ? null
-                : parseJsonOrBadRequest(create.specification, 'data.create.specification'),
+                : jsonTextOrBadRequest(create.specification, 'data.create.specification'),
         })
         return { entity: toWire(equipment) }
     }
@@ -131,7 +134,7 @@ function toWire(equipment: SvtDbEquipmentEntity): EpicEquipment {
         name: equipment.name,
         equipmentTypeId: equipment.equipmentType.id,
         generalLocation: equipment.generalLocation,
-        specification: equipment.specification === null ? null : JSON.stringify(equipment.specification),
+        specification: equipment.specification,
     }
 }
 

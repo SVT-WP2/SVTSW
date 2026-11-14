@@ -2,6 +2,8 @@ import { FilterQuery } from '@mikro-orm/core'
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbSvtTestSetupConfigEntity } from './svt-db-svt-test-setup-config.entity'
 import { SvtDbSvtTestConfigInput } from './svt-db-svt-test-setups.repository'
 
@@ -22,7 +24,7 @@ export class SvtDbSvtTestSetupConfigsRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbSvtTestSetupConfigsFilter = {}): Promise<SvtDbSvtTestSetupConfigEntity[]> {
+    async findPage(filter: SvtDbSvtTestSetupConfigsFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbSvtTestSetupConfigEntity>> {
         const where: FilterQuery<SvtDbSvtTestSetupConfigEntity> = {}
         if (filter.ids?.length) {
             where.id = { $in: filter.ids }
@@ -30,7 +32,12 @@ export class SvtDbSvtTestSetupConfigsRepository {
         if (filter.setupId !== undefined) {
             where.setup = filter.setupId
         }
-        return this.em.find(SvtDbSvtTestSetupConfigEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbSvtTestSetupConfigEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbSvtTestSetupConfigEntity | null> {

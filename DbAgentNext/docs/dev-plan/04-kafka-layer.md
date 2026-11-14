@@ -192,9 +192,10 @@ non-JSON value with the agent still serving afterwards, a write through Kafka, a
 CI has no broker, so the flag stays off there.
 
 **Still open from this page.** 4d: the parity run against the C++ agent ran on 2026-11-14
-([../03-parity-testing.md §5.1](../03-parity-testing.md#51-first-run-against-the-c-agent-2026-11-14)): 161 cases
-the same, 182 intentional, 53 different (two bugs of the clone, four open questions). Open: those fixes and
-questions, and the UI documentation updates that follow.
+([../03-parity-testing.md §5.1](../03-parity-testing.md#51-first-run-against-the-c-agent-2026-11-14)): after the
+fixes of the paging and the `json` columns (§5.2), 189 cases the same, 193 intentional, 14 different (four open
+questions). Open: those questions, the consumer group and the replay at start (§5.2: the group is
+`svt.db-agent.request-server`, not the C++ agent's), and the UI documentation updates that follow.
 Intentional differences so far are the findings sections of [05-e2e-testing.md](05-e2e-testing.md).
 
 ### End-to-end run (2026-11-09, local)

@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { EpicWaferType, EpicWaferTypeMap } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'svt-ts-types/kafka'
 
-import { TestSetup } from '../utils'
+import { expectListPaging, TestSetup } from '../utils'
 
 
 const ER2_MAP = readFileSync(resolve(__dirname, '../../../Configurations/WaferTypeMappings/ER2WaferMap_v0.json'), 'utf8')
@@ -138,6 +138,7 @@ describe('Wafer types (e2e)', () => {
 
             const all = await setup.send<ListReply>(new SvtDbAgentKafkaWaferTypes.GetAllWaferTypesMessage())
             expect(all.data).toEqual({ items: [er2, er1], totalCount: 2 })
+            await expectListPaging(setup, 'GetAllWaferTypes', all.data.items)
             expect(Object.keys(all.data.items[0])).toEqual(['id', 'name', 'engineeringRun', 'foundry', 'technology'])
 
             const filtered = await setup.send<ListReply>({ type: 'GetAllWaferTypes', data: { filter: { ids: [er1.id] } } })
@@ -156,8 +157,8 @@ describe('Wafer types (e2e)', () => {
             const reply = await setup.send<MapReply>({ type: 'GetWaferTypeMap', data: { waferTypeId: er2.id } })
 
             expect(reply).toMatchObject({ type: 'GetWaferTypeMapReply', status: 'Success' })
-            expect(typeof reply.data.entity.waferMap).toBe('string')
-            expect(JSON.parse(reply.data.entity.waferMap)).toEqual(JSON.parse(ER2_MAP))
+            // Byte for byte, the formatting of the file included (R-7).
+            expect(reply.data.entity.waferMap).toBe(ER2_MAP)
         })
 
         it('answers NotFound for a wafer type without a map', async () => {

@@ -53,7 +53,8 @@ describe.skipIf(!TEST_DB_URL)('WaferType entities against the restored productio
             technology: 'TPSCo65',
         })
         expect(er2?.map).toBeDefined()
-        expect(er2?.map?.waferMap).toMatchObject({ FileName: 'ER2WaferMap_v0.json' })
+        // The stored text of the `json` column (SvtDbJsonTextType), parsed here only to look inside.
+        expect(JSON.parse(er2!.map!.waferMap)).toMatchObject({ FileName: 'ER2WaferMap_v0.json' })
     })
 
     it('lets the database assign the identity id on insert (rolled back)', async () => {

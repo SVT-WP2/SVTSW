@@ -112,7 +112,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
                 productionDate: create.productionDate ?? null,
                 generalLocation: create.generalLocation,
             },
-            () => generateAsicsOrBadRequest(create.serialNumber, map.waferMap as SvtDbWaferMap),
+            () => generateAsicsOrBadRequest(create.serialNumber, JSON.parse(map.waferMap) as SvtDbWaferMap),
         )
         return { entity: toWire(wafer) }
     }

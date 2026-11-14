@@ -1,7 +1,7 @@
 import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetupConfigs, SvtDbAgentKafkaSvtTestSetups } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_CONFIG_BODY, SVT_TEST_SETUP_CREATE, TestSetup } from '../utils'
+import { expectListPaging, SVT_TEST_CONFIG_BODY, SVT_TEST_SETUP_CREATE, TestSetup } from '../utils'
 
 
 const SETUP_1: EpicSvtTestSetup = { id: 1, name: 'ts_mit', defaultConfigId: 1, generalLocation: 'CERN_186_R_E10' }
@@ -57,6 +57,7 @@ describe('SVT test setups (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaSvtTestSetups.GetAllSvtTestSetupsMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllSvtTestSetupsReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllSvtTestSetups', reply.data.items)
             expect(reply.data).toEqual({ items: [SETUP_1, SETUP_2], totalCount: 2 })
             expect(Object.keys(reply.data.items[0])).toEqual(['id', 'name', 'defaultConfigId', 'generalLocation'])
         })

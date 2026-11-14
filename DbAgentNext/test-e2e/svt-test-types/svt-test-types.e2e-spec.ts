@@ -1,7 +1,7 @@
 import { EpicSvtTestType, EpicSvtTestTypeCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_CONFIG_BODY, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
+import { expectListPaging, SVT_TEST_CONFIG_BODY, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 
 
 /** DUT types come back in the enum's order (MOSAIX, BABYMOSAIX, AncMPW2_SLDO), not the request's. */
@@ -58,6 +58,7 @@ describe('SVT test types (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaSvtTestTypes.GetAllSvtTestTypesMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllSvtTestTypesReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllSvtTestTypes', reply.data.items)
             expect(reply.data).toEqual({ items: [TYPE_1, TYPE_2], totalCount: 2 })
             expect(Object.keys(reply.data.items[0])).toEqual(['id', 'name', 'dutTypes'])
         })

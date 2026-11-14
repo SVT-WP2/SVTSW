@@ -5,6 +5,7 @@ import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'svt-ts-types/kafka
 import { SvtDbWpProbeCardsRepository, SvtDbWpProbeCardWithFamilyTypes } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     requireAllowedFilterKeys,
     SvtDbAgentNextHandlerDefinition,
@@ -39,10 +40,12 @@ export class SvtDbAgentNextWpProbeCardsHandlers implements SvtDbAgentNextMessage
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<SvtDbAgentNextWpProbeCardWire>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
-        const items = await this.probeCards.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.probeCards.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
 }

@@ -1,7 +1,7 @@
 import { EpicEquipmentType } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipmentTypes } from 'svt-ts-types/kafka'
 
-import { TestSetup } from '../utils'
+import { expectListPaging, TestSetup } from '../utils'
 
 
 const ENCLUSTRA: EpicEquipmentType = { id: 1, name: 'Enclustra Card' }
@@ -40,6 +40,7 @@ describe('Equipment types (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaEquipmentTypes.GetAllEquipmentTypesMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllEquipmentTypesReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllEquipmentTypes', reply.data.items)
             expect(reply.data).toEqual({ items: [ENCLUSTRA, SCOPE], totalCount: 2 })
             expect(await getAll({ filter: { ids: [2] } })).toEqual({ items: [SCOPE], totalCount: 1 })
             expect(await getAll({ filter: { ids: [] } })).toEqual({ items: [ENCLUSTRA, SCOPE], totalCount: 2 })

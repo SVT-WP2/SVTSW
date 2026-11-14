@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbWpProjectEntity } from './svt-db-wp-project.entity'
 
 
@@ -16,8 +18,8 @@ export type SvtDbWpProjectCreateInput = {
     orientation: string
     alignmentDie: string
     homeDie: string
-    /** The parsed JSON of the map; stored in the `json` column. */
-    local2GlobalMap: unknown
+    /** The map as the client sent it (valid JSON); stored in the `json` column as it is. */
+    local2GlobalMap: string | null
 }
 
 @Injectable()
@@ -26,9 +28,14 @@ export class SvtDbWpProjectsRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbWpProjectsFilter = {}): Promise<SvtDbWpProjectEntity[]> {
+    async findPage(filter: SvtDbWpProjectsFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbWpProjectEntity>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        return this.em.find(SvtDbWpProjectEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbWpProjectEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     create(input: SvtDbWpProjectCreateInput): Promise<SvtDbWpProjectEntity> {

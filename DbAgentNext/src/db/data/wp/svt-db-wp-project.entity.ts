@@ -1,6 +1,7 @@
 import { DeferMode, OptionalProps, Ref } from '@mikro-orm/core'
 import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
 
+import { SvtDbJsonTextType } from '../common'
 import { SVT_DB_ENUM_VALUES } from '../enums'
 import { SvtDbWaferTypeEntity } from '../wafer-types'
 
@@ -53,8 +54,9 @@ export class SvtDbWpProjectEntity {
     @Property({ type: 'string', length: 100, nullable: true })
     homeDie!: string | null
 
-    @Property({ type: 'json', columnType: 'json', nullable: true })
-    local2GlobalMap!: unknown;
+    /** The stored text of the `json` column, returned byte for byte. */
+    @Property({ type: SvtDbJsonTextType, columnType: 'json', nullable: true })
+    local2GlobalMap!: string | null;
 
     [OptionalProps]?: 'id' | 'asicFamilyType' | 'orientation' | 'alignmentDie' | 'homeDie' | 'local2GlobalMap'
 

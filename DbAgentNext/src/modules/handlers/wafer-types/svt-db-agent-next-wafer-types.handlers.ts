@@ -5,6 +5,7 @@ import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'svt-ts-types/kafka'
 import { SvtDbEnumsService, SvtDbWaferTypeEntity, SvtDbWaferTypesRepository, validateWaferMap } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     requireAllowedFilterKeys,
     requireInteger,
@@ -45,11 +46,13 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
 
     /** `data.filter.ids` is the only filter the C++ declares; absent means all. */
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWaferType>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
         const ids = optionalIntegerList(filter['ids'], 'data.filter.ids')
-        const items = await this.waferTypes.findAll({ ids })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.waferTypes.findPage({ ids }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     /**
@@ -73,7 +76,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
 
         const entity = await this.waferTypes.create(
             { name: create.name, engineeringRun: create.engineeringRun, foundry: create.foundry, technology: create.technology },
-            validation.map,
+            create.waferMap,
         )
         return { entity: toWire(entity) }
     }
@@ -84,7 +87,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
         if (!map) {
             throw SvtDbAgentNextRequestError.notFound(`No wafer map for wafer type ${waferTypeId}`)
         }
-        return { entity: { waferMap: JSON.stringify(map.waferMap) } }
+        return { entity: { waferMap: map.waferMap } }
     }
 
 }

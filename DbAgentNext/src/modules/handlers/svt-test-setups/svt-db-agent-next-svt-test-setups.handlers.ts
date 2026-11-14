@@ -10,6 +10,7 @@ import {
 } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     parseJsonOrBadRequest,
     requireAllowedFilterKeys,
@@ -54,10 +55,12 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestSetup>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
-        const items = await this.setups.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.setups.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     /** `data.create = { name, generalLocation, defaultConfig: { name, configBody, note? } }`, one transaction. */

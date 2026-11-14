@@ -1,6 +1,7 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
 import { SvtDbSvtTestConfigInput } from '../svt-test-setups'
 
 import { SvtDbSvtTestTypeConfigEntity } from './svt-db-svt-test-type-config.entity'
@@ -34,24 +35,29 @@ export class SvtDbSvtTestTypesRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    async findAll(filter: SvtDbSvtTestTypesFilter = {}): Promise<SvtDbSvtTestTypeWithDutTypes[]> {
+    async findPage(filter: SvtDbSvtTestTypesFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbSvtTestTypeWithDutTypes>> {
         let ids = filter.ids?.length ? filter.ids : undefined
         if (filter.dutTypes?.length) {
             const rows = await this.em.find(SvtDbSvtTestTypeDutTypeEntity, { dutType: { $in: filter.dutTypes } })
             const matching = new Set(rows.map((row) => row.testType.id))
             ids = ids ? ids.filter((id) => matching.has(id)) : [...matching]
             if (ids.length === 0) {
-                return []
+                return { items: [], totalCount: 0 }
             }
         }
         const where = ids ? { id: { $in: ids } } : {}
-        const testTypes = await this.em.find(SvtDbSvtTestTypeEntity, where, { orderBy: { id: 'asc' } })
+        const [testTypes, totalCount] = await this.em.findAndCount(SvtDbSvtTestTypeEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
         const dutTypes = await this.dutTypesByTestType(testTypes.map((testType) => testType.id))
-        return testTypes.map((testType) => ({ testType, dutTypes: dutTypes.get(testType.id) ?? [] }))
+        const items = testTypes.map((testType) => ({ testType, dutTypes: dutTypes.get(testType.id) ?? [] }))
+        return { items, totalCount }
     }
 
     async findById(id: number): Promise<SvtDbSvtTestTypeWithDutTypes | null> {
-        const [found] = await this.findAll({ ids: [id] })
+        const { items: [found] } = await this.findPage({ ids: [id] })
         return found ?? null
     }
 

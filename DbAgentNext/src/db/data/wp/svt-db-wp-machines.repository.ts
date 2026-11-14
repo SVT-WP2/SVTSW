@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbWpMachineEntity } from './svt-db-wp-machine.entity'
 import { SvtDbWpProbeCardInstalledInMachineEntity } from './svt-db-wp-probe-card-installed-in-machine.entity'
 import { SvtDbWpWaferLoadedInMachineEntity } from './svt-db-wp-wafer-loaded-in-machine.entity'
@@ -45,9 +47,14 @@ export class SvtDbWpMachinesRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbWpMachinesFilter = {}): Promise<SvtDbWpMachineEntity[]> {
+    async findPage(filter: SvtDbWpMachinesFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbWpMachineEntity>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        return this.em.find(SvtDbWpMachineEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbWpMachineEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbWpMachineEntity | null> {

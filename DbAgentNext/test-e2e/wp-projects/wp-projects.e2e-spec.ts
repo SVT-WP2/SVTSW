@@ -1,7 +1,7 @@
 import { EpicWpProject, EpicWpProjectCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines, SvtDbAgentKafkaWpProjects } from 'svt-ts-types/kafka'
 
-import { TestSetup, WP_MACHINE_CREATE } from '../utils'
+import { expectListPaging, TestSetup, WP_MACHINE_CREATE } from '../utils'
 
 
 const SMALL_MAP = JSON.stringify({
@@ -36,8 +36,8 @@ const CREATE: EpicWpProjectCreateRequest = {
     local2GlobalMap: JSON.stringify(LOCAL_2_GLOBAL, null, 4),
 }
 
-/** The reply re-serialises the stored JSON: same document, compact form. */
-const PROJECT_1: EpicWpProject = { id: 1, ...CREATE, local2GlobalMap: JSON.stringify(LOCAL_2_GLOBAL) }
+/** The reply carries the map byte for byte as it was sent (R-7): the stored text of the `json` column. */
+const PROJECT_1: EpicWpProject = { id: 1, ...CREATE }
 
 type ListReply = SvtDbAgentKafka.PageReplyMessageData<EpicWpProject>
 type EntityReply = SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpProject>
@@ -87,6 +87,7 @@ describe('Wafer probe projects (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaWpProjects.GetAllWpProjectsMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllWaferProbeProjectsReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllWaferProbeProjects', reply.data.items)
             expect(reply.data).toEqual({
                 items: [PROJECT_1, { ...PROJECT_1, id: 2, name: 'NKF7_Test_2025_W', orientation: 'West' }],
                 totalCount: 2,
@@ -121,8 +122,7 @@ describe('Wafer probe projects (e2e)', () => {
             const rows = await setup.query<{ wpMachineId: number; waferTypeId: number; name: string; map: string }>(
                 'select "wpMachineId", "waferTypeId", name, "local2GlobalMap"::text as map from main."WaferProbeProject"',
             )
-            expect(rows.map((row) => ({ ...row, map: JSON.parse(row.map) as unknown })))
-                .toEqual([{ wpMachineId: 1, waferTypeId: 1, name: CREATE.name, map: LOCAL_2_GLOBAL }])
+            expect(rows).toEqual([{ wpMachineId: 1, waferTypeId: 1, name: CREATE.name, map: CREATE.local2GlobalMap }])
         })
 
         it('rejects an unknown machine, wafer type, enum value or key, a map that is no JSON string and a duplicate name', async () => {

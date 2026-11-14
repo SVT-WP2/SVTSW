@@ -6,6 +6,7 @@ import { SvtDbSvtTestTypeConfigEntity, SvtDbSvtTestTypeConfigsRepository, SvtDbS
 import {
     optionalInteger,
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     parseJsonOrBadRequest,
     requireAllowedFilterKeys,
@@ -60,13 +61,15 @@ export class SvtDbAgentNextSvtTestTypeConfigsHandlers implements SvtDbAgentNextM
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestTypeConfig>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids', 'testTypeId'])
-        const items = await this.configs.findAll({
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.configs.findPage({
             ids: optionalIntegerList(filter['ids'], 'data.filter.ids'),
             testTypeId: optionalInteger(filter['testTypeId'], 'data.filter.testTypeId'),
-        })
-        return { items: items.map(toWire), totalCount: items.length }
+        }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestTypeConfigs.CreateSvtTestTypeConfigReplyMessageData> {

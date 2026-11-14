@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbEquipmentTypeEntity } from './svt-db-equipment-type.entity'
 
 
@@ -14,9 +16,14 @@ export class SvtDbEquipmentTypesRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbEquipmentTypesFilter = {}): Promise<SvtDbEquipmentTypeEntity[]> {
+    async findPage(filter: SvtDbEquipmentTypesFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbEquipmentTypeEntity>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        return this.em.find(SvtDbEquipmentTypeEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbEquipmentTypeEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbEquipmentTypeEntity | null> {

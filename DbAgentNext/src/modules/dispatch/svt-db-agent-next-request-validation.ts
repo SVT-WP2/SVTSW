@@ -107,6 +107,15 @@ export function parseJsonOrBadRequest(text: string, path: string): unknown {
     }
 }
 
+/**
+ * A JSON field as the client sent it: the text itself, once it is known to parse. It is stored in a `json` column
+ * and returned byte for byte (R-7).
+ */
+export function jsonTextOrBadRequest(text: string, path: string): string {
+    parseJsonOrBadRequest(text, path)
+    return text
+}
+
 /** An optional ISO 8601 date-time (e.g. a filter bound) as a `Date`; `null` and absent mean "not given". */
 export function optionalDateTime(value: unknown, path: string): Date | undefined {
     if (value === undefined || value === null) {

@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbWaferTypeMapEntity } from './svt-db-wafer-type-map.entity'
 import { SvtDbWaferTypeEntity } from './svt-db-wafer-type.entity'
 
@@ -21,9 +23,14 @@ export class SvtDbWaferTypesRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbWaferTypesFilter = {}): Promise<SvtDbWaferTypeEntity[]> {
+    async findPage(filter: SvtDbWaferTypesFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbWaferTypeEntity>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        return this.em.find(SvtDbWaferTypeEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbWaferTypeEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbWaferTypeEntity | null> {
@@ -35,7 +42,7 @@ export class SvtDbWaferTypesRepository {
     }
 
     /** Inserts the wafer type and its map in one transaction. */
-    create(input: SvtDbWaferTypeCreateInput, waferMap: unknown): Promise<SvtDbWaferTypeEntity> {
+    create(input: SvtDbWaferTypeCreateInput, waferMap: string): Promise<SvtDbWaferTypeEntity> {
         return this.em.transactional(async (em) => {
             const waferType = em.create(SvtDbWaferTypeEntity, input)
             em.create(SvtDbWaferTypeMapEntity, { waferType, waferMap })

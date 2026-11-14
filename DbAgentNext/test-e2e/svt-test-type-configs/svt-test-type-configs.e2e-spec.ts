@@ -1,7 +1,7 @@
 import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody, EpicSvtTestTypeConfigCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs, SvtDbAgentKafkaSvtTestTypes } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_CONFIG_BODY, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
+import { expectListPaging, SVT_TEST_CONFIG_BODY, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 
 
 /** One-space indentation as the dev database has it: must come back exactly like this. */
@@ -68,6 +68,7 @@ describe('SVT test type configs (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaSvtTestTypeConfigs.GetAllSvtTestTypeConfigsMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllSvtTestTypeConfigsReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllSvtTestTypeConfigs', reply.data.items)
             const createdAt = await today()
             expect(reply.data).toEqual({
                 items: [

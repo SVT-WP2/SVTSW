@@ -11,6 +11,7 @@ import {
 } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
     optionalRecord,
     requireAllowedFilterKeys,
     requireInteger,
@@ -89,10 +90,12 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
 
     /** `data.filter.ids` is the only filter; the contract has no pager for machines. */
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<SvtDbAgentNextWpMachineWire>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
-        const items = await this.machines.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.machines.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<SvtDbAgentNextWpMachineWire>> {

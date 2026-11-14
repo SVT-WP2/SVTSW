@@ -1,7 +1,7 @@
 import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetupConfigs, SvtDbAgentKafkaSvtTestSetups } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_CONFIG_BODY, SVT_TEST_SETUP_CREATE, TestSetup } from '../utils'
+import { expectListPaging, SVT_TEST_CONFIG_BODY, SVT_TEST_SETUP_CREATE, TestSetup } from '../utils'
 
 
 /** Four-space indentation and a different key order: must come back exactly like this. */
@@ -58,6 +58,7 @@ describe('SVT test setup configs (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaSvtTestSetupConfigs.GetAllSvtTestSetupConfigsMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllSvtTestSetupConfigsReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllSvtTestSetupConfigs', reply.data.items)
             expect(reply.data).toEqual({
                 items: [await config1(), { id: 2, setupId: 1, name: 'ts_mit_config_v1', note: null, createdAt: await today() }],
                 totalCount: 2,

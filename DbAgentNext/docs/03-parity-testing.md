@@ -110,8 +110,8 @@ The 53 different cases are not decisions:
 
 | # | Cases | What differs | Kind |
 |---|---|---|---|
-| 1 | 34: `pager-first`, `pager-second`, `pager-beyond` of `wafer-types`, `equipment-types`, `equipment`, `wp-machines`, `wp-probe-cards`, `wp-projects`, `svt-test-setups`, `svt-test-setup-configs`, `svt-test-types`, `svt-test-type-configs`, `svt-test-templates`; `svt-test-type-configs/pager-offset-only` | These 11 list handlers ignore `data.pager` and return every row. Only `wafers`, `asics`, `chips`, `chip-blocks` and `svt-tests` call `optionalPager`. | **Bug** of the clone: the agent's contract (`svt.db-agent-next.kafka.yaml`, "Lists, filters and paging") and the C++ page every list. |
-| 2 | 8: `wp-projects` lists (7), `wafer-types/map` | `local2GlobalMap` and `waferMap` come back re-serialised (compact); the C++ returns the stored text. | **Bug** of the clone: the columns are `json` (which keeps the text) but the entities map them as MikroORM `type: 'json'` (parse, then `JSON.stringify`); the contract says "returned byte for byte" (R-7). `Equipment.specification` is mapped the same way. |
+| 1 | 34: `pager-first`, `pager-second`, `pager-beyond` of `wafer-types`, `equipment-types`, `equipment`, `wp-machines`, `wp-probe-cards`, `wp-projects`, `svt-test-setups`, `svt-test-setup-configs`, `svt-test-types`, `svt-test-type-configs`, `svt-test-templates`; `svt-test-type-configs/pager-offset-only` | These 11 list handlers ignore `data.pager` and return every row. Only `wafers`, `asics`, `chips`, `chip-blocks` and `svt-tests` call `optionalPager`. | **Bug** of the clone: the agent's contract (`svt.db-agent-next.kafka.yaml`, "Lists, filters and paging") and the C++ page every list. **Fixed** (§5.2). |
+| 2 | 8: `wp-projects` lists (7), `wafer-types/map` | `local2GlobalMap` and `waferMap` come back re-serialised (compact); the C++ returns the stored text. | **Bug** of the clone: the columns are `json` (which keeps the text) but the entities map them as MikroORM `type: 'json'` (parse, then `JSON.stringify`); the contract says "returned byte for byte" (R-7). `Equipment.specification` is mapped the same way. **Fixed** (§5.2). |
 | 3 | 7: `wp-probe-cards` lists | The C++ returns the column `version`; the clone does not (it adds `asicFamilyTypes`, R-3). | **Open:** `version` is in neither contract (like `asicId` on chips, R-10). Drop it (as now) or add it to the contract. |
 | 4 | 1: `flow/wafer-type-map` (and `wafer-types/map`) | The C++ adds `waferTypeId` to the `GetWaferTypeMap` entity. | **Open:** not in `WaferTypeMapDto`; same question as row 3. |
 | 5 | 2: `flow/wp-machine-load-no-orientation`, `flow/wp-machine-unload-again` | Loading a wafer without `loadedWaferOrientation` is a `BadRequest` in the clone; the C++ accepted it (the second case follows from the first). | **Open:** the clone's contract requires the orientation, but no decision row backs it. WPAgent sends the key, with `None` as the default value; confirm with the WPAgent team. |
@@ -120,6 +120,37 @@ The 53 different cases are not decisions:
 Found in the harness: the location row written by a `Create*` carries the day of the run (`date` from `now()`),
 and the case does not blank it, so recordings of different days differ in `flow/*-location-at-creation` and in the
 order of `flow/wafer-history-after-moves`. Record both agents on the same day.
+
+### 5.2 After the two fixes (2026-11-14)
+
+The two bugs of §5.1 are fixed: the 11 list handlers page in the database (`findPage` with `findAndCount`, as the
+others), and the three `json` columns are mapped by `SvtDbJsonTextType` (`src/db/data/common`), which reads them
+with `::text` and writes the string as sent, so the stored text comes back byte for byte. The e2e suite checks
+both (`expectListPaging` in every list spec; the equipment, WP-project and wafer-map specs compare the text).
+The clone was recorded again the same day on a fresh restore; `cpp.json` is unchanged.
+
+| Verdict | Cases |
+|---|---|
+| same | 189 |
+| intentional (a listed decision) | 193 |
+| different | 14 |
+
+The 28 cases of the two bugs now match the C++ or a decision: the `pager-beyond` cases of the 11 lists answer
+`items: []` with the real `totalCount` (`X-4`, 11 more intentional cases), the others are the same. The 14 different
+cases are the open questions 3 to 6 of §5.1 (9 probe-card cases, 2 wafer-map cases, 2 wafer loads, 1 envelope).
+
+Found while re-recording, in the clone's Kafka set-up (not fixed here; they change how the agent is deployed):
+
+- **The consumer group is `svt.db-agent.request-server`, not `svt.db-agent.request`.** NestJS appends its
+  `postfixId` (`-server` by default) to the configured `groupId`, and `buildSvtDbAgentNextKafkaOptions` does not
+  override it. The C++ agent and the clone are therefore in two groups: run side by side, both would answer every
+  request, and the planned swap ([04 §7](04-runtime-and-deployment.md#7-swap-procedure)) is not the consumer
+  handover that [dev-plan/04](dev-plan/04-kafka-layer.md) describes.
+- **The clone replays the requests sent while it was down.** `fromBeginning: false` applies only to a group without
+  a committed offset; the clone's group keeps one, so at start it consumes everything after it, writes included
+  (the C++ agent seeks to the end). The comment in `svt-db-agent-next-kafka.models.ts` says the opposite. Here it
+  replayed the 399 requests of the C++ recording into the fresh database of the clone before the reads ran; the
+  recording procedure now resets the group's offset first ([test-parity/README.md](../test-parity/README.md)).
 
 ## 6. Beyond parity
 

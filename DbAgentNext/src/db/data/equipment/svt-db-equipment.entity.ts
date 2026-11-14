@@ -1,6 +1,7 @@
 import { DeferMode, OptionalProps, Ref } from '@mikro-orm/core'
 import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
 
+import { SvtDbJsonTextType } from '../common'
 import { SVT_DB_ENUM_VALUES } from '../enums'
 
 import { SvtDbEquipmentTypeEntity } from './svt-db-equipment-type.entity'
@@ -33,8 +34,9 @@ export class SvtDbEquipmentEntity {
     @Enum({ nativeEnumName: 'wpGeneralLocation', items: SVT_DB_ENUM_VALUES.wpGeneralLocation })
     generalLocation!: string
 
-    @Property({ type: 'json', columnType: 'json', nullable: true })
-    specification!: unknown;
+    /** The stored text of the `json` column, returned byte for byte. */
+    @Property({ type: SvtDbJsonTextType, columnType: 'json', nullable: true })
+    specification!: string | null;
 
     [OptionalProps]?: 'id' | 'specification'
 

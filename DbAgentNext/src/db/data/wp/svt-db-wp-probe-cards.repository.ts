@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbWpProbeCardFamilyTypeEntity } from './svt-db-wp-probe-card-family-type.entity'
 import { SvtDbWpProbeCardEntity } from './svt-db-wp-probe-card.entity'
 
@@ -22,11 +24,16 @@ export class SvtDbWpProbeCardsRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    async findAll(filter: SvtDbWpProbeCardsFilter = {}): Promise<SvtDbWpProbeCardWithFamilyTypes[]> {
+    async findPage(filter: SvtDbWpProbeCardsFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbWpProbeCardWithFamilyTypes>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        const probeCards = await this.em.find(SvtDbWpProbeCardEntity, where, { orderBy: { id: 'asc' } })
+        const [probeCards, totalCount] = await this.em.findAndCount(SvtDbWpProbeCardEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
         const familyTypes = await this.familyTypesByProbeCard(probeCards.map((probeCard) => probeCard.id))
-        return probeCards.map((probeCard) => ({ probeCard, asicFamilyTypes: familyTypes.get(probeCard.id) ?? [] }))
+        const items = probeCards.map((probeCard) => ({ probeCard, asicFamilyTypes: familyTypes.get(probeCard.id) ?? [] }))
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbWpProbeCardEntity | null> {

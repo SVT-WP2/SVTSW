@@ -1,7 +1,7 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
-import { SVT_DB_LOCATION_AT_CREATION_NOTE, SvtDbLocationInput } from '../common'
+import { SVT_DB_LOCATION_AT_CREATION_NOTE, SvtDbLocationInput, SvtDbPage, SvtDbPager } from '../common'
 
 import { SvtDbEquipmentLocationEntity } from './svt-db-equipment-location.entity'
 import { SvtDbEquipmentEntity } from './svt-db-equipment.entity'
@@ -16,8 +16,8 @@ export type SvtDbEquipmentCreateInput = {
     equipmentTypeId: number
     /** The initial location; also written as the first history row. */
     generalLocation: string
-    /** The parsed JSON of the specification, or `null`. */
-    specification: unknown
+    /** The specification as the client sent it (valid JSON), or `null`. */
+    specification: string | null
 }
 
 /**
@@ -30,9 +30,14 @@ export class SvtDbEquipmentRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    findAll(filter: SvtDbEquipmentFilter = {}): Promise<SvtDbEquipmentEntity[]> {
+    async findPage(filter: SvtDbEquipmentFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbEquipmentEntity>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        return this.em.find(SvtDbEquipmentEntity, where, { orderBy: { id: 'asc' } })
+        const [items, totalCount] = await this.em.findAndCount(SvtDbEquipmentEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
+        return { items, totalCount }
     }
 
     findById(id: number): Promise<SvtDbEquipmentEntity | null> {

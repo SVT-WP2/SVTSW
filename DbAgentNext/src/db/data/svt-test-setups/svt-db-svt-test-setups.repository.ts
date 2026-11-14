@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
+import { SvtDbPage, SvtDbPager } from '../common'
+
 import { SvtDbSvtTestSetupConfigEntity } from './svt-db-svt-test-setup-config.entity'
 import { SvtDbSvtTestSetupDefaultConfigEntity } from './svt-db-svt-test-setup-default-config.entity'
 import { SvtDbSvtTestSetupEntity } from './svt-db-svt-test-setup.entity'
@@ -37,15 +39,20 @@ export class SvtDbSvtTestSetupsRepository {
     constructor(private readonly em: EntityManager) {
     }
 
-    async findAll(filter: SvtDbSvtTestSetupsFilter = {}): Promise<SvtDbSvtTestSetupWithDefault[]> {
+    async findPage(filter: SvtDbSvtTestSetupsFilter = {}, pager?: SvtDbPager): Promise<SvtDbPage<SvtDbSvtTestSetupWithDefault>> {
         const where = filter.ids?.length ? { id: { $in: filter.ids } } : {}
-        const setups = await this.em.find(SvtDbSvtTestSetupEntity, where, { orderBy: { id: 'asc' } })
+        const [setups, totalCount] = await this.em.findAndCount(SvtDbSvtTestSetupEntity, where, {
+            orderBy: { id: 'asc' },
+            limit: pager?.limit,
+            offset: pager?.offset,
+        })
         const defaults = await this.defaultConfigIds(setups.map((setup) => setup.id))
-        return setups.map((setup) => ({ setup, defaultConfigId: defaults.get(setup.id) ?? null }))
+        const items = setups.map((setup) => ({ setup, defaultConfigId: defaults.get(setup.id) ?? null }))
+        return { items, totalCount }
     }
 
     async findById(id: number): Promise<SvtDbSvtTestSetupWithDefault | null> {
-        const [found] = await this.findAll({ ids: [id] })
+        const { items: [found] } = await this.findPage({ ids: [id] })
         return found ?? null
     }
 

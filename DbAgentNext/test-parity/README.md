@@ -80,7 +80,16 @@ docker run -d --name svt-db-agent-parity --network svt-network--local --restart 
 SVT_DB_AGENT_PARITY_AGENT=cpp npm run parity:record
 ```
 
-Stop that container (`docker rm -f svt-db-agent-parity`), then the clone on its database (from
+Stop that container (`docker rm -f svt-db-agent-parity`). The clone's consumer group
+(`svt.db-agent.request-server`, see `docs/03-parity-testing.md` §5.2) keeps its committed offset, so the clone
+would first replay every request of the C++ recording into its database. Move the offset to the end before you
+start it; the group must have no member (wait about 30 s after a clone stopped):
+
+```bash
+docker exec svt.kafka-broker--local kafka-consumer-groups --bootstrap-server localhost:9084 --group svt.db-agent.request-server --topic svt.db-agent.request --reset-offsets --to-latest --execute
+```
+
+Then the clone on its database (from
 `DbAgentNext/`, so that `.env.development` is found; the variable set in the shell wins over it):
 
 ```bash

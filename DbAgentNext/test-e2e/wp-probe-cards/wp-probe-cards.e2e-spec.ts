@@ -1,7 +1,7 @@
 import { EpicWpProbeCard } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'svt-ts-types/kafka'
 
-import { insertProbeCard, TestSetup } from '../utils'
+import { expectListPaging, insertProbeCard, TestSetup } from '../utils'
 
 
 /** `ProbeCardDto` of the Kafka contract: `EpicWpProbeCard` plus `asicFamilyTypes`. */
@@ -53,6 +53,7 @@ describe('Probe cards (e2e)', () => {
             const reply = await setup.send<ListReply>(new SvtDbAgentKafkaWpProbeCards.GetAllWpProbeCardsMessage({}))
 
             expect(reply).toMatchObject({ type: 'GetAllProbeCardsReply', status: 'Success' })
+            await expectListPaging(setup, 'GetAllProbeCards', reply.data.items)
             expect(reply.data).toEqual({ items: [CARD_1, CARD_2, CARD_3], totalCount: 3 })
             expect(Object.keys(reply.data.items[0])).toEqual([
                 'id', 'serialNumber', 'name', 'vendor', 'model', 'arriveDate', 'location', 'type', 'vendorCleaningInterval',

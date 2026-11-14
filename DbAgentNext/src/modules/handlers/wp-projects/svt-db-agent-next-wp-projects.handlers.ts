@@ -11,8 +11,9 @@ import {
 } from '../../../db/data'
 import {
     optionalIntegerList,
+    optionalPager,
+    jsonTextOrBadRequest,
     optionalRecord,
-    parseJsonOrBadRequest,
     requireAllowedFilterKeys,
     requireRecord,
     SvtDbAgentNextHandlerDefinition,
@@ -53,10 +54,12 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
     }
 
     private async getAll(data: unknown): Promise<SvtDbAgentKafka.PageReplyMessageData<EpicWpProject>> {
-        const filter = optionalRecord(optionalRecord(data, 'data')['filter'], 'data.filter')
+        const body = optionalRecord(data, 'data')
+        const filter = optionalRecord(body['filter'], 'data.filter')
         requireAllowedFilterKeys(filter, ['ids'])
-        const items = await this.projects.findAll({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') })
-        return { items: items.map(toWire), totalCount: items.length }
+        const pager = optionalPager(body['pager'], 'data.pager')
+        const page = await this.projects.findPage({ ids: optionalIntegerList(filter['ids'], 'data.filter.ids') }, pager)
+        return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpProject>> {
@@ -84,7 +87,7 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
             orientation: create.orientation,
             alignmentDie: create.alignmentDie,
             homeDie: create.homeDie,
-            local2GlobalMap: parseJsonOrBadRequest(create.local2GlobalMap, 'data.create.local2GlobalMap'),
+            local2GlobalMap: jsonTextOrBadRequest(create.local2GlobalMap, 'data.create.local2GlobalMap'),
         })
         return { entity: toWire(project) }
     }
@@ -101,6 +104,6 @@ function toWire(project: SvtDbWpProjectEntity): EpicWpProject {
         orientation: project.orientation,
         alignmentDie: project.alignmentDie,
         homeDie: project.homeDie,
-        local2GlobalMap: project.local2GlobalMap === null ? null : JSON.stringify(project.local2GlobalMap),
+        local2GlobalMap: project.local2GlobalMap,
     }
 }
