@@ -55,8 +55,5 @@ Thumbs.db
 .claude/worktrees
 .nx/polygraph
 .nx/self-healing
-# Personal e2e database credentials (see apps/svt-db-agent-next/test-e2e/README.md)
-.env.*.local
-
 # node_modules anywhere (Vite caches, nested installs)
 node_modules/

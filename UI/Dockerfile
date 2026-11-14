@@ -7,7 +7,8 @@
 #   docker build -f UI/Dockerfile -t svt-ui .
 
 # ---- Stage 1: Build ----
-FROM node:20-alpine AS build
+# Node 22, as in CI (ui.yml); Node 20 reached its end of life in April 2026.
+FROM node:22-alpine AS build
 
 WORKDIR /app/UI
 
@@ -29,7 +30,7 @@ RUN npx nx build epic-measure-ui --configuration=production
 RUN npx nx build epic-measure-api
 
 # ---- Stage 2: Production ----
-FROM node:20-alpine
+FROM node:22-alpine
 
 RUN apk add --no-cache nginx gettext curl
 

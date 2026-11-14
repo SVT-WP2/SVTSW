@@ -36,8 +36,7 @@ UI/
 ├── apps/
 │   ├── epic-measure-ui/      Angular 19 SPA
 │   ├── epic-measure-api/     NestJS BFF (HTTP + Kafka client)
-│   ├── epic-db-agent/        NestJS Kafka microservice — mock DB agent
-│   └── svt-db-agent-next/    NestJS re-implementation of the real DB Agent (in development, see docs/db-agent-clone)
+│   └── epic-db-agent/        NestJS Kafka microservice — mock DB agent
 ├── libs/
 │   ├── epic/                 Node-side shared code (API ↔ db-agent)
 │   │   ├── entities/         DTO classes, RxJS / NestJS helpers around the Kafka contract
@@ -54,8 +53,8 @@ UI/
 └── kafka/                    Kafka contract of the Node apps — `svt-ts-types/kafka`
 ```
 
-The contract types are outside `UI/` because the DB agent is going to leave the workspace and compile them too
-(`docs/db-agent-clone/05-repository-layout-plan.md`). The workspace reaches them through the two aliases of
+The contract types are outside `UI/` because the DB agent, the standalone app `../DbAgentNext`, compiles them too
+(`../DbAgentNext/docs/05-repository-layout-plan.md`). The workspace reaches them through the two aliases of
 `tsconfig.base.json` only; how each tool handles a file outside `UI/` is in `../Shared/svt-ts-types/README.md`.
 
 **The hard boundary:** `libs/epic/*` is Node-only and shared by the two NestJS apps. `libs/epic-ui/*` is

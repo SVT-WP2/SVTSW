@@ -13,7 +13,11 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 | `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
-| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++): consumes `svt.db-agent.request` (consumer group `svt.db-agent.request`, the C++ one), produces the heartbeat, `GET /health` (database + Kafka) on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context: the repository root), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
+
+The real DB Agent's NestJS re-implementation (`svt-db-agent-next`, deployed to dev in place of the C++ agent) is
+**not** in this workspace: it is the standalone app [`../DbAgentNext`](../DbAgentNext/CLAUDE.md), with its own
+`package.json`, lockfile, image and pipelines. What it shares with this workspace is the contract types of
+`../Shared/svt-ts-types` and nothing else.
 
 The browser never talks to Kafka. Flow is always:
 
@@ -37,14 +41,6 @@ npm run start::api     # NestJS only, http://localhost:7373/api (Swagger: /api/s
 
 ```bash
 npm run start::db-agent   # fake DB agent — needs Kafka running
-```
-
-```bash
-npm run start::db-agent-next   # real DB agent (in development) — needs Postgres on 5500 and Kafka on 9085 (../Dev/docker-compose.kafka-local.yml); http://localhost:7676/health
-```
-
-```bash
-npm run e2e::db-agent-next     # DB agent e2e suite — needs Postgres on 5500 (.env.test; override in .env.test.local) with database svt_sw_db_e2e_test; SVT_DB_AGENT_E2E_KAFKA=1 adds the broker-backed smoke spec (Kafka on 9085)
 ```
 
 ```bash
@@ -129,8 +125,8 @@ Don't add a NgRx store for a single grid.
 
 - Dev API port is **7373** (`.env.development`), not the `9393` fallback in `main.ts`. `proxy.conf.json`
   targets 7373 — keep them in sync.
-- `.env.development` / `.env.production` / `.env.test` **are committed** for `epic-measure-api`,
-  `epic-db-agent` and `svt-db-agent-next`. Don't put secrets there. `nx serve` loads the project's
+- `.env.development` / `.env.production` / `.env.test` **are committed** for `epic-measure-api` and
+  `epic-db-agent`. Don't put secrets there. `nx serve` loads the project's
   `.env.<configuration>` itself; the `envFilePath` in `app.module.ts` is for containers.
 - New SCSS in a lib needs its `styles/` dir added to `stylePreprocessorOptions.includePaths` in
   `apps/epic-measure-ui/project.json`; new lib `assets/` needs an entry in the same file's `assets` array.
@@ -143,13 +139,6 @@ Don't add a NgRx store for a single grid.
 - Every dependency must satisfy the Angular 21 peer ranges so plain `npm i` / `npm ci` resolve. If you add
   or bump a package, check its peers — a single stale one (e.g. a lib still pinned to `@angular/*@^19`)
   forces the whole workspace onto `npm i --force` and hides every other conflict behind it.
-- `svt-db-agent-next` uses **MikroORM 7**, which is ESM-first and needs **Node ≥ 22.17** (`engines` in
-  `package.json`). Import its decorators from `@mikro-orm/decorators/legacy`; `apps/svt-db-agent-next`
-  compiles with `moduleResolution: nodenext` because v7's types are invisible to the legacy
-  `node` resolution the rest of the workspace uses. Its database layer is `src/db` (`orm`: MikroORM setup,
-  `data`: entities, repositories, domain logic): `strict` there (`src/db/tsconfig.json`), and the app's
-  `eslint.config.mjs` keeps it from importing the Kafka contract or the handlers. Conventions for entities:
-  `docs/db-agent-clone/dev-plan/03-data-layer.md`.
 - The contract types (`svt-ts-types`, `svt-ts-types/kafka`) are in `../Shared/svt-ts-types`, **outside the
   workspace**. Two rules follow from it. A tsconfig that compiles to CommonJS sets `"importHelpers": false` (else
   the barrels' `export *` imports `tslib`, which does not resolve from `../Shared`: TS2354). And **no comments in a
@@ -168,4 +157,7 @@ Don't add a NgRx store for a single grid.
 - `../Dev/` — auxiliary compose files (Kafka, Postgres).
 - `../DbAgent/docs/` — behavioural documentation of the **real** DB Agent (current state, pending its
   author's review). The authority on what the C++ actually does, quirks included.
-- `docs/db-agent-clone/` — working notes for re-implementing the DB Agent in this workspace (proposal).
+- `../DbAgentNext/` — the NestJS re-implementation of the DB Agent, a standalone app with its own `CLAUDE.md`;
+  its decisions and plans are in `../DbAgentNext/docs/`.
+- `../Shared/svt-ts-types/` — the contract types this workspace and the agent compile (aliases `svt-ts-types`,
+  `svt-ts-types/kafka`).
