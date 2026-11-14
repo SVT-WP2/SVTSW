@@ -1,7 +1,7 @@
 # Repository layout: the DB agent and the shared types leave `UI/`
 
-**Status: in progress (2026-11-14).** Steps 1 to 4 are done and committed on the branch
-`371-db-next-instance-proposal` (§3); steps 5 to 8 are open. This file is the handover: it assumes no knowledge
+**Status: in progress (2026-11-14).** Steps 1 to 5 are done on the branch
+`371-db-next-instance-proposal` (§3, §5); steps 6 to 8 are open. This file is the handover: it assumes no knowledge
 of the sessions that produced it.
 
 It replaces the decision of [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning)
@@ -91,11 +91,25 @@ Do them in this order. Each step is one commit (or two where stated). Verify wit
 ### Step 5: spike, an alias that points outside `UI/`
 
 Not for merge. The question: do all tools of the UI workspace accept a source file that is outside `UI/`?
-None of the points below is tested yet.
 
-1. Create `Shared/svt-ts-types/main/src/index.ts` with one type and one enum. Add the alias to
-   `UI/tsconfig.base.json` and import it in one Angular file and one BFF file.
-2. Check each point. Write down the result and the fix.
+**Done 2026-11-14: yes, every row has a clean fix; the fallback is not needed.** The spike was a
+`Shared/svt-ts-types/main/src` with an enum, an interface and a class behind an `export *` barrel, the alias
+`svt-ts-types` in `UI/tsconfig.base.json`, an import in `apps/epic-measure-ui/src/main.ts` and
+`apps/epic-measure-api/src/main.ts`, and two specs. It was reverted; step 6 applies the fixes.
+
+| Tool | Result | Fix |
+|---|---|---|
+| TypeScript | TS6059 in both apps (`"rootDir": "."`). In the BFF also TS2354: the `export *` of the barrel, compiled to CommonJS with `importHelpers`, imports `tslib`, which does not resolve from `Shared/`. The Angular app emits ES modules and needs no helper. | Remove `rootDir` from `tsconfig.base.json` (no target emits with `tsc`: the builds are webpack, esbuild and Vitest). `"importHelpers": false` in the `tsconfig.app.json` of the three CommonJS Node apps: TypeScript then writes the helper inline. |
+| Angular | `nx build epic-measure-ui` passes. `nx serve` rebuilt after an edit of the shared file; the served `main.js` had the new value. | None. |
+| Nest builds (webpack) | Fails with the TS2354 above. With the fix it builds, and the bundle runs (it printed the spike value). | As above. |
+| Vitest | The root config (Analog plugin, `jsdom`) and the agent's e2e config (swc) both resolve the alias and run the spec. A spec **inside** `Shared/` is not found by `npx vitest run` (its root is `UI/`); with `--dir ..` it fails: `Cannot find module '/@fs/G:/…'`. | `Shared/` holds no spec files. The library has none today; its checks are compile-time. |
+| ESLint | The root config: "File ignored because outside of base path". With lookup from the file: "couldn't find an eslint.config". | `Shared/svt-ts-types/eslint.config.mjs` imports `UI/eslint.config.mjs` (its npm packages resolve from `UI/node_modules`) and adds the import restriction. Run it as `eslint --flag v10_config_lookup_from_file ../Shared/svt-ts-types` (a folder: a `../` glob matches nothing). The type-aware rules work through `Shared/svt-ts-types/tsconfig.json`, a strict tsconfig with no `extends`; `tsc` on it also rejects an npm import (TS2307). |
+| Nx cache | A change in `Shared/` reused the cached build. An input `{workspaceRoot}/../Shared/**/*` is ignored as well. | `"sharedGlobals": [{ "runtime": "node tools/shared-sources-hash.mjs" }]` in `nx.json`: the script hashes the paths and contents of `Shared/`. A changed file and a new file both rebuild. A failing runtime command does not fail the task, it only stops the invalidation, so the script must stay where `nx.json` says. |
+| Docker | The context `UI/` has no `../Shared`. | The repository root as context, with an ignore file next to the Dockerfile (`UI/Dockerfile.dockerignore`, read by BuildKit): `*`, then `!UI` and `!Shared`, then the old exclusions with a `UI/` prefix. The context was 1.8 MB. |
+| Husky / lint-staged | The hook runs in `UI/`. lint-staged sees the staged `Shared/` file, but `*.ts` matches files under `UI/` only: "No staged files match any configured task". | An entry `"../Shared/**/*.ts"` in `UI/.lintstagedrc`: lint-staged matches a file outside its folder only by a pattern that starts with `../`. Its ESLint flag `unstable_config_lookup_from_file` is renamed in ESLint 9.39 (warning); use `v10_config_lookup_from_file`. |
+| CI | Not run. | `Shared/**` in the path filters of `ui.yml` and `db-agent-next.yml`; the Docker context of both is the repository root. |
+
+The plan before the spike, for reference:
 
 | Tool | What to check | Expected problem |
 |---|---|---|
