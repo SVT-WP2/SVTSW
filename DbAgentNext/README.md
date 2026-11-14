@@ -79,6 +79,7 @@ this folder's `package.json`, with the three-workflow layout of the UI:
 > builds both. `svt-db-agent-next@` release commits are skipped by the master jobs; the release image is built
 > from the tag.
 >
-> Where it runs: **dev** (`Environment/Dev/`, in place of the C++ `svt-db-agent`); prod keeps the C++ agent until
+> Where it runs: **dev** (`Environment/Dev/`, in place of the C++ `svt-db-agent`), deployed by the master jobs: not
+> before the branch `371-db-next-instance-proposal` is merged (not merged on 2026-11-14). Prod keeps the C++ agent until
 > the swap described in [docs/04-runtime-and-deployment.md](docs/04-runtime-and-deployment.md). Operator notes:
 > [`../Environment/README.md`](../Environment/README.md#the-two-db-agent-services).

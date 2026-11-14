@@ -72,10 +72,10 @@ All DbAgent automation lives in [`.github/workflows`](../.github/workflows):
 | `db-agent-release.yml` (`DbAgent :: Release`) | Manual (`workflow_dispatch`) | Create a release: bump → commit + tag + push (no image; `db-agent.yml` builds it from the tag) |
 | `db-agent-manual.yml` (`DbAgent :: Manual`) | Manual (`workflow_dispatch`) | Manual ops: build a short-SHA image, deploy a release to prod |
 
-> **Since 2026-11 the dev environment runs the NestJS re-implementation** `svt-db-agent-next`
-> (built from `DbAgentNext/`, pipelines `db-agent-next*.yml`), so the C++ agent is no
-> longer deployed to dev — neither automatically nor manually — and is deployed to **prod only**, by
-> hand. See [`Environment/README.md`](../Environment/README.md#the-two-db-agent-services). The
+> **On dev the NestJS re-implementation** `svt-db-agent-next` **replaces this agent** (built from
+> `DbAgentNext/`, pipelines `db-agent-next*.yml`) once its branch is merged to `master` (not merged on
+> 2026-11-14). From then on the C++ agent is no longer deployed to dev — neither automatically nor manually — and
+> is deployed to **prod only**, by hand. See [`Environment/README.md`](../Environment/README.md#the-two-db-agent-services). The
 > dev-deploy steps that used to be described here were removed from the workflows.
 
 > `db-agent.yml` runs for PRs/pushes only when they touch `DbAgent/**` or `.github/workflows/db-agent.yml`.

@@ -98,7 +98,7 @@ Why the decision of 2026-11-08 was revised:
 | Version | `DbAgentNext/package.json` (and its lockfile), independent of the UI's `svt-ui@` version; bumped by `DbAgent Next :: Release` (`svt-db-agent-next@<v>` commit, `svt-db-agent-next-<v>` tag, `release/svt-db-agent-next/<v>` branch for major/minor) |
 | Workflows | `.github/workflows/db-agent-next.yml` (CI: `npm run lint`, `typecheck`, `test`, `build`, `e2e` against a PostgreSQL service; PR image build without push; master → `:dev` + `:<sha>` and deploy to dev; tag → `:<version>` [+ `:latest`] and deploy to dev), `db-agent-next-manual.yml`, `db-agent-next-release.yml`. Path filter: `DbAgentNext/**` and `Shared/**`; `ui.yml` watches `UI/**` and `Shared/**`, so a change of the contract types builds both |
 | Compose | service `svt-db-agent-next`, container `svt.db-agent-next--<env>`, `SVT_DB_AGENT_NEXT_VERSION` in `versions.env`, same `SVT_DB_*` values from `.env`, optional `SVT_DB_AGENT_NEXT_LOG_VERBOSITY`; no log volume |
-| Where it runs | **dev only** for now, in place of the C++ service (`Environment/Dev/`); prod keeps `svt-db-agent`. `db-agent.yml` still builds the C++ image but no longer deploys to dev |
+| Where it runs | **dev only**, in place of the C++ service (`Environment/Dev/`), once the branch is merged to `master` (not on 2026-11-14); prod keeps `svt-db-agent`. `db-agent.yml` still builds the C++ image but no longer deploys to dev |
 
 Details for operators: [`Environment/README.md`](../../Environment/README.md#the-two-db-agent-services).
 
@@ -123,12 +123,13 @@ Docker context, the version file and the path filter changed.
 
 ## 7. Swap procedure
 
-1. **Dev (done 2026-11-08 at the compose level):** `Environment/Dev/docker-compose-svtsw-dev.yml`
-   defines `svt-db-agent-next` instead of `svt-db-agent`; every master push touching the agent
-   deploys it. The old C++ container has to be removed once by hand
+1. **Dev (configured on the branch since 2026-11-08, not on `master` yet on 2026-11-14):**
+   `Environment/Dev/docker-compose-svtsw-dev.yml` defines `svt-db-agent-next` instead of `svt-db-agent`, and every
+   master push touching the agent deploys it. The switch therefore happens with the merge of the branch to
+   `master`; the old C++ container has to be removed once by hand
    ([`Environment/Dev/README.md`](../../Environment/Dev/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next)).
-   Until phase 4 lands, dev has no Kafka consumer for `svt.db-agent.request`.
-2. Run the parity harness against dev once phase 4 is deployed.
+2. Run the parity harness against dev once the merge has deployed the clone (the local run of 2026-11-14 is
+   [03 §5](03-parity-testing.md#5-intentional-differences)).
 3. **Production:** add the `svt-db-agent-next` service to `Environment/Prod/docker-compose-svtsw-prod.yml`
    and `SVT_DB_AGENT_NEXT_VERSION` to `Prod/versions.env.example`, deploy a release via
    `DbAgent Next :: Manual → deploy-prod--manual`, remove `svt.db-agent--prod` once, then drop the

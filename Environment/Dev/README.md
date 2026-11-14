@@ -43,12 +43,13 @@ sudo docker rm -f svt.db-agent--dev
 does the same while restarting the whole app stack). Keep the
 `SVT_DB_AGENT_VERSION=` line in `versions.env` or delete it; nothing reads it.
 
-Until the Kafka layer of the re-implementation lands (phase 4 of
-`DbAgentNext/docs/dev-plan/`), the dev stack has **no consumer on
-`svt.db-agent.request`**: the UI on dev gets no replies. To run the C++ agent
-on dev again in the meantime, restore its service block in the compose file
-from git history and deploy it with `bash Environment/deploy-service.sh dev
-svt-db-agent <tag>`.
+The re-implementation consumes `svt.db-agent.request` with the C++ agent's
+consumer group and skips the requests produced while no agent consumed it,
+as the C++ did. To run the C++ agent on dev again (a rollback), restore its
+service block in the compose file from git history and deploy it with
+`bash Environment/deploy-service.sh dev svt-db-agent <tag>`; stop the other
+agent first: both join the same group, and only one of them receives the
+requests at a time.
 
 Health of the new agent (the port is not published on the host):
 

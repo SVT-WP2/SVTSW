@@ -1,14 +1,19 @@
 # DB Agent re-implementation in NestJS: working notes
 
-**Status (2026-11-14): built and running on dev** as the standalone app `DbAgentNext/` (this folder is its
-`docs/`); open are the parity run against the C++ agent ([03](03-parity-testing.md)) and the prod swap
+**Status (2026-11-14): built and compared with the C++ agent, not merged to `master` yet.** The agent is the
+standalone app `DbAgentNext/` (this folder is its `docs/`): every message type in scope implemented and covered by
+e2e tests, and the parity run against the C++ agent left 14 cases open ([03 §5.2](03-parity-testing.md)). The
+branch `371-db-next-instance-proposal` is not merged, and dev deploys from `master`, whose dev compose file still
+runs the C++ agent; the clone takes over dev with the merge. Open after that: the open parity questions and the
+**ask** rows of [01](01-behaviour-decisions.md), parity against dev, and the prod swap
 ([04 §7](04-runtime-and-deployment.md#7-swap-procedure)). The notes started as a proposal on 2026-11-08.
 
 These notes collect what a NestJS + MikroORM re-implementation of the SVT DB Agent would have to do.
 They deliberately contain **no description of the current agent's behaviour**: that lives in
 [DbAgent/docs](../../DbAgent/docs/README.md) and is the reference these notes point into. Read
-that first; it is pending review by the agent's author, and several decisions below depend on
-what that review confirms.
+that first. Its author answered the open questions on 2026-11-08
+([DbAgent/docs/08](../../DbAgent/docs/08-questions-for-the-author.md), 13 still partly open), and the decisions
+below cite those answers as *Author (Qn)*.
 
 ## Files
 
@@ -66,6 +71,11 @@ Gates: Phase 2 does not start before the author review and the live schema dump 
 does not start before the harness passes against the clone with every intentional difference
 listed in [03-parity-testing.md](03-parity-testing.md). Phase 4 is a manual `deploy-prod` like any
 other release.
+
+Where they stand (2026-11-14): phase 0 done (the author's answers and the dumps of 2026-11-08); phase 1 and 2
+done (the harness, every slice, the C++ recording of 2026-11-14); phase 3 configured on the branch but not
+deployed, and its gate not met yet: 14 parity cases have no decision ([03 §5.2](03-parity-testing.md)); phase 4
+not started.
 
 ## Open questions before Phase 2
 

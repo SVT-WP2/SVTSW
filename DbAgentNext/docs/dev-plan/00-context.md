@@ -280,14 +280,15 @@ Condensed from `../01-behaviour-decisions.md`; that file is authoritative and ha
 
 ## 13. Open questions that may change the plan
 
-`DbAgent/docs/08-questions-for-the-author.md` is awaiting answers. Phases proceed on the
-assumptions below; when an answer arrives, update the plan.
+The author answered `DbAgent/docs/08-questions-for-the-author.md` on 2026-11-08: 30 questions are resolved, 13
+are still open, and the status table at the top of that file lists them. The phases ran on the assumptions
+below; the last column says what came of each.
 
-| Question | Assumption used by the phases |
-|---|---|
-| Q6 chip block naming | `<blockType>_<chipSN>` as in the code; generation implemented but **disabled by a config flag** until confirmed |
-| Q9 module design | **dropped** (2026-11-08): the UI has no module concept; no entities, no messages |
-| Q21, Q24 DUT model | dev layout: one `SvtTestListToEntityName` and one `SvtTestListToEntityId` row per test |
-| Q25 result status | DB enum values `SUCCESS/PARTIAL_SUCCESS/FAILURE/ERROR` |
-| Q27 configBody type | ~~`json`~~ `text` (answered 2026-11-08: the schema doc is authoritative, Q31); strings on the wire |
-| Q31 prod schema | migration 1 is written; when it runs in prod is an operations decision |
+| Question | Assumption used by the phases | Outcome |
+|---|---|---|
+| Q6 chip block naming | `<blockType>_<chipSN>` as in the code; generation implemented but **disabled by a config flag** until confirmed | Resolved: the dev rows were test data and no naming is defined yet; the flag stays off until a user defines it. |
+| Q9 module design | **dropped** (2026-11-08): the UI has no module concept; no entities, no messages | Dropped. |
+| Q21, Q24 DUT model | dev layout: one `SvtTestListToEntityName` and one `SvtTestListToEntityId` row per test | Q21 resolved (`dutEntityName` + `dutId` identify the device); Q24 open (several DUTs per test, a test without a setup config). |
+| Q25 result status | DB enum values `SUCCESS/PARTIAL_SUCCESS/FAILURE/ERROR` | Open; the agent uses the database enum plus `CANCELLED` (migration 2). |
+| Q27 configBody type | ~~`json`~~ `text` (answered 2026-11-08: the schema doc is authoritative, Q31); strings on the wire | Resolved: `text` (migration 4 for databases migrated earlier). |
+| Q31 prod schema | migration 1 is written; when it runs in prod is an operations decision | Resolved: the schema doc is authoritative; when migrations 1–4 run in prod is still an operations decision. |

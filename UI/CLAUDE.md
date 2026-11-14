@@ -14,7 +14,7 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
 
-The real DB Agent's NestJS re-implementation (`svt-db-agent-next`, deployed to dev in place of the C++ agent) is
+The real DB Agent's NestJS re-implementation (`svt-db-agent-next`, set up to replace the C++ agent on dev) is
 **not** in this workspace: it is the standalone app [`../DbAgentNext`](../DbAgentNext/CLAUDE.md), with its own
 `package.json`, lockfile, image and pipelines. What it shares with this workspace is the contract types of
 `../Shared/svt-ts-types` and nothing else.
@@ -155,8 +155,8 @@ Don't add a NgRx store for a single grid.
   Check it before inventing a message type.
 - `../Documentation/DB/DBTables/SVT_DB_Tables_SourceOfTruth.txt` — DB schema.
 - `../Dev/` — auxiliary compose files (Kafka, Postgres).
-- `../DbAgent/docs/` — behavioural documentation of the **real** DB Agent (current state, pending its
-  author's review). The authority on what the C++ actually does, quirks included.
+- `../DbAgent/docs/` — behavioural documentation of the **real** DB Agent (current state; its author answered
+  the open questions on 2026-11-08, `08-questions-for-the-author.md` lists what is still open). The authority on what the C++ actually does, quirks included.
 - `../DbAgentNext/` — the NestJS re-implementation of the DB Agent, a standalone app with its own `CLAUDE.md`;
   its decisions and plans are in `../DbAgentNext/docs/`.
 - `../Shared/svt-ts-types/` — the contract types this workspace and the agent compile (aliases `svt-ts-types`,
