@@ -191,8 +191,10 @@ microservice (`TestSetup({ kafka: true })`) and checks the envelope and correlat
 non-JSON value with the agent still serving afterwards, a write through Kafka, and the heartbeat record.
 CI has no broker, so the flag stays off there.
 
-**Still open from this page.** 4d: the parity run against the C++ agent on the same dump
-([../03-parity-testing.md](../03-parity-testing.md)) and the UI documentation updates that follow it.
+**Still open from this page.** 4d: the parity run against the C++ agent ran on 2026-11-14
+([../03-parity-testing.md §5.1](../03-parity-testing.md#51-first-run-against-the-c-agent-2026-11-14)): 161 cases
+the same, 182 intentional, 53 different (two bugs of the clone, four open questions). Open: those fixes and
+questions, and the UI documentation updates that follow.
 Intentional differences so far are the findings sections of [05-e2e-testing.md](05-e2e-testing.md).
 
 ### End-to-end run (2026-11-09, local)

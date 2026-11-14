@@ -49,7 +49,8 @@ info:
       `limit` defaults to 20 and `offset` to 0; without one every matching row is returned (no 5000-row cap,
       R-13); an offset beyond the end returns `items: []` with the real `totalCount`.
     - Every list reply carries `totalCount`, the number of rows matching the filter (location histories
-      included, R-12). Lists are ordered by `id`; location histories in insertion order.
+      included, R-12). Lists are ordered by `id`, `GetAllSvtTests` newest first (`id` descending, for the UI
+      grid); location histories in insertion order.
 
     ### Values on the wire
     - Dates (`thinningDate`, `dicingDate`, `productionDate`, `arriveDate`, history `date`, config `createdAt`)
@@ -1556,7 +1557,7 @@ paths:
         - SvtTest
       summary: Get all SvtTest
       description: >-
-        Returns SvtTest list in the reply message, filtered and paged.
+        Returns SvtTest list in the reply message, filtered and paged, newest first (`id` descending).
         Every filter is implemented (D-3): `testResultStatuses` may contain `null` for the tests without a result; the date ranges take ISO 8601 date-times, `…From` inclusive and `…To` exclusive.
       requestBody:
         content:

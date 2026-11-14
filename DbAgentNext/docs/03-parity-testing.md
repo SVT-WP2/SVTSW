@@ -83,6 +83,44 @@ cases above whose expected value for the clone is the contract's, not the snapsh
 keeps that list explicitly (a map from case id to "expected: contract") so a parity failure is
 either a bug or a listed decision, never a surprise.
 
+The list is `test-parity/utils/parity-known-differences.ts`. An entry covers whole cases, so it lists a case
+only when its decision explains **every** difference of that case; a case that also shows a bug or an open
+question stays out and keeps failing.
+
+### 5.1 First run against the C++ agent (2026-11-14)
+
+Both agents on their own restore of `Dev/db-example/2026-11-08-backup.dump` (the clone's with migrations 0–4),
+recorded the same day: `test-parity/snapshots/cpp.json` (the C++ image built from `DbAgent/`, 6 restarts, no
+reply to three malformed records) and `next.json`; the comparison is `snapshots/report.md`.
+
+| Verdict | Cases |
+|---|---|
+| same | 161 |
+| intentional (a listed decision) | 182 |
+| different | 53 |
+
+The 182 intentional cases, by decision: the chip-block handler the C++ lacks (07 §1, 21 cases), `Q-F1` (a wrong
+filter value is a `BadRequest`, 16), `R-9` (other message texts, 19), `X-4` (paging in the database, 19),
+`D-3` (every `GetAllSvtTests` filter, 20), `R-6` and newest-first svt-tests (9), `R-10` (no `asicId` on
+chips, 12), the test flow after the C++ failed `CreateSvtTestSetup` (`X-5`, `X-1`, 10), `X-9` (8), `R-12` (7),
+and `R-13`, `R-8`, `R-2`, `R-7`, `X-2`, `X-10`, `X-12`, `D-1`, `D-2`, `D-4` to `D-13`, the `CANCELLED` test status
+(01 §3) and the envelope headers for the rest. The registry has a note per entry.
+
+The 53 different cases are not decisions:
+
+| # | Cases | What differs | Kind |
+|---|---|---|---|
+| 1 | 34: `pager-first`, `pager-second`, `pager-beyond` of `wafer-types`, `equipment-types`, `equipment`, `wp-machines`, `wp-probe-cards`, `wp-projects`, `svt-test-setups`, `svt-test-setup-configs`, `svt-test-types`, `svt-test-type-configs`, `svt-test-templates`; `svt-test-type-configs/pager-offset-only` | These 11 list handlers ignore `data.pager` and return every row. Only `wafers`, `asics`, `chips`, `chip-blocks` and `svt-tests` call `optionalPager`. | **Bug** of the clone: the agent's contract (`svt.db-agent-next.kafka.yaml`, "Lists, filters and paging") and the C++ page every list. |
+| 2 | 8: `wp-projects` lists (7), `wafer-types/map` | `local2GlobalMap` and `waferMap` come back re-serialised (compact); the C++ returns the stored text. | **Bug** of the clone: the columns are `json` (which keeps the text) but the entities map them as MikroORM `type: 'json'` (parse, then `JSON.stringify`); the contract says "returned byte for byte" (R-7). `Equipment.specification` is mapped the same way. |
+| 3 | 7: `wp-probe-cards` lists | The C++ returns the column `version`; the clone does not (it adds `asicFamilyTypes`, R-3). | **Open:** `version` is in neither contract (like `asicId` on chips, R-10). Drop it (as now) or add it to the contract. |
+| 4 | 1: `flow/wafer-type-map` (and `wafer-types/map`) | The C++ adds `waferTypeId` to the `GetWaferTypeMap` entity. | **Open:** not in `WaferTypeMapDto`; same question as row 3. |
+| 5 | 2: `flow/wp-machine-load-no-orientation`, `flow/wp-machine-unload-again` | Loading a wafer without `loadedWaferOrientation` is a `BadRequest` in the clone; the C++ accepted it (the second case follows from the first). | **Open:** the clone's contract requires the orientation, but no decision row backs it. WPAgent sends the key, with `None` as the default value; confirm with the WPAgent team. |
+| 6 | 1: `envelope/missing-reply-partition` | The C++ answers `BadRequest` without `kafka_replyPartition`; the clone replies `Success`. | **Open:** 01 §2 says the header is required "(NestJS does the same)", but NestJS only copies it when present ([dev-plan/04](dev-plan/04-kafka-layer.md#4d-parity-and-documentation)). Correct the decision row, or require the header. |
+
+Found in the harness: the location row written by a `Create*` carries the day of the run (`date` from `now()`),
+and the case does not blank it, so recordings of different days differ in `flow/*-location-at-creation` and in the
+order of `flow/wafer-history-after-moves`. Record both agents on the same day.
+
 ## 6. Beyond parity
 
 Load: replay a day of production requests (from the `request` topic, if retention allows, or
