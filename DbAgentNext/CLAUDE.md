@@ -50,6 +50,11 @@ name anything `e`. An `index.ts` barrel in every folder; import from the barrel.
 - **The MikroORM CLI reads `tsconfig.mikro-orm.json`**, which turns `emitDecoratorMetadata` off. With the
   metadata, its swc loader (`@swc-node/register`) fails on the circular entity imports with
   "Cannot access 'SvtDbWaferTypeMapEntity' before initialization". The CLI needs the TypeScript sources only.
+- **Kafka: `postfixId: ''` and the backlog skip stay.** NestJS appends `-server` to the client and group ids
+  unless `postfixId` is `''`, and the agent must consume as `svt.db-agent.request`, the C++ agent's group.
+  kafkajs resumes from the group's committed offset (`fromBeginning: false` only covers a group without one),
+  so `SvtDbAgentNextKafkaBacklogService.skip()` moves the offsets to the end before the consumer starts, as the
+  C++ seeks to the end (`docs/04-runtime-and-deployment.md` §2). `main.ts` and the e2e `TestSetup` both call it.
 - **`importHelpers` stays off** (the default): the app compiles to CommonJS, and the `export *` of the
   `../Shared` barrels would import `tslib`, which does not resolve from there.
 - **The lockfile was seeded from `../UI/package-lock.json`** (2026-11-14). A fresh resolution with npm 10.9

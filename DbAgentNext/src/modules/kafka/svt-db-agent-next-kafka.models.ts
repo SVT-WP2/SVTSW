@@ -25,13 +25,18 @@ export type SvtDbAgentNextHeartbeat = {
 /**
  * The Kafka microservice options (`Transport.KAFKA`), as the mock agent and the BFF configure theirs:
  * Kafka's 1 MB defaults are too small for list replies, so the consumer accepts 10 MiB per partition and
- * 50 MiB per fetch (the brokers are configured for 50 MiB) and replies are gzip-compressed. Nothing produced
- * while the agent was down is replayed (`fromBeginning: false`, as the C++ seeks to the end).
+ * 50 MiB per fetch (the brokers are configured for 50 MiB) and replies are gzip-compressed.
+ *
+ * `postfixId: ''`: NestJS appends its postfix (`-server` by default) to `clientId` and `groupId`; without this the
+ * group would be `svt.db-agent.request-server`, not the C++ agent's. `fromBeginning: false` covers a group
+ * without a committed offset only; the requests produced while the agent was down are skipped by
+ * `SvtDbAgentNextKafkaBacklogService` before the consumer starts.
  */
 export function buildSvtDbAgentNextKafkaOptions(brokers: string[]): KafkaOptions {
     return {
         transport: Transport.KAFKA,
         options: {
+            postfixId: '',
             client: {
                 clientId: SVT_DB_AGENT_NEXT_KAFKA_CLIENT_ID,
                 brokers,

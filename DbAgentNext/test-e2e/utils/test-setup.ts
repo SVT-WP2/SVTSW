@@ -15,7 +15,11 @@ import { AppModule } from '../../src/app/app.module'
 import { SvtDbAgentNextConfig } from '../../src/config'
 import { buildSvtDbOrmOptions } from '../../src/db/orm'
 import { SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../../src/modules/dispatch'
-import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService } from '../../src/modules/kafka'
+import {
+    buildSvtDbAgentNextKafkaOptions,
+    SvtDbAgentNextHeartbeatService,
+    SvtDbAgentNextKafkaBacklogService,
+} from '../../src/modules/kafka'
 
 
 /** A request envelope as a client would send it; the typed message classes of `epic/entities` fit too. */
@@ -78,6 +82,7 @@ export class TestSetup {
         }
         await this.app.init()
         if (this.options.kafka) {
+            await this.app.get(SvtDbAgentNextKafkaBacklogService).skip()
             await this.app.startAllMicroservices()
             await this.app.get(SvtDbAgentNextHeartbeatService).start()
         }

@@ -4,7 +4,7 @@ import { Consumer, Kafka, logLevel, Producer } from 'kafkajs'
 import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextReply } from '../../src/modules/dispatch'
-import { SVT_DB_AGENT_NEXT_HEARTBEAT_TOPIC } from '../../src/modules/kafka'
+import { SVT_DB_AGENT_NEXT_HEARTBEAT_TOPIC, SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP } from '../../src/modules/kafka'
 import { TestSetup } from '../utils'
 
 
@@ -12,7 +12,7 @@ import { TestSetup } from '../utils'
  * The only spec that needs a broker: set `SVT_DB_AGENT_E2E_KAFKA=1` with Kafka listening where `.env.test`
  * says (`Dev/docker-compose.kafka-local.yml`, `localhost:9085`). It plays a client (kafkajs, the headers of
  * `Documentation/Kafka/SvtKafkaConventions.md`) against the agent's real Kafka microservice: envelope,
- * correlation, a non-envelope value, a write, and the heartbeat. Everything else about the messages is
+ * correlation, a non-envelope value, a write, the skip of a backlog, and the heartbeat. Everything else about the messages is
  * covered by the dispatcher-level specs, which need no broker.
  */
 const describeWithBroker = process.env.SVT_DB_AGENT_E2E_KAFKA === '1' ? describe : describe.skip
@@ -42,6 +42,8 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
     const replies = new Map<string, (reply: SvtDbAgentNextReply) => void>()
     let producer: Producer
     let replyConsumer: Consumer
+    /** Set when a reply to the request produced before the agent started arrives: it must not. */
+    let backlogAnswered = false
 
     beforeAll(async () => {
         await ensureTopics([SvtDbAgentKafka.TopicName.Request, SvtDbAgentKafka.TopicName.RequestReply])
@@ -63,6 +65,14 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
         await joined
         producer = kafka.producer()
         await producer.connect()
+        // A backlog as a previous run leaves it: the group committed up to the end, then a write was produced while
+        // no agent consumed. Without the skip at start the agent would execute it (kafkajs resumes from the
+        // committed offset); the C++ agent seeks to the end.
+        await commitGroupAtEnd()
+        const backlogId = await produce(JSON.stringify({ type: 'CreateEquipmentType', data: { create: { name: 'Backlog' } } }))
+        replies.set(backlogId, () => {
+            backlogAnswered = true
+        })
         await setup.init()
     }, 60_000)
 
@@ -88,16 +98,26 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
         }
     }
 
-    /** Sends one request record the way the BFF and WPAgent do and waits for the reply with its correlation id. */
-    async function request(value: string): Promise<SvtDbAgentNextReply> {
-        const correlationId = randomUUID()
-        const reply = new Promise<SvtDbAgentNextReply>((resolve, reject) => {
-            replies.set(correlationId, resolve)
-            setTimeout(() => {
-                replies.delete(correlationId)
-                reject(new Error(`No reply for ${correlationId} within ${REPLY_TIMEOUT_MS} ms`))
-            }, REPLY_TIMEOUT_MS)
-        })
+    /** Moves the agent's consumer group to the end of the request topic; the group must have no member. */
+    async function commitGroupAtEnd(): Promise<void> {
+        const admin = kafka.admin()
+        await admin.connect()
+        try {
+            const topic = SvtDbAgentKafka.TopicName.Request
+            const ends = await admin.fetchTopicOffsets(topic)
+            await admin.setOffsets({
+                groupId: SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP,
+                topic,
+                partitions: ends.map((end) => ({ partition: end.partition, offset: end.offset })),
+            })
+        }
+        finally {
+            await admin.disconnect()
+        }
+    }
+
+    /** Produces one request record the way the BFF and WPAgent do; returns its correlation id. */
+    async function produce(value: string, correlationId = randomUUID()): Promise<string> {
         await producer.send({
             topic: SvtDbAgentKafka.TopicName.Request,
             messages: [{
@@ -109,8 +129,30 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
                 },
             }],
         })
+        return correlationId
+    }
+
+    /** Sends one request record and waits for the reply with its correlation id. */
+    async function request(value: string): Promise<SvtDbAgentNextReply> {
+        const correlationId = randomUUID()
+        const reply = new Promise<SvtDbAgentNextReply>((resolve, reject) => {
+            replies.set(correlationId, resolve)
+            setTimeout(() => {
+                replies.delete(correlationId)
+                reject(new Error(`No reply for ${correlationId} within ${REPLY_TIMEOUT_MS} ms`))
+            }, REPLY_TIMEOUT_MS)
+        })
+        await produce(value, correlationId)
         return reply
     }
+
+    it('skips a request produced while no agent consumed the topic, as the C++ agent does', async () => {
+        // One partition, in order: had the agent replayed the backlog, its reply would have come before this one.
+        const reply = await request(JSON.stringify({ type: 'GetAllEquipmentTypes' }))
+
+        expect(reply).toMatchObject({ status: 'Success' })
+        expect(backlogAnswered).toBe(false)
+    })
 
     it('answers a request on the reply topic with the envelope, matched by correlation id', async () => {
         const reply = await request(JSON.stringify({ type: 'GetAllEnums', data: { filter: { enumNames: ['dutEntityName'] } } }))

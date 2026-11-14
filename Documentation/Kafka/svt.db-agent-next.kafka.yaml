@@ -34,7 +34,8 @@ info:
     - Headers as in the conventions: `kafka_correlationId`, `kafka_replyTopic`, `kafka_replyPartition`. The
       reply goes to the topic named in `kafka_replyTopic` (every client sends `svt.db-agent.request.reply`);
       a record without `kafka_correlationId` or without `kafka_replyTopic` is treated as an event and gets no
-      reply. Replies are gzip-compressed records.
+      reply. Replies are gzip-compressed records. The consumer group is `svt.db-agent.request`, the C++ agent's;
+      requests produced while no agent consumed it are skipped at start, as the C++ seeked to the end.
     - Every request runs in one database transaction: a request that fails half-way leaves nothing behind
       (the C++ committed every statement on its own, X-1).
 

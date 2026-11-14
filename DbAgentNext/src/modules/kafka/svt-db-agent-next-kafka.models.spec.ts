@@ -7,11 +7,12 @@ import { buildSvtDbAgentNextHeartbeat, buildSvtDbAgentNextKafkaOptions } from '.
 
 describe('buildSvtDbAgentNextKafkaOptions', () => {
 
-    it('joins the C++ consumer group, lifts the fetch limits, compresses replies and skips old records', () => {
+    it('joins the C++ consumer group as it is named, lifts the fetch limits, compresses replies and skips old records', () => {
         const options = buildSvtDbAgentNextKafkaOptions(['kafka:9094'])
 
         expect(options.transport).toBe(Transport.KAFKA)
         expect(options.options).toEqual({
+            postfixId: '',
             client: { clientId: 'svt-db-agent-next', brokers: ['kafka:9094'] },
             consumer: { groupId: 'svt.db-agent.request', maxBytesPerPartition: 10 * 1024 * 1024, maxBytes: 50 * 1024 * 1024 },
             send: { compression: CompressionTypes.GZIP },

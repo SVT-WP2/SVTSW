@@ -139,7 +139,8 @@ The 28 cases of the two bugs now match the C++ or a decision: the `pager-beyond`
 `items: []` with the real `totalCount` (`X-4`, 11 more intentional cases), the others are the same. The 14 different
 cases are the open questions 3 to 6 of §5.1 (9 probe-card cases, 2 wafer-map cases, 2 wafer loads, 1 envelope).
 
-Found while re-recording, in the clone's Kafka set-up (not fixed here; they change how the agent is deployed):
+Found while re-recording, in the clone's Kafka set-up; **both fixed the same day** (`postfixId: ''`, and
+`SvtDbAgentNextKafkaBacklogService` skips the backlog at start, [04 §2](04-runtime-and-deployment.md#2-kafka-transport)):
 
 - **The consumer group is `svt.db-agent.request-server`, not `svt.db-agent.request`.** NestJS appends its
   `postfixId` (`-server` by default) to the configured `groupId`, and `buildSvtDbAgentNextKafkaOptions` does not
@@ -149,8 +150,8 @@ Found while re-recording, in the clone's Kafka set-up (not fixed here; they chan
 - **The clone replays the requests sent while it was down.** `fromBeginning: false` applies only to a group without
   a committed offset; the clone's group keeps one, so at start it consumes everything after it, writes included
   (the C++ agent seeks to the end). The comment in `svt-db-agent-next-kafka.models.ts` says the opposite. Here it
-  replayed the 399 requests of the C++ recording into the fresh database of the clone before the reads ran; the
-  recording procedure now resets the group's offset first ([test-parity/README.md](../test-parity/README.md)).
+  replayed the 399 requests of the C++ recording into the fresh database of the clone before the reads ran. The
+  Kafka e2e spec now produces such a backlog before the agent starts and checks that it gets no reply.
 
 ## 6. Beyond parity
 

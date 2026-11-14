@@ -26,8 +26,8 @@ settle:
 
 | Topic | Today (C++) | Clone |
 |---|---|---|
-| Consumer group | `svt.db-agent.request` | **same**, so a deployment swap is a plain consumer handover with no offset surprises. Not `epic-ui.fake-db-agent` (the mock's). |
-| Start offset | `auto.offset.reset=latest` + seek to end on start: messages produced while the agent was down are skipped | process the backlog instead (no seek). This is safe only once poison messages reply `BadRequest` rather than crash ([01 §2](01-behaviour-decisions.md#2-envelope-and-errors)). |
+| Consumer group | `svt.db-agent.request` | **same**, so a deployment swap is a plain consumer handover with no offset surprises. NestJS appends a `postfixId` (`-server`) to the group unless it is set to `''`; until 2026-11-14 the clone ran as `svt.db-agent.request-server` ([03 §5.2](03-parity-testing.md#52-after-the-two-fixes-2026-11-14)). Not `epic-ui.fake-db-agent` (the mock's). |
+| Start offset | `auto.offset.reset=latest` + seek to end on start: messages produced while the agent was down are skipped | **same** (decided 2026-11-14): before its consumer starts, the clone moves the group's offsets on the request topic to the end (`SvtDbAgentNextKafkaBacklogService`) and logs how many requests it skipped; their clients gave up long ago, and a write among them would land now. The broker refuses the move while another member holds the group (a handover from a running agent); the clone then joins at the committed offset. `fromBeginning: false` alone does not do it: kafkajs resumes from a committed offset. The proposal of 2026-11-08 here was the opposite, to process the backlog. |
 | Commit | manual, async after each batch | NestJS default (auto-commit) is acceptable; replies are idempotent reads or single-row writes. Revisit if exactly-once matters. |
 | Reply topic | fixed `svt.db-agent.request.reply`, `kafka_replyTopic` ignored | NestJS replies to the `kafka_replyTopic` header; every client sends the fixed name, so behaviour is identical. Reject or log a request whose header names a different topic. |
 | Reply partition | from `kafka_replyPartition` | NestJS does the same. |

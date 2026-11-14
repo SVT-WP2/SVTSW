@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app'
 import { getSvtDbAgentNextLogLevels, SvtDbAgentNextConfig } from './config'
-import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService } from './modules/kafka'
+import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService, SvtDbAgentNextKafkaBacklogService } from './modules/kafka'
 
 
 async function bootstrap() {
@@ -20,10 +20,12 @@ async function bootstrap() {
     // The Kafka consumer (`svt.db-agent.request`) and the heartbeat; an unreachable broker ends the boot, as it
     // did for the C++ agent, and the container restarts. The application is initialised (handlers registered
     // by the dispatcher's module-init hook) *before* the consumer starts: a record consumed earlier would be
-    // answered "unknown request type".
+    // answered "unknown request type". The requests produced while no agent consumed are skipped first, as the C++
+    // agent seeks to the end at start.
     const kafka = configService.get('kafka', { infer: true })
     app.connectMicroservice(buildSvtDbAgentNextKafkaOptions(kafka.brokers), { inheritAppConfig: true })
     await app.init()
+    await app.get(SvtDbAgentNextKafkaBacklogService).skip()
     await app.startAllMicroservices()
     await app.get(SvtDbAgentNextHeartbeatService).start()
 
