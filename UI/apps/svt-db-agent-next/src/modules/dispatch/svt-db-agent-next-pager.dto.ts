@@ -1,5 +1,6 @@
 import { IsInt, IsOptional, Min } from 'class-validator'
-import { SVT_DB_DEFAULT_PAGE_LIMIT, SvtDbPager } from 'svt-db/data'
+
+import { SVT_DB_DEFAULT_PAGE_LIMIT, SvtDbPager } from '../../db/data'
 
 import { validateRequestData } from './svt-db-agent-next-request-validation'
 

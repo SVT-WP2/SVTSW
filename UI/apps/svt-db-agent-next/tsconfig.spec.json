@@ -19,5 +19,8 @@
         "vitest.e2e.config.ts",
         "vitest.parity.config.ts",
         "vitest.shared.ts"
+    ],
+    "exclude": [
+        "src/db/**/*.spec.ts"
     ]
 }

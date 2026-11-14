@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
 import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic-api-types/kafka'
+
 import {
     SvtDbAsicsRepository,
     SvtDbChipBlocksRepository,
@@ -10,8 +11,7 @@ import {
     SvtDbSvtTestsRepository,
     SvtDbSvtTestTypeConfigsRepository,
     SvtDbSvtTestWithDut,
-} from 'svt-db/data'
-
+} from '../../../db/data'
 import {
     optionalDateTime,
     optionalInteger,

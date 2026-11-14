@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { EpicSvtTestTemplate } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTemplates } from 'epic-api-types/kafka'
+
 import {
     SvtDbEnumsService,
     SvtDbSvtTestTemplatesRepository,
     SvtDbSvtTestTemplateWithTestType,
     SvtDbSvtTestTypeConfigsRepository,
-} from 'svt-db/data'
-
+} from '../../../db/data'
 import {
     optionalIntegerList,
     optionalRecord,

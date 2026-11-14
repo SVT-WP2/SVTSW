@@ -3,15 +3,15 @@ import * as path from 'path'
 import { defineConfig } from '@mikro-orm/postgresql'
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 import * as dotenv from 'dotenv'
-import { SvtDbNamingStrategy } from 'svt-db/orm'
 
 import { createSvtDbAgentNextConfig } from './src/config'
+import { SvtDbNamingStrategy } from './src/db/orm'
 
 
 /**
  * MikroORM CLI configuration (migrations, schema diff): `npm run db-next:*` from `UI/`.
  *
- * The running application does not use this file; it builds its options in `svt-db/orm` from the validated
+ * The running application does not use this file; it builds its options in `src/db/orm` from the validated
  * environment. The CLI reuses the same validation (`createSvtDbAgentNextConfig`) after loading the app's
  * `.env.<NODE_ENV>`, so both always point at the same database. Entities are discovered from the TypeScript
  * sources with ts-morph here, while the bundle lists them explicitly.
@@ -35,8 +35,8 @@ export default defineConfig({
     debug: database.debug,
     metadataProvider: TsMorphMetadataProvider,
     metadataCache: { enabled: false },
-    entities: ['dist/libs/svt-db/data/**/*.entity.js'],
-    entitiesTs: ['libs/svt-db/data/src/**/*.entity.ts'],
+    entities: ['dist/apps/svt-db-agent-next/db/data/**/*.entity.js'],
+    entitiesTs: ['apps/svt-db-agent-next/src/db/data/**/*.entity.ts'],
     migrations: {
         tableName: 'mikro_orm_migrations',
         path: 'dist/apps/svt-db-agent-next/migrations',

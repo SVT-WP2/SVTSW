@@ -7,7 +7,7 @@ import { generateAsics, SvtDbGeneratedAsic } from './svt-db-asic-generation'
 import { SvtDbWaferMap } from './svt-db-wafer-map.models'
 
 
-const MAPS_DIR = resolve(__dirname, '../../../../../../Configurations/WaferTypeMappings')
+const MAPS_DIR = resolve(__dirname, '../../../../../../../Configurations/WaferTypeMappings')
 const readMap = (file: string): SvtDbWaferMap => JSON.parse(readFileSync(resolve(MAPS_DIR, file), 'utf8')) as SvtDbWaferMap
 
 type Fixture = {

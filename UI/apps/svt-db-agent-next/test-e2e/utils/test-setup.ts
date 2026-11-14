@@ -9,10 +9,11 @@ import { INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Test } from '@nestjs/testing'
 import { EpicKafkaMessage } from 'epic-api-types/kafka'
-import { buildSvtDbOrmOptions } from 'svt-db/orm'
+
 
 import { AppModule } from '../../src/app/app.module'
 import { SvtDbAgentNextConfig } from '../../src/config'
+import { buildSvtDbOrmOptions } from '../../src/db/orm'
 import { SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../../src/modules/dispatch'
 import { buildSvtDbAgentNextKafkaOptions, SvtDbAgentNextHeartbeatService } from '../../src/modules/kafka'
 

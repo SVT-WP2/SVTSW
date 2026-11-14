@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { EpicEquipmentType } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipmentTypes } from 'epic-api-types/kafka'
-import { SvtDbEquipmentTypeEntity, SvtDbEquipmentTypesRepository } from 'svt-db/data'
 
+import { SvtDbEquipmentTypeEntity, SvtDbEquipmentTypesRepository } from '../../../db/data'
 import {
     optionalIntegerList,
     optionalRecord,

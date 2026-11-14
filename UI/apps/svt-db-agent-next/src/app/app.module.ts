@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { SVT_DB_ENTITIES } from 'svt-db/data'
-import { SvtDbOrmModule } from 'svt-db/orm'
 
 import { getSvtDbAgentNextConfigFactory, SvtDbAgentNextConfig, validateSvtDbAgentNextEnv } from '../config'
+import { SVT_DB_ENTITIES } from '../db/data'
+import { SvtDbOrmModule } from '../db/orm'
 import { SvtDbAgentNextDispatchModule } from '../modules/dispatch'
 import { SvtDbAgentNextHandlersModule } from '../modules/handlers'
 import { SvtDbAgentNextHealthModule } from '../modules/health'

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { EpicAsic } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'epic-api-types/kafka'
-import { SvtDbAsicsRepository, SvtDbAsicWithChip, SvtDbEnumsService, SvtDbWafersRepository } from 'svt-db/data'
 
+import { SvtDbAsicsRepository, SvtDbAsicWithChip, SvtDbEnumsService, SvtDbWafersRepository } from '../../../db/data'
 import {
     optionalInteger,
     optionalIntegerList,

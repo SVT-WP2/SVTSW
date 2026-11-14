@@ -10,7 +10,7 @@ import { TestSetup } from '../utils'
 
 const ER2_MAP = readFileSync(resolve(__dirname, '../../../../../Configurations/WaferTypeMappings/ER2WaferMap_v0.json'), 'utf8')
 
-/** Expected ASICs of a production ER2 wafer (`libs/svt-db/data/src/wafer-maps/__fixtures__`). */
+/** Expected ASICs of a production ER2 wafer (`src/db/data/wafer-maps/__fixtures__`). */
 type AsicFixture = {
     waferSerialNumber: string
     count: number
@@ -18,7 +18,7 @@ type AsicFixture = {
     samples: { serialNumber: string; waferMapPosition: string; familyType: string; quality: string }[]
 }
 const ER2_ASICS = JSON.parse(readFileSync(
-    resolve(__dirname, '../../../../libs/svt-db/data/src/wafer-maps/__fixtures__/er2-HS02697-24A0.asics.json'),
+    resolve(__dirname, '../../src/db/data/wafer-maps/__fixtures__/er2-HS02697-24A0.asics.json'),
     'utf8',
 )) as AsicFixture
 

@@ -2,7 +2,8 @@
 import 'reflect-metadata'
 
 import { MikroORM } from '@mikro-orm/postgresql'
-import { buildSvtDbOrmOptions, SvtDbOrmConfig } from 'svt-db/orm'
+
+import { buildSvtDbOrmOptions, SvtDbOrmConfig } from '../../orm'
 
 import { SvtDbWaferTypeMapEntity } from './svt-db-wafer-type-map.entity'
 import { SvtDbWaferTypeEntity } from './svt-db-wafer-type.entity'

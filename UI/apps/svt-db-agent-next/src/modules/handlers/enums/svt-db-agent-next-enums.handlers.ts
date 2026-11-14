@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { SvtDbAgentKafkaEnums } from 'epic-api-types/kafka'
-import { SvtDbEnumsService } from 'svt-db/data'
 
+import { SvtDbEnumsService } from '../../../db/data'
 import {
     optionalRecord,
     optionalStringList,

@@ -60,8 +60,8 @@ From `UI/CLAUDE.md`, enforced by ESLint (`npm run lint`, fix with `npm run lint:
 - Member ordering enforced: static, decorated, instance, abstract; fields before constructor
   before methods.
 - Every folder has an `index.ts` barrel; import siblings through barrels, never deep paths.
-- Never import across libs by relative path; use the `tsconfig.base.json` aliases. Add new
-  aliases there (`svt-db/orm`, `svt-db/data`).
+- Never import across libs by relative path; use the `tsconfig.base.json` aliases. The app's own
+  folders (`src/db/orm`, `src/db/data`) are imported by relative path, through their barrels.
 - `epic-api-types` must stay framework-free (lint-enforced). Do not add decorators or Node code to
   it.
 - Line endings: the repository stores LF; on Windows `core.autocrlf=true` checks files out as
@@ -90,7 +90,7 @@ and `eslint.config.mjs` for a lib with lint and test targets.
   `nx test <project>` runs `vitest run --dir <project root>`. Database tests must be skipped when
   `SVT_DB_AGENT_TEST_DB_URL` is unset: alias `const describeWithDatabase = url ? describe : describe.skip`
   (the Angular zone setup wraps `describe` and rejects both `describe.skipIf` and the `{ skip }` options
-  form; see `libs/svt-db/data/src/wafer-types/svt-db-wafer-types.repository.spec.ts`).
+  form; see `apps/svt-db-agent-next/src/db/data/wafer-types/svt-db-wafer-types.repository.spec.ts`).
 - `@nestjs/microservices` is currently a **devDependency** in `UI/package.json`; the agent ships
   it, so phase 1 moves it to `dependencies`.
 - After pulling a branch that bumps Angular or Nx: `npx nx reset && rm -rf .angular/cache`.

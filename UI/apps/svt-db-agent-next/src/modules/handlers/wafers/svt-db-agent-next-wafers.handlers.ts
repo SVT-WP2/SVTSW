@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { EpicWafer, EpicWaferLocationHistoryRecord } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic-api-types/kafka'
+
 import {
     generateAsics,
     SvtDbEnumsService,
@@ -9,8 +10,7 @@ import {
     SvtDbWaferMap,
     SvtDbWafersRepository,
     SvtDbWaferTypesRepository,
-} from 'svt-db/data'
-
+} from '../../../db/data'
 import {
     optionalIntegerList,
     optionalPager,

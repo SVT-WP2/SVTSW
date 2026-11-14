@@ -1,10 +1,15 @@
 # SvtDbAgentNext: development plan
 
 `SvtDbAgentNext` is the NestJS re-implementation of the SVT DB Agent. It lives in this Nx workspace
-as the application `apps/svt-db-agent-next`, with its data layer in two libraries under
-`libs/svt-db/`. These documents are **instructions for the agents (and people) who build it**,
+as the application `apps/svt-db-agent-next`, with its data layer in two folders of the app,
+`src/db/orm` and `src/db/data`. These documents are **instructions for the agents (and people) who build it**,
 one phase at a time, in separate sessions. Nothing here assumes knowledge of the conversation that
 produced it: [00-context.md](00-context.md) carries the context.
+
+> The phase documents were written while the data layer was two workspace libraries, `libs/svt-db/orm` and
+> `libs/svt-db/data` (aliases `svt-db/orm`, `svt-db/data`). Read those paths as
+> `apps/svt-db-agent-next/src/db/orm` and `apps/svt-db-agent-next/src/db/data`; the aliases are gone, the app
+> imports the two barrels by relative path.
 
 ## How to work from these documents
 
@@ -56,12 +61,12 @@ Change them **here**, then in the phase documents; the phases only apply them.
 | Topic | Decision | Why |
 |---|---|---|
 | App name and path | `svt-db-agent-next`, `apps/svt-db-agent-next` | as requested |
-| Libraries | `libs/svt-db/orm` (alias `svt-db/orm`, project `svt-db-orm`): MikroORM module, config, naming strategy, CLI config. `libs/svt-db/data` (alias `svt-db/data`, project `svt-db-data`): entities, repositories, enum values, pure domain logic. | mirrors rentaly's `api/db` + domain libs; keeps ORM plumbing separate from the model |
+| Data layer | `apps/svt-db-agent-next/src/db/orm`: MikroORM module, config, naming strategy. `apps/svt-db-agent-next/src/db/data`: entities, repositories, enum values, pure domain logic. Both `strict` (`src/db/tsconfig.json`), each behind its `index.ts`. | mirrors rentaly's `api/db` + domain libs; keeps ORM plumbing separate from the model |
 | Class and file prefix | classes `SvtDb…` (`SvtDbWaferEntity`, `SvtDbOrmModule`), files `svt-db-<thing>.<role>.ts`, app files `svt-db-agent-next-<thing>.<role>.ts` | a distinct bounded context from the `Epic…` UI/BFF code; the workspace lint does not enforce class prefixes outside Angular |
-| Lib dependencies | `svt-db/data` → `svt-db/orm`, `epic-api-types`. The app → both libs, `epic-api-types`, `epic-api-types/kafka`. Neither the app nor the libs import `epic/entities`; neither lib imports `epic-api-types/kafka`, `epic-ui/*`, `@angular/*`. | the data layer must not know the Kafka contract |
+| Dependencies | `src/db/data` → `src/db/orm`, `epic-api-types`. The rest of the app → both folders, `epic-api-types`, `epic-api-types/kafka`. Nothing in the app imports `epic/entities`; `src/db` imports neither `epic-api-types/kafka`, `epic-ui/*`, `@angular/*` nor the app's `modules/` (the app's `eslint.config.mjs`). | the data layer must not know the Kafka contract |
 | MikroORM version | **7.2.x** (ESM-first, Node ≥ 22.17, `@mikro-orm/nestjs` 7.1.x). Decorators are imported from `@mikro-orm/decorators/legacy` (the workspace uses `experimentalDecorators`); `OptionalProps`, `DeferMode`, `MikroORM` and the naming strategies from `@mikro-orm/core` / `@mikro-orm/postgresql`. The app and the `svt-db/*` libs compile with `module`/`moduleResolution: nodenext` and `skipLibCheck` (webpack still emits a CommonJS bundle). | decided 2026-11-08 before phase 3 multiplies the entities; v7's types are only resolvable with a modern `moduleResolution`, and the upgrade guide drops the legacy `node` setting |
 | Metadata provider | runtime: `ReflectMetadataProvider` from `@mikro-orm/decorators/legacy`, set explicitly (no longer the default) with `emitDecoratorMetadata`, explicit entity lists; every scalar property also declares `type` explicitly. CLI (migrations): `TsMorphMetadataProvider` with `entitiesTs` globs, TypeScript loaded through the `swc` loader (`@swc-node/register`, already a workspace dependency) selected by `preferTs: true`. | the app is bundled with webpack; globs and ts-morph do not work in a bundle; the CLI runs from source; Vitest (esbuild) emits no decorator metadata, so explicit types keep the specs working |
-| Naming strategy | `SvtDbNamingStrategy` (`svt-db/orm`): `EntityCaseNamingStrategy` plus PostgreSQL's default constraint names (`_pkey`, `_key`, `_fkey`); explicit `tableName` on every entity, `schema: 'main'` | the database uses quoted camelCase identifiers and was created with PostgreSQL's default constraint names; this keeps `schema:update --dump` empty without naming constraints by hand |
+| Naming strategy | `SvtDbNamingStrategy` (`src/db/orm`): `EntityCaseNamingStrategy` plus PostgreSQL's default constraint names (`_pkey`, `_key`, `_fkey`); explicit `tableName` on every entity, `schema: 'main'` | the database uses quoted camelCase identifiers and was created with PostgreSQL's default constraint names; this keeps `schema:update --dump` empty without naming constraints by hand |
 | Enum columns | typed as `string` in TypeScript; declared with `@Enum({ nativeEnumName, items })` where `items` comes from one generated file of the prod values. Behaviour-relevant values (`asicQuality`, `waferInMachineStatus`, `dutEntityName`) also get string-literal unions. No TypeScript enum of 86 ASIC family types is used as a type. | values are data maintained in the DB; the agent serves them from `pg_enum` |
 | Migrations | `apps/svt-db-agent-next/src/migrations`, CLI config `apps/svt-db-agent-next/mikro-orm.config.ts`, npm scripts `db-next:*`. Migration 0 = production schema (idempotent); migration 1 = dev layout + surrogate ids. | mirrors rentaly; the app owns its schema history |
 | Transactions and context | every message handled inside one MikroORM request context (`@CreateRequestContext()`), writes in `em.transactional()` | fixes the C++ non-atomicity; required by MikroORM for a non-HTTP transport |

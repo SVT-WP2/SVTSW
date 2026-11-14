@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
+
+import { SvtDbAgentNextConfig } from '../../../config'
 import {
     SvtDbAsicsRepository,
     SvtDbChipCreateInput,
@@ -10,9 +12,7 @@ import {
     SvtDbChipsRepository,
     SvtDbChipWithFamilyType,
     SvtDbEnumsService,
-} from 'svt-db/data'
-
-import { SvtDbAgentNextConfig } from '../../../config'
+} from '../../../db/data'
 import {
     optionalIntegerList,
     optionalPager,

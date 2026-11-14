@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { EpicWpProbeCard } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic-api-types/kafka'
-import { SvtDbWpProbeCardsRepository, SvtDbWpProbeCardWithFamilyTypes } from 'svt-db/data'
 
+import { SvtDbWpProbeCardsRepository, SvtDbWpProbeCardWithFamilyTypes } from '../../../db/data'
 import {
     optionalIntegerList,
     optionalRecord,

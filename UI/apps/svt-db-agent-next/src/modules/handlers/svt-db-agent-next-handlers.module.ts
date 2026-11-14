@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
-import { SvtDbDataModule } from 'svt-db/data'
+
+import { SvtDbDataModule } from '../../db/data'
 
 import { SvtDbAgentNextAsicsHandlers } from './asics'
 import { SvtDbAgentNextChipBlocksHandlers } from './chip-blocks'

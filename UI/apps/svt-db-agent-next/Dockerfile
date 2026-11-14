@@ -1,8 +1,7 @@
 # svt-db-agent-next: the NestJS re-implementation of the SVT DB Agent.
 #
 # Build context is the Nx workspace (UI/), not this folder: the app builds from
-# the workspace libs (libs/epic-api-types/*, libs/svt-db/*) and the root
-# package-lock.json.
+# the workspace libs (libs/epic-api-types/*) and the root package-lock.json.
 #
 #   cd UI && docker build -f apps/svt-db-agent-next/Dockerfile -t svt-db-agent-next .
 #

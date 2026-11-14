@@ -23,7 +23,6 @@ on:
       - 'UI/apps/svt-db-agent-next/**'
       - 'UI/libs/epic/**'
       - 'UI/libs/epic-api-types/**'
-      - 'UI/libs/svt-db/**'
       - 'UI/package.json'
       - 'UI/package-lock.json'
       - 'UI/tsconfig*.json'
@@ -39,7 +38,6 @@ on:
       - 'UI/apps/svt-db-agent-next/**'
       - 'UI/libs/epic/**'
       - 'UI/libs/epic-api-types/**'
-      - 'UI/libs/svt-db/**'
       - 'UI/package.json'
       - 'UI/package-lock.json'
       - 'UI/tsconfig*.json'
@@ -98,9 +96,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: UI/package-lock.json
       - run: npm ci --prefer-offline
-      # Scoped to the agent and the libs it owns; the shared libs are linted by ui.yml.
-      - run: npx eslint "apps/svt-db-agent-next/**/*.ts" "libs/svt-db/**/*.ts" --no-error-on-unmatched-pattern --quiet
-      - run: npx vitest run apps/svt-db-agent-next libs/svt-db
+      # Scoped to the agent (its database layer is in src/db); the shared libs are linted by ui.yml.
+      - run: npx eslint "apps/svt-db-agent-next/**/*.ts" --no-error-on-unmatched-pattern --quiet
+      - run: npx vitest run apps/svt-db-agent-next
       - run: rm -rf .nx && npx nx build svt-db-agent-next
       # Real database: migrations are applied by the harness, every table is truncated per test.
       - run: npx nx test-e2e svt-db-agent-next

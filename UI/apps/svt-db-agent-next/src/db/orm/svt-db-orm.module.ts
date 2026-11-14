@@ -12,7 +12,7 @@ export type SvtDbOrmModuleOptions = {
     /** Produces the connection configuration, typically from the application's `ConfigService`. */
     useFactory: (...args: any[]) => SvtDbOrmConfig | Promise<SvtDbOrmConfig>
     inject?: (InjectionToken | OptionalFactoryDependency)[]
-    /** The full entity list of the database (`SVT_DB_ENTITIES` from `svt-db/data`). */
+    /** The full entity list of the database (`SVT_DB_ENTITIES` from `../data`). */
     entities: SvtDbOrmEntities
 }
 

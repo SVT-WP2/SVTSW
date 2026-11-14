@@ -144,12 +144,6 @@
             ],
             "epic-ui/shared/svt-test/tests": [
                 "libs/epic-ui/shared/svt-tests/tests/src/index.ts"
-            ],
-            "svt-db/orm": [
-                "libs/svt-db/orm/src/index.ts"
-            ],
-            "svt-db/data": [
-                "libs/svt-db/data/src/index.ts"
             ]
         },
         "useDefineForClassFields": false,

@@ -8,7 +8,7 @@ import { resolveIndexList, validateWaferMap } from './svt-db-wafer-map-validatio
 
 
 const FAMILY_TYPES = SVT_DB_ENUM_VALUES.asicFamilyType
-const ER2_MAP = readFileSync(resolve(__dirname, '../../../../../../Configurations/WaferTypeMappings/ER2WaferMap_v0.json'), 'utf8')
+const ER2_MAP = readFileSync(resolve(__dirname, '../../../../../../../Configurations/WaferTypeMappings/ER2WaferMap_v0.json'), 'utf8')
 
 const minimalMap = (overrides: Record<string, unknown> = {}) => JSON.stringify({
     Groups: {

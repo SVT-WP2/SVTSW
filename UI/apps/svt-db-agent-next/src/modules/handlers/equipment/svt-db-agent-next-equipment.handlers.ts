@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { EpicEquipment, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'epic-api-types/kafka'
+
 import {
     SvtDbEnumsService,
     SvtDbEquipmentEntity,
     SvtDbEquipmentLocationEntity,
     SvtDbEquipmentRepository,
     SvtDbEquipmentTypesRepository,
-} from 'svt-db/data'
-
+} from '../../../db/data'
 import {
     optionalIntegerList,
     optionalRecord,

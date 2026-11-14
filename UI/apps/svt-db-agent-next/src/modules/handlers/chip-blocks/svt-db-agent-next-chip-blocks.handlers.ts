@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { EpicChipBlock } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'epic-api-types/kafka'
-import { SvtDbChipBlockEntity, SvtDbChipBlocksRepository } from 'svt-db/data'
 
+import { SvtDbChipBlockEntity, SvtDbChipBlocksRepository } from '../../../db/data'
 import {
     optionalInteger,
     optionalIntegerList,
