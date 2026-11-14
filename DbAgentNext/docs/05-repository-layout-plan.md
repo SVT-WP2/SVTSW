@@ -1,11 +1,11 @@
 # Repository layout: the DB agent and the shared types leave `UI/`
 
-**Status: in progress (2026-11-14).** Steps 1 to 7 are done on the branch
-`371-db-next-instance-proposal` (§3, §5); step 8 (records) is open. This file is the handover: it assumes no knowledge
-of the sessions that produced it.
+**Status: done (2026-11-14).** Steps 1 to 8 are committed on the branch `371-db-next-instance-proposal` (§3, §5);
+§6 lists the decisions still open. This file is the handover: it assumes no knowledge of the sessions that produced
+it.
 
-It replaces the decision of [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning)
-(2026-11-08: "the agent lives in the UI workspace"). Update that section when step 8 is done.
+Its decision is now [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning)
+(2026-11-14), which replaced the one of 2026-11-08 ("the agent lives in the UI workspace").
 
 ## 1. Target
 
@@ -221,6 +221,13 @@ the list above:
 - The phase documents in `dev-plan/` describe the workspace of their time. Keep them, and keep the note at the top
   of `dev-plan/README.md` correct.
 
+**Done 2026-11-14.** §6 of 04 holds the new decision with its reasons; the old comparison and decision stay
+there as "Superseded". The path updates of `Environment/`, `DbAgent/` and the Kafka YAML went into the step 7
+commit, so that no link pointed into a folder that was gone. Also updated: `docs/README.md` (status, index, the
+answer to "where the code lives"), the note of `dev-plan/README.md` (old paths, aliases and `nx` targets, and what
+to read them as), and the folder list of the root `README.md`. New in step 7: `DbAgentNext/README.md` (commands,
+layout, Docker, CI/CD, from the former section of `UI/README.md`) and `DbAgentNext/CLAUDE.md`.
+
 ## 6. Open decisions
 
 - **Names.** `DbAgentNext` is a temporary name for a permanent folder (the first proposal said `DbAgentNode`).
@@ -231,6 +238,13 @@ the list above:
   separately. A change of an `Epic*` type for the UI also changes the Kafka contract. A new required field breaks
   the agent build, which is a good signal; a new optional field breaks nothing. Decide if a rule is needed
   (additive changes only, or a coordinated release).
+- **Owner of the new folders.** The root `README.md` lists `DbAgentNext` and `Shared` now, but its "Responsible for
+  each folder" list names no one for them.
+- **Where the Git hook lives.** `UI/.husky/pre-commit` is the hook of the whole repository (`core.hooksPath`), set
+  up by `npm install` in `UI/`, and now also runs `DbAgentNext`'s lint-staged. A clone that never installs `UI/`
+  has no hook at all.
+- **The two local compose files disagree on `svt-network--local`** (§9): the Kafka one creates it, the Postgres one
+  expects it to exist.
 
 ## 7. Found on the way, not part of the move
 
@@ -239,12 +253,13 @@ the list above:
   `test-e2e/svt-test-setup-configs/svt-test-setup-configs.e2e-spec.ts:73` and `:76` (`setupId` is not in the filter
   type), `test-e2e/svt-tests/svt-tests.e2e-spec.ts:307` (`'PARTIAL_SUCCESS'` for `EpicSvtTestResultStatus`).
   The tests pass, because Vitest does not type-check.
-- **`tsconfig.spec.json` of the agent cannot be type-checked as it is.** `types: ["vitest/globals"]` is not found
-  (`typeRoots` of `tsconfig.base.json`), and `tsc` then stops before it examines any file. That hid the 4 errors.
-  Until it is fixed, use the command of §8.
+- **`tsconfig.spec.json` of the agent could not be type-checked** in `UI/`: `types: ["vitest/globals"]` was not
+  found (`typeRoots` of `tsconfig.base.json`), and `tsc` stopped before it examined any file. That hid the 4
+  errors. **Resolved by step 7:** the standalone tsconfig has no `typeRoots`.
 - **21 `strict` errors in the handlers** (`src/modules/handlers`): 14 × TS2322, 6 × TS2345, 1 × TS2416. Most are a
   `string | null` or `number | null` from the database assigned to a contract field typed without `null`.
-- **`db-agent-next.yml` still triggers on `UI/libs/epic/**`.** The agent no longer imports that folder.
+- **`db-agent-next.yml` still triggered on `UI/libs/epic/**`**, which the agent no longer imported. **Resolved by
+  step 7:** the filter is `DbAgentNext/**` and `Shared/**`.
 - **`epic/entities` is no longer about entities.** It holds the BFF's decorated DTOs and the Kafka helpers.
 
 ## 8. How to verify

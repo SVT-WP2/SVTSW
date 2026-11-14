@@ -1,15 +1,18 @@
 # SvtDbAgentNext: development plan
 
-`SvtDbAgentNext` is the NestJS re-implementation of the SVT DB Agent. It lives in this Nx workspace
-as the application `apps/svt-db-agent-next`, with its data layer in two folders of the app,
+`SvtDbAgentNext` is the NestJS re-implementation of the SVT DB Agent. It is the standalone app
+`DbAgentNext/` at the top level of the repository, with its data layer in two folders of the app,
 `src/db/orm` and `src/db/data`. These documents are **instructions for the agents (and people) who build it**,
 one phase at a time, in separate sessions. Nothing here assumes knowledge of the conversation that
 produced it: [00-context.md](00-context.md) carries the context.
 
-> The phase documents were written while the data layer was two workspace libraries, `libs/svt-db/orm` and
-> `libs/svt-db/data` (aliases `svt-db/orm`, `svt-db/data`). Read those paths as
-> `apps/svt-db-agent-next/src/db/orm` and `apps/svt-db-agent-next/src/db/data`; the aliases are gone, the app
-> imports the two barrels by relative path.
+> The phase documents describe the layout of their time: the app was `UI/apps/svt-db-agent-next` in the UI Nx
+> workspace, its data layer the two workspace libraries `libs/svt-db/orm` and `libs/svt-db/data` (aliases
+> `svt-db/orm`, `svt-db/data`), and the contract types the library `UI/libs/epic-api-types` (aliases
+> `epic-api-types`, `epic-api-types/kafka`). Read those paths as `DbAgentNext/`, `DbAgentNext/src/db/orm` and
+> `DbAgentNext/src/db/data` (imported by relative path), and `Shared/svt-ts-types` (aliases `svt-ts-types`,
+> `svt-ts-types/kafka`); `nx` targets as the npm scripts of `DbAgentNext/package.json` (`npm run build`, `e2e`,
+> `db:migration:*`). The moves are in [../05-repository-layout-plan.md](../05-repository-layout-plan.md).
 
 ## How to work from these documents
 

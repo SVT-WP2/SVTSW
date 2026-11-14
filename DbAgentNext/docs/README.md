@@ -1,6 +1,8 @@
 # DB Agent re-implementation in NestJS: working notes
 
-**Status: proposal (2026-11-08). Nothing here is decided or built.**
+**Status (2026-11-14): built and running on dev** as the standalone app `DbAgentNext/` (this folder is its
+`docs/`); open are the parity run against the C++ agent ([03](03-parity-testing.md)) and the prod swap
+([04 §7](04-runtime-and-deployment.md#7-swap-procedure)). The notes started as a proposal on 2026-11-08.
 
 These notes collect what a NestJS + MikroORM re-implementation of the SVT DB Agent would have to do.
 They deliberately contain **no description of the current agent's behaviour**: that lives in
@@ -16,8 +18,8 @@ what that review confirms.
 | [02-database-migration.md](02-database-migration.md) | What the first MikroORM migration has to contain, how the existing schema maps onto MikroORM, and the schema discrepancies to resolve against the live DB. |
 | [03-parity-testing.md](03-parity-testing.md) | The black-box test plan that proves the clone behaves like the C++ where it should, and differs only where decided. |
 | [04-runtime-and-deployment.md](04-runtime-and-deployment.md) | Env vars, heartbeat, healthcheck, consumer group, NestJS Kafka transport specifics, where the code lives, build and versioning. |
-| [05-repository-layout-plan.md](05-repository-layout-plan.md) | **Plan in progress:** the agent moves out of `UI/` to a top-level `DbAgentNext/`, the contract types to `Shared/svt-ts-types`. What is done, the remaining steps, how to verify. Replaces the decision of 04 §6. |
-| [dev-plan/](dev-plan/README.md) | **The development plan for `SvtDbAgentNext`** (`apps/svt-db-agent-next`, database layer in its `src/db`): self-contained instructions per phase for the agents that build it, with the shared context in `dev-plan/00-context.md`. |
+| [05-repository-layout-plan.md](05-repository-layout-plan.md) | **Done 2026-11-14:** the agent moved out of `UI/` to the top-level `DbAgentNext/`, the contract types to `Shared/svt-ts-types`. What was done and why, the traps met, open decisions, how to verify. Its decision is §6 of 04 now. |
+| [dev-plan/](dev-plan/README.md) | **The development plan for `SvtDbAgentNext`** (`DbAgentNext/`, database layer in its `src/db`): self-contained instructions per phase for the agents that build it, with the shared context in `dev-plan/00-context.md`. |
 
 ## Why NestJS + MikroORM (summary of the 2026-11-05 analysis)
 
@@ -82,3 +84,5 @@ other release.
 4. ~~Where the code lives and how it is versioned~~ — decided 2026-11-08, see
    [04-runtime-and-deployment.md §6](04-runtime-and-deployment.md#6-where-the-code-lives-build-and-versioning):
    `apps/svt-db-agent-next` in the UI workspace, own image, version and pipelines, deployed to dev.
+   Revised 2026-11-14: the standalone app `DbAgentNext/`, the contract types in `Shared/svt-ts-types`
+   ([05-repository-layout-plan.md](05-repository-layout-plan.md)).

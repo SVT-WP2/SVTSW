@@ -7,6 +7,8 @@ The Folder distribution is:
 - UI
 - DB
 - DBAgent
+- DbAgentNext (the NestJS re-implementation of the DB Agent, see DbAgentNext/README.md)
+- Shared (code compiled into more than one of the folders above, see Shared/README.md)
 - WPAgent
 - Documentation
 - ExternalDrivers

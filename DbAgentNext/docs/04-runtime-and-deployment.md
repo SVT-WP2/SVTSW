@@ -72,7 +72,39 @@ and closing the pool; NestJS `enableShutdownHooks()` plus the microservice `clos
 
 ## 6. Where the code lives, build and versioning
 
-Two options, both viable; this is an open decision:
+**Decision (2026-11-14): a standalone app `DbAgentNext/` at the top level of the repository, next to
+`DbAgent/`, and the contract types in `Shared/svt-ts-types`.** It replaces the decision of 2026-11-08 (the agent
+as `apps/svt-db-agent-next` in the UI Nx workspace, below). The move, its steps and its checks are in
+[05-repository-layout-plan.md](05-repository-layout-plan.md).
+
+Why the decision of 2026-11-08 was revised:
+
+- The top-level folders of SVTSW are the deployables, and the agent is one: its own image, version and release.
+- In the UI workspace it shared one `package.json`, one lockfile and one Node version with the Angular app.
+  MikroORM 7's Node ≥ 22.17 became a constraint of the whole workspace, the agent's unit tests ran under the
+  Angular test setup (`jsdom`, the zone wrapper), and a change of the workspace's lint or tsconfig settings could
+  break the agent.
+- The reason for the workspace, "the contract types stay in one place", holds with `Shared/svt-ts-types` as well:
+  one copy, compiled by both sides through a path alias, so a type that one side no longer matches still breaks
+  that side's build.
+
+| | Value |
+|---|---|
+| Code | `DbAgentNext/`: own `package.json` and lockfile, tsconfig, `eslint.config.mjs` and Vitest configs; no Nx |
+| Contract types | `Shared/svt-ts-types`, aliases `svt-ts-types` and `svt-ts-types/kafka` in `DbAgentNext/tsconfig.json` and `UI/tsconfig.base.json`. Dependency-free TypeScript; the agent validates requests with its own DTO classes |
+| Build | `nest build` with the webpack builder: `dist/main.js`, `Shared/` bundled, npm packages external |
+| Image | `ghcr.io/svt-wp2/svt-db-agent-next`, built from `DbAgentNext/Dockerfile` with the repository root as context, limited by `DbAgentNext/Dockerfile.dockerignore` to the app and `Shared/` (Node 22 alpine, multi-stage, `npm ci` + `npm run build`, runtime `npm ci --omit=dev` from the app's lockfile, runs as `node`) |
+| Health | `HEALTHCHECK` calls `GET /health` on `SVT_DB_AGENT_HTTP_PORT` (7676) with busybox `wget`; replaces the `svt-db-agent-healthcheck` binary |
+| Version | `DbAgentNext/package.json` (and its lockfile), independent of the UI's `svt-ui@` version; bumped by `DbAgent Next :: Release` (`svt-db-agent-next@<v>` commit, `svt-db-agent-next-<v>` tag, `release/svt-db-agent-next/<v>` branch for major/minor) |
+| Workflows | `.github/workflows/db-agent-next.yml` (CI: `npm run lint`, `typecheck`, `test`, `build`, `e2e` against a PostgreSQL service; PR image build without push; master → `:dev` + `:<sha>` and deploy to dev; tag → `:<version>` [+ `:latest`] and deploy to dev), `db-agent-next-manual.yml`, `db-agent-next-release.yml`. Path filter: `DbAgentNext/**` and `Shared/**`; `ui.yml` watches `UI/**` and `Shared/**`, so a change of the contract types builds both |
+| Compose | service `svt-db-agent-next`, container `svt.db-agent-next--<env>`, `SVT_DB_AGENT_NEXT_VERSION` in `versions.env`, same `SVT_DB_*` values from `.env`, optional `SVT_DB_AGENT_NEXT_LOG_VERBOSITY`; no log volume |
+| Where it runs | **dev only** for now, in place of the C++ service (`Environment/Dev/`); prod keeps `svt-db-agent`. `db-agent.yml` still builds the C++ image but no longer deploys to dev |
+
+Details for operators: [`Environment/README.md`](../../Environment/README.md#the-two-db-agent-services).
+
+### Superseded: the decision of 2026-11-08
+
+The two options as they were compared then:
 
 | | Promote `apps/epic-db-agent` in the UI Nx workspace | New top-level `DbAgentNode/` (or replace `DbAgent/`) |
 |---|---|---|
@@ -82,20 +114,12 @@ Two options, both viable; this is an open decision:
 | CLAUDE.md note "epic-db-agent never ships to prod" | must change | n/a |
 | Blast radius | a UI refactor of `libs/epic/*` can break the agent build (and vice versa); CI must build both | isolated |
 
-**Decision (2026-11-08): the first column, with its own name.** The agent lives in the UI workspace
-as `apps/svt-db-agent-next` (the contract types stay in one workspace), but it is a **separate
-service** rather than a drop-in image under the C++ name:
-
-| | Value |
-|---|---|
-| Image | `ghcr.io/svt-wp2/svt-db-agent-next`, built from `UI/apps/svt-db-agent-next/Dockerfile` with context `UI/` (Node 22 alpine, multi-stage, `npm ci` + `nx build`, runtime `npm install --omit=dev` on the generated `package.json` because the generated lock is incomplete, runs as `node`) |
-| Health | `HEALTHCHECK` calls `GET /health` on `SVT_DB_AGENT_HTTP_PORT` (7676) with busybox `wget`; replaces the `svt-db-agent-healthcheck` binary |
-| Version | `UI/apps/svt-db-agent-next/package.json`, independent of the workspace's `svt-ui@` version; bumped by `DbAgent Next :: Release` (`svt-db-agent-next@<v>` commit, `svt-db-agent-next-<v>` tag, `release/svt-db-agent-next/<v>` branch for major/minor) |
-| Workflows | `.github/workflows/db-agent-next.yml` (CI: scoped eslint, vitest, nx build; PR image build without push; master → `:dev` + `:<sha>` and deploy to dev; tag → `:<version>` [+ `:latest`] and deploy to dev), `db-agent-next-manual.yml`, `db-agent-next-release.yml`. Path filter: the app, `libs/epic/**`, `libs/epic-api-types/**` and the workspace build files; `ui.yml` ignores `UI/apps/svt-db-agent-next/**` |
-| Compose | service `svt-db-agent-next`, container `svt.db-agent-next--<env>`, `SVT_DB_AGENT_NEXT_VERSION` in `versions.env`, same `SVT_DB_*` values from `.env`, optional `SVT_DB_AGENT_NEXT_LOG_VERBOSITY`; no log volume |
-| Where it runs | **dev only** for now, in place of the C++ service (`Environment/Dev/`); prod keeps `svt-db-agent`. `db-agent.yml` still builds the C++ image but no longer deploys to dev |
-
-Details for operators: [`Environment/README.md`](../../Environment/README.md#the-two-db-agent-services).
+The decision then was the first column, with its own name: the agent in the UI workspace as
+`apps/svt-db-agent-next` ("the contract types stay in one workspace"), built from
+`UI/apps/svt-db-agent-next/Dockerfile` with context `UI/` and `nx build`, versioned in its own app
+`package.json`, path-filtered on the app, `libs/epic/**`, `libs/epic-api-types/**` and the workspace build files.
+Its image name, health check, release flow, compose service and environments are kept above; the build, the
+Docker context, the version file and the path filter changed.
 
 ## 7. Swap procedure
 
