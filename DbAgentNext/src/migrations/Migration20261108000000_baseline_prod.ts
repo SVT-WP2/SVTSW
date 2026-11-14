@@ -7,7 +7,7 @@ import { Migration } from '@mikro-orm/migrations'
  * GENERATED on 2026-11-08 from `Dev/db-example/2026-11-08-backup_prod.dump`
  * (`pg_restore --schema-only --no-owner --no-privileges`) and made idempotent (IF NOT EXISTS, guarded DO blocks),
  * so it runs to completion both on an empty database and on one restored from the dump. Not edited by hand:
- * see `docs/dev-plan/02-mikro-orm.md`. Migration 1 brings this layout to the dev one.
+ * see `docs/02-database-migration.md` §1. Migration 1 brings this layout to the dev one.
  */
 export class Migration20261108000000_baseline_prod extends Migration {
 

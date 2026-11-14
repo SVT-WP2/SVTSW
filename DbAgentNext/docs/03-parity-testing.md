@@ -115,7 +115,7 @@ The 53 different cases are not decisions:
 | 3 | 7: `wp-probe-cards` lists | The C++ returns the column `version`; the clone does not (it adds `asicFamilyTypes`, R-3). | **Open:** `version` is in neither contract (like `asicId` on chips, R-10). Drop it (as now) or add it to the contract. |
 | 4 | 1: `flow/wafer-type-map` (and `wafer-types/map`) | The C++ adds `waferTypeId` to the `GetWaferTypeMap` entity. | **Open:** not in `WaferTypeMapDto`; same question as row 3. |
 | 5 | 2: `flow/wp-machine-load-no-orientation`, `flow/wp-machine-unload-again` | Loading a wafer without `loadedWaferOrientation` is a `BadRequest` in the clone; the C++ accepted it (the second case follows from the first). | **Open:** the clone's contract requires the orientation, but no decision row backs it. WPAgent sends the key, with `None` as the default value; confirm with the WPAgent team. |
-| 6 | 1: `envelope/missing-reply-partition` | The C++ answers `BadRequest` without `kafka_replyPartition`; the clone replies `Success`. | **Open:** 01 §2 says the header is required "(NestJS does the same)", but NestJS only copies it when present ([dev-plan/04](dev-plan/04-kafka-layer.md#4d-parity-and-documentation)). Correct the decision row, or require the header. |
+| 6 | 1: `envelope/missing-reply-partition` | The C++ answers `BadRequest` without `kafka_replyPartition`; the clone replies `Success`. | **Open:** 01 §2 says the header is required "(NestJS does the same)", but NestJS only copies it when present ([04 §2](04-runtime-and-deployment.md#2-kafka-transport)). Correct the decision row, or require the header. |
 
 Found in the harness: the location row written by a `Create*` carries the day of the run (`date` from `now()`),
 and the case does not blank it, so recordings of different days differ in `flow/*-location-at-creation` and in the
@@ -146,7 +146,7 @@ Found while re-recording, in the clone's Kafka set-up; **both fixed the same day
   `postfixId` (`-server` by default) to the configured `groupId`, and `buildSvtDbAgentNextKafkaOptions` does not
   override it. The C++ agent and the clone are therefore in two groups: run side by side, both would answer every
   request, and the planned swap ([04 §7](04-runtime-and-deployment.md#7-swap-procedure)) is not the consumer
-  handover that [dev-plan/04](dev-plan/04-kafka-layer.md) describes.
+  handover that [04 §2](04-runtime-and-deployment.md#2-kafka-transport) describes.
 - **The clone replays the requests sent while it was down.** `fromBeginning: false` applies only to a group without
   a committed offset; the clone's group keeps one, so at start it consumes everything after it, writes included
   (the C++ agent seeks to the end). The comment in `svt-db-agent-next-kafka.models.ts` says the opposite. Here it

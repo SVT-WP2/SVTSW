@@ -100,4 +100,4 @@ npm run parity:compare
 
 `snapshots/cpp.json`, `snapshots/next.json` and `snapshots/report.md` are committed: the C++ recording is the
 evidence behind the "by code reading" claims of `DbAgent/docs`, and the report is the parity result of
-[dev-plan/04-kafka-layer.md §4d](../docs/dev-plan/04-kafka-layer.md).
+[docs/03-parity-testing.md §5](../docs/03-parity-testing.md#5-intentional-differences).

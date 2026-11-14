@@ -19,12 +19,12 @@ below cite those answers as *Author (Qn)*.
 
 | File | Content |
 |---|---|
-| [01-behaviour-decisions.md](01-behaviour-decisions.md) | For every drift and quirk in the current agent: preserve, fix, or ask. Plus the behaviour notes collected while documenting the C++. |
-| [02-database-migration.md](02-database-migration.md) | What the first MikroORM migration has to contain, how the existing schema maps onto MikroORM, and the schema discrepancies to resolve against the live DB. |
+| [01-behaviour-decisions.md](01-behaviour-decisions.md) | For every drift and quirk in the current agent: preserve, fix, or ask. The behaviour notes collected while documenting the C++, and what was decided per domain while implementing (§6). |
+| [02-database-migration.md](02-database-migration.md) | The migrations (what they contain, how they were made and run), how the schema maps onto MikroORM with the entity catalogue, the enum snapshot, and the schema discrepancies to resolve against the live DB. |
 | [03-parity-testing.md](03-parity-testing.md) | The black-box test plan that proves the clone behaves like the C++ where it should, and differs only where decided. |
 | [04-runtime-and-deployment.md](04-runtime-and-deployment.md) | Env vars, heartbeat, healthcheck, consumer group, NestJS Kafka transport specifics, where the code lives, build and versioning. |
 | [05-repository-layout-plan.md](05-repository-layout-plan.md) | **Done 2026-11-14:** the agent moved out of `UI/` to the top-level `DbAgentNext/`, the contract types to `Shared/svt-ts-types`. What was done and why, the traps met, open decisions, how to verify. Its decision is §6 of 04 now. |
-| [dev-plan/](dev-plan/README.md) | **The development plan for `SvtDbAgentNext`** (`DbAgentNext/`, database layer in its `src/db`): self-contained instructions per phase for the agents that build it, with the shared context in `dev-plan/00-context.md`. |
+| [06-implementation-notes.md](06-implementation-notes.md) | How the agent is built: where to read what, code layout and dependency rules, the dispatcher and handler contract, the data layer, how to add a message type, the pitfalls met. It replaces the phase instructions of `dev-plan/`, deleted on 2026-11-14 (in git history). |
 
 ## Why NestJS + MikroORM (summary of the 2026-11-05 analysis)
 

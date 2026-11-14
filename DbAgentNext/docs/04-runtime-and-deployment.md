@@ -14,9 +14,14 @@ Names stay the same so `.env` on the servers and the compose files need no chang
 |---|---|
 | `SVT_DB_AGENT_DB_HOST`, `_DB_PORT`, `_DB_USER`, `_DB_PASS`, `_DB_NAME`, `_DB_SCHEMA` | PostgreSQL connection; schema is `main`. |
 | `SVT_DB_AGENT_KAFKA_SERVER`, `_KAFKA_PORT` | broker, joined into `bootstrap.servers`. |
-| `SVT_DB_AGENT_LOGGER_FILE_PATH`, `_LOGGER_TERM_VERBOSITY`, `_LOGGER_FILE_VERBOSITY` | logging. The clone may log to stdout only (Docker json-file logging is already configured); keep the file path variable accepted and ignored, or honour it, but do not fail on it. |
+| `SVT_DB_AGENT_LOGGER_FILE_PATH`, `_LOGGER_TERM_VERBOSITY`, `_LOGGER_FILE_VERBOSITY` | logging. The clone logs to stdout only (Docker json-file logging is already configured): the file variables are accepted and ignored. `_LOGGER_TERM_VERBOSITY` maps onto Nest's log levels: `PRODUCTION` → error and warn, `STANDARD` (the default) → + log, `VERBOSE` → + verbose, `DEBUG` → + debug. |
+| `SVT_DB_AGENT_HTTP_PORT` | new: the port of `GET /health` (7676). |
+| `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS` | new, optional: `true` or `1` makes `CreateChip` and `CreateManyChips` write the chip's `ChipBlock` rows ([01 §6.4](01-behaviour-decisions.md#64-chips-and-chip-blocks)); off when absent, until a naming is defined (Q6). |
+| `NODE_ENV` | selects `.env.<NODE_ENV>` from the working directory for a local run; a container gets the variables from its environment only. |
 
-The compose service also bind-mounts `/var/log/svt-db-agent`; harmless if unused.
+All are validated at boot (`src/config`, `class-validator` on an env class); the database and Kafka variables are
+required, as for the C++ container, and a missing or invalid one ends the start with its name in the message. The
+compose service also bind-mounts `/var/log/svt-db-agent`; harmless if unused.
 
 ## 2. Kafka transport
 
@@ -36,15 +41,31 @@ settle:
 | Message size | broker 50 MiB; no compression | gzip (`CompressionTypes.GZIP`) on the producer; consumer `maxBytes` raised, as in the mock's `main.ts`. |
 | Fetch sizes | n/a | `maxBytesPerPartition` 10 MiB, `maxBytes` 50 MiB as in the mock. |
 
-The dispatch itself stays a `switch` on `message.type` over the typed unions in `epic-api-types/kafka`
-(one controller) or one `@MessagePattern` per type if a second topic is ever introduced; both are
-compatible with the single request topic.
+The dispatch is one `@MessagePattern('svt.db-agent.request')` controller handing every message to the dispatcher
+([06 §3](06-implementation-notes.md#3-the-dispatcher-and-the-handler-contract)); one `@MessagePattern` per type
+would only be needed for a second request topic.
+
+As built (2026-11-08), three points where the clone's transport differs from the C++:
+
+- **Reply routing is NestJS's.** The reply goes to the request's `kafka_replyTopic`, with `kafka_correlationId` and
+  `kafka_replyPartition` copied from the request. The C++ ignored the topic header and always used
+  `svt.db-agent.request.reply`; every client in the repository (the BFF, WPAgent's `WPDbKafkaClient`) sends the
+  header with that value, so nothing changes for them.
+- **No reply without `kafka_replyTopic`.** NestJS treats such a request as an event. A client that omits the header
+  would need a custom `ServerKafka`. NestJS copies `kafka_replyPartition` only when present, which is open question
+  6 of [03 §5.1](03-parity-testing.md#51-first-run-against-the-c-agent-2026-11-14).
+- **A value that is not JSON** reaches the dispatcher as a string and gets the `BadRequest` envelope (`Malformed
+  request: missing string "type"`); the process keeps serving (the C++ exited). An unreachable broker at start ends
+  the boot, as for the C++ agent, and the container restarts.
 
 ## 3. Heartbeat and health
 
 *Status 2026-11-08:* implemented as decided below — the heartbeat record every 2 s with the C++ topic
 retention, `GET /health` with `database` (a `select 1`) and `kafka` (an admin call), the compose
-`HEALTHCHECK` on that endpoint ([dev-plan/04-kafka-layer.md](dev-plan/04-kafka-layer.md), Outcome).
+`HEALTHCHECK` on that endpoint (`src/modules/kafka`, `src/modules/health`). The `kafka` indicator is
+`admin.listTopics()` with a 3 s timeout; the heartbeat service creates its topic with `retention.ms=60000` and
+`segment.ms=120000` when the broker lacks it, and `main.ts` starts it after the microservice is up (the e2e harness
+never does).
 
 - Keep producing `{ "timestamp": "<epoch seconds>.<6 decimals>" }` as a **string** to
   `svt.db-agent.heartbeat` every 2 s. The compose `HEALTHCHECK` consumes it and nothing else does,
@@ -128,6 +149,11 @@ Docker context, the version file and the path filter changed.
    master push touching the agent deploys it. The switch therefore happens with the merge of the branch to
    `master`; the old C++ container has to be removed once by hand
    ([`Environment/Dev/README.md`](../../Environment/Dev/README.md#db-agent-switching-from-svt-db-agent-to-svt-db-agent-next)).
+   **Open:** the dev database needs migrations 1 to 4 before the clone serves it (the history tables get their `id`
+   there), and the container does not migrate at start ([02 §1](02-database-migration.md#1-baseline-from-the-live-database-not-from-the-files)).
+   Who runs them, and whether the container should, is not decided. After the switch, `UI/CLAUDE.md` and the §1
+   diagram and §4 of `UI/docs/ARCHITECTURE.md` should show the agent in place of the mock (the mock stays for
+   offline work).
 2. Run the parity harness against dev once the merge has deployed the clone (the local run of 2026-11-14 is
    [03 §5](03-parity-testing.md#5-intentional-differences)).
 3. **Production:** add the `svt-db-agent-next` service to `Environment/Prod/docker-compose-svtsw-prod.yml`

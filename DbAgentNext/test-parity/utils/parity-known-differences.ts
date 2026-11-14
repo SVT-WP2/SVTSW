@@ -137,7 +137,7 @@ export const PARITY_KNOWN_DIFFERENCES: ParityKnownDifference[] = [
             'svt-tests/filter-ids-null', 'svt-tests/filter-null', 'svt-tests/pager-first', 'svt-tests/pager-second',
             'svt-tests/pager-offset-only',
         ],
-        decision: 'R-6, dev-plan/05 §11',
+        decision: 'R-6, 01 §6.8',
         note: 'Test timestamps are ISO 8601 UTC (the C++ sent PostgreSQL text), and tests list newest first (`id desc`) '
             + 'for the UI grid; the C++ listed by ascending id.',
     },

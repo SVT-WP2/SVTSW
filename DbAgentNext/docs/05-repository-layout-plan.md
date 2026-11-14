@@ -219,7 +219,8 @@ the list above:
 - Update `Environment/README.md`, `Environment/Dev/README.md`, `DbAgent/README.md` and the comment in
   `Documentation/Kafka/svt.db-agent-next.kafka.yaml` where they name the old path.
 - The phase documents in `dev-plan/` describe the workspace of their time. Keep them, and keep the note at the top
-  of `dev-plan/README.md` correct.
+  of `dev-plan/README.md` correct. (Revised the same day: their binding content was folded into 01, 02, 04 and
+  the new [06](06-implementation-notes.md), and `dev-plan/` was deleted.)
 
 **Done 2026-11-14.** §6 of 04 holds the new decision with its reasons; the old comparison and decision stay
 there as "Superseded". The path updates of `Environment/`, `DbAgent/` and the Kafka YAML went into the step 7

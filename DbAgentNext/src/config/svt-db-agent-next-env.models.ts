@@ -21,7 +21,7 @@ export enum SvtDbAgentNextLoggerVerbosity {
  *
  * The names are those of the C++ DB Agent container, so the compose files under `Environment/` need no
  * change. `SVT_DB_AGENT_HTTP_PORT` is the only addition: the port of the `/health` endpoint.
- * See `docs/dev-plan/00-context.md` §7.
+ * See `docs/04-runtime-and-deployment.md` §1.
  */
 export class SvtDbAgentNextEnvVars {
 
@@ -92,7 +92,7 @@ export class SvtDbAgentNextEnvVars {
 
     /**
      * Write the `ChipBlock` rows of a new chip from `AsicFamilyTypeBlockList`, named `<blockType>_<chipSN>`.
-     * Off until the naming is confirmed (`docs/dev-plan/00-context.md`, Q6).
+     * Off until a naming is defined (Q6, `docs/01-behaviour-decisions.md` §3 and §6.4).
      */
     @IsOptional()
     @IsBooleanString()

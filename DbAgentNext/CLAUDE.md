@@ -40,7 +40,7 @@ name anything `e`. An `index.ts` barrel in every folder; import from the barrel.
 - **`src/db` is the database layer** (`orm`: MikroORM setup, `data`: entities, repositories, domain logic). It is
   `strict` (`src/db/tsconfig.json`, checked by `npm run typecheck`), and ESLint keeps it from importing the Kafka
   contract or `modules/`. The rest of the app is not strict yet (21 handler errors under `strict`). Conventions for
-  entities: `docs/dev-plan/03-data-layer.md`.
+  entities: `docs/02-database-migration.md` §3; for the rest of the code: `docs/06-implementation-notes.md`.
 - MikroORM 7 is ESM-first and needs Node ≥ 22.17. Import its decorators from `@mikro-orm/decorators/legacy`; the
   app compiles with `moduleResolution: nodenext` because v7's types are invisible to the legacy `node` resolution.
 

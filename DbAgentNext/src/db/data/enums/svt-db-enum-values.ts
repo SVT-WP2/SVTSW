@@ -5,7 +5,7 @@
  * GENERATED on 2026-11-08 from `Dev/db-example/2026-11-08-backup_prod.dump` (`pg_restore --schema-only`), plus the
  * two dev-only types migration 1 adds (`dutEntityName`, `testResultStatus`) and the `CANCELLED` value migration 2
  * adds to `testResultStatus`. Prod, dev and the schema doc agree on every other value. Regenerate rather than
- * edit: see `docs/dev-plan/02-mikro-orm.md`, step 4 (a regeneration must run after the migrations).
+ * edit: see `docs/02-database-migration.md` §4 (a regeneration must run after the migrations).
  *
  * These are the values the entities declare for `@Enum({ nativeEnumName })`; at runtime `GetAllEnums` reads the
  * live catalog (`pg_enum`), so a value added with `ALTER TYPE ... ADD VALUE` works without a rebuild.

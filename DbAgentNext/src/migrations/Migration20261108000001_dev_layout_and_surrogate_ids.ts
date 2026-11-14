@@ -6,8 +6,7 @@ import { Migration } from '@mikro-orm/migrations'
  * re-implementation needs. Every step is guarded, so it also runs on a database that already has the dev
  * layout (dev) or that was created empty by migration 0.
  *
- * Content and reasoning: `docs/02-database-migration.md` §2 and
- * `docs/dev-plan/02-mikro-orm.md`.
+ * Content and reasoning: `docs/02-database-migration.md` §1 and §2.
  *
  * 1-6: the September 2026 `SvtTestList` changes dev already has (rename `createsAt`, the `dutEntityName` and
  *      `testResultStatus` enums, the two `SvtTestListToEntity*` tables, the `testSetupConfigId` FK, the drop of
