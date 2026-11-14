@@ -16,6 +16,7 @@ what that review confirms.
 | [02-database-migration.md](02-database-migration.md) | What the first MikroORM migration has to contain, how the existing schema maps onto MikroORM, and the schema discrepancies to resolve against the live DB. |
 | [03-parity-testing.md](03-parity-testing.md) | The black-box test plan that proves the clone behaves like the C++ where it should, and differs only where decided. |
 | [04-runtime-and-deployment.md](04-runtime-and-deployment.md) | Env vars, heartbeat, healthcheck, consumer group, NestJS Kafka transport specifics, where the code lives, build and versioning. |
+| [05-repository-layout-plan.md](05-repository-layout-plan.md) | **Plan in progress:** the agent moves out of `UI/` to a top-level `DbAgentNext/`, the contract types to `Shared/svt-ts-types`. What is done, the remaining steps, how to verify. Replaces the decision of 04 §6. |
 | [dev-plan/](dev-plan/README.md) | **The development plan for `SvtDbAgentNext`** (`apps/svt-db-agent-next`, database layer in its `src/db`): self-contained instructions per phase for the agents that build it, with the shared context in `dev-plan/00-context.md`. |
 
 ## Why NestJS + MikroORM (summary of the 2026-11-05 analysis)
