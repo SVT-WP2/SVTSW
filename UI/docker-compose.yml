@@ -62,8 +62,9 @@ services:
 
   svt-ui:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # The repository root: the image also compiles ../Shared (see the Dockerfile).
+      context: ..
+      dockerfile: UI/Dockerfile
     container_name: svt-ui
     depends_on:
       kafka:

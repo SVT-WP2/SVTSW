@@ -26,8 +26,9 @@ services:
   svt-ui:
     container_name: svt.ui
     build:
-      context: ../UI
-      dockerfile: Dockerfile
+      # The repository root: the image also compiles Shared/ (see UI/Dockerfile).
+      context: ..
+      dockerfile: UI/Dockerfile
     environment:
       - "SVT_UI_PORT=${UI_PORT:-7575}"
       - "KAFKA_BROKER=${KAFKA_SERVER:-kafka}:${KAFKA_PORT:-9084}"

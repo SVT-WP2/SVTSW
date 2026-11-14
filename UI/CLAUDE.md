@@ -13,7 +13,7 @@ Nx monorepo. Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 
 | `apps/epic-measure-ui` | Angular 21 | Front-end. Serves on **7755**, baseHref `/app/`. |
 | `apps/epic-measure-api` | NestJS 11 | BFF. HTTP REST at `/api` + Kafka **client**. Serves on **7373** in dev. |
 | `apps/epic-db-agent` | NestJS 11 | **Mock only.** Kafka-consumer microservice standing in for the real DB Agent so we can develop offline. Never ships to prod. |
-| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++): consumes `svt.db-agent.request` (consumer group `svt.db-agent.request`, the C++ one), produces the heartbeat, `GET /health` (database + Kafka) on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context `UI/`), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
+| `apps/svt-db-agent-next` | NestJS 11 | **Real DB Agent, in development.** Re-implementation of `../DbAgent` (C++): consumes `svt.db-agent.request` (consumer group `svt.db-agent.request`, the C++ one), produces the heartbeat, `GET /health` (database + Kafka) on **7676**. Config via `SVT_DB_AGENT_*`. Own image (`ghcr.io/svt-wp2/svt-db-agent-next`, Dockerfile in the app folder, context: the repository root), own version and release, deployed to **dev** in place of the C++ agent. Plan and context: [docs/db-agent-clone](docs/db-agent-clone/README.md). |
 
 The browser never talks to Kafka. Flow is always:
 
@@ -55,7 +55,8 @@ docker compose up -d zookeeper kafka kafka-ui   # Kafka broker on 9095 + UI on 8
 npm run pre-pull-request   # lint + test — run this before opening a PR
 ```
 
-Lint/test individually: `npm run lint`, `npm run lint:fix`, `npm test`.
+Lint/test individually: `npm run lint`, `npm run lint:fix`, `npm test`. `npm run lint:shared` lints and
+strictly type-checks `../Shared/svt-ts-types` (part of `npm run lint`).
 
 Tests run on **Vitest** from a single root `vitest.config.ts` + `test-setup.ts` — libs have no
 test config of their own. `npm test` runs the whole workspace in one process; `nx test <project>`
@@ -88,15 +89,15 @@ or `npm run test::affected` scope it.
 
 - **Never import across libs by relative path.** Use the `tsconfig.base.json` aliases (`epic-ui/api`,
   `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `epic-api-types/kafka`, `@env/environment`, …).
-- `epic-api-types` (`libs/epic-api-types/main`) is the **HTTP contract**: the request bodies, query strings and responses of the
+- `epic-api-types` (`../Shared/svt-ts-types/main`) is the **HTTP contract**: the request bodies, query strings and responses of the
   DB-agent-backed `/api/...` endpoints as plain TypeScript types, and the only lib compiled into both the Angular
-  SPA and the NestJS apps. No decorators, no framework imports (the root `eslint.config.mjs` rejects them). The UI
+  SPA and the NestJS apps. No decorators, no npm imports (`npm run lint:shared` rejects them). The UI
   uses these types as its models; a BE DTO class `implements` them, so a member drifting between FE and BE is a
   compile error. `implements` misses a renamed or missing member of a type with optional members (every
   `ListQuery`), so those DTOs are also paired in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`.
   Request bodies end in `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
   (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
-- `epic-api-types/kafka` (`libs/epic-api-types/kafka`) is the **Kafka contract** of the Node apps: the message
+- `epic-api-types/kafka` (`../Shared/svt-ts-types/kafka`) is the **Kafka contract** of the Node apps: the message
   envelope, the `SvtDbAgentKafka<X>` namespaces and the wire types. Same rule as `epic-api-types` — no decorators,
   no framework imports — but it is its own entry point, not exported by the `epic-api-types` barrel, and Angular code
   must not import it (the root `eslint.config.mjs` rejects it). The messages carry the `epic-api-types` types
@@ -149,6 +150,13 @@ Don't add a NgRx store for a single grid.
   `data`: entities, repositories, domain logic): `strict` there (`src/db/tsconfig.json`), and the app's
   `eslint.config.mjs` keeps it from importing the Kafka contract or the handlers. Conventions for entities:
   `docs/db-agent-clone/dev-plan/03-data-layer.md`.
+- The contract types (`epic-api-types`, `epic-api-types/kafka`) are in `../Shared/svt-ts-types`, **outside the
+  workspace**. Two rules follow from it. A tsconfig that compiles to CommonJS sets `"importHelpers": false` (else
+  the barrels' `export *` imports `tslib`, which does not resolve from `../Shared`: TS2354). And **no comments in a
+  tsconfig** that an Nx webpack build reads, nor in its `extends` chain: Nx 22.7 reads that chain with
+  `JSON.parse`, and on a comment it resolves the aliases from the app folder ("Module not found" for every alias
+  with a `/`). Docker builds use the repository root as context (`docker build -f UI/Dockerfile .`). The rest
+  (Nx cache input, lint-staged, CI filters) is in `../Shared/svt-ts-types/README.md`.
 - Release/CI details live in [README.md](README.md); don't duplicate them here.
 
 ## External sources of truth (outside this workspace)

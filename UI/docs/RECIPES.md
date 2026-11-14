@@ -12,7 +12,7 @@ Throughout, `<Domain>` is the PascalCase entity (`SvtTest`) and `<domain>` its k
 Order matters: contract first, then the two Node sides, then the UI. Each layer compiles independently once
 the one below it exists.
 
-### 1.1 Kafka contract — `libs/epic-api-types/kafka/src/db-agent/kafka-messages/`
+### 1.1 Kafka contract — `../Shared/svt-ts-types/kafka/src/db-agent/kafka-messages/`
 
 Check `../Documentation/Kafka/SvtKafkaConventions.md` for the agreed message names **before** writing this.
 
@@ -60,10 +60,10 @@ export namespace SvtDbAgentKafka<Domain>s {
 Export it from `kafka-messages/index.ts`. The Node apps import it from `epic-api-types/kafka`; the main
 `epic-api-types` barrel does not export the Kafka contract, and Angular code must not import it.
 
-### 1.2 HTTP contract types — `libs/epic-api-types/main/src/<domain>s/`
+### 1.2 HTTP contract types — `../Shared/svt-ts-types/main/src/<domain>s/`
 
 The request bodies, query filters and responses of the HTTP endpoints as plain types — written once, used by
-the BE DTO classes (`implements`) and by the UI directly. The rules are in `libs/epic-api-types/main/README.md`.
+the BE DTO classes (`implements`) and by the UI directly. The rules are in `../Shared/svt-ts-types/main/README.md`.
 
 ```
 responses/epic-<domain>.models.ts                    Epic<Domain>
@@ -72,8 +72,8 @@ requests/epic-<domain>s-list-query.models.ts         Epic<Domain>sListQuery   (f
 requests/index.ts, responses/index.ts, index.ts
 ```
 
-Export the domain from `libs/epic-api-types/main/src/index.ts`. No decorators and no framework imports — the root
-`eslint.config.mjs` rejects them.
+Export the domain from `../Shared/svt-ts-types/main/src/index.ts`. No decorators and no npm imports — `npm run lint:shared`
+rejects them.
 
 ### 1.3 DTOs — `libs/epic/entities/src/<domain>s/`
 
@@ -86,7 +86,7 @@ dtos/index.ts, index.ts
 
 There is no model for a Kafka wire shape that equals the HTTP shape — the messages use the `epic-api-types` type.
 A wire type that differs from it (`EpicSvtTestEntity`, the `*LocationUpdate` types) belongs to the Kafka contract:
-`libs/epic-api-types/kafka/src/db-agent/models/`. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
+`../Shared/svt-ts-types/kafka/src/db-agent/models/`. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
 drive Swagger *and* the `ClassSerializerInterceptor`, and `implements` makes a field drifting from the contract
 fail to compile — except a renamed or missing member of a type with optional members (every `<Domain>sListQuery`).
 Pair those DTOs with their type in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts` (a list DTO

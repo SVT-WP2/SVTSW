@@ -9,4 +9,4 @@ by the Angular app.
 | `svt-tests/models` | `resolveEpicSvtTestStatus()`, `resolveEpicSvtTestResultStatuses()` | The BFF-side mapping between the stored `testResultStatus` and the synthetic `status` of the HTTP contract. |
 | `kafka/` | The helpers around the Kafka contract that need RxJS or NestJS: `mapEpicKafkaMessageData()`, `mapSvtDbAgentListReplyData()`, `mapSvtDbAgentEntityReplyData()`, `processKafkaReplyError()`, `EpicKafkaReplyMessageBusService` | The contract itself — message envelope, per-domain `SvtDbAgentKafka<X>` namespaces, wire types and Kafka filters — is dependency-free and lives in `epic-api-types/kafka`. |
 
-The field lists themselves live in `libs/epic-api-types` — see its README.
+The field lists themselves live in `../Shared/svt-ts-types` — see its README.

@@ -46,8 +46,8 @@ health on <http://localhost:7676/health>); see [docs/db-agent-clone/README.md](d
 
 
 ```
-# Build
-docker build -t epic-measure .
+# Build, from the repository root (the image also compiles ../Shared/svt-ts-types)
+docker build -f UI/Dockerfile -t epic-measure .
 
 # Run (default port 8080)
 docker run -p 8080:8080 epic-measure
@@ -229,12 +229,12 @@ version in `apps/svt-db-agent-next/package.json` and the same three-workflow lay
 | `db-agent-next-release.yml` (`DbAgent Next :: Release`) | Manual | Bump `apps/svt-db-agent-next/package.json` → commit `svt-db-agent-next@<v>` + tag `svt-db-agent-next-<v>` + push (needs `RELEASE_PAT`) |
 | `db-agent-next-manual.yml` (`DbAgent Next :: Manual`) | Manual | Build a short-SHA image, deploy an image to dev, deploy a release to prod |
 
-> Path filter: the app folder, `libs/epic/**`, `libs/epic-api-types/**` and the
+> Path filter: the app folder, `libs/epic/**`, `../Shared/**` and the
 > workspace build files (`package.json`, `package-lock.json`, `tsconfig*.json`, `nx.json`, …). SPA-only
 > changes do not trigger it; conversely `ui.yml` ignores `apps/svt-db-agent-next/**`. `svt-ui@` and
 > `svt-db-agent-next@` release commits are skipped by both pipelines' master jobs.
 >
-> Image: `docker build -f apps/svt-db-agent-next/Dockerfile .` from `UI/` (Node 22 alpine, multi-stage,
+> Image: `docker build -f UI/apps/svt-db-agent-next/Dockerfile .` from the repository root (Node 22 alpine, multi-stage,
 > `HEALTHCHECK` on `GET /health`). The container is configured with the `SVT_DB_AGENT_*` variables only.
 >
 > Where it runs: **dev** (`Environment/Dev/`, in place of the C++ `svt-db-agent`); prod keeps the C++

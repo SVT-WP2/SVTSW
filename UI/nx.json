@@ -1,7 +1,11 @@
 {
   "defaultBase": "master",
   "namedInputs": {
-    "sharedGlobals": [],
+    "sharedGlobals": [
+      {
+        "runtime": "node tools/shared-sources-hash.mjs"
+      }
+    ],
     "default": [
       "{projectRoot}/**/*",
       "sharedGlobals"

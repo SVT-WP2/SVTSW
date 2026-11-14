@@ -132,6 +132,14 @@ The plan before the spike, for reference:
 1. `git mv UI/libs/epic-api-types Shared/svt-ts-types` (keep `main/` and `kafka/`). Point the two aliases at the
    new place. Apply the fixes of the spike. The two Nx `project.json` files go, because `Shared/` is not in the
    workspace. Verify.
+
+   **Done 2026-11-14.** The per-entry `project.json`, `package.json`, `tsconfig*.json` and `eslint.config.mjs`
+   gave way to one `tsconfig.json` and one `eslint.config.mjs` in `Shared/svt-ts-types`, and a README there lists
+   what a consumer must set up. Beyond the spike: `importHelpers` is off in `libs/epic/{core,entities}` too (both
+   CommonJS), the root ESLint block for the old path is gone (`npm run lint:shared` replaces it), the UI image
+   and the agent image build from the repository root (`UI/.dockerignore` became a `Dockerfile.dockerignore` per
+   image), and `UI/docker-compose.yml` and `Dev/docker-compose.swtsw.yml` build with the root as context. One new
+   trap: a comment in an app's `tsconfig.app.json` broke every alias with a `/` in its webpack build (§9).
 2. Second commit: rename the aliases `epic-api-types` → `svt-ts-types` and `epic-api-types/kafka` →
    `svt-ts-types/kafka` (351 + 76 files, mechanical). Do **not** rename the `Epic*` symbols in this work.
 3. Update `UI/CLAUDE.md`, `UI/docs/ARCHITECTURE.md`, `UI/docs/RECIPES.md` and the two library README files.
@@ -213,12 +221,13 @@ npx tsc --noEmit -p apps/svt-db-agent-next/src/db/tsconfig.json
 npx tsc --noEmit -p apps/svt-db-agent-next/tsconfig.spec.json --typeRoots node_modules/@types,node_modules
 ```
 
-The third command must show exactly the 4 errors of §7. For the other projects: `libs/epic-api-types/main`,
-`libs/epic-api-types/kafka`, `libs/epic/entities` (`tsconfig.lib.json`), `apps/epic-measure-api` and
-`apps/epic-db-agent` (`tsconfig.app.json`, `tsconfig.spec.json`): 0 errors each.
+The third command must show exactly the 4 errors of §7. For the other projects: `libs/epic/entities` and
+`libs/epic/core` (`tsconfig.lib.json`), `apps/epic-measure-api` and `apps/epic-db-agent` (`tsconfig.app.json`,
+`tsconfig.spec.json`), `apps/epic-measure-ui/tsconfig.app.json`: 0 errors each. The library itself is checked by
+`npm run lint:shared` (ESLint and `tsc -p ../Shared/svt-ts-types/tsconfig.json`).
 
 ```bash
-npm run lint:ts
+npm run lint
 ```
 
 ```bash
@@ -249,9 +258,10 @@ NODE_ENV=test npx mikro-orm migration:pending
 ```
 
 Results on 2026-11-14, after step 4: 56 unit tests, 148 e2e tests (4 skipped without the Kafka flag), 4 Kafka
-tests, all builds, lint clean, `No pending migrations`.
+tests, all builds, lint clean, `No pending migrations`. After step 6.1: the same, without the Kafka run (no broker
+that day); both images (`docker build -f UI/Dockerfile .` and the agent's) build from the repository root.
 
-## 9. Traps met in steps 1 to 4
+## 9. Traps met in steps 1 to 6
 
 - **A moved file changes the depth of its relative paths.** Step 4 broke two specs that read
   `Configurations/WaferTypeMappings`; only the unit tests showed it. Step 7 moves the same files again (§4).
@@ -264,3 +274,7 @@ tests, all builds, lint clean, `No pending migrations`.
 - **The IDE adds new files to the index by itself.** Before a commit that must hold one step only, look at
   `git diff --cached --stat`.
 - **Import order after a codemod.** `eslint --fix` moves a changed import to its group; run it on the changed files.
+- **No comments in a tsconfig that an Nx webpack build reads** (step 6). Nx 22.7 `resolvePathsBaseUrl` reads the
+  `extends` chain with `JSON.parse`; on a comment it silently takes the app folder as `baseUrl`, and webpack then
+  fails with "Module not found" for `epic/entities`, `epic-api-types/kafka` and every other alias with a `/`.
+  `tsc` and `tsconfig-paths` accept the same file, so only the build shows it.

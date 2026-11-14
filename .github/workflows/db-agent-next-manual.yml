@@ -59,7 +59,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
-          context: UI
+          context: .
           file: UI/apps/svt-db-agent-next/Dockerfile
           push: true
           build-args: |

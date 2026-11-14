@@ -24,9 +24,9 @@ export const DEFAULT_DIRECTIVE_SELECTORS = [
 ]
 
 /**
- * `libs/epic-api-types` is compiled into BOTH the Angular SPA and the NestJS apps, so it must stay free of runtime
- * framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers only.
- * Shared by the root config below (what `npm run lint` and CI use) and the lib's own config (`nx lint`).
+ * `../Shared/svt-ts-types` is compiled into BOTH the Angular SPA and the NestJS apps (and the DB agent), so it must stay
+ * free of runtime framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers
+ * only. Used by the library's own config (`../Shared/svt-ts-types/eslint.config.mjs`, `npm run lint:shared`).
  */
 export const EPIC_API_TYPES_RESTRICTED_IMPORTS = [
     'error',
@@ -252,14 +252,6 @@ export const ROOT_CONFIG = tseslint.config(
         rules: {
             '@angular-eslint/template/prefer-control-flow': 'off',
         }
-    },
-    {
-        // Here and not only in libs/epic-api-types/{main,kafka}/eslint.config.mjs: ESLint 9 reads the config of the directory it
-        // runs from, and `npm run lint` runs from the workspace root, so a lib's own config never applies there.
-        files: ['libs/epic-api-types/**/*.ts'],
-        rules: {
-            'no-restricted-imports': EPIC_API_TYPES_RESTRICTED_IMPORTS,
-        },
     },
     {
         // The Kafka contract is for the Node apps only: the browser never talks to Kafka, so its message classes must

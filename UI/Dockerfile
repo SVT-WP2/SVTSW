@@ -1,12 +1,21 @@
+# svt-ui: the Angular SPA (nginx) and the BFF (epic-measure-api) in one image.
+#
+# Build context is the repository root, not UI/: the apps compile ../Shared/svt-ts-types
+# through the aliases of tsconfig.base.json. Dockerfile.dockerignore next to this file
+# limits the context to UI/ and Shared/.
+#
+#   docker build -f UI/Dockerfile -t svt-ui .
+
 # ---- Stage 1: Build ----
 FROM node:20-alpine AS build
 
-WORKDIR /app
+WORKDIR /app/UI
 
-COPY package.json package-lock.json* ./
+COPY UI/package.json UI/package-lock.json* ./
 RUN npm ci --force
 
-COPY . .
+COPY UI/ ./
+COPY Shared/ ../Shared/
 
 # Disable the Nx daemon in CI/Docker builds (no benefit in one-shot builds,
 # and a known source of `NX [object Object]` errors when it times out).
@@ -27,15 +36,15 @@ RUN apk add --no-cache nginx gettext curl
 WORKDIR /app
 
 # Copy built API + its generated package.json
-COPY --from=build /app/dist/apps/epic-measure-api ./api/
+COPY --from=build /app/UI/dist/apps/epic-measure-api ./api/
 RUN cd /app/api && npm install --omit=dev --force 2>/dev/null || true
 
 # Copy built Angular frontend
-COPY --from=build /app/dist/apps/epic-measure-ui/browser /usr/share/nginx/html
+COPY --from=build /app/UI/dist/apps/epic-measure-ui/browser /usr/share/nginx/html
 
 # Copy nginx template and entrypoint
-COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
-COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
+COPY UI/docker/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY UI/docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 # Default environment variables

@@ -1,0 +1,19 @@
+# Ignore file of UI/apps/svt-db-agent-next/Dockerfile (BuildKit reads <Dockerfile>.dockerignore next to the Dockerfile).
+# The build context is the repository root: send UI/ and Shared/ only.
+*
+!UI
+!Shared
+
+# The former UI/.dockerignore, with the UI/ prefix of the root context.
+**/node_modules
+UI/dist
+UI/.nx
+UI/.angular
+UI/*.md
+UI/**/*.spec.ts
+UI/**/*.test.ts
+UI/.env*
+UI/pm2
+UI/postgresql
+UI/scripts
+UI/Deployment

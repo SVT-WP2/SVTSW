@@ -22,14 +22,13 @@ on:
     paths:
       - 'UI/apps/svt-db-agent-next/**'
       - 'UI/libs/epic/**'
-      - 'UI/libs/epic-api-types/**'
+      - 'Shared/**'
       - 'UI/package.json'
       - 'UI/package-lock.json'
       - 'UI/tsconfig*.json'
       - 'UI/nx.json'
       - 'UI/eslint.config.mjs'
       - 'UI/vitest.config.ts'
-      - 'UI/.dockerignore'
       - '.github/workflows/db-agent-next.yml'
     tags:
       - 'svt-db-agent-next-*'
@@ -37,14 +36,13 @@ on:
     paths:
       - 'UI/apps/svt-db-agent-next/**'
       - 'UI/libs/epic/**'
-      - 'UI/libs/epic-api-types/**'
+      - 'Shared/**'
       - 'UI/package.json'
       - 'UI/package-lock.json'
       - 'UI/tsconfig*.json'
       - 'UI/nx.json'
       - 'UI/eslint.config.mjs'
       - 'UI/vitest.config.ts'
-      - 'UI/.dockerignore'
       - '.github/workflows/db-agent-next.yml'
 
 concurrency:
@@ -115,7 +113,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
-          context: UI
+          context: .
           file: UI/apps/svt-db-agent-next/Dockerfile
           push: false
           build-args: |
@@ -149,7 +147,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
-          context: UI
+          context: .
           file: UI/apps/svt-db-agent-next/Dockerfile
           push: true
           build-args: |
@@ -197,7 +195,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
-          context: UI
+          context: .
           file: UI/apps/svt-db-agent-next/Dockerfile
           push: true
           build-args: |

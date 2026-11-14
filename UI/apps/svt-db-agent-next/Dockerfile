@@ -1,23 +1,25 @@
 # svt-db-agent-next: the NestJS re-implementation of the SVT DB Agent.
 #
-# Build context is the Nx workspace (UI/), not this folder: the app builds from
-# the workspace libs (libs/epic-api-types/*) and the root package-lock.json.
+# Build context is the repository root, not this folder: the app builds in the Nx
+# workspace (UI/, its package-lock.json) and from ../Shared/svt-ts-types.
+# Dockerfile.dockerignore next to this file limits the context to UI/ and Shared/.
 #
-#   cd UI && docker build -f apps/svt-db-agent-next/Dockerfile -t svt-db-agent-next .
+#   docker build -f UI/apps/svt-db-agent-next/Dockerfile -t svt-db-agent-next .
 #
 # Configuration comes from the SVT_DB_AGENT_* environment variables only (the
-# committed .env.* files are excluded by .dockerignore); see
+# committed .env.* files are not copied into the runtime stage); see
 # Environment/Dev/docker-compose-svtsw-dev.yml for the variables the container gets.
 
 # ---- Stage 1: build ----
 FROM node:22-alpine AS build
 
-WORKDIR /app
+WORKDIR /app/UI
 
-COPY package.json package-lock.json ./
+COPY UI/package.json UI/package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY UI/ ./
+COPY Shared/ ../Shared/
 
 # Disable the Nx daemon in one-shot builds (no benefit, and a known source of
 # `NX [object Object]` errors when it times out).
@@ -32,7 +34,7 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/dist/apps/svt-db-agent-next ./
+COPY --from=build /app/UI/dist/apps/svt-db-agent-next ./
 # The lockfile Nx generates next to the bundle is pruned from the workspace lock
 # and misses some nested packages (e.g. content-type), so `npm ci` refuses it;
 # `npm install` reconciles it from the pinned direct versions instead.
