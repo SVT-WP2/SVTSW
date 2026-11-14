@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
 
 
 export namespace EpicWpMachinesActions {

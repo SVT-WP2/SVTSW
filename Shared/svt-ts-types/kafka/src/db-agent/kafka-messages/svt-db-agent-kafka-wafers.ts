@@ -1,4 +1,4 @@
-import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'epic-api-types'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

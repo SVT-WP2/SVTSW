@@ -1,5 +1,5 @@
 import { IsString } from 'class-validator'
-import { EpicEquipmentTypeCreateRequest } from 'epic-api-types'
+import { EpicEquipmentTypeCreateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateEquipmentType`. */

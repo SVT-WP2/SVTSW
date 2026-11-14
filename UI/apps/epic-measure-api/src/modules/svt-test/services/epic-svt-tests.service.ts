@@ -6,6 +6,7 @@ import {
     resolveEpicSvtTestResultStatuses,
     resolveEpicSvtTestStatus,
 } from 'epic/entities'
+import { map, Observable, of } from 'rxjs'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -13,9 +14,8 @@ import {
     EpicSvtTestCreateRequest,
     EpicSvtTestsListQuery,
     EpicSvtTestStatus,
-} from 'epic-api-types'
-import { EpicSvtTestEntity, SvtDbAgentKafka, SvtDbAgentKafkaSvtTests } from 'epic-api-types/kafka'
-import { map, Observable, of } from 'rxjs'
+} from 'svt-ts-types'
+import { EpicSvtTestEntity, SvtDbAgentKafka, SvtDbAgentKafkaSvtTests } from 'svt-ts-types/kafka'
 
 import { EpicSvtTestSvc } from '../models'
 

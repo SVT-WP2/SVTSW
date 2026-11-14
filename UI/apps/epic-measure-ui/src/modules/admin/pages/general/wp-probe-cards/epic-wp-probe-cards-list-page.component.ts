@@ -2,7 +2,6 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicWpProbeCard } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -18,6 +17,7 @@ import {
     EpicWpProbeCardsSelectors,
 } from 'epic-ui/shared/wp'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 import StoreActions = EpicWpProbeCardsActions
 import StoreSelectors = EpicWpProbeCardsSelectors

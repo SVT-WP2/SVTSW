@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'epic-api-types'
 import moment from 'moment/moment'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'svt-ts-types'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsOptional } from 'class-validator'
-import { EpicWpMachineUpdateLoadedWaferRequest } from 'epic-api-types'
+import { EpicWpMachineUpdateLoadedWaferRequest } from 'svt-ts-types'
 
 
 export class EpicWpMachineUpdateLoadedWaferDto implements EpicWpMachineUpdateLoadedWaferRequest {

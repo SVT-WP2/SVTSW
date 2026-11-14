@@ -4,7 +4,6 @@ import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink, RouterOutlet } from '@angular/router'
 import { Store } from '@ngrx/store'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicSvtTestSetup, EpicSvtTestSetupConfig } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -21,6 +20,7 @@ import {
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicSvtTestSetupConfigCreateDialogService, EpicSvtTestSetupsActions, EpicSvtTestSetupsSelectors } from 'epic-ui/shared/svt-tests'
 import { BaseComponent, EpicSearchPipe, ProcessingStore } from 'epic-ui/utils'
+import { EpicSvtTestSetup, EpicSvtTestSetupConfig } from 'svt-ts-types'
 
 import StoreSelectors = EpicSvtTestSetupsSelectors
 import StoreActions = EpicSvtTestSetupsActions

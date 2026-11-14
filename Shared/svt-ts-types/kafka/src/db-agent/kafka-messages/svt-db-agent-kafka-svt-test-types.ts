@@ -1,4 +1,4 @@
-import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypesListQuery, EpicSvtTestTypeUpdateRequest } from 'epic-api-types'
+import { EpicSvtTestType, EpicSvtTestTypeCreateRequest, EpicSvtTestTypesListQuery, EpicSvtTestTypeUpdateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

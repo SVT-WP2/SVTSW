@@ -2,7 +2,6 @@
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute, Router } from '@angular/router'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -19,6 +18,7 @@ import {
     EpicSvtTestTypesSelectors,
 } from 'epic-ui/shared/svt-test/test-types'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'svt-ts-types'
 
 import StoreSelectors = EpicSvtTestTypesSelectors
 import StoreActions = EpicSvtTestTypesActions

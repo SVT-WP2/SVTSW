@@ -43,15 +43,15 @@ UI/
 │   │   ├── entities/         DTO classes, RxJS / NestJS helpers around the Kafka contract
 │   │   └── core/             low-level helpers (TCP connection factory)
 │   └── epic-ui/              Angular-side shared code
-│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from epic-api-types
+│       ├── api/              HTTP clients  (+ __mock__ twins) — DB-agent domain types come from svt-ts-types
 │       ├── common/           auth, layout, ag-grid, design-system components
 │       ├── shared/<domain>/  feature domain libs (the bulk of the UI)
 │       └── utils/            base classes, pipes, directives, material, colors
 └── docker/                   nginx template + entrypoint for the prod image
 
 ../Shared/svt-ts-types/       contract types as plain TS only, outside the workspace — two entry points
-├── main/                     HTTP contract types shared by the SPA and the Node apps — `epic-api-types`
-└── kafka/                    Kafka contract of the Node apps — `epic-api-types/kafka`
+├── main/                     HTTP contract types shared by the SPA and the Node apps — `svt-ts-types`
+└── kafka/                    Kafka contract of the Node apps — `svt-ts-types/kafka`
 ```
 
 The contract types are outside `UI/` because the DB agent is going to leave the workspace and compile them too
@@ -64,7 +64,7 @@ response types of the DB-agent-backed HTTP API as plain TypeScript, with no deco
 (`npm run lint:shared` rejects them). The UI uses those types as its models; a BE DTO class `implements`
 them (and, where the type has optional members, `libs/epic/entities/src/contract` checks that the two declare the
 same members — `implements` cannot); the Kafka messages
-(`epic-api-types/kafka`) carry them directly while the wire shape equals the HTTP one. A field drifting between FE and BE is a
+(`svt-ts-types/kafka`) carry them directly while the wire shape equals the HTTP one. A field drifting between FE and BE is a
 compile error instead of a silently ignored query param. (`iv-mnt` and `tcp` are not DB-agent operations; their
 types still live in `libs/epic-ui/api`.)
 
@@ -112,7 +112,7 @@ sequenceDiagram
 ## 4. The Kafka layer
 
 The contract — envelope, message namespaces, wire types — is plain TypeScript in `../Shared/svt-ts-types/kafka`,
-imported as `epic-api-types/kafka` by the Node apps only (ESLint rejects it in Angular code). The RxJS operators and
+imported as `svt-ts-types/kafka` by the Node apps only (ESLint rejects it in Angular code). The RxJS operators and
 `processKafkaReplyError()` used below stay in `libs/epic/entities`.
 
 Everything goes through **two topics**, declared in
@@ -267,8 +267,8 @@ Defined in `tsconfig.base.json`. Always import through these.
 | Alias | Points at |
 |---|---|
 | `@env`, `@env/*` | `apps/epic-measure-ui/src/environments` |
-| `epic-api-types` | `../Shared/svt-ts-types/main` — HTTP contract types, compiled into both sides |
-| `epic-api-types/kafka` | `../Shared/svt-ts-types/kafka` — Kafka contract (envelope, messages, wire types), Node side only |
+| `svt-ts-types` | `../Shared/svt-ts-types/main` — HTTP contract types, compiled into both sides |
+| `svt-ts-types/kafka` | `../Shared/svt-ts-types/kafka` — Kafka contract (envelope, messages, wire types), Node side only |
 | `epic/core`, `epic/entities` | `libs/epic/*` (Node side) |
 | `epic-ui/api`, `epic-ui/api/__mock__` | HTTP clients (+ mocks) |
 | `epic-ui/common`, `.../auth`, `.../ag-grid`, `.../components`, `.../layout` | design system |

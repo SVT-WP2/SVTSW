@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
-import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic-api-types/kafka'
+import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'svt-ts-types'
+import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'svt-ts-types/kafka'
 
 import {
     SvtDbAsicsRepository,

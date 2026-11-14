@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
-import { EpicChipCreateRequest } from 'epic-api-types'
+import { EpicChipCreateRequest } from 'svt-ts-types'
 
 
 export class EpicChipCreateRequestDto implements EpicChipCreateRequest {

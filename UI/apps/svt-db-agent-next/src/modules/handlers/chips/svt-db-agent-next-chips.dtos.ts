@@ -5,7 +5,7 @@ import {
     EpicChipCreateManyRequestItem,
     EpicChipCreateRequest,
     EpicChipLocationHistoryRecord,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 
 /** `data.create` of `CreateChip`. */

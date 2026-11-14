@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicSvtTestType, EpicSvtTestTypeConfig } from 'svt-ts-types'
 
 
 export namespace EpicSvtTestTypesGrid {

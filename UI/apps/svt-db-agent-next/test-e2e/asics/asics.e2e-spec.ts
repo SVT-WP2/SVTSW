@@ -1,5 +1,5 @@
-import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaAsics, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes } from 'epic-api-types/kafka'
+import { EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaAsics, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes } from 'svt-ts-types/kafka'
 
 import { TestSetup } from '../utils'
 

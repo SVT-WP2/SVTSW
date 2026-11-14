@@ -1,11 +1,11 @@
-import { EpicAsic, EpicChip, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'epic-api-types'
+import { EpicAsic, EpicChip, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'svt-ts-types'
 import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaAsics,
     SvtDbAgentKafkaChips,
     SvtDbAgentKafkaWafers,
     SvtDbAgentKafkaWaferTypes,
-} from 'epic-api-types/kafka'
+} from 'svt-ts-types/kafka'
 
 import { TestSetup } from '../utils'
 

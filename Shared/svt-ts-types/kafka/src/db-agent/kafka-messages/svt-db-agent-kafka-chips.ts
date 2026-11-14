@@ -1,4 +1,4 @@
-import { EpicApiPager, EpicChip, EpicChipCreateManyRequest, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'epic-api-types'
+import { EpicApiPager, EpicChip, EpicChipCreateManyRequest, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 import { EpicGetAllChipsQueryFilter } from '../models'

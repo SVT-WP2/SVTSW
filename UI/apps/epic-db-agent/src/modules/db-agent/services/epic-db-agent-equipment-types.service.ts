@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'svt-ts-types'
 
 
 @Injectable()

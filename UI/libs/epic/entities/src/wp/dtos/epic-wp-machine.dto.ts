@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
-import { EpicWpMachine } from 'epic-api-types'
+import { EpicWpMachine } from 'svt-ts-types'
 
 
 export class EpicWpMachineDto implements EpicWpMachine {

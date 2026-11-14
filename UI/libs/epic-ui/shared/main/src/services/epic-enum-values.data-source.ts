@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEnumName } from 'epic-api-types'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { map, Observable } from 'rxjs'
+import { EpicEnumName } from 'svt-ts-types'
 
 import { EpicEnumsFacade } from './epic-enums.facade'
 

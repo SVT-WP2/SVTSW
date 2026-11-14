@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { EpicEnumsCollectionQueryFilterDto, EpicEnumsCollectionResponseDto } from 'epic/entities'
-import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'epic-api-types/kafka'
 import { firstValueFrom } from 'rxjs'
+import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 import { EpicEnumsService } from '../services'
 

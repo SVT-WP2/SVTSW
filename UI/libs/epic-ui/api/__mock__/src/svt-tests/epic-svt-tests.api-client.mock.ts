@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core'
+import { EpicSvtTestsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
+import moment from 'moment'
+import { delay, Observable, of, throwError } from 'rxjs'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -8,10 +11,7 @@ import {
     EpicSvtTestResultStatus,
     EpicSvtTestsListQuery,
     EpicSvtTestStatus,
-} from 'epic-api-types'
-import { EpicSvtTestsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
-import moment from 'moment'
-import { delay, Observable, of, throwError } from 'rxjs'
+} from 'svt-ts-types'
 
 
 export function getMockEpicSvtTests(): EpicSvtTest[] {

@@ -1,6 +1,6 @@
 import { IsDateString, IsEnum, IsString } from 'class-validator'
-import { EpicSvtTestResultStatus } from 'epic-api-types'
-import { EpicSvtTestFinishUpdate } from 'epic-api-types/kafka'
+import { EpicSvtTestResultStatus } from 'svt-ts-types'
+import { EpicSvtTestFinishUpdate } from 'svt-ts-types/kafka'
 
 
 /** `data.update` of `UpdateSvtTestFinish` (`SvtTestFinishUpdateDto` of the Kafka contract). */

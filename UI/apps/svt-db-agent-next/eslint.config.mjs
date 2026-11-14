@@ -23,7 +23,7 @@ export default [
                     patterns: [
                         DB_NODE_ONLY,
                         {
-                            group: ['epic/*', 'epic-ui/*', 'epic-api-types/kafka'],
+                            group: ['epic/*', 'epic-ui/*', 'svt-ts-types/kafka'],
                             message: 'src/db/data is the database layer — it must not depend on the UI, the BFF or the Kafka contract.',
                         },
                         DB_NO_APP_LAYERS,
@@ -42,7 +42,7 @@ export default [
                     patterns: [
                         DB_NODE_ONLY,
                         {
-                            group: ['epic/*', 'epic-ui/*', 'epic-api-types', 'epic-api-types/*'],
+                            group: ['epic/*', 'epic-ui/*', 'svt-ts-types', 'svt-ts-types/*'],
                             message: 'src/db/orm is the database layer — it must not depend on the UI, the BFF or the contract types.',
                         },
                         DB_NO_APP_LAYERS,

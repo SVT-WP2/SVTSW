@@ -1,7 +1,6 @@
 ﻿import { Component, computed, effect, inject, signal, Signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { ActivatedRoute } from '@angular/router'
-import { EpicAsic, EpicChip, EpicWafer } from 'epic-api-types'
 import { EpicChipsApiClient, EpicIvMnt } from 'epic-ui/api'
 import { EpicBreadcrumbs, EpicNavTabs, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicAsicIvMntDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
@@ -9,6 +8,7 @@ import { EpicChipCreateDialogService } from 'epic-ui/shared/chips'
 import { EpicWaferRef, EpicWafersStoreFacade } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { catchError, filter, first, switchMap, takeUntil, tap, throwError } from 'rxjs'
+import { EpicAsic, EpicChip, EpicWafer } from 'svt-ts-types'
 
 
 @Component({

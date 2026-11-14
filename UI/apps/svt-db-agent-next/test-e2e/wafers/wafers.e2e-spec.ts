@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes } from 'epic-api-types/kafka'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes } from 'svt-ts-types/kafka'
 
 import { TestSetup } from '../utils'
 

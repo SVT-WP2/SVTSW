@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpMachine } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'epic-api-types/kafka'
+import { EpicWpMachine } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'svt-ts-types/kafka'
 
 import {
     SvtDbEnumsService,

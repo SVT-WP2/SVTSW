@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
 import moment from 'moment'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 

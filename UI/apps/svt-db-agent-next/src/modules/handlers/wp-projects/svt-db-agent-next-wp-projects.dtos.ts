@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator'
-import { EpicWpProjectCreateRequest } from 'epic-api-types'
+import { EpicWpProjectCreateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateWpProject`. */

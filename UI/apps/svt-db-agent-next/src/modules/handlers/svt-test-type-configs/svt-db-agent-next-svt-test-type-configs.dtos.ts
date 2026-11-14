@@ -1,5 +1,5 @@
 import { IsNumber, IsString, ValidateIf } from 'class-validator'
-import { EpicSvtTestTypeConfigCreateRequest } from 'epic-api-types'
+import { EpicSvtTestTypeConfigCreateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateSvtTestTypeConfig`. */

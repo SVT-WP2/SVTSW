@@ -1,4 +1,4 @@
-import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'epic-api-types'
+import { EpicEquipmentType, EpicEquipmentTypeCreateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

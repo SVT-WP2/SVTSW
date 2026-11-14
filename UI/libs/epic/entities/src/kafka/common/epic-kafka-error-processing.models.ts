@@ -1,5 +1,5 @@
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common'
-import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'epic-api-types/kafka'
+import { EpicKafkaReplyMessage, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 
 export async function processKafkaReplyError<T>(getReplyFn: () => Promise<T>): Promise<T> {

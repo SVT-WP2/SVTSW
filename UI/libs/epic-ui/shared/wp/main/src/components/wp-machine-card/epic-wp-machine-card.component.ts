@@ -3,9 +3,9 @@ import { FormsModule } from '@angular/forms'
 import { MatCard, MatCardContent } from '@angular/material/card'
 import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field'
 import { MatOption, MatSelect } from '@angular/material/select'
-import { EpicWpMachine } from 'epic-api-types'
 import { EpicIconComponent, EpicButtonModule } from 'epic-ui/common/components'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicWpMachine } from 'svt-ts-types'
 
 
 @Component({

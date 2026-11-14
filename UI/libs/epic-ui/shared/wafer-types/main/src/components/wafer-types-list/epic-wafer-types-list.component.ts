@@ -1,9 +1,9 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
 import { RowClickedEvent } from 'ag-grid-community'
-import { EpicWaferType } from 'epic-api-types'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicWaferType } from 'svt-ts-types'
 
 import { EpicWaferTypesGrid } from '../../models'
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
-import { EpicGetAllAsicsQueryFilter } from 'epic-api-types/kafka'
 import { delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
+import { EpicGetAllAsicsQueryFilter } from 'svt-ts-types/kafka'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 import { EpicDbAgentWafersService } from './epic-db-agent-wafers.service'

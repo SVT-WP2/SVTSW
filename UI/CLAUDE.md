@@ -88,8 +88,8 @@ or `npm run test::affected` scope it.
 ## Cross-cutting rules
 
 - **Never import across libs by relative path.** Use the `tsconfig.base.json` aliases (`epic-ui/api`,
-  `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `epic-api-types/kafka`, `@env/environment`, …).
-- `epic-api-types` (`../Shared/svt-ts-types/main`) is the **HTTP contract**: the request bodies, query strings and responses of the
+  `epic-ui/shared/svt-tests`, `epic/entities`, `svt-ts-types`, `svt-ts-types/kafka`, `@env/environment`, …).
+- `svt-ts-types` (`../Shared/svt-ts-types/main`) is the **HTTP contract**: the request bodies, query strings and responses of the
   DB-agent-backed `/api/...` endpoints as plain TypeScript types, and the only lib compiled into both the Angular
   SPA and the NestJS apps. No decorators, no npm imports (`npm run lint:shared` rejects them). The UI
   uses these types as its models; a BE DTO class `implements` them, so a member drifting between FE and BE is a
@@ -97,17 +97,17 @@ or `npm run test::affected` scope it.
   `ListQuery`), so those DTOs are also paired in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`.
   Request bodies end in `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
   (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
-- `epic-api-types/kafka` (`../Shared/svt-ts-types/kafka`) is the **Kafka contract** of the Node apps: the message
-  envelope, the `SvtDbAgentKafka<X>` namespaces and the wire types. Same rule as `epic-api-types` — no decorators,
-  no framework imports — but it is its own entry point, not exported by the `epic-api-types` barrel, and Angular code
-  must not import it (the root `eslint.config.mjs` rejects it). The messages carry the `epic-api-types` types
+- `svt-ts-types/kafka` (`../Shared/svt-ts-types/kafka`) is the **Kafka contract** of the Node apps: the message
+  envelope, the `SvtDbAgentKafka<X>` namespaces and the wire types. Same rule as `svt-ts-types` — no decorators,
+  no framework imports — but it is its own entry point, not exported by the `svt-ts-types` barrel, and Angular code
+  must not import it (the root `eslint.config.mjs` rejects it). The messages carry the `svt-ts-types` types
   directly; a separate wire type (`EpicSvtTestEntity`, the `*LocationUpdate` types) exists only where the Kafka
   shape differs from the HTTP one.
 - `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`: the decorated DTO classes and
   the RxJS / NestJS helpers around the Kafka contract (`mapEpicKafkaMessageData()`, `processKafkaReplyError()`).
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
 - Angular UI code must never import from `libs/epic/*`. For the DB-agent-backed domains `epic-ui/api` holds the
-  HTTP clients only — the types come from `epic-api-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent
+  HTTP clients only — the types come from `svt-ts-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent
   operations) and the instruments / measurement / wafer-tests models still keep their types next to their clients.
 
 ## Two data-loading patterns — pick the right one
@@ -150,7 +150,7 @@ Don't add a NgRx store for a single grid.
   `data`: entities, repositories, domain logic): `strict` there (`src/db/tsconfig.json`), and the app's
   `eslint.config.mjs` keeps it from importing the Kafka contract or the handlers. Conventions for entities:
   `docs/db-agent-clone/dev-plan/03-data-layer.md`.
-- The contract types (`epic-api-types`, `epic-api-types/kafka`) are in `../Shared/svt-ts-types`, **outside the
+- The contract types (`svt-ts-types`, `svt-ts-types/kafka`) are in `../Shared/svt-ts-types`, **outside the
   workspace**. Two rules follow from it. A tsconfig that compiles to CommonJS sets `"importHelpers": false` (else
   the barrels' `export *` imports `tslib`, which does not resolve from `../Shared`: TS2354). And **no comments in a
   tsconfig** that an Nx webpack build reads, nor in its `extends` chain: Nx 22.7 reads that chain with

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWafer, EpicWaferLocationHistoryRecord } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic-api-types/kafka'
+import { EpicWafer, EpicWaferLocationHistoryRecord } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
 import {
     generateAsics,

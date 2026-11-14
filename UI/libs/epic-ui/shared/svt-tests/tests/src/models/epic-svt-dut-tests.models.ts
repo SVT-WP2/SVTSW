@@ -1,9 +1,9 @@
-import { EpicSvtTestStatus } from 'epic-api-types'
 import { AgLabelCell } from 'epic-ui/common/ag-grid'
 import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'
 import { uniq } from 'lodash-es'
 import moment from 'moment'
+import { EpicSvtTestStatus } from 'svt-ts-types'
 
 import { EpicSvtTestsGrid } from './epic-svt-tests-grid.models'
 

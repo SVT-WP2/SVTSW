@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicWpProbeCard } from 'epic-api-types'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 import { EpicWpProbeCardDetailsDialogComponent } from '../../dialogs'
 import { EpicWpProbeCardDetailsDialog } from '../../models'

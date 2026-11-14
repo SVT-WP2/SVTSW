@@ -1,9 +1,9 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
 import { RowClickedEvent } from 'ag-grid-community'
-import { EpicWpProject } from 'epic-api-types'
 import { AgGridCellEventDirective, AgIconActionsCellModule, EpicAgGridCell } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicWpProject } from 'svt-ts-types'
 
 import { EpicWpProjectsAdminGrid } from '../../models'
 

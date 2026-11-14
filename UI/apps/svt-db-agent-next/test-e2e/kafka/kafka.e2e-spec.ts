@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
-import { SvtDbAgentKafka } from 'epic-api-types/kafka'
 import { Consumer, Kafka, logLevel, Producer } from 'kafkajs'
+import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextReply } from '../../src/modules/dispatch'
 import { SVT_DB_AGENT_NEXT_HEARTBEAT_TOPIC } from '../../src/modules/kafka'

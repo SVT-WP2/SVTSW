@@ -1,5 +1,5 @@
 import { IsString } from 'class-validator'
-import { EpicWaferTypeCreateRequest } from 'epic-api-types'
+import { EpicWaferTypeCreateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateWaferType`. */

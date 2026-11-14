@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
-import { SvtDbAgentKafka } from 'epic-api-types/kafka'
 import { Consumer, Kafka, logLevel, Producer } from 'kafkajs'
+import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 
 export const PARITY_REPLY_TIMEOUT_MS = 20_000

@@ -20,8 +20,8 @@ import {
     EpicWaferUpdateRequestDto,
     processKafkaReplyError,
 } from 'epic/entities'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic-api-types/kafka'
 import { firstValueFrom } from 'rxjs'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
 import { EpicWafersService } from '../services'
 

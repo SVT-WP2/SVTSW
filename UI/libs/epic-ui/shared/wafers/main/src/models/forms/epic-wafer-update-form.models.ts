@@ -1,7 +1,7 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWafer, EpicWaferCreateRequest, EpicWaferUpdateRequest } from 'epic-api-types'
 import { EpicSelectFormControl } from 'epic-ui/utils'
 import moment from 'moment'
+import { EpicWafer, EpicWaferCreateRequest, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 import { EpicWaferTypeRef } from '../epic-wafer-type-ref.models'
 

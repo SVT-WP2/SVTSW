@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import moment from 'moment/moment'
+import { concat, delay, map, Observable, of, zipAll } from 'rxjs'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -6,10 +8,8 @@ import {
     EpicChipCreateManyRequest,
     EpicChipCreateRequest,
     EpicChipLocationHistoryRecord,
-} from 'epic-api-types'
-import { EpicGetAllChipsQueryFilter } from 'epic-api-types/kafka'
-import moment from 'moment/moment'
-import { concat, delay, map, Observable, of, zipAll } from 'rxjs'
+} from 'svt-ts-types'
+import { EpicGetAllChipsQueryFilter } from 'svt-ts-types/kafka'
 
 import { EpicDbAgentAsicsService } from './epic-db-agent-asics.service'
 import { getEnumsCollection } from './epic-db-agent-enums.service'

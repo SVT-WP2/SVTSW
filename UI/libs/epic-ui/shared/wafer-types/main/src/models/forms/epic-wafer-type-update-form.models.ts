@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicWaferType, EpicWaferTypeCreateRequest } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
+import { EpicWaferType, EpicWaferTypeCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicWaferTypeUpdateForm {

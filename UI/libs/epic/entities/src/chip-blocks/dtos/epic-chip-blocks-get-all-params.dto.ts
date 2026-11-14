@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsInt, IsNumber, IsOptional, IsString, Max } from 'class-validator'
-import { EpicApiPager, EpicChipBlocksListQuery } from 'epic-api-types'
+import { EpicApiPager, EpicChipBlocksListQuery } from 'svt-ts-types'
 
 import { TransformQueryNumberArray, TransformQueryStringArray } from '../../common'
 

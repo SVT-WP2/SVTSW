@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicApiPager, EpicApiPageResponse, EpicChipBlock, EpicChipBlocksListQuery } from 'epic-api-types'
 import { EpicChipBlocksApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import { delay, Observable, of, throwError } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock, EpicChipBlocksListQuery } from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 

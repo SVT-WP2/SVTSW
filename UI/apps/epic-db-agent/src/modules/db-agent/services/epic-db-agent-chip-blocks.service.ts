@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'epic-api-types'
-import { EpicGetAllChipBlocksQueryFilter } from 'epic-api-types/kafka'
 import { delay, Observable, of } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'svt-ts-types'
+import { EpicGetAllChipBlocksQueryFilter } from 'svt-ts-types/kafka'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 

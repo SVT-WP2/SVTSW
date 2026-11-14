@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { delay, map, Observable, of, tap } from 'rxjs'
 import {
     EpicSvtTestTemplate,
     EpicSvtTestTemplateCreateRequest,
     EpicSvtTestTemplatesListQuery,
     EpicSvtTestTemplateUpdateRequest,
-} from 'epic-api-types'
-import { delay, map, Observable, of, tap } from 'rxjs'
+} from 'svt-ts-types'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 import { EpicDbAgentSvtTestTypeConfigsService } from './epic-db-agent-svt-test-type-configs.service'

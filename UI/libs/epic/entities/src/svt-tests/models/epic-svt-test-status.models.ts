@@ -1,4 +1,4 @@
-import { EpicSvtTestResultStatus, EpicSvtTestStatus } from 'epic-api-types'
+import { EpicSvtTestResultStatus, EpicSvtTestStatus } from 'svt-ts-types'
 
 
 /**

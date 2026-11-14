@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import { EpicWpMachinesApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 

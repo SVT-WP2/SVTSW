@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicAsic } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'epic-api-types/kafka'
+import { EpicAsic } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'svt-ts-types/kafka'
 
 import { SvtDbAsicsRepository, SvtDbAsicWithChip, SvtDbEnumsService, SvtDbWafersRepository } from '../../../db/data'
 import {

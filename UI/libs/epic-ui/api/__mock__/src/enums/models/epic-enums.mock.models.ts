@@ -1,4 +1,4 @@
-import { EpicEnumsCollection } from 'epic-api-types'
+import { EpicEnumsCollection } from 'svt-ts-types'
 
 
 // Enum values copied from the production database (Dev/db-example/2026-11-08-backup_prod.dump), in declaration order.

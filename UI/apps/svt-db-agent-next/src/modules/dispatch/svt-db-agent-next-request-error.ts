@@ -1,4 +1,4 @@
-import { EpicKafkaReplyStatus } from 'epic-api-types/kafka'
+import { EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 
 /**

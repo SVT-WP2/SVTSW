@@ -1,7 +1,7 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { EpicWaferRef } from 'epic-ui/shared/wafers'
 import { EpicSelectFormControl } from 'epic-ui/utils'
+import { EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicAsicUpdateForm {

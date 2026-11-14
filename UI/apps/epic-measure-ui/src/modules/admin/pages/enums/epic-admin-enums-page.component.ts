@@ -1,9 +1,9 @@
 ﻿import { Component } from '@angular/core'
 import { RouterOutlet } from '@angular/router'
-import { EpicEnumName } from 'epic-api-types'
 import { EpicNavTabs, EpicSearchBoxModule, EpicTabsModule } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent, EpicSearchPipe } from 'epic-ui/utils'
+import { EpicEnumName } from 'svt-ts-types'
 
 
 @Component({

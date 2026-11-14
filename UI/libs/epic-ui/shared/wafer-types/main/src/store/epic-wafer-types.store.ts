@@ -1,7 +1,7 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity'
 import { createReducer, on } from '@ngrx/store'
-import { EpicWaferType } from 'epic-api-types'
 import { ProcessingStore } from 'epic-ui/utils'
+import { EpicWaferType } from 'svt-ts-types'
 
 import { EpicWaferTypesActions } from './actions'
 

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'epic-api-types'
 import { Observable } from 'rxjs'
+import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 

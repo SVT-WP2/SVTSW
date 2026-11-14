@@ -4,7 +4,7 @@ import {
     EpicSvtTestSetupCreateRequest,
     EpicSvtTestSetupDefaultConfigCreateRequest,
     EpicSvtTestSetupUpdateRequest,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 
 /** `defaultConfig` of the `CreateSvtTestSetup` payload. */

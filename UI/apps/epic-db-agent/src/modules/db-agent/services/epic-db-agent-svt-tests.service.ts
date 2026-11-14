@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicApiPager, EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
-import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic-api-types/kafka'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'svt-ts-types'
+import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'svt-ts-types/kafka'
 
 
 /** How many of the newest generated tests have not been run yet. */

@@ -1,6 +1,6 @@
 import { ColDef, GridOptions, ValueGetterParams } from 'ag-grid-community'
-import { EpicWaferType, EpicWpMachine, EpicWpProject } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicWaferType, EpicWpMachine, EpicWpProject } from 'svt-ts-types'
 
 
 export namespace EpicWpProjectsAdminGrid {

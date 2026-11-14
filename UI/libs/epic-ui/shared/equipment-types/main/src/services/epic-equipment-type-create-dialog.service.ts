@@ -1,11 +1,11 @@
 ﻿import { HttpErrorResponse } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicEquipmentType } from 'epic-api-types'
 import { EpicEquipmentTypesApiClient } from 'epic-ui/api'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
 import { catchError, EMPTY, switchMap, takeUntil, tap } from 'rxjs'
+import { EpicEquipmentType } from 'svt-ts-types'
 
 import { EpicEquipmentTypeUpdateDialogComponent } from '../dialogs'
 import { EpicEquipmentTypeUpdateDialog, EpicEquipmentTypeUpdateForm } from '../models'

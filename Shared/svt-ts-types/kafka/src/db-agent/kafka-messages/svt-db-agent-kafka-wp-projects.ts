@@ -1,4 +1,4 @@
-import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

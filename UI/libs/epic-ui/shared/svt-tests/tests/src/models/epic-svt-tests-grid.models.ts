@@ -1,15 +1,5 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
 import {
-    EpicSvtDutEntityName,
-    EpicSvtTest,
-    EpicSvtTestResultStatus,
-    EpicSvtTestSetup,
-    EpicSvtTestSetupConfig,
-    EpicSvtTestStatus,
-    EpicSvtTestType,
-    EpicSvtTestTypeConfig,
-} from 'epic-api-types'
-import {
     AgIconActionsCell,
     AgIconActionsCellComponent,
     AgLabelCell,
@@ -23,6 +13,16 @@ import { toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { DEFAULT_SYSTEM_COLORS } from 'epic-ui/utils/colors'
 import { keyBy } from 'lodash-es'
 import moment from 'moment'
+import {
+    EpicSvtDutEntityName,
+    EpicSvtTest,
+    EpicSvtTestResultStatus,
+    EpicSvtTestSetup,
+    EpicSvtTestSetupConfig,
+    EpicSvtTestStatus,
+    EpicSvtTestType,
+    EpicSvtTestTypeConfig,
+} from 'svt-ts-types'
 
 
 export namespace EpicSvtTestsGrid {

@@ -1,5 +1,5 @@
-import { EpicKafkaMessage, EpicKafkaReplyMessageInfo } from 'epic-api-types/kafka'
 import { Observable, Subject } from 'rxjs'
+import { EpicKafkaMessage, EpicKafkaReplyMessageInfo } from 'svt-ts-types/kafka'
 
 
 export abstract class EpicKafkaReplyMessageBusService<TMessage extends EpicKafkaMessage = EpicKafkaMessage> {

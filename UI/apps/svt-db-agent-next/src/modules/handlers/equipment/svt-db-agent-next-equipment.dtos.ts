@@ -1,5 +1,5 @@
 import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
+import { EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 
 
 /**

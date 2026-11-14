@@ -1,5 +1,5 @@
 import { IsBoolean, IsNumber, IsString } from 'class-validator'
-import { EpicSvtTestTemplateCreateRequest, EpicSvtTestTemplateUpdateRequest } from 'epic-api-types'
+import { EpicSvtTestTemplateCreateRequest, EpicSvtTestTemplateUpdateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateSvtTestTemplate`. */

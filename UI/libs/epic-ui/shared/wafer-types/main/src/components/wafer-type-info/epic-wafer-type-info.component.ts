@@ -1,9 +1,9 @@
 ﻿import { Component, DOCUMENT, inject, input } from '@angular/core'
-import { EpicWaferType, EpicWaferTypeMap } from 'epic-api-types'
 import { EpicWaferTypesApiClient } from 'epic-ui/api'
 import { EpicButtonModule, EpicNotificationService } from 'epic-ui/common/components'
 import { BaseComponent, FileHelpers } from 'epic-ui/utils'
 import { catchError, of, switchMap, throwError } from 'rxjs'
+import { EpicWaferType, EpicWaferTypeMap } from 'svt-ts-types'
 
 
 @Component({

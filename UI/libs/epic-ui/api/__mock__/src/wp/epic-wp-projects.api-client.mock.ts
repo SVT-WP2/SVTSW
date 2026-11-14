@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
 import { EpicWpProjectsApiClient } from 'epic-ui/api'
 import { delay, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicWpProject, EpicWpProjectCreateRequest } from 'svt-ts-types'
 
 
 export function getMockEpicWpProjectsList(): EpicWpProject[] {

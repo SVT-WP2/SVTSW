@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicApiPageResponse, EpicSvtTest, EpicSvtTestCreateRequest, EpicSvtTestsListQuery } from 'epic-api-types'
 import { QueryHelpers } from 'epic-ui/utils'
 import { EMPTY, expand, map, Observable, toArray } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicSvtTest, EpicSvtTestCreateRequest, EpicSvtTestsListQuery } from 'svt-ts-types'
 
 import { EpicApi, getDefaultEpicApiPager } from '../../common'
 

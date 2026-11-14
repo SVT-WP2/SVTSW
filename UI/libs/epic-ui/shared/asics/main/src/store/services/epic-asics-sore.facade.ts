@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { EpicAsicsApiClient } from 'epic-ui/api'
 import { BaseStore, EntityStore, ProcessingStore } from 'epic-ui/utils'
 import { isEqual } from 'lodash-es'
 import { catchError, distinctUntilChanged, map, Observable, of, switchMap, throwError } from 'rxjs'
+import { EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
 
 import { EpicAsicsStore } from '../models'
 

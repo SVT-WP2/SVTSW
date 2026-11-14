@@ -12,7 +12,7 @@ import type {
     EpicSvtTestTypeConfigsListQuery,
     EpicSvtTestTypesListQuery,
     EpicWaferUpdateRequest,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 import type { EpicAsicDto, EpicAsicsGetAllParamsDto } from '../asics'
 import type { EpicChipBlocksGetAllParamsDto } from '../chip-blocks'
@@ -42,7 +42,7 @@ export type EpicSameKeys<TDto, TContract> = [EpicKeysOnlyIn<TDto, TContract>, Ep
 type EpicAllTrue<T extends true[]> = T
 
 /**
- * Compile-time guard for the DTOs whose `epic-api-types` type has optional members — the one case `implements`
+ * Compile-time guard for the DTOs whose `svt-ts-types` type has optional members — the one case `implements`
  * cannot see.
  *
  * When every member of a type is required, `class XDto implements X` already fails on a missing or renamed member.

@@ -61,7 +61,8 @@ Two changes in these steps were not mechanical:
 
 ## 4. Where the code stands
 
-- The agent imports, outside its own folder: `epic-api-types`, `epic-api-types/kafka` and npm packages. Nothing else.
+- The agent imports, outside its own folder: `svt-ts-types`, `svt-ts-types/kafka` (`Shared/svt-ts-types`, since
+  step 6) and npm packages. Nothing else.
 - Runtime packages of the agent: `@nestjs/{common,config,core,microservices,terminus}` (plus `platform-express`),
   `@mikro-orm/{core,decorators,migrations,nestjs,postgresql}`, `pg`, `kafkajs`, `class-validator`,
   `class-transformer`, `reflect-metadata`, `rxjs`.
@@ -70,7 +71,7 @@ Two changes in these steps were not mechanical:
 - No other app or lib imports `@mikro-orm/*`, `pg`, `unplugin-swc`, `dotenv` or `@nestjs/testing`. They are the
   candidates to leave `UI/package.json` in step 7 (check the build tooling for `dotenv` first), together with the
   Node 22.17 `engines` constraint and the `mikro-orm` block.
-- `epic-api-types` is imported in 351 files, `epic-api-types/kafka` in 76 files (size of the alias rename, step 6).
+- `epic-api-types` was imported in 352 files, `epic-api-types/kafka` in 76 files; step 6 renamed both.
 - Paths in the agent that depend on its place in the repository (all change in step 7):
   - `tsconfig.json` (`extends ../../tsconfig.base.json`), `tsconfig.app.json` / `tsconfig.spec.json` (`outDir`),
     `src/db/tsconfig.json` (`typeRoots`), `eslint.config.mjs`, `project.json`, `webpack.config.js` (output path).
@@ -142,9 +143,17 @@ The plan before the spike, for reference:
    trap: a comment in an app's `tsconfig.app.json` broke every alias with a `/` in its webpack build (§9).
 2. Second commit: rename the aliases `epic-api-types` → `svt-ts-types` and `epic-api-types/kafka` →
    `svt-ts-types/kafka` (351 + 76 files, mechanical). Do **not** rename the `Epic*` symbols in this work.
-3. Update `UI/CLAUDE.md`, `UI/docs/ARCHITECTURE.md`, `UI/docs/RECIPES.md` and the two library README files.
 
-On Windows a folder rename fails while the IDE holds the folder open. Close the IDE or move the files one by one.
+   **Done 2026-11-14.** A Node codemod over the tracked `.ts`, `.mjs` and `.json` files of `UI/` and `Shared/`
+   (376 files) and 8 README / guide files; `EPIC_API_TYPES_RESTRICTED_IMPORTS` became
+   `SVT_TS_TYPES_RESTRICTED_IMPORTS`. `eslint --fix` then moved the import in 16 files to its new alphabetical
+   place. The documents of `docs/db-agent-clone` keep the old name where they describe the past.
+3. Update `UI/CLAUDE.md`, `UI/docs/ARCHITECTURE.md`, `UI/docs/RECIPES.md` and the two library README files.
+   **Done** in the two commits (paths in the first, alias names in the second), plus `Shared/README.md` and
+   `Shared/svt-ts-types/README.md`.
+
+On Windows a folder rename fails while the IDE holds the folder open. Close the IDE or move the files one by one
+(step 6 did: `git mv` per file).
 
 ### Step 7: move the agent to `DbAgentNext/`
 

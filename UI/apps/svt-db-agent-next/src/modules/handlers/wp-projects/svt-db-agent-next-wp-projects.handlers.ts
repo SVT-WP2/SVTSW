@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProject } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWpProjects } from 'epic-api-types/kafka'
+import { EpicWpProject } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProjects } from 'svt-ts-types/kafka'
 
 import {
     SvtDbEnumsService,

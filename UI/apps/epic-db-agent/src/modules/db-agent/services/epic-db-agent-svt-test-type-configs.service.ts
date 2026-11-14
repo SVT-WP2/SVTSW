@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
+import { omit } from 'lodash-es'
+import moment from 'moment/moment'
+import { delay, map, Observable, of } from 'rxjs'
 import {
     EpicSvtTestTypeConfig,
     EpicSvtTestTypeConfigBody,
     EpicSvtTestTypeConfigCreateRequest,
     EpicSvtTestTypeConfigsListQuery,
-} from 'epic-api-types'
-import { omit } from 'lodash-es'
-import moment from 'moment/moment'
-import { delay, map, Observable, of } from 'rxjs'
+} from 'svt-ts-types'
 
 
 @Injectable()

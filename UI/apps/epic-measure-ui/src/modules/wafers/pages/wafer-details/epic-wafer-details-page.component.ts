@@ -6,7 +6,6 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu'
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute } from '@angular/router'
 import { GridApi } from 'ag-grid-community'
-import { EpicAsic, EpicWafer } from 'epic-api-types'
 import { EpicAgGridCardHeaderComponent, EpicAgGridCardWrapperComponent } from 'epic-ui/common/ag-grid'
 import {
     EpicButtonModule,
@@ -32,6 +31,7 @@ import {
     EpicWafersStoreFacade,
 } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicAsic, EpicWafer } from 'svt-ts-types'
 
 
 @Component({

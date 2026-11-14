@@ -1,4 +1,4 @@
-import { EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
+import { EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'svt-ts-types'
 import {
     EpicSvtTestEntity,
     SvtDbAgentKafka,
@@ -9,7 +9,7 @@ import {
     SvtDbAgentKafkaSvtTestTypes,
     SvtDbAgentKafkaWafers,
     SvtDbAgentKafkaWaferTypes,
-} from 'epic-api-types/kafka'
+} from 'svt-ts-types/kafka'
 
 import { SVT_TEST_SETUP_CREATE, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 

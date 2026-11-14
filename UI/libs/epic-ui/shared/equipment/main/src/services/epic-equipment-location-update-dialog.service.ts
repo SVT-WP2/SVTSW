@@ -1,13 +1,13 @@
 ﻿import { HttpErrorResponse } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicEquipment } from 'epic-api-types'
 import { EpicEquipmentApiClient } from 'epic-ui/api'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { EpicLocationUpdateDialog, EpicLocationUpdateDialogComponent } from 'epic-ui/shared/location'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
 import moment from 'moment'
 import { catchError, switchMap, takeUntil, tap, throwError } from 'rxjs'
+import { EpicEquipment } from 'svt-ts-types'
 
 import Dialog = EpicLocationUpdateDialog
 import DialogSize = MatDialogHelpers.DialogSize

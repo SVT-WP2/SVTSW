@@ -1,5 +1,5 @@
 import { IsDateString, IsInt, IsNumber, IsOptional, IsString } from 'class-validator'
-import { EpicDateString, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'epic-api-types'
+import { EpicDateString, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateWafer`. */

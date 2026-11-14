@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'epic-api-types/kafka'
+import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'svt-ts-types/kafka'
 
 import { SvtDbSvtTestTypeConfigEntity, SvtDbSvtTestTypeConfigsRepository, SvtDbSvtTestTypesRepository } from '../../../db/data'
 import {

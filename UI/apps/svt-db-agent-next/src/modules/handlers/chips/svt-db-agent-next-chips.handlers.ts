@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
+import { EpicChip, EpicChipLocationHistoryRecord } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextConfig } from '../../../config'
 import {

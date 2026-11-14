@@ -2,7 +2,6 @@ import { Component, effect, inject, OnDestroy, OnInit, signal, Signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
 import { IDatasource } from 'ag-grid-community'
-import { EpicSvtTestTemplate } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorMessagePipe,
@@ -22,6 +21,7 @@ import {
     toEpicSvtTestsListQueryFilter,
 } from 'epic-ui/shared/svt-test/tests'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicSvtTestTemplate } from 'svt-ts-types'
 
 
 @Component({

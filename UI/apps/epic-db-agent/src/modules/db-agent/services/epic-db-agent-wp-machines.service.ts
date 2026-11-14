@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
-import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'epic-api-types/kafka'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'svt-ts-types/kafka'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
 

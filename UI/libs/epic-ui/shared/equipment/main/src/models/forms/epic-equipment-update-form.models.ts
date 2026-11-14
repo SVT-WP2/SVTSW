@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentType } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
+import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentType } from 'svt-ts-types'
 
 
 export namespace EpicEquipmentUpdateForm {

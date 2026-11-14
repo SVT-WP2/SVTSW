@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms'
-import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest } from 'epic-api-types'
 import { EpicSelectFormControl, FileHelpers } from 'epic-ui/utils'
+import { EpicSvtTestSetup, EpicSvtTestSetupCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicSvtTestSetupCreateForm {

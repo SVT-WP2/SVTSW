@@ -1,10 +1,10 @@
 ﻿import { HttpErrorResponse } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
-import { EpicSvtTestType } from 'epic-api-types'
 import { EpicNotificationService } from 'epic-ui/common/components'
 import { MatDialogHelpers } from 'epic-ui/utils/material'
 import { catchError, EMPTY, from, switchMap, takeUntil, tap } from 'rxjs'
+import { EpicSvtTestType } from 'svt-ts-types'
 
 import { EpicSvtTestTypeCreateDialog, EpicSvtTestTypeCreateDialogComponent } from '../dialogs'
 import { EpicSvtTestTypeCreateForm } from '../forms'

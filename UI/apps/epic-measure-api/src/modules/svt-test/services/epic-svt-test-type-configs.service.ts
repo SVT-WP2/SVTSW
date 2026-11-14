@@ -1,14 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import { mapEpicKafkaMessageData, mapSvtDbAgentEntityReplyData, mapSvtDbAgentListReplyData } from 'epic/entities'
+import { Observable } from 'rxjs'
 import {
     EpicSvtTestTypeConfig,
     EpicSvtTestTypeConfigBody,
     EpicSvtTestTypeConfigCreateRequest,
     EpicSvtTestTypeConfigsListQuery,
-} from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'epic-api-types/kafka'
-import { Observable } from 'rxjs'
+} from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'svt-ts-types/kafka'
 
 import { EpicSvtTestSvc } from '../models'
 

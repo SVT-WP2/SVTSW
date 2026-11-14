@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsObject } from 'class-validator'
-import { EpicEnumsCollectionResponse } from 'epic-api-types'
-import { EpicApiEnumsCollection } from 'epic-api-types/kafka'
+import { EpicEnumsCollectionResponse } from 'svt-ts-types'
+import { EpicApiEnumsCollection } from 'svt-ts-types/kafka'
 
 
 export class EpicEnumsCollectionResponseDto implements EpicEnumsCollectionResponse {

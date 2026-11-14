@@ -1,8 +1,8 @@
 import { Component, Input } from '@angular/core'
 import { AgGridModule } from 'ag-grid-angular'
-import { EpicEquipmentType } from 'epic-api-types'
 import { AgGridCellEventDirective, AgIconActionsCellModule } from 'epic-ui/common/ag-grid'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicEquipmentType } from 'svt-ts-types'
 
 import { EpicEquipmentTypesGrid } from '../../models'
 

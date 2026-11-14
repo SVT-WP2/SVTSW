@@ -1,4 +1,4 @@
-import { EpicWaferType } from 'epic-api-types'
+import { EpicWaferType } from 'svt-ts-types'
 
 
 export namespace EpicWaferTypeDetailsDialog {

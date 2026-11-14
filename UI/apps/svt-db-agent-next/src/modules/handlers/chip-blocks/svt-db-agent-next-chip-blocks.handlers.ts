@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicChipBlock } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'epic-api-types/kafka'
+import { EpicChipBlock } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'svt-ts-types/kafka'
 
 import { SvtDbChipBlockEntity, SvtDbChipBlocksRepository } from '../../../db/data'
 import {

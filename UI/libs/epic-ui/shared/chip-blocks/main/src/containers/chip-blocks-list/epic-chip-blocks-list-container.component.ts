@@ -5,7 +5,6 @@ import { MatCardModule } from '@angular/material/card'
 import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
 import { TranslatePipe } from '@ngx-translate/core'
-import { EpicChipBlock } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorModule,
@@ -18,6 +17,7 @@ import {
     EpicScrollingDataSourceVirtualScrollViewportDirective,
 } from 'epic-ui/common/components'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicChipBlock } from 'svt-ts-types'
 
 import { EpicChipBlocksScrollingDataSource, EpicChipBlocksScrollingDsFilter } from '../../services'
 

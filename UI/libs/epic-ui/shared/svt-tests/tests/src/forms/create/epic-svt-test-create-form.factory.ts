@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtDutEntityName } from 'epic-api-types'
 import {
     EpicSvtTestSetupConfigsApiClient,
     EpicSvtTestSetupsApiClient,
@@ -8,6 +7,7 @@ import {
     EpicSvtTestTypesApiClient,
 } from 'epic-ui/api'
 import { forkJoin, map, Observable } from 'rxjs'
+import { EpicSvtDutEntityName } from 'svt-ts-types'
 
 import { EpicSvtTestCreateForm } from './epic-svt-test-create-form.models'
 

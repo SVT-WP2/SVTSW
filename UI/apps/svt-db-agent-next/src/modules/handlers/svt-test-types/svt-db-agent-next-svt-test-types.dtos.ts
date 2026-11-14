@@ -4,7 +4,7 @@ import {
     EpicSvtTestTypeCreateRequest,
     EpicSvtTestTypeDefaultConfigCreateRequest,
     EpicSvtTestTypeUpdateRequest,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 
 /** `testTypeConfig` of the `CreateSvtTestType` payload. */

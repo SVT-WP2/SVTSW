@@ -1,4 +1,4 @@
-import { EpicSvtTestSetupCreateRequest, EpicSvtTestTypeCreateRequest } from 'epic-api-types'
+import { EpicSvtTestSetupCreateRequest, EpicSvtTestTypeCreateRequest } from 'svt-ts-types'
 
 
 /** A pretty-printed configuration; the agent must store and return it byte for byte. */

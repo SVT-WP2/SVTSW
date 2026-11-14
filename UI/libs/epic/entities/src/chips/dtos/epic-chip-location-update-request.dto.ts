@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsOptional, IsString } from 'class-validator'
-import { EpicDateString, EpicChipLocationUpdateRequest } from 'epic-api-types'
+import { EpicDateString, EpicChipLocationUpdateRequest } from 'svt-ts-types'
 
 
 export class EpicChipLocationUpdateRequestDto implements EpicChipLocationUpdateRequest {

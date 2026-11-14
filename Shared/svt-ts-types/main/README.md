@@ -1,4 +1,4 @@
-# epic-api-types
+# svt-ts-types (main entry point)
 
 The HTTP contract between `epic-measure-ui` (Angular) and `epic-measure-api` (NestJS): the request bodies,
 query strings and responses of the DB-agent-backed `/api/...` endpoints, as plain TypeScript types.
@@ -8,7 +8,7 @@ stay dependency-free:
 
 - types, interfaces, enums and the occasional tiny pure function only;
 - **no** decorators, **no** `@angular/*`, `@nestjs/*`, `class-validator`, `rxjs`, and **no** imports from
-  `epic/*` or `epic-ui/*`. `../eslint.config.mjs` rejects them (`EPIC_API_TYPES_RESTRICTED_IMPORTS` of
+  `epic/*` or `epic-ui/*`. `../eslint.config.mjs` rejects them (`SVT_TS_TYPES_RESTRICTED_IMPORTS` of
   `UI/eslint.config.mjs`) and `tsc` rejects any npm import: `npm run lint:shared` in `UI/`, see
   [`../README.md`](../README.md).
 
@@ -18,10 +18,10 @@ stay dependency-free:
 |---|---|---|
 | Angular (`epic-ui/*`, `apps/epic-measure-ui`) | imports the types directly — there is no separate view model | `fetchOne(id): Observable<EpicAsic>` |
 | NestJS (`UI/libs/epic/entities`) | the decorated DTO class `implements` the shared type, so a drifting field is a compile error; a type with optional members is also paired in `contract/epic-api-contract-checks.models.ts` | `class EpicAsicDto implements EpicAsic` + `EpicSameKeys<EpicAsicDto, EpicAsic>` |
-| Kafka contract (`epic-api-types/kafka`) | the messages carry the shared type directly while the wire shape equals the HTTP shape; a separate wire type exists only where the two differ | `PageReplyMessageData<EpicAsic>`, `type EpicSvtTestEntity = Omit<EpicSvtTest, 'status'>` |
+| Kafka contract (`svt-ts-types/kafka`) | the messages carry the shared type directly while the wire shape equals the HTTP shape; a separate wire type exists only where the two differ | `PageReplyMessageData<EpicAsic>`, `type EpicSvtTestEntity = Omit<EpicSvtTest, 'status'>` |
 
-The alias is `epic-api-types` (see `UI/tsconfig.base.json`). The Kafka contract is the sibling entry point
-`epic-api-types/kafka` — see [`../kafka/README.md`](../kafka/README.md).
+The alias is `svt-ts-types` (see `UI/tsconfig.base.json`). The Kafka contract is the sibling entry point
+`svt-ts-types/kafka` — see [`../kafka/README.md`](../kafka/README.md).
 
 ## Layout
 
@@ -47,7 +47,7 @@ barrel.
    is satisfied by a class sharing a single member, so without the pair a renamed or added filter compiles and is
    then dropped by the `ValidationPipe` (`whitelist: true`).
 3. FE: delete the view models in `UI/libs/epic-ui/api/main/src/<domain>/models` and point every importer at
-   `epic-api-types`.
+   `svt-ts-types`.
 
 Every DB-agent-backed domain the BE exposes is in here, and nothing else: a request type exists only when the
 Kafka contract (`Documentation/Kafka/svt.db-agent.kafka.yaml` at the repository root) defines the operation behind

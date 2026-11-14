@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString } from 'class-validator'
-import { EpicWaferTypeMap } from 'epic-api-types'
+import { EpicWaferTypeMap } from 'svt-ts-types'
 
 
 export class EpicWaferTypeMapDto implements EpicWaferTypeMap {

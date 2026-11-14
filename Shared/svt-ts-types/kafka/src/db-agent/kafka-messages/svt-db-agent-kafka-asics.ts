@@ -1,4 +1,4 @@
-import { EpicApiPager, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
+import { EpicApiPager, EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 import { EpicGetAllAsicsQueryFilter } from '../models'

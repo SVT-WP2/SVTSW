@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { EpicWaferTypeCreateRequestDto } from 'epic/entities'
-import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'epic-api-types'
 import { omit } from 'lodash-es'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'svt-ts-types'
 
 
 @Injectable()

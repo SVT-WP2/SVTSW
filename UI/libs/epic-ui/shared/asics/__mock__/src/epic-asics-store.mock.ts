@@ -1,7 +1,7 @@
-import { EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 import { EpicEnumsMock } from 'epic-ui/api/__mock__'
 import { EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
 import { delay, Observable, of } from 'rxjs'
+import { EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
 
 
 export namespace EpicAsicsStoreMock {

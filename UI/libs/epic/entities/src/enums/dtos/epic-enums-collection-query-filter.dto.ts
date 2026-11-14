@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsOptional, IsString } from 'class-validator'
-import { EpicEnumsCollectionQuery } from 'epic-api-types'
+import { EpicEnumsCollectionQuery } from 'svt-ts-types'
 
 import { TransformQueryStringArray } from '../../common'
 

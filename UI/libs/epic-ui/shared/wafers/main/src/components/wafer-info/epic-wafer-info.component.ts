@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core'
-import { EpicWafer } from 'epic-api-types'
 import { EpicButtonModule } from 'epic-ui/common/components'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicWafer } from 'svt-ts-types'
 
 
 @Component({

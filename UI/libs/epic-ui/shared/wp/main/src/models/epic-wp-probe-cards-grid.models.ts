@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicWpProbeCard } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 export namespace EpicWpProbeCardsGrid {

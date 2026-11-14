@@ -1,4 +1,4 @@
-import { EpicDateTimeString, EpicSvtTest, EpicSvtTestResultStatus } from 'epic-api-types'
+import { EpicDateTimeString, EpicSvtTest, EpicSvtTestResultStatus } from 'svt-ts-types'
 
 
 /**

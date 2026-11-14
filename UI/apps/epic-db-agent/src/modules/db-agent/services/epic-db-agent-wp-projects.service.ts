@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { EpicWpProjectCreateDto } from 'epic/entities'
-import { EpicWpProject } from 'epic-api-types'
 import { delay, map, Observable, of } from 'rxjs'
+import { EpicWpProject } from 'svt-ts-types'
 
 
 @Injectable()

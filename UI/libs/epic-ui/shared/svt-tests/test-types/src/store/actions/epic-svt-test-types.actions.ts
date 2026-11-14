@@ -5,7 +5,7 @@ import {
     EpicSvtTestTypeConfigCreateRequest,
     EpicSvtTestTypeCreateRequest,
     EpicSvtTestTypeUpdateRequest,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 
 export namespace EpicSvtTestTypesActions {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString } from 'class-validator'
-import { EpicEquipment } from 'epic-api-types'
+import { EpicEquipment } from 'svt-ts-types'
 
 
 export class EpicEquipmentDto implements EpicEquipment {

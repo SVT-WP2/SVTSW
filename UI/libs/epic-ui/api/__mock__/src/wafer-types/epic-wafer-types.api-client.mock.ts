@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'epic-api-types'
 import { EpicWaferTypesApiClient } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
+import { EpicWaferType, EpicWaferTypeCreateRequest, EpicWaferTypeMap } from 'svt-ts-types'
 
 
 export function getMockEpicWaferTypes(): EpicWaferType[] {

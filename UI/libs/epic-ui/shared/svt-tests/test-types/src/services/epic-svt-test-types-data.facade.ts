@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicSvtTestType } from 'epic-api-types'
 import { EpicSvtTestTypesApiClient } from 'epic-ui/api'
 import { BaseCachedDataFacade } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
+import { EpicSvtTestType } from 'svt-ts-types'
 
 
 @Injectable({ providedIn: 'root' })

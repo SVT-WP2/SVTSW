@@ -5,7 +5,6 @@ import { MatCardModule } from '@angular/material/card'
 import { ActivatedRoute, Router } from '@angular/router'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicSvtTestSetup, EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicIconComponent,
@@ -21,6 +20,7 @@ import { EpicSvtTestSetupConfigBodyDataFacade, EpicSvtTestSetupsActions, EpicSvt
 import { BaseComponent, FileHelpers, StringHelpers } from 'epic-ui/utils'
 import { AceModule } from 'ngx-ace-wrapper'
 import { takeUntil } from 'rxjs'
+import { EpicSvtTestSetup, EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'svt-ts-types'
 
 import 'brace/mode/hjson'
 import StoreSelectors = EpicSvtTestSetupsSelectors

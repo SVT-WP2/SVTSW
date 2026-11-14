@@ -1,4 +1,4 @@
-import { EpicWpProbeCard } from 'epic-api-types'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

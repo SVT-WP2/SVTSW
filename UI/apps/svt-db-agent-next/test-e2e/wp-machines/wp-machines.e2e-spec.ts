@@ -1,5 +1,5 @@
-import { EpicWpMachine, EpicWpMachineUpdateRequest } from 'epic-api-types'
-import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines } from 'epic-api-types/kafka'
+import { EpicWpMachine, EpicWpMachineUpdateRequest } from 'svt-ts-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines } from 'svt-ts-types/kafka'
 
 import { insertProbeCard, TestSetup, WP_MACHINE_CREATE } from '../utils'
 

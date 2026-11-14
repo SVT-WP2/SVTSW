@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core'
+import { EpicWafersApiClient } from 'epic-ui/api'
+import moment from 'moment'
+import { delay, Observable, of } from 'rxjs'
 import {
     EpicWafer,
     EpicWaferCreateRequest,
     EpicWaferLocationHistoryRecord,
     EpicWaferLocationUpdateRequest,
     EpicWaferUpdateRequest,
-} from 'epic-api-types'
-import { EpicWafersApiClient } from 'epic-ui/api'
-import moment from 'moment'
-import { delay, Observable, of } from 'rxjs'
+} from 'svt-ts-types'
 
 import { EpicEnumsMock } from '../enums'
 

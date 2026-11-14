@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core'
-import { EpicEquipment, EpicEquipmentCreateRequest } from 'epic-api-types'
 import { EpicEquipmentApiClient } from 'epic-ui/api'
 import { EpicEnumsMock } from 'epic-ui/api/__mock__'
 import { delay, Observable, of } from 'rxjs'
+import { EpicEquipment, EpicEquipmentCreateRequest } from 'svt-ts-types'
 
 
 export function getMockEpicEquipment(): EpicEquipment[] {

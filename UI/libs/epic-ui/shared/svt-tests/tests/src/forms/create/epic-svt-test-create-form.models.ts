@@ -1,4 +1,5 @@
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms'
+import { EpicSelectFormControl } from 'epic-ui/utils'
 import {
     EpicSvtDutEntityName,
     EpicSvtTestCreateRequest,
@@ -7,8 +8,7 @@ import {
     EpicSvtTestTemplate,
     EpicSvtTestType,
     EpicSvtTestTypeConfig,
-} from 'epic-api-types'
-import { EpicSelectFormControl } from 'epic-ui/utils'
+} from 'svt-ts-types'
 
 
 export namespace EpicSvtTestCreateForm {

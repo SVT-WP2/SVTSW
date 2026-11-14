@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicEquipmentType } from 'epic-api-types'
 import { SimpleDataSource } from 'epic-ui/utils'
 import { Observable } from 'rxjs'
+import { EpicEquipmentType } from 'svt-ts-types'
 
 import { EpicEquipmentTypesFacade } from './epic-equipment-types.facade'
 

@@ -1,4 +1,4 @@
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from '../models'

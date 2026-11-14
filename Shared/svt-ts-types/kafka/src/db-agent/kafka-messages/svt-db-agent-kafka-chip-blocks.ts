@@ -1,4 +1,4 @@
-import { EpicApiPager, EpicChipBlock } from 'epic-api-types'
+import { EpicApiPager, EpicChipBlock } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 import { EpicGetAllChipBlocksQueryFilter } from '../models'

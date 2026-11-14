@@ -1,4 +1,4 @@
-import { EpicWaferLocationUpdateRequest } from 'epic-api-types'
+import { EpicWaferLocationUpdateRequest } from 'svt-ts-types'
 
 
 /** Payload of the `UpdateWaferLocation` Kafka message — the HTTP request body plus the acting user. */

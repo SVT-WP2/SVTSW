@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { EpicApiPager, EpicChip } from 'epic-api-types'
 import { EpicChipsApiClient } from 'epic-ui/api'
 import { EpicBaseScrollingDataSource, EpicScrollData } from 'epic-ui/common/components'
 import { map, Observable } from 'rxjs'
+import { EpicApiPager, EpicChip } from 'svt-ts-types'
 
 
 export type EpicChipsScrollingDsFilter = {

@@ -1,9 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import { mapEpicKafkaMessageData } from 'epic/entities'
-import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'epic-api-types'
-import { EpicGetAllChipBlocksQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChipBlock } from 'svt-ts-types'
+import { EpicGetAllChipBlocksQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChipBlocks } from 'svt-ts-types/kafka'
 
 import { EpicChipBlocksSvc } from '../models'
 

@@ -1,4 +1,4 @@
-import { EpicWpMachineUpdateInstalledProbeCardRequest } from 'epic-api-types'
+import { EpicWpMachineUpdateInstalledProbeCardRequest } from 'svt-ts-types'
 
 
 /** Payload of the `UpdateWpMachineInstalledProbeCard` Kafka message — the HTTP request body plus the machine it targets. */

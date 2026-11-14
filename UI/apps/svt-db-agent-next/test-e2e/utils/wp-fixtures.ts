@@ -1,4 +1,4 @@
-import { EpicWpMachineCreateRequest } from 'epic-api-types'
+import { EpicWpMachineCreateRequest } from 'svt-ts-types'
 
 import { TestSetup } from './test-setup'
 

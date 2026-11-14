@@ -16,7 +16,7 @@
         "types": [],
         "useDefineForClassFields": false,
         "paths": {
-            "epic-api-types": [
+            "svt-ts-types": [
                 "./main/src/index.ts"
             ]
         }

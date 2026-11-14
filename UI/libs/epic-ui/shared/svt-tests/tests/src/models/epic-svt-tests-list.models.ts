@@ -1,7 +1,7 @@
-import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'epic-api-types'
 import { EpicInlineFilterDateRange, toEpicMatOutlinedIcon } from 'epic-ui/common/components'
 import { SelectOptionLabelValue } from 'epic-ui/utils'
 import { uniq } from 'lodash-es'
+import { EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestsListQuery, EpicSvtTestStatus } from 'svt-ts-types'
 
 
 export type EpicSvtTestsListFilterValue = {

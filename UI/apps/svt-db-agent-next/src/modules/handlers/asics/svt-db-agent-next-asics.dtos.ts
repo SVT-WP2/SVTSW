@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator'
-import { EpicAsicCreateRequest } from 'epic-api-types'
+import { EpicAsicCreateRequest } from 'svt-ts-types'
 
 
 /** `data.create` of `CreateAsic`. */

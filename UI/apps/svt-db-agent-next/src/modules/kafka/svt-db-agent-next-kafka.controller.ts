@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common'
 import { Ctx, KafkaContext, MessagePattern, Payload } from '@nestjs/microservices'
-import { EpicKafkaReplyStatus, SvtDbAgentKafka } from 'epic-api-types/kafka'
+import { EpicKafkaReplyStatus, SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 import { isRecord, SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../dispatch'
 

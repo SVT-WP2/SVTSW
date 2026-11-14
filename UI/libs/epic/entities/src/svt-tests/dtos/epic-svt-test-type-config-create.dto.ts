@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsString, ValidateIf } from 'class-validator'
-import { EpicSvtTestTypeConfigCreateRequest } from 'epic-api-types'
+import { EpicSvtTestTypeConfigCreateRequest } from 'svt-ts-types'
 
 
 export class EpicSvtTestTypeConfigCreateDto implements EpicSvtTestTypeConfigCreateRequest {

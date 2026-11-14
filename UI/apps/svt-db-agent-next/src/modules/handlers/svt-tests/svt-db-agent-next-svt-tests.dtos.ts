@@ -1,6 +1,6 @@
 import { IsDateString, IsEnum, IsNumber, IsString } from 'class-validator'
-import { EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
-import { EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from 'epic-api-types/kafka'
+import { EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'svt-ts-types'
+import { EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from 'svt-ts-types/kafka'
 
 
 /** `data.create` of `CreateSvtTest`. */

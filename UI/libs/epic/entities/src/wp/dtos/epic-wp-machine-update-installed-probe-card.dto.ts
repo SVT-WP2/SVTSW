@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsOptional } from 'class-validator'
-import { EpicWpMachineUpdateInstalledProbeCardRequest } from 'epic-api-types'
+import { EpicWpMachineUpdateInstalledProbeCardRequest } from 'svt-ts-types'
 
 
 export class EpicWpMachineUpdateInstalledProbeCardDto implements EpicWpMachineUpdateInstalledProbeCardRequest {

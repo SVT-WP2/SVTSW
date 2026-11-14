@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProbeCard } from 'epic-api-types'
 import { delay, Observable, of } from 'rxjs'
+import { EpicWpProbeCard } from 'svt-ts-types'
 
 
 @Injectable()

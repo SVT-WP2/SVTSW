@@ -3,7 +3,7 @@ import {
     EpicSvtTestTemplateCreateRequest,
     EpicSvtTestTemplatesListQuery,
     EpicSvtTestTemplateUpdateRequest,
-} from 'epic-api-types'
+} from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 

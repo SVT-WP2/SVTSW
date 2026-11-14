@@ -1,6 +1,6 @@
-import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest, EpicAsicsListQuery } from 'epic-api-types'
 import { EpicAsicsApiClient, getDefaultEpicApiPager } from 'epic-ui/api'
 import { delay, Observable, of } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest, EpicAsicsListQuery } from 'svt-ts-types'
 
 
 import { EpicEnumsMock } from '../enums'

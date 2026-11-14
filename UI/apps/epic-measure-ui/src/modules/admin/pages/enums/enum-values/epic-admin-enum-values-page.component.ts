@@ -2,7 +2,6 @@
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute } from '@angular/router'
-import { EpicEnumName } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -15,6 +14,7 @@ import { EpicEnumValuesDataSource } from 'epic-ui/shared'
 import { EpicWaferEnumsGrid, EpicWaferEnumsListComponent } from 'epic-ui/shared/wafers'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { filter, map, takeUntil } from 'rxjs'
+import { EpicEnumName } from 'svt-ts-types'
 
 
 @Component({

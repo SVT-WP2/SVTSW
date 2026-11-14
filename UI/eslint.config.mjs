@@ -28,21 +28,21 @@ export const DEFAULT_DIRECTIVE_SELECTORS = [
  * free of runtime framework dependencies and of the Node-only / browser-only libs — types, enums and tiny pure helpers
  * only. Used by the library's own config (`../Shared/svt-ts-types/eslint.config.mjs`, `npm run lint:shared`).
  */
-export const EPIC_API_TYPES_RESTRICTED_IMPORTS = [
+export const SVT_TS_TYPES_RESTRICTED_IMPORTS = [
     'error',
     {
         patterns: [
             {
                 group: ['@angular/*', '@ngrx/*', 'rxjs', 'rxjs/*'],
-                message: 'epic-api-types is shared with the NestJS apps — no Angular / rxjs imports here.',
+                message: 'svt-ts-types is shared with the NestJS apps — no Angular / rxjs imports here.',
             },
             {
                 group: ['@nestjs/*', 'class-validator', 'class-transformer', 'kafkajs'],
-                message: 'epic-api-types is shared with the Angular SPA — no NestJS / class-validator imports here.',
+                message: 'svt-ts-types is shared with the Angular SPA — no NestJS / class-validator imports here.',
             },
             {
                 group: ['epic/*', 'epic-ui/*', '@env', '@env/*'],
-                message: 'epic-api-types is the lowest layer — it must not depend on epic/* or epic-ui/*.',
+                message: 'svt-ts-types is the lowest layer — it must not depend on epic/* or epic-ui/*.',
             },
         ],
     },
@@ -264,8 +264,8 @@ export const ROOT_CONFIG = tseslint.config(
                     paths: [
                         RXJS_RX_RESTRICTED_PATH,
                         {
-                            name: 'epic-api-types/kafka',
-                            message: 'epic-api-types/kafka is the Kafka contract of the Node apps — Angular code imports epic-api-types only.',
+                            name: 'svt-ts-types/kafka',
+                            message: 'svt-ts-types/kafka is the Kafka contract of the Node apps — Angular code imports svt-ts-types only.',
                         },
                     ],
                 },

@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core'
 import { MatButton } from '@angular/material/button'
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card'
-import { EpicChipCreateRequest } from 'epic-api-types'
 import {
     EpicChipCreateManyPreviewDialogService,
     EpicChipCreateManyPreviewGridComponent,
@@ -11,6 +10,7 @@ import {
 } from 'epic-ui/shared/chips'
 import { BaseComponent } from 'epic-ui/utils'
 import { MarkdownComponent } from 'ngx-markdown'
+import { EpicChipCreateRequest } from 'svt-ts-types'
 
 
 @Component({

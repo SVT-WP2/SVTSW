@@ -1,6 +1,6 @@
 import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator'
-import { EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
-import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'epic-api-types/kafka'
+import { EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'svt-ts-types'
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'svt-ts-types/kafka'
 
 
 /** `data.create` of `CreateWpMachine`. */

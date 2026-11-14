@@ -1,4 +1,4 @@
-import { EpicApiPager, EpicDateTimeString, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
+import { EpicApiPager, EpicDateTimeString, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 import { EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../models'

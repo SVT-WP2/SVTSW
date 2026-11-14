@@ -16,11 +16,11 @@ the one below it exists.
 
 Check `../Documentation/Kafka/SvtKafkaConventions.md` for the agreed message names **before** writing this.
 
-Create `svt-db-agent-kafka-<domain>s.ts`. The messages carry the `epic-api-types` types of step 1.2 directly, so
+Create `svt-db-agent-kafka-<domain>s.ts`. The messages carry the `svt-ts-types` types of step 1.2 directly, so
 write those first:
 
 ```ts
-import { Epic<Domain>, Epic<Domain>sListQuery } from 'epic-api-types'
+import { Epic<Domain>, Epic<Domain>sListQuery } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
 
@@ -57,8 +57,8 @@ export namespace SvtDbAgentKafka<Domain>s {
 }
 ```
 
-Export it from `kafka-messages/index.ts`. The Node apps import it from `epic-api-types/kafka`; the main
-`epic-api-types` barrel does not export the Kafka contract, and Angular code must not import it.
+Export it from `kafka-messages/index.ts`. The Node apps import it from `svt-ts-types/kafka`; the main
+`svt-ts-types` barrel does not export the Kafka contract, and Angular code must not import it.
 
 ### 1.2 HTTP contract types — `../Shared/svt-ts-types/main/src/<domain>s/`
 
@@ -84,7 +84,7 @@ dtos/epic-<domain>s-get-all-params.dto.ts   … implements Epic<Domain>sListQuer
 dtos/index.ts, index.ts
 ```
 
-There is no model for a Kafka wire shape that equals the HTTP shape — the messages use the `epic-api-types` type.
+There is no model for a Kafka wire shape that equals the HTTP shape — the messages use the `svt-ts-types` type.
 A wire type that differs from it (`EpicSvtTestEntity`, the `*LocationUpdate` types) belongs to the Kafka contract:
 `../Shared/svt-ts-types/kafka/src/db-agent/models/`. DTOs are decorated classes (the HTTP shape) that `implements` the shared types — they
 drive Swagger *and* the `ClassSerializerInterceptor`, and `implements` makes a field drifting from the contract
@@ -183,7 +183,7 @@ Finally register the module in `apps/epic-measure-api/src/app/app.module.ts`.
 ### 1.6 UI HTTP client — `libs/epic-ui/api/main/src/<domain>s/`
 
 ```
-services/epic-<domain>s.api-client.ts      the types come from `epic-api-types` — no view models here
+services/epic-<domain>s.api-client.ts      the types come from `svt-ts-types` — no view models here
 index.ts (+ barrels)
 ```
 
@@ -227,11 +227,11 @@ Register lazily in `src/app/app.routes.ts` and add the sidebar entry in
 ### Checklist
 
 - [ ] Kafka message namespace + barrel export
-- [ ] HTTP contract types in `epic-api-types` + barrel export
+- [ ] HTTP contract types in `svt-ts-types` + barrel export
 - [ ] DTOs (`implements`; list DTOs also paired in `contract/epic-api-contract-checks.models.ts`) + barrels + root `index.ts`
 - [ ] db-agent service, module provider, controller `case`s + `@Payload()` union
 - [ ] API service, controller, module, registered in `app.module.ts`
-- [ ] `epic-ui/api` client (types from `epic-api-types`) + `__mock__` twin + `app.mock.providers.ts`
+- [ ] `epic-ui/api` client (types from `svt-ts-types`) + `__mock__` twin + `app.mock.providers.ts`
 - [ ] Feature lib (grid models, data source, list component)
 - [ ] Page component + routing + `app.routes.ts` + sidebar
 - [ ] `npm run pre-pull-request` clean

@@ -7,9 +7,9 @@ import {
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
 } from 'epic/entities'
-import { EpicApiPager, EpicApiPageResponse, EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
-import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
+import { EpicApiPager, EpicApiPageResponse, EpicChip, EpicChipLocationHistoryRecord } from 'svt-ts-types'
+import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'svt-ts-types/kafka'
 
 import { EpicChipsSvc } from './models'
 

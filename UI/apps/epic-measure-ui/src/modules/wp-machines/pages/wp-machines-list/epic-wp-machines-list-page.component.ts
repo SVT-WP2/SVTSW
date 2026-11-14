@@ -3,7 +3,6 @@ import { MatTooltip } from '@angular/material/tooltip'
 import { Router } from '@angular/router'
 import { Actions, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { EpicWpMachine } from 'epic-api-types'
 import {
     EpicIconComponent,
     EpicButtonModule,
@@ -19,6 +18,7 @@ import {
 } from 'epic-ui/shared/wp'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
 import { takeUntil } from 'rxjs'
+import { EpicWpMachine } from 'svt-ts-types'
 
 import StoreActions = EpicWpMachinesActions
 import StoreSelectors = EpicWpMachinesSelectors

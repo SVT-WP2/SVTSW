@@ -6,8 +6,8 @@ that workspace ([05-repository-layout-plan.md](../../UI/docs/db-agent-clone/05-r
 
 | Entry point | Alias | Holds | Consumers |
 |---|---|---|---|
-| [`main/`](main/README.md) | `epic-api-types` | HTTP contract: request bodies, query strings, responses | SPA, BFF, DB agents |
-| [`kafka/`](kafka/README.md) | `epic-api-types/kafka` | Kafka contract: envelope, `SvtDbAgentKafka<X>` messages, wire types | Node apps only |
+| [`main/`](main/README.md) | `svt-ts-types` | HTTP contract: request bodies, query strings, responses | SPA, BFF, DB agents |
+| [`kafka/`](kafka/README.md) | `svt-ts-types/kafka` | Kafka contract: envelope, `SvtDbAgentKafka<X>` messages, wire types | Node apps only |
 
 ## The rule
 
@@ -22,8 +22,8 @@ Dependency-free TypeScript only: types, interfaces, enums and plain classes.
   its own tsconfig, by a relative path, and compiles the sources with its own options:
 
 ```jsonc
-"epic-api-types":       ["../Shared/svt-ts-types/main/src/index.ts"],
-"epic-api-types/kafka": ["../Shared/svt-ts-types/kafka/src/index.ts"]
+"svt-ts-types":       ["../Shared/svt-ts-types/main/src/index.ts"],
+"svt-ts-types/kafka": ["../Shared/svt-ts-types/kafka/src/index.ts"]
 ```
 
 ## Checks

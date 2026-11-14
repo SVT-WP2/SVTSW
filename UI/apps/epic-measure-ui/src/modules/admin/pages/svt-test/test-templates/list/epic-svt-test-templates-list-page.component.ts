@@ -1,7 +1,6 @@
 import { Component, inject, OnDestroy, OnInit, Signal, ViewContainerRef } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { MatTooltip } from '@angular/material/tooltip'
-import { EpicSvtTestTemplate } from 'epic-api-types'
 import {
     EpicButtonModule,
     EpicContentErrorMessagePipe,
@@ -19,6 +18,7 @@ import {
 } from 'epic-ui/shared/svt-test/test-templates'
 import { EpicSvtTestTypeConfigsDataFacade, EpicSvtTestTypesDataFacade } from 'epic-ui/shared/svt-test/test-types'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
+import { EpicSvtTestTemplate } from 'svt-ts-types'
 
 
 @Component({

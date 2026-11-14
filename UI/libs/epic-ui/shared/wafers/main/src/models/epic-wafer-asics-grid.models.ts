@@ -1,6 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community'
-import { EpicAsic } from 'epic-api-types'
 import { AgIconActionsCell, AgIconActionsCellComponent, AgLinkCellFactory, EpicAgGrid } from 'epic-ui/common/ag-grid'
+import { EpicAsic } from 'svt-ts-types'
 
 
 export namespace EpicWaferAsicsGrid {
