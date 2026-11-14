@@ -238,8 +238,8 @@ layout, Docker, CI/CD, from the former section of `UI/README.md`) and `DbAgentNe
   separately. A change of an `Epic*` type for the UI also changes the Kafka contract. A new required field breaks
   the agent build, which is a good signal; a new optional field breaks nothing. Decide if a rule is needed
   (additive changes only, or a coordinated release).
-- **Owner of the new folders.** The root `README.md` lists `DbAgentNext` and `Shared` now, but its "Responsible for
-  each folder" list names no one for them.
+- **Owner of `Shared/`.** The root `README.md` lists `DbAgentNext` and `Shared`; `DbAgentNext` has the owner of `UI`
+  (decided 2026-11-14), `Shared` has no one in the "Responsible for each folder" list yet.
 - **Where the Git hook lives.** `UI/.husky/pre-commit` is the hook of the whole repository (`core.hooksPath`), set
   up by `npm install` in `UI/`, and now also runs `DbAgentNext`'s lint-staged. A clone that never installs `UI/`
   has no hook at all.
