@@ -1,6 +1,53 @@
-import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicChipLocationHistoryRecord } from 'epic-api-types'
+import { Type } from 'class-transformer'
+import { IsArray, IsDateString, IsInt, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
+import {
+    EpicChipCreateManyRequest,
+    EpicChipCreateManyRequestItem,
+    EpicChipCreateRequest,
+    EpicChipLocationHistoryRecord,
+} from 'epic-api-types'
 
+
+/** `data.create` of `CreateChip`. */
+export class SvtDbAgentNextChipCreateDto implements EpicChipCreateRequest {
+
+    @IsString()
+    serialNumber!: string
+
+    @IsNumber()
+    asicId!: number
+
+    /** Enum value `generalLocation`. */
+    @IsString()
+    generalLocation!: string
+
+}
+
+/** One chip of the `CreateManyChips` payload. */
+export class SvtDbAgentNextChipCreateManyItemDto implements EpicChipCreateManyRequestItem {
+
+    @IsString()
+    serialNumber!: string
+
+    @IsNumber()
+    asicId!: number
+
+}
+
+/** `data.create` of `CreateManyChips`. */
+export class SvtDbAgentNextChipCreateManyDto implements EpicChipCreateManyRequest {
+
+    /** Enum value `generalLocation`. */
+    @IsString()
+    generalLocation!: string
+
+    @IsArray()
+    @IsOptional()
+    @ValidateNested({ each: true })
+    @Type(() => SvtDbAgentNextChipCreateManyItemDto)
+    items!: SvtDbAgentNextChipCreateManyItemDto[]
+
+}
 
 /**
  * `UpdateChipLocation` payload: the history record itself. As for wafers, the contract DTO in `epic/entities`

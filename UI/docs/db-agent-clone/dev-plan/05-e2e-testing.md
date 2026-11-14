@@ -52,7 +52,8 @@ Seeding: no shared fixtures. Each test creates what it needs, through the agent'
   provider (`DiscoveryService`), so a new domain only adds its class to
   `SvtDbAgentNextHandlersModule`.
 - Request `data` is validated by name: `validateRequestData(Dto, data.create, 'data.create')` with the
-  contract DTOs of `epic/entities` (`whitelist` + `forbidNonWhitelisted`, so unknown keys are rejected),
+  app-local DTOs (`svt-db-agent-next-<domain>.dtos.ts` next to the handlers; each `implements` its contract type
+  from `epic-api-types` — the app imports nothing from `epic/entities`) (`whitelist` + `forbidNonWhitelisted`, so unknown keys are rejected),
   `requireRecord` / `requireInteger` / `optionalIntegerList` for the rest. Enum values are checked
   against the live catalog (`SvtDbEnumsService`), not the generated snapshot.
 

@@ -1,6 +1,53 @@
-import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicWaferLocationHistoryRecord } from 'epic-api-types'
+import { IsDateString, IsInt, IsNumber, IsOptional, IsString } from 'class-validator'
+import { EpicDateString, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'epic-api-types'
 
+
+/** `data.create` of `CreateWafer`. */
+export class SvtDbAgentNextWaferCreateDto implements EpicWaferCreateRequest {
+
+    @IsString()
+    serialNumber!: string
+
+    @IsNumber()
+    batchNumber!: number
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    thinningDate!: EpicDateString
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    dicingDate!: EpicDateString
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    productionDate!: EpicDateString
+
+    @IsNumber()
+    waferTypeId!: number
+
+    @IsOptional()
+    @IsString()
+    generalLocation!: string | null
+
+}
+
+/** `data.update` of `UpdateWafer`. */
+export class SvtDbAgentNextWaferUpdateDto implements EpicWaferUpdateRequest {
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    thinningDate!: EpicDateString | null
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    dicingDate!: EpicDateString | null
+
+    @IsOptional()
+    @IsDateString({ strict: true })
+    productionDate!: EpicDateString | null
+
+}
 
 /**
  * `UpdateWaferLocation` payload: the history record itself. The contract DTO in `epic/entities` is a reply

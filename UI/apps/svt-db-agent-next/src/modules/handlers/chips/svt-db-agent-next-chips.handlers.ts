@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { EpicChipCreateManyRequestDto, EpicChipCreateRequestDto } from 'epic/entities'
 import { EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
 import {
@@ -30,7 +29,11 @@ import {
     validateRequestData,
 } from '../../dispatch'
 
-import { SvtDbAgentNextChipLocationRecordDto } from './svt-db-agent-next-chips.dtos'
+import {
+    SvtDbAgentNextChipCreateDto,
+    SvtDbAgentNextChipCreateManyDto,
+    SvtDbAgentNextChipLocationRecordDto,
+} from './svt-db-agent-next-chips.dtos'
 
 
 import MessageType = SvtDbAgentKafkaChips.MessageType
@@ -101,7 +104,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
     /** `data.create`: the chip, its first location row and (feature on) its blocks, in one transaction. */
     private async create(data: unknown): Promise<SvtDbAgentKafkaChips.CreateChipReplyMessageData> {
         const body = requireRecord(data, 'data')
-        const create = validateRequestData(EpicChipCreateRequestDto, body['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextChipCreateDto, body['create'], 'data.create')
         await this.assertGeneralLocation(create.generalLocation)
 
         const [input] = await this.toCreateInputs([create], create.generalLocation, 'data.create')
@@ -115,7 +118,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
      */
     private async createMany(data: unknown): Promise<SvtDbAgentKafkaChips.CreateManyChipsReplyMessageData> {
         const body = requireRecord(data, 'data')
-        const create = validateRequestData(EpicChipCreateManyRequestDto, body['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextChipCreateManyDto, body['create'], 'data.create')
         if (!Array.isArray(create.items)) {
             throw SvtDbAgentNextRequestError.badRequest('data.create.items must be an array')
         }

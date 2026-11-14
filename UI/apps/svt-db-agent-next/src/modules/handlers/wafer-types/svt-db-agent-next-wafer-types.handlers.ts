@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWaferTypeCreateRequestDto } from 'epic/entities'
 import { EpicWaferType, EpicWaferTypeMap } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic-api-types/kafka'
 import { SvtDbEnumsService, SvtDbWaferTypeEntity, SvtDbWaferTypesRepository, validateWaferMap } from 'svt-db/data'
@@ -16,6 +15,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextWaferTypeCreateDto } from './svt-db-agent-next-wafer-types.dtos'
 
 
 import MessageType = SvtDbAgentKafkaWaferTypes.MessageType
@@ -57,7 +58,7 @@ export class SvtDbAgentNextWaferTypesHandlers implements SvtDbAgentNextMessageHa
      */
     private async create(data: unknown): Promise<SvtDbAgentKafkaWaferTypes.CreateWaferTypeReplyMessageData> {
         const body = requireRecord(data, 'data')
-        const create = validateRequestData(EpicWaferTypeCreateRequestDto, body['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextWaferTypeCreateDto, body['create'], 'data.create')
 
         const enums = await this.enums.getAll(['asicFamilyType', 'engineeringRun', 'foundryName', 'waferTech'])
         assertEnumValue(enums['engineeringRun'], create.engineeringRun, 'engineeringRun')

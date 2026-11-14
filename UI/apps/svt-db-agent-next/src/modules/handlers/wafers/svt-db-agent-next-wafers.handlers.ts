@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWaferCreateRequestDto, EpicWaferUpdateRequestDto } from 'epic/entities'
 import { EpicWafer, EpicWaferLocationHistoryRecord } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic-api-types/kafka'
 import {
@@ -26,7 +25,11 @@ import {
     validateRequestData,
 } from '../../dispatch'
 
-import { SvtDbAgentNextWaferLocationRecordDto } from './svt-db-agent-next-wafers.dtos'
+import {
+    SvtDbAgentNextWaferCreateDto,
+    SvtDbAgentNextWaferLocationRecordDto,
+    SvtDbAgentNextWaferUpdateDto,
+} from './svt-db-agent-next-wafers.dtos'
 
 
 import MessageType = SvtDbAgentKafkaWafers.MessageType
@@ -84,7 +87,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
      */
     private async create(data: unknown): Promise<SvtDbAgentKafkaWafers.CreateWaferReplyMessageData> {
         const body = requireRecord(data, 'data')
-        const create = validateRequestData(EpicWaferCreateRequestDto, body['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextWaferCreateDto, body['create'], 'data.create')
         if (!create.generalLocation) {
             throw SvtDbAgentNextRequestError.badRequest('data.create.generalLocation is required to create a wafer')
         }
@@ -122,7 +125,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
         if ('generalLocation' in update) {
             throw SvtDbAgentNextRequestError.badRequest(LOCATION_UPDATE_NOT_ALLOWED)
         }
-        const patch = validateRequestData(EpicWaferUpdateRequestDto, update, 'data.update')
+        const patch = validateRequestData(SvtDbAgentNextWaferUpdateDto, update, 'data.update')
 
         const wafer = await this.wafers.update(id, patch)
         if (!wafer) {

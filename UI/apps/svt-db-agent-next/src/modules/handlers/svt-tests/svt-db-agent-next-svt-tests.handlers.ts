@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { EpicSvtTestCreateDto, EpicSvtTestFinishUpdateDto, EpicSvtTestStartUpdateDto } from 'epic/entities'
 import { EpicSvtDutEntityName, EpicSvtTestResultStatus } from 'epic-api-types'
 import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'epic-api-types/kafka'
 import {
@@ -30,6 +29,12 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import {
+    SvtDbAgentNextSvtTestCreateDto,
+    SvtDbAgentNextSvtTestFinishUpdateDto,
+    SvtDbAgentNextSvtTestStartUpdateDto,
+} from './svt-db-agent-next-svt-tests.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTests.MessageType
@@ -106,7 +111,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
 
     /** `data.create = { dutEntityName, dutId, testTypeConfigId, testSetupConfigId }`; the device and both configs must exist. */
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         await this.assertDutExists(create.dutEntityName, create.dutId)
         if (!(await this.typeConfigs.findById(create.testTypeConfigId))) {
             throw SvtDbAgentNextRequestError.badRequest(`Test type config ${create.testTypeConfigId} does not exist`)
@@ -128,7 +133,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
     private async updateStart(data: unknown): Promise<SvtDbAgentKafkaSvtTests.UpdateSvtTestStartReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicSvtTestStartUpdateDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextSvtTestStartUpdateDto, body['update'], 'data.update')
 
         const current = await this.requireTest(id)
         if (current.test.startedAt) {
@@ -142,7 +147,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
     private async updateFinish(data: unknown): Promise<SvtDbAgentKafkaSvtTests.UpdateSvtTestFinishReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicSvtTestFinishUpdateDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextSvtTestFinishUpdateDto, body['update'], 'data.update')
         // the contract enum mirrors the database enum; the live catalog catches the two drifting apart
         const statuses = await this.enums.getValues('testResultStatus')
         if (!statuses.includes(update.testResultStatus)) {

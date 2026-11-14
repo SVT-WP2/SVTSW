@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpProjectCreateDto } from 'epic/entities'
 import { EpicWpProject } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWpProjects } from 'epic-api-types/kafka'
 import {
@@ -22,6 +21,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextWpProjectCreateDto } from './svt-db-agent-next-wp-projects.dtos'
 
 
 import MessageType = SvtDbAgentKafkaWpProjects.MessageType
@@ -59,7 +60,7 @@ export class SvtDbAgentNextWpProjectsHandlers implements SvtDbAgentNextMessageHa
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpProject>> {
-        const create = validateRequestData(EpicWpProjectCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextWpProjectCreateDto, requireRecord(data, 'data')['create'], 'data.create')
 
         const enums = await this.enums.getAll(['asicFamilyType', 'waferMapOrientation'])
         if (!enums['asicFamilyType']?.includes(create.asicFamilyType)) {

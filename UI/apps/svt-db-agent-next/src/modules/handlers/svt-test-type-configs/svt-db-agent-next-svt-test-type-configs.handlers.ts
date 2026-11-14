@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestTypeConfigCreateDto } from 'epic/entities'
 import { EpicSvtTestTypeConfig, EpicSvtTestTypeConfigBody } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypeConfigs } from 'epic-api-types/kafka'
 import { SvtDbSvtTestTypeConfigEntity, SvtDbSvtTestTypeConfigsRepository, SvtDbSvtTestTypesRepository } from 'svt-db/data'
@@ -18,6 +17,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextSvtTestTypeConfigCreateDto } from './svt-db-agent-next-svt-test-type-configs.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTestTypeConfigs.MessageType
@@ -69,7 +70,7 @@ export class SvtDbAgentNextSvtTestTypeConfigsHandlers implements SvtDbAgentNextM
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestTypeConfigs.CreateSvtTestTypeConfigReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestTypeConfigCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestTypeConfigCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         if (!(await this.testTypes.findById(create.testTypeId))) {
             throw SvtDbAgentNextRequestError.badRequest(`Test type ${create.testTypeId} does not exist`)
         }

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestSetupConfigCreateDto } from 'epic/entities'
 import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetupConfigs } from 'epic-api-types/kafka'
 import { SvtDbSvtTestSetupConfigEntity, SvtDbSvtTestSetupConfigsRepository, SvtDbSvtTestSetupsRepository } from 'svt-db/data'
@@ -18,6 +17,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextSvtTestSetupConfigCreateDto } from './svt-db-agent-next-svt-test-setup-configs.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTestSetupConfigs.MessageType
@@ -69,7 +70,7 @@ export class SvtDbAgentNextSvtTestSetupConfigsHandlers implements SvtDbAgentNext
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestSetupConfigs.CreateSvtTestSetupConfigReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestSetupConfigCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestSetupConfigCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         if (!(await this.setups.findById(create.setupId))) {
             throw SvtDbAgentNextRequestError.badRequest(`Test setup ${create.setupId} does not exist`)
         }

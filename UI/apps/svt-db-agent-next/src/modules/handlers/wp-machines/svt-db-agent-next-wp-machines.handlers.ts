@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpMachineCreateRequestDto, EpicWpMachineUpdateRequestDto } from 'epic/entities'
 import { EpicWpMachine } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'epic-api-types/kafka'
 import {
@@ -23,7 +22,12 @@ import {
     validateRequestData,
 } from '../../dispatch'
 
-import { SvtDbAgentNextWpMachineInstalledProbeCardDto, SvtDbAgentNextWpMachineLoadedWaferDto } from './svt-db-agent-next-wp-machines.dtos'
+import {
+    SvtDbAgentNextWpMachineCreateDto,
+    SvtDbAgentNextWpMachineInstalledProbeCardDto,
+    SvtDbAgentNextWpMachineLoadedWaferDto,
+    SvtDbAgentNextWpMachineUpdateDto,
+} from './svt-db-agent-next-wp-machines.dtos'
 
 
 import MessageType = SvtDbAgentKafkaWpMachines.MessageType
@@ -92,7 +96,7 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<SvtDbAgentNextWpMachineWire>> {
-        const create = validateRequestData(EpicWpMachineCreateRequestDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextWpMachineCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         await this.assertEnumValues(create)
 
         const machine = await this.machines.create({
@@ -113,7 +117,7 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
     private async update(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<SvtDbAgentNextWpMachineWire>> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicWpMachineUpdateRequestDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextWpMachineUpdateDto, body['update'], 'data.update')
         await this.assertEnumValues(update)
 
         const machine = await this.machines.update(id, {

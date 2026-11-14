@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicAsicCreateRequestDto } from 'epic/entities'
 import { EpicAsic } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'epic-api-types/kafka'
 import { SvtDbAsicsRepository, SvtDbAsicWithChip, SvtDbEnumsService, SvtDbWafersRepository } from 'svt-db/data'
@@ -19,6 +18,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextAsicCreateDto } from './svt-db-agent-next-asics.dtos'
 
 
 import MessageType = SvtDbAgentKafkaAsics.MessageType
@@ -69,7 +70,7 @@ export class SvtDbAgentNextAsicsHandlers implements SvtDbAgentNextMessageHandler
     /** A manually registered ASIC (the UI does not use it); enum values and the wafer are checked first. */
     private async create(data: unknown): Promise<SvtDbAgentKafkaAsics.CreateAsicReplyMessageData> {
         const body = requireRecord(data, 'data')
-        const create = validateRequestData(EpicAsicCreateRequestDto, body['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextAsicCreateDto, body['create'], 'data.create')
 
         const enums = await this.enums.getAll(['asicFamilyType', 'asicQuality'])
         if (!enums['asicFamilyType']?.includes(create.familyType)) {

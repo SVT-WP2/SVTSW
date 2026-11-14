@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestTypeCreateDto, EpicSvtTestTypeUpdateDto } from 'epic/entities'
 import { EpicSvtTestType } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'epic-api-types/kafka'
 import { SvtDbEnumsService, SvtDbSvtTestTypesRepository, SvtDbSvtTestTypeWithDutTypes } from 'svt-db/data'
@@ -18,6 +17,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextSvtTestTypeCreateDto, SvtDbAgentNextSvtTestTypeUpdateDto } from './svt-db-agent-next-svt-test-types.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTestTypes.MessageType
@@ -59,7 +60,7 @@ export class SvtDbAgentNextSvtTestTypesHandlers implements SvtDbAgentNextMessage
 
     /** `data.create = { name, dutTypes, testTypeConfig: { name, configBody, note? } }`, one transaction. */
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestTypes.CreateSvtTestTypeReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestTypeCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestTypeCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         // `@ValidateNested()` alone lets a missing object through.
         if (!create.testTypeConfig) {
             throw SvtDbAgentNextRequestError.badRequest('data.create.testTypeConfig is required')
@@ -83,7 +84,7 @@ export class SvtDbAgentNextSvtTestTypesHandlers implements SvtDbAgentNextMessage
     private async update(data: unknown): Promise<SvtDbAgentKafkaSvtTestTypes.UpdateSvtTestTypeReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicSvtTestTypeUpdateDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextSvtTestTypeUpdateDto, body['update'], 'data.update')
         await this.assertDutTypes(update.dutTypes)
 
         const updated = await this.testTypes.replaceDutTypes(id, update.dutTypes)

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicEquipmentTypeCreateRequestDto } from 'epic/entities'
 import { EpicEquipmentType } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipmentTypes } from 'epic-api-types/kafka'
 import { SvtDbEquipmentTypeEntity, SvtDbEquipmentTypesRepository } from 'svt-db/data'
@@ -14,6 +13,8 @@ import {
     SvtDbAgentNextMessageHandlers,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextEquipmentTypeCreateDto } from './svt-db-agent-next-equipment-types.dtos'
 
 
 import MessageType = SvtDbAgentKafkaEquipmentTypes.MessageType
@@ -50,7 +51,7 @@ export class SvtDbAgentNextEquipmentTypesHandlers implements SvtDbAgentNextMessa
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafkaEquipmentTypes.CreateEquipmentTypeReplyMessageData> {
-        const create = validateRequestData(EpicEquipmentTypeCreateRequestDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextEquipmentTypeCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         const equipmentType = await this.equipmentTypes.create(create.name)
         return { entity: toWire(equipmentType) }
     }

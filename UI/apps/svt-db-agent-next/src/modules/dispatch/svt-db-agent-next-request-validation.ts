@@ -75,7 +75,7 @@ export function optionalStringList(value: unknown, path: string): string[] | und
 }
 
 /**
- * Validates a request body against a decorated DTO class (the contract DTOs of `epic/entities`): every
+ * Validates a request body against a decorated DTO class (the `*.dtos.ts` file next to each handler): every
  * declared field by its own rules, unknown keys rejected (`01-behaviour-decisions.md` §1). Throws
  * `BadRequest` listing every violation.
  */

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestSetupCreateDto, EpicSvtTestSetupUpdateDto } from 'epic/entities'
 import { EpicSvtTestSetup } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetups } from 'epic-api-types/kafka'
 import {
@@ -22,6 +21,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextSvtTestSetupCreateDto, SvtDbAgentNextSvtTestSetupUpdateDto } from './svt-db-agent-next-svt-test-setups.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTestSetups.MessageType
@@ -61,7 +62,7 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
 
     /** `data.create = { name, generalLocation, defaultConfig: { name, configBody, note? } }`, one transaction. */
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestSetups.CreateSvtTestSetupReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestSetupCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestSetupCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         // `@ValidateNested()` alone lets a missing object through.
         if (!create.defaultConfig) {
             throw SvtDbAgentNextRequestError.badRequest('data.create.defaultConfig is required')
@@ -85,7 +86,7 @@ export class SvtDbAgentNextSvtTestSetupsHandlers implements SvtDbAgentNextMessag
     private async update(data: unknown): Promise<SvtDbAgentKafkaSvtTestSetups.UpdateSvtTestSetupReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicSvtTestSetupUpdateDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextSvtTestSetupUpdateDto, body['update'], 'data.update')
 
         if (!(await this.setups.findById(id))) {
             throw SvtDbAgentNextRequestError.notFound(`Test setup ${id} not found`)

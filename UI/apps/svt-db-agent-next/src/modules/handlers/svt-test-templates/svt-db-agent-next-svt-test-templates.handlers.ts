@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicSvtTestTemplateCreateDto, EpicSvtTestTemplateUpdateDto } from 'epic/entities'
 import { EpicSvtTestTemplate } from 'epic-api-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTemplates } from 'epic-api-types/kafka'
 import {
@@ -22,6 +21,8 @@ import {
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
+
+import { SvtDbAgentNextSvtTestTemplateCreateDto, SvtDbAgentNextSvtTestTemplateUpdateDto } from './svt-db-agent-next-svt-test-templates.dtos'
 
 
 import MessageType = SvtDbAgentKafkaSvtTestTemplates.MessageType
@@ -74,7 +75,7 @@ export class SvtDbAgentNextSvtTestTemplatesHandlers implements SvtDbAgentNextMes
     }
 
     private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTestTemplates.CreateSvtTestTemplateReplyMessageData> {
-        const create = validateRequestData(EpicSvtTestTemplateCreateDto, requireRecord(data, 'data')['create'], 'data.create')
+        const create = validateRequestData(SvtDbAgentNextSvtTestTemplateCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         const dutTypes = await this.enums.getValues('dutType')
         if (!dutTypes.includes(create.dutType)) {
             throw SvtDbAgentNextRequestError.badRequest(`${create.dutType} is not a value of the dutType enum`)
@@ -95,7 +96,7 @@ export class SvtDbAgentNextSvtTestTemplatesHandlers implements SvtDbAgentNextMes
     private async update(data: unknown): Promise<SvtDbAgentKafkaSvtTestTemplates.UpdateSvtTestTemplateReplyMessageData> {
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
-        const update = validateRequestData(EpicSvtTestTemplateUpdateDto, body['update'], 'data.update')
+        const update = validateRequestData(SvtDbAgentNextSvtTestTemplateUpdateDto, body['update'], 'data.update')
 
         const updated = await this.templates.update(id, { isEnabled: update.isEnabled })
         if (!updated) {
