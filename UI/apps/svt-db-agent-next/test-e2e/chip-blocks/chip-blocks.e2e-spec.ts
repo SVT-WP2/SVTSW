@@ -1,11 +1,11 @@
+import { EpicChipBlock } from 'epic-api-types'
 import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaChipBlocks,
     SvtDbAgentKafkaChips,
     SvtDbAgentKafkaWafers,
     SvtDbAgentKafkaWaferTypes,
-} from 'epic/entities'
-import { EpicChipBlock } from 'epic-api-types'
+} from 'epic-api-types/kafka'
 
 import { TestSetup } from '../utils'
 

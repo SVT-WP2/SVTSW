@@ -1,6 +1,5 @@
+import { SvtDbAgentKafka } from 'epic-api-types/kafka'
 import { map, Observable, OperatorFunction } from 'rxjs'
-
-import { SvtDbAgentKafka } from '../../kafka-messages'
 
 
 export function mapSvtDbAgentEntityReplyData<TSource extends SvtDbAgentKafka.OneEntityReplyMessageData

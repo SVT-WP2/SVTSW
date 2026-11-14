@@ -1,5 +1,5 @@
-import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic/entities'
 import { EpicWpProbeCard } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic-api-types/kafka'
 
 import { insertProbeCard, TestSetup } from '../utils'
 

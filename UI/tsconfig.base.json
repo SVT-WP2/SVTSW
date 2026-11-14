@@ -122,7 +122,10 @@
                 "libs/epic/entities/src/index.ts"
             ],
             "epic-api-types": [
-                "libs/epic-api-types/src/index.ts"
+                "libs/epic-api-types/main/src/index.ts"
+            ],
+            "epic-api-types/kafka": [
+                "libs/epic-api-types/kafka/src/index.ts"
             ],
             "epic-ui/shared/equipment": [
                 "libs/epic-ui/shared/equipment/main/src/index.ts"

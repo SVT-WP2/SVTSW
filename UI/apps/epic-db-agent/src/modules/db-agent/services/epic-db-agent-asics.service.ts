@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { EpicGetAllAsicsQueryFilter } from 'epic/entities'
 import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
+import { EpicGetAllAsicsQueryFilter } from 'epic-api-types/kafka'
 import { delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'

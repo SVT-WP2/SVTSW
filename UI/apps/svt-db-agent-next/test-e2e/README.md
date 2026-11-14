@@ -90,7 +90,7 @@ describe('Wafers (e2e)', () => {
 - Cover the success path **and** every reply status the handler can produce (`BadRequest` for
   validation, `NotFound` for a missing id), and assert the database for writes.
 - Add the new message types to the list in `dispatch/dispatch.e2e-spec.ts`.
-- Use the typed message classes of `epic/entities` where they fit; a plain `{ type, data }` object is
+- Use the typed message classes of `epic-api-types/kafka` where they fit; a plain `{ type, data }` object is
   fine where a class is awkward.
 - A spec that needs a feature flag boots its own application with it:
   `new TestSetup({ env: { SVT_DB_AGENT_FEATURE_CHIP_BLOCKS: 'true' } })` sets the variable before `init()`

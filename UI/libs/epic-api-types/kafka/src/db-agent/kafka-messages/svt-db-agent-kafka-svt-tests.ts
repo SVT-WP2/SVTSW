@@ -1,7 +1,7 @@
 import { EpicApiPager, EpicDateTimeString, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'epic-api-types'
 
-import { EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../../../svt-tests'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicSvtTestEntity, EpicSvtTestFinishUpdate, EpicSvtTestStartUpdate } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 

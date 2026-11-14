@@ -19,9 +19,8 @@ import {
     EpicWaferLocationUpdateRequestDto,
     EpicWaferUpdateRequestDto,
     processKafkaReplyError,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaWafers,
 } from 'epic/entities'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'epic-api-types/kafka'
 import { firstValueFrom } from 'rxjs'
 
 import { EpicWafersService } from '../services'

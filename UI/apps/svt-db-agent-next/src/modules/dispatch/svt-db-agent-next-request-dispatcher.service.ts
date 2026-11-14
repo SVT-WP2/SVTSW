@@ -1,7 +1,7 @@
 import { DriverException, MikroORM, RequestContext, UniqueConstraintViolationException } from '@mikro-orm/core'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { DiscoveryService } from '@nestjs/core'
-import { EpicKafkaReplyError, EpicKafkaReplyStatus } from 'epic/entities'
+import { EpicKafkaReplyError, EpicKafkaReplyStatus } from 'epic-api-types/kafka'
 
 import { SvtDbAgentNextHandlerDefinition, SvtDbAgentNextHandlers, SvtDbAgentNextMessageHandlers } from './svt-db-agent-next-handler.models'
 import { SvtDbAgentNextRequestError } from './svt-db-agent-next-request-error'

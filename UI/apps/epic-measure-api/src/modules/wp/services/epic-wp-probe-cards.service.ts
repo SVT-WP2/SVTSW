@@ -1,7 +1,8 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import { mapEpicKafkaMessageData, mapSvtDbAgentListReplyData, SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic/entities'
+import { mapEpicKafkaMessageData, mapSvtDbAgentListReplyData } from 'epic/entities'
 import { EpicWpProbeCard } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
 
 import { EpicWpSvc } from '../models'

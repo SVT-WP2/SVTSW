@@ -1,6 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import { EpicApiEnumsCollection, mapEpicKafkaMessageData, SvtDbAgentKafka, SvtDbAgentKafkaEnums } from 'epic/entities'
+import { mapEpicKafkaMessageData } from 'epic/entities'
+import { EpicApiEnumsCollection, SvtDbAgentKafka, SvtDbAgentKafkaEnums } from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
 
 import { EpicEnumsSvc } from '../models'

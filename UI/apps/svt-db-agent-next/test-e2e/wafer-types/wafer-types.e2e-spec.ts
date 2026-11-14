@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic/entities'
 import { EpicWaferType, EpicWaferTypeMap } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic-api-types/kafka'
 
 import { TestSetup } from '../utils'
 

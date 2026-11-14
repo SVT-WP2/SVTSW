@@ -48,6 +48,11 @@ export const EPIC_API_TYPES_RESTRICTED_IMPORTS = [
     },
 ]
 
+const RXJS_RX_RESTRICTED_PATH = {
+    name: 'rxjs/Rx',
+    message: 'Please import directly from \'rxjs\' instead',
+}
+
 export const ROOT_CONFIG = tseslint.config(
     {
         ignores: ['**/node_modules/', '**/assets/', 'dist/', '.angular/', '.nx/'],
@@ -83,10 +88,7 @@ export const ROOT_CONFIG = tseslint.config(
                 'error',
                 {
                     'paths': [
-                        {
-                            'name': 'rxjs/Rx',
-                            'message': 'Please import directly from \'rxjs\' instead'
-                        }
+                        RXJS_RX_RESTRICTED_PATH,
                     ]
                 }
             ],
@@ -252,11 +254,30 @@ export const ROOT_CONFIG = tseslint.config(
         }
     },
     {
-        // Here and not only in libs/epic-api-types/eslint.config.mjs: ESLint 9 reads the config of the directory it
+        // Here and not only in libs/epic-api-types/{main,kafka}/eslint.config.mjs: ESLint 9 reads the config of the directory it
         // runs from, and `npm run lint` runs from the workspace root, so a lib's own config never applies there.
         files: ['libs/epic-api-types/**/*.ts'],
         rules: {
             'no-restricted-imports': EPIC_API_TYPES_RESTRICTED_IMPORTS,
+        },
+    },
+    {
+        // The Kafka contract is for the Node apps only: the browser never talks to Kafka, so its message classes must
+        // not reach the SPA bundle. The `rxjs/Rx` path is repeated because this block replaces the options above.
+        files: ['apps/epic-measure-ui/**/*.ts', 'libs/epic-ui/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        RXJS_RX_RESTRICTED_PATH,
+                        {
+                            name: 'epic-api-types/kafka',
+                            message: 'epic-api-types/kafka is the Kafka contract of the Node apps — Angular code imports epic-api-types only.',
+                        },
+                    ],
+                },
+            ],
         },
     },
 )

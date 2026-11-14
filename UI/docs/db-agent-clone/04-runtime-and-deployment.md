@@ -36,7 +36,7 @@ settle:
 | Message size | broker 50 MiB; no compression | gzip (`CompressionTypes.GZIP`) on the producer; consumer `maxBytes` raised, as in the mock's `main.ts`. |
 | Fetch sizes | n/a | `maxBytesPerPartition` 10 MiB, `maxBytes` 50 MiB as in the mock. |
 
-The dispatch itself stays a `switch` on `message.type` over the typed unions in `libs/epic/entities`
+The dispatch itself stays a `switch` on `message.type` over the typed unions in `epic-api-types/kafka`
 (one controller) or one `@MessagePattern` per type if a second topic is ever introduced; both are
 compatible with the single request topic.
 

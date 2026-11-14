@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { EpicGetAllChipsQueryFilter } from 'epic/entities'
 import {
     EpicApiPager,
     EpicApiPageResponse,
@@ -8,6 +7,7 @@ import {
     EpicChipCreateRequest,
     EpicChipLocationHistoryRecord,
 } from 'epic-api-types'
+import { EpicGetAllChipsQueryFilter } from 'epic-api-types/kafka'
 import moment from 'moment/moment'
 import { concat, delay, map, Observable, of, zipAll } from 'rxjs'
 

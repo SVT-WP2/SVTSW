@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWpMachineCreateRequestDto, EpicWpMachineUpdateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'epic/entities'
+import { EpicWpMachineCreateRequestDto, EpicWpMachineUpdateRequestDto } from 'epic/entities'
 import { EpicWpMachine } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWpMachines } from 'epic-api-types/kafka'
 import {
     SvtDbEnumsService,
     SvtDbWafersRepository,

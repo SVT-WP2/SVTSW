@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { EpicChipCreateManyRequestDto, EpicChipCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic/entities'
+import { EpicChipCreateManyRequestDto, EpicChipCreateRequestDto } from 'epic/entities'
 import { EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
 import {
     SvtDbAsicsRepository,
     SvtDbChipCreateInput,

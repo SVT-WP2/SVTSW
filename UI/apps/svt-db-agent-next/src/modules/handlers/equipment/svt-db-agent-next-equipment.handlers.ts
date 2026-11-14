@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'epic/entities'
 import { EpicEquipment, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'epic-api-types/kafka'
 import {
     SvtDbEnumsService,
     SvtDbEquipmentEntity,

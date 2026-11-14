@@ -23,7 +23,7 @@ what that review confirms.
 - The Kafka request/reply protocol the agent speaks **is NestJS's microservice convention**
   (`kafka_correlationId`, `kafka_replyTopic`, `kafka_replyPartition`, `kafka_nest-is-disposed`).
   The C++ imitates it; the Python WPAgent client was written against it.
-- The typed contract for all 55 message types already exists in `libs/epic/entities`, and
+- The typed contract for all 55 message types already exists in `libs/epic-api-types/kafka`, and
   `apps/epic-db-agent` already dispatches every type over the NestJS Kafka transport, backed by
   in-memory arrays. The data layer is what is missing.
 - Deployment is already uniform: the compose stack pins each service by image tag in

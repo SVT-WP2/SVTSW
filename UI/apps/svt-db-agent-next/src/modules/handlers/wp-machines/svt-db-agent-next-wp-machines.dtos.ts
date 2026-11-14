@@ -1,5 +1,5 @@
 import { IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'epic/entities'
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from 'epic-api-types/kafka'
 
 
 /**

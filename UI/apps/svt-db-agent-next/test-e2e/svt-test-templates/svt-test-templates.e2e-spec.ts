@@ -1,10 +1,10 @@
+import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest } from 'epic-api-types'
 import {
     SvtDbAgentKafka,
     SvtDbAgentKafkaSvtTestTemplates,
     SvtDbAgentKafkaSvtTestTypeConfigs,
     SvtDbAgentKafkaSvtTestTypes,
-} from 'epic/entities'
-import { EpicSvtTestTemplate, EpicSvtTestTemplateCreateRequest } from 'epic-api-types'
+} from 'epic-api-types/kafka'
 
 import { SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 

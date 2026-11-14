@@ -1,5 +1,5 @@
-import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'epic/entities'
 import { EpicSvtTestType, EpicSvtTestTypeCreateRequest } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTypes } from 'epic-api-types/kafka'
 
 import { SVT_TEST_CONFIG_BODY, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
 

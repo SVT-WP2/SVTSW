@@ -1,5 +1,5 @@
-import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines, SvtDbAgentKafkaWpProjects } from 'epic/entities'
 import { EpicWpProject, EpicWpProjectCreateRequest } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines, SvtDbAgentKafkaWpProjects } from 'epic-api-types/kafka'
 
 import { TestSetup, WP_MACHINE_CREATE } from '../utils'
 

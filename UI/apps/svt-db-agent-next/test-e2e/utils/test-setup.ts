@@ -8,7 +8,7 @@ import { EntityManager, MikroORM as PostgreSqlMikroORM } from '@mikro-orm/postgr
 import { INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Test } from '@nestjs/testing'
-import { EpicKafkaMessage } from 'epic/entities'
+import { EpicKafkaMessage } from 'epic-api-types/kafka'
 import { buildSvtDbOrmOptions } from 'svt-db/orm'
 
 import { AppModule } from '../../src/app/app.module'

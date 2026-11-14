@@ -1,7 +1,7 @@
 {
-    "name": "epic-api-types",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/epic-api-types/src",
+    "name": "epic-api-types/kafka",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/epic-api-types/kafka/src",
     "projectType": "library",
     "tags": [
         "api-types"
@@ -10,7 +10,7 @@
         "test": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "vitest run --dir libs/epic-api-types",
+                "command": "vitest run --dir libs/epic-api-types/kafka",
                 "cwd": "{workspaceRoot}"
             }
         },

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { EpicWaferTypeCreateRequestDto, SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic/entities'
+import { EpicWaferTypeCreateRequestDto } from 'epic/entities'
 import { EpicWaferType, EpicWaferTypeMap } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaWaferTypes } from 'epic-api-types/kafka'
 import { SvtDbEnumsService, SvtDbWaferTypeEntity, SvtDbWaferTypesRepository, validateWaferMap } from 'svt-db/data'
 
 import {

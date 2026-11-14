@@ -1,6 +1,5 @@
 import { IsDateString } from 'class-validator'
-
-import { EpicSvtTestStartUpdate } from '../models'
+import { EpicSvtTestStartUpdate } from 'epic-api-types/kafka'
 
 
 /** `data.update` of `UpdateSvtTestStart` (`SvtTestStartUpdateDto` of the Kafka contract). */

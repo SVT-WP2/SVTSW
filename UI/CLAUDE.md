@@ -87,8 +87,8 @@ or `npm run test::affected` scope it.
 ## Cross-cutting rules
 
 - **Never import across libs by relative path.** Use the `tsconfig.base.json` aliases (`epic-ui/api`,
-  `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `@env/environment`, …).
-- `libs/epic-api-types` is the **HTTP contract**: the request bodies, query strings and responses of the
+  `epic-ui/shared/svt-tests`, `epic/entities`, `epic-api-types`, `epic-api-types/kafka`, `@env/environment`, …).
+- `epic-api-types` (`libs/epic-api-types/main`) is the **HTTP contract**: the request bodies, query strings and responses of the
   DB-agent-backed `/api/...` endpoints as plain TypeScript types, and the only lib compiled into both the Angular
   SPA and the NestJS apps. No decorators, no framework imports (the root `eslint.config.mjs` rejects them). The UI
   uses these types as its models; a BE DTO class `implements` them, so a member drifting between FE and BE is a
@@ -96,10 +96,14 @@ or `npm run test::affected` scope it.
   `ListQuery`), so those DTOs are also paired in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`.
   Request bodies end in `Request`, list filters in `ListQuery`. A type exists only for an operation the Kafka contract
   (`../Documentation/Kafka/svt.db-agent.kafka.yaml`) defines: no contract operation → no type, no endpoint, no UI flow.
-- `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`. Kafka message contracts
-  and the decorated DTO classes live there. The Kafka messages carry the `epic-api-types` types directly; a
-  separate wire type (`EpicSvtTestEntity`, the `*LocationUpdate` types) exists only where the Kafka shape
-  differs from the HTTP one.
+- `epic-api-types/kafka` (`libs/epic-api-types/kafka`) is the **Kafka contract** of the Node apps: the message
+  envelope, the `SvtDbAgentKafka<X>` namespaces and the wire types. Same rule as `epic-api-types` — no decorators,
+  no framework imports — but it is its own entry point, not exported by the `epic-api-types` barrel, and Angular code
+  must not import it (the root `eslint.config.mjs` rejects it). The messages carry the `epic-api-types` types
+  directly; a separate wire type (`EpicSvtTestEntity`, the `*LocationUpdate` types) exists only where the Kafka
+  shape differs from the HTTP one.
+- `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`: the decorated DTO classes and
+  the RxJS / NestJS helpers around the Kafka contract (`mapEpicKafkaMessageData()`, `processKafkaReplyError()`).
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
 - Angular UI code must never import from `libs/epic/*`. For the DB-agent-backed domains `epic-ui/api` holds the
   HTTP clients only — the types come from `epic-api-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent

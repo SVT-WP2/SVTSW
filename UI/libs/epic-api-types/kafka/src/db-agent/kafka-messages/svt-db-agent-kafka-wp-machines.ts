@@ -1,7 +1,7 @@
 import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 
-import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from '../../../wp'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicWpMachineUpdateInstalledProbeCard, EpicWpMachineUpdateLoadedWafer } from '../models'
 
 
 export namespace SvtDbAgentKafkaWpMachines {

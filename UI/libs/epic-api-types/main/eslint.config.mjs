@@ -1,4 +1,4 @@
-import baseConfig, { EPIC_API_TYPES_RESTRICTED_IMPORTS } from '../../eslint.config.mjs';
+import baseConfig, { EPIC_API_TYPES_RESTRICTED_IMPORTS } from '../../../eslint.config.mjs';
 
 export default [
     ...baseConfig,

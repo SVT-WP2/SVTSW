@@ -1,7 +1,7 @@
 import { EpicApiPager, EpicChipBlock } from 'epic-api-types'
 
-import { EpicGetAllChipBlocksQueryFilter } from '../../../chip-blocks'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicGetAllChipBlocksQueryFilter } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 

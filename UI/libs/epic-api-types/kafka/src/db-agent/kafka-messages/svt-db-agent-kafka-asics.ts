@@ -1,7 +1,7 @@
 import { EpicApiPager, EpicAsic, EpicAsicCreateRequest } from 'epic-api-types'
 
-import { EpicGetAllAsicsQueryFilter } from '../../../asics'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicGetAllAsicsQueryFilter } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 

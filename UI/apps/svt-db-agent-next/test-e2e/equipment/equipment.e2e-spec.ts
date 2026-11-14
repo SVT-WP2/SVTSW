@@ -1,5 +1,5 @@
-import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment, SvtDbAgentKafkaEquipmentTypes } from 'epic/entities'
 import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'epic-api-types'
+import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment, SvtDbAgentKafkaEquipmentTypes } from 'epic-api-types/kafka'
 
 import { TestSetup } from '../utils'
 

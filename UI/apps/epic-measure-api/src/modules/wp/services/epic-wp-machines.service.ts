@@ -1,15 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
+import { mapEpicKafkaMessageData, mapSvtDbAgentEntityReplyData, mapSvtDbAgentListReplyData } from 'epic/entities'
+import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
 import {
     EpicWpMachineUpdateInstalledProbeCard,
     EpicWpMachineUpdateLoadedWafer,
-    mapEpicKafkaMessageData,
-    mapSvtDbAgentEntityReplyData,
-    mapSvtDbAgentListReplyData,
     SvtDbAgentKafka,
     SvtDbAgentKafkaWpMachines,
-} from 'epic/entities'
-import { EpicWpMachine, EpicWpMachineCreateRequest, EpicWpMachineUpdateRequest } from 'epic-api-types'
+} from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
 
 import { EpicWpSvc } from '../models'

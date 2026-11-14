@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { EpicApiEnumsCollection } from 'epic/entities'
+import { EpicApiEnumsCollection } from 'epic-api-types/kafka'
 import { delay, map, Observable, of } from 'rxjs'
 
 

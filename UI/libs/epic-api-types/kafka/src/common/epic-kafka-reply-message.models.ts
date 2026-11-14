@@ -3,12 +3,17 @@ import { EpicKafkaReplyError } from './epic-kafka-reply-error.models'
 import { EpicKafkaReplyStatus } from './epic-kafka-reply-status.models'
 
 
+/**
+ * A reply as it travels on the wire. `data` and `error` may be `null` as well as absent: `EpicKafkaReplyMessageClass`
+ * always writes both keys, `null` for the one that does not apply.
+ */
 export type EpicKafkaReplyMessage<TData extends Record<string, any> = Record<string, any>, TType extends string = string> =
-    & EpicKafkaMessage<TData, TType>
+    & Omit<EpicKafkaMessage<TData, TType>, 'data'>
     &
     {
+        data?: TData | null
         status: EpicKafkaReplyStatus
-        error?: EpicKafkaReplyError
+        error?: EpicKafkaReplyError | null
     }
 
 

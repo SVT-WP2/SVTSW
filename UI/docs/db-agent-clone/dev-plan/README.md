@@ -41,8 +41,8 @@ produced it: [00-context.md](00-context.md) carries the context.
   `ProbeCardFamilyType`, `SvtTestSetupEquipList`, the `Module*` tables, history tables). Nothing
   of that exists in TypeScript yet, so nothing is duplicated.
 - **Wire types.** The HTTP and Kafka shapes that already exist are **reused, not re-declared**:
-  `libs/epic-api-types` (shared request/response types), `libs/epic/entities` (Kafka message
-  classes, envelope, DTOs). The data layer may alias them but never redefines them.
+  `libs/epic-api-types` (`main`: shared request/response types; `kafka`: Kafka message classes, envelope),
+  `libs/epic/entities` (DTOs). The data layer may alias them but never redefines them.
 - **Behaviour.** The agent reproduces the C++ agent as documented in `DbAgent/docs`, except where
   [../01-behaviour-decisions.md](../01-behaviour-decisions.md) says **fix**. Rows marked **ask**
   are implemented the way the C++ does it today unless the answer has arrived in
@@ -57,7 +57,7 @@ Change them **here**, then in the phase documents; the phases only apply them.
 | App name and path | `svt-db-agent-next`, `apps/svt-db-agent-next` | as requested |
 | Libraries | `libs/svt-db/orm` (alias `svt-db/orm`, project `svt-db-orm`): MikroORM module, config, naming strategy, CLI config. `libs/svt-db/data` (alias `svt-db/data`, project `svt-db-data`): entities, repositories, enum values, pure domain logic. | mirrors rentaly's `api/db` + domain libs; keeps ORM plumbing separate from the model |
 | Class and file prefix | classes `SvtDb…` (`SvtDbWaferEntity`, `SvtDbOrmModule`), files `svt-db-<thing>.<role>.ts`, app files `svt-db-agent-next-<thing>.<role>.ts` | a distinct bounded context from the `Epic…` UI/BFF code; the workspace lint does not enforce class prefixes outside Angular |
-| Lib dependencies | `svt-db/data` → `svt-db/orm`, `epic-api-types`. The app → both libs, `epic/entities`. Neither lib imports `epic/entities`, `epic-ui/*`, `@angular/*`. | the data layer must not know the Kafka contract |
+| Lib dependencies | `svt-db/data` → `svt-db/orm`, `epic-api-types`. The app → both libs, `epic-api-types/kafka`, `epic/entities`. Neither lib imports `epic-api-types/kafka`, `epic/entities`, `epic-ui/*`, `@angular/*`. | the data layer must not know the Kafka contract |
 | MikroORM version | **7.2.x** (ESM-first, Node ≥ 22.17, `@mikro-orm/nestjs` 7.1.x). Decorators are imported from `@mikro-orm/decorators/legacy` (the workspace uses `experimentalDecorators`); `OptionalProps`, `DeferMode`, `MikroORM` and the naming strategies from `@mikro-orm/core` / `@mikro-orm/postgresql`. The app and the `svt-db/*` libs compile with `module`/`moduleResolution: nodenext` and `skipLibCheck` (webpack still emits a CommonJS bundle). | decided 2026-11-08 before phase 3 multiplies the entities; v7's types are only resolvable with a modern `moduleResolution`, and the upgrade guide drops the legacy `node` setting |
 | Metadata provider | runtime: `ReflectMetadataProvider` from `@mikro-orm/decorators/legacy`, set explicitly (no longer the default) with `emitDecoratorMetadata`, explicit entity lists; every scalar property also declares `type` explicitly. CLI (migrations): `TsMorphMetadataProvider` with `entitiesTs` globs, TypeScript loaded through the `swc` loader (`@swc-node/register`, already a workspace dependency) selected by `preferTs: true`. | the app is bundled with webpack; globs and ts-morph do not work in a bundle; the CLI runs from source; Vitest (esbuild) emits no decorator metadata, so explicit types keep the specs working |
 | Naming strategy | `SvtDbNamingStrategy` (`svt-db/orm`): `EntityCaseNamingStrategy` plus PostgreSQL's default constraint names (`_pkey`, `_key`, `_fkey`); explicit `tableName` on every entity, `schema: 'main'` | the database uses quoted camelCase identifiers and was created with PostgreSQL's default constraint names; this keeps `schema:update --dump` empty without naming constraints by hand |

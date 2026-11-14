@@ -28,8 +28,8 @@ deployment.
 | `UI/` | this Nx workspace: Angular UI, NestJS BFF, the mock agent, shared libs |
 | `UI/apps/epic-db-agent/` | the **mock** DB agent: NestJS Kafka microservice backed by in-memory arrays; its controller dispatch is the model for the real one |
 | `UI/apps/epic-measure-api/` | the BFF; the Kafka **client** of the agent |
-| `UI/libs/epic-api-types/` | shared HTTP/wire types (plain TS, no framework imports); alias `epic-api-types` |
-| `UI/libs/epic/entities/` | Node-only: Kafka message classes and envelope types (`src/kafka/**`), decorated DTOs; alias `epic/entities` |
+| `UI/libs/epic-api-types/` | plain TS, no framework imports: `main/` shared HTTP/wire types, alias `epic-api-types`; `kafka/` Kafka message classes and envelope types, alias `epic-api-types/kafka` |
+| `UI/libs/epic/entities/` | Node-only: decorated DTOs, RxJS / NestJS helpers around the Kafka contract; alias `epic/entities` |
 | `UI/docs/db-agent-clone/` | migration notes: 01 behaviour decisions, 02 database migration, 03 parity testing, 04 runtime and deployment; this `dev-plan/` folder |
 | `WPAgent/services/WPDbKafkaClient.py` | a second client of the agent (6 message types); shows the Python side of the protocol |
 
@@ -41,7 +41,7 @@ deployment.
 | Envelope, headers, statuses, heartbeat | `DbAgent/docs/01-architecture.md` §4–§8 |
 | Any entity or migration | `DbAgent/docs/03-database-schema.md` (tables, enums, S1–S16 discrepancies, data snapshot) and `../02-database-migration.md` |
 | Wafer creation | `DbAgent/docs/06-wafer-map.md` (format, validation, generation algorithm, verified against all production data) |
-| Message shapes | `Documentation/Kafka/svt.db-agent.kafka.yaml`; the TypeScript mirror in `UI/libs/epic/entities/src/kafka/db-agent/kafka-messages/*.ts` |
+| Message shapes | `Documentation/Kafka/svt.db-agent.kafka.yaml`; the TypeScript mirror in `UI/libs/epic-api-types/kafka/src/db-agent/kafka-messages/*.ts` |
 | What the mock does today | `UI/apps/epic-db-agent/src/modules/db-agent/controllers/epic-db-agent-wafers.controller.ts` (one `switch` over all types) and `services/*.ts` |
 | Workspace rules | `UI/CLAUDE.md`, `UI/docs/ARCHITECTURE.md`, `UI/docs/RECIPES.md` |
 | Reference NestJS + MikroORM project | `G:\www\rentaly\rentaly` (outside this repo, may not be present on every machine): `libs/api/db/src/database.module.ts`, `mikro-orm.config.ts`, `apps/rentaly-api/src/migrations/`, `libs/api/auth/src/` as a domain lib |
@@ -73,7 +73,7 @@ From `UI/CLAUDE.md`, enforced by ESLint (`npm run lint`, fix with `npm run lint:
   packages run `npm i` without `--force` and make sure it succeeds.
 
 Project configuration patterns to copy: `UI/apps/epic-db-agent/project.json`, `webpack.config.js`,
-`tsconfig.*.json`, `eslint.config.mjs`, `.env.*` for an app; `UI/libs/epic-api-types/project.json`
+`tsconfig.*.json`, `eslint.config.mjs`, `.env.*` for an app; `UI/libs/epic-api-types/main/project.json`
 and `eslint.config.mjs` for a lib with lint and test targets.
 
 ## 5. Build, run and test facts
@@ -159,9 +159,9 @@ is the natural fit; the mock already does this.
 - Replies gzip-compressed (`CompressionTypes.GZIP`); consumer `maxBytesPerPartition` 10 MiB,
   `maxBytes` 50 MiB (copy from the mock's `main.ts`).
 
-Message classes and unions for all 55 types: `UI/libs/epic/entities/src/kafka/db-agent/kafka-messages/`
+Message classes and unions for all 55 types: `UI/libs/epic-api-types/kafka/src/db-agent/kafka-messages/`
 (`SvtDbAgentKafkaWafers.MessageType`, `GetAllWafersMessage`, `GetAllWafersReplyMessage`, …);
-envelope types in `UI/libs/epic/entities/src/kafka/common/` (`EpicKafkaReplyStatus`,
+envelope types in `UI/libs/epic-api-types/kafka/src/common/` (`EpicKafkaReplyStatus`,
 `EpicKafkaReplyMessageClass`).
 
 ## 9. Database facts for the data layer

@@ -1,4 +1,4 @@
-import { EpicKafkaReplyStatus } from 'epic/entities'
+import { EpicKafkaReplyStatus } from 'epic-api-types/kafka'
 
 
 /**

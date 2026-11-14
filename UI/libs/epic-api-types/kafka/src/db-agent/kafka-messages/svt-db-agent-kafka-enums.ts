@@ -1,5 +1,5 @@
-import { EpicApiEnumsCollection } from '../../../enums'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicApiEnumsCollection } from '../models'
 
 
 export namespace SvtDbAgentKafkaEnums {

@@ -1,4 +1,4 @@
-import { SvtDbAgentKafkaEnums } from 'epic/entities'
+import { SvtDbAgentKafkaEnums } from 'epic-api-types/kafka'
 import { SVT_DB_ENUM_VALUES } from 'svt-db/data'
 
 import { TestSetup } from '../utils'

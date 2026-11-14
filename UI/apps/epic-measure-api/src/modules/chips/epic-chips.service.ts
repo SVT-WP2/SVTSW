@@ -3,15 +3,12 @@ import { ClientKafka } from '@nestjs/microservices'
 import {
     EpicChipCreateManyRequestDto,
     EpicChipCreateRequestDto,
-    EpicChipLocationUpdate,
-    EpicGetAllChipsQueryFilter,
     mapEpicKafkaMessageData,
     mapSvtDbAgentEntityReplyData,
     mapSvtDbAgentListReplyData,
-    SvtDbAgentKafka,
-    SvtDbAgentKafkaChips,
 } from 'epic/entities'
 import { EpicApiPager, EpicApiPageResponse, EpicChip, EpicChipLocationHistoryRecord } from 'epic-api-types'
+import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'epic-api-types/kafka'
 import { Observable } from 'rxjs'
 
 import { EpicChipsSvc } from './models'

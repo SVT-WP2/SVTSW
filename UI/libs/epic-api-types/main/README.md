@@ -17,9 +17,10 @@ stay dependency-free:
 |---|---|---|
 | Angular (`epic-ui/*`, `apps/epic-measure-ui`) | imports the types directly — there is no separate view model | `fetchOne(id): Observable<EpicAsic>` |
 | NestJS (`epic/entities`) | the decorated DTO class `implements` the shared type, so a drifting field is a compile error; a type with optional members is also paired in `contract/epic-api-contract-checks.models.ts` | `class EpicAsicDto implements EpicAsic` + `EpicSameKeys<EpicAsicDto, EpicAsic>` |
-| Kafka contract (`epic/entities`) | the messages carry the shared type directly while the wire shape equals the HTTP shape; a separate wire type exists only where the two differ | `PageReplyMessageData<EpicAsic>`, `type EpicSvtTestEntity = Omit<EpicSvtTest, 'status'>` |
+| Kafka contract (`epic-api-types/kafka`) | the messages carry the shared type directly while the wire shape equals the HTTP shape; a separate wire type exists only where the two differ | `PageReplyMessageData<EpicAsic>`, `type EpicSvtTestEntity = Omit<EpicSvtTest, 'status'>` |
 
-The alias is `epic-api-types` (see `tsconfig.base.json`).
+The alias is `epic-api-types` (see `tsconfig.base.json`). The Kafka contract is the sibling entry point
+`epic-api-types/kafka` — see [`../kafka/README.md`](../kafka/README.md).
 
 ## Layout
 
@@ -39,8 +40,8 @@ barrel.
 
 1. Create `src/<domain>/{requests,responses}` with the types + barrels and export the domain from `src/index.ts`.
 2. BE: make the DTO classes in `libs/epic/entities/src/<domain>/dtos` `implements` the shared types and use the
-   shared types directly in the Kafka messages — `.../models` keeps a type only for a wire shape that differs from
-   the HTTP one. If a type has optional members (all `*ListQuery`
+   shared types directly in the Kafka messages (`../kafka/src/db-agent/kafka-messages`) — `../kafka/src/db-agent/models`
+   holds a type only for a wire shape that differs from the HTTP one. If a type has optional members (all `*ListQuery`
    types), also pair its DTO in `libs/epic/entities/src/contract/epic-api-contract-checks.models.ts`: such a type
    is satisfied by a class sharing a single member, so without the pair a renamed or added filter compiles and is
    then dropped by the `ValidationPipe` (`whitelist: true`).

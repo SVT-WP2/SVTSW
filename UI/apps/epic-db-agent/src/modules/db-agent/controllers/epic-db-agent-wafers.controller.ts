@@ -8,9 +8,9 @@ import {
     SvtDbAgentKafkaEnums,
     SvtDbAgentKafkaEquipment,
     SvtDbAgentKafkaEquipmentTypes,
+    SvtDbAgentKafkaSvtTests,
     SvtDbAgentKafkaSvtTestSetupConfigs,
     SvtDbAgentKafkaSvtTestSetups,
-    SvtDbAgentKafkaSvtTests,
     SvtDbAgentKafkaSvtTestTemplates,
     SvtDbAgentKafkaSvtTestTypeConfigs,
     SvtDbAgentKafkaSvtTestTypes,
@@ -19,7 +19,7 @@ import {
     SvtDbAgentKafkaWpMachines,
     SvtDbAgentKafkaWpProbeCards,
     SvtDbAgentKafkaWpProjects,
-} from 'epic/entities'
+} from 'epic-api-types/kafka'
 import { map } from 'rxjs'
 
 import {

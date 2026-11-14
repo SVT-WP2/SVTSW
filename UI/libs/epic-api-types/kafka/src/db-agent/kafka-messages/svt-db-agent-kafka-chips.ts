@@ -1,7 +1,7 @@
 import { EpicApiPager, EpicChip, EpicChipCreateManyRequest, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'epic-api-types'
 
-import { EpicGetAllChipsQueryFilter } from '../../../chips'
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicGetAllChipsQueryFilter } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 
