@@ -25,7 +25,7 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: svt-wp2/svt-ui
-  NODE_VERSION: '22.13'
+  NODE_VERSION: '22.17'
 
 defaults:
   run:
