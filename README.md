@@ -15,7 +15,7 @@ The Folder distribution is:
 - SVTSupervisor
 
 Responsible for each folder:
-- UI and DbAgentNext ok-cern
+- UI, DbAgentNext and Shared ok-cern
 - DB and DBAgent ycorrales
 - WPAgent leyreflores, angie-kistina
 - Documentation leyreflores

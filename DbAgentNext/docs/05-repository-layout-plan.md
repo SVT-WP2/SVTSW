@@ -225,7 +225,7 @@ the list above:
 there as "Superseded". The path updates of `Environment/`, `DbAgent/` and the Kafka YAML went into the step 7
 commit, so that no link pointed into a folder that was gone. Also updated: `docs/README.md` (status, index, the
 answer to "where the code lives"), the note of `dev-plan/README.md` (old paths, aliases and `nx` targets, and what
-to read them as), and the folder list of the root `README.md`. New in step 7: `DbAgentNext/README.md` (commands,
+to read them as), and the folder list of the root `README.md` (owner of `DbAgentNext` and `Shared`: the owner of `UI`). New in step 7: `DbAgentNext/README.md` (commands,
 layout, Docker, CI/CD, from the former section of `UI/README.md`) and `DbAgentNext/CLAUDE.md`.
 
 ## 6. Open decisions
@@ -238,8 +238,6 @@ layout, Docker, CI/CD, from the former section of `UI/README.md`) and `DbAgentNe
   separately. A change of an `Epic*` type for the UI also changes the Kafka contract. A new required field breaks
   the agent build, which is a good signal; a new optional field breaks nothing. Decide if a rule is needed
   (additive changes only, or a coordinated release).
-- **Owner of `Shared/`.** The root `README.md` lists `DbAgentNext` and `Shared`; `DbAgentNext` has the owner of `UI`
-  (decided 2026-11-14), `Shared` has no one in the "Responsible for each folder" list yet.
 - **Where the Git hook lives.** `UI/.husky/pre-commit` is the hook of the whole repository (`core.hooksPath`), set
   up by `npm install` in `UI/`, and now also runs `DbAgentNext`'s lint-staged. A clone that never installs `UI/`
   has no hook at all.
