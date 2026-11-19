@@ -4,7 +4,7 @@ Tests for utilities/WPStateMachineDiagram.py (Mermaid generator).
 Run:  python3 -m pytest tests/unit/TestStateMachineDiagram.py -q
 """
 
-from stateMachine.WpAgentStateMachine import WPAgentState, WPAgentStateMachine
+from stateMachine.WpAgentStateMachine import RECONNECT_COMMAND, WPAgentState, WPAgentStateMachine
 from utilities.WPCommandConstants import EXPERT_COMMANDS, SEQUENCE_COMMANDS, USER_COMMANDS
 from utilities.WPStateMachineDiagram import (
     ACTION_TRANSITIONS, LEVEL_COLORS, build_mermaid, command_level, main,
@@ -22,8 +22,8 @@ def test_every_non_error_transition_is_drawn():
     out = build_mermaid(sm, style="plain")
     for src, table in sm.transitions.items():
         for command, dst in table.items():
-            if command == "Error":
-                continue
+            if command in ("Error", RECONNECT_COMMAND):
+                continue  # Error: one note; ReconnectProber: one "Any state" edge
             lines = [l for l in out.splitlines() if l.startswith(f"    {src.name} --> {dst.name}:")]
             assert lines, f"missing edge {src.name} -> {dst.name}"
             if command in SEQUENCE_COMMANDS:
