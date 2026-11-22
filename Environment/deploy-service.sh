@@ -7,11 +7,13 @@
 #
 # Usage:
 #   bash Environment/deploy-service.sh <dev|prod> <compose-service> <image-tag>
+#   bash Environment/deploy-service.sh <dev|prod> --apply-compose
 #
 # Examples:
 #   bash Environment/deploy-service.sh dev  svt-ui            1a2b3c4d
 #   bash Environment/deploy-service.sh dev  svt-db-agent-next 1a2b3c4d
 #   bash Environment/deploy-service.sh prod svt-db-agent-next 1.4.0
+#   bash Environment/deploy-service.sh dev  --apply-compose
 #
 # What it does (idempotent):
 #   1. Syncs the environment's compose files from this checkout to
@@ -22,7 +24,13 @@
 #      versions.env from versions.env.example on the first run.
 #   3. Pins <SERVICE>_VERSION=<image-tag> in versions.env.
 #   4. Pulls the image and recreates ONLY that service:
-#      docker compose up -d --no-deps <service>.
+#      docker compose up -d --no-deps --wait <service>.
+#      The deploy fails when the container stops, or its HEALTHCHECK fails,
+#      within WAIT_TIMEOUT seconds.
+#
+# --apply-compose does steps 1 and 2, keeps every pinned version and runs
+# `docker compose up -d --remove-orphans --wait` for the whole stack: compose
+# recreates only the services whose config changed (see Environment/README.md).
 #
 # The rest of the stack is untouched. On reboot the svt.svtsw--<env> systemd
 # unit re-runs the same compose project with the same pinned versions.
@@ -46,13 +54,20 @@ set -euo pipefail
 
 usage() {
   echo "usage: deploy-service.sh <dev|prod> <compose-service> <image-tag>" >&2
+  echo "       deploy-service.sh <dev|prod> --apply-compose" >&2
   exit 2
 }
 
 ENV_NAME="${1:-}"
 SERVICE="${2:-}"
 IMAGE_TAG="${3:-}"
-[ -n "$ENV_NAME" ] && [ -n "$SERVICE" ] && [ -n "$IMAGE_TAG" ] || usage
+APPLY_COMPOSE=false
+if [ "$SERVICE" = "--apply-compose" ]; then
+  APPLY_COMPOSE=true
+  [ -n "$ENV_NAME" ] && [ -z "$IMAGE_TAG" ] || usage
+else
+  [ -n "$ENV_NAME" ] && [ -n "$SERVICE" ] && [ -n "$IMAGE_TAG" ] || usage
+fi
 
 case "$ENV_NAME" in
   dev)  ENV_SRC_SUBDIR="Dev" ;;
@@ -68,6 +83,8 @@ ENV_FILE="${TARGET_DIR}/.env"
 VERSIONS_FILE="${TARGET_DIR}/versions.env"
 # Must match `name:` in the compose file and -p in the systemd unit.
 PROJECT="svt-svtsw--${ENV_NAME}"
+# Seconds for `up --wait`. The slowest HEALTHCHECK (UI) declares a failure after about 130 s.
+WAIT_TIMEOUT=180
 
 # CI deploys (REGISTRY_TOKEN set) run docker against an isolated DOCKER_CONFIG
 # so the job-scoped login never touches root's persistent read:packages login
@@ -81,6 +98,14 @@ fi
 COMPOSE=("${DOCKER[@]}" docker compose -p "$PROJECT"
          --env-file "$ENV_FILE" --env-file "$VERSIONS_FILE"
          -f "$COMPOSE_FILE")
+
+# Show the state and the last logs of the given services (all when none), then stop.
+fail_unhealthy() {
+  "${COMPOSE[@]}" ps -a "$@" || true
+  "${COMPOSE[@]}" logs --no-color --tail 100 "$@" || true
+  echo "ERROR: ${*:-the stack} is not running or not healthy after ${WAIT_TIMEOUT}s on ${ENV_NAME}." >&2
+  exit 1
+}
 
 # --- serialize deploys per environment ----------------------------------------
 # Two workflows (ui + db-agent) may deploy at the same time; both edit
@@ -122,15 +147,17 @@ if ! sudo test -f "$VERSIONS_FILE"; then
   sudo cp "${SRC_DIR}/versions.env.example" "$VERSIONS_FILE"
 fi
 
-# --- 3. pin the new version ----------------------------------------------------
-# svt-ui -> SVT_UI_VERSION, svt-db-agent-next -> SVT_DB_AGENT_NEXT_VERSION, ...
-VERSION_VAR="$(printf '%s' "$SERVICE" | tr 'a-z-' 'A-Z_')_VERSION"
-if sudo grep -q "^${VERSION_VAR}=" "$VERSIONS_FILE"; then
-  sudo sed -i "s|^${VERSION_VAR}=.*|${VERSION_VAR}=${IMAGE_TAG}|" "$VERSIONS_FILE"
-else
-  printf '%s=%s\n' "$VERSION_VAR" "$IMAGE_TAG" | sudo tee -a "$VERSIONS_FILE" >/dev/null
+# --- 3. pin the new version (not for --apply-compose) --------------------------
+if [ "$APPLY_COMPOSE" = false ]; then
+  # svt-ui -> SVT_UI_VERSION, svt-db-agent-next -> SVT_DB_AGENT_NEXT_VERSION, ...
+  VERSION_VAR="$(printf '%s' "$SERVICE" | tr 'a-z-' 'A-Z_')_VERSION"
+  if sudo grep -q "^${VERSION_VAR}=" "$VERSIONS_FILE"; then
+    sudo sed -i "s|^${VERSION_VAR}=.*|${VERSION_VAR}=${IMAGE_TAG}|" "$VERSIONS_FILE"
+  else
+    printf '%s=%s\n' "$VERSION_VAR" "$IMAGE_TAG" | sudo tee -a "$VERSIONS_FILE" >/dev/null
+  fi
+  echo "Pinned ${VERSION_VAR}=${IMAGE_TAG} in ${VERSIONS_FILE}"
 fi
-echo "Pinned ${VERSION_VAR}=${IMAGE_TAG} in ${VERSIONS_FILE}"
 
 # --- 4. registry login (CI only; isolated config, see header) ------------------
 if [ -n "${REGISTRY_TOKEN:-}" ]; then
@@ -138,6 +165,17 @@ if [ -n "${REGISTRY_TOKEN:-}" ]; then
   printf '%s' "$REGISTRY_TOKEN" | "${DOCKER[@]}" docker login "${REGISTRY:-ghcr.io}" \
     -u "${REGISTRY_USER:?REGISTRY_USER must be set when REGISTRY_TOKEN is}" \
     --password-stdin
+fi
+
+# --- --apply-compose: whole stack, pinned versions ------------------------------
+# Compose recreates only the services whose config or version differs from the
+# running container. The other services keep running. --remove-orphans, as in
+# the systemd unit, removes the containers of services no longer in the file.
+if [ "$APPLY_COMPOSE" = true ]; then
+  "${COMPOSE[@]}" up -d --remove-orphans --wait --wait-timeout "$WAIT_TIMEOUT" || fail_unhealthy
+  "${COMPOSE[@]}" ps
+  echo "Applied docker-compose-svtsw-${ENV_NAME}.yml to ${ENV_NAME}."
+  exit 0
 fi
 
 # --- 5. one-time migration: replace pre-compose containers ---------------------
@@ -156,6 +194,8 @@ fi
 
 # --- 6. deploy just this service -----------------------------------------------
 "${COMPOSE[@]}" pull "$SERVICE"
-"${COMPOSE[@]}" up -d --no-deps "$SERVICE"
+# --wait: fail the deploy when the container stops or its HEALTHCHECK fails.
+"${COMPOSE[@]}" up -d --no-deps --wait --wait-timeout "$WAIT_TIMEOUT" "$SERVICE" \
+  || fail_unhealthy "$SERVICE"
 "${COMPOSE[@]}" ps "$SERVICE"
 echo "Deployed ${SERVICE}=${IMAGE_TAG} to ${ENV_NAME}."

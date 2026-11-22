@@ -46,8 +46,10 @@ Ownership is strict:
    [`deploy-service.sh`](deploy-service.sh) `<env> <service> <tag>`, which:
    - re-syncs the two compose files from the checkout to `/opt/docker/svtsw/<env>/`;
    - pins `<SERVICE>_VERSION=<tag>` in `versions.env`;
-   - `docker compose pull <service>` + `up -d --no-deps <service>` — **only that
-     one container is recreated**, the rest of the stack keeps running.
+   - `docker compose pull <service>` + `up -d --no-deps --wait <service>` — **only that
+     one container is recreated**, the rest of the stack keeps running. The job
+     fails when the container stops, or its `HEALTHCHECK` fails, within 180 s; it
+     then prints the container state and its last 100 log lines.
 3. systemd is only involved at boot/stop: the units run `compose up -d` with
    `.env` + `versions.env`, so after a reboot the host comes back with exactly
    the versions that were last deployed.
@@ -60,6 +62,27 @@ server itself:
 ```bash
 bash Environment/deploy-service.sh dev svt-ui 1a2b3c4d
 ```
+
+## Compose changes without a new image
+
+A deploy copies both compose files to the server but recreates only its own
+service. A change to the block of another service (for example a new
+environment variable for `svt-db-agent-next`) waits for the next deploy of
+that service.
+
+To apply it now, run `Environment :: Apply` from the Actions UI on master and
+pick the environment, or run on the server:
+
+```bash
+bash Environment/deploy-service.sh dev --apply-compose
+```
+
+Compose recreates only the services whose config or pinned version differs
+from the running container; every service keeps its version in `versions.env`.
+It also starts a service that an admin stopped by hand, and it removes the
+container of a service that is no longer in the file (`--remove-orphans`, as
+the systemd unit does at boot). The Kafka stack is not
+touched: apply Kafka changes with `sudo systemctl restart svt.kafka--<env>.service`.
 
 ## The two DB agent services
 

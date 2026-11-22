@@ -79,6 +79,11 @@ jobs:
             echo "ERROR: run this from a branch, not a ${GITHUB_REF_TYPE} (${GITHUB_REF_NAME})." >&2
             exit 1
           fi
+          # The tag build runs no tests: release from master, or from a release branch for a patch.
+          case "${GITHUB_REF_NAME}" in
+            master|release/svt-ui/*) ;;
+            *) echo "ERROR: run this from master or a release/svt-ui/* branch, not ${GITHUB_REF_NAME}." >&2; exit 1 ;;
+          esac
           # Run the prepared npm script but suppress npm's own commit/tag
           # (--no-git-tag-version); the steps below make the commit and tag with
           # the svt-ui@ / svt-ui- formats instead of npm's defaults.

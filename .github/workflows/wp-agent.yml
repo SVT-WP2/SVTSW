@@ -24,7 +24,8 @@ on:
 
 concurrency:
   group: wp-agent-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel old PR runs only. On master a new run waits, so it never stops a deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io
@@ -166,7 +167,9 @@ jobs:
   # not in GitHub.
   deploy-dev:
     # Same guard as docker-registry-create: don't deploy version-bump commits.
+    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
     if: >-
+      false &&
       github.event_name == 'push' && github.ref == 'refs/heads/master'
       && !startsWith(github.event.head_commit.message, 'svt-wp-agent@')
     needs: docker-registry-create
@@ -196,7 +199,8 @@ jobs:
   # release-versioned image (svt-wp-agent:<version>), replacing whatever the
   # master-push deploy-dev last pinned for the service.
   deploy-dev--release:
-    if: startsWith(github.ref, 'refs/tags/svt-wp-agent-')
+    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
+    if: false && startsWith(github.ref, 'refs/tags/svt-wp-agent-')
     needs: docker-registry-create--release
     runs-on: self-hosted
     environment: dev
