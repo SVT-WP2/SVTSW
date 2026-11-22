@@ -48,7 +48,7 @@ COMMAND_ROUTER = {
     "UserLogOut": user_actions.UserLogOut,
 
     # General
-    "Initialize": project_actions.svt_initialise_wp,
+    "Initialize": project_actions.initialize_machine,
     "ShowStatus": project_actions.show_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help,
@@ -297,7 +297,7 @@ def execute_command(message_type, data=None):
                 _try_local_mode()  # Try to recover by going to local mode
 
     except ProberNotConnectedError as e:
-        # The machine is off: a normal case, not an agent error (no Error state).
+        # The machine is off or not initialized: a normal case, not an agent error (no Error state).
         result = ResponseBuilder.error(f"{message_type}Reply", str(e), 503)
         severity = Severity.WARNING
 

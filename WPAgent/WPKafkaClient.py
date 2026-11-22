@@ -15,7 +15,7 @@ from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from services.WPProberConnectionWatch import (
-    ProberConnectionWatch, add_connection_listener, remove_connection_listener,
+    ProberConnectionWatch, add_connection_listener, is_prober_initialized, remove_connection_listener,
 )
 from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
@@ -315,6 +315,7 @@ class KafkaClient:
                 "waferAgentName": self.agent_name,
                 "wpMachineId": g.wpMachineId,
                 "connected": connected,
+                "initialized": is_prober_initialized(),
                 "address": g.address,
                 "timestamp": time.time(),
             },
@@ -326,11 +327,62 @@ class KafkaClient:
         )
         self.producer.poll(0)
 
-    def listen(self, poll_timeout=0.1, initialize_prober=None):
+    def skip_request_backlog(self, consumer):
+        """
+        Move the offsets of this listener's group to the end of the request topic, before
+        the consumer subscribes.
+
+        Kafka resumes a group from its committed offset ("auto.offset.reset: latest" only
+        covers a group without one), so the requests sent while the agent was down would
+        run when it starts: their senders gave up long ago, and a command among them
+        would move the machine now.
+
+        The broker accepts the commit only while the group has no member. With another
+        listener of this machine in the group the offsets stay, and this listener joins the
+        group as it is. Returns the number of skipped requests, or None when the offsets
+        could not be read or moved.
+        """
+        from confluent_kafka import TopicPartition
+
+        group = self.listener_group_id()
+        try:
+            metadata = consumer.list_topics(self.request_topic, timeout=5.0)
+            partitions = [
+                TopicPartition(self.request_topic, partition)
+                for partition in metadata.topics[self.request_topic].partitions
+            ]
+            skipped, ends = 0, []
+            for committed in consumer.committed(partitions, timeout=5.0):
+                _low, high = consumer.get_watermark_offsets(committed, timeout=5.0, cached=False)
+                if committed.offset >= 0:  # negative: no committed offset, "latest" applies
+                    skipped += max(0, high - committed.offset)
+                ends.append(TopicPartition(committed.topic, committed.partition, high))
+            if skipped:
+                consumer.commit(offsets=ends, asynchronous=False)
+        except Exception as e:
+            logger.log_command(
+                messageOut=f"Could not skip the request backlog of group '{group}': {e}",
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result={"error": str(e)},
+            )
+            return None
+
+        if skipped:
+            logger.log_command(
+                messageOut=f"Skipped {skipped} request(s) sent while no listener of group '{group}' was running",
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+        return skipped
+
+    def listen(self, poll_timeout=0.1):
         """Listen for and process Kafka messages (LISTENER MODE).
 
-        initialize_prober() runs the first, full prober initialization; the connection
-        watch calls it as soon as the WP machine is reachable.
+        The listener starts after the last request of the topic (skip_request_backlog) and
+        with the connection watch, which only reports whether the WP machine is on: the
+        agent connects to the machine when it gets the Initialize command.
         """
 
         consumer_config = {
@@ -352,6 +404,7 @@ class KafkaClient:
         self.cache.initialize_cache()
 
         self.request_consumer = KafkaConsumer(consumer_config)
+        self.skip_request_backlog(self.request_consumer)
         self.request_consumer.subscribe([self.request_topic])
 
         # Initialize heartbeat monitoring with correct broker only when listener started
@@ -374,12 +427,10 @@ class KafkaClient:
 
         heartbeat_monitor.start()
 
-        # The global watcher of the WP machine connection: connects when the machine is on,
-        # and every status change is published as an event.
+        # The global watcher of the WP machine: it reports whether the machine is on and
+        # restores a lost connection; every status change is published as an event.
         add_connection_listener(self.publish_connection_status)
-        connection_watch = ProberConnectionWatch(
-            is_busy=lambda: self._active_commands > 0, initialize=initialize_prober
-        )
+        connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
         connection_watch.start()
 
         try:

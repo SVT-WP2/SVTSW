@@ -74,7 +74,8 @@ request with a reply.
 | `svt.db-agent.heartbeat` | the DB agent, every 2 s | the health check of the C++ image | liveness |
 | `svt.wp-agent.request` | ITS3TestAgent, the WPAgent command-line sender | WPAgent | commands for the prober (open a project, move the chuck, load a wafer, …) |
 | `svt.wp-agent.request.reply` | WPAgent | ITS3TestAgent, the sender | replies |
-| `svt.wp-agent.heartbeat` | WPAgent | ITS3TestAgent, WPAgent's own health check | liveness. Not in the WPAgent contract |
+| `svt.wp-agent.heartbeat` | WPAgent, every 2 s | ITS3TestAgent, WPAgent's own health check | liveness, and the status of the machine (`proberConnected`, `proberInitialized`) |
+| `svt.wp-agent.connection-status` | WPAgent | none yet | an event on every change of the status of the machine (on or off, initialized) |
 | `svt.wp-agent.cache` | WPAgent, with each heartbeat | none | a snapshot of the state of the agent. Not in a contract |
 | `svt.test-agent.request` | the TestAgent tools | TestAgent | commands to run tests |
 | `svt.test-agent.request.reply` | TestAgent | none outside TestAgent | replies and progress |

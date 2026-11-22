@@ -11,8 +11,9 @@ There is a single heartbeat topic (svt.wp-agent.heartbeat). The cache snapshot
 that used to be written from a separate cache-heartbeat monitor is now written
 from the on_heartbeat callback of the listener monitor.
 
-All agents share the topic: a heartbeat carries waferAgentName, and a health check with
-an agent name counts only the heartbeats of that machine. Each heartbeat that Kafka
+All agents share the topic: a heartbeat carries waferAgentName (and the machine status:
+proberConnected, proberInitialized), and a health check with an agent name counts only
+the heartbeats of that machine. Each heartbeat that Kafka
 confirms also goes to LOCAL_HEALTH_FILE, which the Docker HEALTHCHECK reads.
 """
 
@@ -121,6 +122,7 @@ class HeartbeatBase:
         if not self.producer:
             return
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        from services.WPProberConnectionWatch import is_prober_initialized
 
         g = SvtWPAagentGlobalParameters.getInstance()
         heartbeat = {
@@ -129,6 +131,7 @@ class HeartbeatBase:
             "waferAgentName": self.agent_name,
             "wpMachineId": g.wpMachineId,
             "proberConnected": g.prober_connected,
+            "proberInitialized": is_prober_initialized(),
             "appVersion": os.environ.get("APP_VERSION"),
         }
 

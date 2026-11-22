@@ -1,6 +1,7 @@
 """
-One WPAgent per WP machine: the machine name, the routing of requests, the start config
-from the env vars, the required DB lookup and the per-machine heartbeat.
+One WPAgent per WP machine: the machine name, the routing of requests, the skip of the
+request backlog at start, the start config from the env vars, the required DB lookup and
+the per-machine heartbeat.
 
 Run:  python3 -m pytest tests/unit/TestOneAgentPerMachine.py -q -o python_files="Test*.py"
 """
@@ -20,7 +21,7 @@ from WPAgent import ENV_KAFKA_BROKER, ENV_MACHINE_NAME, WaferProberAgent
 from WPKafkaClient import CONNECTION_STATUS_EVENT, CONNECTION_STATUS_TOPIC, KafkaClient
 
 WPMIT = {
-    "id": 3, "name": "WPMIT", "hostName": "cern.ch", "connectionPort": 35555,
+    "id": 3, "name": "WPMIT", "hostName": "wpmit01.cern.ch", "connectionPort": 35555,
     "software": "Sentio", "generalLocation": "CERN",
 }
 
@@ -100,6 +101,21 @@ def test_request_for_this_machine_runs_and_replies(monkeypatch, target):
     assert client.producer.produce.call_args[0][0] == "svt.wp-agent.request.reply"
 
 
+def test_every_command_takes_the_routing_keys():
+    """Every request carries waferAgentName (and user): a handler without them fails on each call."""
+    import inspect
+
+    from WPCmdMap import COMMAND_ROUTER
+
+    def takes(handler, key):
+        params = inspect.signature(handler).parameters
+        return key in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values())
+
+    missing = [name for name, handler in COMMAND_ROUTER.items()
+               if not (takes(handler, "waferAgentName") and takes(handler, "user"))]
+    assert missing == []
+
+
 def test_connection_status_event(globals_instance):
     globals_instance.wpMachineId = 3
     globals_instance.set_address("wpmit01.cern.ch:35555")
@@ -111,9 +127,72 @@ def test_connection_status_event(globals_instance):
     assert kwargs["key"] == "WPMIT"
     event = json.loads(kwargs["value"])
     assert event["type"] == CONNECTION_STATUS_EVENT
-    assert {k: event["data"][k] for k in ("waferAgentName", "wpMachineId", "connected", "address")} == {
-        "waferAgentName": "WPMIT", "wpMachineId": 3, "connected": False, "address": "wpmit01.cern.ch:35555",
+    assert {k: event["data"][k] for k in ("waferAgentName", "wpMachineId", "connected", "initialized", "address")} == {
+        "waferAgentName": "WPMIT", "wpMachineId": 3, "connected": False, "initialized": False,
+        "address": "wpmit01.cern.ch:35555",
     }
+
+
+# --- request backlog --------------------------------------------------------------------------
+
+REQUEST_TOPIC = "svt.wp-agent.request"
+
+
+class _TopicPartition:
+    def __init__(self, topic, partition, offset=-1001):
+        self.topic, self.partition, self.offset = topic, partition, offset
+
+
+@pytest.fixture
+def request_consumer(monkeypatch):
+    """A consumer of a group that committed `committed` on a topic that ends at `high`."""
+    import confluent_kafka
+
+    monkeypatch.setattr(confluent_kafka, "TopicPartition", _TopicPartition)
+
+    def build(committed, high):
+        consumer = MagicMock()
+        consumer.list_topics.return_value.topics = {REQUEST_TOPIC: MagicMock(partitions={0: None})}
+        consumer.committed.return_value = [_TopicPartition(REQUEST_TOPIC, 0, committed)]
+        consumer.get_watermark_offsets.return_value = (0, high)
+        return consumer
+
+    return build
+
+
+def test_requests_sent_while_the_agent_was_down_are_skipped(request_consumer):
+    consumer = request_consumer(committed=5, high=8)
+    assert _client("WPMIT").skip_request_backlog(consumer) == 3
+
+    kwargs = consumer.commit.call_args[1]
+    assert [(tp.topic, tp.partition, tp.offset) for tp in kwargs["offsets"]] == [(REQUEST_TOPIC, 0, 8)]
+    assert kwargs["asynchronous"] is False
+
+
+@pytest.mark.parametrize("committed", [8, -1001])   # up to date; a new group ("latest" applies)
+def test_nothing_to_skip_leaves_the_offsets(request_consumer, committed):
+    consumer = request_consumer(committed=committed, high=8)
+    assert _client("WPMIT").skip_request_backlog(consumer) == 0
+    consumer.commit.assert_not_called()
+
+
+def test_offsets_stay_when_the_group_has_another_member(request_consumer):
+    consumer = request_consumer(committed=5, high=8)
+    consumer.commit.side_effect = Exception("UNKNOWN_MEMBER_ID")   # the broker refuses the commit
+    assert _client("WPMIT").skip_request_backlog(consumer) is None
+
+
+def test_listener_skips_the_backlog_before_it_subscribes(request_consumer, monkeypatch):
+    consumer = request_consumer(committed=5, high=8)
+    consumer.poll.side_effect = KeyboardInterrupt      # stop the listener at its first poll
+    monkeypatch.setattr(WPKafkaClient, "KafkaConsumer", lambda _config: consumer)
+    for name in ("WPAgentCache", "ListenerHealthCheck", "ListenerHealthMonitor", "ProberConnectionWatch"):
+        monkeypatch.setattr(WPKafkaClient, name, MagicMock())
+
+    _client("WPMIT").listen()
+
+    calls = [call[0] for call in consumer.method_calls]
+    assert calls.index("commit") < calls.index("subscribe") < calls.index("poll")
 
 
 # --- start config -----------------------------------------------------------------------------
@@ -183,6 +262,17 @@ def test_machine_comes_from_the_db(fake_db):
     }
 
 
+def test_host_of_the_record_is_used_as_it_is(fake_db):
+    fake_db([{**WPMIT, "hostName": "cern.ch"}])
+    assert WaferProberAgent()._find_machine_in_db("WPMIT", "kafka:9094", wait=0)["address"] == "cern.ch"
+
+
+def test_record_without_host_stops_the_agent(fake_db):
+    fake_db([{**WPMIT, "hostName": ""}])
+    with pytest.raises(ValueError, match="hostName"):
+        WaferProberAgent()._find_machine_in_db("WPMIT", "kafka:9094", wait=0)
+
+
 def test_waits_for_the_db_agent(fake_db, monkeypatch):
     monkeypatch.setattr("WPAgent.time.sleep", lambda _s: None)
     db = fake_db([], [], [WPMIT])
@@ -250,6 +340,7 @@ def test_heartbeat_names_the_machine_and_its_connection(globals_instance, health
     kwargs = hc.producer.produce.call_args[1]
     beat = json.loads(kwargs["value"])
     assert (beat["waferAgentName"], beat["wpMachineId"], beat["proberConnected"]) == ("WPMIT", 3, False)
+    assert beat["proberInitialized"] is False
     assert heartbeat_module.read_local_health() is None   # Kafka has not confirmed it yet
 
     kwargs["on_delivery"](None, MagicMock())

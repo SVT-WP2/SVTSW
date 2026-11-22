@@ -274,12 +274,10 @@ class WPInitializationService:
         }
 
     def _build_address(self, machine):
-        """Build full address string from machine dict."""
-        machine_name = machine.get("name", "")
+        """ "host:port" of a machine record: the host exactly as it is in the DB."""
         host_name = machine.get("hostName", "")
         port = machine.get("connectionPort", "")
-        base = f"{machine_name}01.{host_name}" if machine_name and host_name else host_name
-        return f"{base}:{port}" if port else base
+        return f"{host_name}:{port}" if port else host_name
 
     def _send_and_report(self, params, selections):
         """Send Initialize command and print summary on success."""

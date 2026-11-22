@@ -1,13 +1,15 @@
 """
 The global watcher of the WP machine connection: WPAgent runs while the machine is off,
-connects when it is on, sends every status change to the listeners, and a command that
-needs the prober gets an error (no Error state) while the machine is off.
+reports when it is on (it never initializes the machine: see TestInitialize.py), sends
+every status change to the listeners, and a command that needs the prober gets an error
+(no Error state) while the machine is off.
 
 Run:  python3 -m pytest tests/unit/TestConnectionStatus.py -q -o python_files="Test*.py"
 """
 
 import pytest
 
+import services.WPProberConnectionWatch as watch_module
 import WPCmdMap
 from drivers.WPFactory import ProberFactory, ProberNotConnectedError
 from services.WPProberConnectionWatch import (
@@ -41,42 +43,29 @@ def events():
     remove_connection_listener(seen.append)
 
 
-def test_starts_with_the_machine_off(globals_instance, events):
-    calls = []
-    w = ProberConnectionWatch(initialize=lambda: calls.append(1) and False)
+def test_starts_with_the_machine_off(machine, globals_instance, events):
+    globals_instance.set_machine_type("sentio")
+    globals_instance.set_address("127.0.0.1:1")   # closed port: the quick TCP check fails
+    w = ProberConnectionWatch()
     assert w.check_once() is False
     assert w.check_once() is False
     assert globals_instance.prober_connected is False
     assert events == [False]            # one event, not one per check
-    assert len(calls) == 2              # it keeps trying
+    assert not machine.is_initialized()
     assert sm.current_state == S.ServiceOn
 
 
-def test_connects_when_the_machine_comes_on(machine, globals_instance, events):
+def test_reports_the_machine_that_comes_on_without_initializing_it(machine, globals_instance, events, monkeypatch):
     machine_on = []
-
-    def initialize():
-        if not machine_on:
-            return False
-        machine.get_prober("mock", "mock:35555")
-        return True
-
-    w = ProberConnectionWatch(initialize=initialize)
+    monkeypatch.setattr(watch_module, "is_reachable", lambda *_args, **_kwargs: bool(machine_on))
+    w = ProberConnectionWatch()
     w.check_once()
     machine_on.append(True)
     w.check_once()
-    w.check_once()                      # healthy: no new event
+    w.check_once()                      # still on: no new event
     assert globals_instance.prober_connected is True
     assert events == [False, True]
-
-
-def test_unreachable_machine_is_not_initialized(globals_instance):
-    globals_instance.set_machine_type("sentio")
-    globals_instance.set_address("127.0.0.1:1")   # closed port: the quick TCP check fails
-    calls = []
-    ProberConnectionWatch(initialize=lambda: calls.append(1) or True).check_once()
-    assert calls == []
-    assert globals_instance.prober_connected is False
+    assert not machine.is_initialized()  # connecting to the machine is the Initialize command
 
 
 def test_reconnects_without_a_session_in_serviceon(machine, globals_instance):

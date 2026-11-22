@@ -2,30 +2,40 @@
 ProberConnectionWatch - the global watcher of the connection to the WP machine.
 
 WPAgent runs all the time; the WP machine is switched on only when it is needed. A daemon
-thread checks the connection every few seconds and keeps the global status
+thread checks the machine every few seconds and keeps the global status
 (SvtWPAagentGlobalParameters.prober_connected: None until the first check, then True / False):
 
-- Connected: a cheap, read-only probe (prober.is_alive()). After FAILURES_BEFORE_ERROR
+- Not initialized (the agent has no connection to the machine yet): a quick TCP check of
+  the machine address that sends nothing. The watch never initializes the machine: that is
+  the Initialize command (actions/WPProjectActions.initialize_machine).
+- Initialized: a cheap, read-only probe (prober.is_alive()). After FAILURES_BEFORE_ERROR
   consecutive failures the connection is lost: one immediate reconnect, else the status is
   False and an agent in a session goes to the Error state (the session is lost).
-- Not connected: a quick TCP check of the machine address, then a connect. The first connect
-  runs the full initialization; a later one forgets the old session (as ReconnectProber does).
+- Initialized, connection lost: the TCP check, then a new connection that forgets the old
+  session (as ReconnectProber does).
 
-Every status change goes to the audit log and to the connection listeners (the Kafka listener
-publishes it as an event). While the status is False, a command that needs the prober gets an
-error: ProberFactory.get_current_prober() raises ProberNotConnectedError.
+While the machine is not connected, the watch reads its DB record again every
+RECORD_REFRESH_INTERVAL seconds and right before a reconnect (services/WPMachineRecord.py),
+so it follows a change of the address in the DB.
+
+Every change of the status (connected, initialized) goes to the connection listeners (the
+Kafka listener publishes it as an event), a change of `connected` also to the audit log.
+A command that needs the prober gets an error while the machine is off or not initialized:
+ProberFactory.get_current_prober() raises ProberNotConnectedError.
 
 The check is skipped while a command is executing (the prober connection is in use).
 """
 
 import socket
 import threading
+import time
 
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 
 PROBE_INTERVAL        = 5.0
 FAILURES_BEFORE_ERROR = 3
 TCP_CHECK_TIMEOUT     = 2.0
+RECORD_REFRESH_INTERVAL = 30.0
 
 _status_lock = threading.Lock()
 _listeners = []
@@ -38,30 +48,54 @@ def is_prober_connected():
     return SvtWPAagentGlobalParameters.getInstance().prober_connected
 
 
-def not_connected_message() -> str:
-    """The error text for a command that needs the prober while the machine is off."""
+def is_prober_initialized() -> bool:
+    """True when the agent has set up its connection to the prober (the Initialize command)."""
+    from drivers.WPFactory import ProberFactory
+
+    return ProberFactory.get_instance().is_initialized()
+
+
+def _machine_label() -> str:
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
-    name = SvtWPAagentGlobalParameters.getInstance().wpAgentName or "The WP machine"
-    return f"{name} is not connected. Switch the machine on: the agent connects to it by itself."
+    return SvtWPAagentGlobalParameters.getInstance().wpAgentName or "The WP machine"
+
+
+def not_connected_message() -> str:
+    """The error text for a command that needs the prober while the machine is off."""
+    if is_prober_initialized():
+        return f"{_machine_label()} is not connected. Switch the machine on: the agent connects to it again by itself."
+    return f"{_machine_label()} is not connected. Switch the machine on, then send Initialize."
+
+
+def not_initialized_message() -> str:
+    """The error text for a command that needs the prober before the Initialize command."""
+    return f"{_machine_label()} is not initialized. Send Initialize first."
 
 
 def set_prober_connected(connected: bool, reason: str = ""):
-    """Store the status. On a change, write the audit log and call the listeners."""
+    """
+    Store the status. The listeners are called when `connected` or `initialized` changed;
+    a change of `connected` also goes to the audit log.
+    """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     g = SvtWPAagentGlobalParameters.getInstance()
+    status = (connected, is_prober_initialized())
     with _status_lock:
-        if g.prober_connected is connected:
+        connection_changed = g.prober_connected is not connected
+        if not connection_changed and g.prober_status_published == status:
             return
         g.prober_connected = connected
+        g.prober_status_published = status
 
-    WPAgentLogger().log_audit(
-        "PROBER_CONNECTED" if connected else "PROBER_DISCONNECTED",
-        severity=Severity.INFO if connected else Severity.WARNING,
-        address=g.address,
-        reason=reason,
-    )
+    if connection_changed:
+        WPAgentLogger().log_audit(
+            "PROBER_CONNECTED" if connected else "PROBER_DISCONNECTED",
+            severity=Severity.INFO if connected else Severity.WARNING,
+            address=g.address,
+            reason=reason,
+        )
     for listener in list(_listeners):
         try:
             listener(connected)
@@ -70,7 +104,7 @@ def set_prober_connected(connected: bool, reason: str = ""):
 
 
 def add_connection_listener(listener):
-    """listener(connected: bool) is called on every status change."""
+    """listener(connected: bool) is called on every change of the status (connected, initialized)."""
     _listeners.append(listener)
 
 
@@ -93,14 +127,14 @@ def is_reachable(machine_type, address, timeout=TCP_CHECK_TIMEOUT) -> bool:
 
 class ProberConnectionWatch:
     def __init__(self, is_busy=None, interval=PROBE_INTERVAL, failures=FAILURES_BEFORE_ERROR,
-                 auto_reconnect=True, initialize=None):
-        """initialize() runs the first, full initialization and returns True on success."""
+                 auto_reconnect=True, refresh_interval=RECORD_REFRESH_INTERVAL):
         self.is_busy  = is_busy or (lambda: False)
         self.auto_reconnect = auto_reconnect
-        self.initialize = initialize
         self.interval = interval
         self.failures = failures
+        self.refresh_interval = refresh_interval
         self._failed  = 0
+        self._refreshed_at = time.monotonic()  # the record was read at the start of the agent
         self.running  = False
         self._stop    = threading.Event()
         self._thread  = None
@@ -115,10 +149,35 @@ class ProberConnectionWatch:
         if factory.is_initialized() and is_prober_connected() is not False:
             return self._probe(factory)
 
+        # No connection to the machine: follow its DB record and look whether it is on.
         self._failed = 0
-        connected = self.auto_reconnect and self._connect(factory)
-        set_prober_connected(bool(connected), "connected" if connected else "machine not reachable")
+        initialized = factory.is_initialized()
+        self._refresh_machine_if_due()
+        connected = self._is_machine_reachable()
+        if factory.is_initialized() != initialized:
+            return False  # Initialize ran during this check and has set the status itself
+        if connected and initialized:
+            # The agent had a connection and lost it: open a new one.
+            connected = self.auto_reconnect and self._reconnect(factory)
+        set_prober_connected(bool(connected), "machine reachable" if connected else "machine not reachable")
         return False
+
+    def _refresh_machine_if_due(self):
+        """While the machine is not connected, read its DB record again every refresh_interval."""
+        if time.monotonic() - self._refreshed_at < self.refresh_interval:
+            return
+        self._refreshed_at = time.monotonic()
+        from services.WPMachineRecord import refresh_machine
+
+        refresh_machine()
+
+    @staticmethod
+    def _is_machine_reachable():
+        """True when the machine stored in the globals answers the TCP check."""
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        g = SvtWPAagentGlobalParameters.getInstance()
+        return bool(g.address and g.machineType and is_reachable(g.machineType, g.address))
 
     def _probe(self, factory):
         try:
@@ -143,7 +202,7 @@ class ProberConnectionWatch:
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
         state = agentStateMachine.current_state
-        if self.auto_reconnect and self._connect(factory):
+        if self.auto_reconnect and self._is_machine_reachable() and self._reconnect(factory):
             set_prober_connected(True, "reconnected")
             return False
 
@@ -155,21 +214,22 @@ class ProberConnectionWatch:
         )
         return True
 
-    def _connect(self, factory):
-        """Connect to the machine stored in the globals. Returns True on success."""
+    def _reconnect(self, factory):
+        """
+        Open a new connection for an agent that was initialized and lost the machine.
+        The DB record of the machine is read again first. Returns True on success.
+        """
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
         from stateMachine.WpAgentStateMachine import WPAgentState
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-        g = SvtWPAagentGlobalParameters.getInstance()
-        if not g.address or not g.machineType or not is_reachable(g.machineType, g.address):
-            return False
-
-        if not factory.is_initialized():
-            return bool(self.initialize and self.initialize())
-
         if agentStateMachine.current_state == WPAgentState.ServiceOn:
             # No session to forget: a new connection is enough.
+            from services.WPMachineRecord import refresh_machine
+
+            refresh_machine()
+            self._refreshed_at = time.monotonic()
+            g = SvtWPAagentGlobalParameters.getInstance()
             try:
                 factory.reconnect(g.machineType, g.address)
             except Exception:
@@ -180,6 +240,7 @@ class ProberConnectionWatch:
         from actions.WPProjectActions import reconnect_session
 
         ok, _message, _status = reconnect_session(requested_by="ProberConnectionWatch", event="AUTO_RECONNECT")
+        self._refreshed_at = time.monotonic()
         return ok
 
     def _loop(self):

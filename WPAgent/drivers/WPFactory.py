@@ -5,7 +5,10 @@ prober_classes = {"sentio": SentioProberImpl, "mock": MockProberImpl}
 
 
 class ProberNotConnectedError(RuntimeError):
-    """A command needs the prober, but the WP machine is not connected (e.g. switched off)."""
+    """
+    A command needs the prober, but the agent has no connection to the WP machine:
+    the machine is off, or the agent was not initialized yet (the Initialize command).
+    """
 
 
 class ProberFactory:
@@ -71,30 +74,31 @@ class ProberFactory:
         """
         Get the currently initialized prober without creating a new one.
 
-        This is used by command functions after auto-initialization.
+        This is used by command functions after the Initialize command.
         No parameters needed since the prober was already initialized.
 
         Returns:
             The current prober instance
 
         Raises:
-            RuntimeError: If no prober is currently initialized
+            ProberNotConnectedError: the machine is off, or the agent is not initialized.
+                Both are normal cases: the command gets an error reply, the agent
+                state does not change (see WPCmdMap.execute_command).
 
         Example:
             >>> factory = ProberFactory.get_instance()
             >>> prober = factory.get_current_prober()
             >>> prober.move_chuck_center()
         """
-        from services.WPProberConnectionWatch import is_prober_connected, not_connected_message
+        from services.WPProberConnectionWatch import (
+            is_prober_connected, not_connected_message, not_initialized_message,
+        )
 
         if is_prober_connected() is False:
             raise ProberNotConnectedError(not_connected_message())
 
         if not self._initialized or self._prober is None:
-            raise RuntimeError(
-                "No prober is currently initialized. "
-                "Please start the listener with a config: python3.12 main.py listen --config=configs/ProbeConfigCERN.json"
-            )
+            raise ProberNotConnectedError(not_initialized_message())
 
         return self._prober
 

@@ -18,12 +18,17 @@ class SvtWPAagentGlobalParameters:
         self.prober_status = "available"
         # Connection to the WP machine: None = not checked yet, then True / False (see WPProberConnectionWatch)
         self.prober_connected = None
+        # The last (connected, initialized) given to the connection listeners
+        self.prober_status_published = None
         self._alignment_die = None
         self._home_die = None
         self._project_metadata = {}
 
         # Database-related parameters
         self.wpMachineId = None  # Database ID of the prober
+        # WaferProbeMachine.name of the DB record of this machine (None: mock config, no record);
+        # see services/WPMachineRecord.py
+        self.machine_record_name = None
         self.machine_name = None  # Human-readable name from database
         self.initialization_mode = None  # "manual" or "database"
         self.wpAgentName = None

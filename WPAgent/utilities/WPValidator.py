@@ -398,16 +398,9 @@ class WPCommandValidator:
                 "align_die_row": {"type": "int", "required": False},
                 "subsite": {"type": "int", "required": False},
             },
-            # Initialize — all optional
+            # Initialize — the machine is the DB record of this agent, so no address
             "Initialize": {
-                "serialNumber": {"type": "str", "required": False},
-                "address": {"type": "str", "required": False},
-                "machineType": {"type": "str", "required": False},
-                "projectName": {"type": "str", "required": False},
-                "alignmentDie": {"type": "str", "required": False},
-                "homeDie": {"type": "str", "required": False},
                 "force": {"type": "bool", "required": False},
-                "withDB": {"type": "bool", "required": False},
             },
             # Testing lock/unlock
             "TestingLock": {

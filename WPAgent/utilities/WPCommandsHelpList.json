@@ -1,50 +1,18 @@
 {
   "Initialize": {
-  "description": "Initialize connection to the wafer prober with two modes: Manual (direct connection) or Database (interactive selection)",
+  "description": "Connect the agent to its wafer prober and read the machine state (loaded wafer, probe card) from the database. The agent never does this by itself: after its start it only reports whether the machine is on.",
   "category": "Setup",
   "data": {
-    "address": {
-      "required": "conditional",
-      "type": "string",
-      "description": "Prober network address (REQUIRED for manual mode, format: 'host:port')"
-    },
-    "machineType": {
-      "required": "conditional",
-      "type": "string",
-      "description": "Type of prober (REQUIRED for manual mode, value: 'sentio')"
-    },
-    "projectName": {
-      "required": false,
-      "type": "string",
-      "description": "Project name to open (optional, auto-opens .prj file)"
-    },
-    "alignmentDie": {
-      "required": false,
-      "type": "string or tuple",
-      "description": "Alignment die position as 'col,row,subsite' (e.g., '2,2,0'). Used by AlignWafer if not specified."
-    },
-    "homeDie": {
-      "required": false,
-      "type": "string or tuple",
-      "description": "Home die position as 'col,row,subsite' (e.g., '5,2,0'). Used by FindHome if not specified."
-    },
     "force": {
       "required": false,
       "type": "boolean",
-      "description": "Force re-initialization (default: false)"
-    },
-    "withDB": {
-      "required": false,
-      "type": "boolean",
-      "description": "Use database mode for interactive initialization"
+      "description": "Initialize again when the agent is already initialized (default: false)"
     }
   },
-  "example": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\"}'",
-  "example_with_project": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\",\"projectName\":\"NKF7_Test\"}'",
-  "example_with_dies": "python main.py send Initialize --data='{\"address\":\"WPMIT01.cern.ch:35555\",\"machineType\":\"sentio\",\"alignmentDie\":\"2,2,0\",\"homeDie\":\"5,2,0\"}'",
-  "example_db": "python main.py send Initialize withDB=true",
-  "execution_time": "5-15 seconds (manual) or 30-90 seconds (database)",
-  "notes": "MANUAL MODE: Provide address and machineType. DATABASE MODE: Interactive flow selects prober/ASIC/orientation/project. Die positions stored for AlignWafer and FindHome commands."
+  "example": "python main.py send Initialize --data='{\"waferAgentName\":\"WPMIT\"}'",
+  "example_force": "python main.py send Initialize --data='{\"waferAgentName\":\"WPMIT\",\"force\":true}'",
+  "execution_time": "1-10 seconds",
+  "notes": "The machine (host, port, type) is the WaferProbeMachine record of this agent in the database, read again right before the connect: the request carries no address. Works in every agent state and without a log-in. Error 503 while the machine is off."
 },
 
   "Load": {

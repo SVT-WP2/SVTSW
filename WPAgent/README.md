@@ -202,7 +202,7 @@ Example of config file:
   "kafka_broker": "pcmitpx01:9096"
 }
 ```
-`name` is the machine name as registered in the database — the listener uses it to look up the rest of the machine's connection details (address, port, machine type, machine ID) from the DB Agent at startup. The lookup is required: if the DB Agent gives no answer within 60 s, or has no machine with this name, the listener stops with exit code 1. Only a mock config (`"machineType": "mock"`) keeps its own values without the DB.
+`name` is the machine name as registered in the database — the listener uses it to look up the rest of the machine's connection details (address, port, machine type, machine ID) from the DB Agent at startup. The record is the source of truth: the listener connects to `hostName`:`connectionPort` exactly as the record has them. The lookup is required: if the DB Agent gives no answer within 60 s, has no machine with this name, or the record has no host or port, the listener stops with exit code 1. Only a mock config (`"machineType": "mock"`) keeps its own values without the DB.
 
 In a container (one compose service per WP machine) there is no config file: compose sets the name and the broker as env vars, and the command is only `listen`:
 
@@ -210,7 +210,11 @@ In a container (one compose service per WP machine) there is no config file: com
 SVT_WP_AGENT_MACHINE_NAME=WPMIT SVT_WP_AGENT_KAFKA_BROKER=kafka:9094 python3.12 main.py listen
 ```
 
-The machine can be off when the listener starts: see [One agent per WP machine](#one-agent-per-wp-machine).
+The start does not connect to the machine, and the machine can be off: the listener only reports whether it is on. Send `Initialize` to connect (see [One agent per WP machine](#one-agent-per-wp-machine)):
+
+```bash
+python3.12 main.py send Initialize --data='{"waferAgentName":"WPMIT"}'
+```
 
 Note: Depending on which Kafka broker is specified in the config file, WPAgent will run in either development or production mode (see the `_DEV` suffix note in [Configuration](#️-configuration)).
 
@@ -347,7 +351,7 @@ python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CER
 | Command | Key Parameters | Description |
 |---------|---------------|-------------|
 | `ConnectProbeMachine` | `wpMachineId` | Connect to a prober by its DB machine ID |
-| `Initialize` | `address`, `machineType` | Connect to prober manually (no DB) |
+| `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. The agent never does this by itself. Works in every state, without a log-in |
 | `OpenProject` | `projectName` | Open a SENTIO project file |
 | `ChangeProject` | `projectName` | Swap active project (stays in `OpenedProject`) |
 | `ShowStatus` | — | Show connection and project status |
@@ -501,9 +505,12 @@ Each WP machine has its own WPAgent: in the dev/prod stacks, one compose service
 | `SVT_WP_AGENT_KAFKA_BROKER` | `kafka:9094` | Kafka broker (`host:port`) |
 
 * **Routing.** All agents of an environment share `svt.wp-agent.request`. Every agent reads every request and runs only the requests whose `data.waferAgentName` names its machine (case does not matter, and `WPMIT_DEV` names `WPMIT`). It ignores the other requests and sends no reply for them. Each machine has its own consumer group `wafer-executor-<NAME>`, so a second agent of the same machine stays idle.
-* **The machine can be off.** The agent runs all the time; the machine is switched on only when it is needed. The connection watch (`services/WPProberConnectionWatch.py`) checks the connection every 5 s. While the machine is off, it makes a quick TCP check, and it connects as soon as the machine answers (the first connect runs the full initialization). When a connected machine stops answering 3 times, an agent in a session goes to `Error`, and the next connect brings it back to `UserLogged` (open the project again). `ReconnectProber` still works by hand.
-* **Commands while the machine is off.** A command that needs the prober gets an error reply (code 503, "… is not connected"), and the agent state does not change. Commands without the prober (log-in, DB queries, `GetAgentState`, …) still work.
-* **Events.** Each change of the connection status goes to the topic `svt.wp-agent.connection-status` (key: the machine name): `{"type": "WpConnectionStatusChanged", "data": {"waferAgentName", "wpMachineId", "connected", "address", "timestamp"}}`. The heartbeat on `svt.wp-agent.heartbeat` also carries `waferAgentName`, `wpMachineId`, `proberConnected` and `appVersion`.
+* **The start skips old requests.** A listener that starts moves the offsets of its consumer group to the end of `svt.wp-agent.request` before it subscribes: the requests sent while no listener of the machine was running do not run (their senders gave up long ago, and a command among them would move the machine now). The log says how many were skipped.
+* **The machine can be off.** The agent runs all the time; the machine is switched on only when it is needed. The connection watch (`services/WPProberConnectionWatch.py`) checks the machine every 5 s and keeps two flags: `connected` (the machine is on) and `initialized` (the agent is connected to it).
+* **The start does not touch the machine.** Until `Initialize`, the watch makes only a quick TCP check that sends nothing. `Initialize` opens the connection and reads the loaded wafer and the probe card from the DB. After that the watch probes the connection. When the machine stops answering 3 times, an agent in a session goes to `Error`; when the machine is on again, the watch opens a new connection by itself and brings the agent back to `UserLogged` (open the project again). `ReconnectProber` still works by hand, for an initialized agent.
+* **The DB record is the source of truth for the address.** The agent connects to `hostName`:`connectionPort` of its `WaferProbeMachine` record, exactly as written. It reads the record at start, every 30 s while the machine is off, and right before every connect (`Initialize`, a reconnect), so a change of the record needs no restart. If the DB Agent gives no answer, the last known record stays. A change does not touch a live connection: it is used at the next connect (`services/WPMachineRecord.py`).
+* **Commands without the machine.** A command that needs the prober gets an error reply with code 503, and the agent state does not change: "… is not connected" while the machine is off, "… is not initialized" before `Initialize`. Commands without the prober (log-in, DB queries, `GetAgentState`, …) still work.
+* **Status.** Every reply carries `proberConnected` and `proberInitialized` in its data. Each change of one of them goes to the topic `svt.wp-agent.connection-status` (key: the machine name): `{"type": "WpConnectionStatusChanged", "data": {"waferAgentName", "wpMachineId", "connected", "initialized", "address", "timestamp"}}`. The heartbeat on `svt.wp-agent.heartbeat` carries `waferAgentName`, `wpMachineId`, `proberConnected`, `proberInitialized` and `appVersion`.
 * **Health check.** The Docker `HEALTHCHECK` runs `main.py check_local_health`: healthy while the listener sends heartbeats that Kafka confirms. It prints the connection status, but a machine that is off does not make the container unhealthy. `main.py --config=<file> check_listener_health` checks a listener over Kafka, for its machine only.
 
 ### SSH Tunnel (remote Kafka access)
@@ -649,7 +656,8 @@ If a DB-backed command (`OpenProject`, `ListProbers`, machine/project lookups, e
 
 - Verify SENTIO software is running on the prober machine
 - Check IP address and port: `ping <prober-host>` if needed 
-- `"<machine> is not connected"`: the agent cannot reach the machine. Switch it on (and start SENTIO); the agent connects by itself within a few seconds.
+- `"<machine> is not initialized"`: the machine is on, but the agent is not connected to it yet. Send `Initialize`.
+- `"<machine> is not connected"`: the agent cannot reach the machine at the address of its DB record (`hostName`:`connectionPort`). Switch the machine on (and start SENTIO), and check the record. An agent that was initialized connects again by itself within a few seconds; otherwise send `Initialize`.
 
 
 ### Error state recovery
