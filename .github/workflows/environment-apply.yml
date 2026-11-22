@@ -1,0 +1,49 @@
+name: 'Environment :: Apply'
+
+# Manual only, from the Actions UI (Run workflow -> pick the environment).
+# Applies the svtsw compose file of master to the server without a new image:
+# compose recreates only the services whose config changed, and every service
+# keeps the version pinned in versions.env. Run it after a merged change to
+# Environment/<Env>/docker-compose-svtsw-<env>.yml that no image deploy applied
+# (a deploy recreates only its own service, see Environment/README.md).
+# It also removes the containers of services no longer in the file.
+# The Kafka stack is not touched.
+#
+# Not automatic on push: the same push can also start an image build, and an
+# early apply would recreate that service with its old image first.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to apply the svtsw compose file to'
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  apply:
+    runs-on: self-hosted
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Require master
+        # The server copies of the compose files must match master.
+        run: |
+          if [ "${GITHUB_REF}" != "refs/heads/master" ]; then
+            echo "ERROR: run this from master, not ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+      # deploy-service.sh and the compose files are in Environment/.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: Environment
+      - name: Apply the svtsw compose file to ${{ inputs.environment }}
+        env:
+          ENV_NAME: ${{ inputs.environment }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          bash Environment/deploy-service.sh "${ENV_NAME}" --apply-compose

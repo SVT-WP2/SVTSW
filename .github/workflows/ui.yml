@@ -19,7 +19,8 @@ on:
 
 concurrency:
   group: ui-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel old PR runs only. On master a new run waits, so it never stops a deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io

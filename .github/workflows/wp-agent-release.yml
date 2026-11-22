@@ -86,6 +86,11 @@ jobs:
             echo "ERROR: run this from a branch, not a ${GITHUB_REF_TYPE} (${GITHUB_REF_NAME})." >&2
             exit 1
           fi
+          # The tag build runs no tests: release from master, or from a release branch for a patch.
+          case "${GITHUB_REF_NAME}" in
+            master|release/svt-wp-agent/*) ;;
+            *) echo "ERROR: run this from master or a release/svt-wp-agent/* branch, not ${GITHUB_REF_NAME}." >&2; exit 1 ;;
+          esac
           # Map the dropdown choice to a node-semver increment. The labels
           # mirror the UI's npm scripts and DbAgent's release so all three
           # services release the same way, and the outputs are byte-identical

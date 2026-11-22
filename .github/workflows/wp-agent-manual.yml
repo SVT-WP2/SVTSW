@@ -10,12 +10,15 @@ on:
       job:
         description: 'Manual job to run'
         required: true
-        default: 'deploy-dev--manual'
+        default: 'docker-registry-create--manual'
         type: choice
+        # TEMPORARY: the deploy jobs are hidden while WPAgent is out of the
+        # compose files. Restore the two options and the default
+        # 'deploy-dev--manual' when it comes back.
         options:
           - docker-registry-create--manual
-          - deploy-dev--manual
-          - deploy-prod--manual
+          # - deploy-dev--manual
+          # - deploy-prod--manual
       image_tag:
         description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-registry-create--manual (always builds short SHA).'
         required: false
