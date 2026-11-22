@@ -45,8 +45,8 @@ export async function prepareE2eBroker(broker: string): Promise<void> {
 
 /**
  * A brand-new broker creates `__consumer_offsets` on the first group request and answers "not the correct
- * coordinator" until it is ready. The agent's backlog skip at start does not retry that (it exits), so the harness
- * asks first, until the coordinator answers.
+ * coordinator" until it is ready. The agent's backlog skip waits for it too (E2E-10); the harness asks first because
+ * its own group checks below need the coordinator.
  */
 async function waitForGroupCoordinator(admin: Admin): Promise<void> {
     const deadline = Date.now() + IDLE_GROUPS_TIMEOUT_MS
