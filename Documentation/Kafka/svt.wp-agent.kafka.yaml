@@ -38,6 +38,17 @@ info:
     - Request messages are sent to `svt.wp-agent.request` topic
     - Reply messages are emitted to `svt.wp-agent.request.reply` topic
     - Request body describes Kafka Message structure. Mandatory fields: user, waferAgentName
+    - One WP agent per WP machine. Every agent reads every request; only the agent of the
+      machine named by `waferAgentName` (`WaferProbeMachine.name`, case-insensitive, `_DEV` suffix
+      allowed) runs it and replies. A request without `waferAgentName` gets no reply.
+    - A command that needs the prober while the machine is off gets an error reply with code 503.
+
+    ### Events
+    - `svt.wp-agent.connection-status` (key: the machine name), on every change of the connection
+      to the WP machine:
+      `{ type: 'WpConnectionStatusChanged', data: { waferAgentName, wpMachineId, connected, address, timestamp } }`
+    - `svt.wp-agent.heartbeat`, every 2 s:
+      `{ timestamp, status: 'alive', waferAgentName, wpMachineId, proberConnected, appVersion }`
 
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)

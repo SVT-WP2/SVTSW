@@ -35,10 +35,10 @@ ENV APP_VERSION=$VERSION
 ENV PYTHONUNBUFFERED=1 \
     PYTHONNOUSERSITE=1
 
-# Sanity check that the listener is up and heartbeating
-# (see services/WPHeartbeat.py -> check_listener_health)
+# Healthy while the listener sends heartbeats that Kafka confirms (WPAgent.check_local_health).
+# A WP machine that is switched off does not make the container unhealthy.
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
-    CMD python3.12 main.py check_listener_health || exit 1
+    CMD python3.12 main.py check_local_health || exit 1
 
 ENTRYPOINT ["python3.12", "main.py"]
 

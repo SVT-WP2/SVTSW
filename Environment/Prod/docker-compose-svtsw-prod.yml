@@ -86,13 +86,23 @@ services:
         max-size: "50m"
         max-file: "5"
 
-  # TEMPORARY: WPAgent is out of the deployment until its issues are fixed.
-  # The deploy jobs of wp-agent.yml and wp-agent-manual.yml are off too.
-  # svt-wp-agent:
-  #   image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_VERSION:?missing - set it in versions.env}
-  #   container_name: svt.wp-agent--prod
+  # WPAgent: one service per WP machine, as in docker-compose-svtsw-dev.yml.
+  # TEMPORARY: off on prod until the first WPAgent release (svt-wp-agent-* tag): before it
+  # there is no release image, and a missing image or version line stops the whole stack.
+  # To enable: uncomment the block, the SVT_WP_AGENT_WPMIT_VERSION line in
+  # versions.env.example and the deploy-prod--manual option of wp-agent-manual.yml.
+  # svt-wp-agent-wpmit:
+  #   image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_WPMIT_VERSION:?missing - set it in versions.env}
+  #   container_name: svt.wp-agent-wpmit--prod
   #   restart: unless-stopped
-  #   command: ["listen", "--config=configs/ProbeConfigCERN.json"]
+  #   networks:
+  #     - svt-network--prod
+  #   command: ["listen"]
+  #   environment:
+  #     SVT_WP_AGENT_MACHINE_NAME: WPMIT
+  #     SVT_WP_AGENT_KAFKA_BROKER: "${SVT_KAFKA_HOST:-kafka}:${SVT_KAFKA_PORT:-9094}"
+  #     # The agent reports its own version; keep it in lockstep with the image tag.
+  #     APP_VERSION: "${SVT_WP_AGENT_WPMIT_VERSION}"
   #   logging:
   #     driver: "json-file"
   #     options:

@@ -56,6 +56,9 @@ def _connect_prober(factory, globals_, machine_type, address, force):
         prober = factory.get_prober(machine_type, address)
         print(f"✅ Prober created successfully: {type(prober).__name__}")
         globals_.set_prober_status("initialized")
+        from services.WPProberConnectionWatch import set_prober_connected
+
+        set_prober_connected(True, "initialized")
         return prober, None
     except Exception as e:
         error_msg = f"Failed to create prober: {str(e)}"
@@ -368,6 +371,9 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
         )
 
     g.set_prober_status("initialized")
+    from services.WPProberConnectionWatch import set_prober_connected
+
+    set_prober_connected(True, f"reconnected by {requested_by or 'ReconnectProber'}")
 
     # The machine lost its session: forget the old one.
     g.set_project_name(None)

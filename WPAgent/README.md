@@ -202,11 +202,21 @@ Example of config file:
   "kafka_broker": "pcmitpx01:9096"
 }
 ```
-`name` is the machine name as registered in the database — the listener uses it to look up the rest of the machine's connection details (address, port, machine type, machine ID) from the DB Agent at startup. If the DB lookup fails, it falls back to whatever is in the config file.
+`name` is the machine name as registered in the database — the listener uses it to look up the rest of the machine's connection details (address, port, machine type, machine ID) from the DB Agent at startup. The lookup is required: if the DB Agent gives no answer within 60 s, or has no machine with this name, the listener stops with exit code 1. Only a mock config (`"machineType": "mock"`) keeps its own values without the DB.
+
+In a container (one compose service per WP machine) there is no config file: compose sets the name and the broker as env vars, and the command is only `listen`:
+
+```bash
+SVT_WP_AGENT_MACHINE_NAME=WPMIT SVT_WP_AGENT_KAFKA_BROKER=kafka:9094 python3.12 main.py listen
+```
+
+The machine can be off when the listener starts: see [One agent per WP machine](#one-agent-per-wp-machine).
 
 Note: Depending on which Kafka broker is specified in the config file, WPAgent will run in either development or production mode (see the `_DEV` suffix note in [Configuration](#️-configuration)).
 
 > **Note:** On the CERN side, the `WPMIT` machine's production listener (`ProbeConfigCERN.json`, broker `pcmitpx01:9092`) runs as a system service and does not need to be started manually. Only start the listener yourself for development/testing (e.g. against `ProbeConfigCERN_DEV.json` / MOCK configs).
+>
+> **One listener per machine:** on dev, `WPMIT` now runs as the compose service `svt-wp-agent-wpmit` (see `Environment/Dev/docker-compose-svtsw-dev.yml`). Do not start another listener for the same machine on the same broker. A listener of this version joins the same consumer group and stays idle, but a listener of an older version (group `wafer-executor`) runs every command a second time.
 
 
 ### 2. Send Commands (Producer side — runs anywhere with Kafka access)
@@ -481,6 +491,21 @@ Current configs on disk:
 
 > Note: an older `configs/WPProbesConfigs.json` file (a single JSON file with nested `machineId`/`address`/`port` per machine) still exists in the repo but is no longer read by the code — machine connection details now come from the database, keyed by the config file's `name` field.
 
+### One agent per WP machine
+
+Each WP machine has its own WPAgent: in the dev/prod stacks, one compose service per machine (`svt-wp-agent-<machine>`) with these env vars:
+
+| Env var | Example | Meaning |
+|---------|---------|---------|
+| `SVT_WP_AGENT_MACHINE_NAME` | `WPMIT` | `WaferProbeMachine.name` in the DB |
+| `SVT_WP_AGENT_KAFKA_BROKER` | `kafka:9094` | Kafka broker (`host:port`) |
+
+* **Routing.** All agents of an environment share `svt.wp-agent.request`. Every agent reads every request and runs only the requests whose `data.waferAgentName` names its machine (case does not matter, and `WPMIT_DEV` names `WPMIT`). It ignores the other requests and sends no reply for them. Each machine has its own consumer group `wafer-executor-<NAME>`, so a second agent of the same machine stays idle.
+* **The machine can be off.** The agent runs all the time; the machine is switched on only when it is needed. The connection watch (`services/WPProberConnectionWatch.py`) checks the connection every 5 s. While the machine is off, it makes a quick TCP check, and it connects as soon as the machine answers (the first connect runs the full initialization). When a connected machine stops answering 3 times, an agent in a session goes to `Error`, and the next connect brings it back to `UserLogged` (open the project again). `ReconnectProber` still works by hand.
+* **Commands while the machine is off.** A command that needs the prober gets an error reply (code 503, "… is not connected"), and the agent state does not change. Commands without the prober (log-in, DB queries, `GetAgentState`, …) still work.
+* **Events.** Each change of the connection status goes to the topic `svt.wp-agent.connection-status` (key: the machine name): `{"type": "WpConnectionStatusChanged", "data": {"waferAgentName", "wpMachineId", "connected", "address", "timestamp"}}`. The heartbeat on `svt.wp-agent.heartbeat` also carries `waferAgentName`, `wpMachineId`, `proberConnected` and `appVersion`.
+* **Health check.** The Docker `HEALTHCHECK` runs `main.py check_local_health`: healthy while the listener sends heartbeats that Kafka confirms. It prints the connection status, but a machine that is off does not make the container unhealthy. `main.py --config=<file> check_listener_health` checks a listener over Kafka, for its machine only.
+
 ### SSH Tunnel (remote Kafka access)
 
 If you're sending commands from a machine outside the CERN network, create an SSH tunnel first:
@@ -624,6 +649,7 @@ If a DB-backed command (`OpenProject`, `ListProbers`, machine/project lookups, e
 
 - Verify SENTIO software is running on the prober machine
 - Check IP address and port: `ping <prober-host>` if needed 
+- `"<machine> is not connected"`: the agent cannot reach the machine. Switch it on (and start SENTIO); the agent connects by itself within a few seconds.
 
 
 ### Error state recovery

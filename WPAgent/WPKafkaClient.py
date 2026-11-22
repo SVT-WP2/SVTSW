@@ -14,7 +14,10 @@ from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
-from services.WPProberConnectionWatch import ProberConnectionWatch
+from services.WPProberConnectionWatch import (
+    ProberConnectionWatch, add_connection_listener, remove_connection_listener,
+)
+from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
 
 logger = WPAgentLogger(kafka_servers=None)
@@ -28,6 +31,10 @@ KAFKA_HEADER__CORRELATION_ID = "kafka_correlationId"
 KAFKA_HEADER__REPLY_TOPIC = "kafka_replyTopic"
 KAFKA_HEADER__REPLY_PARTITION = "kafka_replyPartition"
 
+# Connection status of each WP machine (see ProberConnectionWatch)
+CONNECTION_STATUS_TOPIC = "svt.wp-agent.connection-status"
+CONNECTION_STATUS_EVENT = "WpConnectionStatusChanged"
+
 
 
 
@@ -40,7 +47,7 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers=None, group_id="wafer-executor"):
+    def __init__(self, bootstrap_servers=None, group_id="wafer-executor", agent_name=None):
         """
         Initialize Kafka client
 
@@ -48,19 +55,24 @@ class KafkaClient:
             bootstrap_servers: Kafka broker address (e.g., "svmithi02:9092")
                               If None, uses default
             group_id: Consumer group ID
+            agent_name: WP machine of this listener. It runs only the requests for this
+                        machine, and every machine has its own consumer group.
         """
 
         self.bootstrap_servers = bootstrap_servers
         print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
 
         self.group_id = group_id
+        self.agent_name = agent_name
 
         # Topics
         self.request_topic = "svt.wp-agent.request"
         self.reply_topic = f"{self.request_topic}.reply"
+        self.connection_topic = CONNECTION_STATUS_TOPIC
 
         self._ensure_topic_exists(self.request_topic)
         self._ensure_topic_exists(self.reply_topic)
+        self._ensure_topic_exists(self.connection_topic)
 
         # Producer configuration
         producer_config = {
@@ -279,12 +291,51 @@ class KafkaClient:
 
         return results if repeat > 1 else (results[0] if results else None)
 
-    def listen(self, poll_timeout=0.1):
-        """Listen for and process Kafka messages (LISTENER MODE)."""
+    def listener_group_id(self):
+        """One consumer group per machine: each listener gets every request.
+        A second listener of the same machine joins the same group and stays idle."""
+        machine = normalize_machine_name(self.agent_name)
+        return f"{self.group_id}-{machine}" if machine else self.group_id
+
+    def is_for_this_machine(self, params):
+        """True when the request names the machine of this listener (always, without agent_name)."""
+        if not self.agent_name:
+            return True
+        target = params.get("waferAgentName") if isinstance(params, dict) else None
+        return is_same_machine(target, self.agent_name)
+
+    def publish_connection_status(self, connected):
+        """Send a WpConnectionStatusChanged event (key: the machine name)."""
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        g = SvtWPAagentGlobalParameters.getInstance()
+        event = {
+            "type": CONNECTION_STATUS_EVENT,
+            "data": {
+                "waferAgentName": self.agent_name,
+                "wpMachineId": g.wpMachineId,
+                "connected": connected,
+                "address": g.address,
+                "timestamp": time.time(),
+            },
+        }
+        self.producer.produce(
+            self.connection_topic,
+            key=(normalize_machine_name(self.agent_name) or None),
+            value=json.dumps(event).encode("utf-8"),
+        )
+        self.producer.poll(0)
+
+    def listen(self, poll_timeout=0.1, initialize_prober=None):
+        """Listen for and process Kafka messages (LISTENER MODE).
+
+        initialize_prober() runs the first, full prober initialization; the connection
+        watch calls it as soon as the WP machine is reachable.
+        """
 
         consumer_config = {
             "bootstrap.servers": self.bootstrap_servers,
-            "group.id": self.group_id,
+            "group.id": self.listener_group_id(),
             "auto.offset.reset": "latest",
             "enable.auto.commit": True,
             "session.timeout.ms": 10000,
@@ -305,7 +356,7 @@ class KafkaClient:
 
         # Initialize heartbeat monitoring with correct broker only when listener started
         health_check = ListenerHealthCheck(
-            bootstrap_servers=self.bootstrap_servers
+            bootstrap_servers=self.bootstrap_servers, agent_name=self.agent_name
         )
         # The cache snapshot is refreshed on every heartbeat beat (no separate cache topic)
         heartbeat_monitor = ListenerHealthMonitor(
@@ -323,9 +374,12 @@ class KafkaClient:
 
         heartbeat_monitor.start()
 
-        # Put the agent into Error when the prober machine stops answering
-        # (e.g. powered off). ReconnectProber brings it back without a restart.
-        connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
+        # The global watcher of the WP machine connection: connects when the machine is on,
+        # and every status change is published as an event.
+        add_connection_listener(self.publish_connection_status)
+        connection_watch = ProberConnectionWatch(
+            is_busy=lambda: self._active_commands > 0, initialize=initialize_prober
+        )
         connection_watch.start()
 
         try:
@@ -352,6 +406,7 @@ class KafkaClient:
             self.request_consumer.close()
             heartbeat_monitor.stop()
             connection_watch.stop()
+            remove_connection_listener(self.publish_connection_status)
             self.producer.flush(timeout=5.0)
             if self.reply_consumer:
                 self.reply_consumer.close()
@@ -363,6 +418,10 @@ class KafkaClient:
 
             command = payload.get("type")
             params = payload.get("data", {}) or {}
+
+            # Every agent reads every request: only the named machine runs it and replies.
+            if not self.is_for_this_machine(params):
+                return
 
             if hasattr(self, "_convert_param_types"):
                 params = self._convert_param_types(params)

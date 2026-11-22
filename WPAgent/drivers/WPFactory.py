@@ -4,6 +4,10 @@ from drivers.WPMockProber import MockProberImpl
 prober_classes = {"sentio": SentioProberImpl, "mock": MockProberImpl}
 
 
+class ProberNotConnectedError(RuntimeError):
+    """A command needs the prober, but the WP machine is not connected (e.g. switched off)."""
+
+
 class ProberFactory:
     """Singleton factory that maintains a single prober instance per configuration"""
 
@@ -81,6 +85,11 @@ class ProberFactory:
             >>> prober = factory.get_current_prober()
             >>> prober.move_chuck_center()
         """
+        from services.WPProberConnectionWatch import is_prober_connected, not_connected_message
+
+        if is_prober_connected() is False:
+            raise ProberNotConnectedError(not_connected_message())
+
         if not self._initialized or self._prober is None:
             raise RuntimeError(
                 "No prober is currently initialized. "

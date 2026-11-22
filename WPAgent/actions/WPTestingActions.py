@@ -24,7 +24,9 @@ def _ensure_initialized():
 
 
 def update_current_info(currentProber=None):
-    """Update global parameters with current prober state"""
+    """Update global parameters with current prober state (nothing to do without a prober)"""
+    if currentProber is None:
+        return
     g = SvtWPAagentGlobalParameters.getInstance()
     # Update position
     get_current_position = currentProber.get_current_index().split(",")

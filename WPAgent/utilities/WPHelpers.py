@@ -90,6 +90,10 @@ def check_prober_ready():
         tuple: (is_ready: bool, message: str)
     """
     from drivers.WPFactory import ProberFactory
+    from services.WPProberConnectionWatch import is_prober_connected, not_connected_message
+
+    if is_prober_connected() is False:
+        return False, not_connected_message()
 
     factory = ProberFactory.get_instance()
 

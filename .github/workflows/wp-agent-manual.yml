@@ -10,14 +10,13 @@ on:
       job:
         description: 'Manual job to run'
         required: true
-        default: 'docker-registry-create--manual'
+        default: 'deploy-dev--manual'
         type: choice
-        # TEMPORARY: the deploy jobs are hidden while WPAgent is out of the
-        # compose files. Restore the two options and the default
-        # 'deploy-dev--manual' when it comes back.
         options:
           - docker-registry-create--manual
-          # - deploy-dev--manual
+          - deploy-dev--manual
+          # TEMPORARY: hidden until the prod compose file has the WP machine services
+          # (after the first WPAgent release, see docker-compose-svtsw-prod.yml).
           # - deploy-prod--manual
       image_tag:
         description: 'Image tag. Required for deploy-prod--manual (the release version, e.g. 1.2.3). Optional for deploy-dev--manual (defaults to short SHA). Ignored by docker-registry-create--manual (always builds short SHA).'
@@ -33,6 +32,9 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: svt-wp2/svt-wp-agent
+  # The compose services of the WP machines (one per machine, same image), space-separated.
+  # Keep in sync with wp-agent.yml and Environment/<Env>/docker-compose-svtsw-<env>.yml.
+  WP_AGENT_SERVICES: 'svt-wp-agent-wpmit'
 
 defaults:
   run:
@@ -92,7 +94,9 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE_TAG="${INPUT_TAG:-${GITHUB_SHA::8}}"
-          bash Environment/deploy-service.sh dev svt-wp-agent "${IMAGE_TAG}"
+          for service in ${WP_AGENT_SERVICES}; do
+            bash Environment/deploy-service.sh dev "${service}" "${IMAGE_TAG}"
+          done
 
   # Manual production deploy. Run from the Actions UI once a release image
   # exists for a `svt-wp-agent-*` tag. Requires `image_tag` input (the
@@ -122,4 +126,6 @@ jobs:
             echo "ERROR: image_tag input is required for deploy-prod--manual" >&2
             exit 1
           fi
-          bash Environment/deploy-service.sh prod svt-wp-agent "${INPUT_TAG}"
+          for service in ${WP_AGENT_SERVICES}; do
+            bash Environment/deploy-service.sh prod "${service}" "${INPUT_TAG}"
+          done

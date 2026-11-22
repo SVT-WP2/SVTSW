@@ -16,6 +16,8 @@ class SvtWPAagentGlobalParameters:
         self.orientation = None  # Project orientation
         self.projectName = None
         self.prober_status = "available"
+        # Connection to the WP machine: None = not checked yet, then True / False (see WPProberConnectionWatch)
+        self.prober_connected = None
         self._alignment_die = None
         self._home_die = None
         self._project_metadata = {}

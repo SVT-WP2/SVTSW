@@ -10,7 +10,7 @@ as systemd services on the same host:
 | Stack | Compose file | systemd unit | Contents |
 | ----- | ------------ | ------------ | -------- |
 | kafka | `docker-compose-kafka-<env>.yml` | `svt.kafka--<env>.service` | Kafka broker (KRaft) + Kafka UI; **owns** the `svt-network--<env>` network |
-| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui` and the DB agent `svt-db-agent-next` (join the network as `external`) |
+| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, the DB agent `svt-db-agent-next` and one `svt-wp-agent-<machine>` per WP machine (dev only for now) (join the network as `external`) |
 
 On the server each environment is one self-contained folder:
 
@@ -83,6 +83,33 @@ It also starts a service that an admin stopped by hand, and it removes the
 container of a service that is no longer in the file (`--remove-orphans`, as
 the systemd unit does at boot). The Kafka stack is not
 touched: apply Kafka changes with `sudo systemctl restart svt.kafka--<env>.service`.
+
+## WPAgent: one service per WP machine
+
+Each WP machine has its own compose service `svt-wp-agent-<machine>` (all use the
+image `svt-wp-agent`) with its own version line `SVT_WP_AGENT_<MACHINE>_VERSION`.
+Compose sets the machine name (`WaferProbeMachine.name`) and the Kafka broker as
+env vars; the agent gets the rest from the DB agent, and it runs also while the
+machine is off (see the WPAgent README, "One agent per WP machine").
+
+To add a machine:
+
+1. Copy the `svt-wp-agent-wpmit` block in `docker-compose-svtsw-<env>.yml` and change
+   the service, the container, the version variable and `SVT_WP_AGENT_MACHINE_NAME`.
+2. Add the version line to `versions.env.example`. A deploy adds a template line that
+   is missing from the server's `versions.env`.
+3. Add the service to `WP_AGENT_SERVICES` in `wp-agent.yml` and `wp-agent-manual.yml`:
+   a WPAgent deploy deploys every service of the list.
+
+A single-service deploy runs `up --remove-orphans`: the first deploy of
+`svt-wp-agent-wpmit` removes the old `svt.wp-agent--<env>` container, so two agents
+never drive the same machine.
+
+**Prod (temporary):** the prod services stay commented out until the first WPAgent
+release (`WPAgent :: Release`). Before it there is no release image, and a missing
+image or version line stops every compose command of the prod stack. To enable:
+uncomment the block in `docker-compose-svtsw-prod.yml`, the version line in
+`Prod/versions.env.example` and the `deploy-prod--manual` option in `wp-agent-manual.yml`.
 
 ## The two DB agent services
 

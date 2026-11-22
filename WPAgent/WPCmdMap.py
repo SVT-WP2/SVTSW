@@ -12,6 +12,8 @@ import actions.WPImagingActions as imaging_actions
 import actions.WPContactingActions as contacting_actions
 import actions.WPDieGridActions as die_grid_actions
 
+from drivers.WPFactory import ProberNotConnectedError
+from services.WPProberConnectionWatch import is_prober_connected
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 from utilities.WPValidationDecorator import validate_command_with_name
 from utilities.WPSequenceContext import trusted_sequence, in_trusted_sequence
@@ -177,6 +179,8 @@ def _exec_in_sequence(message_type, data=None):
 
 def _try_local_mode():
     """Try to set prober to local mode after error"""
+    if is_prober_connected() is False:
+        return
     try:
         from drivers.WPFactory import ProberFactory
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
@@ -291,6 +295,11 @@ def execute_command(message_type, data=None):
             else:
                 severity = Severity.ERROR
                 _try_local_mode()  # Try to recover by going to local mode
+
+    except ProberNotConnectedError as e:
+        # The machine is off: a normal case, not an agent error (no Error state).
+        result = ResponseBuilder.error(f"{message_type}Reply", str(e), 503)
+        severity = Severity.WARNING
 
     except Exception as e:
         import traceback

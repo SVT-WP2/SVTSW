@@ -21,10 +21,11 @@
 #      versions.env are NEVER overwritten).
 #   2. Refuses to run until the admin has created /opt/docker/svtsw/<env>/.env
 #      (secrets never leave the server, so CI cannot create it); bootstraps
-#      versions.env from versions.env.example on the first run.
+#      versions.env from versions.env.example on the first run, and adds the
+#      lines of services that are new in the template.
 #   3. Pins <SERVICE>_VERSION=<image-tag> in versions.env.
 #   4. Pulls the image and recreates ONLY that service:
-#      docker compose up -d --no-deps --wait <service>.
+#      docker compose up -d --no-deps --remove-orphans --wait <service>.
 #      The deploy fails when the container stops, or its HEALTHCHECK fails,
 #      within WAIT_TIMEOUT seconds.
 #
@@ -146,6 +147,14 @@ if ! sudo test -f "$VERSIONS_FILE"; then
   echo "First deploy to ${ENV_NAME}: bootstrapping ${VERSIONS_FILE} from the template."
   sudo cp "${SRC_DIR}/versions.env.example" "$VERSIONS_FILE"
 fi
+# A service new in the template (e.g. a new WP machine) gets its bootstrap line:
+# compose needs the version of every service before it runs any command.
+while IFS= read -r line; do
+  if ! sudo grep -q "^${line%%=*}=" "$VERSIONS_FILE"; then
+    echo "Adding ${line} to ${VERSIONS_FILE} (new in the template)."
+    printf '%s\n' "$line" | sudo tee -a "$VERSIONS_FILE" >/dev/null
+  fi
+done < <(grep -E '^[A-Z0-9_]+_VERSION=' "${SRC_DIR}/versions.env.example")
 
 # --- 3. pin the new version (not for --apply-compose) --------------------------
 if [ "$APPLY_COMPOSE" = false ]; then
@@ -195,7 +204,9 @@ fi
 # --- 6. deploy just this service -----------------------------------------------
 "${COMPOSE[@]}" pull "$SERVICE"
 # --wait: fail the deploy when the container stops or its HEALTHCHECK fails.
-"${COMPOSE[@]}" up -d --no-deps --wait --wait-timeout "$WAIT_TIMEOUT" "$SERVICE" \
+# --remove-orphans: remove the containers of services no longer in the file
+# (e.g. a renamed service), so an old container never runs next to its successor.
+"${COMPOSE[@]}" up -d --no-deps --remove-orphans --wait --wait-timeout "$WAIT_TIMEOUT" "$SERVICE" \
   || fail_unhealthy "$SERVICE"
 "${COMPOSE[@]}" ps "$SERVICE"
 echo "Deployed ${SERVICE}=${IMAGE_TAG} to ${ENV_NAME}."
