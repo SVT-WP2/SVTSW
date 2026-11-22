@@ -4,18 +4,19 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
-import { AppModule, configureEpicMeasureApiApp, EPIC_MEASURE_API_GLOBAL_PREFIX } from './app'
+import { AppModule, configureEpicMeasureApiApp, EPIC_MEASURE_API_GLOBAL_PREFIX, ensureEpicMeasureApiKafkaTopics } from './app'
 
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true })
     configureEpicMeasureApiApp(app)
 
+    const brokers = [process.env.KAFKA_BROKER || 'localhost:9092']
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.KAFKA,
         options: {
             client: {
-                brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+                brokers,
             },
             consumer: {
                 groupId: 'epic-ui',
@@ -35,6 +36,7 @@ async function bootstrap() {
     SwaggerModule.setup('api/swagger', app, documentFactory)
     // ./Swagger
     const port = process.env.SVT_UI_API_PORT || 9393
+    await ensureEpicMeasureApiKafkaTopics(brokers)
     await app.startAllMicroservices()
     await app.listen(port)
     Logger.log(

@@ -65,7 +65,9 @@ or `npm run test::affected` scope it.
 
 **Kafka must be running before the API starts.** Broker is `localhost:9085` per
 `apps/epic-measure-api/.env.development` (`../Dev/docker-compose.kafka-local.yml`). The e2e suite has its own broker on 9185
-(`../Dev/docker-compose.e2e.yml`).
+(`../Dev/docker-compose.e2e.yml`). On an empty broker, `main.ts` creates the topics the API consumes before its
+consumers start (`ensureEpicMeasureApiKafkaTopics`): kafkajs does not retry a subscribe to a topic the broker is
+still auto-creating, and the boot would end.
 
 ## Code style — non-negotiable, enforced by ESLint
 
