@@ -83,6 +83,11 @@ jobs:
             echo "ERROR: run this from a branch, not a ${GITHUB_REF_TYPE} (${GITHUB_REF_NAME})." >&2
             exit 1
           fi
+          # The tag build runs no tests: release from master, or from a release branch for a patch.
+          case "${GITHUB_REF_NAME}" in
+            master|release/svt-db-agent-next/*) ;;
+            *) echo "ERROR: run this from master or a release/svt-db-agent-next/* branch, not ${GITHUB_REF_NAME}." >&2; exit 1 ;;
+          esac
           # Run the prepared npm script of the app's own package.json but
           # suppress npm's commit/tag (--no-git-tag-version); the steps below make
           # the commit and tag with the svt-db-agent-next@ / svt-db-agent-next-
