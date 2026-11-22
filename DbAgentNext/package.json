@@ -1,6 +1,6 @@
 {
     "name": "svt-db-agent-next",
-    "version": "1.1.0-SNAPSHOT.0",
+    "version": "1.1.0",
     "description": "SVT DB Agent, NestJS re-implementation of DbAgent/ (C++)",
     "private": true,
     "scripts": {
