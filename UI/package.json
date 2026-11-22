@@ -1,6 +1,6 @@
 {
     "name": "svt-ui",
-    "version": "1.1.0-SNAPSHOT.0",
+    "version": "1.1.0",
     "scripts": {
         "ng": "ng",
         "start": "nx run-many -t=serve -p epic-measure-api epic-measure-ui",
