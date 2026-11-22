@@ -1,24 +1,11 @@
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-from drivers.WPFactory import get_prober, ProberFactory
+from drivers.WPFactory import get_prober, ProberFactory, ProberNotConnectedError
 from utilities.WPValidationDecorator import validate_command_with_name
 from utilities.WPResponseBuilder import ResponseBuilder
 from services.WPDbKafkaClient import DBKafkaClient
 import actions.WPDataBaseActions
 import json
 import os
-
-
-def _parse_die_position(die_string):
-    """Parse die position string like '5,10,0' into dict"""
-    try:
-        parts = die_string.split(",")
-        return {
-            "col": int(parts[0]),
-            "row": int(parts[1]),
-            "subsite": int(parts[2]) if len(parts) > 2 else 0,
-        }
-    except Exception:
-        return None
 
 
 # =============================================================================
@@ -50,12 +37,15 @@ def _connect_prober(factory, globals_, machine_type, address, force):
     Returns (prober, error_response). On success error_response is None.
     """
     if force:
-        factory.reset()
+        factory.close()  # closes the old connection; the new one is opened below
 
     try:
         prober = factory.get_prober(machine_type, address)
         print(f"✅ Prober created successfully: {type(prober).__name__}")
         globals_.set_prober_status("initialized")
+        from services.WPProberConnectionWatch import set_prober_connected
+
+        set_prober_connected(True, "initialized")
         return prober, None
     except Exception as e:
         error_msg = f"Failed to create prober: {str(e)}"
@@ -88,20 +78,28 @@ def _store_globals(globals_, address, machine_type, machine_id, machine_name,
     except Exception:
         globals_.user = "default_user"
 
-    globals_.wpag_state = "ServiceOn"
+    # The state machine owns the agent state: an initialization does not change it
+    # (a user may have logged in before the machine was initialized).
+    from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-def _sync_from_db(globals_, machine_id, is_mock):
+    globals_.wpag_state = agentStateMachine.get_state_name()
+
+
+def _sync_from_db(globals_, machine_id, is_mock, machine_record=None):
     """
     Sync loaded wafer and probe card state from the database.
     Skipped silently for mock probers or when machine_id is missing.
+    machine_record: the record of this machine when the caller has just read it.
     """
     if not machine_id or machine_id == 0:
         return
 
     try:
-        db_client = DBKafkaClient.get_instance()
-        machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
-        our_machine = next((m for m in machines if m.get("id") == machine_id), None)
+        our_machine = machine_record
+        if our_machine is None:
+            db_client = DBKafkaClient.get_instance()
+            machines = db_client.get_all_wafer_probe_machines(timeout=15.0)
+            our_machine = next((m for m in machines if m.get("id") == machine_id), None)
 
         if not our_machine:
             print(f"⚠️  Machine ID {machine_id} not found in database")
@@ -137,11 +135,9 @@ def _sync_from_db(globals_, machine_id, is_mock):
         print(f"⚠️  DB sync failed (non-fatal): {str(e)}")
 
 
-def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock,
-                   alignment_die, home_die):
+def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock):
     """
-    Set project name, resolve project ID from DB if needed, open project on prober,
-    and store alignment/home die positions.
+    Set project name, resolve project ID from DB if needed and open project on prober.
     """
     if not project_name:
         return
@@ -180,17 +176,6 @@ def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mo
     except Exception as e:
         print(f"⚠️  Warning: Could not open project: {str(e)}")
 
-    # Store die positions
-    if alignment_die:
-        parsed = _parse_die_position(alignment_die)
-        if parsed:
-            globals_.set_alignment_die(parsed)
-
-    if home_die:
-        parsed = _parse_die_position(home_die)
-        if parsed:
-            globals_.set_home_die(parsed)
-
 
 # =============================================================================
 # Public entry point
@@ -200,8 +185,6 @@ def svt_initialise_wp(
         address=None,
         machine_type=None,
         project_name=None,
-        alignment_die=None,
-        home_die=None,
         force=False,
         machine_id=None,
         machine_name=None,
@@ -212,10 +195,12 @@ def svt_initialise_wp(
         serialNumber=None,
         user=None,
         waferAgentName=None,
+        machine_record=None,
 ):
     """
     Initialize the WP agent with prober connection and DB sync.
     Works with both real probers (sentio) and mock probers (mock).
+    The Initialize command calls it for the machine of this agent (initialize_machine).
     """
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
@@ -240,11 +225,10 @@ def svt_initialise_wp(
                        initialization_mode, serialNumber)
 
         # 4. Sync state from DB
-        _sync_from_db(globals_, machine_id, is_mock)
+        _sync_from_db(globals_, machine_id, is_mock, machine_record)
 
         # 5. Setup project
-        _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock,
-                       alignment_die, home_die)
+        _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock)
 
         # Store extra metadata
         globals_.chuck_z_position_state = "Unknown"
@@ -277,21 +261,75 @@ def svt_initialise_wp(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        globals_.wpag_state = "WP_Error"
         return ResponseBuilder.error("InitializeReply", f"Initialization failed: {str(e)}", 500)
 
 
-def show_status(user=None, waferAgentName=None):
-    """Get current project status"""
-    try:
-        factory = ProberFactory.get_instance()
-        g = SvtWPAagentGlobalParameters.getInstance()
+def initialize_machine(force=False, user=None, waferAgentName=None, **other):
+    """
+    The Initialize command: connect this agent to its WP machine and read the machine
+    state (loaded wafer, probe card) from the DB.
 
-        if not factory.is_initialized():
-            return ResponseBuilder.error("ShowStatusReply", "Not initialized", 400)
+    The agent never does this by itself: it starts with a connection watch that only
+    reports whether the machine is on. The machine is the DB record of this agent
+    (WaferProbeMachine), read again right before the connect, so the request has no address.
+    An agent that is already initialized stays as it is, unless force is true.
+    """
+    from services.WPMachineRecord import refresh_machine
+    from services.WPProberConnectionWatch import is_reachable, not_connected_message, set_prober_connected
+
+    reply = "InitializeReply"
+    g = SvtWPAagentGlobalParameters.getInstance()
+    factory = ProberFactory.get_instance()
+
+    if other:
+        return ResponseBuilder.error(
+            reply,
+            f"Initialize takes only 'force': the machine is the DB record of {g.wpAgentName or 'this agent'} "
+            f"(not allowed: {', '.join(sorted(other))}).",
+            400,
+        )
+
+    force = force is True or str(force).lower() in ("true", "1", "yes")
+    if factory.is_initialized() and not force:
+        return ResponseBuilder.success(
+            reply, f"Already initialized at {g.address}. Use force=true to initialize again."
+        )
+
+    machine_record = refresh_machine()
+    if not g.address or not g.machineType:
+        return ResponseBuilder.error(
+            reply, "The machine of this agent is not known: start the listener with a config.", 500
+        )
+    if not is_reachable(g.machineType, g.address):
+        set_prober_connected(False, "machine not reachable")
+        return ResponseBuilder.error(reply, f"{not_connected_message()} (address: {g.address})", 503)
+
+    return svt_initialise_wp(
+        address=g.address,
+        machine_type=g.machineType,
+        machine_id=g.wpMachineId,
+        machine_name=g.wpAgentName,
+        initialization_mode="database" if g.machine_record_name else "manual",
+        force=True,
+        machine_record=machine_record,
+    )
+
+
+def show_status(user=None, waferAgentName=None):
+    """
+    The status of the agent and of its WP machine. It reads only the agent's own state,
+    so it also works before Initialize and while the machine is off.
+    """
+    try:
+        from services.WPProberConnectionWatch import is_prober_connected, is_prober_initialized
+
+        g = SvtWPAagentGlobalParameters.getInstance()
+        connection = {True: "connected", False: "not connected"}.get(is_prober_connected(), "not checked yet")
+        initialized = "initialized" if is_prober_initialized() else "not initialized"
 
         parts = [
             f"Agent: {g.wpAgentName or 'Unknown'}",
+            f"Machine: {connection}, {initialized}",
             f"State: {g.wpag_state}",
             f"User: {g.userLogged or 'None'}",
             f"Project: {g.projectName or 'None'}",
@@ -305,16 +343,14 @@ def show_status(user=None, waferAgentName=None):
         return ResponseBuilder.error("ShowStatusReply", str(e), 500)
 
 
-def get_info():
+def get_info(user=None, waferAgentName=None):
     """Get current die info"""
     try:
-        factory = ProberFactory.get_instance()
         globals_ = SvtWPAagentGlobalParameters.getInstance()
 
-        if not factory.is_initialized():
-            return ResponseBuilder.error("GetInfoReply", "Not initialized", 400)
-
-        prober = factory.get_prober(globals_.machineType, globals_.address)
+        # The prober of the live connection only: never a new connection from here
+        # (get_prober would open one when the DB record has moved the machine).
+        prober = ProberFactory.get_instance().get_current_prober()
         current_index = prober.get_current_index()
         counts = prober.get_dies_number().split(",")
         parts = current_index.split(",")
@@ -332,6 +368,8 @@ def get_info():
         )
         return ResponseBuilder.success("GetInfoReply", message)
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 
@@ -346,9 +384,22 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
     from stateMachine.WpAgentStateMachine import WPAgentState
 
+    from services.WPMachineRecord import refresh_machine
+    from services.WPProberConnectionWatch import not_initialized_message, set_prober_connected
+
     g = SvtWPAagentGlobalParameters.getInstance()
     factory = ProberFactory.get_instance()
 
+    if not factory.is_initialized():
+        return (
+            False,
+            f"{not_initialized_message()} A reconnect only restores a connection that Initialize has set up.",
+            400,
+        )
+
+    # The DB record is the source of truth for the address: read it right before the connect.
+    old_address = g.address
+    refresh_machine()
     address, machine_type = g.address, g.machineType
     if not address or not machine_type:
         return (
@@ -360,6 +411,9 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
     try:
         prober = factory.reconnect(machine_type, address)
     except Exception as e:
+        if address != old_address:
+            # The record moved the machine: the old connection is not this machine any more.
+            set_prober_connected(False, f"the machine moved to {address}, which is not reachable")
         return (
             False,
             f"Cannot reach the prober at {address}: {e}. "
@@ -368,6 +422,7 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
         )
 
     g.set_prober_status("initialized")
+    set_prober_connected(True, f"reconnected by {requested_by or 'ReconnectProber'}")
 
     # The machine lost its session: forget the old one.
     g.set_project_name(None)
@@ -453,7 +508,7 @@ def reset_agent(user=None, waferAgentName=None):
     )
 
 
-def get_agent_state():
+def get_agent_state(user=None, waferAgentName=None):
     """Get current agent state"""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 

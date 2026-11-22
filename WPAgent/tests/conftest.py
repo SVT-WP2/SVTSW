@@ -57,6 +57,13 @@ def _clear_globals():
     SvtWPAagentGlobalParameters._instance = None
     _wv._validator_instance = None
 
+    # A test that stops the listener closes the prober factory for good (no new
+    # connection after the stop): the next test starts with a factory that connects again.
+    from drivers.WPFactory import ProberFactory
+
+    if ProberFactory._instance is not None:
+        ProberFactory._instance._stopped = False
+
 
 @pytest.fixture(autouse=True)
 def reset_globals():

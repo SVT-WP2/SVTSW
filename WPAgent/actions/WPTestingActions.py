@@ -24,7 +24,9 @@ def _ensure_initialized():
 
 
 def update_current_info(currentProber=None):
-    """Update global parameters with current prober state"""
+    """Update global parameters with current prober state (nothing to do without a prober)"""
+    if currentProber is None:
+        return
     g = SvtWPAagentGlobalParameters.getInstance()
     # Update position
     get_current_position = currentProber.get_current_index().split(",")
@@ -859,32 +861,17 @@ def align_wafer(
 ):
     """Perform wafer alignment"""
     reply = get_reply_type()
-    from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     error = _ensure_initialized()
     if error:
         return error
 
-    g = SvtWPAagentGlobalParameters.getInstance()
-
-    # Get die position from initialization if not provided
     if align_die_col is None or align_die_row is None:
-        alignment_die = g.get_alignment_die()
-
-        if alignment_die:
-            align_die_col = alignment_die["col"]
-            align_die_row = alignment_die["row"]
-            subsite = subsite if subsite is not None else alignment_die["subsite"]
-            print(
-                f"   📍 Using alignment die from initialization: Col {align_die_col}, Row {align_die_row}, Subsite {subsite}"
-            )
-        else:
-            return ResponseBuilder.error(
-                reply,
-                "Alignment die not specified. Please provide align_die_col and align_die_row parameters, "
-                "or set alignment_die during initialization.",
-                400,
-            )
+        return ResponseBuilder.error(
+            reply,
+            "Alignment die not specified. Please provide align_die_col and align_die_row parameters.",
+            400,
+        )
 
     # Set default subsite if still None
     if subsite is None:

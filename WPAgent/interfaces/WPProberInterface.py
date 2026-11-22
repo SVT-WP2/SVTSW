@@ -7,6 +7,13 @@ class AbstractProber(ABC):
         """Initialize connection to prober"""
         pass
 
+    def disconnect(self):
+        """
+        Close the connection to the prober. Sends no command; safe to call twice.
+        ProberFactory calls it for every prober that it lets go (close, reconnect).
+        """
+        pass
+
     @abstractmethod
     def open_project(self, path: str):
         """Open project in Sentio"""

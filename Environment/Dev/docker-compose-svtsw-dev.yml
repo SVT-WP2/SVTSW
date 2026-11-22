@@ -86,18 +86,32 @@ services:
         max-size: "50m"
         max-file: "5"
 
-  # TEMPORARY: WPAgent is out of the deployment until its issues are fixed.
-  # The deploy jobs of wp-agent.yml and wp-agent-manual.yml are off too.
-  # svt-wp-agent:
-  #   image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_VERSION:?missing - set it in versions.env}
-  #   container_name: svt.wp-agent--dev
-  #   restart: unless-stopped
-  #   command: ["listen", "--config=configs/ProbeConfigCERN_DEV.json"]
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "50m"
-  #       max-file: "5"
+  # WPAgent: one service per WP machine. SVT_WP_AGENT_MACHINE_NAME is WaferProbeMachine.name
+  # in the DB; the agent gets the address and the type of the machine from the DB agent.
+  # The agent runs also while the machine is off, and connects when it is on.
+  # Add a machine: copy the block, change the service, container, version variable and
+  # machine name, and add the service to WP_AGENT_SERVICES in wp-agent.yml + wp-agent-manual.yml.
+  svt-wp-agent-wpmit:
+    image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_WPMIT_VERSION:?missing - set it in versions.env}
+    container_name: svt.wp-agent-wpmit--dev
+    restart: unless-stopped
+    # On a stop or a redeploy the agent lets the running command finish (up to 20 s,
+    # STOP_COMMAND_WAIT in WPAgent/WPKafkaClient.py), then closes its connection to the
+    # WP machine. Keep this above that wait: after it docker kills the container.
+    stop_grace_period: 30s
+    networks:
+      - svt-network--dev
+    command: ["listen"]
+    environment:
+      SVT_WP_AGENT_MACHINE_NAME: WPMIT
+      SVT_WP_AGENT_KAFKA_BROKER: "${SVT_KAFKA_HOST:-kafka}:${SVT_KAFKA_PORT:-9094}"
+      # The agent reports its own version; keep it in lockstep with the image tag.
+      APP_VERSION: "${SVT_WP_AGENT_WPMIT_VERSION}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
 # The network is created and owned by the Kafka stack
 # (docker-compose-kafka-dev.yml) - start that stack first.

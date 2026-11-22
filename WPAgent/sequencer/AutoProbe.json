@@ -1,9 +1,10 @@
 [
   {
-    "command": "Initialize",
+    "command": "Initialize"
+  },
+  {
+    "command": "OpenProject",
     "params": {
-      "address": "wpmit01.cern.ch:35555",
-      "machineType": "sentio",
       "projectName": "nkf7_arrow_e_test_21_07"
     }
   },

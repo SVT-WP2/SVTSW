@@ -28,6 +28,8 @@ class AgentData(TypedDict):
     asicSerialNumber: int
     wpMachineId: int
     WPAG_State: str
+    proberConnected: Optional[bool]  # the WP machine is on (None: not checked yet)
+    proberInitialized: bool  # the Initialize command has connected the agent to the machine
     wpAgentName: str
     loadedWafer: Union[int, LoadedWafer]
     installedProbeCard: Optional[InstalledProbeCard]

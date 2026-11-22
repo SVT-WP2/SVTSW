@@ -31,6 +31,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: svt-wp2/svt-wp-agent
   PYTHON_VERSION: '3.12'
+  # The compose services of the WP machines (one per machine, same image), space-separated.
+  # Keep in sync with wp-agent-manual.yml and Environment/<Env>/docker-compose-svtsw-<env>.yml.
+  WP_AGENT_SERVICES: 'svt-wp-agent-wpmit'
 
 defaults:
   run:
@@ -167,9 +170,7 @@ jobs:
   # not in GitHub.
   deploy-dev:
     # Same guard as docker-registry-create: don't deploy version-bump commits.
-    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
     if: >-
-      false &&
       github.event_name == 'push' && github.ref == 'refs/heads/master'
       && !startsWith(github.event.head_commit.message, 'svt-wp-agent@')
     needs: docker-registry-create
@@ -191,7 +192,9 @@ jobs:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          bash Environment/deploy-service.sh dev svt-wp-agent "${IMAGE_TAG}"
+          for service in ${WP_AGENT_SERVICES}; do
+            bash Environment/deploy-service.sh dev "${service}" "${IMAGE_TAG}"
+          done
 
   # Auto-deploy a release image to dev as soon as it's built. Runs on every
   # svt-wp-agent-* tag (any release type), after
@@ -199,8 +202,7 @@ jobs:
   # release-versioned image (svt-wp-agent:<version>), replacing whatever the
   # master-push deploy-dev last pinned for the service.
   deploy-dev--release:
-    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
-    if: false && startsWith(github.ref, 'refs/tags/svt-wp-agent-')
+    if: startsWith(github.ref, 'refs/tags/svt-wp-agent-')
     needs: docker-registry-create--release
     runs-on: self-hosted
     environment: dev
@@ -220,4 +222,6 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF#refs/tags/svt-wp-agent-}"
-          bash Environment/deploy-service.sh dev svt-wp-agent "${VERSION}"
+          for service in ${WP_AGENT_SERVICES}; do
+            bash Environment/deploy-service.sh dev "${service}" "${VERSION}"
+          done
