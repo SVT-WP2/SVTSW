@@ -5,14 +5,19 @@ import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextConfig } from '../../config'
 
-import { SVT_DB_AGENT_NEXT_KAFKA_CLIENT_ID, SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP } from './svt-db-agent-next-kafka.models'
+import {
+    SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_RETRY_MS,
+    SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_TIMEOUT_MS,
+    SVT_DB_AGENT_NEXT_KAFKA_CLIENT_ID,
+    SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP,
+} from './svt-db-agent-next-kafka.models'
 
 
 /** What `skip()` did: how many requests it skipped, or why it left the offsets as they were. */
 export type SvtDbAgentNextKafkaBacklogResult =
     | { skipped: number }
     | {
-        kept: 'no-topic' | 'no-committed-offset' | 'group-active'
+        kept: 'no-committed-offset' | 'group-active'
         reason?: string
     }
 
@@ -26,6 +31,9 @@ export type SvtDbAgentNextKafkaBacklogResult =
  * The broker accepts that only while the group has no member. With another agent in it (a handover from a
  * running agent, or a restarted one the broker still counts until its session times out) the offsets stay
  * and the consumer joins the group as it is.
+ *
+ * On a brand-new broker it also prepares what the consumer needs, because kafkajs does not retry these errors and
+ * the boot would end: it creates the request topic, and it waits until the group coordinator answers.
  */
 @Injectable()
 export class SvtDbAgentNextKafkaBacklogService {
@@ -52,11 +60,9 @@ export class SvtDbAgentNextKafkaBacklogService {
 
     private async moveToEnd(admin: Admin): Promise<SvtDbAgentNextKafkaBacklogResult> {
         const topic = SvtDbAgentKafka.TopicName.Request
-        if (!(await admin.listTopics()).includes(topic)) {
-            return { kept: 'no-topic' }
-        }
+        await this.ensureTopic(admin, topic)
         const groupId = SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP
-        const [committed] = await admin.fetchOffsets({ groupId, topics: [topic] })
+        const [committed] = await this.fetchCommittedOffsets(admin, groupId, topic)
         const ends = await admin.fetchTopicOffsets(topic)
         let skipped = 0
         let anyCommitted = false
@@ -85,6 +91,44 @@ export class SvtDbAgentNextKafkaBacklogService {
             return { kept: 'group-active', reason: error instanceof Error ? error.message : String(error) }
         }
         return { skipped }
+    }
+
+    /**
+     * Creates the request topic when the broker has not got it. Without it, a KRaft broker answers the consumer's
+     * first metadata request "This server does not host this topic-partition" while it auto-creates the topic.
+     */
+    private async ensureTopic(admin: Admin, topic: string): Promise<void> {
+        if ((await admin.listTopics()).includes(topic)) {
+            return
+        }
+        const created = await admin.createTopics({
+            waitForLeaders: true,
+            topics: [{ topic, numPartitions: 1, replicationFactor: 1 }],
+        })
+        if (created) {
+            this.logger.log(`Created topic ${topic}`)
+        }
+    }
+
+    /**
+     * The group's committed offsets. A brand-new broker creates `__consumer_offsets` on the first group request and
+     * answers "This is not the correct coordinator for this group" until it is ready: ask again until the timeout.
+     */
+    private async fetchCommittedOffsets(admin: Admin, groupId: string, topic: string): ReturnType<Admin['fetchOffsets']> {
+        const deadline = Date.now() + SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_TIMEOUT_MS
+        for (;;) {
+            try {
+                return await admin.fetchOffsets({ groupId, topics: [topic] })
+            }
+            catch (error) {
+                // kafkajs marks its errors `retriable`; its error classes are not visible to an ESM import.
+                const retriable = (error as { retriable?: boolean } | undefined)?.retriable === true
+                if (!retriable || Date.now() >= deadline) {
+                    throw error
+                }
+                await new Promise((resolve) => setTimeout(resolve, SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_RETRY_MS))
+            }
+        }
     }
 
     private report(result: SvtDbAgentNextKafkaBacklogResult): void {

@@ -21,7 +21,7 @@
         "db:migration:down": "mikro-orm migration:down",
         "db:migration:pending": "mikro-orm migration:pending",
         "db:schema:update:dump": "mikro-orm schema:update --dump --safe",
-        "db:restore": "node scripts/db-restore.mjs ../Dev/db-example/2026-11-08-backup.dump",
+        "db:restore": "node scripts/db-restore.mjs ../Dev/db-example/backup-prod-2026-11-22.dump",
         "pre-pull-request": "npm run lint && npm run typecheck && npm test",
         "next-preminor-version": "npm version preminor --preid=SNAPSHOT",
         "next-snapshot-version": "npm version prerelease --preid=SNAPSHOT",

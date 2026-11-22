@@ -79,6 +79,8 @@ name anything `e`. An `index.ts` barrel in every folder; import from the barrel.
   kafkajs resumes from the group's committed offset (`fromBeginning: false` only covers a group without one),
   so `SvtDbAgentNextKafkaBacklogService.skip()` moves the offsets to the end before the consumer starts, as the
   C++ seeks to the end (`docs/04-runtime-and-deployment.md` §2). `main.ts` and the e2e `TestSetup` both call it.
+  On a brand-new broker it also creates the request topic and waits for the group coordinator first: kafkajs
+  does not retry either error, and the boot would end.
 - **`importHelpers` stays off** (the default): the app compiles to CommonJS, and the `export *` of the
   `../Shared` barrels would import `tslib`, which does not resolve from there.
 - **The lockfile was seeded from `../UI/package-lock.json`** (2026-11-14). A fresh resolution with npm 10.9
