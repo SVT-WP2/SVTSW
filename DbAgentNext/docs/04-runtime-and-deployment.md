@@ -41,14 +41,24 @@ every message to the dispatcher ([05 §3](05-implementation-notes.md#3-the-dispa
 | A value that is not JSON | the process exits | The value reaches the dispatcher as a string and gets the `BadRequest` envelope (`Malformed request: missing string "type"`); the agent keeps serving. |
 | Compression and sizes | none; broker limit 50 MiB | gzip on the producer; the consumer fetches up to 10 MiB per partition and 50 MiB per request. |
 
-An unreachable broker at start ends the boot, as for the C++ agent, and the container restarts. A broker that has
-just started can fail the boot too ("This server does not host this topic-partition"): the agent starts cleanly once
-the broker reports healthy.
+An unreachable broker at start ends the boot, as for the C++ agent, and the container restarts.
+
+A brand-new broker (an empty volume) has neither the request topic nor `__consumer_offsets`, and kafkajs does not
+retry the errors it then gets. Before the backlog skip, `SvtDbAgentNextKafkaBacklogService` therefore prepares the
+broker:
+
+- It creates `svt.db-agent.request` (1 partition, replication 1) when the broker has not got it. Without this step,
+  a KRaft broker answers the consumer's first metadata request with "This server does not host this
+  topic-partition" while it auto-creates the topic, and the boot ends.
+- It waits up to 30 s for the group coordinator. The first group request makes the broker create
+  `__consumer_offsets`, and until that is ready the broker answers "This is not the correct coordinator for this
+  group". The agent asks again every 500 ms.
 
 Start order (`main.ts`): the application is initialised first, so that the handlers are registered; then the
 pending migrations are applied ([02 §1](02-database-migration.md#1-baseline-from-the-live-database-not-from-the-files));
-then the backlog is skipped; then the consumer starts; then the heartbeat; then the HTTP port. A migration that
-fails, or a database that is unreachable or does not exist at start, ends the boot, and the container restarts.
+then the request topic and the group coordinator are made ready and the backlog is skipped; then the consumer
+starts; then the heartbeat; then the HTTP port. A migration that fails, or a database that is unreachable or does
+not exist at start, ends the boot, and the container restarts.
 
 ## 3. Heartbeat and health
 

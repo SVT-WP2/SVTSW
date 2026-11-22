@@ -11,6 +11,10 @@ export const SVT_DB_AGENT_NEXT_KAFKA_CLIENT_ID = 'svt-db-agent-next'
  */
 export const SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP = 'svt.db-agent.request'
 
+/** How long the start waits for the group coordinator: a brand-new broker creates `__consumer_offsets` first. */
+export const SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_TIMEOUT_MS = 30_000
+export const SVT_DB_AGENT_NEXT_GROUP_COORDINATOR_RETRY_MS = 500
+
 /** The heartbeat topic and its retention, as the C++ agent created them (`01-architecture.md` §4, §8). */
 export const SVT_DB_AGENT_NEXT_HEARTBEAT_TOPIC = 'svt.db-agent.heartbeat'
 export const SVT_DB_AGENT_NEXT_HEARTBEAT_INTERVAL_MS = 2000
