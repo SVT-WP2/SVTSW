@@ -120,7 +120,7 @@ def test_connection_status_event(globals_instance):
     globals_instance.wpMachineId = 3
     globals_instance.set_address("wpmit01.cern.ch:35555")
     client = _client("WPMIT")
-    client.publish_connection_status(False)
+    client.publish_connection_status(False, True)
 
     args, kwargs = client.producer.produce.call_args
     assert args[0] == CONNECTION_STATUS_TOPIC
@@ -128,7 +128,7 @@ def test_connection_status_event(globals_instance):
     event = json.loads(kwargs["value"])
     assert event["type"] == CONNECTION_STATUS_EVENT
     assert {k: event["data"][k] for k in ("waferAgentName", "wpMachineId", "connected", "initialized", "address")} == {
-        "waferAgentName": "WPMIT", "wpMachineId": 3, "connected": False, "initialized": False,
+        "waferAgentName": "WPMIT", "wpMachineId": 3, "connected": False, "initialized": True,
         "address": "wpmit01.cern.ch:35555",
     }
 
@@ -347,6 +347,21 @@ def test_heartbeat_names_the_machine_and_its_connection(globals_instance, health
     assert heartbeat_module.read_local_health()["waferAgentName"] == "WPMIT"
 
 
+def test_local_health_file_holds_the_time_of_the_confirmation(health_file):
+    hc = ListenerHealthCheck(agent_name="WPMIT")
+    hc.producer = MagicMock()
+    hc.send_heartbeat()
+    kwargs = hc.producer.produce.call_args[1]
+    sent = json.loads(kwargs["value"])
+    assert "confirmedAt" not in sent                      # only the local file has it
+
+    kwargs["on_delivery"](None, MagicMock())
+    stored = heartbeat_module.read_local_health()
+    assert stored["timestamp"] == sent["timestamp"]
+    assert stored["confirmedAt"] >= sent["timestamp"]
+    assert [path.name for path in health_file.parent.iterdir()] == [health_file.name]   # no temp file left
+
+
 def test_heartbeat_that_kafka_refused_is_not_written(health_file):
     hc = ListenerHealthCheck(agent_name="WPMIT")
     hc.producer = MagicMock()
@@ -367,6 +382,16 @@ def test_health_check_counts_only_its_machine():
 def test_local_health_ok_while_listener_beats_even_if_machine_is_off(health_file, connected):
     heartbeat_module.write_local_health(
         {"timestamp": time.time(), "waferAgentName": "WPMIT", "proberConnected": connected}
+    )
+    with pytest.raises(SystemExit) as stop:
+        WaferProberAgent().check_local_health()
+    assert stop.value.code == 0
+
+
+def test_local_health_counts_from_the_confirmation(health_file):
+    """Kafka's confirmation is served one beat after the send: the send time alone would be too old."""
+    heartbeat_module.write_local_health(
+        {"timestamp": time.time() - 7, "confirmedAt": time.time(), "waferAgentName": "WPMIT"}
     )
     with pytest.raises(SystemExit) as stop:
         WaferProberAgent().check_local_health()

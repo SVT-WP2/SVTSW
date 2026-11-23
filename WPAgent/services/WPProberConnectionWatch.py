@@ -77,34 +77,42 @@ def set_prober_connected(connected: bool, reason: str = ""):
     """
     Store the status. The listeners are called when `connected` or `initialized` changed;
     a change of `connected` also goes to the audit log.
+
+    The watch thread and the command threads both call this. The listeners run under the
+    status lock and get the stored pair, so the changes go out in the order in which they
+    were stored, and the last event is the current status.
     """
     from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
     g = SvtWPAagentGlobalParameters.getInstance()
-    status = (connected, is_prober_initialized())
     with _status_lock:
+        status = (connected, is_prober_initialized())
         connection_changed = g.prober_connected is not connected
         if not connection_changed and g.prober_status_published == status:
             return
         g.prober_connected = connected
         g.prober_status_published = status
 
-    if connection_changed:
-        WPAgentLogger().log_audit(
-            "PROBER_CONNECTED" if connected else "PROBER_DISCONNECTED",
-            severity=Severity.INFO if connected else Severity.WARNING,
-            address=g.address,
-            reason=reason,
-        )
-    for listener in list(_listeners):
-        try:
-            listener(connected)
-        except Exception as e:
-            print(f"WARNING - connection listener failed: {e}")
+        if connection_changed:
+            WPAgentLogger().log_audit(
+                "PROBER_CONNECTED" if connected else "PROBER_DISCONNECTED",
+                severity=Severity.INFO if connected else Severity.WARNING,
+                address=g.address,
+                reason=reason,
+            )
+        for listener in list(_listeners):
+            try:
+                listener(*status)
+            except Exception as e:
+                print(f"WARNING - connection listener failed: {e}")
 
 
 def add_connection_listener(listener):
-    """listener(connected: bool) is called on every change of the status (connected, initialized)."""
+    """
+    listener(connected: bool, initialized: bool) is called on every change of the status,
+    in the order of the changes. It runs under the status lock: it must be quick and must
+    not call set_prober_connected.
+    """
     _listeners.append(listener)
 
 

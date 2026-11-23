@@ -1,24 +1,11 @@
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-from drivers.WPFactory import get_prober, ProberFactory
+from drivers.WPFactory import get_prober, ProberFactory, ProberNotConnectedError
 from utilities.WPValidationDecorator import validate_command_with_name
 from utilities.WPResponseBuilder import ResponseBuilder
 from services.WPDbKafkaClient import DBKafkaClient
 import actions.WPDataBaseActions
 import json
 import os
-
-
-def _parse_die_position(die_string):
-    """Parse die position string like '5,10,0' into dict"""
-    try:
-        parts = die_string.split(",")
-        return {
-            "col": int(parts[0]),
-            "row": int(parts[1]),
-            "subsite": int(parts[2]) if len(parts) > 2 else 0,
-        }
-    except Exception:
-        return None
 
 
 # =============================================================================
@@ -148,11 +135,9 @@ def _sync_from_db(globals_, machine_id, is_mock, machine_record=None):
         print(f"⚠️  DB sync failed (non-fatal): {str(e)}")
 
 
-def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock,
-                   alignment_die, home_die):
+def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock):
     """
-    Set project name, resolve project ID from DB if needed, open project on prober,
-    and store alignment/home die positions.
+    Set project name, resolve project ID from DB if needed and open project on prober.
     """
     if not project_name:
         return
@@ -191,17 +176,6 @@ def _setup_project(globals_, prober, project_name, project_id, machine_id, is_mo
     except Exception as e:
         print(f"⚠️  Warning: Could not open project: {str(e)}")
 
-    # Store die positions
-    if alignment_die:
-        parsed = _parse_die_position(alignment_die)
-        if parsed:
-            globals_.set_alignment_die(parsed)
-
-    if home_die:
-        parsed = _parse_die_position(home_die)
-        if parsed:
-            globals_.set_home_die(parsed)
-
 
 # =============================================================================
 # Public entry point
@@ -211,8 +185,6 @@ def svt_initialise_wp(
         address=None,
         machine_type=None,
         project_name=None,
-        alignment_die=None,
-        home_die=None,
         force=False,
         machine_id=None,
         machine_name=None,
@@ -256,8 +228,7 @@ def svt_initialise_wp(
         _sync_from_db(globals_, machine_id, is_mock, machine_record)
 
         # 5. Setup project
-        _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock,
-                       alignment_die, home_die)
+        _setup_project(globals_, prober, project_name, project_id, machine_id, is_mock)
 
         # Store extra metadata
         globals_.chuck_z_position_state = "Unknown"
@@ -345,16 +316,20 @@ def initialize_machine(force=False, user=None, waferAgentName=None, **other):
 
 
 def show_status(user=None, waferAgentName=None):
-    """Get current project status"""
+    """
+    The status of the agent and of its WP machine. It reads only the agent's own state,
+    so it also works before Initialize and while the machine is off.
+    """
     try:
-        factory = ProberFactory.get_instance()
-        g = SvtWPAagentGlobalParameters.getInstance()
+        from services.WPProberConnectionWatch import is_prober_connected, is_prober_initialized
 
-        if not factory.is_initialized():
-            return ResponseBuilder.error("ShowStatusReply", "Not initialized", 400)
+        g = SvtWPAagentGlobalParameters.getInstance()
+        connection = {True: "connected", False: "not connected"}.get(is_prober_connected(), "not checked yet")
+        initialized = "initialized" if is_prober_initialized() else "not initialized"
 
         parts = [
             f"Agent: {g.wpAgentName or 'Unknown'}",
+            f"Machine: {connection}, {initialized}",
             f"State: {g.wpag_state}",
             f"User: {g.userLogged or 'None'}",
             f"Project: {g.projectName or 'None'}",
@@ -371,13 +346,11 @@ def show_status(user=None, waferAgentName=None):
 def get_info(user=None, waferAgentName=None):
     """Get current die info"""
     try:
-        factory = ProberFactory.get_instance()
         globals_ = SvtWPAagentGlobalParameters.getInstance()
 
-        if not factory.is_initialized():
-            return ResponseBuilder.error("GetInfoReply", "Not initialized", 400)
-
-        prober = factory.get_prober(globals_.machineType, globals_.address)
+        # The prober of the live connection only: never a new connection from here
+        # (get_prober would open one when the DB record has moved the machine).
+        prober = ProberFactory.get_instance().get_current_prober()
         current_index = prober.get_current_index()
         counts = prober.get_dies_number().split(",")
         parts = current_index.split(",")
@@ -395,6 +368,8 @@ def get_info(user=None, waferAgentName=None):
         )
         return ResponseBuilder.success("GetInfoReply", message)
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         return ResponseBuilder.error("GetInfoReply", str(e), 500)
 

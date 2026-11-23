@@ -35,10 +35,15 @@ def machine(globals_instance):
 
 @pytest.fixture
 def events():
+    """The `connected` value of every status change that the listeners got."""
     seen = []
-    add_connection_listener(seen.append)
+
+    def listener(connected, _initialized):
+        seen.append(connected)
+
+    add_connection_listener(listener)
     yield seen
-    remove_connection_listener(seen.append)
+    remove_connection_listener(listener)
 
 
 def _initialize(**data):
@@ -129,6 +134,43 @@ def test_prober_command_before_initialize_fails_without_error_state(machine, log
     assert res["status"] != "Success"
     assert res["error"]["code"] == 503
     assert "not initialized" in res["error"]["message"]
+    assert sm.current_state == S.UsedByDeveloper
+
+
+@pytest.mark.parametrize("command, data", [
+    ("TakeScreenshot", {}),
+    ("TakeImage", {}),
+    ("GetChuckXY", {}),
+    ("MoveChuckXYPrecise", {"x": 0, "y": 0}),
+])
+def test_imaging_command_before_initialize_fails_without_error_state(machine, logged_in_user, command, data):
+    sm.force_state(S.UsedByDeveloper)
+    res = WPCmdMap.execute_command(command, {"user": "test_user", "waferAgentName": AGENT, **data})
+    assert res["error"]["code"] == 503
+    assert "not initialized" in res["error"]["message"]
+    assert sm.current_state == S.UsedByDeveloper
+
+
+def test_get_info_before_initialize_is_a_503_reply(machine):
+    res = WPCmdMap.execute_command("GetInfo", {"waferAgentName": AGENT})
+    assert (res["type"], res["error"]["code"]) == ("GetInfoReply", 503)
+    assert "Send Initialize" in res["error"]["message"]
+
+
+def test_show_status_works_before_initialize(machine):
+    ProberConnectionWatch().check_once()
+    res = WPCmdMap.execute_command("ShowStatus", {"waferAgentName": AGENT})
+    assert res["status"] == "Success", res
+    assert "Machine: connected, not initialized" in res["error"]["message"]
+
+
+def test_align_wafer_needs_its_die(machine, logged_in_user):
+    """Initialize takes no alignment die any more: AlignWafer gets it in the request."""
+    _initialize()
+    sm.force_state(S.UsedByDeveloper)
+    res = WPCmdMap.execute_command("AlignWafer", {"user": "test_user", "waferAgentName": AGENT})
+    assert res["error"]["code"] == 400
+    assert "align_die_col" in res["error"]["message"]
     assert sm.current_state == S.UsedByDeveloper
 
 

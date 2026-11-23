@@ -346,16 +346,21 @@ class WaferProberAgent:
         normal case: its connection status is printed, it does not make the check fail.
         """
         heartbeat = read_local_health() or {}
-        timestamp = heartbeat.get("timestamp")
-        age = time.time() - timestamp if timestamp else None
+        # confirmedAt: when Kafka's confirmation of the heartbeat reached the listener
+        confirmed_at = heartbeat.get("confirmedAt") or heartbeat.get("timestamp")
+        age = time.time() - confirmed_at if confirmed_at else None
         if age is None or age > max_age:
-            print("❌ Listener is DOWN (" + ("no heartbeat" if age is None else f"last heartbeat {age:.1f}s ago") + ")")
+            print(
+                "❌ Listener is DOWN ("
+                + ("no heartbeat" if age is None else f"last confirmed heartbeat {age:.1f}s ago")
+                + ")"
+            )
             sys.exit(1)
 
         connection = {True: "connected", False: "NOT connected"}.get(heartbeat.get("proberConnected"), "not checked yet")
         initialized = "initialized" if heartbeat.get("proberInitialized") else "not initialized"
         print(
-            f"✅ Listener of {heartbeat.get('waferAgentName')} is alive (heartbeat {age:.1f}s ago); "
+            f"✅ Listener of {heartbeat.get('waferAgentName')} is alive (heartbeat confirmed {age:.1f}s ago); "
             f"WP machine {connection}, {initialized}"
         )
         sys.exit(0)

@@ -32,29 +32,11 @@
   },
 
   "FindHome": {
-    "description": "Find the home position of the chuck. Uses home die from initialization if not specified.",
+    "description": "Find the home position of the chuck.",
     "category": "Positioning",
-    "data": {
-      "homeDie_col": {
-        "required": false,
-        "type": "int",
-        "description": "Home die column (optional if set during initialization)"
-      },
-      "homeDie_row": {
-        "required": false,
-        "type": "int",
-        "description": "Home die row (optional if set during initialization)"
-      },
-      "subsite": {
-        "required": false,
-        "type": "int",
-        "description": "Subsite index (default: 0)"
-      }
-    },
+    "data": {},
     "example": "python main.py send FindHome",
-    "example_with_params": "python main.py send FindHome --data='{\"homeDie_col\":1,\"homeDie_row\":1}'",
-    "execution_time": "10-20 seconds",
-    "notes": "If homeDie was set during initialization, it will automatically use that position. Otherwise performs default FindHome."
+    "execution_time": "10-20 seconds"
   },
 
   "AutoFocus": {
@@ -66,18 +48,18 @@
   },
 
   "AlignWafer": {
-    "description": "Perform wafer alignment. Uses alignment die from initialization if not specified.",
+    "description": "Perform wafer alignment at the given alignment die.",
     "category": "Vision",
     "data": {
       "align_die_col": {
-        "required": false,
+        "required": true,
         "type": "int",
-        "description": "Alignment die column (optional if set during initialization)"
+        "description": "Alignment die column"
       },
       "align_die_row": {
-        "required": false,
+        "required": true,
         "type": "int",
-        "description": "Alignment die row (optional if set during initialization)"
+        "description": "Alignment die row"
       },
       "subsite": {
         "required": false,
@@ -85,10 +67,9 @@
         "description": "Subsite index (default: 0)"
       }
     },
-    "example": "python main.py send AlignWafer",
-    "example_with_params": "python main.py send AlignWafer --data='{\"align_die_col\":5,\"align_die_row\":10}'",
+    "example": "python main.py send AlignWafer --data='{\"align_die_col\":5,\"align_die_row\":10}'",
     "execution_time": "20-60 seconds",
-    "notes": "If alignmentDie was set during initialization, it will automatically use that position. Otherwise requires homeDie_col and homeDie_row parameters."
+    "notes": "Error 400 without align_die_col and align_die_row."
   },
 
   "RunPTPA": {

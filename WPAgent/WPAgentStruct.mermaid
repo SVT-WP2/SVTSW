@@ -76,7 +76,6 @@ graph TB
     end
 
     subgraph "Services"
-        INIT_SVC[WPInitializationService<br/>Database Init Flow]
         DB_SVC[IDBService<br/>db_service.py<br/>Protocol]
     end
 
@@ -115,8 +114,6 @@ graph TB
     HEALTH --> HB_TOPIC
 
     %% Database Communication
-    WPA_SEND -.DB Init.-> INIT_SVC
-    INIT_SVC --> KDBS
     KDBS --> DBKC
     DBKC --> DB_REQ
     DBKC --> DB_REPLY
@@ -192,5 +189,5 @@ graph TB
     class GLOBALS,PARAMS state
     class PROJ_ACT,TEST_ACT,SEQ_ACT,DB_ACT,CMD_ACT,SEQ,SEQ_FILE action
     class FACTORY,IFACE,SENTIO,SENTIO_LIB driver
-    class LOGGER,HELPERS,HELP_JSON,INIT_SVC,DB_SVC util
+    class LOGGER,HELPERS,HELP_JSON,DB_SVC util
     class HARDWARE,DB_AGENT external

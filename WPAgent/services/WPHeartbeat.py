@@ -39,10 +39,15 @@ LOCAL_HEALTH_FILE = os.path.join(tempfile.gettempdir(), "wp-agent-health.json")
 
 
 def write_local_health(heartbeat: dict):
-    """Keep the last confirmed heartbeat for the Docker HEALTHCHECK."""
+    """
+    Keep the last confirmed heartbeat for the Docker HEALTHCHECK.
+    The file is replaced in one step, so a reader never sees a half-written file.
+    """
+    temp_file = f"{LOCAL_HEALTH_FILE}.tmp"
     try:
-        with open(LOCAL_HEALTH_FILE, "w") as f:
+        with open(temp_file, "w") as f:
             json.dump(heartbeat, f)
+        os.replace(temp_file, LOCAL_HEALTH_FILE)
     except OSError as e:
         print(f"WARNING - cannot write {LOCAL_HEALTH_FILE}: {e}")
 
@@ -136,8 +141,10 @@ class HeartbeatBase:
         }
 
         def on_delivery(err, _msg):
+            # The confirmation is served by the poll() of a later beat: the health check
+            # counts from confirmedAt, not from the time the heartbeat was sent.
             if err is None:
-                write_local_health(heartbeat)
+                write_local_health({**heartbeat, "confirmedAt": time.time()})
 
         self.producer.produce(
             self.HEARTBEAT_TOPIC,

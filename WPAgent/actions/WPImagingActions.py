@@ -7,7 +7,7 @@ from stateMachine.WpAgentStateMachine import WPAgentState
 from utilities.WPValidationDecorator import validate_command
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-from drivers.WPFactory import get_current_prober
+from drivers.WPFactory import ProberNotConnectedError, get_current_prober
 from actions.WPTestingActions import _ensure_initialized
 from actions.WPTestingActions import move_chuck_die
 
@@ -55,6 +55,8 @@ def get_chuck_xy(log_file="chuck_xy_log.csv", label="", user=None, waferAgentNam
 
         return ResponseBuilder.success("GetChuckXYReply", f"x={x:.2f}, y={y:.2f}")
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         import traceback; traceback.print_exc()
         return ResponseBuilder.error("GetChuckXYReply", str(e), 500)
@@ -250,6 +252,8 @@ def move_chuck_xy_precise(x, y, position="Relative",
             f"x={ax:.2f}, y={ay:.2f}, err=({ex:+.2f},{ey:+.2f}) µm, iter={iterations}"
         )
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         import traceback; traceback.print_exc()
         return ResponseBuilder.error("MoveChuckXYPreciseReply", str(e), 500)
@@ -890,7 +894,7 @@ def take_image(
 
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("TakeImageReply", error["output"], 400)
+        return error
 
     try:
         from utilities.WPImageStitching import stitch_images
@@ -975,7 +979,7 @@ def take_screenshot(
     """
     error = _ensure_initialized()
     if error:
-        return ResponseBuilder.error("TakeScreenshotReply", error["output"], 400)
+        return error
 
     try:
         prober = get_current_prober()

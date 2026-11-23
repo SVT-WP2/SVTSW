@@ -37,10 +37,15 @@ def machine(globals_instance):
 
 @pytest.fixture
 def events():
+    """The `connected` value of every status change that the listeners got."""
     seen = []
-    add_connection_listener(seen.append)
+
+    def listener(connected, _initialized):
+        seen.append(connected)
+
+    add_connection_listener(listener)
     yield seen
-    remove_connection_listener(seen.append)
+    remove_connection_listener(listener)
 
 
 def test_starts_with_the_machine_off(machine, globals_instance, events):
@@ -85,6 +90,23 @@ def test_listeners_get_only_the_changes(events):
     assert events == [True, False]
 
 
+def test_listeners_get_the_stored_status(machine):
+    seen = []
+
+    def listener(connected, initialized):
+        seen.append((connected, initialized))
+
+    add_connection_listener(listener)
+    try:
+        set_prober_connected(True)
+        machine.get_prober("mock", "mock:35555")      # the agent is initialized now
+        set_prober_connected(True)
+        set_prober_connected(False)
+    finally:
+        remove_connection_listener(listener)
+    assert seen == [(True, False), (True, True), (False, True)]
+
+
 def test_get_current_prober_raises_while_the_machine_is_off(machine):
     prober = machine.get_prober("mock", "mock:35555")
     set_prober_connected(False)
@@ -112,6 +134,22 @@ def test_unhandled_not_connected_error_is_a_503_reply(machine, monkeypatch):
     res = WPCmdMap.execute_command("GetInfo", {"waferAgentName": AGENT})
     assert (res["type"], res["error"]["code"]) == ("GetInfoReply", 503)
     assert sm.current_state == S.ServiceOn
+
+
+def test_get_info_while_off_is_a_503_and_opens_no_connection(machine, globals_instance):
+    machine.get_prober("mock", "mock:35555")
+    set_prober_connected(False)
+    globals_instance.set_address("mock-moved:35555")      # the DB record has moved the machine
+    res = WPCmdMap.execute_command("GetInfo", {"waferAgentName": AGENT})
+    assert (res["type"], res["error"]["code"]) == ("GetInfoReply", 503)
+    assert machine.get_current_config() == ("mock", "mock:35555")
+
+
+def test_show_status_works_while_the_machine_is_off(machine):
+    set_prober_connected(False)
+    res = WPCmdMap.execute_command("ShowStatus", {"waferAgentName": AGENT})
+    assert res["status"] == "Success", res
+    assert "Machine: not connected, not initialized" in res["error"]["message"]
 
 
 def test_login_works_while_the_machine_is_off(globals_instance):

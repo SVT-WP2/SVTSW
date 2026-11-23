@@ -127,7 +127,8 @@ WPAgent/
 ├── services/
 │   ├── WPDbKafkaClient.py           # Kafka client for DB Agent communication
 │   ├── WPHeartbeat.py               # Listener heartbeat / health monitoring
-│   └── WPInitializationService.py   # DB-driven + manual prober initialization
+│   ├── WPMachineRecord.py           # The DB record of the agent's WP machine (address, type, id)
+│   └── WPProberConnectionWatch.py   # Connection watch: is the machine on, reconnect after a loss
 │
 ├── sequencer/
 │   ├── WPSequencer.py
@@ -509,7 +510,7 @@ Each WP machine has its own WPAgent: in the dev/prod stacks, one compose service
 * **The machine can be off.** The agent runs all the time; the machine is switched on only when it is needed. The connection watch (`services/WPProberConnectionWatch.py`) checks the machine every 5 s and keeps two flags: `connected` (the machine is on) and `initialized` (the agent is connected to it).
 * **The start does not touch the machine.** Until `Initialize`, the watch makes only a quick TCP check that sends nothing. `Initialize` opens the connection and reads the loaded wafer and the probe card from the DB. After that the watch probes the connection. When the machine stops answering 3 times, an agent in a session goes to `Error`; when the machine is on again, the watch opens a new connection by itself and brings the agent back to `UserLogged` (open the project again). `ReconnectProber` still works by hand, for an initialized agent.
 * **The DB record is the source of truth for the address.** The agent connects to `hostName`:`connectionPort` of its `WaferProbeMachine` record, exactly as written. It reads the record at start, every 30 s while the machine is off, and right before every connect (`Initialize`, a reconnect), so a change of the record needs no restart. If the DB Agent gives no answer, the last known record stays. A change does not touch a live connection: it is used at the next connect (`services/WPMachineRecord.py`).
-* **Commands without the machine.** A command that needs the prober gets an error reply with code 503, and the agent state does not change: "… is not connected" while the machine is off, "… is not initialized" before `Initialize`. Commands without the prober (log-in, DB queries, `GetAgentState`, …) still work.
+* **Commands without the machine.** A command that needs the prober gets an error reply with code 503, and the agent state does not change: "… is not connected" while the machine is off, "… is not initialized" before `Initialize`. Commands without the prober (log-in, DB queries, `GetAgentState`, `ShowStatus`, …) still work; `ShowStatus` also says whether the machine is connected and initialized.
 * **Status.** Every reply carries `proberConnected` and `proberInitialized` in its data. Each change of one of them goes to the topic `svt.wp-agent.connection-status` (key: the machine name): `{"type": "WpConnectionStatusChanged", "data": {"waferAgentName", "wpMachineId", "connected", "initialized", "address", "timestamp"}}`. The heartbeat on `svt.wp-agent.heartbeat` carries `waferAgentName`, `wpMachineId`, `proberConnected`, `proberInitialized` and `appVersion`.
 * **Health check.** The Docker `HEALTHCHECK` runs `main.py check_local_health`: healthy while the listener sends heartbeats that Kafka confirms. It prints the connection status, but a machine that is off does not make the container unhealthy. `main.py --config=<file> check_listener_health` checks a listener over Kafka, for its machine only.
 

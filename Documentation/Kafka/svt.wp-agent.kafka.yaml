@@ -410,6 +410,10 @@ paths:
       tags: [ "1. USER LEVEL" ]
       summary: Show overall Status
       description: |
+        The status of the agent (state, user, project) and of its WP machine (connected,
+        initialized). It needs no prober: it also works before `Initialize` and while the
+        machine is off.
+
         ### State availability
         **Required state:** `All of the states`
       requestBody:

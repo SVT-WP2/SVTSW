@@ -15,7 +15,7 @@ from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from services.WPProberConnectionWatch import (
-    ProberConnectionWatch, add_connection_listener, is_prober_initialized, remove_connection_listener,
+    ProberConnectionWatch, add_connection_listener, remove_connection_listener,
 )
 from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
@@ -304,8 +304,8 @@ class KafkaClient:
         target = params.get("waferAgentName") if isinstance(params, dict) else None
         return is_same_machine(target, self.agent_name)
 
-    def publish_connection_status(self, connected):
-        """Send a WpConnectionStatusChanged event (key: the machine name)."""
+    def publish_connection_status(self, connected, initialized):
+        """Send a WpConnectionStatusChanged event (key: the machine name) with the given status."""
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         g = SvtWPAagentGlobalParameters.getInstance()
@@ -315,7 +315,7 @@ class KafkaClient:
                 "waferAgentName": self.agent_name,
                 "wpMachineId": g.wpMachineId,
                 "connected": connected,
-                "initialized": is_prober_initialized(),
+                "initialized": initialized,
                 "address": g.address,
                 "timestamp": time.time(),
             },
