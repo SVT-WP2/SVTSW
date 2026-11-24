@@ -37,7 +37,10 @@ info:
     ### Request/Reply Messages
     - Request messages are sent to `svt.wp-agent.request` topic
     - Reply messages are emitted to `svt.wp-agent.request.reply` topic
-    - Request body describes Kafka Message structure. Mandatory fields: user, waferAgentName
+    - Request body describes Kafka Message structure. `waferAgentName` is mandatory in every
+      request. `user` is mandatory in the request of every command that needs a log-in.
+    - The read-only queries that need no log-in (`ShowStatus`, `Help`, `ListProbers`,
+      `ListChipTypes`) have no `user`. The agent ignores a `user` that a client still sends.
     - One WP agent per WP machine. Every agent reads every request; only the agent of the
       machine named by `waferAgentName` (`WaferProbeMachine.name`, case-insensitive, `_DEV` suffix
       allowed) runs it and replies. A request without `waferAgentName` gets no reply.
@@ -419,6 +422,10 @@ paths:
         initialized). It needs no prober: it also works before `Initialize` and while the
         machine is off.
 
+        It needs no log-in, and its request has no `user`. It reads only what the agent
+        knows and sends nothing to the WP machine: `connected` is what the connection watch
+        saw at its last check (at most 5 s ago).
+
         ### State availability
         **Required state:** `All of the states`
       requestBody:
@@ -427,7 +434,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RequestMessageWithoutUser'
                 - $ref: '#/components/schemas/ShowStatusMessage'
       responses:
         '200':
@@ -1154,7 +1161,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestMessage'
+              $ref: '#/components/schemas/RequestMessageWithoutUser'
       responses:
         '200':
           description: Success
@@ -1195,7 +1202,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestMessage'
+              $ref: '#/components/schemas/RequestMessageWithoutUser'
       responses:
         '200':
           description: Success
@@ -1493,7 +1500,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RequestMessageWithoutUser'
                 - $ref: '#/components/schemas/HelpMessage'
       responses:
         '200':
@@ -2399,7 +2406,21 @@ components:
              user:
               type: string
              waferAgentName:
-              type: string   
+              type: string
+
+      # The request of a read-only query that needs no log-in: it has no `user`.
+      RequestMessageWithoutUser:
+        type: object
+        required: [ type ]
+        properties:
+          type:
+            type: string
+          data:
+            type: object
+            required: [ waferAgentName ]
+            properties:
+              waferAgentName:
+                type: string
 
       ReplyMessage:
         type: object

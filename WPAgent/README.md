@@ -359,7 +359,7 @@ python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CER
 | `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. It is the only way to connect, and the agent never does it by itself: send it after every start of the listener. It moves nothing on the machine. Works in every state, without a log-in. `force: true` closes the connection and opens a new one |
 | `OpenProject` | `projectName` | Open a SENTIO project file |
 | `ChangeProject` | `projectName` | Swap active project (stays in `OpenedProject`) |
-| `ShowStatus` | — | Show connection and project status |
+| `ShowStatus` | — | Show the status of the agent (state, user, project) and of its machine (connected, initialized). No log-in and no `user` needed. It sends nothing to the machine: `connected` is what the connection watch saw last |
 | `Help` | `command` (optional) | Show all commands or help for one command |
 | `GetAgentState` | — | Return current FSM state name |
 
