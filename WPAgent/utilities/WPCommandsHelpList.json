@@ -1,6 +1,6 @@
 {
   "Initialize": {
-  "description": "Connect the agent to its wafer prober and read the machine state (loaded wafer, probe card) from the database. The agent never does this by itself: after its start it only reports whether the machine is on.",
+  "description": "Connect the agent to its wafer prober and read the machine state (loaded wafer, probe card) from the database. The agent never does this by itself: after its start it only reports whether the machine is on. Send it after every start of the agent, also after a restart or a deploy: an agent that stops closes its connection.",
   "category": "Setup",
   "data": {
     "force": {

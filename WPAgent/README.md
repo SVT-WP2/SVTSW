@@ -217,6 +217,8 @@ The start does not connect to the machine, and the machine can be off: the liste
 python3.12 main.py send Initialize --data='{"waferAgentName":"WPMIT"}'
 ```
 
+Every start of the listener needs it again, also after a restart or a deploy: a listener that stops closes its connection to the machine (see [Start, Initialize, stop](#start-initialize-stop)).
+
 Note: Depending on which Kafka broker is specified in the config file, WPAgent will run in either development or production mode (see the `_DEV` suffix note in [Configuration](#️-configuration)).
 
 > **Note:** On the CERN side, the `WPMIT` machine's production listener (`ProbeConfigCERN.json`, broker `pcmitpx01:9092`) runs as a system service and does not need to be started manually. Only start the listener yourself for development/testing (e.g. against `ProbeConfigCERN_DEV.json` / MOCK configs).
@@ -246,6 +248,9 @@ Use `--port` to override the auto-detected port, and `--no-reply` for fire-and-f
 ### 3. Minimal Happy Path
 
 ```bash
+# 0. Connect the agent to its machine: one time after every start of the listener
+python3.12 main.py send Initialize --data='{"waferAgentName":"CERN"}'
+
 # 1. Log in
 python3.12 main.py send UserLogIn --data='{"user":"user1","waferAgentName":"CERN"}'
 
@@ -351,8 +356,7 @@ python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CER
 
 | Command | Key Parameters | Description |
 |---------|---------------|-------------|
-| `ConnectProbeMachine` | `wpMachineId` | Connect to a prober by its DB machine ID |
-| `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. The agent never does this by itself. Works in every state, without a log-in |
+| `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. It is the only way to connect, and the agent never does it by itself: send it after every start of the listener. It moves nothing on the machine. Works in every state, without a log-in. `force: true` closes the connection and opens a new one |
 | `OpenProject` | `projectName` | Open a SENTIO project file |
 | `ChangeProject` | `projectName` | Swap active project (stays in `OpenedProject`) |
 | `ShowStatus` | — | Show connection and project status |
@@ -360,7 +364,7 @@ python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CER
 | `GetAgentState` | — | Return current FSM state name |
 
 ```bash
-python3.12 main.py send ConnectProbeMachine --data='{"user":"dev1","waferAgentName":"CERN","wpMachineId":3}'
+python3.12 main.py send Initialize   --data='{"waferAgentName":"CERN"}'
 python3.12 main.py send OpenProject  --data='{"user":"user1","waferAgentName":"CERN","projectName":"NKF7_Test"}'
 python3.12 main.py send Help
 python3.12 main.py send Help --data='{"command":"MoveChuckContact"}'
@@ -513,6 +517,75 @@ Each WP machine has its own WPAgent: in the dev/prod stacks, one compose service
 * **Commands without the machine.** A command that needs the prober gets an error reply with code 503, and the agent state does not change: "… is not connected" while the machine is off, "… is not initialized" before `Initialize`. Commands without the prober (log-in, DB queries, `GetAgentState`, `ShowStatus`, …) still work; `ShowStatus` also says whether the machine is connected and initialized.
 * **Status.** Every reply carries `proberConnected` and `proberInitialized` in its data. Each change of one of them goes to the topic `svt.wp-agent.connection-status` (key: the machine name): `{"type": "WpConnectionStatusChanged", "data": {"waferAgentName", "wpMachineId", "connected", "initialized", "address", "timestamp"}}`. The heartbeat on `svt.wp-agent.heartbeat` carries `waferAgentName`, `wpMachineId`, `proberConnected`, `proberInitialized` and `appVersion`.
 * **Health check.** The Docker `HEALTHCHECK` runs `main.py check_local_health`: healthy while the listener sends heartbeats that Kafka confirms. It prints the connection status, but a machine that is off does not make the container unhealthy. `main.py --config=<file> check_listener_health` checks a listener over Kafka, for its machine only.
+* **A stop closes the connection.** On Ctrl+C or SIGTERM (`docker stop`, a deploy, `systemctl stop`) the agent lets the running command finish, switches the machine to local mode and closes its TCP connection. The agent that starts next is not initialized: send `Initialize` again. See [Start, Initialize, stop](#start-initialize-stop).
+
+### Start, Initialize, stop
+
+The agent has one TCP connection to SENTIO, and every prober command uses it. Only `Initialize` opens it. The two flags of the replies, the heartbeat and the status event say where the agent is:
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    NotInitialized: Not initialized
+    Initialized: Initialized
+    Lost: Connection lost
+
+    [*] --> NotInitialized: the agent starts
+    NotInitialized --> Initialized: Initialize
+    Initialized --> Lost: the machine stops answering
+    Lost --> Initialized: the machine is on again
+    Initialized --> [*]: the agent stops
+    Lost --> [*]: the agent stops
+    NotInitialized --> [*]: the agent stops
+```
+
+| | `initialized` | `connected` | Connection to SENTIO | The connection watch | A prober command |
+|---|---|---|---|---|---|
+| **Not initialized** | `false` | the machine is on / off | none | port check every 5 s, sends nothing | 503 `… is not initialized` (`… is not connected` while the machine is off) |
+| **Initialized** | `true` | `true` | open | looks at the socket, sends nothing | runs |
+| **Connection lost** | `true` | `false` | broken | port check; opens a new connection when the machine answers | 503 `… is not connected` |
+
+`Initialize` only opens the connection and reads the loaded wafer and the probe card from the DB: it moves nothing. The commands that move the machine come after it and need a log-in (`OpenProject`, `InitProbing`, …).
+
+**A stop, a restart or a deploy.** The agent keeps its state in memory, so a restarted agent starts from zero: state `ServiceOn`, no user, no project, not initialized. It does not connect by itself, because the service is deployed on every push to master and a start must not take the machine. The user sends `Initialize` when the machine is needed.
+
+```mermaid
+sequenceDiagram
+    participant D as docker stop or deploy
+    participant A1 as Agent (stops)
+    participant S as SENTIO
+    participant K as Kafka
+    participant A2 as Agent (starts)
+    participant U as User
+
+    D->>A1: SIGTERM
+    A1->>K: reads no more requests
+    Note over A1: the running command finishes and replies (up to 20 s)
+    A1->>S: *LOCAL (local mode)
+    A1->>S: closes the TCP connection
+    A1->>K: WpConnectionStatusChanged (initialized false)
+    A1-->>D: exit code 0
+    D->>A2: start
+    Note over A2,S: port check only, nothing is sent to SENTIO
+    A2->>K: heartbeat and status (not initialized)
+    U->>K: Initialize
+    K->>A2: Initialize
+    A2->>S: opens the TCP connection
+    A2->>K: InitializeReply, WpConnectionStatusChanged (initialized true)
+    Note over U,A2: then UserLogIn, OpenProject, InitProbing as before
+```
+
+The steps of a stop (`KafkaClient._stop_listening`):
+
+1. The listener reads no more requests. A request that still waits for a free worker is dropped, and its sender gets no reply.
+2. A command that is running gets 20 s (`STOP_COMMAND_WAIT`) to finish and to send its reply.
+3. The connection watch stops, so it does not take the closed connection for a lost machine.
+4. The machine gets `*LOCAL`, the same command that ends every prober command, and the TCP connection is closed. From here the agent opens no new connection.
+5. The listeners get the status `initialized: false`, the heartbeat stops, and the last messages go out. The process ends with exit code 0.
+
+A command that runs longer than the 20 s is cut: the connection is closed without `*LOCAL`, because a second command on the same connection would mix with the running one. SENTIO finishes the move that it already got and can stay in remote mode. Stop the measurements before a restart or a deploy.
+
+The stop needs time: the compose services have `stop_grace_period: 30s` (docker kills the container after it), and the systemd unit has its default of 90 s. `Initialize` with `force: true` and a reconnect also close the old connection before they use the new one.
 
 ### SSH Tunnel (remote Kafka access)
 
@@ -657,7 +730,7 @@ If a DB-backed command (`OpenProject`, `ListProbers`, machine/project lookups, e
 
 - Verify SENTIO software is running on the prober machine
 - Check IP address and port: `ping <prober-host>` if needed 
-- `"<machine> is not initialized"`: the machine is on, but the agent is not connected to it yet. Send `Initialize`.
+- `"<machine> is not initialized"`: the machine is on, but the agent is not connected to it yet. Send `Initialize`. This is the normal state after every start of the agent, also after a restart or a deploy.
 - `"<machine> is not connected"`: the agent cannot reach the machine at the address of its DB record (`hostName`:`connectionPort`). Switch the machine on (and start SENTIO), and check the record. An agent that was initialized connects again by itself within a few seconds; otherwise send `Initialize`.
 
 

@@ -53,6 +53,11 @@ info:
     - The start of the agent does not connect to the machine. The agent only watches whether the
       machine is on (`connected`). It connects when it gets `Initialize` (`initialized`). After
       that it restores a lost connection by itself when the machine is on again.
+    - An agent that stops (a restart, a deploy) lets the running command finish and reply,
+      closes its connection to the machine and sends `WpConnectionStatusChanged` with
+      `initialized: false`. A request that it has not started gets no reply. The agent that
+      starts next is not initialized and keeps nothing of the old one (no user, no project):
+      send `Initialize` again.
     - A command that needs the prober gets an error reply with code 503 while the machine is off
       (`... is not connected`) or before `Initialize` (`... is not initialized`). The agent state
       does not change.

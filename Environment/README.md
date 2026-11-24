@@ -94,6 +94,17 @@ runs also while the machine is off. A started agent does not connect to the mach
 it connects when it gets the `Initialize` command (see the WPAgent README, "One agent
 per WP machine").
 
+**A deploy restarts the agent, and the user sends `Initialize` again.** Every push to
+master that changes `WPAgent/` deploys the dev services (`wp-agent.yml`), also while
+somebody uses the machine: stop the measurements before a merge. Docker sends SIGTERM
+to the old container. The agent reads no more requests, lets the running command
+finish (up to 20 s), switches the machine to local mode, closes its connection to the
+machine and ends with exit code 0. The service has `stop_grace_period: 30s` for that:
+keep it above the 20 s (`STOP_COMMAND_WAIT` in `WPAgent/WPKafkaClient.py`), because
+docker kills the container after it. The new container is not initialized and sends
+nothing to the machine. When the machine is needed, the user sends `Initialize`, logs
+in and opens the project again (see the WPAgent README, "Start, Initialize, stop").
+
 To add a machine:
 
 1. Create the `WaferProbeMachine` record in the DB of the environment first. Its `name`

@@ -24,6 +24,9 @@ A command that needs the prober gets an error while the machine is off or not in
 ProberFactory.get_current_prober() raises ProberNotConnectedError.
 
 The check is skipped while a command is executing (the prober connection is in use).
+
+When the agent stops, the listener stops the watch and then closes the connection
+(close_prober_connection): a restarted agent has no connection until the next Initialize.
 """
 
 import socket
@@ -119,6 +122,39 @@ def add_connection_listener(listener):
 def remove_connection_listener(listener):
     if listener in _listeners:
         _listeners.remove(listener)
+
+
+def close_prober_connection(send_local_mode=True) -> bool:
+    """
+    The agent stops: give the WP machine back and close the TCP connection to it.
+
+    - Local mode first (the same *LOCAL that ends every command), only when no command is
+      running on the connection (send_local_mode) and the machine answers.
+    - Then the connection is closed for good: no command and no check of the connection
+      watch can open a new one (ProberFactory.close(final=True)).
+    - The listeners get the status "not initialized": the next agent starts without a
+      connection and waits for the Initialize command.
+
+    Stop the connection watch before this call, so that it does not take the closed
+    connection for a lost machine. Returns True when there was a connection to close.
+    """
+    from drivers.WPFactory import ProberFactory
+
+    factory = ProberFactory.get_instance()
+    was_initialized = factory.is_initialized()
+    connected = is_prober_connected()
+
+    if was_initialized and send_local_mode and connected is not False:
+        try:
+            factory.get_current_prober().local_mode()
+        except Exception as e:
+            print(f"WARNING - could not switch the WP machine to local mode: {e}")
+
+    factory.close(final=True)
+
+    if was_initialized and connected is not None:
+        set_prober_connected(connected, "the agent stops")
+    return was_initialized
 
 
 def is_reachable(machine_type, address, timeout=TCP_CHECK_TIMEOUT) -> bool:

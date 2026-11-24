@@ -95,6 +95,10 @@ services:
     image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_WPMIT_VERSION:?missing - set it in versions.env}
     container_name: svt.wp-agent-wpmit--dev
     restart: unless-stopped
+    # On a stop or a redeploy the agent lets the running command finish (up to 20 s,
+    # STOP_COMMAND_WAIT in WPAgent/WPKafkaClient.py), then closes its connection to the
+    # WP machine. Keep this above that wait: after it docker kills the container.
+    stop_grace_period: 30s
     networks:
       - svt-network--dev
     command: ["listen"]

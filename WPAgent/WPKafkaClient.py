@@ -1,8 +1,9 @@
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait as wait_for_futures
 
 import json
+import signal
 import threading
 import time
 import ast
@@ -15,7 +16,7 @@ from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from services.WPProberConnectionWatch import (
-    ProberConnectionWatch, add_connection_listener, remove_connection_listener,
+    ProberConnectionWatch, add_connection_listener, close_prober_connection, remove_connection_listener,
 )
 from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
@@ -35,7 +36,27 @@ KAFKA_HEADER__REPLY_PARTITION = "kafka_replyPartition"
 CONNECTION_STATUS_TOPIC = "svt.wp-agent.connection-status"
 CONNECTION_STATUS_EVENT = "WpConnectionStatusChanged"
 
+# Seconds that a command which is running when the listener stops gets to finish, before
+# the connection to the WP machine is closed anyway. Keep the stop timeout of the service
+# above it (stop_grace_period in the compose files).
+STOP_COMMAND_WAIT = 20.0
 
+
+def _stop_on_sigterm(stop: threading.Event):
+    """
+    SIGTERM (docker stop, a deploy, systemctl stop) asks the listener to stop in order,
+    as Ctrl+C does. Without a handler Python has none for SIGTERM: a process with PID 1
+    in a container ignores the signal and is killed after the stop timeout.
+
+    Returns a function that puts the previous handler back.
+    """
+    try:
+        previous = signal.signal(signal.SIGTERM, lambda _signum, _frame: stop.set())
+    except ValueError:
+        return lambda: None  # not the main thread: signal handlers cannot be set here
+    if previous is None:  # the old handler was not set from Python
+        previous = signal.SIG_DFL
+    return lambda: signal.signal(signal.SIGTERM, previous)
 
 
 
@@ -383,6 +404,9 @@ class KafkaClient:
         The listener starts after the last request of the topic (skip_request_backlog) and
         with the connection watch, which only reports whether the WP machine is on: the
         agent connects to the machine when it gets the Initialize command.
+
+        Ctrl+C or SIGTERM stops it in order (_stop_listening): the running command
+        finishes, then the connection to the WP machine is closed.
         """
 
         consumer_config = {
@@ -417,6 +441,7 @@ class KafkaClient:
         )
 
         executor = ThreadPoolExecutor(max_workers=4)
+        handling = set()  # the futures of the requests that are being handled
 
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
@@ -433,8 +458,10 @@ class KafkaClient:
         connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
         connection_watch.start()
 
+        stop = threading.Event()
+        restore_sigterm = _stop_on_sigterm(stop)
         try:
-            while True:
+            while not stop.is_set():
                 msg = self.request_consumer.poll(poll_timeout)
 
                 if msg is None:
@@ -449,18 +476,85 @@ class KafkaClient:
                     )
                     continue
 
-                executor.submit(self._handle_message, msg)
+                future = executor.submit(self._handle_message, msg)
+                handling.add(future)
+                future.add_done_callback(handling.discard)
 
         except KeyboardInterrupt:
             pass
         finally:
-            self.request_consumer.close()
-            heartbeat_monitor.stop()
-            connection_watch.stop()
-            remove_connection_listener(self.publish_connection_status)
-            self.producer.flush(timeout=5.0)
-            if self.reply_consumer:
-                self.reply_consumer.close()
+            try:
+                self._stop_listening(executor, handling, heartbeat_monitor, connection_watch)
+            finally:
+                restore_sigterm()
+
+    def _stop_listening(self, executor, handling, heartbeat_monitor, connection_watch):
+        """
+        Stop the listener in an order that leaves the WP machine in a clean state:
+
+        1. No new requests; requests that wait for a free worker are dropped.
+        2. A running command gets STOP_COMMAND_WAIT seconds to finish and to send its reply.
+        3. The connection watch stops, so that it does not take the closed connection for
+           a lost machine (no reconnect, no Error state).
+        4. The machine goes to local mode and the TCP connection is closed
+           (close_prober_connection). A command that is still running is cut: no local
+           mode then, because a second command on the same connection would mix with it.
+        5. The heartbeat stops, the replies and the last status event go out.
+
+        A step that fails does not stop the next ones.
+        """
+        def step(what, action):
+            try:
+                return action()
+            except Exception as e:
+                logger.log_command(
+                    messageOut=f"Stop of the listener: could not {what}: {e}",
+                    severityLevel=Severity.WARNING,
+                    command="KAFKA_LISTEN",
+                    result={"error": str(e)},
+                )
+                return None
+
+        logger.log_command(
+            messageOut="Kafka listener stops",
+            severityLevel=Severity.INFO,
+            command="KAFKA_LISTEN",
+            result=None,
+        )
+
+        step("close the request consumer", self.request_consumer.close)
+        step("drop the waiting requests", lambda: executor.shutdown(wait=False, cancel_futures=True))
+
+        _done, still_running = wait_for_futures(list(handling), timeout=STOP_COMMAND_WAIT)
+        if still_running:
+            logger.log_command(
+                messageOut=(
+                    f"{len(still_running)} command(s) still running after {STOP_COMMAND_WAIT:.0f} s: "
+                    "the connection to the WP machine is closed anyway"
+                ),
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+
+        step("stop the connection watch", connection_watch.stop)
+        closed = step(
+            "close the connection to the WP machine",
+            lambda: close_prober_connection(send_local_mode=not still_running),
+        )
+        if closed:
+            logger.log_command(
+                messageOut="Connection to the WP machine closed: the next start needs Initialize",
+                severityLevel=Severity.INFO,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+
+        step("remove the connection listener", lambda: remove_connection_listener(self.publish_connection_status))
+        step("stop the heartbeat", heartbeat_monitor.stop)
+        step("send the last messages", lambda: self.producer.flush(timeout=5.0))
+        if self.reply_consumer:
+            step("close the reply consumer", self.reply_consumer.close)
 
     def _handle_message(self, msg):
         """Runs in a thread — executes command and sends reply."""

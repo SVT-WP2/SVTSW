@@ -11,19 +11,56 @@ class ProberNotConnectedError(RuntimeError):
     """
 
 
+STOPPED_MESSAGE = "The agent is stopping: it opens no new connection to the WP machine."
+
+
+def _disconnect(prober):
+    """Close the connection of a prober that the factory lets go. Never raises."""
+    disconnect = getattr(prober, "disconnect", None)
+    if not callable(disconnect):
+        return
+    try:
+        disconnect()
+    except Exception as e:
+        print(f"WARNING - could not close the connection to the prober: {e}")
+
+
 class ProberFactory:
-    """Singleton factory that maintains a single prober instance per configuration"""
+    """
+    Singleton factory that maintains a single prober instance per configuration.
+
+    The prober holds the one TCP connection of the agent to the WP machine. The factory
+    closes the connection of every prober that it lets go: close(), a reconnect, a new
+    configuration.
+    """
 
     _instance = None
     _prober = None
     _initialized = False
     _current_config = None
+    # The agent stops (close(final=True)): no new connection after that.
+    _stopped = False
 
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
+
+    def _open(self, machineType: str, address: str):
+        """Open a new connection to the prober. Refused when the agent stops."""
+        try:
+            prober_class = prober_classes[machineType.lower()]
+        except KeyError:
+            raise ValueError(f"Unsupported machine type: {machineType}")
+        if self._stopped:
+            raise ProberNotConnectedError(STOPPED_MESSAGE)
+        prober = prober_class(address)  # raises when the machine is unreachable
+        if self._stopped:
+            # The agent stopped while this connection was opening.
+            _disconnect(prober)
+            raise ProberNotConnectedError(STOPPED_MESSAGE)
+        return prober
 
     def get_prober(self, machineType: str, address: str):
         """
@@ -46,16 +83,14 @@ class ProberFactory:
         ):
             return self._prober
 
-        # Create new prober instance
-        try:
-            prober_class = prober_classes[machineType.lower()]
-            self._prober = prober_class(address)
-            self._current_config = config
-            self._initialized = True
-            print(f"✅ Prober initialized: {machineType} at {address}")
-            return self._prober
-        except KeyError:
-            raise ValueError(f"Unsupported machine type: {machineType}")
+        # Create new prober instance; the connection of the one it replaces is closed
+        prober = self._open(machineType, address)
+        old, self._prober = self._prober, prober
+        self._current_config = config
+        self._initialized = True
+        _disconnect(old)
+        print(f"✅ Prober initialized: {machineType} at {address}")
+        return self._prober
 
     def is_initialized(self):
         """Check if prober is initialized"""
@@ -108,23 +143,35 @@ class ProberFactory:
 
         The current prober is kept if the new connection cannot be opened, so a
         failed reconnect (machine still booting) does not lose the old setup.
+        The old connection is closed once the new one is open.
         """
-        try:
-            prober_class = prober_classes[machineType.lower()]
-        except KeyError:
-            raise ValueError(f"Unsupported machine type: {machineType}")
-        prober = prober_class(address)  # raises when the machine is unreachable
-        self._prober = prober
+        prober = self._open(machineType, address)
+        old, self._prober = self._prober, prober
         self._current_config = (machineType.lower(), address)
         self._initialized = True
+        _disconnect(old)
         print(f"🔌 Prober reconnected: {machineType} at {address}")
         return prober
 
-    def reset(self):
-        """Reset the factory (useful for testing or reconnection)"""
-        self._prober = None
+    def close(self, final=False):
+        """
+        Close the TCP connection to the prober and forget the prober: the agent is not
+        initialized afterwards (the Initialize command connects again).
+
+        final=True: the agent stops. Every later connect is refused, so that a command
+        or the connection watch that is still running cannot open a connection again.
+        """
+        if final:
+            self._stopped = True
+        prober, self._prober = self._prober, None
         self._initialized = False
         self._current_config = None
+        _disconnect(prober)
+
+    def reset(self):
+        """Back to a new factory (tests): close the connection and allow connects again."""
+        self.close()
+        self._stopped = False
         print("🔄 Prober factory reset")
 
 

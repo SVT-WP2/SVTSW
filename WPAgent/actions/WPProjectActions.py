@@ -37,7 +37,7 @@ def _connect_prober(factory, globals_, machine_type, address, force):
     Returns (prober, error_response). On success error_response is None.
     """
     if force:
-        factory.reset()
+        factory.close()  # closes the old connection; the new one is opened below
 
     try:
         prober = factory.get_prober(machine_type, address)
