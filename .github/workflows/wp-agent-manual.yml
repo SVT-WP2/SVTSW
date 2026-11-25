@@ -10,11 +10,13 @@ on:
       job:
         description: 'Manual job to run'
         required: true
-        default: 'deploy-dev--manual'
+        default: 'docker-registry-create--manual'
         type: choice
         options:
           - docker-registry-create--manual
-          - deploy-dev--manual
+          # TEMPORARY: hidden while the WP machine services are commented out of the dev
+          # compose file (see docker-compose-svtsw-dev.yml).
+          # - deploy-dev--manual
           # TEMPORARY: hidden until the prod compose file has the WP machine services
           # (after the first WPAgent release, see docker-compose-svtsw-prod.yml).
           # - deploy-prod--manual

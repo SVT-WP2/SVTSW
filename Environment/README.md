@@ -10,7 +10,7 @@ as systemd services on the same host:
 | Stack | Compose file | systemd unit | Contents |
 | ----- | ------------ | ------------ | -------- |
 | kafka | `docker-compose-kafka-<env>.yml` | `svt.kafka--<env>.service` | Kafka broker (KRaft) + Kafka UI; **owns** the `svt-network--<env>` network |
-| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, the DB agent `svt-db-agent-next` and one `svt-wp-agent-<machine>` per WP machine (dev only for now) (join the network as `external`) |
+| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, the DB agent `svt-db-agent-next` and one `svt-wp-agent-<machine>` per WP machine (prepared, commented out in both environments for now) (join the network as `external`) |
 
 On the server each environment is one self-contained folder:
 
@@ -86,6 +86,22 @@ touched: apply Kafka changes with `sudo systemctl restart svt.kafka--<env>.servi
 
 ## WPAgent: one service per WP machine
 
+**Off for now (temporary).** The WP machine services are commented out in both
+environments. A push to master that changes `WPAgent/` tests and builds the image
+(`wp-agent.yml`) and deploys nothing. The rest of this section says how the services
+work when they are on.
+
+- **Dev:** off until an agent that gets stuck no longer needs a manual restart: a
+  command that SENTIO never answers (for example after an Abort on the machine) blocks
+  the agent. To enable: uncomment the block in `docker-compose-svtsw-dev.yml`, the
+  version line in `Dev/versions.env.example`, the `deploy-dev--manual` option in
+  `wp-agent-manual.yml` and the two deploy jobs in `wp-agent.yml`.
+- **Prod:** off until the first WPAgent release (`WPAgent :: Release`). Before it there
+  is no release image, and a missing image or version line stops every compose command
+  of the prod stack. To enable: uncomment the block in `docker-compose-svtsw-prod.yml`,
+  the version line in `Prod/versions.env.example` and the `deploy-prod--manual` option
+  in `wp-agent-manual.yml`.
+
 Each WP machine has its own compose service `svt-wp-agent-<machine>` (all use the
 image `svt-wp-agent`) with its own version line `SVT_WP_AGENT_<MACHINE>_VERSION`.
 Compose sets the machine name (`WaferProbeMachine.name`) and the Kafka broker as
@@ -94,10 +110,8 @@ runs also while the machine is off. A started agent does not connect to the mach
 it connects when it gets the `Initialize` command (see the WPAgent README, "One agent
 per WP machine").
 
-**A deploy restarts the agent, and the user sends `Initialize` again.** Every push to
-master that changes `WPAgent/` deploys the dev services (`wp-agent.yml`), also while
-somebody uses the machine: stop the measurements before a merge. Docker sends SIGTERM
-to the old container. The agent reads no more requests, lets the running command
+**A deploy restarts the agent, and the user sends `Initialize` again.** Stop the
+measurements before a deploy. Docker sends SIGTERM to the old container. The agent reads no more requests, lets the running command
 finish (up to 20 s), switches the machine to local mode, closes its connection to the
 machine and ends with exit code 0. The service has `stop_grace_period: 30s` for that:
 keep it above the 20 s (`STOP_COMMAND_WAIT` in `WPAgent/WPKafkaClient.py`), because
@@ -124,12 +138,6 @@ it reads the record again while the machine is off and before every connect.
 A single-service deploy runs `up --remove-orphans`: the first deploy of
 `svt-wp-agent-wpmit` removes the old `svt.wp-agent--<env>` container, so two agents
 never drive the same machine.
-
-**Prod (temporary):** the prod services stay commented out until the first WPAgent
-release (`WPAgent :: Release`). Before it there is no release image, and a missing
-image or version line stops every compose command of the prod stack. To enable:
-uncomment the block in `docker-compose-svtsw-prod.yml`, the version line in
-`Prod/versions.env.example` and the `deploy-prod--manual` option in `wp-agent-manual.yml`.
 
 ## The two DB agent services
 

@@ -223,7 +223,7 @@ Note: Depending on which Kafka broker is specified in the config file, WPAgent w
 
 > **Note:** On the CERN side, the `WPMIT` machine's production listener (`ProbeConfigCERN.json`, broker `pcmitpx01:9092`) runs as a system service and does not need to be started manually. Only start the listener yourself for development/testing (e.g. against `ProbeConfigCERN_DEV.json` / MOCK configs).
 >
-> **One listener per machine:** on dev, `WPMIT` now runs as the compose service `svt-wp-agent-wpmit` (see `Environment/Dev/docker-compose-svtsw-dev.yml`). Do not start another listener for the same machine on the same broker. A listener of this version joins the same consumer group and stays idle, but a listener of an older version (group `wafer-executor`) runs every command a second time.
+> **One listener per machine:** on dev, `WPMIT` is prepared as the compose service `svt-wp-agent-wpmit` (see `Environment/Dev/docker-compose-svtsw-dev.yml`; the block is commented out for now). Do not start a second listener for the same machine on the same broker. A listener of this version joins the same consumer group and stays idle, but a listener of an older version (group `wafer-executor`) runs every command a second time.
 
 
 ### 2. Send Commands (Producer side — runs anywhere with Kafka access)
@@ -547,7 +547,7 @@ stateDiagram-v2
 
 `Initialize` only opens the connection and reads the loaded wafer and the probe card from the DB: it moves nothing. The commands that move the machine come after it and need a log-in (`OpenProject`, `InitProbing`, …).
 
-**A stop, a restart or a deploy.** The agent keeps its state in memory, so a restarted agent starts from zero: state `ServiceOn`, no user, no project, not initialized. It does not connect by itself, because the service is deployed on every push to master and a start must not take the machine. The user sends `Initialize` when the machine is needed.
+**A stop, a restart or a deploy.** The agent keeps its state in memory, so a restarted agent starts from zero: state `ServiceOn`, no user, no project, not initialized. It does not connect by itself, because a start, also the one after a deploy, must not take the machine. The user sends `Initialize` when the machine is needed.
 
 ```mermaid
 sequenceDiagram
