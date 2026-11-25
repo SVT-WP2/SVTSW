@@ -1,0 +1,89 @@
+# LECTopography_ER2B.yaml
+#
+# In-house LEC topography of a whole ER2B wafer: for every die of both chip projects
+# (dies from configs/WPMapConversion_ER2B.json), autofocus on the 9 LEC positions and
+# store the focus heights (MeasureLECTopographyDie).
+#
+#   babyMOSAIX project: open -> find home -> die list -> each die
+#   MOSAIX project:     open -> find home -> die list -> each die
+#
+# Start: wafer aligned, chuck in separation (the dies are measured off-axis).
+# Result: Contacting/topography/<wafer>/LEC_topography.json
+# Then, per die: ComputeTopographyCorrection {"die": "...", "wafer": "..."}
+#
+#   --data='{"user":"..","waferAgentName":"..","wafer":"L3W15"}'
+
+params:
+  user:
+  waferAgentName:
+  wafer: "Wafer"
+  baby_project: "ER2B_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+  mosaix_project: "ER2B_MOSAIX_Vertical_V0_NotchW_ArrowW"
+  # MeasureLECTopographyDie
+  n_points: 9
+  settle_s: 0.2
+  min_points: 5
+
+steps:
+
+  # ── babyMOSAIX dies ───────────────────────────────────────────────────────────
+  - command: OpenProject
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      projectName: $baby_project
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: GetDieList
+    as: baby_dies
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - foreach: $baby_dies.steps
+    as: d
+    steps:
+      - command: MeasureLECTopographyDie
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $d.label
+          wafer: $wafer
+          n_points: $n_points
+          settle_s: $settle_s
+          min_points: $min_points
+
+  # ── MOSAIX dies ───────────────────────────────────────────────────────────────
+  - command: OpenProject
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+      projectName: $mosaix_project
+
+  - command: FindHome
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - command: GetDieList
+    as: mosaix_dies
+    params:
+      user: $user
+      waferAgentName: $waferAgentName
+
+  - foreach: $mosaix_dies.steps
+    as: d
+    steps:
+      - command: MeasureLECTopographyDie
+        params:
+          user: $user
+          waferAgentName: $waferAgentName
+          label: $d.label
+          wafer: $wafer
+          n_points: $n_points
+          settle_s: $settle_s
+          min_points: $min_points

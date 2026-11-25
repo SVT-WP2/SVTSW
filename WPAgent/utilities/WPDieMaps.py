@@ -78,6 +78,16 @@ def project_asic(project, dies):
     return next((p for p in prefixes if p in str(project)), None)
 
 
+def project_dies(project):
+    """Dies of the open project, in map order: the dies of its wafer type whose
+    SN_prefix is the project's ASIC (babyMOSAIX dies in a babyMOSAIX project, ...)."""
+    dies = die_map(wafer_type(project))["dies"]
+    asic = project_asic(project, dies)
+    if asic is None:
+        raise ValueError(f"Cannot tell from its name which dies project '{project}' contains")
+    return [d for d in dies if d["SN_prefix"] == asic]
+
+
 def label_to_coordinates(label, project):
     """(col, row) of a die label, alias or SVT serial number in the open project.
 

@@ -160,7 +160,13 @@ class SentioProberImpl(AbstractProber):
         self.prober.move_chuck_separation()
 
     def auto_focus(self):
-        resp = self.prober.vision.auto_focus()
+        """Auto focus on the current position (vis:auto_focus F). Returns the focus
+        height in um (higher = wafer surface higher, closer to the needles)."""
+        return float(self.prober.vision.auto_focus())
+
+    def get_chuck_z(self):
+        """Chuck Z in um, Zero reference (get_chuck_z Zero)."""
+        return float(self.prober.get_chuck_z(ChuckZReference.Zero))
 
     def move_chuck_work_area(self, work_area):
         try:
