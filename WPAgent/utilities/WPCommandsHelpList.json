@@ -412,24 +412,26 @@
     "data": {
       "label":          {"required": true,  "type": "string", "description": "Die label of the open project's map, e.g. BAMTest"},
       "wafer":          {"required": true,  "type": "string", "description": "Wafer name, e.g. L3W15 (file per wafer)"},
-      "n_points":       {"required": false, "type": "int",    "description": "LEC positions (default 9)"},
+      "positions":      {"required": false, "type": "list",   "description": "LEC positions to measure, e.g. [0, 4, 8] (default all 9)"},
+      "n_points":       {"required": false, "type": "int",    "description": "LEC positions of the raster (default 9)"},
       "row_spacing_um": {"required": false, "type": "float",  "description": "Distance between positions (default 2476, as the LEC imaging)"},
       "start_config":   {"required": false, "type": "string", "description": "Raster start block of WPImagingConfig.json (default LEC)"},
       "settle_s":       {"required": false, "type": "float",  "description": "Wait after each move (default 0.2)"},
-      "min_points":     {"required": false, "type": "int",    "description": "Good points for a complete die (default 5)"}
+      "min_points":     {"required": false, "type": "int",    "description": "Good points for a complete die (default half of positions)"}
     },
     "example": "python main.py send MeasureLECTopographyDie --data='{\"label\":\"BAMTest\",\"wafer\":\"L3W15\"}'",
     "execution_time": "30-60 seconds"
   },
 
   "ComputeTopographyCorrection": {
-    "description": "dz = mean LEC focus height of a die - that of the reference die (> 0: die higher, closer to the needles); overdrive correction = -dz. |dz| > max_abs_um enters error state, nothing saved; otherwise saved as topography_correction in Contacting/topography/<wafer>/dies/<die>.json. Moves nothing.",
+    "description": "dz = LEC focus height of a die - that of the reference die, averaged over the positions measured on both (> 0: die higher, closer to the needles); overdrive correction = -dz. |dz| > max_abs_um enters error state, nothing saved; otherwise saved as topography_correction in Contacting/topography/<wafer>/dies/<die>.json. Moves nothing.",
     "category": "Contacting",
     "data": {
       "die":        {"required": true,  "type": "string", "description": "Die label, e.g. BAM03"},
       "wafer":      {"required": true,  "type": "string", "description": "Wafer name, e.g. L3W15"},
       "reference":  {"required": false, "type": "string", "description": "Reference die (default BAMTest)"},
-      "max_abs_um": {"required": false, "type": "float",  "description": "Largest |dz| accepted (default 40)"}
+      "max_abs_um": {"required": false, "type": "float",  "description": "Largest |dz| accepted (default 40)"},
+      "min_common": {"required": false, "type": "int",    "description": "LEC positions both dies must have (default 2)"}
     },
     "example": "python main.py send ComputeTopographyCorrection --data='{\"die\":\"BAM03\",\"wafer\":\"L3W15\"}'",
     "execution_time": "< 1 second"

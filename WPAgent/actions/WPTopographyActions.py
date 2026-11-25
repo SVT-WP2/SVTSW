@@ -9,6 +9,7 @@ Sequences: sequencer/LECTopography_ER2.yaml / LECTopography_ER2B.yaml measure ev
 die of both chip projects of a wafer type. Storage and maths: utilities/WPTopography.py.
 """
 
+import math
 import time
 
 from utilities.WPResponseBuilder import ResponseBuilder
@@ -54,31 +55,34 @@ def get_die_list(user=None, waferAgentName=None, **kwargs):
 
 
 @validate_command_with_name("MeasureLECTopographyDie")   # "LEC" in capitals: not derivable from the name
-def measure_lec_topography_die(label, wafer="", n_points=9, row_spacing_um=2476, start_config="LEC",
-                               settle_s=0.2, min_points=5, user=None, waferAgentName=None, **kwargs):
+def measure_lec_topography_die(label, wafer="", positions=None, n_points=9, row_spacing_um=2476,
+                               start_config="LEC", settle_s=0.2, min_points=None,
+                               user=None, waferAgentName=None, **kwargs):
     """
     LEC topography of one die: autofocus on the LEC column, store the focus heights.
 
-    Off-axis: move to the die, then to the n_points positions of the LEC imaging raster
-    (first one = raster start `start_config` of configs/WPImagingConfig.json, then
-    row_spacing_um apart along -Y), autofocus at each and read the chuck Z; finally back
-    to the die position. Stored per wafer in Contacting/topography/<wafer>/LEC_topography.json
-    (utilities/WPTopography.py): every point, mean / std / min / max / range of the focus
-    height and its slope along the column (die tilt).
+    Off-axis: move to the die, then to the LEC positions `positions` (indices 0..n_points-1
+    of the LEC imaging raster: 0 = raster start `start_config` of configs/WPImagingConfig.json,
+    then row_spacing_um apart along -Y; e.g. [0, 4, 8] = first, middle, last; default all),
+    autofocus at each and read the chuck Z; finally back to the die position. Stored per
+    wafer in Contacting/topography/<wafer>/LEC_topography.json (utilities/WPTopography.py):
+    every point, mean / std / min / max / range of the focus height and its slope along
+    the column (die tilt).
 
     A failed autofocus is recorded and the die goes on; with fewer than min_points good
-    points the die is stored as incomplete (the reply says so, but succeeds, so a wafer
-    scan continues) and ComputeTopographyCorrection refuses it. A failed move puts the
-    agent in error state.
+    points (default: half of the positions, rounded up) the die is stored as incomplete
+    (the reply says so, but succeeds, so a wafer scan continues) and
+    ComputeTopographyCorrection refuses it. A failed move puts the agent in error state.
 
     Args:
         label:          die label of the open project's map, e.g. "BAMTest"
         wafer:          wafer name, e.g. "L3W15" (the file is per wafer)
-        n_points:       LEC positions (9 = the LEC imaging raster)
+        positions:      LEC positions to measure, e.g. [0, 4, 8]; default all n_points
+        n_points:       LEC positions of the raster (9 = the LEC imaging raster)
         row_spacing_um: distance between positions (as the LEC imaging)
         start_config:   raster start block of configs/WPImagingConfig.json
         settle_s:       wait after each move, before the autofocus
-        min_points:     good points needed for a complete die
+        min_points:     good points needed for a complete die (default: half of `positions`)
     """
     reply = get_reply_type()
     error = _ensure_initialized()
@@ -90,6 +94,8 @@ def measure_lec_topography_die(label, wafer="", n_points=9, row_spacing_um=2476,
         col, row = label_to_coordinates(label, g.projectName)
         sx, sy = raster_start(start_config)
         n, spacing, settle = int(n_points), float(row_spacing_um), float(settle_s)
+        selected = _positions(positions, n)
+        min_points = math.ceil(len(selected) / 2) if min_points is None else int(min_points)
         path = topography_path(wafer)                     # checks the wafer name
     except (ValueError, OSError) as e:
         return ResponseBuilder.error(reply, f"Topography of '{label}' refused: {e}", 400)
@@ -102,7 +108,7 @@ def measure_lec_topography_die(label, wafer="", n_points=9, row_spacing_um=2476,
         g.set_current_die(col, row, 0)
         x0, y0 = prober.get_chuck_xy()
 
-        for i in range(n):
+        for i in selected:
             prober.move_chuck_xy(x0 + sx, y0 + sy - i * spacing, "Zero")
             if settle > 0:
                 time.sleep(settle)
@@ -137,6 +143,8 @@ def measure_lec_topography_die(label, wafer="", n_points=9, row_spacing_um=2476,
         "start_config": start_config,
         "raster_start_um": [sx, sy],
         "row_spacing_um": spacing,
+        "positions": selected,
+        "min_points": min_points,
         **stats,
         "points": points,
         "failed": failed,
@@ -150,26 +158,29 @@ def measure_lec_topography_die(label, wafer="", n_points=9, row_spacing_um=2476,
         return ResponseBuilder.error(reply, f"Topography of '{label}' measured but not saved: {e}", 500)
 
     if not stats["n_points"]:
-        message = f"{label}: INCOMPLETE, no autofocus succeeded ({n} tried) -> {path}"
+        message = f"{label}: INCOMPLETE, no autofocus succeeded ({len(selected)} tried) -> {path}"
     else:
-        message = (f"{label}: {stats['n_points']}/{n} points, focus mean {stats['mean_focus_um']:.2f} um, "
+        message = (f"{label}: {stats['n_points']}/{len(selected)} points {selected}, "
+                   f"focus mean {stats['mean_focus_um']:.2f} um, "
                    f"std {stats['std_focus_um']:.2f}, range {stats['range_um']:.2f}, "
                    f"slope {stats['slope_um_per_mm']} um/mm"
-                   + ("" if stats["complete"] else f", INCOMPLETE (< {int(min_points)} points)") + f" -> {path}")
+                   + ("" if stats["complete"] else f", INCOMPLETE (< {min_points} points)") + f" -> {path}")
     print(f"   🗺️  {message}")
     return ResponseBuilder.success(reply, message)
 
 
 @validate_command
-def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um=40.0,
+def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um=40.0, min_common=2,
                                   user=None, waferAgentName=None, **kwargs):
     """
-    Topography correction of a die: difference of its mean LEC focus height to the
-    reference die's (Contacting/topography/<wafer>/LEC_topography.json).
+    Topography correction of a die: difference of its LEC focus heights to the
+    reference die's (Contacting/topography/<wafer>/LEC_topography.json), on the LEC
+    positions measured on both (the focus varies along the column the same way on
+    every die, so only the same positions are compared):
 
-        dz_um            = mean focus(die) - mean focus(reference)   (> 0: die higher,
-                           closer to the needles)
-        od_correction_um = -dz_um, to add to the nominal overdrive
+        dz_um            = mean over common positions of focus(die) - focus(reference)
+                           (> 0: die higher, closer to the needles)
+        od_correction_um = -dz_um, to add to the nominal overdrive (a lower die needs more)
 
     |dz_um| > max_abs_um: something is wrong (bad focus, wrong die, tilted wafer):
     nothing is saved and the agent goes to error state. Otherwise saved as
@@ -181,6 +192,7 @@ def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um
         wafer:      wafer name, as for MeasureLECTopographyDie
         reference:  reference die (default "BAMTest": PTPA / needle offset die)
         max_abs_um: largest |dz| accepted (default 40)
+        min_common: LEC positions that both dies must have (default 2)
     """
     reply = get_reply_type()
     try:
@@ -193,7 +205,12 @@ def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um
                 reply, f"Die '{name}' has an incomplete topography ({rec.get('n_points', 0)} points): "
                        f"measure it again", 400)
 
-    dz, od = topography_correction(meas, ref)
+    corr = topography_correction(meas, ref)
+    if corr["n_common"] < int(min_common):
+        return ResponseBuilder.error(
+            reply, f"'{die}' and '{reference}' share {corr['n_common']} measured LEC positions "
+                   f"(need {int(min_common)}): measure them on the same positions", 400)
+    dz, od = corr["dz_um"], corr["od_correction_um"]
     limit = float(max_abs_um)
     if abs(dz) > limit:
         message = (f"Topography correction of '{die}' vs '{reference}': dz={dz:+.2f} um exceeds "
@@ -205,6 +222,9 @@ def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um
         "reference": reference,
         "dz_um": dz,
         "od_correction_um": od,
+        "positions": corr["positions"],
+        "n_common": corr["n_common"],
+        "sd_diff_um": corr["sd_diff_um"],
         "die_mean_focus_um": meas["mean_focus_um"],
         "reference_mean_focus_um": ref["mean_focus_um"],
         "die_std_focus_um": meas["std_focus_um"],
@@ -221,7 +241,22 @@ def compute_topography_correction(die, wafer="", reference="BAMTest", max_abs_um
         traceback.print_exc()
         return ResponseBuilder.error(reply, f"Correction of '{die}' computed but not saved: {e}", 500)
 
-    message = (f"{die} vs {reference}: dz={dz:+.2f} um (die {meas['mean_focus_um']:.2f}, reference "
-               f"{ref['mean_focus_um']:.2f}), overdrive correction {od:+.2f} um -> {path}")
+    message = (f"{die} vs {reference}: dz={dz:+.2f} um on LEC positions {corr['positions']} "
+               f"(spread {corr['sd_diff_um']} um), overdrive correction {od:+.2f} um -> {path}")
     print(f"   📐 {message}")
     return ResponseBuilder.success(reply, message)
+
+
+def _positions(positions, n):
+    """Sorted, unique LEC position indices in 0..n-1 (None / empty = all). Raises ValueError."""
+    if positions is None or positions == "" or positions == []:
+        return list(range(n))
+    if isinstance(positions, str):                        # "0,4,8" from a command line
+        positions = [p for p in positions.replace("[", "").replace("]", "").split(",") if p.strip()]
+    try:
+        selected = sorted({int(p) for p in positions})
+    except (TypeError, ValueError):
+        raise ValueError(f"positions must be LEC position indices, e.g. [0, 4, 8], got {positions!r}")
+    if not selected or selected[0] < 0 or selected[-1] >= n:
+        raise ValueError(f"positions {selected} must be within 0..{n - 1}")
+    return selected

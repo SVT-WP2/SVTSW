@@ -20,9 +20,13 @@ result in the die's own file:
         {"label": ..., "wafer": ..., "topography_correction": {...}}
 
 Sign: a higher focus height means a higher wafer surface, closer to the needles.
-    dz_um            = mean focus(die) - mean focus(reference)   (> 0: die higher)
-    od_correction_um = -dz_um     (to add to the nominal overdrive: a higher die
-                                   is touched earlier, so it needs less overdrive)
+    dz_um            = focus(die) - focus(reference), averaged over the LEC positions
+                       measured on both dies                    (> 0: die higher)
+    od_correction_um = -dz_um     (to add to the nominal overdrive: a lower / thinner
+                                   die needs more overdrive, a higher one less)
+Only the positions measured on both dies are compared: the focus height varies along
+the LEC column in the same way on every die, so comparing different positions would
+add that pattern (a few um) to dz.
 """
 
 import json
@@ -130,6 +134,18 @@ def summarize(points, min_points):
 
 
 def topography_correction(die_record, ref_record):
-    """dz_um = mean focus(die) - mean focus(reference); od_correction_um = -dz_um."""
-    dz = float(die_record["mean_focus_um"]) - float(ref_record["mean_focus_um"])
-    return round(dz, 2), round(-dz, 2)
+    """Focus-height difference of a die to the reference, on the LEC positions both have.
+
+    Returns a dict: dz_um = mean over the common positions of focus(die) - focus(reference),
+    od_correction_um = -dz_um, positions (the common LEC position indices), n_common,
+    sd_diff_um (spread of the point-by-point differences; None below 2 points).
+    """
+    die = {p["index"]: float(p["focus_um"]) for p in die_record.get("points", [])}
+    ref = {p["index"]: float(p["focus_um"]) for p in ref_record.get("points", [])}
+    common = sorted(set(die) & set(ref))
+    diffs = [die[i] - ref[i] for i in common]
+    if not diffs:
+        return {"dz_um": None, "od_correction_um": None, "positions": [], "n_common": 0, "sd_diff_um": None}
+    dz = mean(diffs)
+    return {"dz_um": round(dz, 2), "od_correction_um": round(-dz, 2), "positions": common,
+            "n_common": len(common), "sd_diff_um": round(pstdev(diffs), 2) if len(diffs) > 1 else None}

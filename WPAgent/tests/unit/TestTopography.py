@@ -132,6 +132,21 @@ def test_measure_refusals_and_move_failure(setup):
     assert topo.load_topography(WAFER)["dies"] == {}
 
 
+def test_measure_selected_positions(setup):
+    g, mp = setup
+    r = _measure("BAMTest", positions=[8, 0, 4, 4])            # sorted, duplicates dropped
+    assert r["status"] == "Success", r["error"]["message"]
+    rec = topo.die_measurement(WAFER, "BAMTest")
+    sx, sy = raster_start("LEC")
+    y0 = -400000.0 + 25000.0
+    assert [p["index"] for p in rec["points"]] == [0, 4, 8] and rec["positions"] == [0, 4, 8]
+    assert [p["y_um"] for p in rec["points"]] == [y0 + sy - i * 2476 for i in (0, 4, 8)]
+    assert rec["min_points"] == 2 and rec["complete"]
+    assert _measure("BAMTest", positions="0,4,8")["status"] == "Success"      # command-line form
+    for bad in ([9], [-1], ["a"]):
+        assert _measure("BAMTest", positions=bad)["error"]["code"] == 400
+
+
 # --- ComputeTopographyCorrection -------------------------------------------------
 
 def _two_dies(mp, ref_height, die_height):
@@ -165,6 +180,41 @@ def test_correction_above_limit_enters_error_state(setup, dz):
     assert r["error"]["code"] == 500 and "max_abs_um=40" in r["error"]["message"]
     assert sm.get_state() == S.Error
     assert not os.path.exists(topo.die_file_path(WAFER, "BAM03"))
+
+
+def test_correction_compares_the_same_positions(setup):
+    """Reference on all 9 positions, die on 3: only those 3 positions are compared."""
+    g, mp = setup
+    mp.tilt = 0.001                                  # same shape along the column on every die
+    mp.die_height[(-4, 1)] = 15300.0
+    mp.die_height[(-2, 1)] = 15303.0
+    assert _measure("BAMTest")["status"] == "Success"
+    assert _measure("BAM03", positions=[0, 1, 2])["status"] == "Success"
+    r = ta.compute_topography_correction(die="BAM03", wafer=WAFER, **U)
+    assert r["status"] == "Success", r["error"]["message"]
+    c = json.load(open(topo.die_file_path(WAFER, "BAM03")))["topography_correction"]
+    assert c["positions"] == [0, 1, 2] and c["n_common"] == 3
+    assert c["dz_um"] == pytest.approx(3.0, abs=0.01) and c["sd_diff_um"] == pytest.approx(0.0, abs=0.01)
+    # a plain difference of means would mix the tilt in
+    assert abs(topo.die_measurement(WAFER, "BAM03")["mean_focus_um"]
+               - topo.die_measurement(WAFER, "BAMTest")["mean_focus_um"] - 3.0) > 0.1
+    # no positions in common
+    assert _measure("BAM03", positions=[1, 2])["status"] == "Success"
+    assert _measure("BAMTest", positions=[5, 6])["status"] == "Success"
+    r = ta.compute_topography_correction(die="BAM03", wafer=WAFER, **U)
+    assert r["error"]["code"] == 400 and "share 0" in r["error"]["message"]
+
+
+def test_correction_on_measured_wafer_l3w14():
+    """BAM00 vs BAMTest, focus heights of the first real run (wafer L3W14, 25.11.2026)."""
+    bamtest = [8553.5, 8551.2, 8548.2, 8549.3, 8546.9, 8543.6, 8548.5, 8546.7, 8543.3]
+    bam00 = [8550.7, 8548.2, 8544.7, 8544.7, 8543.2, 8541.0, 8547.3, 8546.1, 8543.7]
+    ref = {"points": [{"index": i, "focus_um": z} for i, z in enumerate(bamtest)]}
+    die = {"points": [{"index": i, "focus_um": z} for i, z in enumerate(bam00)]}
+    c = topo.topography_correction(die, ref)
+    assert c["dz_um"] == pytest.approx(-2.4) and c["od_correction_um"] == pytest.approx(2.4)
+    die3 = {"points": [p for p in die["points"] if p["index"] in (0, 4, 8)]}
+    assert topo.topography_correction(die3, ref)["dz_um"] == pytest.approx(-2.03, abs=0.01)
 
 
 def test_correction_refusals(setup):
@@ -214,4 +264,4 @@ def test_lec_topography_er2b_sequence(setup):
     all_labels = {d["label"] for d in die_map("ER2B")["dies"]}
     dies = topo.load_topography(WAFER)["dies"]
     assert set(dies) == all_labels
-    assert all(rec["n_points"] == 9 for rec in dies.values())
+    assert all(rec["positions"] == [0, 4, 8] and rec["n_points"] == 3 for rec in dies.values())
