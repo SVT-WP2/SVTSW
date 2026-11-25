@@ -398,6 +398,61 @@
     "execution_time": "1-5 seconds"
   },
 
+  "GetDieList": {
+    "description": "Dies of the open project from the die map of its wafer type (configs/WPMapConversion_<type>.json), only those of the project's ASIC. Returned as 'steps' [{label, col, row}] so a sequence can loop over them. Moves nothing.",
+    "category": "Contacting",
+    "data": {},
+    "example": "python main.py send GetDieList",
+    "execution_time": "< 1 second"
+  },
+
+  "MeasureLECTopographyDie": {
+    "description": "LEC topography of one die: off-axis, autofocus on the 9 LEC positions (raster start 'LEC' of configs/WPImagingConfig.json), store every focus height and chuck Z, plus mean / std / range / slope, in Contacting/topography/<wafer>/LEC_topography.json. A failed autofocus is recorded and skipped; a failed move enters error state.",
+    "category": "Contacting",
+    "data": {
+      "label":          {"required": true,  "type": "string", "description": "Die label of the open project's map, e.g. BAMTest"},
+      "wafer":          {"required": true,  "type": "string", "description": "Wafer name, e.g. L3W15 (file per wafer)"},
+      "positions":      {"required": false, "type": "list",   "description": "LEC positions to measure, e.g. [0, 4, 8] (default all 9)"},
+      "n_points":       {"required": false, "type": "int",    "description": "LEC positions of the raster (default 9)"},
+      "row_spacing_um": {"required": false, "type": "float",  "description": "Distance between positions (default 2476, as the LEC imaging)"},
+      "start_config":   {"required": false, "type": "string", "description": "Raster start block of WPImagingConfig.json (default LEC)"},
+      "settle_s":       {"required": false, "type": "float",  "description": "Wait after each move (default 0.2)"},
+      "min_points":     {"required": false, "type": "int",    "description": "Good points for a complete die (default half of positions)"}
+    },
+    "example": "python main.py send MeasureLECTopographyDie --data='{\"label\":\"BAMTest\",\"wafer\":\"L3W15\"}'",
+    "execution_time": "30-60 seconds"
+  },
+
+  "ComputeTopographyCorrection": {
+    "description": "dz = LEC focus height of a die - that of the reference die, averaged over the positions measured on both (> 0: die higher, closer to the needles); overdrive correction = -dz. |dz| > max_abs_um enters error state, nothing saved; otherwise saved as topography_correction in Contacting/topography/<wafer>/dies/<die>.json. Moves nothing.",
+    "category": "Contacting",
+    "data": {
+      "die":        {"required": true,  "type": "string", "description": "Die label, e.g. BAM03"},
+      "wafer":      {"required": true,  "type": "string", "description": "Wafer name, e.g. L3W15"},
+      "reference":  {"required": false, "type": "string", "description": "Reference die (default BAMTest)"},
+      "max_abs_um": {"required": false, "type": "float",  "description": "Largest |dz| accepted (default 40)"},
+      "min_common": {"required": false, "type": "int",    "description": "LEC positions both dies must have (default 2)"}
+    },
+    "example": "python main.py send ComputeTopographyCorrection --data='{\"die\":\"BAM03\",\"wafer\":\"L3W15\"}'",
+    "execution_time": "< 1 second"
+  },
+
+  "LECTopographyER2": {
+    "description": "Sequence (sequencer/LECTopography_ER2.yaml): MeasureLECTopographyDie on every die of the ER2 babyMOSAIX and MOSAIX projects.",
+    "category": "Contacting",
+    "data": {"wafer": {"required": true, "type": "string", "description": "Wafer name, e.g. L3W15"}},
+    "example": "python main.py send LECTopographyER2 --data='{\"wafer\":\"L3W15\"}'",
+    "execution_time": "minutes"
+  },
+
+  "LECTopographyER2B": {
+    "description": "Sequence (sequencer/LECTopography_ER2B.yaml): MeasureLECTopographyDie on every die of the ER2B babyMOSAIX and MOSAIX projects.",
+    "category": "Contacting",
+    "data": {"wafer": {"required": true, "type": "string", "description": "Wafer name, e.g. L3W15"}},
+    "example": "python main.py send LECTopographyER2B --data='{\"wafer\":\"L3W15\"}'",
+    "execution_time": "minutes"
+  },
+
   "GetDieSize": {
     "description": "Read the die size (index size / pitch) of the open project's wafer map from SENTIO, its axis orientation, grid origin, the current die and the column/row steps learned by precise MoveChuckRowColumn moves. Moves nothing.",
     "category": "Contacting",

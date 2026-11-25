@@ -299,8 +299,13 @@ class MockProberImpl:
         return self._camera
 
     def auto_focus(self):
+        """Focus height in um, like SentioProberImpl.auto_focus()."""
         time.sleep(0.5)
-        return "0,OK"
+        return float(getattr(self, "_focus_um", 15300.0))
+
+    def get_chuck_z(self):
+        """Chuck Z in um (Zero reference), like SentioProberImpl.get_chuck_z()."""
+        return float(self._chuck_z)
 
     def take_screenshot(
         self,

@@ -11,6 +11,7 @@ import actions.WPLoginActions as user_actions
 import actions.WPImagingActions as imaging_actions
 import actions.WPContactingActions as contacting_actions
 import actions.WPDieGridActions as die_grid_actions
+import actions.WPTopographyActions as topography_actions
 
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 from utilities.WPValidationDecorator import validate_command_with_name
@@ -118,6 +119,8 @@ COMMAND_ROUTER = {
     "TakeImageLECDie":    _yaml_command("TakeImageLECDie", "sequencer/TakeImageLECDie.yaml"),
     "NeedleOffsetMeasureER2B":    _yaml_command("NeedleOffsetMeasureER2B", "sequencer/NeedleOffsetMeasure_ER2B.yaml"),
     "MoveToPadTarget":    _yaml_command("MoveToPadTarget", "sequencer/MoveToPadTarget.yaml"),
+    "LECTopographyER2":    _yaml_command("LECTopographyER2", "sequencer/LECTopography_ER2.yaml"),
+    "LECTopographyER2B":    _yaml_command("LECTopographyER2B", "sequencer/LECTopography_ER2B.yaml"),
 
     # Contacting
     "SaveChuckPosition": contacting_actions.save_chuck_position,
@@ -128,6 +131,11 @@ COMMAND_ROUTER = {
 
     # Die size of the wafer map (precise die moves: MoveChuckRowColumn precise=true)
     "GetDieSize": die_grid_actions.get_die_size,
+
+    # In-house LEC topography (Contacting domain)
+    "GetDieList": topography_actions.get_die_list,
+    "MeasureLECTopographyDie": topography_actions.measure_lec_topography_die,
+    "ComputeTopographyCorrection": topography_actions.compute_topography_correction,
 
     # FSM State management commands (bypass state check)
     "ResetAgent": project_actions.reset_agent,

@@ -23,6 +23,7 @@ BYPASS_COMMANDS: set[str] = {
     "ListChipTypes",
     "ListAvailableCommands",
     "GetDieSize",
+    "GetDieList",
     # Hardware ops allowed in any state
     "AutoFocus",
 }
@@ -88,6 +89,8 @@ SEQUENCE_COMMANDS: set[str] = {
     "TakeImageLECDie",
     "NeedleOffsetMeasureER2B",
     "MoveToPadTarget",
+    "LECTopographyER2",
+    "LECTopographyER2B",
 }
 EXPERT_COMMANDS |= SEQUENCE_COMMANDS
 
