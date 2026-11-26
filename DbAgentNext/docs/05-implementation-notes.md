@@ -101,9 +101,11 @@ src/
   - The controller (`headerText`) takes the text of a string or a `Buffer` (UTF-8). Any other value of a header that
     is there becomes `null`, which the dispatcher refuses: it never unwraps an array and never turns an object into a
     string (`String()` can throw on an object). The read cannot throw.
-  - On the log line the user is `-` without the header and `invalid` for a value that is no positive integer; the raw
-    value is not logged. The correlation id is printed only when it is 1 to 100 characters of `A-Z`, `a-z`, `0-9`,
-    `.`, `_`, `:` and `-`, otherwise `[invalid correlation id]`: a raw value could hold a line break and forge a line.
+  - The log line prints no value of the record raw: a raw value could hold a line break and forge a line. The type
+    is printed when it is 1 to 100 safe characters, otherwise `<invalid type>` (the reply keeps the type as it came);
+    the user is `-` without the header and `invalid` for a value that is no positive integer; the correlation id is
+    printed when it is 1 to 100 characters of `A-Z`, `a-z`, `0-9`, `.`, `_`, `:` and `-`, otherwise
+    `[invalid correlation id]`. The rules are in [04 §4](04-runtime-and-deployment.md#4-logging).
   - A dispatcher failure becomes an `UnexpectedError` envelope; nothing is thrown out of the method.
   - The unit spec builds its records with the real `KafkaParser`, so it sees what the controller sees.
 

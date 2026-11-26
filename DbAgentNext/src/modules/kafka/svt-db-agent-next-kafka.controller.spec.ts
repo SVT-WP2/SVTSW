@@ -122,6 +122,40 @@ describe('SvtDbAgentNextKafkaController', () => {
             expect(logLine()).toMatch(/ user=invalid$/)
         })
 
+        it('logs the type only when it is a short text of safe characters, and hands the body on unchanged', async () => {
+            const cases: [unknown, string][] = [
+                [{ type: 'UpdateWpMachineLoadedWafer' }, 'UpdateWpMachineLoadedWafer'],
+                [{ type: 'X\nFAKE LINE' }, '<invalid type>'],
+                [{ type: 'X'.repeat(101) }, '<invalid type>'],
+                [{ type: '' }, '<invalid type>'],
+                [{ type: 5 }, '<no type>'],
+                ['not json', '<no type>'],
+            ]
+            for (const [body, type] of cases) {
+                log.mockClear()
+                await controller.handleRequest(body, recordContext({}))
+
+                expect(dispatch, type).toHaveBeenLastCalledWith(body, { userId: undefined })
+                expect(logLine().startsWith(`${type} → Success in `), JSON.stringify(body)).toBe(true)
+                expect(logLine()).not.toContain('\n')
+            }
+        })
+
+        it('keeps the type of the body in a fallback reply, and logs only the safe form of it', async () => {
+            dispatch.mockRejectedValue(new Error('boom'))
+            const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined)
+            try {
+                const value = JSON.parse(await controller.handleRequest({ type: 'X\nFAKE' }, recordContext({}))) as SvtDbAgentNextReply
+
+                expect(value).toMatchObject({ type: 'X\nFAKEReply', error: { message: 'Unexpected error while processing X\nFAKE' } })
+                expect(String(error.mock.calls[0][0])).toBe('<invalid type>: the dispatcher threw')
+                expect(logLine().startsWith('<invalid type> → UnexpectedError in ')).toBe(true)
+            }
+            finally {
+                error.mockRestore()
+            }
+        })
+
         it('logs a correlation id only when it is a short text of safe characters', async () => {
             const cases: [Buffer | string | null, string][] = [
                 ['0f8fad5b-d9cb-469f-a165-70867728950e', ' [0f8fad5b-d9cb-469f-a165-70867728950e]'],

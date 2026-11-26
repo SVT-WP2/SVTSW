@@ -75,9 +75,23 @@ Code: `src/modules/kafka` (heartbeat), `src/modules/health`.
 
 ## 4. Logging
 
-To stdout, at the level of `SVT_DB_AGENT_LOGGER_TERM_VERBOSITY` (§1). For each request the controller logs the type,
-the reply status, the duration and the correlation id. The agent does not log SQL with literal values, and it does
-not return SQL to clients (R-9).
+To stdout, at the level of `SVT_DB_AGENT_LOGGER_TERM_VERBOSITY` (§1). For each request the controller logs one line:
+
+```
+<type> → <status> in <n> ms user=<user> [<correlation id>]
+```
+
+- `<type>` is the type of the body when it is 1 to 100 characters of `A-Z`, `a-z`, `0-9`, `_`, `.` and `-`;
+  `<no type>` when the body has none; `<invalid type>` otherwise.
+- `<user>` is the id of the header `svt_userId`; `-` without the header; `invalid` for a value that is no positive
+  integer ([messages.md §1.5](messages.md#15-the-user-of-a-request)).
+- `[<correlation id>]` is there when the record has the header `kafka_correlationId`: the id when it is 1 to 100
+  characters of `A-Z`, `a-z`, `0-9`, `.`, `_`, `:` and `-`, otherwise `[invalid correlation id]`.
+
+The line prints no value of the record raw: a value with a line break could forge a second log line. The reply keeps
+the type as it came. Except at the level `DEBUG`, where MikroORM logs each query with its values (but not the
+queries of the transactions that write a password hash), the agent does not log SQL with literal values. It does not
+return SQL to clients (R-9).
 
 ## 5. Shutdown
 

@@ -5,6 +5,9 @@ import { EpicKafkaReplyStatus, SvtDbAgentKafka, SvtKafkaHeader } from 'svt-ts-ty
 import { isRecord, parseUserIdHeader, SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../dispatch'
 
 
+/** The type of the log lines and of a fallback reply for a body without a string `type`. */
+const NO_TYPE = '<no type>'
+
 /**
  * The Kafka side of the agent: one method for every record of `svt.db-agent.request`. The payload goes to
  * the dispatcher as the e2e harness sends it, and the returned **string** becomes the value of the reply
@@ -12,8 +15,10 @@ import { isRecord, parseUserIdHeader, SvtDbAgentNextReply, SvtDbAgentNextRequest
  * to the request's `kafka_replyTopic`). Nothing is ever thrown out of here: an exception would become a
  * `kafka_nest-err` header the clients do not understand.
  *
- * It reads the header `svt_userId` of the record and hands its raw value to the dispatcher, which checks it. The
- * reply does not repeat the header. The log line of each request names the user (`user=42`, `user=-`).
+ * It reads the header `svt_userId` of the record and hands its text to the dispatcher, or `null` for a header that
+ * is there without text (`headerText`); the dispatcher checks it. The reply does not repeat the header. The log line
+ * of each request names the type, the status, the duration, the user and the correlation id, and prints no value of
+ * the record raw: a type, a user or a correlation id that is not a short text of safe characters becomes a fixed word.
  */
 @Controller()
 export class SvtDbAgentNextKafkaController {
@@ -26,7 +31,7 @@ export class SvtDbAgentNextKafkaController {
     @MessagePattern(SvtDbAgentKafka.TopicName.Request)
     async handleRequest(@Payload() value: unknown, @Ctx() context: KafkaContext): Promise<string> {
         const startedAt = Date.now()
-        const requestType = isRecord(value) && typeof value['type'] === 'string' ? value['type'] : '<no type>'
+        const requestType = isRecord(value) && typeof value['type'] === 'string' ? value['type'] : NO_TYPE
         const userId = headerText(context, SvtKafkaHeader.UserId)
         let reply: SvtDbAgentNextReply
         try {
@@ -34,7 +39,7 @@ export class SvtDbAgentNextKafkaController {
         }
         catch (error) {
             // The dispatcher answers every failure itself; this is the last line of defence.
-            this.logger.error(`${requestType}: the dispatcher threw`, error instanceof Error ? error.stack : String(error))
+            this.logger.error(`${typeForLog(requestType)}: the dispatcher threw`, error instanceof Error ? error.stack : String(error))
             reply = {
                 type: `${requestType}Reply`,
                 status: EpicKafkaReplyStatus.UnexpectedError,
@@ -43,7 +48,8 @@ export class SvtDbAgentNextKafkaController {
             }
         }
         this.logger.log(
-            `${requestType} → ${reply.status} in ${Date.now() - startedAt} ms user=${userForLog(userId)}${correlationSuffix(context)}`,
+            `${typeForLog(requestType)} → ${reply.status} in ${Date.now() - startedAt} ms user=${userForLog(userId)}`
+            + correlationSuffix(context),
         )
         return JSON.stringify(reply)
     }
@@ -52,6 +58,17 @@ export class SvtDbAgentNextKafkaController {
 
 /** A correlation id that the log line prints as it is: a UUID or another short id of safe characters. */
 const SAFE_CORRELATION_ID = /^[A-Za-z0-9._:-]{1,100}$/
+
+/** A message type that the log lines print as it is: the names of the contract are letters and digits. */
+const SAFE_TYPE = /^[A-Za-z0-9_.-]{1,100}$/
+
+/**
+ * The type of the log lines: the type of the body when it is a short text of safe characters, `<no type>` when the
+ * body has none, `<invalid type>` otherwise. The log lines only: the reply keeps the type as it came.
+ */
+function typeForLog(requestType: string): string {
+    return requestType === NO_TYPE || SAFE_TYPE.test(requestType) ? requestType : '<invalid type>'
+}
 
 /**
  * The text of one header of the record. NestJS's `KafkaParser` has decoded every header before the controller sees
