@@ -19,7 +19,7 @@ One spec file: `npx vitest run --config apps/epic-measure-api/vitest.e2e.config.
 
 | Piece | How the suite runs it |
 |---|---|
-| **BFF** (`epic-measure-api`) | In-process, per spec file: `TestSetup.init()` boots the real `AppModule` with `configureEpicMeasureApiApp()` (the bootstrap `main.ts` uses), connects its Kafka clients and listens on a free port. Requests are plain `fetch` calls. |
+| **BFF** (`epic-measure-api`) | In-process, per spec file: `TestSetup.init()` boots the real `AppModule` with `configureEpicMeasureApiApp()` (the bootstrap `main.ts` uses), connects its Kafka clients as `main.ts` does (`connectEpicMeasureApiKafkaClients`) and listens on a free port. Requests are plain `fetch` calls. |
 | **The user** | The suite runs as a logged-in Admin, through the real `EpicAuthGuard`: `init()` empties the database, enters `E2E_ADMIN` (user 1, a random password per run) and logs it in with `POST /api/auth/login`; `get` / `post` / `patch` / `request` send its session cookie. `clearDatabase()` puts the user back as user 1, so the session stays valid. `setup.as(null)` sends no cookie, `setup.loginAs(role)` logs in as a new user of that role, `setup.createUser()` enters a user, `setup.fetch()` returns the raw response (cookies). |
 | **DB agent** (`DbAgentNext`) | A child process, once per run (`utils/global-setup.ts`): built with `npm run build` when `dist/main.js` is older than its sources, migrated with its own CLI when a migration is missing, started as `node dist/main.js` (NODE_ENV=test) and stopped gracefully over IPC (`agent/run-agent.cjs`). Its log: `UI/tmp/epic-measure-api-e2e/svt-db-agent-next.log`. |
 | **Kafka** | The dedicated broker of `../Dev/docker-compose.e2e.yml` on **9185**, never the dev broker (9085): see below. |

@@ -166,13 +166,15 @@ The outer envelope is always unwrapped first with `mapEpicKafkaMessageData()`. E
 
 ```ts
 protected sendMessageAndGetReply<TReply>(message: SvtDbAgentKafkaSvtTests.Message): Observable<TReply> {
-    return this.kafkaClient.send<TReply>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
+    return sendEpicDbAgentRequest<TReply>(this.kafkaClient, message)
 }
 ```
 
-`toEpicDbAgentKafkaRecord()` (`apps/epic-measure-api/src/common/kafka`) turns the message into a Kafka record: the
-message as JSON, and the header `svt_userId` with the user of the HTTP request ([§10](#10-authentication)). Every
-service sends through it. Each service must also `subscribeToResponseOf(TopicName.Request)` in `onModuleInit()`.
+`sendEpicDbAgentRequest()` (`apps/epic-measure-api/src/common/kafka`) is the one way to send: it makes the Kafka
+record (the message as JSON, and the header `svt_userId` with the user of the HTTP request, [§10](#10-authentication))
+when it is called, and delivers the reply in the context of that request. Each service must also
+`subscribeToResponseOf(TopicName.Request)` in `onModuleInit()`. Every Kafka client connects at boot
+(`connectEpicMeasureApiKafkaClients`, in `main.ts` and the e2e harness).
 
 ### Receiving, in the mock DB agent
 
@@ -377,16 +379,22 @@ sequenceDiagram
 
 | Piece | Where | What |
 |---|---|---|
-| Routes | `apps/epic-measure-api/src/modules/auth/controllers` | `POST /api/auth/login` (public: `200` + cookie, `401` with one text for every cause, `429` after 5 failed log-ins of a login within 5 minutes, for 60 s), `POST /api/auth/logout` (public, `204`, clears the cookie), `GET /api/auth/me`. |
+| Routes | `apps/epic-measure-api/src/modules/auth/controllers` | `POST /api/auth/login` (public: `200` + cookie, `401` with one text for every cause, `429` after 5 failed log-ins of a login within 5 minutes, for 60 s), `POST /api/auth/logout` (public, `204`, clears the cookie), `GET /api/auth/me`. The attempts of one login run one after another, each waiting at most 10 s for the one before it. |
 | Password hash | `libs/epic/core/src/auth` | `hashEpicPassword` / `verifyEpicPassword`: scrypt, `scrypt$N$r$p$<salt>$<key>`. Only the BFF hashes and checks; a plain password is not logged, not sent, not returned. `npm run auth:hash-password` prints the hash for the first Admin (`../Environment/README.md`). |
-| Session | `EpicAuthSessionService` | A JWT (HS256, `{ sub: "<user id>" }`) in the cookie `svt_session`: `HttpOnly`, `SameSite=Strict`, `Path=/`, `Secure` when `SVT_UI_AUTH_COOKIE_SECURE=true`. Lifetime `SVT_UI_AUTH_SESSION_HOURS` (12). Key `SVT_UI_AUTH_SECRET` (32 characters at least; the BFF does not start without it, and refuses a `DEVELOPMENT-ONLY-` value when `NODE_ENV=production`). No session store: a token stays valid until it expires, also after a log-out. |
-| Guard | `EpicAuthGuard` (`APP_GUARD`) | Every HTTP route needs a valid session of an active user unless it is marked `@EpicPublic()` (the log-in, the log-out, `/api/health`). The user is read with `GetAllUsers` through a cache of `SVT_UI_AUTH_USER_CACHE_SECONDS` (30 s): a user switched off loses access within that time. `@EpicRoles(EpicUserRole.X)` needs that role or a higher one (`403`); no route uses it yet. `@EpicCurrentUser()` is the user of the request. Swagger (`/api/swagger`) is outside the controllers and stays open. |
+| Session | `EpicAuthSessionService` | A JWT (HS256 only, `{ sub: "<user id>" }`, the id as a strict decimal string) in the cookie `SVT_UI_AUTH_COOKIE_NAME` (`svt_session`; `svt_session_dev` on the dev server, which shares its host with prod): `HttpOnly`, `SameSite=Strict`, `Path=/`, `Secure` when `SVT_UI_AUTH_COOKIE_SECURE=true`. Lifetime `SVT_UI_AUTH_SESSION_HOURS` (12). Key `SVT_UI_AUTH_SECRET` (32 characters at least, spaces around it not counted; one per environment; the BFF does not start without it, and refuses a `DEVELOPMENT-ONLY-` value when `NODE_ENV=production`). No session store: a token stays valid until it expires, also after a log-out. |
+| Guard | `EpicAuthGuard` (`APP_GUARD`) | Every HTTP route needs a valid session of an active user unless it is marked `@EpicPublic()` (the log-in, the log-out, `/api/health`). The user is read with `GetAllUsers` through a cache of `SVT_UI_AUTH_USER_CACHE_SECONDS` (30 s): a user switched off loses access within that time. `@EpicRoles(EpicUserRole.X)` needs that role or a higher one (`403`); no route uses it yet. `@EpicCurrentUser()` is the user of the request. Swagger (`/api/swagger`, `-json`, `-yaml`) is outside the controllers and stays open. |
+| No reply | `EpicAuthUsersService` | The two user reads of the log-in and the guard time out after 10 s (`EpicAuthSvc.DB_AGENT_TIMEOUT_MS`): `503` with a plain text. A timeout is not a failed log-in (the count stays), and a guard read that timed out is not kept in the cache. The other services have no timeout. |
 | WebSocket | `modules/iv-mnt/iv-mnt.gateway.ts` | No HTTP guard: `handleConnection` checks the same cookie and closes the socket (code 4401) without a valid session. |
 | Request context | `apps/epic-measure-api/src/common/request-context` | `AsyncLocalStorage`: `epicRequestContextMiddleware` opens one per request, the guard writes the user id. |
-| Header | `toEpicDbAgentKafkaRecord()` | Every Kafka request of a logged-in user carries `svt_userId`; without a user (the log-in, the guard's own read) the record has no header at all. Build the record when the service method is called, not inside the returned Observable. The mock DB agent ignores the header. |
-| SPA | `libs/epic-ui/common/auth`, `libs/epic-ui/api/main/src/auth` | `EpicAuthService` keeps the user in memory only: `login` calls the BFF, `authorize` asks `GET /api/auth/me` once, `logout` calls the BFF and reloads. `epicAuthInterceptor`: a `401` of another `/api` request clears the user and goes to `/auth/login`. The users of the code, the hash in the browser and the `localStorage` key `epic.user` are gone. |
+| Header | `sendEpicDbAgentRequest()` | Every Kafka request of a logged-in user carries `svt_userId`; without a user (the log-in, the guard's own read) the record has no header at all. The record is made when the service method is called, and the reply is delivered in the context of the request: a request sent while reacting to a reply (`switchMap`) carries the user of the request that started the chain. The mock DB agent ignores the header. |
+| SPA | `libs/epic-ui/common/auth`, `libs/epic-ui/api/main/src/auth` | `EpicAuthService` keeps the user in memory only: `login` calls the BFF, `authorize` asks `GET /api/auth/me` once, `logout` calls the BFF and reloads (when the BFF does not answer, the user stays logged in and the page shows an error). `epicAuthInterceptor`: a `401` of another `/api` request clears the user and goes to `/auth/login`. The users of the code, the hash in the browser and the `localStorage` key `epic.user` are gone. |
 | Mock mode | `EpicAuthApiClientMock` | The users `admin`, `developer`, `expert`, `user`; any password that is not empty. The mock user is kept in `localStorage` (`epic.mockAuth.login`) so that a reload keeps it. |
 | Mock DB agent | `apps/epic-db-agent` | The five user messages on a list in memory: the same four logins, each with the password equal to the login (`admin` / `admin`). Laptop only. |
 
 Roles: `User` < `Expert` < `Developer` < `Admin` (`isEpicUserRoleAtLeast` of `svt-ts-types`). The only role rule
-planned is the user management (ticket 396).
+planned is the user management (ticket 396). The login rule (`isEpicUserLogin`, `normalizeEpicUserLogin`) is in
+`svt-ts-types` too: a log-in with a login that breaks it is an unknown login, without a Kafka request.
+
+**Known limit: the lock of a login.** Anybody who knows a login can keep it locked: five wrong attempts a minute
+answer `429` to the real user too. The lock is per login, on purpose (a lock per address would not stop an attacker
+with many addresses); accepted for now.

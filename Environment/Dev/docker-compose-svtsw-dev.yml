@@ -49,6 +49,8 @@ services:
       SVT_UI_AUTH_SECRET: "${SVT_UI_AUTH_SECRET:?missing - set it in .env, at least 32 random characters, see Environment/README.md}"
       SVT_UI_AUTH_SESSION_HOURS: "${SVT_UI_AUTH_SESSION_HOURS:-12}"
       SVT_UI_AUTH_COOKIE_SECURE: "${SVT_UI_AUTH_COOKIE_SECURE:-false}"
+      # Dev and prod share one host, and a cookie belongs to the host, not to the port.
+      SVT_UI_AUTH_COOKIE_NAME: "svt_session_dev"
     logging:
       driver: "json-file"
       options:

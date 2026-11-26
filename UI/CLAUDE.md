@@ -152,9 +152,9 @@ Run only one of the two on a broker: each of them answers every request.
   variable the BFF does not start.
 - New SCSS in a lib needs its `styles/` dir added to `stylePreprocessorOptions.includePaths` in
   `apps/epic-measure-ui/project.json`; new lib `assets/` needs an entry in the same file's `assets` array.
-- A Kafka request is sent as `toEpicDbAgentKafkaRecord(message)` (the JSON and the header `svt_userId` of the
-  logged-in user), never as a bare `JSON.stringify`: the reply comes back needing `mapEpicKafkaMessageData()` to
-  unwrap.
+- A Kafka request is sent with `sendEpicDbAgentRequest(this.kafkaClient, message)` (the JSON and the header
+  `svt_userId` of the logged-in user, the reply delivered in the context of the request), never with a bare
+  `kafkaClient.send`: the reply comes back needing `mapEpicKafkaMessageData()` to unwrap.
 - **After pulling a branch that bumps Angular or Nx, wipe the build caches before you build:**
   `npx nx reset && rm -rf .angular/cache`. A cache written by the previous major makes `@angular/build`'s
   lmdb store blow up with `Error: Not enough space` (lmdb code 12) — that's the cache, not your disk.

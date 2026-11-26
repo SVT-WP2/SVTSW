@@ -332,8 +332,9 @@ After changing a `.env` value, recreate the affected service(s) with `up -d`
 ## Users and the log-in of the UI
 
 The UI logs people in against the table `SvtUser` of the database. The BFF in `svt-ui` checks the password and
-keeps the session in a signed cookie; every `/api` route needs a session, except the log-in, the log-out and
-`/api/health`. The decisions are in
+keeps the session in a signed cookie; every `/api` route needs a session, except the log-in, the log-out,
+`/api/health`, `/api/health/version` and Swagger (`/api/swagger`, `/api/swagger-json`, `/api/swagger-yaml`). The
+decisions are in
 [`Documentation/decisions/2026-11-users-and-roles.md`](../Documentation/decisions/2026-11-users-and-roles.md).
 
 ### The variables of `svt-ui`
@@ -345,6 +346,7 @@ They go into the server `.env` of the environment; the compose files pass them t
 | `SVT_UI_AUTH_SECRET` | required | The key that signs the sessions. At least 32 random characters, a different value for dev and prod, only in the server `.env`. Compose refuses the file without it, and the BFF does not start without it. A new value ends every open session. |
 | `SVT_UI_AUTH_SESSION_HOURS` | optional, `12` | How long a session lasts, in hours. |
 | `SVT_UI_AUTH_COOKIE_SECURE` | optional, `false` | The `Secure` flag of the session cookie. Set `true` only when the UI is served over HTTPS; the servers have plain HTTP today. |
+| `SVT_UI_AUTH_COOKIE_NAME` | optional, `svt_session` | The name of the session cookie: letters, digits, `_` and `-`. The dev compose file sets `svt_session_dev` itself (not in `.env`): dev and prod run on one host, a cookie belongs to the host and not to the port, and with one name a log-in at one environment would replace the session of the other. |
 
 Make a secret on the server, then put it into `.env` (`sudoedit /opt/docker/svtsw/<env>/.env`):
 
@@ -354,6 +356,9 @@ openssl rand -base64 48
 
 Compose reads the whole file, so **no service of the stack starts while `SVT_UI_AUTH_SECRET` is missing**, the DB
 agent included. Add it to the `.env` of dev and of prod before the first deploy of a version that contains it.
+
+**The secrets of dev and prod must differ.** A token says only "user 42": with one secret, a session of dev would be
+a valid session of the user with the same id in prod.
 
 ### The first Admin
 
@@ -384,6 +389,10 @@ migrations (the table `SvtUser` exists). That Admin then creates the other users
    - Give no `id`: the database sets it. A row with its own `id` leaves the identity behind
      ([`DbAgentNext/docs/database-schema.md` §5a.1](../DbAgentNext/docs/database-schema.md#5a1-svtuser)).
    - Type the statement into `psql` itself: the hash holds `$`, which a shell would expand inside double quotes.
+   - If the `INSERT` fails, make a new password and a new hash before you try again: `psql` prints the failing row,
+     hash included, and PostgreSQL writes a failing statement to its log.
+   - Do not reuse the password of the old `admin` user of the browser log-in (before ticket 395): its hash is in the
+     public git history.
 
 3. Open the UI and log in with that login and password; reload the page (you stay logged in) and log out.
 
@@ -391,10 +400,10 @@ migrations (the table `SvtUser` exists). That Admin then creates the other users
 
 Once, for the deploy that brings the log-in:
 
-1. Deploy `svt-db-agent-next` with the users table. Its migration creates `SvtUser`.
-2. Insert the first Admin (above).
-3. Add `SVT_UI_AUTH_SECRET` to the `.env` of the environment.
+1. Add `SVT_UI_AUTH_SECRET` to the `.env` of the environment (a different value for dev and prod). Do it first:
+   from a `master` that has this change, compose starts no service without it, the DB agent included.
+2. Deploy `svt-db-agent-next` with the users table. Its migration creates `SvtUser`.
+3. Insert the first Admin (above).
 4. Deploy `svt-ui`. From then on nobody uses the UI without a log-in.
 
-A person does steps 2 and 3 on the server, for dev and for prod. Because of the compose rule above, step 3 must be
-done before any deploy from a `master` that has this change, also a deploy of the DB agent.
+A person does steps 1 and 3 on the server, for dev and for prod.

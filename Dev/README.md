@@ -34,8 +34,15 @@ cd Dev
 Copy-Item .env.example .env
 ```
 
-The defaults in `.env` already target the containerised Postgres, so for **Setup A**
-you don't need to change anything.
+The defaults in `.env` already target the containerised Postgres. One value has no default: set
+`SVT_UI_AUTH_SECRET` (the key of the UI sessions) in `.env`, or compose refuses every service of
+`docker-compose.swtsw.yml`. Make a value of your own, at least 32 random characters:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```
+
+Apart from that, **Setup A** needs no change.
 
 ## Two database setups
 
