@@ -7,7 +7,7 @@ import { MatSlideToggle } from '@angular/material/slide-toggle'
 import { RouterOutlet } from '@angular/router'
 import { environment } from '@env/environment'
 import { EpicAuthService } from 'epic-ui/common/auth'
-import { EpicIconComponent, EpicIconMatOutlinedPipe, EpicMenuLightModule } from 'epic-ui/common/components'
+import { EpicIconComponent, EpicIconMatOutlinedPipe, EpicMenuLightModule, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent } from 'epic-ui/utils'
 import { EpicAuthUser } from 'svt-ts-types'
@@ -43,6 +43,7 @@ export class AppLayoutPageComponent extends BaseComponent {
 
     // DI
     private readonly epicAuthService = inject(EpicAuthService)
+    private readonly epicNotificationService = inject(EpicNotificationService)
 
     constructor() {
         super()
@@ -51,6 +52,9 @@ export class AppLayoutPageComponent extends BaseComponent {
 
     onLogout(): void {
         this.epicAuthService.logout()
+            .subscribe({
+                error: (error: Error) => this.epicNotificationService.error(error.message, 'Log-out'),
+            })
     }
 
     onUseMockDataChanged(useMockData: boolean): void {

@@ -17,6 +17,7 @@ export namespace EpicAuthMessages {
     export const LOGIN_FAILED = 'Unknown combination login/password.'
     export const TOO_MANY_ATTEMPTS = 'Too many attempts. Try again in a minute.'
     export const LOGIN_UNAVAILABLE = 'The log-in failed. Try again later.'
+    export const LOGOUT_FAILED = 'The log-out failed: the server did not answer. You are still logged in; try again.'
 
 }
 
@@ -95,16 +96,23 @@ export class EpicAuthService {
         return this.authorization$
     }
 
-    /** Ends the session at the BFF (the cookie is cleared), then reloads the page. */
-    logout(): void {
-        this.api.logout()
+    /**
+     * Ends the session at the BFF (the cookie is cleared), then forgets the user and reloads the page. A `401` means
+     * that the session had ended already: the same. Any other failure keeps the user and the page (the cookie may
+     * still be valid) and errors with `EpicAuthMessages.LOGOUT_FAILED`, for the page to show.
+     */
+    logout(): Observable<void> {
+        return this.api.logout()
             .pipe(
-                catchError(() => of(undefined)),
+                map(() => undefined),
+                catchError((error: unknown) => isUnauthorized(error)
+                    ? of(undefined)
+                    : throwError(() => new Error(EpicAuthMessages.LOGOUT_FAILED))),
+                tap(() => {
+                    this.clearUser()
+                    this.reloadPage()
+                }),
             )
-            .subscribe(() => {
-                this.clearUser()
-                this.reloadPage()
-            })
     }
 
     /** Forgets the user without asking the BFF: the session has ended there (a `401`, see `epicAuthInterceptor`). */

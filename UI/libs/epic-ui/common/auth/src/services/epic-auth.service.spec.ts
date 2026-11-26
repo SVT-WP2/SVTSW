@@ -105,28 +105,52 @@ describe('EpicAuthService', () => {
 
     describe('logout and clearUser', () => {
 
-        it('logout posts to the BFF, forgets the user and reloads the page', () => {
-            const reload = vi.spyOn(service, 'reloadPage').mockImplementation(() => undefined)
-            const login = service.login('jane.doe', 'secret-of-the-test').subscribe()
+        async function loggedIn(): Promise<void> {
+            const login = firstValueFrom(service.login('jane.doe', 'secret-of-the-test'))
             http.expectOne('/api/auth/login').flush(jane)
-            login.unsubscribe()
+            await login
+        }
 
-            service.logout()
+        it('logout posts to the BFF, forgets the user and reloads the page', async () => {
+            const reload = vi.spyOn(service, 'reloadPage').mockImplementation(() => undefined)
+            await loggedIn()
+
+            const logout = firstValueFrom(service.logout(), { defaultValue: undefined })
             const request = http.expectOne('/api/auth/logout')
             expect(request.request.method).toBe('POST')
             request.flush(null, { status: 204, statusText: 'No Content' })
+            await logout
 
             expect(service.user).toBeNull()
             expect(reload).toHaveBeenCalledTimes(1)
         })
 
-        it('logout reloads also when the BFF cannot be reached', () => {
+        it('logout after a 401 (the session had ended already) forgets the user and reloads too', async () => {
             const reload = vi.spyOn(service, 'reloadPage').mockImplementation(() => undefined)
+            await loggedIn()
 
-            service.logout()
-            http.expectOne('/api/auth/logout').flush(null, { status: 0, statusText: 'Unknown Error' })
+            const logout = firstValueFrom(service.logout(), { defaultValue: undefined })
+            http.expectOne('/api/auth/logout').flush({ statusCode: 401 }, { status: 401, statusText: 'Unauthorized' })
+            await logout
 
+            expect(service.user).toBeNull()
             expect(reload).toHaveBeenCalledTimes(1)
+        })
+
+        it.each([
+            [0, 'Unknown Error'],
+            [502, 'Bad Gateway'],
+            [500, 'Internal Server Error'],
+        ])('logout that fails with %s keeps the user and the page, and errors with a text to show', async (status, statusText) => {
+            const reload = vi.spyOn(service, 'reloadPage').mockImplementation(() => undefined)
+            await loggedIn()
+
+            const logout = firstValueFrom(service.logout(), { defaultValue: undefined })
+            http.expectOne('/api/auth/logout').flush(null, { status, statusText })
+
+            await expect(logout).rejects.toThrow(EpicAuthMessages.LOGOUT_FAILED)
+            expect(service.user).toEqual(jane)
+            expect(reload).not.toHaveBeenCalled()
         })
 
         it('clearUser forgets the user, and authorize then answers "not logged in" without asking', async () => {
