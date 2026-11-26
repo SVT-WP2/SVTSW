@@ -134,6 +134,20 @@ describe('Auth (e2e)', () => {
             expect((await setup.as(null).post('/api/auth/login', { login: 'jane.doe', password: jane.password })).status).toBe(200)
         })
 
+        it('answers the one 401 for a login that breaks the login rule, without asking the DB agent', async () => {
+            const reader = new E2eRequestTopicReader(loadEpicApiE2eConfig().kafkaBroker)
+            await reader.mark()
+
+            for (const login of ['a\u0000b', 'ab', 'jane doe', 'x'.repeat(51)]) {
+                expect(await setup.as(null).post('/api/auth/login', { login, password: 'x' }), JSON.stringify(login))
+                    .toEqual({ status: 401, body: LOGIN_FAILED })
+            }
+            // A valid login afterwards marks the end of what the reader waits for: the only record.
+            await setup.as(null).post('/api/auth/login', { login: 'somebody.else', password: 'x' })
+            const records = await reader.read((all) => all.some((record) => record.value.data?.login === 'somebody.else'))
+            expect(records.map((record) => record.value.data)).toEqual([{ login: 'somebody.else' }])
+        })
+
         it('answers 400 for a body without a login or a password', async () => {
             expectError(await setup.as(null).post('/api/auth/login', { login: 'jane.doe' }), 400, 'password must be a string')
             expectError(await setup.as(null).post('/api/auth/login', { password: 'x' }), 400, 'login must be a string')
@@ -169,8 +183,18 @@ describe('Auth (e2e)', () => {
                 otherSecret: new JwtService({ secret: 'another-secret-that-is-long-enough-for-hs256' }).sign({ sub: '1' }),
                 expired: new JwtService({ secret }).sign({ sub: '1', iat: now - 120, exp: now - 60 }),
                 unsigned: `${header}.${payload}.`,
-                numberSubject: new JwtService({ secret }).sign({ sub: 1 }),
                 noToken: 'not-a-token',
+                // The algorithm is pinned to HS256: the right secret with another HMAC is no session.
+                hs384: new JwtService({ secret }).sign({ sub: '1' }, { algorithm: 'HS384', expiresIn: 60 }),
+                hs512: new JwtService({ secret }).sign({ sub: '1' }, { algorithm: 'HS512', expiresIn: 60 }),
+                // The subject is the user id as a strict decimal string.
+                subjectLeadingZero: new JwtService({ secret }).sign({ sub: '01' }, { expiresIn: 60 }),
+                subjectSpace: new JwtService({ secret }).sign({ sub: ' 1' }, { expiresIn: 60 }),
+                subjectExponent: new JwtService({ secret }).sign({ sub: '1e0' }, { expiresIn: 60 }),
+                subjectSign: new JwtService({ secret }).sign({ sub: '+1' }, { expiresIn: 60 }),
+                subjectNegative: new JwtService({ secret }).sign({ sub: '-1' }, { expiresIn: 60 }),
+                subjectZero: new JwtService({ secret }).sign({ sub: '0' }, { expiresIn: 60 }),
+                subjectNumber: new JwtService({ secret }).sign({ sub: 1 }, { expiresIn: 60 }),
             }
             for (const [name, token] of Object.entries(tokens)) {
                 const response = await setup.as({ user: E2E_ADMIN, cookie: `svt_session=${token}` }).get('/api/auth/me')
