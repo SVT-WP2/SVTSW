@@ -33,12 +33,23 @@ export function optionalInteger(value: unknown, path: string): number | undefine
     return value === undefined || value === null ? undefined : requireInteger(value, path)
 }
 
+export function requireString(value: unknown, path: string): string {
+    if (typeof value !== 'string') {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string`)
+    }
+    return value
+}
+
 export function optionalString(value: unknown, path: string): string | undefined {
+    return value === undefined || value === null ? undefined : requireString(value, path)
+}
+
+export function optionalBoolean(value: unknown, path: string): boolean | undefined {
     if (value === undefined || value === null) {
         return undefined
     }
-    if (typeof value !== 'string') {
-        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a string`)
+    if (typeof value !== 'boolean') {
+        throw SvtDbAgentNextRequestError.badRequest(`${path} must be a boolean`)
     }
     return value
 }
