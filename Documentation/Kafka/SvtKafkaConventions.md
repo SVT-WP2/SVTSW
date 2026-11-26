@@ -128,7 +128,7 @@ in the body are in the [decision record](../decisions/2026-11-users-and-roles.md
 | Name | `svt_userId` (`SvtKafkaHeader.UserId` of `svt-ts-types/kafka`) |
 | Value | The `id` of a row of `SvtUser`, as a decimal string in UTF-8: `42`. No sign, no spaces, no leading zero. |
 | Where | On a request record, beside `kafka_correlationId`, `kafka_replyTopic` and `kafka_replyPartition`. |
-| Required | No. A request without the header is valid and is served as before. |
+| Required | No. A request without the header is valid and is served as before. A header that is there must hold a valid value: a null value or an empty one is refused. To send no user, leave the header out. |
 | On a reply | Not set. A reply does not repeat the header. |
 | Meaning | The user that the request is for: the person who asked for the work. A service that works for a user passes the same value on in its own requests. |
 

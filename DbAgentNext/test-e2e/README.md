@@ -20,7 +20,8 @@ npm run e2e                       # from DbAgentNext/ = vitest run --config vite
 
 So `setup.send(message)` is to this agent what `request().post(url)` is to an HTTP API. The headers of a record that
 the agent reads go in a second argument, as raw strings: `setup.send(message, { userId: '42' })` is a record with
-`svt_userId = 42`, and a spec can send a malformed value the same way (`user-header/user-header.e2e-spec.ts`).
+`svt_userId = 42`, and a spec can send a malformed value the same way (`user-header/user-header.e2e-spec.ts`);
+`{ userId: null }` is a header without text, as the controller hands on a null value or parsed JSON.
 `setup.handlerDefinition(type)` gives the definition that the dispatcher calls, so that a spec can spy on its
 `handle` and see the context of the request.
 

@@ -39,7 +39,8 @@ info:
     - The optional header `svt_userId` names the user that a request is for: the `id` of a row of `SvtUser`, as a
       decimal string (`42`). A request without it is served as before. When it is present, the agent checks it after
       the envelope and the type, before the handler: a value that is not a positive integer (no sign, no spaces, no
-      leading zero, at most 2147483647) is a `BadRequest` with `Header svt_userId must be a positive integer`, and the
+      leading zero, at most 2147483647; an empty or a null value; JSON such as `[1]`) is a `BadRequest` with
+      `Header svt_userId must be a positive integer`, and the
       id of no user is a `BadRequest` with `Unknown user: <id>`. A user who is switched off (`isActive: false`) is
       accepted. A malformed request or an unknown type is answered as without the header. The agent checks no role,
       and a reply does not repeat the header. A key `svt_userId` in the body has no meaning.

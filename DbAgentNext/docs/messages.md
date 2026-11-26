@@ -98,11 +98,16 @@ The agent checks a request in this order:
 
    | Case | `status` | `error.message` |
    |---|---|---|
-   | The value is not a decimal string of a positive integer: a sign, a space, a leading zero, a point, more than 10 digits, a number above 2147483647, an empty value. | `BadRequest` | `Header svt_userId must be a positive integer` |
+   | The value is not a decimal string of a positive integer: a sign, a space, a leading zero, a point, more than 10 digits, a number above 2147483647, an empty value, a null value, a value that the header has twice (`1,1`). | `BadRequest` | `Header svt_userId must be a positive integer` |
    | No row of `SvtUser` has this id. | `BadRequest` | `Unknown user: <id>` |
 
 3. The handler. It gets the user id, or no user when the record has no header. No handler uses it yet.
 
+- **A header that is there must hold a valid value.** Only a record without the header is a request without a
+  user. A null value is refused like an empty one: a client library that sends a null value for "no user" (as
+  `confluent-kafka` does for `None`) must leave the header out instead.
+- NestJS decodes the headers before the agent sees them, and turns text that starts with `[` or `{` and is valid
+  JSON into an array or an object. Such a value is refused: `[1]` is not the user 1.
 - The reply type of a header failure is `<Type>Reply`, as for every failure of a known type. The handler does not
   run, and nothing is written.
 - **A user who is switched off is accepted.** A user who was switched off after starting a long measurement is still
@@ -112,7 +117,7 @@ The agent checks a request in this order:
 - The header is read from the Kafka record only. A key `svt_userId` in the body has no meaning.
 - A reply does not repeat the header.
 - The log line of each request names the user: `user=42`, `user=-` without the header, `user=invalid` for a value
-  that step 2 refuses.
+  that is no positive integer. An id of no user is logged as it is (`user=999`).
 
 ## 2. Rules for all messages
 
