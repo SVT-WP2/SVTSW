@@ -37,12 +37,12 @@ describe('Enums (e2e)', () => {
             expect(Object.keys(all).length).toBeGreaterThan(10)
         })
 
-        it('names every member of EpicEnumName, and three more the shared type does not list (finding E2E-7)', async () => {
+        it('names every member of EpicEnumName, and four more the shared type does not list (finding E2E-7)', async () => {
             const names = Object.keys(await collection())
 
             expect(Object.values(EpicEnumName).filter((name) => !names.includes(name))).toEqual([])
             expect(names.filter((name) => !(Object.values(EpicEnumName) as string[]).includes(name)).sort())
-                .toEqual(['dutEntityName', 'moduleType', 'testResultStatus'])
+                .toEqual(['dutEntityName', 'moduleType', 'testResultStatus', 'userRole'])
         })
 
         it('filters by enumNames: one, several (repeated, comma-separated, bracketed)', async () => {
