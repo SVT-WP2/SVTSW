@@ -1,0 +1,46 @@
+{
+  "mosaix_root": "/home/its3/mosaix_testing/software/mosaix_test",
+  "build_dir": "build",
+  "run_list": "run_list_er2b_txvdd_sweep.csv",
+  "kafka_broker": "pcmitpx01:9092",
+  "kafka_ip_family": "v4",
+  "wp_user": "user1",
+  "wp_agent_name": "WPMIT",
+  "wp_project_bam": "ER2B_babyMOSAIX_Vertical_V0_NotchW_ArrowW",
+  "wp_project_seg": "ER2B_MOSAIX_Vertical_V0_NotchW_ArrowW",
+
+  "die_overrides": {
+    "BAM12": {"via_die": "BAM09", "precise_offset_um": [0, 23474.965]},
+    "BAM13": {"via_die": "BAM10", "precise_offset_um": [0, 23474.965]}
+  },
+
+  "run_ptpa_bam": true,
+  "run_ptpa_seg": true,
+  "ptpa_chips_bam": ["ALL"],
+  "ptpa_chips_seg": ["ALL"],
+  "reset_on_ptpa_failure": true,
+  "re_enable_ptpa": false,
+
+  "log_cmd_output": true,
+  "show_cmd_output": true,
+
+  "fpga_program_dir": "/home/its3/mosaix_testing/software/fx3_tools",
+  "fpga_program_setup": "prober_mit",
+  "fpga_firmware_test_system": "/home/build_files/mosaix_test_system-v2.15.0.bit",
+  "fpga_firmware_link_test": "/home/build_files/mosaix_link_test-v2.15.0.bit",
+  "fpga_link_test_trigger": ["wafer_prbs_seq","wafer_hsch_seq_nj_test","wafer_prbs_txvdd_sweep"],
+
+  "setup_config": "Configs/SetupConfigs/Probe/ts_mit_vertical.json5",
+  "power_profile": "rs_ps",
+  "output": "staging",
+  "remove_daq_status_file": true,
+  "daq_status_file": ".daq_status.json",
+
+  "Initialization": [
+    "python3 utility_scripts/set_daq.py {setup_config} -s ps"
+  ],
+
+  "Sequence": [
+"./{build_dir}/RunSequence Configs/SequenceConfigs/wafer_prbs_txvdd_sweep.json5 {setup_config} -c {chip_name} -p {power_profile} -o {output}"
+]
+}
