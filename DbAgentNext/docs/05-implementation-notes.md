@@ -200,9 +200,11 @@ Implementation details behind the decisions of [01 §6](01-behaviour-decisions.m
   - `passwordHash` is `lazy: true`: a list never loads it, and only `findCredentialsByLogin` populates it. The
     handlers build every reply with `toWire`, which has no hash; only `GetUserCredentials` adds it.
   - `create` and `updatePasswordHash` run their transaction without the query log (§6).
-  - `create` inserts with `ON CONFLICT (login) DO NOTHING` and reads "no row back" as a duplicate login: a duplicate
-    is no failing statement. PostgreSQL logs the text of a failing statement (`log_min_error_statement` is `error`
-    by default), and the text holds the hash (next point).
+  - `create` inserts with `ON CONFLICT DO NOTHING` (for every unique constraint: the login, and the key when a row
+    entered by hand with its own id has left the identity behind) and reads "no row back" as a duplicate: a
+    duplicate is no failing statement. PostgreSQL logs the text of a failing statement (`log_min_error_statement`
+    is `error` by default), and the text holds the hash (next point). The e2e spec proves it: the dispatcher's
+    warning `CreateUser: unique constraint violated`, which only a failing insert gives, is never written.
   - **Known limit: the hash is in the text of the statement.** MikroORM puts the values into the SQL text that it
     sends (it does not send them as parameters). A database server that logs statements (`log_statement`,
     `log_min_duration_statement`, or a statement that fails for another reason) therefore logs the hash, also on

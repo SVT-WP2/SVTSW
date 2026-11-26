@@ -691,8 +691,9 @@ The validation of `data.create` of `CreateUser`. A key that the table does not n
   short or too long answers `<key> must be <min> to <max> characters long`, in `data.create: …` or
   `data.update: …`. This text is the agent's own, not one of the validation library.
 - A login that exists already, in any case, answers the unique-constraint text of §1.4, because the stored login is
-  in lower case. The insert does not fail: the agent inserts with `ON CONFLICT (login) DO NOTHING` and reads "no row
-  written" as the duplicate. Of two creates of one login at the same time, one writes the user.
+  in lower case. The insert does not fail: the agent inserts with `ON CONFLICT DO NOTHING` and reads "no row
+  written" as the duplicate. Of two creates of one login at the same time, one writes the user. An `id` that a row
+  entered by hand has taken answers the same text ([database-schema.md §5a.1](database-schema.md#5a1-svtuser)).
 - `GetUserCredentials` returns a user with `isActive` false like any other. The caller decides.
 - The database sets `createdAt` to the current time.
 - `UpdateUser` writes the keys that have a value. An absent key or `null` keeps the value. An empty `data.update`

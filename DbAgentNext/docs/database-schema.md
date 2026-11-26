@@ -650,15 +650,20 @@ in hand-written SQL means the current database user. No foreign key points to th
 | Column | Type | Null | Default | Key | Meaning |
 |---|---|---|---|---|---|
 | `id` | `integer` | no | identity | PK | The user id. Other services point to a user by this id. |
-| `login` | `varchar(50)` | no |  | unique, check | The name the user types at log-in. Trimmed and in lower case: the agent stores it so, and the check refuses any other login, also in a row entered by hand. |
+| `login` | `varchar(50)` | no |  | unique, check | The name the user types at log-in: 3 to 50 characters of `a-z`, `0-9`, `.`, `_` and `-`. The agent stores only such a login (trimmed, in lower case), and the check refuses any other, also in a row entered by hand. |
 | `name` | `varchar(100)` | no |  |  | The name shown to people. |
 | `role` | enum `userRole` | no |  |  | The role of the user. |
 | `passwordHash` | `varchar(255)` | no |  |  | An opaque string made by the BFF. The agent never reads its content. |
 | `isActive` | `boolean` | no | `true` |  | `false`: the user cannot log in. The row stays. |
 | `createdAt` | `timestamp` | no | `CURRENT_TIMESTAMP` |  | When the row was created, UTC. The database sets it. |
 
-Check: `SvtUser_login_check`, `CHECK (login = lower(btrim(login)))`. Without it, a login `Admin` entered by hand could
-never log in (the agent looks for `admin`), and `CreateUser` could add `admin` next to it.
+Check: `SvtUser_login_check`, `CHECK (login ~ '^[a-z0-9._-]{3,50}$')`, the login rule of the agent. Without it, a
+login entered by hand as `Admin`, or as `admin` with a space, a tab or a newline, could never log in (the agent looks
+for `admin`), and `CreateUser` could add `admin` next to it.
+
+A row entered by hand with its own `id` does not move the identity on. Set it after such an insert:
+`SELECT setval(pg_get_serial_sequence('main."SvtUser"', 'id'), max(id)) FROM main."SvtUser";`. Until then,
+`CreateUser` answers `BadRequest` once for each id that is taken.
 
 ## 6. Enum types
 
