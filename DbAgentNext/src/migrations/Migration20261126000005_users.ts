@@ -6,9 +6,9 @@ import { Migration } from '@mikro-orm/migrations'
  * four roles in their order, and the table `SvtUser` (not `User`: `user` is a reserved word of PostgreSQL). The
  * migration creates no row: the first Admin is entered by hand (D4).
  *
- * The check `SvtUser_login_check` makes the database refuse a login that is not trimmed and in lower case. The
- * agent stores the login so, and the check also holds for a row entered by hand: a login `Admin` could never log
- * in, and `admin` could then be created next to it.
+ * The check `SvtUser_login_check` is the login rule of the agent: 3 to 50 characters of `a-z`, `0-9`, `.`, `_` and
+ * `-`. The agent stores only such a login, and the check also holds for a row entered by hand: a login `Admin`, or
+ * `admin` with a space, a tab or a newline, could never log in, and `admin` could then be created next to it.
  *
  * Every step is guarded, so it is a no-op where its change is already there. A new table and a new type are
  * invisible to the previous release. Schema: `docs/database-schema.md` §6 (enum types) and the area "Users".
@@ -37,7 +37,7 @@ export class Migration20261126000005_users extends Migration {
         `)
         this.addSql(`
             DO $$ BEGIN
-                ALTER TABLE main."SvtUser" ADD CONSTRAINT "SvtUser_login_check" CHECK (login = lower(btrim(login)));
+                ALTER TABLE main."SvtUser" ADD CONSTRAINT "SvtUser_login_check" CHECK (login ~ '^[a-z0-9._-]{3,50}$');
             EXCEPTION WHEN duplicate_object THEN NULL;
             END $$;
         `)

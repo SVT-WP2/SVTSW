@@ -1,6 +1,14 @@
+import { Logger } from '@nestjs/common'
 import { EpicUser, EpicUserRole } from 'svt-ts-types'
-import { EpicUserCreate, EpicUserCredentials, SvtDbAgentKafka, SvtDbAgentKafkaUsers } from 'svt-ts-types/kafka'
+import {
+    EpicUserCreate,
+    EpicUserCredentials,
+    SvtDbAgentKafka,
+    SvtDbAgentKafkaEquipmentTypes,
+    SvtDbAgentKafkaUsers,
+} from 'svt-ts-types/kafka'
 
+import { SvtDbAgentNextReply } from '../../src/modules/dispatch'
 import { expectListPaging, TestSetup } from '../utils'
 
 
@@ -11,6 +19,7 @@ const HASH_CARLA = 'test-hash-carla'
 const HASH_NEW = 'test-hash-new'
 
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+const UNIQUE_MESSAGE = 'Failed entry creation: an entry with the same unique value already exists'
 const USER_KEYS = ['id', 'login', 'name', 'role', 'isActive', 'createdAt']
 
 const ANNA: EpicUserCreate = { login: 'anna.rossi', name: 'Anna Rossi', role: EpicUserRole.Admin, passwordHash: HASH_ANNA }
@@ -57,6 +66,18 @@ describe('Users (e2e)', () => {
 
     function rows(): Promise<UserRow[]> {
         return setup.query<UserRow>('select id, login, name, role, "passwordHash", "isActive" from main."SvtUser" order by id')
+    }
+
+    /** The warnings `<Type>: unique constraint violated` that the dispatcher writes while `work` runs. */
+    async function uniqueViolationWarnings(work: () => Promise<void>): Promise<string[]> {
+        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
+        try {
+            await work()
+            return warn.mock.calls.map(([message]) => String(message)).filter((message) => message.endsWith('unique constraint violated'))
+        }
+        finally {
+            warn.mockRestore()
+        }
     }
 
     /** Waits until `count` sessions of this database wait for a lock (a table lock or a row lock). */
@@ -244,6 +265,23 @@ describe('Users (e2e)', () => {
                 })
             }
             expect(await rows()).toEqual([{ id: anna.id, ...ANNA, isActive: true }])
+        })
+
+        it('answers a login that exists already without a failing insert', async () => {
+            // PostgreSQL logs a failing statement with its text, which holds the hash. The dispatcher warns
+            // `<Type>: unique constraint violated` for each insert that fails so; here only the control does.
+            const scope = new SvtDbAgentKafkaEquipmentTypes.CreateEquipmentTypeMessage({ create: { name: 'Scope' } })
+            await create(ANNA)
+            await setup.send(scope)
+
+            const warnings = await uniqueViolationWarnings(async () => {
+                const duplicate = await setup.send({ type: 'CreateUser', data: { create: { ...BRUNO, login: 'Anna.Rossi' } } })
+                expect(duplicate).toMatchObject({ status: 'BadRequest', error: { message: UNIQUE_MESSAGE } })
+                const control = await setup.send(scope)
+                expect(control).toMatchObject({ status: 'BadRequest', error: { message: UNIQUE_MESSAGE } })
+            })
+
+            expect(warnings).toEqual(['CreateEquipmentType: unique constraint violated'])
         })
 
         it('creates one user when two creates of one login come at the same time', async () => {
@@ -467,11 +505,39 @@ describe('Users (e2e)', () => {
             expect(reply.data.entity).toMatchObject({ login: 'first.admin', role: 'Admin', isActive: true, passwordHash: HASH_ANNA })
         })
 
-        it('is refused by the database when the login has an upper-case letter or a space around it', async () => {
-            for (const login of ['Admin', 'ADMIN', ' admin', 'admin ']) {
-                await expect(insertByHand(login), login).rejects.toThrow('SvtUser_login_check')
+        it('is refused by the database when the login breaks the login rule of the agent', async () => {
+            const broken = [
+                'Admin', 'ADMIN', ' admin', 'admin ', 'admin\n', 'admin\t', ' admin', 'ad min', 'a@b', 'adminé', 'ab', '',
+            ]
+            for (const login of broken) {
+                await expect(insertByHand(login), JSON.stringify(login)).rejects.toThrow('SvtUser_login_check')
             }
             expect(await rows()).toEqual([])
+
+            for (const login of ['abc', 'a.b_c-9', 'x'.repeat(50)]) {
+                await insertByHand(login)
+            }
+            expect(await rows()).toHaveLength(3)
+        })
+
+        it('with its own id: the next create meets that id, answers without a failing insert, and the create after works', async () => {
+            // An id given by hand does not move the identity on. The next CreateUser gets the same id, and its insert
+            // must not fail as a statement either (the text holds the hash).
+            await setup.query(
+                'insert into main."SvtUser" (id, login, name, role, "passwordHash") values (1, ?, ?, ?, ?)',
+                ['first.admin', 'First Admin', 'Admin', HASH_ANNA],
+            )
+            const replies: SvtDbAgentNextReply<EntityReply>[] = []
+
+            const warnings = await uniqueViolationWarnings(async () => {
+                replies.push(await setup.send<EntityReply>(new SvtDbAgentKafkaUsers.CreateUserMessage({ create: BRUNO })))
+                replies.push(await setup.send<EntityReply>(new SvtDbAgentKafkaUsers.CreateUserMessage({ create: BRUNO })))
+            })
+
+            expect(replies[0]).toMatchObject({ status: 'BadRequest', error: { message: UNIQUE_MESSAGE } })
+            expect(replies[1].status, replies[1].error.message).toBe('Success')
+            expect(replies[1].data.entity).toMatchObject({ id: 2, login: 'bruno' })
+            expect(warnings).toEqual([])
         })
 
     })

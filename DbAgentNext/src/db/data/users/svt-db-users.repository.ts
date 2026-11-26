@@ -78,19 +78,20 @@ export class SvtDbUsersRepository {
     }
 
     /**
-     * A new, active user, or `null` when the login exists already. The database sets `id` and `createdAt`. A
-     * duplicate login is no failing statement (`ON CONFLICT (login) DO NOTHING`): PostgreSQL logs the text of a
+     * A new, active user, or `null` when a unique value exists already: the login, or the id when a row entered by
+     * hand with its own id has left the identity behind. The database sets `id` and `createdAt`. A duplicate is no
+     * failing statement (`ON CONFLICT DO NOTHING`, for every unique constraint): PostgreSQL logs the text of a
      * failing statement, and the text holds the hash. Two creates of one login at the same time give one user.
      */
     create(input: SvtDbUserCreateInput): Promise<SvtDbUserEntity | null> {
         return this.em.transactional(async (em) => {
             const result = await em.createQueryBuilder(SvtDbUserEntity)
                 .insert({ ...input, isActive: true })
-                .onConflict('login')
+                .onConflict()
                 .ignore()
                 .returning('id')
                 .execute('run')
-            // PostgreSQL returns the new id through `RETURNING`; a login that exists already returns no row.
+            // PostgreSQL returns the new id through `RETURNING`; a duplicate returns no row.
             const id = result.row?.['id'] as number | undefined
             return id === undefined ? null : em.findOneOrFail(SvtDbUserEntity, { id })
         }, WITHOUT_QUERY_LOG)
