@@ -32,7 +32,7 @@ database (PostgreSQL 17.7): 34 tables of the domain and 22 enum types
 - **Foreign keys.** Each of the 34 foreign keys is `DEFERRABLE` (initially immediate) and has no `ON DELETE` or
   `ON UPDATE` action. The database thus refuses to delete a row that another row refers to.
 - **Constraint names.** The names are the PostgreSQL defaults: `<Table>_pkey`, `<Table>_<column>_key`,
-  `<Table>_<column>_fkey`. Two unique indexes have their own names (`SvtTestTypeConfig`, `SvtTestTemplate`).
+  `<Table>_<column>_fkey`, `<Table>_<column>_check`. Two unique indexes have their own names (`SvtTestTypeConfig`, `SvtTestTemplate`).
 - **Enum types.** A column with a fixed list of values has a native PostgreSQL enum type ([§6](#6-enum-types)).
   In the tables below, the type is written `enum <name>`.
 - **Dates and times.** A `date` column has day resolution. The four `timestamp` columns (three of `SvtTestList`,
@@ -40,7 +40,8 @@ database (PostgreSQL 17.7): 34 tables of the domain and 22 enum types
 - **JSON documents.** `WaferTypeMap.waferMap`, `Equipment.specification` and `WaferProbeProject.local2GlobalMap`
   are `json` (not `jsonb`). The two `configBody` columns are `text`, so they can hold JSON5 too. In all five, the agent stores the text that
   the client sent and returns the same text.
-- **Nothing else.** The schema has no view, no function, no trigger and no check constraint. The only indexes are
+- **Nothing else.** The schema has no view, no function and no trigger. It has one check constraint,
+  `SvtUser_login_check` ([§5a.1](#5a1-svtuser)). The only indexes are
   those of the keys and of the unique constraints.
 - **No delete.** No message deletes a row of an entity. `UpdateSvtTestType` replaces the rows of
   `SvtTestTypeDUTTypeList` of one test type; that is the only delete that the agent makes.
@@ -649,12 +650,15 @@ in hand-written SQL means the current database user. No foreign key points to th
 | Column | Type | Null | Default | Key | Meaning |
 |---|---|---|---|---|---|
 | `id` | `integer` | no | identity | PK | The user id. Other services point to a user by this id. |
-| `login` | `varchar(50)` | no |  | unique | The name the user types at log-in. The agent stores it trimmed and in lower case; the schema does not check that. |
+| `login` | `varchar(50)` | no |  | unique, check | The name the user types at log-in. Trimmed and in lower case: the agent stores it so, and the check refuses any other login, also in a row entered by hand. |
 | `name` | `varchar(100)` | no |  |  | The name shown to people. |
 | `role` | enum `userRole` | no |  |  | The role of the user. |
 | `passwordHash` | `varchar(255)` | no |  |  | An opaque string made by the BFF. The agent never reads its content. |
 | `isActive` | `boolean` | no | `true` |  | `false`: the user cannot log in. The row stays. |
 | `createdAt` | `timestamp` | no | `CURRENT_TIMESTAMP` |  | When the row was created, UTC. The database sets it. |
+
+Check: `SvtUser_login_check`, `CHECK (login = lower(btrim(login)))`. Without it, a login `Admin` entered by hand could
+never log in (the agent looks for `admin`), and `CreateUser` could add `admin` next to it.
 
 ## 6. Enum types
 

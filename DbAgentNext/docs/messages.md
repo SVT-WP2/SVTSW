@@ -99,7 +99,8 @@ with one rule per field. The classes are in the `*.dtos.ts` file beside each han
 - For an optional field, `null` means the same as an absent key.
 - The agent rejects a key that the class does not declare.
 - The reply lists every violation of the object: `<path>: <violation>; <violation>`. The path is for example
-  `data.create`. Each violation names its field. The violation texts come from the validation library.
+  `data.create`. Each violation names its field. The violation texts come from the validation library, except the
+  length checks of the user messages (§3.18).
 - When the value is not a JSON object, the text is `<path> must be an object`. A missing `data.create` gives
   `data.create must be an object`.
 
@@ -671,7 +672,7 @@ the BFF allows the user management to an Admin only.
 |---|---|---|---|
 | `GetAllUsers` | Lists the users. | Standard list. Filter keys: `ids` (list of integers), `roles` (list of strings), `isActive` (boolean). | Nothing. |
 | `GetUserCredentials` | Returns one user with its password hash. The BFF sends it at log-in. | 1. `data` is an object. If not: `BadRequest`, `data must be an object`.<br>2. `data.login` is a string. If not: `BadRequest`, `data.login must be a string`.<br>3. A user has the login. The agent trims `data.login` and compares it in lower case. If not: `NotFound`, `No user with this login`. | Nothing. |
-| `CreateUser` | Creates an active user. | 1. Validation of `data.create` (below).<br>2. Enum check of `role`.<br>3. The insert. Unique: `login`. | One `SvtUser` row, with `isActive` true. |
+| `CreateUser` | Creates an active user. | 1. Validation of `data.create` (below).<br>2. Enum check of `role`.<br>3. The insert. A login that exists already: `BadRequest`, the unique-constraint text of §1.4. | One `SvtUser` row, with `isActive` true. |
 | `UpdateUser` | Changes the name, the role or the state of a user. | 1. Id check.<br>2. Validation of `data.update`: `name` (as in `CreateUser`), `role` (a value of `userRole`) and `isActive` (boolean) are optional. No other key is allowed, so `login` is rejected.<br>3. Enum check of `role`, when it has a value.<br>4. The user exists. If not: `NotFound`, `No user with id <id>`.<br>5. The last-Admin rule (below). If it is broken: `BadRequest`, `The installation must keep one active Admin`. | The changed columns of the `SvtUser` row. |
 | `UpdateUserPassword` | Sets the password hash of a user. | 1. Id check.<br>2. `data.passwordHash` is a string. If not: `BadRequest`, `data.passwordHash must be a string`.<br>3. It has 1 to 255 characters. If not: `BadRequest`, `data.passwordHash must be 1 to 255 characters long`.<br>4. The user exists. If not: `NotFound`, `No user with id <id>`. | `passwordHash` of the `SvtUser` row. |
 
@@ -686,19 +687,25 @@ The validation of `data.create` of `CreateUser`. A key that the table does not n
 
 - Item: `{ id, login, name, role, isActive, createdAt }`. No reply but that of `GetUserCredentials` holds
   `passwordHash`; `GetUserCredentials` replies `{ entity: { id, login, name, role, isActive, createdAt, passwordHash } }`.
+- A length is a number of characters as the `varchar` column counts them (Unicode code points). A text that is too
+  short or too long answers `<key> must be <min> to <max> characters long`, in `data.create: …` or
+  `data.update: …`. This text is the agent's own, not one of the validation library.
 - A login that exists already, in any case, answers the unique-constraint text of §1.4, because the stored login is
-  in lower case.
+  in lower case. The insert does not fail: the agent inserts with `ON CONFLICT (login) DO NOTHING` and reads "no row
+  written" as the duplicate. Of two creates of one login at the same time, one writes the user.
 - `GetUserCredentials` returns a user with `isActive` false like any other. The caller decides.
 - The database sets `createdAt` to the current time.
 - `UpdateUser` writes the keys that have a value. An absent key or `null` keeps the value. An empty `data.update`
   answers `Success` and changes nothing.
 - No message changes `login`.
 - **The last-Admin rule.** `UpdateUser` refuses a change when the user is an active Admin, the change switches it off
-  or gives it another role, and no other active Admin exists. The check and the write are in one transaction. The
-  agent locks the rows of the active Admins first, so of two changes at the same time that each remove one of the
-  last two Admins, one is refused.
+  or gives it another role, and no other active Admin exists. The check and the write are in one transaction, which
+  first takes one lock for all updates of users: the updates of users run one at a time. Of two changes at the same
+  time that each remove one of the last two Admins, one is refused.
 - The agent never writes a `passwordHash` to its log. The transactions of `CreateUser` and `UpdateUserPassword` log
   no query, also when the debug log is on.
+- The hash is in the text of the SQL statement that the agent sends. A database server that logs statements logs
+  it ([05 §7](05-implementation-notes.md#7-notes-per-domain), Users).
 
 ## 4. Index
 

@@ -216,17 +216,18 @@ A user of the installation is one row of `SvtUser`. Other services point to a us
 - **The roles are levels.** A user has one role of the enum `userRole`: `User` < `Expert` < `Developer` < `Admin`.
   A role has every right of the roles below it. The code depends on the four values, so a change of them is a
   schema change. `isEpicUserRoleAtLeast` of `svt-ts-types` compares two roles.
-- **The login is unique and in lower case.** The agent trims the login and stores it in lower case, so `Anna.Rossi`
-  and `anna.rossi` are one login. The database enforces the unique login; only the agent enforces the lower case.
-  The login does not change after creation.
+- **The login is unique, trimmed and in lower case.** The agent trims the login of a request and makes it lower
+  case, so `Anna.Rossi` and `anna.rossi` are one login. The database enforces both: the unique login, and with a
+  check constraint the trimmed, lower-case form, also for a row entered by hand. The login does not change after
+  creation.
 - **A user is never deleted.** It is switched off (`isActive` false) and its row stays, because other rows will
   point to it. A user that is switched off cannot log in; the BFF checks that.
 - **The installation keeps one active Admin.** The agent refuses a change that would switch off the last active
-  Admin, or give it another role. It checks and writes in one transaction, and it locks the Admins first, so two
-  changes at the same time cannot remove the last two Admins. Only the agent enforces the rule: a row changed
-  directly in the database can break it.
+  Admin, or give it another role. It checks and writes in one transaction, and the changes of users run one at a
+  time, so two changes at the same time cannot remove the last two Admins. Only the agent enforces the rule: a row
+  changed directly in the database can break it.
 - **The first Admin is entered by hand.** The migration creates no user, and no account with a known password
-  exists.
+  exists. Its login must be in lower case: the database refuses another.
 - **The password hash is opaque.** The BFF makes it; the agent stores it and never reads it. Only the reply of
   `GetUserCredentials` holds it, and the agent never writes it to its log.
 - **The agent does not check who sends a user message.** The rule that only an Admin manages the users belongs to

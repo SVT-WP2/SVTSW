@@ -154,7 +154,8 @@ Wafers, chips and equipment have a **general location**: an institute or a room 
 - A move is its own operation. It appends a history row, and that row becomes the current location. A general
   update of the entity cannot change the location.
 - The history is append-only.
-- **Open:** the user name is a free text from the client. No service knows the users yet.
+- **Open:** the user name is a free text from the client. The users are in the database ([§5a](#5a-users)), and
+  no history row points to one yet.
 - Wafer probe machines also have a general location, without a history. Probe cards have a location from a
   separate enumeration, without a history.
 

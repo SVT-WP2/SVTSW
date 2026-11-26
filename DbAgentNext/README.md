@@ -51,7 +51,7 @@ DbAgentNext/
 ├── src/
 │   ├── app/  config/  modules/     NestJS application: Kafka controller, dispatcher, handlers, health
 │   ├── db/                         database layer: orm (MikroORM setup), data (entities, repositories); strict
-│   └── migrations/                 MikroORM migrations 0–4 and their list; the agent applies them at start
+│   └── migrations/                 MikroORM migrations 0–5 and their list; the agent applies them at start
 ├── scripts/                        db-restore.mjs (npm run db:restore)
 ├── test-e2e/  test-parity/
 ├── docs/                           domain model, database schema, messages, wafer map, runtime, implementation, decisions

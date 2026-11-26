@@ -200,8 +200,22 @@ Implementation details behind the decisions of [01 §6](01-behaviour-decisions.m
   - `passwordHash` is `lazy: true`: a list never loads it, and only `findCredentialsByLogin` populates it. The
     handlers build every reply with `toWire`, which has no hash; only `GetUserCredentials` adds it.
   - `create` and `updatePasswordHash` run their transaction without the query log (§6).
+  - `create` inserts with `ON CONFLICT (login) DO NOTHING` and reads "no row back" as a duplicate login: a duplicate
+    is no failing statement. PostgreSQL logs the text of a failing statement (`log_min_error_statement` is `error`
+    by default), and the text holds the hash (next point).
+  - **Known limit: the hash is in the text of the statement.** MikroORM puts the values into the SQL text that it
+    sends (it does not send them as parameters). A database server that logs statements (`log_statement`,
+    `log_min_duration_statement`, or a statement that fails for another reason) therefore logs the hash, also on
+    success. Keep the logging of statements off on the servers, and treat the server log as secret as the hashes.
   - The last-Admin rule is the pure function `removesLastActiveAdmin` (unit spec next to it). `update` calls it in
-    the transaction of the write, after it has locked the active Admins (`FOR UPDATE`, in id order) and then the
-    user. Two updates at the same time thus cannot both remove an Admin of the last two, and they cannot deadlock.
+    the transaction of the write. The transaction first takes the advisory lock `SVT_DB_USERS_UPDATE_LOCK`
+    (`pg_advisory_xact_lock`, released at commit): the updates of users run one at a time, so two updates at the
+    same time cannot both remove an Admin of the last two. It is the only lock taken before the write, so two
+    updates cannot deadlock, and it locks no user row, so it does not wait for a row that another table locks
+    through a foreign key. Users are changed rarely, so one update at a time costs nothing.
   - The DTOs trim `login` and `name` with `@Transform` before they validate them; `login` is also lower-cased.
-    `GetUserCredentials` normalises `data.login` with the same function.
+    `GetUserCredentials` normalises `data.login` with the same function. The check `SvtUser_login_check` refuses
+    any other login in the database.
+  - Lengths are checked with `HasTextLength` (`modules/dispatch`), which counts code points as a `varchar(n)`
+    column does. class-validator's `@Length` does not count U+FE0F and U+FE0E: a name of 100 characters and
+    U+FE0F would pass it and then fail in the column with `UnexpectedError`.
