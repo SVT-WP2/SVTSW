@@ -27,7 +27,7 @@ export class SvtDbAgentNextKafkaController {
     async handleRequest(@Payload() value: unknown, @Ctx() context: KafkaContext): Promise<string> {
         const startedAt = Date.now()
         const requestType = isRecord(value) && typeof value['type'] === 'string' ? value['type'] : '<no type>'
-        const userId = headerValue(context, SvtKafkaHeader.UserId)
+        const userId = headerText(context, SvtKafkaHeader.UserId)
         let reply: SvtDbAgentNextReply
         try {
             reply = await this.dispatcher.dispatch(value, { userId })
@@ -50,31 +50,55 @@ export class SvtDbAgentNextKafkaController {
 
 }
 
+/** A correlation id that the log line prints as it is: a UUID or another short id of safe characters. */
+const SAFE_CORRELATION_ID = /^[A-Za-z0-9._:-]{1,100}$/
+
 /**
- * The value of one header of the record, decoded as UTF-8; `undefined` when the record has no such header. A header
- * that the record has more than once gives its values joined by commas, which no check of a header accepts.
+ * The text of one header of the record. NestJS's `KafkaParser` has decoded every header before the controller sees
+ * it: a string; a `Buffer` (a value that starts with a zero byte); `null` (a header without a value); or, for text
+ * that starts with `[` or `{` and is valid JSON, the parsed array or object. A header that the record has twice
+ * arrives as one string, its values joined by a comma.
+ *
+ * Returns the text of a string or a `Buffer` (UTF-8); `null` for a header that is there without text (a null value, a
+ * parsed array or object), which the check of the dispatcher refuses; `undefined` when the record has no such header.
+ * It never converts an object to a string, and it cannot throw.
  */
-function headerValue(context: KafkaContext, name: string): string | undefined {
-    const raw = context.getMessage()?.headers?.[name]
-    if (raw === undefined || raw === null) {
-        return undefined
+function headerText(context: KafkaContext, name: string): string | null | undefined {
+    try {
+        const headers: unknown = context.getMessage()?.headers
+        if (typeof headers !== 'object' || headers === null || !Object.prototype.hasOwnProperty.call(headers, name)) {
+            return undefined
+        }
+        const raw: unknown = (headers as Record<string, unknown>)[name]
+        if (raw === undefined) {
+            return undefined
+        }
+        if (typeof raw === 'string') {
+            return raw
+        }
+        return Buffer.isBuffer(raw) ? raw.toString('utf8') : null
     }
-    const values = Array.isArray(raw) ? raw : [raw]
-    return values.map((item) => (Buffer.isBuffer(item) ? item.toString('utf8') : String(item))).join(',')
+    catch {
+        return null
+    }
 }
 
 /**
- * The user of the log line: the id, `-` without the header, `invalid` for a value that the dispatcher refuses. The
- * raw value of a refused header is not logged: it can be anything, line breaks too.
+ * The user of the log line: the id, `-` without the header, `invalid` for a value that is no positive integer. The
+ * raw value of such a header is not logged: it can be anything, line breaks too.
  */
-function userForLog(userId: string | undefined): string {
+function userForLog(userId: string | null | undefined): string {
     if (userId === undefined) {
         return '-'
     }
-    return parseUserIdHeader(userId) === undefined ? 'invalid' : userId
+    return userId === null || parseUserIdHeader(userId) === undefined ? 'invalid' : userId
 }
 
+/** ` [<correlation id>]` for a safe id, a fixed word for any other, nothing without the header. */
 function correlationSuffix(context: KafkaContext): string {
-    const correlationId = headerValue(context, 'kafka_correlationId')
-    return correlationId ? ` [${correlationId}]` : ''
+    const correlationId = headerText(context, 'kafka_correlationId')
+    if (correlationId === undefined || correlationId === '') {
+        return ''
+    }
+    return correlationId !== null && SAFE_CORRELATION_ID.test(correlationId) ? ` [${correlationId}]` : ' [invalid correlation id]'
 }

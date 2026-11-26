@@ -106,15 +106,15 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
     }
 
     /**
-     * The user of the header `svt_userId`: `null` without the header. A value that is no positive integer, or the id
-     * of no user, is a `BadRequest`. A user that is switched off is accepted: work that started for that user still
-     * writes its rows. Roles are not checked (D12).
+     * The user of the header `svt_userId`: `null` without the header. A header without text (`null`), a value that is
+     * no positive integer, or the id of no user, is a `BadRequest`. A user that is switched off is accepted: work that
+     * started for that user still writes its rows. Roles are not checked (D12).
      */
-    private async userOf(header: string | undefined): Promise<number | null> {
+    private async userOf(header: string | null | undefined): Promise<number | null> {
         if (header === undefined) {
             return null
         }
-        const userId = parseUserIdHeader(header)
+        const userId = header === null ? undefined : parseUserIdHeader(header)
         if (userId === undefined) {
             throw SvtDbAgentNextRequestError.badRequest(`Header ${SvtKafkaHeader.UserId} must be a positive integer`)
         }

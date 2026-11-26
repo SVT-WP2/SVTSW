@@ -83,6 +83,45 @@ describe('The user of a request, header svt_userId (e2e)', () => {
         expect(handle).not.toHaveBeenCalled()
     })
 
+    it('refuses a header without text (a null value, or JSON that NestJS parsed): only a missing header is no user', async () => {
+        await createUser('anna')
+
+        const reply = await setup.send(list, { userId: null })
+
+        expect(reply).toEqual({
+            type: 'GetAllEquipmentTypesReply',
+            status: 'BadRequest',
+            data: null,
+            error: { code: -1, message: HEADER_MESSAGE },
+        })
+        expect(handle).not.toHaveBeenCalled()
+    })
+
+    it('lets the handler read the user of the header fresh: the check loads no copy of it', async () => {
+        // The row changes between the check of the header and the handler. A check that loaded the user would leave a
+        // copy in the identity map of the request, and UpdateUser would answer with the role of that copy.
+        const anna = await createUser('anna')
+        const definition = setup.handlerDefinition('UpdateUser')
+        const original = definition.handle
+        const updateUser = vi.spyOn(definition, 'handle').mockImplementation(async (data, context) => {
+            await setup.query('update main."SvtUser" set role = \'Expert\' where id = ?', [anna])
+            return original(data, context)
+        })
+        try {
+            const reply = await setup.send<EntityReply>(
+                new SvtDbAgentKafkaUsers.UpdateUserMessage({ id: anna, update: { name: 'Anna R.' } }),
+                { userId: String(anna) },
+            )
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(reply.data.entity).toMatchObject({ id: anna, name: 'Anna R.', role: 'Expert' })
+            expect(updateUser).toHaveBeenCalledWith({ id: anna, update: { name: 'Anna R.' } }, { userId: anna })
+        }
+        finally {
+            updateUser.mockRestore()
+        }
+    })
+
     it('refuses the id of no user, before the handler, also at the end of the integer range', async () => {
         await createUser('anna')
 

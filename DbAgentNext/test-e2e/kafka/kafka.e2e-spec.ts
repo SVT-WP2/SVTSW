@@ -209,12 +209,19 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
 
         const known = await exchange(list, { [SvtKafkaHeader.UserId]: '1' })
         const unknown = await exchange(list, { [SvtKafkaHeader.UserId]: '999' })
+        // NestJS's parser turns header text that is a JSON array into an array: it must not count as user 1.
+        const array = await exchange(list, { [SvtKafkaHeader.UserId]: '[1]' })
 
         expect(created).toMatchObject({ status: 'Success', data: { entity: { id: 1, login: 'kafka.user' } } })
         expect(known.reply).toMatchObject({ type: 'GetAllEquipmentTypesReply', status: 'Success' })
         expect(known.headers).not.toHaveProperty(SvtKafkaHeader.UserId)
         expect(unknown.reply).toMatchObject({ status: 'BadRequest', data: null, error: { code: -1, message: 'Unknown user: 999' } })
         expect(unknown.headers).not.toHaveProperty(SvtKafkaHeader.UserId)
+        expect(array.reply).toMatchObject({
+            type: 'GetAllEquipmentTypesReply',
+            status: 'BadRequest',
+            error: { message: 'Header svt_userId must be a positive integer' },
+        })
     })
 
     it('produces a heartbeat record every two seconds: a string timestamp in epoch seconds with six decimals', async () => {

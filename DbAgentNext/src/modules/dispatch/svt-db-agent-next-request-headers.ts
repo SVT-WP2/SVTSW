@@ -1,10 +1,14 @@
 /**
- * The headers of a request record that the dispatcher reads, as the raw strings of the record (UTF-8). The Kafka
- * controller decodes them; the e2e harness passes them as they are, so a spec can send a malformed value.
+ * The headers of a request record that the dispatcher reads. The Kafka controller gives the text of each header; the
+ * e2e harness passes the values as they are, so a spec can send a malformed value.
  */
 export type SvtDbAgentNextRequestHeaders = {
-    /** The value of the header `svt_userId`; absent when the record has no such header. */
-    userId?: string
+    /**
+     * The header `svt_userId`: its text; `null` when the record has the header but no text in it (a null value, or a
+     * value that NestJS has already parsed as JSON); absent when the record has no such header. The check refuses
+     * `null`: only a record without the header is a request without a user.
+     */
+    userId?: string | null
 }
 
 /** A positive decimal integer: no sign, no space, no leading zero, at most 10 digits. */
