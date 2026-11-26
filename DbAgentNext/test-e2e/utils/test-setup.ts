@@ -9,7 +9,12 @@ import { EpicKafkaMessage } from 'svt-ts-types/kafka'
 import { AppModule } from '../../src/app/app.module'
 import { SvtDbAgentNextConfig } from '../../src/config'
 import { SvtDbOrmMigrationsService } from '../../src/db/orm'
-import { SvtDbAgentNextReply, SvtDbAgentNextRequestDispatcher } from '../../src/modules/dispatch'
+import {
+    SvtDbAgentNextHandlerDefinition,
+    SvtDbAgentNextReply,
+    SvtDbAgentNextRequestDispatcher,
+    SvtDbAgentNextRequestHeaders,
+} from '../../src/modules/dispatch'
 import {
     buildSvtDbAgentNextKafkaOptions,
     SvtDbAgentNextHeartbeatService,
@@ -19,6 +24,9 @@ import {
 
 /** A request envelope as a client would send it; the typed message classes of `epic/entities` fit too. */
 export type E2eRequest = EpicKafkaMessage | { type: string; data?: unknown }
+
+/** The headers of a request record that the agent reads, as raw strings (`SvtDbAgentNextRequestHeaders`). */
+export type E2eRequestHeaders = SvtDbAgentNextRequestHeaders
 
 export type TestSetupOptions = {
     /**
@@ -137,16 +145,33 @@ export class TestSetup {
 
     // ── Messaging ───────────────────────────────────────────────
 
-    /** Sends one request envelope and returns the reply envelope, both as they would travel over Kafka. */
-    async send<TData = Record<string, any>>(message: E2eRequest): Promise<SvtDbAgentNextReply<TData>> {
+    /**
+     * Sends one request envelope and returns the reply envelope, both as they would travel over Kafka. `headers`
+     * holds the raw values of the record's headers that the agent reads, for example `{ userId: '42' }` for
+     * `svt_userId`; a spec can send a malformed value. Without it, the request has no such header.
+     */
+    async send<TData = Record<string, any>>(message: E2eRequest, headers?: E2eRequestHeaders): Promise<SvtDbAgentNextReply<TData>> {
         const wireRequest: unknown = JSON.parse(JSON.stringify(message))
-        const reply = await this.dispatcher.dispatch(wireRequest)
+        const reply = await this.dispatcher.dispatch(wireRequest, headers)
         return JSON.parse(JSON.stringify(reply)) as SvtDbAgentNextReply<TData>
     }
 
     /** The message types the application handles; new slices must appear here and in a spec. */
     registeredTypes(): string[] {
         return this.dispatcher.registeredTypes
+    }
+
+    /**
+     * The definition that the dispatcher calls for a message type, so that a spec can spy on its `handle` and see the
+     * context of a request (`vi.spyOn(definition, 'handle')`). The spy calls the real handler.
+     */
+    handlerDefinition(type: string): SvtDbAgentNextHandlerDefinition {
+        const definitions = (this.dispatcher as unknown as { handlers: Map<string, SvtDbAgentNextHandlerDefinition> }).handlers
+        const definition = definitions.get(type)
+        if (!definition) {
+            throw new Error(`No handler for ${type}`)
+        }
+        return definition
     }
 
 }

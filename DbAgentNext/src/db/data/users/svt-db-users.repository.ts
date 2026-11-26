@@ -72,6 +72,15 @@ export class SvtDbUsersRepository {
         return { items, totalCount }
     }
 
+    /**
+     * Whether a user with this id exists, switched off or not: the check of the header `svt_userId`. One query by
+     * primary key. It counts and loads no entity: a user loaded here would stay in the identity map of the request,
+     * and a handler would find that copy, read before its own transaction and lock.
+     */
+    async exists(id: number): Promise<boolean> {
+        return (await this.em.count(SvtDbUserEntity, { id })) > 0
+    }
+
     /** The user with this login, with its password hash. `login` is already trimmed and in lower case. */
     findCredentialsByLogin(login: string): Promise<SvtDbUserEntity | null> {
         return this.em.findOne(SvtDbUserEntity, { login }, { populate: ['passwordHash'] })
