@@ -49,6 +49,7 @@ The agent builds one reply for every request, also when the request fails. The r
 The causes of `BadRequest`:
 
 - The envelope is malformed, or no handler serves the type (§1.3).
+- The header `svt_userId` is not valid, or names no user (§1.5).
 - `data` fails validation (§2.1), or a filter is not valid (§2.2).
 - A value is not a value of its enum (§2.7).
 - A row that the payload refers to does not exist. Example: the wafer type of a new wafer.
@@ -82,6 +83,36 @@ to answers `BadRequest`.
 - For `UnexpectedError` the reply carries only the generic text. The agent writes the real error and its stack
   trace to the log. The reply never contains SQL or a stack trace.
 - The agent logs a unique-constraint violation and a `22P02` error as warnings.
+
+### 1.5 The user of a request
+
+A request record can carry the header `svt_userId`: the user that the request is for, as the `id` of a row of
+`SvtUser` in a decimal string (`42`). The header is optional. The conventions are in
+[SvtKafkaConventions.md](../../Documentation/Kafka/SvtKafkaConventions.md#the-user-of-a-request).
+
+The agent checks a request in this order:
+
+1. The envelope and the type (§1.3). A malformed request or an unknown type is answered as in §1.3, whatever the
+   header holds.
+2. The header, when the record has it:
+
+   | Case | `status` | `error.message` |
+   |---|---|---|
+   | The value is not a decimal string of a positive integer: a sign, a space, a leading zero, a point, more than 10 digits, a number above 2147483647, an empty value. | `BadRequest` | `Header svt_userId must be a positive integer` |
+   | No row of `SvtUser` has this id. | `BadRequest` | `Unknown user: <id>` |
+
+3. The handler. It gets the user id, or no user when the record has no header. No handler uses it yet.
+
+- The reply type of a header failure is `<Type>Reply`, as for every failure of a known type. The handler does not
+  run, and nothing is written.
+- **A user who is switched off is accepted.** A user who was switched off after starting a long measurement is still
+  the right owner of the rows that the measurement writes. Switching a user off stops the log-in and the UI, not the
+  work that is already running.
+- The agent checks no role: the services on Kafka trust each other.
+- The header is read from the Kafka record only. A key `svt_userId` in the body has no meaning.
+- A reply does not repeat the header.
+- The log line of each request names the user: `user=42`, `user=-` without the header, `user=invalid` for a value
+  that step 2 refuses.
 
 ## 2. Rules for all messages
 
