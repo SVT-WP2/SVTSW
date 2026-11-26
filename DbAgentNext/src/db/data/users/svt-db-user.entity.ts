@@ -1,17 +1,19 @@
 import { OptionalProps } from '@mikro-orm/core'
-import { Entity, Enum, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
+import { Check, Entity, Enum, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
 
 import { SVT_DB_ENUM_VALUES } from '../enums'
 
 
 /**
  * `main."SvtUser"`: a user of the installation. `id` is the user id that other services point to. `login` is
- * unique and stored in lower case; the agent lower-cases it, the schema does not check it. `role` is the enum
+ * unique, trimmed and in lower case: the agent stores it so, and the check `SvtUser_login_check` makes the database
+ * refuse any other login, also in a row entered by hand. `role` is the enum
  * `userRole`, whose four values the code depends on. `passwordHash` is an opaque string made by the BFF; it is lazy,
  * so a list never loads it, and only `GetUserCredentials` populates it. A user is never deleted: `isActive` false
  * switches it off. `createdAt` is `timestamp without time zone`, UTC, stamped by the database.
  */
 @Entity({ tableName: 'SvtUser' })
+@Check({ name: 'SvtUser_login_check', expression: 'login = lower(btrim(login))' })
 export class SvtDbUserEntity {
 
     @PrimaryKey({ type: 'integer', autoincrement: true, generated: 'by default as identity' })

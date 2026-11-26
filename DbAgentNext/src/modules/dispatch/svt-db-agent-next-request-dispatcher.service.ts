@@ -4,7 +4,7 @@ import { DiscoveryService } from '@nestjs/core'
 import { EpicKafkaReplyError, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextHandlerDefinition, SvtDbAgentNextHandlers, SvtDbAgentNextMessageHandlers } from './svt-db-agent-next-handler.models'
-import { SvtDbAgentNextRequestError } from './svt-db-agent-next-request-error'
+import { SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE, SvtDbAgentNextRequestError } from './svt-db-agent-next-request-error'
 import { isRecord } from './svt-db-agent-next-request-validation'
 
 
@@ -94,11 +94,7 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
         }
         if (error instanceof UniqueConstraintViolationException) {
             this.logger.warn(`${requestType}: unique constraint violated`)
-            return failure(
-                replyType,
-                EpicKafkaReplyStatus.BadRequest,
-                'Failed entry creation: an entry with the same unique value already exists',
-            )
+            return failure(replyType, EpicKafkaReplyStatus.BadRequest, SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE)
         }
         if (error instanceof DriverException && error.code === INVALID_TEXT_REPRESENTATION) {
             this.logger.warn(`${requestType}: ${error.message}`)

@@ -13,10 +13,13 @@ import {
     requireInteger,
     requireRecord,
     requireString,
+    SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE,
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
     SvtDbAgentNextRequestError,
+    textLength,
+    textLengthMessage,
     validateRequestData,
 } from '../../dispatch'
 
@@ -109,6 +112,10 @@ export class SvtDbAgentNextUsersHandlers implements SvtDbAgentNextMessageHandler
             role: create.role,
             passwordHash: create.passwordHash,
         })
+        if (!user) {
+            // The text of every unique value that exists already (§1.4); the insert itself did not fail (see `create`).
+            throw SvtDbAgentNextRequestError.badRequest(SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE)
+        }
         return { entity: toWire(user) }
     }
 
@@ -137,9 +144,10 @@ export class SvtDbAgentNextUsersHandlers implements SvtDbAgentNextMessageHandler
         const body = requireRecord(data, 'data')
         const id = requireInteger(body['id'], 'data.id')
         const passwordHash = requireString(body['passwordHash'], 'data.passwordHash')
-        if (passwordHash.length < 1 || passwordHash.length > SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH) {
+        const length = textLength(passwordHash)
+        if (length < 1 || length > SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH) {
             throw SvtDbAgentNextRequestError.badRequest(
-                `data.passwordHash must be 1 to ${SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH} characters long`,
+                textLengthMessage('data.passwordHash', 1, SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH),
             )
         }
 

@@ -1,7 +1,9 @@
 import { Transform, TransformFnParams } from 'class-transformer'
-import { IsBoolean, IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator'
+import { IsBoolean, IsEnum, IsOptional, IsString, Matches } from 'class-validator'
 import { EpicUserRole } from 'svt-ts-types'
 import { EpicUserCreate, SvtDbAgentKafkaUsers } from 'svt-ts-types/kafka'
+
+import { HasTextLength } from '../../dispatch'
 
 
 /** The longest password hash that the column `SvtUser.passwordHash` holds. */
@@ -19,25 +21,28 @@ function trimmed({ value }: TransformFnParams): unknown {
     return typeof value === 'string' ? value.trim() : value
 }
 
-/** `data.create` of `CreateUser`. `login` and `name` are checked, and stored, trimmed; `login` in lower case. */
+/**
+ * `data.create` of `CreateUser`. `login` and `name` are checked, and stored, trimmed; `login` in lower case. The
+ * lengths are counted as the `varchar` columns count them (`HasTextLength`).
+ */
 export class SvtDbAgentNextUserCreateDto implements EpicUserCreate {
 
     @Transform(({ value }) => (typeof value === 'string' ? normalizeUserLogin(value) : value))
     @IsString()
-    @Length(3, 50)
+    @HasTextLength(3, 50)
     @Matches(LOGIN_PATTERN)
     login!: string
 
     @Transform(trimmed)
     @IsString()
-    @Length(1, 100)
+    @HasTextLength(1, 100)
     name!: string
 
     @IsEnum(EpicUserRole)
     role!: EpicUserRole
 
     @IsString()
-    @Length(1, SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH)
+    @HasTextLength(1, SVT_DB_AGENT_NEXT_PASSWORD_HASH_MAX_LENGTH)
     passwordHash!: string
 
 }
@@ -48,7 +53,7 @@ export class SvtDbAgentNextUserUpdateDto implements SvtDbAgentKafkaUsers.UserUpd
     @IsOptional()
     @Transform(trimmed)
     @IsString()
-    @Length(1, 100)
+    @HasTextLength(1, 100)
     name?: string
 
     @IsOptional()

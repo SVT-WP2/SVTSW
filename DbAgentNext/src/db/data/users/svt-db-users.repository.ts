@@ -1,4 +1,4 @@
-import { FilterQuery, LockMode, TransactionOptions } from '@mikro-orm/core'
+import { FilterQuery, TransactionOptions } from '@mikro-orm/core'
 import { EntityManager } from '@mikro-orm/postgresql'
 import { Injectable } from '@nestjs/common'
 
@@ -14,6 +14,12 @@ import { SvtDbUserEntity } from './svt-db-user.entity'
  * hash.
  */
 const WITHOUT_QUERY_LOG: TransactionOptions = { loggerContext: { enabled: false } }
+
+/**
+ * The key of the transaction-level advisory lock (`pg_advisory_xact_lock`) that `update` takes. No other code of
+ * the agent takes an advisory lock. The value has no meaning: it is the number of the ticket.
+ */
+export const SVT_DB_USERS_UPDATE_LOCK = 393
 
 export type SvtDbUsersFilter = {
     ids?: number[]
@@ -71,34 +77,44 @@ export class SvtDbUsersRepository {
         return this.em.findOne(SvtDbUserEntity, { login }, { populate: ['passwordHash'] })
     }
 
-    /** A new, active user. The database sets `id` and `createdAt`. */
-    create(input: SvtDbUserCreateInput): Promise<SvtDbUserEntity> {
+    /**
+     * A new, active user, or `null` when the login exists already. The database sets `id` and `createdAt`. A
+     * duplicate login is no failing statement (`ON CONFLICT (login) DO NOTHING`): PostgreSQL logs the text of a
+     * failing statement, and the text holds the hash. Two creates of one login at the same time give one user.
+     */
+    create(input: SvtDbUserCreateInput): Promise<SvtDbUserEntity | null> {
         return this.em.transactional(async (em) => {
-            const user = em.create(SvtDbUserEntity, { ...input, isActive: true })
-            await em.flush()
-            return user
+            const result = await em.createQueryBuilder(SvtDbUserEntity)
+                .insert({ ...input, isActive: true })
+                .onConflict('login')
+                .ignore()
+                .returning('id')
+                .execute('run')
+            // PostgreSQL returns the new id through `RETURNING`; a login that exists already returns no row.
+            const id = result.row?.['id'] as number | undefined
+            return id === undefined ? null : em.findOneOrFail(SvtDbUserEntity, { id })
         }, WITHOUT_QUERY_LOG)
     }
 
     /**
      * Changes the user, unless the change takes away the last active Admin (`removesLastActiveAdmin`). The check
-     * and the write are in one transaction. It first locks the active Admins, in id order, and then the user: two
-     * updates at the same time cannot both remove an Admin of the last two, and they lock the rows in the same
-     * order, so they cannot deadlock.
+     * and the write are in one transaction, which first takes one advisory lock: the updates of users run one at a
+     * time, so two updates at the same time cannot both remove an Admin of the last two. The lock is the only one
+     * taken before the write, so it cannot deadlock with another update, and it locks no row of a user.
      */
     update(id: number, patch: SvtDbUserUpdateInput): Promise<SvtDbUserUpdateResult> {
         return this.em.transactional(async (em): Promise<SvtDbUserUpdateResult> => {
-            const activeAdmins = await em.find(
-                SvtDbUserEntity,
-                { role: SVT_DB_USER_ROLE_ADMIN, isActive: true },
-                { orderBy: { id: 'asc' }, lockMode: LockMode.PESSIMISTIC_WRITE },
-            )
-            const user = await em.findOne(SvtDbUserEntity, { id }, { lockMode: LockMode.PESSIMISTIC_WRITE })
+            await em.execute('select pg_advisory_xact_lock(?)', [SVT_DB_USERS_UPDATE_LOCK])
+            const user = await em.findOne(SvtDbUserEntity, { id })
             if (!user) {
                 return { outcome: 'notFound' }
             }
             const after = { role: patch.role ?? user.role, isActive: patch.isActive ?? user.isActive }
-            const otherActiveAdmins = activeAdmins.filter((admin) => admin.id !== id).length
+            const otherActiveAdmins = await em.count(SvtDbUserEntity, {
+                role: SVT_DB_USER_ROLE_ADMIN,
+                isActive: true,
+                id: { $ne: id },
+            })
             if (removesLastActiveAdmin(user, after, otherActiveAdmins)) {
                 return { outcome: 'lastActiveAdmin' }
             }

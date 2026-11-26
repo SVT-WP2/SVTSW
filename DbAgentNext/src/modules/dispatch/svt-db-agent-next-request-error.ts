@@ -1,6 +1,9 @@
 import { EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
 
 
+/** The reply text for a value that a unique constraint refuses (`docs/messages.md` §1.4). */
+export const SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE = 'Failed entry creation: an entry with the same unique value already exists'
+
 /**
  * A failure the dispatcher turns into a reply envelope (`status`, `error: { code, message }`). Handlers throw
  * it for validation (`BadRequest`) and missing ids (`NotFound`); anything else they let escape becomes

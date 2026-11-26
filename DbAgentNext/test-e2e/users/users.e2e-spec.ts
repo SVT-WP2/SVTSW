@@ -212,27 +212,47 @@ describe('Users (e2e)', () => {
             expect(await setup.query('select "createdAt" is not null as stamped from main."SvtUser"')).toEqual([{ stamped: true }])
         })
 
-        it('accepts the limits of each field', async () => {
+        it('accepts the limits of each field, counted in characters as the columns count them', async () => {
             const longest = { login: `a.b_c-1${'x'.repeat(43)}`, name: 'N'.repeat(100), passwordHash: 'h'.repeat(255) }
             await create({ ...longest, role: EpicUserRole.Admin })
             await create({ login: 'abc', name: 'N', role: EpicUserRole.Developer, passwordHash: 'h' })
+            // One emoji is two UTF-16 units and one character of a varchar.
+            await create({ login: 'emoji', name: '😀'.repeat(100), role: EpicUserRole.User, passwordHash: '😀'.repeat(255) })
 
-            const stored = await rows()
-            expect(stored.map((row) => [row.login.length, row.name.length, row.passwordHash.length]))
-                .toEqual([[50, 100, 255], [3, 1, 1]])
+            const lengths = await setup.query<{ login: number; name: number; hash: number }>(
+                'select char_length(login) as login, char_length(name) as name, char_length("passwordHash") as hash'
+                + ' from main."SvtUser" order by id',
+            )
+            expect(lengths).toEqual([
+                { login: 50, name: 100, hash: 255 },
+                { login: 3, name: 1, hash: 1 },
+                { login: 5, name: 100, hash: 255 },
+            ])
         })
 
         it('rejects a login that exists already, also in another case', async () => {
-            await create(ANNA)
+            const anna = await create(ANNA)
 
             for (const login of ['anna.rossi', 'ANNA.ROSSI']) {
                 const reply = await setup.send({ type: 'CreateUser', data: { create: { ...BRUNO, login } } })
 
-                expect(reply).toMatchObject({
+                expect(reply).toEqual({
+                    type: 'CreateUserReply',
                     status: 'BadRequest',
-                    error: { message: 'Failed entry creation: an entry with the same unique value already exists' },
+                    data: null,
+                    error: { code: -1, message: 'Failed entry creation: an entry with the same unique value already exists' },
                 })
             }
+            expect(await rows()).toEqual([{ id: anna.id, ...ANNA, isActive: true }])
+        })
+
+        it('creates one user when two creates of one login come at the same time', async () => {
+            const replies = await Promise.all([
+                setup.send({ type: 'CreateUser', data: { create: ANNA } }),
+                setup.send({ type: 'CreateUser', data: { create: { ...BRUNO, login: ANNA.login } } }),
+            ])
+
+            expect(replies.map((reply) => reply.status).sort()).toEqual(['BadRequest', 'Success'])
             expect(await rows()).toHaveLength(1)
         })
 
@@ -251,6 +271,7 @@ describe('Users (e2e)', () => {
                 [{ ...BRUNO, name: '' }, 'name'],
                 [{ ...BRUNO, name: '   ' }, 'name'],
                 [{ ...BRUNO, name: 'N'.repeat(101) }, 'name'],
+                [{ ...BRUNO, name: `${'N'.repeat(100)}️` }, 'name must be 1 to 100 characters long'],
                 [{ ...BRUNO, role: undefined }, 'role'],
                 [{ ...BRUNO, role: 'Boss' }, 'role'],
                 [{ ...BRUNO, role: 'admin' }, 'role'],
@@ -258,6 +279,7 @@ describe('Users (e2e)', () => {
                 [{ ...BRUNO, passwordHash: 42 }, 'passwordHash'],
                 [{ ...BRUNO, passwordHash: '' }, 'passwordHash'],
                 [{ ...BRUNO, passwordHash: 'h'.repeat(256) }, 'passwordHash'],
+                [{ ...BRUNO, passwordHash: `${'h'.repeat(255)}️` }, 'passwordHash must be 1 to 255 characters long'],
                 [{ ...BRUNO, isActive: false }, 'isActive'],
                 [{ ...BRUNO, id: 9 }, 'id'],
                 [undefined, 'data.create must be an object'],
@@ -329,6 +351,7 @@ describe('Users (e2e)', () => {
                 [{ id: bruno.id, update: { name: '' } }, 'name'],
                 [{ id: bruno.id, update: { name: '   ' } }, 'name'],
                 [{ id: bruno.id, update: { name: 'N'.repeat(101) } }, 'name'],
+                [{ id: bruno.id, update: { name: `${'N'.repeat(100)}️` } }, 'name must be 1 to 100 characters long'],
                 [{ id: bruno.id, update: { role: 'Boss' } }, 'role'],
                 [{ id: bruno.id, update: { isActive: 'no' } }, 'isActive'],
             ]
@@ -393,7 +416,7 @@ describe('Users (e2e)', () => {
             const second = await create({ ...BRUNO, role: EpicUserRole.Admin })
 
             // The test holds a lock that lets the agent read the table but not write it, until both updates wait.
-            // Without the row locks of the agent, both updates would read two active Admins, and both would write.
+            // Without the advisory lock of the agent, both updates would read two active Admins, and both would write.
             // `begin` and not `transactional`: the updates must not run inside the transaction of the test.
             const lock = setup.em()
             await lock.begin()
@@ -422,6 +445,33 @@ describe('Users (e2e)', () => {
 
             expect(reply.status, reply.error.message).toBe('Success')
             expect(reply.data.entity.isActive).toBe(false)
+        })
+
+    })
+
+    describe('A user entered by hand in the database (the first Admin, D4)', () => {
+
+        function insertByHand(login: string) {
+            return setup.query(
+                'insert into main."SvtUser" (login, name, role, "passwordHash") values (?, ?, ?, ?)',
+                [login, 'First Admin', 'Admin', HASH_ANNA],
+            )
+        }
+
+        it('can log in when the login is trimmed and in lower case', async () => {
+            await insertByHand('first.admin')
+
+            const reply = await setup.send<CredentialsReply>(new SvtDbAgentKafkaUsers.GetUserCredentialsMessage({ login: 'First.Admin' }))
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(reply.data.entity).toMatchObject({ login: 'first.admin', role: 'Admin', isActive: true, passwordHash: HASH_ANNA })
+        })
+
+        it('is refused by the database when the login has an upper-case letter or a space around it', async () => {
+            for (const login of ['Admin', 'ADMIN', ' admin', 'admin ']) {
+                await expect(insertByHand(login), login).rejects.toThrow('SvtUser_login_check')
+            }
+            expect(await rows()).toEqual([])
         })
 
     })
@@ -462,6 +512,7 @@ describe('Users (e2e)', () => {
                 [{ id: anna.id, passwordHash: 7 }, 'data.passwordHash must be a string'],
                 [{ id: anna.id, passwordHash: '' }, 'data.passwordHash must be 1 to 255 characters long'],
                 [{ id: anna.id, passwordHash: 'h'.repeat(256) }, 'data.passwordHash must be 1 to 255 characters long'],
+                [{ id: anna.id, passwordHash: `${'h'.repeat(255)}️` }, 'data.passwordHash must be 1 to 255 characters long'],
             ]
             for (const [data, message] of cases) {
                 const reply = await setup.send({ type: 'UpdateUserPassword', data })
