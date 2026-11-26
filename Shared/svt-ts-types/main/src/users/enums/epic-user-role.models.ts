@@ -17,8 +17,12 @@ const EPIC_USER_ROLE_LEVELS: readonly EpicUserRole[] = [
     EpicUserRole.Admin,
 ]
 
-/** True when `role` is `minimum` or a role above it (User < Expert < Developer < Admin). */
+/**
+ * True when `role` is `minimum` or a role above it (User < Expert < Developer < Admin). False when either of the two
+ * is no role: the values often come from outside (a token, a reply) and are not typed at run time.
+ */
 export function isEpicUserRoleAtLeast(role: EpicUserRole, minimum: EpicUserRole): boolean {
     const level = EPIC_USER_ROLE_LEVELS.indexOf(role)
-    return level >= 0 && level >= EPIC_USER_ROLE_LEVELS.indexOf(minimum)
+    const minimumLevel = EPIC_USER_ROLE_LEVELS.indexOf(minimum)
+    return level >= 0 && minimumLevel >= 0 && level >= minimumLevel
 }
