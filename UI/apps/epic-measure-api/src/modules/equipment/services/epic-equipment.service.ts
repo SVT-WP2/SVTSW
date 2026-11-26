@@ -5,6 +5,7 @@ import { Observable } from 'rxjs'
 import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 import { EpicEquipmentLocationUpdate, SvtDbAgentKafka, SvtDbAgentKafkaEquipment } from 'svt-ts-types/kafka'
 
+import { toEpicDbAgentKafkaRecord } from '../../../common'
 import { EpicEquipmentSvc } from '../models'
 
 
@@ -63,7 +64,7 @@ export class EpicEquipmentService implements OnModuleInit {
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaEquipment.Message): Observable<TReplyMessage> {
         return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
     }
 
 }

@@ -5,6 +5,8 @@ import { Observable } from 'rxjs'
 import { EpicApiPager, EpicApiPageResponse, EpicAsic, EpicAsicCreateRequest } from 'svt-ts-types'
 import { EpicGetAllAsicsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaAsics } from 'svt-ts-types/kafka'
 
+import { toEpicDbAgentKafkaRecord } from '../../common'
+
 import { EpicAsicsSvc } from './models'
 
 // TODO: process reply errors
@@ -57,7 +59,7 @@ export class EpicAsicsService implements OnModuleInit {
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaAsics.Message): Observable<TReplyMessage> {
         return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
     }
 
 }

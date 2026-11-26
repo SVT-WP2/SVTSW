@@ -10,6 +10,7 @@ import {
     SvtDbAgentKafkaWpMachines,
 } from 'svt-ts-types/kafka'
 
+import { toEpicDbAgentKafkaRecord } from '../../../common'
 import { EpicWpSvc } from '../models'
 
 
@@ -72,7 +73,7 @@ export class EpicWpMachinesService implements OnModuleInit {
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaWpMachines.Message): Observable<TReplyMessage> {
         return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
     }
 
 }

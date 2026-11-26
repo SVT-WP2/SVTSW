@@ -5,6 +5,7 @@ import { Observable } from 'rxjs'
 import { EpicWpProbeCard } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWpProbeCards } from 'svt-ts-types/kafka'
 
+import { toEpicDbAgentKafkaRecord } from '../../../common'
 import { EpicWpSvc } from '../models'
 
 
@@ -32,7 +33,7 @@ export class EpicWpProbeCardsService implements OnModuleInit {
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaWpProbeCards.Message): Observable<TReplyMessage> {
         return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
     }
 
 }

@@ -11,6 +11,8 @@ import { Observable } from 'rxjs'
 import { EpicApiPager, EpicApiPageResponse, EpicChip, EpicChipLocationHistoryRecord } from 'svt-ts-types'
 import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter, SvtDbAgentKafka, SvtDbAgentKafkaChips } from 'svt-ts-types/kafka'
 
+import { toEpicDbAgentKafkaRecord } from '../../common'
+
 import { EpicChipsSvc } from './models'
 
 // TODO: process reply errors
@@ -92,7 +94,7 @@ export class EpicChipsService implements OnModuleInit {
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaChips.Message): Observable<TReplyMessage> {
         return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
     }
 
 }
