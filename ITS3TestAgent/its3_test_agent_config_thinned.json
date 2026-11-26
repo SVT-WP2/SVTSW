@@ -11,7 +11,7 @@
   "thinned_layer": true,
   "reset_agent_at_login": false,
   "run_ptpa_bam": true,
-  "run_ptpa_seg": false,
+  "run_ptpa_seg": true,
   "ptpa_chips_bam": ["ALL"],
   "ptpa_chips_seg": ["ALL"],
   "reset_on_ptpa_failure": true,
