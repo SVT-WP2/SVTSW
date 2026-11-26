@@ -35,12 +35,15 @@ def _connect_prober(factory, globals_, machine_type, address, force):
     """
     Create prober via factory and mark globals as initialized.
     Returns (prober, error_response). On success error_response is None.
-    """
-    if force:
-        factory.close()  # closes the old connection; the new one is opened below
 
+    force on an initialized agent: the new connection is opened first and the old one is
+    closed after that (ProberFactory.reconnect), so a failed connect keeps the old one.
+    """
     try:
-        prober = factory.get_prober(machine_type, address)
+        if force and factory.is_initialized():
+            prober = factory.reconnect(machine_type, address)
+        else:
+            prober = factory.get_prober(machine_type, address)
         print(f"✅ Prober created successfully: {type(prober).__name__}")
         globals_.set_prober_status("initialized")
         from services.WPProberConnectionWatch import set_prober_connected
@@ -273,9 +276,14 @@ def initialize_machine(force=False, user=None, waferAgentName=None, **other):
     reports whether the machine is on. The machine is the DB record of this agent
     (WaferProbeMachine), read again right before the connect, so the request has no address.
     An agent that is already initialized stays as it is, unless force is true.
+
+    force on an initialized agent replaces the connection: it is refused while another
+    command runs (closing the connection would cut that command), and a machine that does
+    not answer leaves the current connection and its status as they are.
     """
     from services.WPMachineRecord import refresh_machine
     from services.WPProberConnectionWatch import is_reachable, not_connected_message, set_prober_connected
+    from utilities.WPCommandActivity import other_running_commands
 
     reply = "InitializeReply"
     g = SvtWPAagentGlobalParameters.getInstance()
@@ -290,29 +298,47 @@ def initialize_machine(force=False, user=None, waferAgentName=None, **other):
         )
 
     force = force is True or str(force).lower() in ("true", "1", "yes")
-    if factory.is_initialized() and not force:
-        return ResponseBuilder.success(
-            reply, f"Already initialized at {g.address}. Use force=true to initialize again."
-        )
+    # One change of the connection at a time: the connection watch may be reconnecting.
+    with factory.lock:
+        initialized = factory.is_initialized()
+        if initialized and not force:
+            return ResponseBuilder.success(
+                reply, f"Already initialized at {g.address}. Use force=true to initialize again."
+            )
+        if initialized and other_running_commands():
+            return ResponseBuilder.error(
+                reply,
+                "Another command is running: Initialize with force would close the connection that it uses. "
+                "Send Initialize again when it has ended.",
+                409,
+            )
 
-    machine_record = refresh_machine()
-    if not g.address or not g.machineType:
-        return ResponseBuilder.error(
-            reply, "The machine of this agent is not known: start the listener with a config.", 500
-        )
-    if not is_reachable(g.machineType, g.address):
-        set_prober_connected(False, "machine not reachable")
-        return ResponseBuilder.error(reply, f"{not_connected_message()} (address: {g.address})", 503)
+        machine_record = refresh_machine()
+        if not g.address or not g.machineType:
+            return ResponseBuilder.error(
+                reply, "The machine of this agent is not known: start the listener with a config.", 500
+            )
+        if not is_reachable(g.machineType, g.address):
+            if initialized:
+                # The current connection may still work: keep it, and its status.
+                return ResponseBuilder.error(
+                    reply,
+                    f"{g.wpAgentName or 'The WP machine'} does not answer at {g.address}: "
+                    "the agent keeps its current connection.",
+                    503,
+                )
+            set_prober_connected(False, "machine not reachable")
+            return ResponseBuilder.error(reply, f"{not_connected_message()} (address: {g.address})", 503)
 
-    return svt_initialise_wp(
-        address=g.address,
-        machine_type=g.machineType,
-        machine_id=g.wpMachineId,
-        machine_name=g.wpAgentName,
-        initialization_mode="database" if g.machine_record_name else "manual",
-        force=True,
-        machine_record=machine_record,
-    )
+        return svt_initialise_wp(
+            address=g.address,
+            machine_type=g.machineType,
+            machine_id=g.wpMachineId,
+            machine_name=g.wpAgentName,
+            initialization_mode="database" if g.machine_record_name else "manual",
+            force=True,
+            machine_record=machine_record,
+        )
 
 
 def show_status(user=None, waferAgentName=None):
@@ -380,7 +406,16 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
 
     Shared by the ReconnectProber command and the automatic reconnect of the
     connection watch. Returns (ok, message, status_code); status_code is None on success.
+    It holds ProberFactory.lock: one change of the connection at a time (Initialize,
+    the connection watch).
     """
+    factory = ProberFactory.get_instance()
+    with factory.lock:
+        return _reconnect_session(factory, requested_by, event)
+
+
+def _reconnect_session(factory, requested_by, event):
+    """reconnect_session while it holds ProberFactory.lock."""
     from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
     from stateMachine.WpAgentStateMachine import WPAgentState
 
@@ -388,7 +423,6 @@ def reconnect_session(requested_by=None, event="RECONNECT"):
     from services.WPProberConnectionWatch import not_initialized_message, set_prober_connected
 
     g = SvtWPAagentGlobalParameters.getInstance()
-    factory = ProberFactory.get_instance()
 
     if not factory.is_initialized():
         return (
@@ -473,9 +507,20 @@ def reconnect_prober(user=None, waferAgentName=None):
     lock) and puts the state machine back to UserLogged, so the normal flow
     OpenProject -> InitProbing can be run again. Loaded wafer / probe card info
     (from the DB) is kept. If the machine is not reachable yet, nothing changes.
+    Refused while another command runs: closing the old connection would cut it.
     """
+    from utilities.WPCommandActivity import other_running_commands
+
     reply = "ReconnectProberReply"
-    ok, message, status = reconnect_session(requested_by=user)
+    with ProberFactory.get_instance().lock:
+        if other_running_commands():
+            return ResponseBuilder.error(
+                reply,
+                "Another command is running: a reconnect would close the connection that it uses. "
+                "Send ReconnectProber again when it has ended.",
+                409,
+            )
+        ok, message, status = reconnect_session(requested_by=user)
     if not ok:
         return ResponseBuilder.error(reply, message, status)
     return ResponseBuilder.success(reply, message)

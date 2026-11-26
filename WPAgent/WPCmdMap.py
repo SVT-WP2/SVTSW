@@ -178,17 +178,19 @@ def _exec_in_sequence(message_type, data=None):
 
 
 def _try_local_mode():
-    """Try to set prober to local mode after error"""
+    """
+    Try to set prober to local mode after error, on the current connection only: never a
+    new connection (the globals may hold a newer address from the DB record than the
+    connection, e.g. after a forced Initialize that found the machine off).
+    """
     if is_prober_connected() is False:
         return
     try:
         from drivers.WPFactory import ProberFactory
-        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         factory = ProberFactory.get_instance()
-        if factory.is_initialized():
-            globals_ = SvtWPAagentGlobalParameters.getInstance()
-            prober = factory.get_prober(globals_.machineType, globals_.address)
+        prober = factory.peek_prober()
+        if factory.is_initialized() and prober is not None:
             prober.local_mode()
             print("   🔓 Switched to local mode after error")
     except Exception:

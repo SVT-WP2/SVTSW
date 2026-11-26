@@ -6,6 +6,8 @@ Initialize gets an error reply (no Error state).
 Run:  python3 -m pytest tests/unit/TestInitialize.py -q -o python_files="Test*.py"
 """
 
+import threading
+
 import pytest
 
 import WPCmdMap
@@ -15,6 +17,7 @@ from services.WPProberConnectionWatch import (
 )
 from stateMachine.WpAgentStateMachine import WPAgentState as S
 from stateMachine.WpAgentStateMachineGlobals import agentStateMachine as sm
+from utilities.WPCommandActivity import command_running
 
 AGENT = "TestAgent"
 
@@ -180,6 +183,110 @@ def test_unhandled_not_initialized_error_is_a_503_reply(machine, monkeypatch):
     assert (res["type"], res["error"]["code"]) == ("GetInfoReply", 503)
     assert "Send Initialize" in res["error"]["message"]
     assert sm.current_state == S.ServiceOn
+
+
+@pytest.fixture
+def other_command():
+    """A command that runs in another thread (as a worker of the Kafka listener) until the test ends."""
+    started, done = threading.Event(), threading.Event()
+
+    def run():
+        with command_running():
+            started.set()
+            done.wait(5)
+
+    worker = threading.Thread(target=run)
+    worker.start()
+    started.wait(5)
+    yield
+    done.set()
+    worker.join(5)
+
+
+def test_forced_initialize_is_refused_while_another_command_runs(machine, other_command):
+    _initialize()
+    first = machine.get_current_prober()
+    res = _initialize(force=True)
+    assert res["error"]["code"] == 409
+    assert "Another command is running" in res["error"]["message"]
+    assert machine.get_current_prober() is first
+    assert first.is_alive()                  # its connection is not closed
+
+
+def test_first_initialize_runs_next_to_another_command(machine, other_command):
+    """Without a connection there is nothing to cut."""
+    assert _initialize()["status"] == "Success"
+
+
+def test_forced_initialize_counts_only_the_other_commands(machine):
+    """Initialize itself runs as a command of the listener (and so does a sequence that sends it)."""
+    _initialize()
+    with command_running():
+        assert _initialize(force=True)["status"] == "Success"
+
+
+def test_forced_initialize_keeps_the_connection_when_the_machine_does_not_answer(machine, globals_instance):
+    _initialize()
+    first = machine.get_current_prober()
+    globals_instance.set_machine_type("sentio")
+    globals_instance.set_address("127.0.0.1:1")   # closed port: the quick TCP check fails
+
+    res = _initialize(force=True)
+
+    assert res["error"]["code"] == 503
+    assert "keeps its current connection" in res["error"]["message"]
+    assert machine.get_current_prober() is first
+    assert globals_instance.prober_connected is True   # the status of the live connection stays
+
+
+def test_forced_initialize_keeps_the_old_connection_when_the_connect_fails(machine, globals_instance, monkeypatch):
+    _initialize()
+    first = machine.get_current_prober()
+
+    def unreachable(_machine_type, _address):
+        raise OSError("connection refused")
+
+    monkeypatch.setattr(machine, "_open", unreachable)
+    res = _initialize(force=True)
+
+    assert res["status"] != "Success"
+    assert machine.get_current_prober() is first
+    assert first.is_alive()
+    assert globals_instance.prober_connected is True
+
+
+def test_initialize_waits_for_a_running_change_of_the_connection(machine):
+    """One change of the connection at a time: Initialize waits for the reconnect of the watch."""
+    held, release = threading.Event(), threading.Event()
+
+    def reconnecting_watch():
+        with machine.lock:
+            held.set()
+            release.wait(5)
+
+    watch = threading.Thread(target=reconnecting_watch)
+    watch.start()
+    held.wait(5)
+    results = []
+    init = threading.Thread(target=lambda: results.append(_initialize()))
+    init.start()
+    init.join(0.3)
+    assert init.is_alive() and not results   # waits for the lock
+    release.set()
+    init.join(5)
+    watch.join(5)
+    assert results[0]["status"] == "Success", results
+
+
+def test_reconnect_prober_is_refused_while_another_command_runs(machine, globals_instance, other_command):
+    _initialize()
+    first = machine.get_current_prober()
+    globals_instance.set_user("u1", "Expert")
+    sm.force_state(S.OpenedProject)
+    res = WPCmdMap.execute_command("ReconnectProber", {"user": "u1", "waferAgentName": AGENT})
+    assert res["error"]["code"] == 409
+    assert machine.get_current_prober() is first
+    assert sm.current_state == S.OpenedProject   # the session is kept
 
 
 def test_reconnect_prober_needs_an_initialized_agent(machine, globals_instance):

@@ -1,7 +1,14 @@
+import threading
+
 from drivers.WPSentioProber import SentioProberImpl
 from drivers.WPMockProber import MockProberImpl
 
 prober_classes = {"sentio": SentioProberImpl, "mock": MockProberImpl}
+
+# Seconds that the final close (the agent stops) waits for a connect of another thread
+# to end. After that it closes the connection without the lock: the connect sees that the
+# agent stops and closes its own connection (ProberFactory._keep).
+CLOSE_LOCK_WAIT = 5.0
 
 
 class ProberNotConnectedError(RuntimeError):
@@ -32,6 +39,12 @@ class ProberFactory:
     The prober holds the one TCP connection of the agent to the WP machine. The factory
     closes the connection of every prober that it lets go: close(), a reconnect, a new
     configuration.
+
+    The connection watch and the command threads both change the connection. `lock`
+    makes each change one step: get_prober, reconnect and close take it, and so do the
+    operations that decide on the connection and then change it (the Initialize command,
+    a reconnect, the reconnect of the connection watch). It is reentrant: such an
+    operation calls get_prober, reconnect or close while it holds the lock.
     """
 
     _instance = None
@@ -40,6 +53,7 @@ class ProberFactory:
     _current_config = None
     # The agent stops (close(final=True)): no new connection after that.
     _stopped = False
+    lock = threading.RLock()
 
     @classmethod
     def get_instance(cls):
@@ -55,12 +69,24 @@ class ProberFactory:
             raise ValueError(f"Unsupported machine type: {machineType}")
         if self._stopped:
             raise ProberNotConnectedError(STOPPED_MESSAGE)
-        prober = prober_class(address)  # raises when the machine is unreachable
+        return prober_class(address)  # raises when the machine is unreachable
+
+    def _keep(self, prober, config):
+        """Make `prober` the current one and close the connection of the one it replaces."""
+        old, self._prober = self._prober, prober
+        self._current_config = config
+        self._initialized = True
+        _disconnect(old)
         if self._stopped:
-            # The agent stopped while this connection was opening.
+            # The agent stopped while this connection was opening (close(final=True)
+            # may have run without the lock): close this one too.
+            self._prober, self._current_config, self._initialized = None, None, False
             _disconnect(prober)
             raise ProberNotConnectedError(STOPPED_MESSAGE)
-        return prober
+
+    def peek_prober(self):
+        """The prober of the current connection, or None. No checks, no new connection."""
+        return self._prober
 
     def get_prober(self, machineType: str, address: str):
         """
@@ -75,22 +101,20 @@ class ProberFactory:
         """
         config = (machineType.lower(), address)
 
-        # Return existing prober if configuration matches and it's initialized
-        if (
-            self._initialized
-            and self._current_config == config
-            and self._prober is not None
-        ):
-            return self._prober
+        with self.lock:
+            # Return existing prober if configuration matches and it's initialized
+            if (
+                self._initialized
+                and self._current_config == config
+                and self._prober is not None
+            ):
+                return self._prober
 
-        # Create new prober instance; the connection of the one it replaces is closed
-        prober = self._open(machineType, address)
-        old, self._prober = self._prober, prober
-        self._current_config = config
-        self._initialized = True
-        _disconnect(old)
-        print(f"✅ Prober initialized: {machineType} at {address}")
-        return self._prober
+            # Create new prober instance; the connection of the one it replaces is closed
+            prober = self._open(machineType, address)
+            self._keep(prober, config)
+            print(f"✅ Prober initialized: {machineType} at {address}")
+            return prober
 
     def is_initialized(self):
         """Check if prober is initialized"""
@@ -145,13 +169,11 @@ class ProberFactory:
         failed reconnect (machine still booting) does not lose the old setup.
         The old connection is closed once the new one is open.
         """
-        prober = self._open(machineType, address)
-        old, self._prober = self._prober, prober
-        self._current_config = (machineType.lower(), address)
-        self._initialized = True
-        _disconnect(old)
-        print(f"🔌 Prober reconnected: {machineType} at {address}")
-        return prober
+        with self.lock:
+            prober = self._open(machineType, address)
+            self._keep(prober, (machineType.lower(), address))
+            print(f"🔌 Prober reconnected: {machineType} at {address}")
+            return prober
 
     def close(self, final=False):
         """
@@ -160,12 +182,18 @@ class ProberFactory:
 
         final=True: the agent stops. Every later connect is refused, so that a command
         or the connection watch that is still running cannot open a connection again.
+        The stop waits at most CLOSE_LOCK_WAIT seconds for a connect of another thread.
         """
         if final:
             self._stopped = True
-        prober, self._prober = self._prober, None
-        self._initialized = False
-        self._current_config = None
+        locked = self.lock.acquire(timeout=CLOSE_LOCK_WAIT if final else -1)
+        try:
+            prober, self._prober = self._prober, None
+            self._initialized = False
+            self._current_config = None
+        finally:
+            if locked:
+                self.lock.release()
         _disconnect(prober)
 
     def reset(self):

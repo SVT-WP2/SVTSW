@@ -8,6 +8,7 @@ Run:  python3 -m pytest tests/unit/TestOneAgentPerMachine.py -q -o python_files=
 
 import itertools
 import json
+import os
 import time
 from unittest.mock import MagicMock
 
@@ -24,6 +25,8 @@ WPMIT = {
     "id": 3, "name": "WPMIT", "hostName": "wpmit01.cern.ch", "connectionPort": 35555,
     "software": "Sentio", "generalLocation": "CERN",
 }
+
+CONFIGS = os.path.join(os.path.dirname(__file__), "..", "..", "configs")
 
 
 # --- machine name ---------------------------------------------------------------------------
@@ -303,6 +306,17 @@ def test_mock_config_needs_no_db(fake_db):
     config = {"name": "MOCK_LOCAL", "kafka_broker": "kafka:9084", "machineType": "mock",
               "address": "mock-prober", "port": 35555}
     assert WaferProberAgent()._load_probe_config_with_db(config) is config
+    assert db.calls == 0
+
+
+@pytest.mark.parametrize("file_name", ["ProbeConfigMOCK.json", "ProbeConfigLocalMOCK.json", "ProbeConfigMockLocal.json"])
+def test_mock_config_files_start_without_the_db(fake_db, file_name):
+    """The DB has no mock machine (its MOCK record is a Sentio): a mock config file says machineType mock."""
+    db = fake_db([WPMIT])
+    agent = WaferProberAgent(config=os.path.join(CONFIGS, file_name))
+    config = agent._load_probe_config_with_db(agent._load_start_config())
+    assert config["machineType"] == "mock"
+    assert config["address"] and config["port"]
     assert db.calls == 0
 
 

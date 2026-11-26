@@ -90,7 +90,9 @@ services:
   # TEMPORARY: off on prod until the first WPAgent release (svt-wp-agent-* tag): before it
   # there is no release image, and a missing image or version line stops the whole stack.
   # To enable: uncomment the block, the SVT_WP_AGENT_WPMIT_VERSION line in
-  # versions.env.example and the deploy-prod--manual option of wp-agent-manual.yml.
+  # versions.env.example and the deploy-prod--manual option of wp-agent-manual.yml. Change
+  # the WPMIT record in the DB first (its hostName: Environment/README.md, "Switching WPMIT
+  # from the old agent").
   # svt-wp-agent-wpmit:
   #   image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_WPMIT_VERSION:?missing - set it in versions.env}
   #   container_name: svt.wp-agent-wpmit--prod

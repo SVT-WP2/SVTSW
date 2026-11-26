@@ -5,7 +5,7 @@ from utilities.WPValidationDecorator import validate_command, validate_command_w
 from utilities.WPDieMaps import label_to_coordinates
 
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
-from drivers.WPFactory import get_current_prober
+from drivers.WPFactory import ProberNotConnectedError, get_current_prober
 import time
 
 
@@ -77,6 +77,8 @@ def move_chuck_xy(x, y, position, user=None, waferAgentName=None):
             reply, f"Moved chuck to x={x}, y={y}"
         )
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -101,6 +103,8 @@ def move_chuck_z(z, user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckZ")
         return ResponseBuilder.success(reply, f"Moved chuck to z={z}")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -126,6 +130,8 @@ def move_chuck_center(user=None, waferAgentName=None):
 
         agentStateMachine.transition("MoveChuckCenter")
         return ResponseBuilder.success(reply, f"Moved chuck to Center")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -150,6 +156,8 @@ def move_chuck_home(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckHome")
 
         return ResponseBuilder.success(reply, "Chuck moved home")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -186,6 +194,8 @@ def move_chuck_work_area(work_area=0, user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, f"Moved to {work_area} workarea"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -221,6 +231,8 @@ def move_chuck_offaxis(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Probe station is in off-axis position"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -255,6 +267,8 @@ def move_chuck_wide(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Probe station is in wide position"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -299,6 +313,8 @@ def move_chuck_safe_position(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Probe station is in safe position"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -332,6 +348,8 @@ def move_chuck_contact(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Probe station is in contact"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -364,6 +382,8 @@ def move_chuck_separation(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Probe station is in separation"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -520,6 +540,8 @@ def move_chuck_die(
 
         return ResponseBuilder.success(reply, message)
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -548,6 +570,8 @@ def move_chuck_next_die(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, f"Stepped to next die: {result}"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -577,6 +601,8 @@ def move_chuck_previous_die(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Moved to previous die"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -607,6 +633,8 @@ def set_ptpa(enable: bool, user=None, waferAgentName=None):
         status = "enabled" if enable else "disabled"
         return ResponseBuilder.success(reply, f"PTPA {status}")
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -666,6 +694,8 @@ def run_ptpa(user=None, waferAgentName=None):
             f"d_contact_height={delta_contact_height:.2f}"
         )
         return ResponseBuilder.success(reply, message)
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -722,6 +752,8 @@ def init_probing(user=None, waferAgentName=None):
 
     try:
         prober = get_current_prober()
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -792,6 +824,8 @@ def init_probing(user=None, waferAgentName=None):
                 f"(ASIC family {family}); project '{user_project}' is open again."
             )
         return ResponseBuilder.success(reply, message)
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -849,6 +883,8 @@ def find_home(user=None, waferAgentName=None):
             f"dz={delta_z:.2f}"
         )
         return ResponseBuilder.success(reply, message)
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -892,6 +928,8 @@ def align_wafer(
             reply,
             f"Wafer aligned using die at Col {align_die_col}, Row {align_die_row}, Subsite {subsite}",
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -921,6 +959,8 @@ def auto_focus(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Auto-focus command successfully executed"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -960,6 +1000,8 @@ def load_wafer(waferId: float, orientation: str, user=None, waferAgentName=None)
         g.current_working_area = "OffAxis"
 
         return ResponseBuilder.success(reply, "Wafer has been loaded")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -999,6 +1041,8 @@ def unload_wafer(user=None, waferAgentName=None):
         g.current_working_area = "LoadPosition"
 
         return ResponseBuilder.success(reply, "Wafer unloaded")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -1035,6 +1079,8 @@ def move_chuck_loaded_wafer(user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "Wafer has been loaded"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -1073,6 +1119,8 @@ def move_chuck_unloaded_wafer(user=None, waferAgentName=None):
         g.current_working_area = "LoadPosition"
 
         return ResponseBuilder.success(reply, "Wafer unloaded")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
 
         agentStateMachine.enter_error_state(str(e))
@@ -1121,6 +1169,8 @@ def change_project(projectName: str, user=None, waferAgentName=None):
             reply, f"Project has been changed to: {project_path}"
         )
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1168,6 +1218,8 @@ def open_project(projectName: str, user=None, waferAgentName=None):
             reply, f"Opened project: {project_path}"
         )
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1228,6 +1280,8 @@ def stress_open_project(
 
         return ResponseBuilder.success(reply, f"test is DONE")
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1260,6 +1314,8 @@ def switch_camera(mountPoint, user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, f"Switched camera to {mountPoint}"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1280,6 +1336,8 @@ def get_chuck_position(user=None, waferAgentName=None):
         prober.local_mode()
 
         return ResponseBuilder.success(reply, f"Chuck is {position}")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1313,6 +1371,8 @@ def set_chuck_overtravel(overtravelGap=None, user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "SetOvertravel command successfully executed"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1388,6 +1448,8 @@ def set_contact_height(contactHeight=None, user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, f"Contact height set to {target_height:.2f} µm"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1421,6 +1483,8 @@ def disable_overtravel(overtravelGap=None, user=None, waferAgentName=None):
         return ResponseBuilder.success(
             reply, "DisableOvertravel command successfully executed"
         )
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1445,6 +1509,8 @@ def local_mode(user=None, waferAgentName=None):
         agentStateMachine.transition("LocalMode")
 
         return ResponseBuilder.success(reply, "Local mode")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1535,6 +1601,8 @@ def move_chuck_asic(asicId: int, subsite: int = 0, user=None, waferAgentName=Non
             "— off-axis, row/column, auto-focus, PTPA and wide sequence complete",
         )
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1695,6 +1763,8 @@ def move_chuck_top_left(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckTopLeft")
         return ResponseBuilder.success(reply, f"Moved chuck to Top Left corner")
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1719,6 +1789,8 @@ def move_chuck_top_right(user=None, waferAgentName=None):
         agentStateMachine.transition("MoveChuckTopRight")
         return ResponseBuilder.success(reply, f"Moved chuck to Top Right corner")
 
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1742,6 +1814,8 @@ def move_chuck_bottom_left(user=None, waferAgentName=None):
         prober.local_mode()
         agentStateMachine.transition("MoveChuckBottomLeft")
         return ResponseBuilder.success(reply, "Chuck moved to bottom-left")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)
@@ -1766,6 +1840,8 @@ def move_chuck_bottom_right(user=None, waferAgentName=None):
         prober.local_mode()
         agentStateMachine.transition("MoveChuckBottomRight")
         return ResponseBuilder.success(reply, "Chuck moved to bottom-right")
+    except ProberNotConnectedError:
+        raise  # machine off or not initialized: the 503 reply of WPCmdMap.execute_command
     except Exception as e:
         agentStateMachine.enter_error_state(str(e))
         return ResponseBuilder.error(reply, str(e), 500)

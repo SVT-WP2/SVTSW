@@ -1406,6 +1406,9 @@ paths:
             and `force` gets an error reply with code 400.
           - Works in every agent state and without a log-in. The agent state does not change.
           - An agent that is already initialized stays as it is (`Success`), unless `force` is true.
+          - `force` on an initialized agent opens the new connection first and closes the old one
+            after that. Error 409 while another command runs (closing the old connection would cut
+            it). Error 503 when the machine does not answer: the old connection and its status stay.
           - Error 503 while the machine is off.
 
       requestBody:

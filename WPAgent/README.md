@@ -356,7 +356,7 @@ python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"CER
 
 | Command | Key Parameters | Description |
 |---------|---------------|-------------|
-| `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. It is the only way to connect, and the agent never does it by itself: send it after every start of the listener. It moves nothing on the machine. Works in every state, without a log-in. `force: true` closes the connection and opens a new one |
+| `Initialize` | `force` (optional) | Connect the agent to its machine (the DB record of the agent) and read the loaded wafer and probe card from the DB. It is the only way to connect, and the agent never does it by itself: send it after every start of the listener. It moves nothing on the machine. Works in every state, without a log-in. `force: true` opens a new connection and then closes the old one; error 409 while another command runs, and error 503 that keeps the old connection when the machine does not answer |
 | `OpenProject` | `projectName` | Open a SENTIO project file |
 | `ChangeProject` | `projectName` | Swap active project (stays in `OpenedProject`) |
 | `ShowStatus` | — | Show the status of the agent (state, user, project) and of its machine (connected, initialized). No log-in and no `user` needed. It sends nothing to the machine: `connected` is what the connection watch saw last |
@@ -487,14 +487,17 @@ Each probe/environment has its own small config file under `configs/`, named `Pr
 * **`name`** — the machine name as registered in the database. It is *not* a free-form label: the listener passes it to the DB Agent (`GetAllWaferProbeMachines`) to resolve the machine's real `address`, `port`, `machineType` and `machineId`. The sender side also matches on this name (via the *effective* name — see below) to find the right config file and Kafka broker for `--waferAgentName=...`.
 * **`kafka_broker`** — which Kafka broker/environment this config talks to.
 
+A mock config is the exception: with `"machineType": "mock"` the listener needs no DB record and takes `address`, `port`, `machineId` and `description` from the file. A config without it is always a real machine: the listener stops at start when the DB has no `WaferProbeMachine` with its `name`.
+
 Current configs on disk:
 
 | File | `name` | `kafka_broker` | Purpose |
 |------|--------|-----------------|---------|
 | `ProbeConfigCERN.json` | `WPMIT` | `pcmitpx01:9092` | **Production** — runs as a system service on the CERN side |
 | `ProbeConfigCERN_DEV.json` | `WPMIT` | `pcmitpx01:9096` | **Development / staging** — same machine, DEV broker |
-| `ProbeConfigMOCK.json` | `MOCK` | `pcmitpx01:9096` | Mock prober, DEV broker |
-| `ProbeConfigLocalMOCK.json` | `MOCK` | `localhost:9085` | Mock prober, fully local Kafka |
+| `ProbeConfigMOCK.json` | `MOCK` | `pcmitpx01:9096` | Mock prober (`machineType: mock`), DEV broker |
+| `ProbeConfigLocalMOCK.json` | `MOCK` | `localhost:9085` | Mock prober (`machineType: mock`), fully local Kafka |
+| `ProbeConfigMockLocal.json` | `MOCK_LOCAL` | `kafka:9084` | Mock prober (`machineType: mock`), the default `CMD` of the Docker image |
 
 **`_DEV` suffix:** any config whose `kafka_broker` equals the DEV broker (`pcmitpx01:9096`) automatically gets `_DEV` appended to its effective agent name — e.g. `ProbeConfigCERN_DEV.json` (`name: "WPMIT"`, DEV broker) is addressed as `WPMIT_DEV` in commands, while `ProbeConfigCERN.json` (same `name`, production broker) is addressed as `WPMIT`. This is why `waferAgentName` in the examples above shows values like `CERN`/`CERN_DEV` — use whichever effective name matches the config you started the listener with. The DB lookup itself always uses the plain `name` field (e.g. `WPMIT`), not the `_DEV`-suffixed name.
 
@@ -585,7 +588,9 @@ The steps of a stop (`KafkaClient._stop_listening`):
 
 A command that runs longer than the 20 s is cut: the connection is closed without `*LOCAL`, because a second command on the same connection would mix with the running one. SENTIO finishes the move that it already got and can stay in remote mode. Stop the measurements before a restart or a deploy.
 
-The stop needs time: the compose services have `stop_grace_period: 30s` (docker kills the container after it), and the systemd unit has its default of 90 s. `Initialize` with `force: true` and a reconnect also close the old connection before they use the new one.
+The stop needs time: the compose services have `stop_grace_period: 30s` (docker kills the container after it), and the systemd unit has its default of 90 s.
+
+`Initialize` with `force: true` and a reconnect (`ReconnectProber`, the connection watch) replace the connection: they open the new one first and close the old one after that, so a failed connect keeps the old connection. They never cut a command: `Initialize` with `force: true` and `ReconnectProber` get error 409 while another command runs, and the watch waits until no command runs. One change of the connection runs at a time (`ProberFactory.lock`): an `Initialize` that comes during an automatic reconnect waits for it.
 
 ### SSH Tunnel (remote Kafka access)
 

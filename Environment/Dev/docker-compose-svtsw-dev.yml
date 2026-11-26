@@ -97,7 +97,8 @@ services:
   # `Environment :: Apply` starts the service, also without a deploy.
   # To enable: uncomment the block, the SVT_WP_AGENT_WPMIT_VERSION line in
   # versions.env.example, the deploy-dev--manual option of wp-agent-manual.yml and the two
-  # deploy jobs of wp-agent.yml.
+  # deploy jobs of wp-agent.yml. Change the WPMIT record in the DB first (its hostName:
+  # Environment/README.md, "Switching WPMIT from the old agent").
   # svt-wp-agent-wpmit:
   #   image: ghcr.io/svt-wp2/svt-wp-agent:${SVT_WP_AGENT_WPMIT_VERSION:?missing - set it in versions.env}
   #   container_name: svt.wp-agent-wpmit--dev

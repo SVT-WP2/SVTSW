@@ -95,12 +95,14 @@ work when they are on.
   command that SENTIO never answers (for example after an Abort on the machine) blocks
   the agent. To enable: uncomment the block in `docker-compose-svtsw-dev.yml`, the
   version line in `Dev/versions.env.example`, the `deploy-dev--manual` option in
-  `wp-agent-manual.yml` and the two deploy jobs in `wp-agent.yml`.
+  `wp-agent-manual.yml` and the two deploy jobs in `wp-agent.yml`, and change the
+  `WPMIT` record first ([Switching WPMIT from the old agent](#switching-wpmit-from-the-old-agent)).
 - **Prod:** off until the first WPAgent release (`WPAgent :: Release`). Before it there
   is no release image, and a missing image or version line stops every compose command
   of the prod stack. To enable: uncomment the block in `docker-compose-svtsw-prod.yml`,
   the version line in `Prod/versions.env.example` and the `deploy-prod--manual` option
-  in `wp-agent-manual.yml`.
+  in `wp-agent-manual.yml`, and change the `WPMIT` record first
+  ([Switching WPMIT from the old agent](#switching-wpmit-from-the-old-agent)).
 
 Each WP machine has its own compose service `svt-wp-agent-<machine>` (all use the
 image `svt-wp-agent`) with its own version line `SVT_WP_AGENT_<MACHINE>_VERSION`.
@@ -135,9 +137,47 @@ To add a machine:
 A later change of the record (`UpdateWaferProbeMachine`) needs no restart of the agent:
 it reads the record again while the machine is off and before every connect.
 
-A single-service deploy runs `up --remove-orphans`: the first deploy of
+Every single-service deploy removes the containers of the retired service
+`svt-wp-agent` (`RETIRED_SERVICES` in `deploy-service.sh`): the first deploy of
 `svt-wp-agent-wpmit` removes the old `svt.wp-agent--<env>` container, so two agents
-never drive the same machine.
+never drive the same machine. A single-service deploy removes no other container (no
+`--remove-orphans`): its compose file comes from the deployed ref, which can be older
+than the running stack.
+
+### Switching WPMIT from the old agent
+
+The `WPMIT` record has `hostName: cern.ch`. The old agent (the system service on the CERN
+side, `ProbeConfigCERN*.json`) builds the host from it as `wpmit01.` + `hostName`; the new
+agent uses `hostName` as it is and would try `cern.ch:35555`. The record can hold only
+one of the two forms, so change it when the new agent replaces the old one, in each
+environment:
+
+1. Stop the old agent (its system service), so that only one agent drives the machine.
+2. Read the record: `GetAllWaferProbeMachines` with `{"filter": {"name": "WPMIT"}}` on
+   `svt.db-agent.request` (e.g. from the Kafka UI of the environment, with the headers
+   `kafka_correlationId` and `kafka_replyTopic: svt.db-agent.request.reply`).
+3. Send `UpdateWaferProbeMachine` with the `id` of the record and its current values,
+   `hostName` changed. The update takes all six fields:
+
+   ```json
+   {
+     "type": "UpdateWaferProbeMachine",
+     "data": {
+       "id": <id of WPMIT>,
+       "update": {
+         "hostName": "wpmit01.cern.ch",
+         "connectionType": "<as in the record>",
+         "connectionPort": <as in the record>,
+         "generalLocation": "<as in the record>",
+         "software": "<as in the record>",
+         "swVersion": "<as in the record>"
+       }
+     }
+   }
+   ```
+4. Start the new service (uncomment it, deploy), then send `Initialize`.
+
+To go back to the old agent, set `hostName` to `cern.ch` again before you start it.
 
 ## The two DB agent services
 

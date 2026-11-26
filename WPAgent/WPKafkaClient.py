@@ -18,6 +18,7 @@ from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
 from services.WPProberConnectionWatch import (
     ProberConnectionWatch, add_connection_listener, close_prober_connection, remove_connection_listener,
 )
+from utilities.WPCommandActivity import command_running, running_commands
 from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
 
@@ -108,9 +109,6 @@ class KafkaClient:
         self.request_consumer = None
         self.reply_consumer = None
 
-        # Number of commands being executed right now (the connection watch stays quiet meanwhile)
-        self._active_commands = 0
-        self._active_lock = threading.Lock()
         self._initialize_reply_consumer()
         self.cache = None
 
@@ -455,7 +453,8 @@ class KafkaClient:
         # The global watcher of the WP machine: it reports whether the machine is on and
         # restores a lost connection; every status change is published as an event.
         add_connection_listener(self.publish_connection_status)
-        connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
+        # The watch stays quiet while a command runs (utilities/WPCommandActivity.py)
+        connection_watch = ProberConnectionWatch(is_busy=lambda: running_commands() > 0)
         connection_watch.start()
 
         stop = threading.Event()
@@ -599,13 +598,8 @@ class KafkaClient:
             )
 
             exec_start = time.time()
-            with self._active_lock:
-                self._active_commands += 1
-            try:
+            with command_running():
                 result = execute_command(command, params)
-            finally:
-                with self._active_lock:
-                    self._active_commands -= 1
             exec_end = time.time()
             exec_time_ms = (exec_end - exec_start) * 1000
             self.cache.cache_command()  # update cache snapshot with current global state

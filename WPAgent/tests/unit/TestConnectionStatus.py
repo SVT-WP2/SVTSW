@@ -127,6 +127,31 @@ def test_prober_command_fails_while_off_without_error_state(machine, logged_in_u
     assert sm.current_state == S.UsedByDeveloper
 
 
+@pytest.mark.parametrize("command, data", [
+    ("MoveChuckXY", {"x": 0.0, "y": 0.0, "position": "Zero"}),
+    ("MoveChuckZ", {"z": 0.0}),
+    ("MoveChuckCenter", {}),
+])
+def test_machine_lost_after_the_readiness_check_gives_no_error_state(machine, logged_in_user, monkeypatch,
+                                                                    command, data):
+    """The machine goes off between the readiness check and the use of the prober (another thread)."""
+    import actions.WPTestingActions as testing
+
+    machine.get_prober("mock", "mock:35555")
+    sm.force_state(S.UsedByDeveloper)
+    set_prober_connected(True)
+
+    def ready_then_off():
+        set_prober_connected(False)   # e.g. ReconnectProber in another worker finds the machine off
+        return None
+
+    monkeypatch.setattr(testing, "_ensure_initialized", ready_then_off)
+    res = WPCmdMap.execute_command(command, {"user": "test_user", "waferAgentName": AGENT, **data})
+    assert res["error"]["code"] == 503
+    assert "not connected" in res["error"]["message"]
+    assert sm.current_state == S.UsedByDeveloper
+
+
 def test_unhandled_not_connected_error_is_a_503_reply(machine, monkeypatch):
     machine.get_prober("mock", "mock:35555")
     set_prober_connected(False)

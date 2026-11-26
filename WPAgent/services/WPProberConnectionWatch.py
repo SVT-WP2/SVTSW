@@ -190,8 +190,10 @@ class ProberConnectionWatch:
         if self.is_busy():
             return False
         factory = ProberFactory.get_instance()
+        # The connection that this check is about: a reconnect replaces only this one
+        current = factory.peek_prober()
         if factory.is_initialized() and is_prober_connected() is not False:
-            return self._probe(factory)
+            return self._probe(factory, current)
 
         # No connection to the machine: follow its DB record and look whether it is on.
         self._failed = 0
@@ -202,7 +204,13 @@ class ProberConnectionWatch:
             return False  # Initialize ran during this check and has set the status itself
         if connected and initialized:
             # The agent had a connection and lost it: open a new one.
-            connected = self.auto_reconnect and self._reconnect(factory)
+            if not self.auto_reconnect:
+                connected = False
+            else:
+                reconnected = self._reconnect(factory, current)
+                if reconnected is None:
+                    return False  # the connection was changed meanwhile: its status is set
+                connected = reconnected
         set_prober_connected(bool(connected), "machine reachable" if connected else "machine not reachable")
         return False
 
@@ -223,9 +231,10 @@ class ProberConnectionWatch:
         g = SvtWPAagentGlobalParameters.getInstance()
         return bool(g.address and g.machineType and is_reachable(g.machineType, g.address))
 
-    def _probe(self, factory):
+    def _probe(self, factory, prober):
+        """Probe the connection of `prober` (the current one when the check started)."""
         try:
-            alive = bool(factory.get_prober(*factory.get_current_config()).is_alive())
+            alive = prober is not None and bool(prober.is_alive())
         except Exception:
             alive = False
 
@@ -238,19 +247,26 @@ class ProberConnectionWatch:
         if self._failed < self.failures:
             return False
         self._failed = 0
-        return self._lost(factory)
+        return self._lost(factory, prober)
 
-    def _lost(self, factory):
+    def _lost(self, factory, lost):
         """The prober stopped answering: one immediate reconnect, else Error for a session."""
         from stateMachine.WpAgentStateMachine import WPAgentState
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
         state = agentStateMachine.current_state
-        if self.auto_reconnect and self._is_machine_reachable() and self._reconnect(factory):
-            set_prober_connected(True, "reconnected")
-            return False
+        if self.auto_reconnect and self._is_machine_reachable():
+            reconnected = self._reconnect(factory, lost)
+            if reconnected is None:
+                return False  # the connection was changed meanwhile: its status is set
+            if reconnected:
+                set_prober_connected(True, "reconnected")
+                return False
 
-        set_prober_connected(False, "prober not answering")
+        with factory.lock:
+            if factory.peek_prober() is not lost:
+                return False  # Initialize or ReconnectProber has replaced the lost connection
+            set_prober_connected(False, "prober not answering")
         if state in (WPAgentState.ServiceOn, WPAgentState.Error):
             return False
         agentStateMachine.enter_error_state(
@@ -258,34 +274,45 @@ class ProberConnectionWatch:
         )
         return True
 
-    def _reconnect(self, factory):
+    def _reconnect(self, factory, lost):
         """
         Open a new connection for an agent that was initialized and lost the machine.
-        The DB record of the machine is read again first. Returns True on success.
+        The DB record of the machine is read again first.
+
+        It holds ProberFactory.lock, so Initialize and ReconnectProber wait for it, and it
+        checks again under the lock that the reconnect is still needed.
+
+        Returns True on success, False when the connect failed, None when it did nothing:
+        a command started (it uses the connection), or Initialize, ReconnectProber or the
+        stop has changed the connection (`lost` is not the current one any more).
         """
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
         from stateMachine.WpAgentStateMachine import WPAgentState
         from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-        if agentStateMachine.current_state == WPAgentState.ServiceOn:
-            # No session to forget: a new connection is enough.
-            from services.WPMachineRecord import refresh_machine
+        with factory.lock:
+            if self.is_busy() or not factory.is_initialized() or factory.peek_prober() is not lost:
+                return None
 
-            refresh_machine()
+            if agentStateMachine.current_state == WPAgentState.ServiceOn:
+                # No session to forget: a new connection is enough.
+                from services.WPMachineRecord import refresh_machine
+
+                refresh_machine()
+                self._refreshed_at = time.monotonic()
+                g = SvtWPAagentGlobalParameters.getInstance()
+                try:
+                    factory.reconnect(g.machineType, g.address)
+                except Exception:
+                    return False
+                set_prober_connected(True, "reconnected")
+                return True
+
+            from actions.WPProjectActions import reconnect_session
+
+            ok, _message, _status = reconnect_session(requested_by="ProberConnectionWatch", event="AUTO_RECONNECT")
             self._refreshed_at = time.monotonic()
-            g = SvtWPAagentGlobalParameters.getInstance()
-            try:
-                factory.reconnect(g.machineType, g.address)
-            except Exception:
-                return False
-            set_prober_connected(True, "reconnected")
-            return True
-
-        from actions.WPProjectActions import reconnect_session
-
-        ok, _message, _status = reconnect_session(requested_by="ProberConnectionWatch", event="AUTO_RECONNECT")
-        self._refreshed_at = time.monotonic()
-        return ok
+            return ok
 
     def _loop(self):
         while True:
