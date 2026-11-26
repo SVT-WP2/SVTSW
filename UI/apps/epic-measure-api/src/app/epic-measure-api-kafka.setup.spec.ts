@@ -1,5 +1,10 @@
 // @vitest-environment node
-import { ensureEpicMeasureApiKafkaTopics } from './epic-measure-api-kafka.setup'
+import { INestApplication } from '@nestjs/common'
+import { ClientKafka } from '@nestjs/microservices'
+
+import { EpicRequestContext } from '../common'
+
+import { connectEpicMeasureApiKafkaClients, ensureEpicMeasureApiKafkaTopics } from './epic-measure-api-kafka.setup'
 
 
 const admin = vi.hoisted(() => ({
@@ -45,6 +50,45 @@ describe('ensureEpicMeasureApiKafkaTopics', () => {
 
         expect(admin.createTopics).not.toHaveBeenCalled()
         expect(admin.disconnect).toHaveBeenCalled()
+    })
+
+})
+
+describe('connectEpicMeasureApiKafkaClients', () => {
+
+    function fakeClient(assigned: boolean, seen: string[]): ClientKafka {
+        return Object.assign(Object.create(ClientKafka.prototype) as ClientKafka, {
+            connect: vi.fn(() => {
+                seen.push(EpicRequestContext.capture() ? 'in a request context' : 'outside')
+                return Promise.resolve()
+            }),
+            getConsumerAssignments: () => (assigned ? { 'svt.db-agent.request.reply': 0 } : {}),
+        })
+    }
+
+    function fakeApp(...instances: unknown[]): INestApplication {
+        return { get: () => ({ getProviders: () => instances.map((instance) => ({ instance })) }) } as unknown as INestApplication
+    }
+
+    it('connects every Kafka client outside any request context, also when it is called inside one', async () => {
+        const seen: string[] = []
+        const clients = [fakeClient(true, seen), fakeClient(true, seen)]
+
+        const result = await EpicRequestContext.run(() => {
+            EpicRequestContext.setUserId(1)
+            return connectEpicMeasureApiKafkaClients(fakeApp(...clients, { notAClient: true }), 100)
+        })
+
+        expect(seen).toEqual(['outside', 'outside'])
+        expect(result).toEqual({ clients, unassigned: 0 })
+    })
+
+    it('reports the clients that got no partition of the reply topic within the time', async () => {
+        const seen: string[] = []
+
+        const result = await connectEpicMeasureApiKafkaClients(fakeApp(fakeClient(true, seen), fakeClient(false, seen)), 100)
+
+        expect(result.unassigned).toBe(1)
     })
 
 })

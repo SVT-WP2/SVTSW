@@ -1,6 +1,10 @@
-import { Logger } from '@nestjs/common'
+import { INestApplication, Logger } from '@nestjs/common'
+import { DiscoveryService } from '@nestjs/core'
+import { ClientKafka } from '@nestjs/microservices'
 import { Kafka, logLevel } from 'kafkajs'
 import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
+
+import { EpicRequestContext } from '../common'
 
 
 /**
@@ -32,4 +36,37 @@ export async function ensureEpicMeasureApiKafkaTopics(brokers: string[]): Promis
     finally {
         await admin.disconnect()
     }
+}
+
+/** The clients that `connectEpicMeasureApiKafkaClients` connected, and how many of them still wait for their reply partition. */
+export type EpicMeasureApiKafkaClients = {
+    clients: ClientKafka[]
+    unassigned: number
+}
+
+/**
+ * Connects every `ClientKafka` of the application (one per module) at boot, outside any request context, and waits
+ * up to `assignmentTimeoutMs` until each consumer holds its partition of the reply topic. Call it after `app.init()`
+ * (the services subscribe to their reply topic in `onModuleInit`).
+ *
+ * A client that connected at its first request would run its consumer, and so the handling of every later reply, in
+ * the request context of that first request (`sendEpicDbAgentRequest` delivers each reply in the context of its own
+ * request anyway). A request from a client without its reply partition fails (`InvalidKafkaClientTopicException`).
+ */
+export async function connectEpicMeasureApiKafkaClients(
+    app: INestApplication,
+    assignmentTimeoutMs = 30_000,
+): Promise<EpicMeasureApiKafkaClients> {
+    const clients = app.get(DiscoveryService).getProviders()
+        .map((wrapper) => wrapper.instance as unknown)
+        .filter((instance): instance is ClientKafka => instance instanceof ClientKafka)
+    await EpicRequestContext.outside(() => Promise.all(clients.map((client) => client.connect())))
+
+    const deadline = Date.now() + assignmentTimeoutMs
+    const unassigned = () => clients
+        .filter((client) => client.getConsumerAssignments()[SvtDbAgentKafka.TopicName.RequestReply] === undefined).length
+    while (unassigned() > 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    return { clients, unassigned: unassigned() }
 }

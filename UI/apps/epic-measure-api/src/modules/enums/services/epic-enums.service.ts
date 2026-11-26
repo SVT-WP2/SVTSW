@@ -4,7 +4,7 @@ import { mapEpicKafkaMessageData } from 'epic/entities'
 import { Observable } from 'rxjs'
 import { EpicApiEnumsCollection, SvtDbAgentKafka, SvtDbAgentKafkaEnums } from 'svt-ts-types/kafka'
 
-import { toEpicDbAgentKafkaRecord } from '../../../common'
+import { sendEpicDbAgentRequest } from '../../../common'
 import { EpicEnumsSvc } from '../models'
 
 // TODO: process reply errors
@@ -29,8 +29,7 @@ export class EpicEnumsService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaEnums.Message): Observable<TReplyMessage> {
-        return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
+        return sendEpicDbAgentRequest<TReplyMessage>(this.kafkaClient, message)
     }
 
 }

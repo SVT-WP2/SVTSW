@@ -5,7 +5,7 @@ import { Observable } from 'rxjs'
 import { EpicSvtTestSetupConfig, EpicSvtTestSetupConfigBody, EpicSvtTestSetupConfigCreateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestSetupConfigs } from 'svt-ts-types/kafka'
 
-import { toEpicDbAgentKafkaRecord } from '../../../common'
+import { sendEpicDbAgentRequest } from '../../../common'
 import { EpicSvtTestSvc } from '../models'
 
 
@@ -49,8 +49,7 @@ export class EpicSvtTestSetupConfigsService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaSvtTestSetupConfigs.Message): Observable<TReplyMessage> {
-        return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
+        return sendEpicDbAgentRequest<TReplyMessage>(this.kafkaClient, message)
     }
 
 }

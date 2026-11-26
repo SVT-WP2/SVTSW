@@ -4,7 +4,13 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
-import { AppModule, configureEpicMeasureApiApp, EPIC_MEASURE_API_GLOBAL_PREFIX, ensureEpicMeasureApiKafkaTopics } from './app'
+import {
+    AppModule,
+    configureEpicMeasureApiApp,
+    connectEpicMeasureApiKafkaClients,
+    EPIC_MEASURE_API_GLOBAL_PREFIX,
+    ensureEpicMeasureApiKafkaTopics,
+} from './app'
 
 
 async function bootstrap() {
@@ -37,6 +43,12 @@ async function bootstrap() {
     // ./Swagger
     const port = process.env.SVT_UI_API_PORT || 9393
     await ensureEpicMeasureApiKafkaTopics(brokers)
+    await app.init()
+    // Every Kafka client connects now, outside any request context (see the function).
+    const { unassigned } = await connectEpicMeasureApiKafkaClients(app)
+    if (unassigned > 0) {
+        Logger.warn(`${unassigned} Kafka client(s) got no partition of the reply topic yet; their first requests may fail until they do`)
+    }
     await app.startAllMicroservices()
     await app.listen(port)
     Logger.log(
