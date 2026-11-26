@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
-
-import { normalizeEpicLogin } from '../models'
+import { normalizeEpicUserLogin } from 'svt-ts-types'
 
 
 type LoginState = {
@@ -27,17 +26,25 @@ export class EpicAuthLoginThrottleService {
 
     private readonly logins = new Map<string, LoginState>()
 
-    /** The last attempt of each login that is still running: the next one waits for it (`oneAtATime`). */
+    /** The last attempt of each login that is still running: the next one waits for it (`oneAtATime`). Never rejects. */
     private readonly running = new Map<string, Promise<unknown>>()
 
     /**
      * Runs the attempts of one login one after another. Without it, many attempts sent at the same time would all
-     * pass the check of the limit before the first one is counted (each takes the time of a hash).
+     * pass the check of the limit before the first one is counted (each takes the time of a hash). An attempt waits
+     * for the one before it at most `maxWaitMs`, whatever happened to that one (no reply, an error, an exception):
+     * a dead attempt never holds its login.
      */
-    async oneAtATime<T>(login: string, attempt: () => Promise<T>): Promise<T> {
-        const key = normalizeEpicLogin(login)
+    async oneAtATime<T>(login: string, attempt: () => Promise<T>, maxWaitMs: number): Promise<T> {
+        const key = normalizeEpicUserLogin(login)
         const previous = this.running.get(key) ?? Promise.resolve()
-        const result = previous.then(attempt, attempt)
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const waitLimit = new Promise<void>((resolve) => {
+            timer = setTimeout(resolve, maxWaitMs)
+        })
+        const result = Promise.race([previous, waitLimit])
+            .finally(() => clearTimeout(timer))
+            .then(attempt)
         const done = result.then(() => undefined, () => undefined)
         this.running.set(key, done)
         try {
@@ -52,14 +59,14 @@ export class EpicAuthLoginThrottleService {
 
     /** How long the login stays locked, in ms; 0 when it is not locked. */
     lockRemainingMs(login: string): number {
-        const state = this.logins.get(normalizeEpicLogin(login))
+        const state = this.logins.get(normalizeEpicUserLogin(login))
         const remaining = state ? state.lockedUntil - Date.now() : 0
         return remaining > 0 ? remaining : 0
     }
 
     /** Counts one failed log-in. The one that reaches the limit locks the login. */
     recordFailure(login: string): void {
-        const key = normalizeEpicLogin(login)
+        const key = normalizeEpicUserLogin(login)
         const now = Date.now()
         const state = this.logins.get(key) ?? { failures: [], lockedUntil: 0 }
         state.failures = state.failures.filter((time) => time > now - EpicAuthLoginThrottleService.WINDOW_MS)
@@ -75,7 +82,7 @@ export class EpicAuthLoginThrottleService {
 
     /** A successful log-in: the login starts again from zero. */
     clear(login: string): void {
-        this.logins.delete(normalizeEpicLogin(login))
+        this.logins.delete(normalizeEpicUserLogin(login))
     }
 
     clearAll(): void {

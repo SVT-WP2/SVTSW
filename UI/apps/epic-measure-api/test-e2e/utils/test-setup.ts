@@ -1,16 +1,14 @@
 import { randomBytes } from 'node:crypto'
 import { AddressInfo } from 'node:net'
 
-import { DiscoveryModule, DiscoveryService } from '@nestjs/core'
 import { ClientKafka } from '@nestjs/microservices'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test } from '@nestjs/testing'
 import { hashEpicPassword } from 'epic/core'
 import { Pool, QueryResultRow } from 'pg'
 import { EpicAuthUser, EpicUserRole } from 'svt-ts-types'
-import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
-import { AppModule, configureEpicMeasureApiApp } from '../../src/app'
+import { AppModule, configureEpicMeasureApiApp, connectEpicMeasureApiKafkaClients } from '../../src/app'
 import { EpicAuthLoginThrottleService, EpicAuthSvc, EpicAuthUserCacheService } from '../../src/modules/auth'
 
 import { loadEpicApiE2eConfig } from './e2e-config'
@@ -45,11 +43,6 @@ export type E2eHttp = {
 
 /** The Admin that the suite runs as: always user 1, put back by every `clearDatabase()`. */
 export const E2E_ADMIN = { id: 1, login: 'e2e-admin', name: 'E2E Admin', role: EpicUserRole.Admin } satisfies EpicAuthUser
-
-/** How long a BFF Kafka client may take to get its reply partition after `connect()`. */
-const REPLY_ASSIGNMENT_TIMEOUT_MS = 30_000
-
-const REPLY_TOPIC = SvtDbAgentKafka.TopicName.RequestReply
 
 /** A test password: random for each run, so no password is written in the suite. */
 export function randomE2ePassword(): string {
@@ -92,7 +85,7 @@ export class TestSetup {
     async init(): Promise<void> {
         const config = loadEpicApiE2eConfig()
 
-        const moduleFixture = await Test.createTestingModule({ imports: [AppModule, DiscoveryModule] }).compile()
+        const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile()
         this.app = moduleFixture.createNestApplication<NestExpressApplication>({ logger: ['error', 'warn'] })
         configureEpicMeasureApiApp(this.app)
         await this.app.init()
@@ -178,7 +171,7 @@ export class TestSetup {
         const text = await response.text()
         const cookie = response.headers.getSetCookie()
             .map((header) => header.split(';')[0])
-            .find((pair) => pair.startsWith(`${EpicAuthSvc.SESSION_COOKIE_NAME}=`))
+            .find((pair) => pair.startsWith(`${EpicAuthSvc.DEFAULT_SESSION_COOKIE_NAME}=`))
         if (response.status !== 200 || !cookie) {
             throw new Error(`The log-in of ${login} answered ${response.status} ${text}`)
         }
@@ -257,23 +250,16 @@ export class TestSetup {
     }
 
     /**
-     * Connects every `ClientKafka` of the application (one per module) up front, so no test pays for a group join,
-     * and checks that each consumer holds its reply partition: a request from a client without one fails with
-     * `InvalidKafkaClientTopicException`, which would point at the broker or a leftover group member, not at the code.
+     * Connects every `ClientKafka` of the application as `main.ts` does (`connectEpicMeasureApiKafkaClients`), so no
+     * test pays for a group join, and fails unless each consumer holds its reply partition: a request from a client
+     * without one fails with `InvalidKafkaClientTopicException`, which would point at the broker or a leftover group
+     * member, not at the code.
      */
     private async connectKafkaClients(): Promise<void> {
-        const clients = this.app.get(DiscoveryService).getProviders()
-            .map((wrapper) => wrapper.instance as unknown)
-            .filter((instance): instance is ClientKafka => instance instanceof ClientKafka)
+        const { clients, unassigned } = await connectEpicMeasureApiKafkaClients(this.app)
         this.kafkaClients = clients
-        await Promise.all(clients.map((client) => client.connect()))
-
-        const deadline = Date.now() + REPLY_ASSIGNMENT_TIMEOUT_MS
-        while (!clients.every((client) => client.getConsumerAssignments()[REPLY_TOPIC] !== undefined)) {
-            if (Date.now() > deadline) {
-                throw new Error(`The BFF's Kafka clients got no partition of ${REPLY_TOPIC} within ${REPLY_ASSIGNMENT_TIMEOUT_MS / 1000} s`)
-            }
-            await new Promise((resolve) => setTimeout(resolve, 50))
+        if (unassigned > 0) {
+            throw new Error(`${unassigned} of the BFF's Kafka clients got no partition of the reply topic within 30 s`)
         }
     }
 

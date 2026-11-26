@@ -46,16 +46,16 @@ export class EpicAuthSessionService {
         }
     }
 
-    /** The token of the session cookie of an HTTP request (parsed by `cookie-parser`). */
+    /** The token of the session cookie (`SVT_UI_AUTH_COOKIE_NAME`) of an HTTP request (parsed by `cookie-parser`). */
     readToken(request: EpicAuthRequest): unknown {
-        return (request.cookies as Record<string, unknown> | undefined)?.[EpicAuthSvc.SESSION_COOKIE_NAME]
+        return (request.cookies as Record<string, unknown> | undefined)?.[this.config.cookieName]
     }
 
     /** The token of the session cookie in a raw `Cookie` header (the upgrade request of a WebSocket). */
     readTokenFromCookieHeader(cookieHeader: string | undefined): string | undefined {
         for (const part of (cookieHeader ?? '').split(';')) {
             const index = part.indexOf('=')
-            if (index > 0 && part.slice(0, index).trim() === EpicAuthSvc.SESSION_COOKIE_NAME) {
+            if (index > 0 && part.slice(0, index).trim() === this.config.cookieName) {
                 return part.slice(index + 1).trim()
             }
         }
@@ -63,14 +63,14 @@ export class EpicAuthSessionService {
     }
 
     setCookie(response: Response, token: string): void {
-        response.cookie(EpicAuthSvc.SESSION_COOKIE_NAME, token, {
+        response.cookie(this.config.cookieName, token, {
             ...this.cookieOptions(),
             maxAge: Math.round(this.config.sessionHours * 3600 * 1000),
         })
     }
 
     clearCookie(response: Response): void {
-        response.clearCookie(EpicAuthSvc.SESSION_COOKIE_NAME, this.cookieOptions())
+        response.clearCookie(this.config.cookieName, this.cookieOptions())
     }
 
     private cookieOptions(): CookieOptions {

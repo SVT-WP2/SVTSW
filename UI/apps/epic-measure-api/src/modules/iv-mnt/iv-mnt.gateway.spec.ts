@@ -11,7 +11,13 @@ import { IvMntGateway } from './iv-mnt.gateway'
 describe('IvMntGateway', () => {
 
     const userCache = { getActiveUser: vi.fn() }
-    const session = new EpicAuthSessionService({ secret: 'x'.repeat(32), sessionHours: 1, cookieSecure: false, userCacheMs: 0 })
+    const session = new EpicAuthSessionService({
+        secret: 'x'.repeat(32),
+        sessionHours: 1,
+        cookieSecure: false,
+        userCacheMs: 0,
+        cookieName: 'svt_session',
+    })
     const gateway = new IvMntGateway(session, userCache as unknown as EpicAuthUserCacheService)
 
     const socket = () => {

@@ -1,15 +1,19 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit, ServiceUnavailableException } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
 import { mapEpicKafkaMessageData } from 'epic/entities'
-import { catchError, map, Observable, of, throwError } from 'rxjs'
+import { catchError, map, MonoTypeOperatorFunction, Observable, of, throwError, timeout } from 'rxjs'
 import { EpicUser } from 'svt-ts-types'
 import { EpicKafkaReplyMessage, EpicKafkaReplyStatus, EpicUserCredentials, SvtDbAgentKafka, SvtDbAgentKafkaUsers } from 'svt-ts-types/kafka'
 
-import { toEpicDbAgentKafkaRecord } from '../../../common'
+import { sendEpicDbAgentRequest } from '../../../common'
 import { EpicAuthSvc } from '../models'
 
 
-/** The two user messages that the log-in and the guard need. The user management (ticket 396) has its own service. */
+/**
+ * The two user messages that the log-in and the guard need. The user management (ticket 396) has its own service.
+ * Both have a timeout (`EpicAuthSvc.DB_AGENT_TIMEOUT_MS`): a log-in or a guard read that gets no reply (the DB agent
+ * is down, or skipped the request at its start) ends with `503`, so it can never hold the next log-in of its login.
+ */
 @Injectable()
 export class EpicAuthUsersService implements OnModuleInit {
 
@@ -46,8 +50,18 @@ export class EpicAuthUsersService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaUsers.Message): Observable<TReplyMessage> {
-        return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, toEpicDbAgentKafkaRecord(message))
+        return sendEpicDbAgentRequest<TReplyMessage>(this.kafkaClient, message)
+            .pipe(
+                timeoutAsServiceUnavailable(),
+            )
     }
 
+}
+
+/** No reply within `EpicAuthSvc.DB_AGENT_TIMEOUT_MS`: `503` (unsubscribing drops the pending request of the client). */
+function timeoutAsServiceUnavailable<T>(): MonoTypeOperatorFunction<T> {
+    return timeout({
+        first: EpicAuthSvc.DB_AGENT_TIMEOUT_MS,
+        with: () => throwError(() => new ServiceUnavailableException(EpicAuthSvc.DB_AGENT_TIMEOUT_MESSAGE)),
+    })
 }

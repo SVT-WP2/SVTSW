@@ -11,8 +11,3 @@ export type EpicAuthRequest = Request & {
 export function toEpicAuthUser(user: Pick<EpicUser, 'id' | 'login' | 'name' | 'role'>): EpicAuthUser {
     return { id: user.id, login: user.login, name: user.name, role: user.role }
 }
-
-/** The form in which the BFF compares and stores a login: trimmed, in lower case (as the DB agent does). */
-export function normalizeEpicLogin(login: string): string {
-    return login.trim().toLowerCase()
-}

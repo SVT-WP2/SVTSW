@@ -94,9 +94,9 @@ describe('EpicAuthLoginThrottleService', () => {
             const order: string[] = []
 
             const results = await Promise.all([
-                throttle.oneAtATime('jane.doe', task(order, 'jane 1', 40)),
-                throttle.oneAtATime(' JANE.DOE', task(order, 'jane 2', 1)),
-                throttle.oneAtATime('john', task(order, 'john 1', 15)),
+                throttle.oneAtATime('jane.doe', task(order, 'jane 1', 40), 10_000),
+                throttle.oneAtATime(' JANE.DOE', task(order, 'jane 2', 1), 10_000),
+                throttle.oneAtATime('john', task(order, 'john 1', 15), 10_000),
             ])
 
             expect(results).toEqual(['jane 1', 'jane 2', 'john 1'])
@@ -106,12 +106,36 @@ describe('EpicAuthLoginThrottleService', () => {
         it('goes on with the next attempt after one that fails, and gives each its own result', async () => {
             const order: string[] = []
 
-            const first = throttle.oneAtATime('jane.doe', task(order, 'jane 1', 10, true))
-            const second = throttle.oneAtATime('jane.doe', task(order, 'jane 2', 1))
+            const first = throttle.oneAtATime('jane.doe', task(order, 'jane 1', 10, true), 10_000)
+            const second = throttle.oneAtATime('jane.doe', task(order, 'jane 2', 1), 10_000)
 
             await expect(first).rejects.toThrow('jane 1')
             await expect(second).resolves.toBe('jane 2')
             expect(order).toEqual(['jane 1', 'jane 2'])
+        })
+
+        it('waits for an attempt that never ends at most maxWaitMs, then runs the next one', async () => {
+            vi.useFakeTimers()
+            const dead = throttle.oneAtATime('jane.doe', () => new Promise<string>(() => undefined), 1000)
+            const next = vi.fn(() => Promise.resolve('next'))
+
+            const result = throttle.oneAtATime('JANE.DOE', next, 1000)
+            await vi.advanceTimersByTimeAsync(999)
+            expect(next).not.toHaveBeenCalled()
+            await vi.advanceTimersByTimeAsync(1)
+
+            await expect(result).resolves.toBe('next')
+            expect(next).toHaveBeenCalledTimes(1)
+            void dead
+        })
+
+        it('goes on after an attempt that throws before it returns a promise', async () => {
+            const broken = throttle.oneAtATime('jane.doe', () => {
+                throw new Error('broken')
+            }, 10_000)
+
+            await expect(broken).rejects.toThrow('broken')
+            await expect(throttle.oneAtATime('jane.doe', () => Promise.resolve('next'), 10_000)).resolves.toBe('next')
         })
 
     })
