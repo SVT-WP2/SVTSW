@@ -1,5 +1,5 @@
 ﻿import { CommonModule } from '@angular/common'
-import { HttpBackend, provideHttpClient } from '@angular/common/http'
+import { HttpBackend, provideHttpClient, withInterceptors } from '@angular/common/http'
 import { isDevMode, NgModule } from '@angular/core'
 import { MatButtonModule } from '@angular/material/button'
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldDefaultOptions } from '@angular/material/form-field'
@@ -19,7 +19,7 @@ import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { EpicAuthService } from 'epic-ui/common/auth'
+import { epicAuthInterceptor, EpicAuthService } from 'epic-ui/common/auth'
 import { EpicMenuLightModule, EpicNotificationModule, provideEpicDefaultIcons } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { EpicAsicCreateDialogService, EpicAsicsStoreFacade } from 'epic-ui/shared/asics'
@@ -75,7 +75,8 @@ echarts.use([BarChart, LineChart, GaugeChart, PieChart, LegendComponent, Tooltip
                 floatLabel: 'always',
             } as MatFormFieldDefaultOptions,
         },
-        provideHttpClient(),
+        // A 401 of an ended session sends the user to the log-in page.
+        provideHttpClient(withInterceptors([epicAuthInterceptor])),
         provideTranslateService({
             loader: {
                 provide: TranslateLoader,

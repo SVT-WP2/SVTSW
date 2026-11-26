@@ -4,7 +4,7 @@ import { Router } from '@angular/router'
 import { EpicAuthLoginForm, EpicAuthLoginFormComponent, EpicAuthService } from 'epic-ui/common/auth'
 import { EpicIconComponent, EpicAlertModule, EpicButtonModule } from 'epic-ui/common/components'
 import { BaseComponent, ProcessingStore } from 'epic-ui/utils'
-import { catchError, delay, throwError } from 'rxjs'
+import { catchError, delay, EMPTY } from 'rxjs'
 
 
 @Component({
@@ -44,7 +44,7 @@ export class AppLoginPageComponent extends BaseComponent {
                         ProcessingStore.eventProcessingFinish(this.loginProcessing(), error),
                     )
                     this.formGroup.enable()
-                    return throwError(() => error)
+                    return EMPTY
                 }),
             )
             .subscribe((user) => {

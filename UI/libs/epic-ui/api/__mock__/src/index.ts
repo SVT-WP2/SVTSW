@@ -1,4 +1,5 @@
 export * from './asics'
+export * from './auth'
 export * from './chips'
 export * from './chip-blocks'
 export * from './enums'

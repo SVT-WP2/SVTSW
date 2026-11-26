@@ -2,6 +2,7 @@ import { Provider } from '@angular/core'
 import {
     EpicAsicsApiClient,
     EpicAsicTestTypesApiClient,
+    EpicAuthApiClient,
     EpicChipBlocksApiClient,
     EpicChipsApiClient,
     EpicEnumsApiClient,
@@ -22,6 +23,7 @@ import {
 } from 'epic-ui/api'
 import {
     EpicAsicsApiClientMock,
+    EpicAuthApiClientMock,
     EpicChipBlocksApiClientMock,
     EpicChipsApiClientMock,
     EpicEnumsApiClientMock,
@@ -45,6 +47,10 @@ import { EpicWaferTestsApiClientMock } from 'epic-ui/shared/wafer-tests/__mock__
 
 export function provideMockData(): Provider[] {
     return [
+        {
+            provide: EpicAuthApiClient,
+            useClass: EpicAuthApiClientMock,
+        },
         {
             provide: EpicWafersApiClient,
             useClass: EpicWafersApiClientMock,
