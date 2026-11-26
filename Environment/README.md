@@ -328,3 +328,73 @@ After changing a `.env` value, recreate the affected service(s) with `up -d`
   host ports differ per environment, and the compose **project names** are
   pinned via `name:`/`-p` — see [`Prod/README.md`](Prod/README.md) for the
   details.
+
+## Users and the log-in of the UI
+
+The UI logs people in against the table `SvtUser` of the database. The BFF in `svt-ui` checks the password and
+keeps the session in a signed cookie; every `/api` route needs a session, except the log-in, the log-out and
+`/api/health`. The decisions are in
+[`Documentation/decisions/2026-11-users-and-roles.md`](../Documentation/decisions/2026-11-users-and-roles.md).
+
+### The variables of `svt-ui`
+
+They go into the server `.env` of the environment; the compose files pass them to `svt-ui`.
+
+| Variable | | Meaning |
+| --- | --- | --- |
+| `SVT_UI_AUTH_SECRET` | required | The key that signs the sessions. At least 32 random characters, a different value for dev and prod, only in the server `.env`. Compose refuses the file without it, and the BFF does not start without it. A new value ends every open session. |
+| `SVT_UI_AUTH_SESSION_HOURS` | optional, `12` | How long a session lasts, in hours. |
+| `SVT_UI_AUTH_COOKIE_SECURE` | optional, `false` | The `Secure` flag of the session cookie. Set `true` only when the UI is served over HTTPS; the servers have plain HTTP today. |
+
+Make a secret on the server, then put it into `.env` (`sudoedit /opt/docker/svtsw/<env>/.env`):
+
+```bash
+openssl rand -base64 48
+```
+
+Compose reads the whole file, so **no service of the stack starts while `SVT_UI_AUTH_SECRET` is missing**, the DB
+agent included. Add it to the `.env` of dev and of prod before the first deploy of a version that contains it.
+
+### The first Admin
+
+A new installation has no user, and nobody can log in to the UI: that is intended (no account with a known
+password exists). Enter the first Admin by hand, once per environment, after `svt-db-agent-next` has run its
+migrations (the table `SvtUser` exists). That Admin then creates the other users in the UI.
+
+1. Make the hash of the password, on any machine with a checkout of this repository and Node 22:
+
+   ```bash
+   cd UI && npm ci && npm run auth:hash-password
+   ```
+
+   It asks for the password twice (8 to 128 characters) without showing it, and prints only the hash
+   (`scrypt$16384$8$5$…`). Never give the password as an argument (it stays in the shell history), and do not
+   paste the hash into a ticket or a chat.
+
+2. Insert the user with `psql`, connected to `SVT_DB_NAME` as `SVT_DB_USER` (`main` is the schema of
+   `SVT_DB_SCHEMA` on our servers):
+
+   ```sql
+   INSERT INTO main."SvtUser" ("login", "name", "role", "passwordHash")
+   VALUES ('jdoe', 'Jane Doe', 'Admin', '<the hash>');
+   ```
+
+   - **The login must be in lower case**: 3 to 50 characters of `a-z`, `0-9`, `.`, `_` and `-`. The check
+     `SvtUser_login_check` refuses any other login. At the log-in the BFF compares the login in lower case.
+   - Give no `id`: the database sets it. A row with its own `id` leaves the identity behind
+     ([`DbAgentNext/docs/database-schema.md` §5a.1](../DbAgentNext/docs/database-schema.md#5a1-svtuser)).
+   - Type the statement into `psql` itself: the hash holds `$`, which a shell would expand inside double quotes.
+
+3. Open the UI and log in with that login and password; reload the page (you stay logged in) and log out.
+
+### Roll-out order
+
+Once, for the deploy that brings the log-in:
+
+1. Deploy `svt-db-agent-next` with the users table. Its migration creates `SvtUser`.
+2. Insert the first Admin (above).
+3. Add `SVT_UI_AUTH_SECRET` to the `.env` of the environment.
+4. Deploy `svt-ui`. From then on nobody uses the UI without a log-in.
+
+A person does steps 2 and 3 on the server, for dev and for prod. Because of the compose rule above, step 3 must be
+done before any deploy from a `master` that has this change, also a deploy of the DB agent.

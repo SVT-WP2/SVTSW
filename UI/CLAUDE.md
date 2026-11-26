@@ -56,6 +56,10 @@ npm run pre-pull-request   # lint + test — run this before opening a PR
 npm run e2e::api           # BFF e2e: HTTP → Kafka → DbAgentNext → Postgres (apps/epic-measure-api/test-e2e/README.md)
 ```
 
+```bash
+npm run auth:hash-password # the password hash of a user, for the first Admin (../Environment/README.md)
+```
+
 Lint/test individually: `npm run lint`, `npm run lint:fix`, `npm test`. `npm run lint:shared` lints and
 strictly type-checks `../Shared/svt-ts-types` (part of `npm run lint`).
 
@@ -109,6 +113,9 @@ still auto-creating, and the boot would end.
   shape differs from the HTTP one.
 - `libs/epic/*` is Node-only, shared between `epic-measure-api` and `epic-db-agent`: the decorated DTO classes and
   the RxJS / NestJS helpers around the Kafka contract (`mapEpicKafkaMessageData()`, `processKafkaReplyError()`).
+- **Every BFF route needs a session unless it is marked `@EpicPublic()`** (the global `EpicAuthGuard`). A route
+  for some roles only takes `@EpicRoles(EpicUserRole.X)`. The SPA keeps no user, password or hash: the session is
+  an `HttpOnly` cookie ([docs/ARCHITECTURE.md §10](docs/ARCHITECTURE.md#10-authentication)).
 - Angular components are **standalone** (`imports: [...]`), except a few legacy `NgModule` feature modules.
 - Angular UI code must never import from `libs/epic/*`. For the DB-agent-backed domains `epic-ui/api` holds the
   HTTP clients only — the types come from `svt-ts-types`. `iv-mnt` and `tcp` (BFF endpoints that are not DB-agent
@@ -139,10 +146,15 @@ Run only one of the two on a broker: each of them answers every request.
 - `.env.development` / `.env.production` / `.env.test` **are committed** for `epic-measure-api` and
   `epic-db-agent`. Don't put secrets there. `nx serve` loads the project's
   `.env.<configuration>` itself; the `envFilePath` in `app.module.ts` is for containers.
+  The one exception is `SVT_UI_AUTH_SECRET` of the API (the key of the sessions): `.env.development` and `.env.test`
+  hold a value marked `DEVELOPMENT-ONLY-`, which protects nothing and which the BFF refuses when `NODE_ENV` is
+  `production`. `.env.production` has none: a server sets its own (`../Environment/README.md`). Without the
+  variable the BFF does not start.
 - New SCSS in a lib needs its `styles/` dir added to `stylePreprocessorOptions.includePaths` in
   `apps/epic-measure-ui/project.json`; new lib `assets/` needs an entry in the same file's `assets` array.
-- Kafka payloads are `JSON.stringify`'d by hand before `.send()` — the reply comes back needing
-  `mapEpicKafkaMessageData()` to unwrap.
+- A Kafka request is sent as `toEpicDbAgentKafkaRecord(message)` (the JSON and the header `svt_userId` of the
+  logged-in user), never as a bare `JSON.stringify`: the reply comes back needing `mapEpicKafkaMessageData()` to
+  unwrap.
 - **After pulling a branch that bumps Angular or Nx, wipe the build caches before you build:**
   `npx nx reset && rm -rf .angular/cache`. A cache written by the previous major makes `@angular/build`'s
   lmdb store blow up with `Error: Not enough space` (lmdb code 12) — that's the cache, not your disk.
