@@ -28,12 +28,16 @@ export namespace EpicPasswordHash {
 
 }
 
-/** The limits that a stored hash must keep, so that a broken or hostile string cannot make `scrypt` run for long. */
+/**
+ * The parameters that a stored hash may have. Above them `verifyEpicPassword` answers `false` without running
+ * `scrypt`: a broken or hostile hash string cannot make one attempt cost more than about 128 MiB (`128 * N * r`)
+ * and the time of 8 rounds at that size. Today's hashes (N = 2^14, r = 8, p = 5) are well inside.
+ */
 const LIMITS = {
     minCost: 2 ** 10,
-    maxCost: 2 ** 20,
-    maxBlockSize: 32,
-    maxParallelization: 16,
+    maxCost: 2 ** 17,
+    maxBlockSize: 8,
+    maxParallelization: 8,
     minSaltLength: 8,
     minKeyLength: 16,
     maxKeyLength: 128,
@@ -114,8 +118,8 @@ function parseHash(hash: unknown): ParsedHash | null {
 }
 
 function deriveKey(password: string, salt: Buffer, keyLength: number, options: ScryptOptions): Promise<Buffer> {
-    // scrypt needs about 128 * N * r bytes; Node refuses more than `maxmem` (32 MiB by default).
-    const maxmem = Math.max(32 * 1024 * 1024, 2 * 128 * (options.N ?? 0) * (options.r ?? 0))
+    // scrypt needs 128 * r * (N + p + 2) bytes (OpenSSL); `maxmem` allows that and 1 MiB more, and nothing beyond.
+    const maxmem = 128 * (options.r ?? 0) * ((options.N ?? 0) + (options.p ?? 0) + 2) + 1024 * 1024
     return new Promise((resolve, reject) => {
         scrypt(password.normalize('NFC'), salt, keyLength, { ...options, maxmem }, (error, key) => {
             if (error) {

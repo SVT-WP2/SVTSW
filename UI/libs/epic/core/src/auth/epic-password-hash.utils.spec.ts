@@ -60,7 +60,9 @@ describe('hashEpicPassword / verifyEpicPassword', () => {
         ['an extra part', () => `${hash}$x`],
         ['a cost that is no number', () => withPart(1, 'many')],
         ['a cost that is no power of two', () => withPart(1, '16000')],
-        ['a cost above the limit', () => withPart(1, String(2 ** 21))],
+        ['a cost above 2^17', () => withPart(1, String(2 ** 18))],
+        ['a block size above 8', () => withPart(2, '9')],
+        ['a parallelization above 8', () => withPart(3, '9')],
         ['a block size of zero', () => withPart(2, '0')],
         ['a salt that is no base64', () => withPart(4, '!!!!')],
         ['a key that is too short', () => withPart(5, 'AAAA')],
@@ -69,5 +71,25 @@ describe('hashEpicPassword / verifyEpicPassword', () => {
     ])('gives false, and does not throw, for %s', async (_, broken) => {
         expect(await verifyEpicPassword(password, broken())).toBe(false)
     })
+
+    it.each([
+        ['N = 2^20', () => withPart(1, String(2 ** 20))],
+        ['r = 32', () => withPart(2, '32')],
+        ['p = 16', () => withPart(3, '16')],
+    ])('refuses a hash above the bounds (%s) without running scrypt', async (_, costly) => {
+        const start = performance.now()
+
+        expect(await verifyEpicPassword(password, costly())).toBe(false)
+        expect(performance.now() - start).toBeLessThan(50)
+    })
+
+    it('verifies a hash at the memory bound (N = 2^17, r = 8): maxmem fits', async () => {
+        const { scryptSync } = await import('node:crypto')
+        const salt = Buffer.from('0123456789abcdef')
+        const key = scryptSync(password, salt, 32, { N: 2 ** 17, r: 8, p: 1, maxmem: 256 * 1024 * 1024 })
+        const hash = ['scrypt', 2 ** 17, 8, 1, salt.toString('base64'), key.toString('base64')].join('$')
+
+        expect(await verifyEpicPassword(password, hash)).toBe(true)
+    }, 30_000)
 
 })
