@@ -72,6 +72,50 @@ describe('EpicAuthLoginThrottleService', () => {
         expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
     })
 
+    describe('oneAtATime', () => {
+
+        const task = (order: string[], name: string, ms: number, fails = false) => () => new Promise<string>((resolve, reject) => {
+            setTimeout(() => {
+                order.push(name)
+                if (fails) {
+                    reject(new Error(name))
+                }
+                else {
+                    resolve(name)
+                }
+            }, ms)
+        })
+
+        beforeEach(() => {
+            vi.useRealTimers()
+        })
+
+        it('runs the attempts of one login one after another, and those of two logins side by side', async () => {
+            const order: string[] = []
+
+            const results = await Promise.all([
+                throttle.oneAtATime('jane.doe', task(order, 'jane 1', 40)),
+                throttle.oneAtATime(' JANE.DOE', task(order, 'jane 2', 1)),
+                throttle.oneAtATime('john', task(order, 'john 1', 15)),
+            ])
+
+            expect(results).toEqual(['jane 1', 'jane 2', 'john 1'])
+            expect(order).toEqual(['john 1', 'jane 1', 'jane 2'])
+        })
+
+        it('goes on with the next attempt after one that fails, and gives each its own result', async () => {
+            const order: string[] = []
+
+            const first = throttle.oneAtATime('jane.doe', task(order, 'jane 1', 10, true))
+            const second = throttle.oneAtATime('jane.doe', task(order, 'jane 2', 1))
+
+            await expect(first).rejects.toThrow('jane 1')
+            await expect(second).resolves.toBe('jane 2')
+            expect(order).toEqual(['jane 1', 'jane 2'])
+        })
+
+    })
+
     it('keeps at most MAX_LOGINS logins, and drops the oldest first', () => {
         fail('jane.doe', 5)
         for (let index = 0; index <= EpicAuthLoginThrottleService.MAX_LOGINS; index++) {

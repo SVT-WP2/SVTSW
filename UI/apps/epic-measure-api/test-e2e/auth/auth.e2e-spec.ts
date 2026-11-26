@@ -110,6 +110,15 @@ describe('Auth (e2e)', () => {
             ])
         })
 
+        it('counts attempts sent at the same time one after another: five 401, then 429', async () => {
+            await setup.createUser({ login: 'jane.doe', name: 'Jane Doe', role: EpicUserRole.User })
+
+            const responses = await Promise.all(Array.from({ length: 8 }, () => (
+                setup.as(null).post('/api/auth/login', { login: 'jane.doe', password: 'wrong' }))))
+
+            expect(responses.map((response) => response.status).sort()).toEqual([401, 401, 401, 401, 401, 429, 429, 429])
+        })
+
         it('starts the count again after a successful log-in', async () => {
             const jane = await setup.createUser({ login: 'jane.doe', name: 'Jane Doe', role: EpicUserRole.User })
             const wrongAttempts = async () => {

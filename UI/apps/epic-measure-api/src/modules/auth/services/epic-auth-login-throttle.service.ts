@@ -27,6 +27,29 @@ export class EpicAuthLoginThrottleService {
 
     private readonly logins = new Map<string, LoginState>()
 
+    /** The last attempt of each login that is still running: the next one waits for it (`oneAtATime`). */
+    private readonly running = new Map<string, Promise<unknown>>()
+
+    /**
+     * Runs the attempts of one login one after another. Without it, many attempts sent at the same time would all
+     * pass the check of the limit before the first one is counted (each takes the time of a hash).
+     */
+    async oneAtATime<T>(login: string, attempt: () => Promise<T>): Promise<T> {
+        const key = normalizeEpicLogin(login)
+        const previous = this.running.get(key) ?? Promise.resolve()
+        const result = previous.then(attempt, attempt)
+        const done = result.then(() => undefined, () => undefined)
+        this.running.set(key, done)
+        try {
+            return await result
+        }
+        finally {
+            if (this.running.get(key) === done) {
+                this.running.delete(key)
+            }
+        }
+    }
+
     /** How long the login stays locked, in ms; 0 when it is not locked. */
     lockRemainingMs(login: string): number {
         const state = this.logins.get(normalizeEpicLogin(login))

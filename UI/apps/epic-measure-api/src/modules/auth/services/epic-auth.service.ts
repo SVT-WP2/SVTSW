@@ -53,13 +53,17 @@ export class EpicAuthService {
      */
     async login(request: EpicAuthLoginRequest): Promise<{ user: EpicAuthUser; token: string }> {
         const login = normalizeEpicLogin(request.login)
+        return this.throttle.oneAtATime(login, () => this.attempt(login, request.password))
+    }
+
+    private async attempt(login: string, password: string): Promise<{ user: EpicAuthUser; token: string }> {
         const lockMs = this.throttle.lockRemainingMs(login)
         if (lockMs > 0) {
             throw new EpicAuthTooManyAttemptsException(Math.ceil(lockMs / 1000))
         }
 
         const credentials = await firstValueFrom(this.users.getCredentials(login))
-        const isPassword = await verifyEpicPassword(request.password, credentials?.passwordHash ?? await this.dummyHash)
+        const isPassword = await verifyEpicPassword(password, credentials?.passwordHash ?? await this.dummyHash)
         if (!credentials || !isPassword || !credentials.isActive) {
             this.throttle.recordFailure(login)
             throw new UnauthorizedException(EpicAuthSvc.LOGIN_FAILED_MESSAGE)
