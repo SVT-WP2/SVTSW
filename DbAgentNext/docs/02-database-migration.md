@@ -80,6 +80,7 @@ Then the changes this agent needs. The last two rows are **not migrated yet**:
 | `CANCELLED` added to enum `testResultStatus` (**migration 2**, 2026-11-08) | the UI has a Cancelled status and the contract enum mirrors the database's values ([01 §6.8](01-behaviour-decisions.md#68-svt-tests)) | No: an extra enum value is invisible to code that never writes it. |
 | June-dump leftovers (**migration 3**, 2026-11-09): `ProbeCard.arrivalDate` → `arriveDate`, `pcModel` and `pcName` values | a developer database restored from the June 2026 dump still had them; migration 0 adds what is missing but cannot rename | No: guarded, a no-op on production- and dev-shaped databases. |
 | `configBody` `json` → `text` on databases that ran migration 1 before 2026-11-12 (**migration 4**, 2026-11-12) | migration 1 converted to `json` until Q27/Q31 were answered; the same guarded conversion is repeated so those databases catch up | No: it reads and writes the column as text either way (dev has been `text` all along). |
+| The enum type `userRole` and the table `SvtUser`, with no row (**migration 5**, 2026-11-26) | the users of the installation (#392, #393); the first Admin is entered by hand | No: a new table and a new type. |
 | Allow probe-card uninstall: a status column on `ProbeCardInstalledInMachine` (the author suggests a status such as "PC not installed", Q14) rather than a nullable `probeCardId` | decision in [01](01-behaviour-decisions.md#3-handlers); the enum values are to be agreed with the WPAgent team | Only if the C++ is still handling that message on the same DB; it never writes the new column. |
 | Rename the enum type `blockType` → `chipBlockType` (Q30): `ALTER TYPE main."blockType" RENAME TO "chipBlockType"`, guarded | the author keeps the contract's name; `GetAllEnums` then answers with the key `chipBlockType` | After a restart: the C++ reads the type names at startup and would answer `chipBlockType` too; the columns keep working. **Pending**: the UI (`EpicEnumName.blockType`), the mock agent's enum list and the entities (`nativeEnumName`, `SVT_DB_ENUM_VALUES`) still say `blockType`, and all of them must change in the same step as the migration. |
 
@@ -146,6 +147,7 @@ The entities, in `src/db/data/<domain>/`, all listed in `SVT_DB_ENTITIES`. The c
 | `SvtDbSvtTestEntity` | `SvtTestList` | id | → TestTypeConfig, → TestSetupConfig; createdAt default now; startedAt, finishedAt, pathToResult, testResultStatus enum |
 | `SvtDbSvtTestDutEntityNameEntity` | `SvtTestListToEntityName` | (dutEntityName, testId) | → Test; one row per test in practice |
 | `SvtDbSvtTestDutIdEntity` | `SvtTestListToEntityId` | id (migration 1) | → Test; `dutId` without a foreign key (it is polymorphic) |
+| `SvtDbUserEntity` | `SvtUser` | id (migration 5) | login UK; role enum `userRole`; `passwordHash` lazy (lists never load it); isActive default true; createdAt timestamp default now |
 
 Not mapped: `WaferTypeImage` (no message uses it), `SvtTestSetupEquipList` (nothing reads or writes it until
 `GetEquipmentListForTestSetup` is designed, R-1), and `Module`, `ModuleChipList`, `ModuleLocation` (modules are out of
@@ -168,7 +170,8 @@ The values the entities declare (`@Enum({ items })`) are a generated snapshot,
 take the `CREATE TYPE … AS ENUM` lines of `pg_dump --schema-only` (or the catalogue query of
 [05 §4](05-implementation-notes.md#4-the-data-layer)), keep the declaration order, and update the source and date in
 the file's comment. The snapshot of 2026-11-08 came from the prod dump, plus the two dev-only types of migration 1
-and the `CANCELLED` value of migration 2.
+and the `CANCELLED` value of migration 2. On 2026-11-26 the type `userRole` of migration 5 was added from the
+catalogue of a migrated database, which had the same values for every other type.
 
 ## 5. Timestamps and history ordering
 

@@ -112,7 +112,9 @@ with one rule per field. The classes are in the `*.dtos.ts` file beside each han
 | `optionalRecord` | `data` and `data.filter` of the `GetAll…` messages; absent and `null` mean `{}` | `<path> must be an object` |
 | `requireInteger` | `data.id`, `data.waferTypeId`, `data.waferId`, `data.chipId`, `data.equipmentId` | `<path> must be an integer` |
 | `optionalInteger` | filters with one id (`waferId`, `chipId`, `setupId`, `testTypeId`, `dutId`) | `<path> must be an integer` |
+| `requireString` | `data.login` of `GetUserCredentials`, `data.passwordHash` of `UpdateUserPassword` | `<path> must be a string` |
 | `optionalString` | filters with one string (`quality`, `generalLocation`, `serialNumber`) | `<path> must be a string` |
+| `optionalBoolean` | the filter `isActive` of `GetAllUsers` | `<path> must be a boolean` |
 | `optionalIntegerList` | filters with a list of ids | `<path> must be a list of integers` |
 | `optionalStringList` | filters with a list of enum values, `enumNames` | `<path> must be a list of strings` |
 | `optionalStringOrNullList` | the filter `testResultStatuses` | `<path> must be a list of strings or nulls` |
@@ -149,7 +151,7 @@ A list message takes its filter in `data.filter`. The filter is optional.
 
 ### 2.3 Paging
 
-The 16 list messages `GetAll…` (all but `GetAllEnums`) take an optional `data.pager = { limit, offset }`.
+The 17 list messages `GetAll…` (all but `GetAllEnums`) take an optional `data.pager = { limit, offset }`.
 
 - `limit` and `offset` are optional integers of 0 or more. The agent has no upper limit. It rejects another key
   in the pager.
@@ -193,7 +195,7 @@ order of `id`. The exceptions:
 | Kind | Fields | On the wire |
 |---|---|---|
 | Calendar date (`date` column) | `thinningDate`, `dicingDate`, `productionDate`, `date` of a history row, `createdAt` of a configuration, `arriveDate` | A string `YYYY-MM-DD`. |
-| Timestamp | `createdAt`, `startedAt`, `finishedAt` of a test | An ISO 8601 string in UTC with milliseconds: `2026-03-01T10:15:30.000Z`. |
+| Timestamp | `createdAt`, `startedAt`, `finishedAt` of a test; `createdAt` of a user | An ISO 8601 string in UTC with milliseconds: `2026-03-01T10:15:30.000Z`. |
 | JSON document | `waferMap`, `local2GlobalMap`, `specification` | A string that holds the JSON text. |
 | Configuration body | `configBody` | A string that holds JSON or JSON5 text (comments, trailing commas, unquoted keys, single-quoted strings). |
 | Enum value | all enum-typed fields | A string. |
@@ -225,6 +227,7 @@ order of `id`. The exceptions:
 | `dutType`, `dutTypes` | `dutType` |
 | `dutEntityName` | `dutEntityName` |
 | `testResultStatus` | `testResultStatus` |
+| `role` (users) | `userRole` |
 
 ### 2.8 The location pattern (wafers, chips, equipment)
 
@@ -658,9 +661,48 @@ The domain has no table of its own and no write message.
 - The agent reads the catalogue of the database for each request. A value that was added to an enum type is in
   the next reply.
 
+### 3.18 Users
+
+Table: `SvtUser`. A user has a login, a name, a role of the enum `userRole`, a password hash and the flag
+`isActive`. No message deletes a user: an Admin switches it off. The agent does not check who sends these messages;
+the BFF allows the user management to an Admin only.
+
+| Message | What it does | Checks, in order | Writes |
+|---|---|---|---|
+| `GetAllUsers` | Lists the users. | Standard list. Filter keys: `ids` (list of integers), `roles` (list of strings), `isActive` (boolean). | Nothing. |
+| `GetUserCredentials` | Returns one user with its password hash. The BFF sends it at log-in. | 1. `data` is an object. If not: `BadRequest`, `data must be an object`.<br>2. `data.login` is a string. If not: `BadRequest`, `data.login must be a string`.<br>3. A user has the login. The agent trims `data.login` and compares it in lower case. If not: `NotFound`, `No user with this login`. | Nothing. |
+| `CreateUser` | Creates an active user. | 1. Validation of `data.create` (below).<br>2. Enum check of `role`.<br>3. The insert. Unique: `login`. | One `SvtUser` row, with `isActive` true. |
+| `UpdateUser` | Changes the name, the role or the state of a user. | 1. Id check.<br>2. Validation of `data.update`: `name` (as in `CreateUser`), `role` (a value of `userRole`) and `isActive` (boolean) are optional. No other key is allowed, so `login` is rejected.<br>3. Enum check of `role`, when it has a value.<br>4. The user exists. If not: `NotFound`, `No user with id <id>`.<br>5. The last-Admin rule (below). If it is broken: `BadRequest`, `The installation must keep one active Admin`. | The changed columns of the `SvtUser` row. |
+| `UpdateUserPassword` | Sets the password hash of a user. | 1. Id check.<br>2. `data.passwordHash` is a string. If not: `BadRequest`, `data.passwordHash must be a string`.<br>3. It has 1 to 255 characters. If not: `BadRequest`, `data.passwordHash must be 1 to 255 characters long`.<br>4. The user exists. If not: `NotFound`, `No user with id <id>`. | `passwordHash` of the `SvtUser` row. |
+
+The validation of `data.create` of `CreateUser`. A key that the table does not name is rejected.
+
+| Key | Rule | Stored as |
+|---|---|---|
+| `login` | A string. After trimming: 3 to 50 characters. After lower-casing: only `a-z`, `0-9`, `.`, `_` and `-`. | Trimmed, in lower case. |
+| `name` | A string of 1 to 100 characters after trimming. | Trimmed. |
+| `role` | `User`, `Expert`, `Developer` or `Admin`. | As sent. |
+| `passwordHash` | A string of 1 to 255 characters. | As sent. |
+
+- Item: `{ id, login, name, role, isActive, createdAt }`. No reply but that of `GetUserCredentials` holds
+  `passwordHash`; `GetUserCredentials` replies `{ entity: { id, login, name, role, isActive, createdAt, passwordHash } }`.
+- A login that exists already, in any case, answers the unique-constraint text of §1.4, because the stored login is
+  in lower case.
+- `GetUserCredentials` returns a user with `isActive` false like any other. The caller decides.
+- The database sets `createdAt` to the current time.
+- `UpdateUser` writes the keys that have a value. An absent key or `null` keeps the value. An empty `data.update`
+  answers `Success` and changes nothing.
+- No message changes `login`.
+- **The last-Admin rule.** `UpdateUser` refuses a change when the user is an active Admin, the change switches it off
+  or gives it another role, and no other active Admin exists. The check and the write are in one transaction. The
+  agent locks the rows of the active Admins first, so of two changes at the same time that each remove one of the
+  last two Admins, one is refused.
+- The agent never writes a `passwordHash` to its log. The transactions of `CreateUser` and `UpdateUserPassword` log
+  no query, also when the debug log is on.
+
 ## 4. Index
 
-The agent registers 50 message types. Every other type answers `Unknown request type` (§1.3). There is no message
+The agent registers 55 message types. Every other type answers `Unknown request type` (§1.3). There is no message
 for modules, and no `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` or `GetEquipmentListForTestSetup`.
 
 | Message type (wire name) | Reply type | Handlers file | Section |
@@ -715,3 +757,8 @@ for modules, and no `UpdateChip`, `UpdateEquipment`, `CreateProbeCard` or `GetEq
 | `UpdateSvtTestStart` | `UpdateSvtTestStartReply` | `src/modules/handlers/svt-tests/svt-db-agent-next-svt-tests.handlers.ts` | [3.16](#316-svt-tests) |
 | `UpdateSvtTestFinish` | `UpdateSvtTestFinishReply` | `src/modules/handlers/svt-tests/svt-db-agent-next-svt-tests.handlers.ts` | [3.16](#316-svt-tests) |
 | `GetAllEnums` | `GetAllEnumsReply` | `src/modules/handlers/enums/svt-db-agent-next-enums.handlers.ts` | [3.17](#317-enums) |
+| `GetAllUsers` | `GetAllUsersReply` | `src/modules/handlers/users/svt-db-agent-next-users.handlers.ts` | [3.18](#318-users) |
+| `GetUserCredentials` | `GetUserCredentialsReply` | `src/modules/handlers/users/svt-db-agent-next-users.handlers.ts` | [3.18](#318-users) |
+| `CreateUser` | `CreateUserReply` | `src/modules/handlers/users/svt-db-agent-next-users.handlers.ts` | [3.18](#318-users) |
+| `UpdateUser` | `UpdateUserReply` | `src/modules/handlers/users/svt-db-agent-next-users.handlers.ts` | [3.18](#318-users) |
+| `UpdateUserPassword` | `UpdateUserPasswordReply` | `src/modules/handlers/users/svt-db-agent-next-users.handlers.ts` | [3.18](#318-users) |

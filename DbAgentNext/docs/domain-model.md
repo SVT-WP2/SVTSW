@@ -19,7 +19,8 @@ handler). A rule that only the agent enforces does not hold for a row that is wr
 
 ## 1. The model
 
-The model has three areas. An entity of the model is one table, except where §2 says so.
+The model has three areas of the laboratory, and the users of the installation (§4.5). An entity of the model is
+one table, except where §2 says so.
 
 ```mermaid
 classDiagram
@@ -42,6 +43,7 @@ classDiagram
     class SvtTestTypeConfig
     class SvtTestTemplate
     class SvtTest
+    class User
 
     WaferType "1" --> "1" WaferTypeMap
     WaferType "1" --> "*" Wafer
@@ -87,6 +89,7 @@ not change after creation. No message deletes an entity.
 | Test type configuration | `SvtTestTypeConfig` | `name`, in its test type | `CreateSvtTestType` (the first), `CreateSvtTestTypeConfig` | |
 | Test template | `SvtTestTemplate` | DUT type + test type configuration | `CreateSvtTestTemplate` | `UpdateSvtTestTemplate` (`isEnabled`) |
 | Test | `SvtTestList`, `SvtTestListToEntityName`, `SvtTestListToEntityId` | none | `CreateSvtTest` | `UpdateSvtTestStart`, `UpdateSvtTestFinish` |
+| User | `SvtUser` | `login`, in lower case | `CreateUser`; the first Admin is entered in the database | `UpdateUser` (`name`, `role`, `isActive`), `UpdateUserPassword` |
 
 Two more sets of rows are configuration data without a message: which block types a family type has
 (`AsicFamilyTypeBlockList`), and the values of the enum types ([database-schema.md §6](database-schema.md#6-enum-types)).
@@ -205,6 +208,30 @@ stateDiagram-v2
 - **The result status** is a value of the enum `testResultStatus`, or `null` for a test without a result.
 - **The times are UTC.** `createdAt` comes from the database.
 
+### 4.5 Users
+
+A user of the installation is one row of `SvtUser`. Other services point to a user by its `id`, never by a name
+([the decision record](../../Documentation/decisions/2026-11-users-and-roles.md)).
+
+- **The roles are levels.** A user has one role of the enum `userRole`: `User` < `Expert` < `Developer` < `Admin`.
+  A role has every right of the roles below it. The code depends on the four values, so a change of them is a
+  schema change. `isEpicUserRoleAtLeast` of `svt-ts-types` compares two roles.
+- **The login is unique and in lower case.** The agent trims the login and stores it in lower case, so `Anna.Rossi`
+  and `anna.rossi` are one login. The database enforces the unique login; only the agent enforces the lower case.
+  The login does not change after creation.
+- **A user is never deleted.** It is switched off (`isActive` false) and its row stays, because other rows will
+  point to it. A user that is switched off cannot log in; the BFF checks that.
+- **The installation keeps one active Admin.** The agent refuses a change that would switch off the last active
+  Admin, or give it another role. It checks and writes in one transaction, and it locks the Admins first, so two
+  changes at the same time cannot remove the last two Admins. Only the agent enforces the rule: a row changed
+  directly in the database can break it.
+- **The first Admin is entered by hand.** The migration creates no user, and no account with a known password
+  exists.
+- **The password hash is opaque.** The BFF makes it; the agent stores it and never reads it. Only the reply of
+  `GetUserCredentials` holds it, and the agent never writes it to its log.
+- **The agent does not check who sends a user message.** The rule that only an Admin manages the users belongs to
+  the BFF.
+
 ## 5. Values that the agent derives
 
 A reply has fields that are not columns of the table of the entity. The agent computes them for each reply.
@@ -232,7 +259,8 @@ A reply has fields that are not columns of the table of the entity. The agent co
 
 ## 7. What the model does not hold
 
-Users and permissions. The content of a test result: the model has only the path to it. The outcome of wafer
+Rights per page or per message: the model has the four roles only (§4.5). Which user did something: no row points
+to a user yet. The content of a test result: the model has only the path to it. The outcome of wafer
 probing. The list of equipment of a test setup: the table `SvtTestSetupEquipList` exists, and nothing reads or
 writes it. Modules. An audit trail other than the location, load and install histories.
 
@@ -248,7 +276,7 @@ A decision on one of these points changes the model, and then it changes this pa
 | The enum type `blockType` | Its name on the wire is `chipBlockType`. The rename in the database is planned ([02 §2](02-database-migration.md#2-what-migration-1-adds)). |
 | The removal of a probe card | It leaves no history row. A status column on `ProbeCardInstalledInMachine` is proposed. |
 | The meaning of the orientations | One enum type serves the wafer and the probe card. What each orientation describes is not written down. |
-| The user name in a history row | Free text. No service knows the users. |
+| The user name in a history row | Free text. The users are in `SvtUser`, and no history row points to one yet. |
 | `UpdateSvtTestType` | It replaces the list of DUT types. The owners of the clients did not confirm this meaning. |
 | Several devices for one test | The link tables permit it. The agent writes one. |
 | The order of start and finish of a test | Not enforced. Who enforces it is not decided. |

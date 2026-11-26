@@ -34,7 +34,7 @@ src/
 ├── db/                     the database layer, strict (src/db/tsconfig.json)
 │   ├── orm/                SvtDbOrmModule, runtime options, SvtDbNamingStrategy
 │   └── data/<domain>/      entities, repositories, enum values service, pure domain logic (wafer-maps/)
-└── migrations/             MikroORM migrations 0 to 4 and their list, applied at start (02)
+└── migrations/             MikroORM migrations 0 to 5 and their list, applied at start (02)
 ```
 
 | Topic | Rule | Why |
@@ -171,6 +171,12 @@ comparison with the C++ agent ([03](03-parity-testing.md)), and the C++ agent ge
   (`ProbeCardFamilyType`, `SvtTestListToEntityName`): `primary: true` on both properties plus `[PrimaryKeyProp]`.
 - **Line endings.** The repository stores LF; on Windows `core.autocrlf=true` checks out CRLF. Tools that read files
   byte by byte must tolerate `\r` (MSYS `grep` strips it silently, so it cannot be used to detect it).
+- **The debug log writes the values of each query.** With `SVT_DB_AGENT_LOGGER_TERM_VERBOSITY=DEBUG` (the default of
+  `.env.development`) MikroORM logs every query with its values. A transaction that writes a password hash therefore
+  runs with `loggerContext: { enabled: false }`, which turns the query log off for that transaction only (§7, Users).
+- **A transaction started by a test runs the agent's work inside it.** MikroORM keeps the transaction of
+  `em.transactional(cb)` in the async context, so a request sent from inside `cb` joins it as a savepoint. A test
+  that holds a lock while the agent works uses `em.begin()` and `em.commit()` instead (`users.e2e-spec.ts`).
 
 ## 7. Notes per domain
 
@@ -190,3 +196,12 @@ Implementation details behind the decisions of [01 §6](01-behaviour-decisions.m
   two `Get*ConfigBody` messages populate it.
 - **Tests.** The two device filters are resolved through the link tables first and intersected with `ids`; the
   rest is one `findAndCount`.
+- **Users** (`db/data/users/`).
+  - `passwordHash` is `lazy: true`: a list never loads it, and only `findCredentialsByLogin` populates it. The
+    handlers build every reply with `toWire`, which has no hash; only `GetUserCredentials` adds it.
+  - `create` and `updatePasswordHash` run their transaction without the query log (§6).
+  - The last-Admin rule is the pure function `removesLastActiveAdmin` (unit spec next to it). `update` calls it in
+    the transaction of the write, after it has locked the active Admins (`FOR UPDATE`, in id order) and then the
+    user. Two updates at the same time thus cannot both remove an Admin of the last two, and they cannot deadlock.
+  - The DTOs trim `login` and `name` with `@Transform` before they validate them; `login` is also lower-cased.
+    `GetUserCredentials` normalises `data.login` with the same function.

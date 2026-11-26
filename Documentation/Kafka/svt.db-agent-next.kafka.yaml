@@ -1691,6 +1691,177 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReplyMessage"
   # ENUMS
+  # USERS
+  /svt.db-agent.request/GetAllUsers:
+    post:
+      tags:
+        - User
+      summary: Get all users
+      description: >-
+        Returns the users in the reply message, in `id` order. Optional filter by ids, roles and `isActive`, and
+        an optional pager. An item never holds the password hash. A role that is no value of `userRole` is a
+        `BadRequest`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetAllUsersMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetAllUsersReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/GetUserCredentials:
+    post:
+      tags:
+        - User
+      summary: Get the user of a login, with the password hash
+      description: >-
+        The only message whose reply holds the password hash; the BFF sends it at log-in. The agent trims
+        `data.login` and compares it in lower case. An inactive user is returned like any other; the caller
+        decides. `NotFound` with `No user with this login` when no user has the login.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/GetUserCredentialsMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/GetUserCredentialsReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/CreateUser:
+    post:
+      tags:
+        - User
+      summary: Create a user
+      description: >-
+        Returns the new user in the reply message, without the password hash. The new user is active. The agent
+        stores `login` trimmed and in lower case, and `name` trimmed. A login that exists already, in any case,
+        is a `BadRequest` (the unique-constraint text). The agent never reads the content of `passwordHash`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/CreateUserMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/CreateUserReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateUser:
+    post:
+      tags:
+        - User
+      summary: Change the name, the role or the state of a user
+      description: >-
+        Returns the user after the change, without the password hash. An absent key of `data.update` keeps the
+        value. The login cannot be changed. `NotFound` with `No user with id <id>`. The installation keeps one
+        active Admin: a change that would switch off the last active Admin, or give it another role, is a
+        `BadRequest` with `The installation must keep one active Admin`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateUserMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateUserReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  /svt.db-agent.request/UpdateUserPassword:
+    post:
+      tags:
+        - User
+      summary: Set the password hash of a user
+      description: >-
+        Stores the new hash and returns the user, without the hash. `NotFound` with `No user with id <id>`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: "#/components/schemas/RequestMessage"
+                - $ref: "#/components/schemas/UpdateUserPasswordMessage"
+        required: true
+      responses:
+        "200":
+          description: Reply Message
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "#/components/schemas/ReplyMessage"
+                  - $ref: "#/components/schemas/UpdateUserPasswordReplyMessage"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyMessage"
+  # ENUMS
   /svt.db-agent.request/GetAllEnums:
     post:
       tags:
@@ -1910,6 +2081,10 @@ components:
               items:
                 type: string
             testResultStatus:
+              type: array
+              items:
+                type: string
+            userRole:
               type: array
               items:
                 type: string
@@ -4487,6 +4662,238 @@ components:
         - ERROR
         - CANCELLED
 
+    #
+    # USERS :: MESSAGES
+    #
+    GetAllUsersMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllUsers"
+        data:
+          type: object
+          properties:
+            pager:
+              type: object
+              properties:
+                limit:
+                  type: number
+                  description: Default value is 20. That value will be used if no limit specified.
+                offset:
+                  type: number
+                  description: Default value is 0. That value will be used if no offset specified.
+            filter:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: User ids. Empty or absent => users with any id.
+                  items:
+                    type: number
+                roles:
+                  type: array
+                  description: Values of `userRole`. Empty or absent => users with any role.
+                  items:
+                    $ref: "#/components/schemas/UserRole"
+                isActive:
+                  type: boolean
+                  description: Absent => active and inactive users.
+    GetAllUsersReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetAllUsersReply"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserDto"
+            totalCount:
+              type: number
+              description: The number of users that match the filter. The pager does not change it.
+    GetUserCredentialsMessage:
+      properties:
+        type:
+          type: string
+          default: "GetUserCredentials"
+        data:
+          type: object
+          required:
+            - login
+          properties:
+            login:
+              type: string
+              description: Trimmed and compared in lower case.
+    GetUserCredentialsReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "GetUserCredentialsReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/UserCredentialsDto"
+    CreateUserMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateUser"
+        data:
+          type: object
+          required:
+            - create
+          properties:
+            create:
+              $ref: "#/components/schemas/UserCreateDto"
+    CreateUserReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "CreateUserReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/UserDto"
+    UpdateUserMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateUser"
+        data:
+          type: object
+          required:
+            - id
+            - update
+          properties:
+            id:
+              type: number
+            update:
+              $ref: "#/components/schemas/UserUpdateDto"
+    UpdateUserReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateUserReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/UserDto"
+    UpdateUserPasswordMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateUserPassword"
+        data:
+          type: object
+          required:
+            - id
+            - passwordHash
+          properties:
+            id:
+              type: number
+            passwordHash:
+              type: string
+              minLength: 1
+              maxLength: 255
+              description: An opaque string made by the BFF.
+    UpdateUserPasswordReplyMessage:
+      properties:
+        type:
+          type: string
+          default: "UpdateUserPasswordReply"
+        data:
+          type: object
+          properties:
+            entity:
+              $ref: "#/components/schemas/UserDto"
+    # USERS :: DTO
+    UserDto:
+      description: A user as every service may see it. It never holds the password hash.
+      required:
+        - id
+        - login
+        - name
+        - role
+        - isActive
+        - createdAt
+      properties:
+        id:
+          type: number
+          description: The user id, the value of the header `svt_userId`.
+        login:
+          type: string
+          description: The name the user types at log-in, in lower case.
+        name:
+          type: string
+          description: The name shown to people.
+        role:
+          $ref: "#/components/schemas/UserRole"
+        isActive:
+          type: boolean
+          description: "`false`: the user cannot log in."
+        createdAt:
+          type: string
+          description: ISO 8601 date-time in UTC, e.g. `2026-11-26T10:15:30.000Z`
+    UserCredentialsDto:
+      description: A user with the password hash. Only the reply of `GetUserCredentials` carries it.
+      allOf:
+        - $ref: "#/components/schemas/UserDto"
+        - type: object
+          required:
+            - passwordHash
+          properties:
+            passwordHash:
+              type: string
+              description: An opaque string made by the BFF. The agent never reads its content.
+    UserCreateDto:
+      required:
+        - login
+        - name
+        - role
+        - passwordHash
+      properties:
+        login:
+          type: string
+          description: >-
+            3 to 50 characters after trimming; only `a-z`, `0-9`, `.`, `_` and `-` after lower-casing. Stored
+            trimmed and in lower case. Unique in any case.
+        name:
+          type: string
+          description: 1 to 100 characters after trimming. Stored trimmed.
+        role:
+          $ref: "#/components/schemas/UserRole"
+        passwordHash:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: An opaque string made by the BFF.
+    UserUpdateDto:
+      description: Every key is optional; an absent key or `null` keeps the value. No other key is allowed (no `login`).
+      properties:
+        name:
+          type: string
+          description: 1 to 100 characters after trimming. Stored trimmed.
+        role:
+          $ref: "#/components/schemas/UserRole"
+        isActive:
+          type: boolean
+    # USERS :: ROLE (the PostgreSQL enum `userRole`)
+    UserRole:
+      type: string
+      description: >-
+        The role of a user, as ordered levels: `User` < `Expert` < `Developer` < `Admin`. A role has every right of
+        the roles below it.
+      enum:
+        - User
+        - Expert
+        - Developer
+        - Admin
+
     # ENUM :: DTO
     SvtEnumName:
       type: string
@@ -4515,3 +4922,4 @@ components:
         - wpSwType
         - wpVendor
         - testResultStatus
+        - userRole
