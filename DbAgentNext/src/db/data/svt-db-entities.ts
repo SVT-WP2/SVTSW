@@ -18,6 +18,7 @@ import {
     SvtDbSvtTestTypeEntity,
 } from './svt-test-types'
 import { SvtDbSvtTestDutEntityNameEntity, SvtDbSvtTestDutIdEntity, SvtDbSvtTestEntity } from './svt-tests'
+import { SvtDbUserEntity } from './users'
 import { SvtDbWaferTypeEntity, SvtDbWaferTypeMapEntity } from './wafer-types'
 import { SvtDbWaferEntity, SvtDbWaferLocationEntity } from './wafers'
 import {
@@ -64,4 +65,5 @@ export const SVT_DB_ENTITIES = [
     SvtDbSvtTestEntity,
     SvtDbSvtTestDutEntityNameEntity,
     SvtDbSvtTestDutIdEntity,
+    SvtDbUserEntity,
 ]
