@@ -41,6 +41,10 @@ services:
     environment:
       - "SVT_UI_PORT=${UI_PORT:-7575}"
       - "KAFKA_BROKER=${KAFKA_SERVER:-kafka}:${KAFKA_PORT:-9084}"
+      # The key of the UI sessions: required, set it in .env (see .env.example).
+      - "SVT_UI_AUTH_SECRET=${SVT_UI_AUTH_SECRET:?missing - set it in Dev/.env, at least 32 random characters, see .env.example}"
+      - "SVT_UI_AUTH_SESSION_HOURS=${SVT_UI_AUTH_SESSION_HOURS:-12}"
+      - "SVT_UI_AUTH_COOKIE_SECURE=${SVT_UI_AUTH_COOKIE_SECURE:-false}"
     ports:
       - "${UI_PORT:-7575}:${UI_PORT:-7575}"
     networks:
