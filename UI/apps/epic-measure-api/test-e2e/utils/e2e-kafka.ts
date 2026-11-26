@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { Admin, Kafka, logLevel } from 'kafkajs'
 import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
 
@@ -86,4 +88,88 @@ async function waitForIdleGroups(admin: Admin, broker: string): Promise<void> {
         }
         await new Promise((resolve) => setTimeout(resolve, 1000))
     }
+}
+
+/** A record of the request topic as the DB agent receives it: the headers as text, and the parsed value. */
+export type E2eRequestRecord = {
+    offset: string
+    headers: Record<string, string | undefined>
+    value: { type: string; data?: any }
+}
+
+/**
+ * Reads the records of `svt.db-agent.request` that arrive after `mark()`, with their headers: what the BFF really
+ * sends to the DB agent. A consumer of its own group (not one of the groups the global setup checks), which it
+ * deletes after the read.
+ *
+ * ```ts
+ * const reader = new E2eRequestTopicReader(config.kafkaBroker)
+ * await reader.mark()
+ * await setup.get('/api/wafer-types')
+ * const records = await reader.read((all) => all.some((record) => record.value.type === 'GetAllWaferTypes'))
+ * ```
+ */
+export class E2eRequestTopicReader {
+
+    private readonly kafka: Kafka
+    private marks: { partition: number; offset: string }[] = []
+
+    constructor(broker: string) {
+        this.kafka = new Kafka({ clientId: 'epic-measure-api-e2e.reader', brokers: [broker], logLevel: logLevel.NOTHING })
+    }
+
+    /** Remembers the end of each partition: `read` returns what comes after it. */
+    async mark(): Promise<void> {
+        const admin = this.kafka.admin()
+        await admin.connect()
+        try {
+            const offsets = await admin.fetchTopicOffsets(SvtDbAgentKafka.TopicName.Request)
+            this.marks = offsets.map(({ partition, high }) => ({ partition, offset: high }))
+        }
+        finally {
+            await admin.disconnect()
+        }
+    }
+
+    /** The records after the mark, once `until` is true for them; fails after `timeoutMs`. */
+    async read(until: (records: E2eRequestRecord[]) => boolean, timeoutMs = 20_000): Promise<E2eRequestRecord[]> {
+        const groupId = `epic-measure-api-e2e.reader.${randomUUID()}`
+        const consumer = this.kafka.consumer({ groupId })
+        const records: E2eRequestRecord[] = []
+        const start = new Map(this.marks.map(({ partition, offset }) => [partition, BigInt(offset)]))
+        try {
+            await consumer.connect()
+            await consumer.subscribe({ topic: SvtDbAgentKafka.TopicName.Request, fromBeginning: false })
+            await consumer.run({
+                eachMessage: ({ partition, message }) => {
+                    if (BigInt(message.offset) < (start.get(partition) ?? 0n)) {
+                        return Promise.resolve()
+                    }
+                    const headers = Object.fromEntries(Object.entries(message.headers ?? {})
+                        .map(([key, value]) => [key, value === undefined ? undefined : String(value)]))
+                    records.push({ offset: message.offset, headers, value: JSON.parse(String(message.value)) })
+                    return Promise.resolve()
+                },
+            })
+            for (const { partition, offset } of this.marks) {
+                consumer.seek({ topic: SvtDbAgentKafka.TopicName.Request, partition, offset })
+            }
+            const deadline = Date.now() + timeoutMs
+            while (!until(records)) {
+                if (Date.now() > deadline) {
+                    throw new Error(`The request topic did not get the expected records within ${timeoutMs} ms: ${JSON.stringify(records)}`)
+                }
+                await new Promise((resolve) => setTimeout(resolve, 100))
+            }
+            return records
+        }
+        finally {
+            await consumer.disconnect()
+            const admin = this.kafka.admin()
+            await admin.connect()
+            await admin.deleteGroups([groupId]).catch(() => undefined)
+            await admin.disconnect()
+        }
+    }
+
 }

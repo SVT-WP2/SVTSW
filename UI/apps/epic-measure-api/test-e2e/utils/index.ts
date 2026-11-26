@@ -1,5 +1,6 @@
 export * from './e2e-config'
 export * from './e2e-expectations'
+export * from './e2e-kafka'
 export * from './svt-test-fixtures'
 export * from './test-setup'
 export * from './wafer-fixtures'
