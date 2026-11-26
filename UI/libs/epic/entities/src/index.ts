@@ -1,4 +1,5 @@
 export * from './asics'
+export * from './auth'
 export * from './common'
 export * from './kafka'
 export * from './wafers'
