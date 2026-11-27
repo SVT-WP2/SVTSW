@@ -62,7 +62,7 @@ Every command is sent as a Kafka message to `svt.wp-agent.request`:
 | 🔴 `ListChipTypes` | none | `ListChipTypesReply`, "Chip types retrieval not yet implemented" | Not implemented yet in the code. | `python3.12 main.py send ListChipTypes --data='{"waferAgentName":"WPMIT_DEV"}'` |
 | 🔴 `ListOrientations` | none | none: not registered in `WPCmdMap.py`, so the agent doesn't run it | A function exists in `actions/WPDataBaseActions.py` but it isn't connected to a command, and it's not implemented yet either. | `python3.12 main.py send ListOrientations --data='{"waferAgentName":"WPMIT_DEV"}'` |
 
-🔴 = the remaining commands from the Swagger file and not tested by me.
+🔴 = the remaining commands from the Swagger file (added last, none of them used in its3.py).
 
 
 ### `MoveChuckRowColumn` variants
@@ -83,58 +83,148 @@ Precise-only parameters:
 | `correction_settle_s` | 0.1 | Wait between correction steps, s. |
 | `step_tolerance_um` | 50.0 | Accepted difference between the prober's die-to-die step and the die size, µm. |
 
-## Part 2. Flow #1 ER2B Wafer
+## Part 2. Flows
 
-**Start**
-
-1. `Initialize`
-2. `UserLogIn`
-3. `OpenProject`
-4.`MoveChuckOffAxis`
-5.`MoveChuckCenter`
-6.`AutoFocus`
-7.`AlignWafer`
-8.`FindHome`
-9.Program the FPGA with `test_system` firmware and run the `Initialization` commands from the config.
-
-**For each chip in the CSV with `TEST=yes`**
-
-10.`MoveChuckRowColumn` with the die's `col`, `row`
-11. If PTPA is on for this die: `SetPTPA` false → `SetPTPA` true (only if `re_enable_ptpa`), then `RunPTPA`. If it fails: `ResetAgent` + `UserLogIn` (if `reset_on_ptpa_failure`) and skip the chip.
-12`MoveChuckWide`
-13. `MoveChuckXY` (only if a manual offset is set) and `MoveChuckXYPrecise` (only if the die has `precise_offset_um`)
-14. `MoveChuckContact`
-15. Run `set_daq`, then the test `Sequence` commands for the chip.
-
-**End (always runs)**
-
-16. `MoveChuckSeparation`
-17. `MoveChuckOffAxis` (first undoes any precise offset)
-18. `MoveChuckHome`
-19. `UserLogOut`
-
-Flow #2 ER2 Wafer
-**Start**
+### ER2-BAM: PTPA only
 
 1. `Initialize`
 2. `UserLogIn`
-3. `OpenProject`
-4.`MoveChuckOffAxis`
-5.`MoveChuckCenter`
-6.`InitProbing`
-7.Program the FPGA with `test_system` firmware and run the `Initialization` commands from the config.
+3. `OpenProject` with the ER2 babyMOSAIX project
+4. `InitProbing` (aligns on the same babyMOSAIX project, no project switch)
+5. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+6. `SetPTPA` true (optional), then `RunPTPA`
+7. `MoveChuckWide`
+8. `MoveChuckContact`
+9. Run the tests
+10. `MoveChuckSeparation`
+11. Next die: repeat from step 5 (after the last die, continue)
+12. `MoveChuckOffAxis`
+13. `MoveChuckHome`
+14. `UserLogOut`
 
-**For each chip in the CSV with `TEST=yes`**
+### ER2-BAM: PTPA + TopRight
 
-8.`MoveChuckRowColumn` with the die's `col`, `row`
-9. If PTPA is on for this die: `SetPTPA` false → `SetPTPA` true (only if `re_enable_ptpa`), then `RunPTPA`. If it fails: `ResetAgent` + `UserLogIn` (if `reset_on_ptpa_failure`) and skip the chip.
-10`MoveChuckWide`
-11.`MoveChuckXY` (only if a manual offset is set) and `MoveChuckXYPrecise` (only if the die has `precise_offset_um`)
-12.`MoveChuckContact`
-13.Run `set_daq`, then the test `Sequence` commands for the chip.
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the ER2 babyMOSAIX project
+4. `InitProbing` (aligns on the same babyMOSAIX project, no project switch)
+5. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+6. `SetPTPA` true (optional), then `RunPTPA`
+7. `MoveChuckWide`
+8. `MoveChuckTopRight` (relative x=-15, y=-10 µm) *(guess: developer login needed, and TopRight is done in addition to PTPA)*
+9. `MoveChuckContact`
+10. Run the tests
+11. `MoveChuckSeparation`
+12. Next die: repeat from step 5 (after the last die, continue)
+13. `MoveChuckOffAxis`
+14. `MoveChuckHome`
+15. `UserLogOut`
 
-**End (always runs)**
-14.`MoveChuckSeparation`
-15.`MoveChuckOffAxis` (first undoes any precise offset)
-17.`MoveChuckHome`
-18`UserLogOut`
+### ER2-SEG (Mosaix): PTPA only
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the ER2 MOSAIX project
+4. `InitProbing` (opens the babyMOSAIX alignment project, aligns, reopens the MOSAIX project, runs FindHome)
+5. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+6. `SetPTPA` true (optional), then `RunPTPA`
+7. `MoveChuckWide`
+8. `MoveChuckContact`
+9. Run the tests
+10. `MoveChuckSeparation`
+11. Next die: repeat from step 5 (after the last die, continue)
+12. `MoveChuckOffAxis`
+13. `MoveChuckHome`
+14. `UserLogOut`
+
+### ER2-SEG (Mosaix): PTPA + TopRight
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the ER2 MOSAIX project
+4. `InitProbing` (opens the babyMOSAIX alignment project, aligns, reopens the MOSAIX project, runs FindHome)
+5. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+6. `SetPTPA` true (optional), then `RunPTPA`
+7. `MoveChuckWide`
+8. `MoveChuckTopRight` (relative x=-15, y=-10 µm) *(guess: developer login needed, and TopRight is done in addition to PTPA)*
+9. `MoveChuckContact`
+10. Run the tests
+11. `MoveChuckSeparation`
+12. Next die: repeat from step 5 (after the last die, continue)
+13. `MoveChuckOffAxis`
+14. `MoveChuckHome`
+15. `UserLogOut`
+
+### ER2B-BAM: PTPA only
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the ER2B babyMOSAIX project
+4. `AlignWafer` 
+5. `FindHome`
+6. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+7. `SetPTPA` true (optional), then `RunPTPA`
+8. `MoveChuckWide`
+9. `MoveChuckContact`
+10. Run the tests
+11. `MoveChuckSeparation`
+12. Next die: repeat from step 5 (after the last die, continue)
+13. `MoveChuckOffAxis`
+14. `MoveChuckHome`
+15. `UserLogOut`
+
+### ER2B-BAM: PTPA + TopRight
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the ER2B babyMOSAIX project
+4. `AlignWafer`
+5. `FindHome`
+6. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+7. `SetPTPA` true (optional), then `RunPTPA`
+8. `MoveChuckWide`
+9. `MoveChuckTopRight` (relative x=-15, y=-10 µm) *(guess: developer login needed, and TopRight is done in addition to PTPA)*
+10. `MoveChuckContact`
+11. Run the tests
+12. `MoveChuckSeparation`
+13. Next die: repeat from step 5 (after the last die, continue)
+14. `MoveChuckOffAxis`
+15. `MoveChuckHome`
+16. `UserLogOut`
+
+### ER2-thinned: PTPA only
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the SEG project
+4. `MoveChuckOffAxis` 
+5. `InitProbing` (opens the babyMOSAIX alignment project, aligns, reopens the MOSAIX project, runs FindHome)
+6. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+7. `SetPTPA` true (optional), then `RunPTPA`
+8. `MoveChuckWide`
+9. `MoveChuckContact`
+10. Run the tests
+11. `MoveChuckSeparation`
+12. Next die: repeat from step 5 (after the last die, continue)
+13. `MoveChuckOffAxis`
+14. `MoveChuckHome`
+15. `UserLogOut`
+
+### ER2-thinned: PTPA + TopRight
+
+1. `Initialize`
+2. `UserLogIn`
+3. `OpenProject` with the SEG project
+4. `MoveChuckOffAxis` 
+5. `InitProbing` (opens the babyMOSAIX alignment project, aligns, reopens the MOSAIX project, runs FindHome)
+6. `MoveChuckRowColumn` to the die (`label`, or `col` + `row`)
+7. `SetPTPA` true (optional), then `RunPTPA`
+8. `MoveChuckWide`
+9. `MoveChuckTopRight` (relative x=-15, y=-10 µm) *(guess: developer login needed, and TopRight is done in addition to PTPA)*
+10. `MoveChuckContact`
+11. Run the tests
+12. `MoveChuckSeparation`
+13. Next die: repeat from step 5 (after the last die, continue)
+14. `MoveChuckOffAxis`
+15. `MoveChuckHome`
+16. `UserLogOut`
