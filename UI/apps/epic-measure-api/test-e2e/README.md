@@ -63,6 +63,7 @@ test-e2e/
 │   └── *-fixtures.ts          # payloads and seeds (wafer maps, WP machine, probe cards via SQL, SVT configs)
 ├── routes/                    # every route of the BFF and the spec that covers it
 ├── auth/                      # log-in, log-out, me, the guard on every route, the header svt_userId, the user cache
+├── users/                     # the user management of an Admin (403 for the other roles), the own password
 └── <domain>/<domain>.e2e-spec.ts
 ```
 
@@ -109,7 +110,7 @@ a test of today's behaviour) until someone decides.
 | Id | Finding | State |
 |---|---|---|
 | E2E-1 | A query array with more than 20 values (`ids=1&…&ids=21`, or `ids[]=`) reached the DTO as an object (qs `arrayLimit` 20) and became `[NaN]` (400) or `['[object Object]']` (a wrong filter). | **Fixed**: `toQueryStringArray` takes the object's values in index order (unit spec next to it). |
-| E2E-2 | The global `ValidationPipe`'s `enableImplicitConversion` converts JSON bodies too: `{ "name": 5 }` creates `"5"`, and any string is `true` for a boolean (`"false"` included). | Decision needed (`it.fails` in `equipment`, `svt-test-catalog`): convert only query strings, e.g. explicit `@Type()` on the query DTOs. Changes what bodies the API accepts. |
+| E2E-2 | The global `ValidationPipe`'s `enableImplicitConversion` converts JSON bodies too: `{ "name": 5 }` creates `"5"`, and any string is `true` for a boolean (`"false"` included). | Decision needed (`it.fails` in `equipment`, `svt-test-catalog`): convert only query strings, e.g. explicit `@Type()` on the query DTOs. Changes what bodies the API accepts. The bodies of the user management and of the own password (ticket 396) are not converted: their members take `TransformKeepPlainValue` (`users` spec: `"false"` is no boolean). |
 | E2E-3 | A path id that is no number answered 404 "does not exist: NaN" (asics, chips, chip blocks) or a 400 from the agent (others), after a Kafka round trip. | **Fixed**: `ParseIntPipe` on every numeric `@Param` (400 "numeric string is expected"). |
 | E2E-4 | `GET /api/svt-tests?statuses=Done` answered 200 with an empty page: the values were only checked to be strings. | **Fixed**: `@IsEnum(EpicSvtTestStatus, { each: true })`. |
 | E2E-5 | `POST /api/wp-machines/:id/loaded-wafer` could not load a wafer: the HTTP body had no orientation, and DbAgentNext requires `loadedWaferOrientation` (the C++ stored `null`; parity question 5). | **Fixed** 2026-11-16: the body takes `loadedWaferOrientation` (and the probe-card install an optional `installedProbeCardOrientation`); the agent keeps requiring it to load, decided in `../../../../DbAgentNext/docs/01-behaviour-decisions.md` §6.5. The UI's machine card has an orientation select. |
