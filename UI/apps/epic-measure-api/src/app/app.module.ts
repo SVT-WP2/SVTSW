@@ -12,6 +12,7 @@ import { HealthModule } from '../modules/health'
 import { IvMntModule } from '../modules/iv-mnt'
 import { EpicSvtTestModule } from '../modules/svt-test'
 import { EpicTcpModule } from '../modules/tcp'
+import { EpicUsersModule } from '../modules/users'
 import { EpicWafersModule } from '../modules/wafers'
 import { EpicWpModule } from '../modules/wp'
 
@@ -36,6 +37,7 @@ import { EpicWpModule } from '../modules/wp'
         EpicChipBlocksModule,
         EpicEquipmentsModule,
         EpicSvtTestModule,
+        EpicUsersModule,
     ],
     controllers: [],
     providers: [],

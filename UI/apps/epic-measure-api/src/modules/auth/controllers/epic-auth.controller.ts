@@ -1,6 +1,13 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UnauthorizedException } from '@nestjs/common'
-import { ApiNoContentResponse, ApiOkResponse, ApiTags, ApiTooManyRequestsResponse, ApiUnauthorizedResponse } from '@nestjs/swagger'
-import { EpicAuthLoginRequestDto, EpicAuthUserDto } from 'epic/entities'
+import {
+    ApiBadRequestResponse,
+    ApiNoContentResponse,
+    ApiOkResponse,
+    ApiTags,
+    ApiTooManyRequestsResponse,
+    ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
+import { EpicAuthLoginRequestDto, EpicAuthPasswordChangeRequestDto, EpicAuthUserDto } from 'epic/entities'
 import type { Response } from 'express'
 import { EpicAuthUser } from 'svt-ts-types'
 
@@ -57,6 +64,33 @@ export class EpicAuthController {
             throw new UnauthorizedException()
         }
         return user
+    }
+
+    /** The logged-in user changes the own password. The session stays valid. */
+    @Post('password')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiNoContentResponse({ description: 'The password is changed' })
+    @ApiBadRequestResponse({ description: 'A wrong current password (a failed log-in), or a new password not of 8 to 128 characters' })
+    @ApiUnauthorizedResponse({ description: 'No valid session' })
+    @ApiTooManyRequestsResponse({ description: EpicAuthSvc.TOO_MANY_ATTEMPTS_MESSAGE })
+    async changePassword(
+        @EpicCurrentUser() user: EpicAuthUser | undefined,
+        @Body() body: EpicAuthPasswordChangeRequestDto,
+        @Res({ passthrough: true }) response: Response,
+    ): Promise<void> {
+        if (!user) {
+            // The guard sets the user on every route that is not public; this is only a second line.
+            throw new UnauthorizedException()
+        }
+        try {
+            await this.authService.changePassword(user, body)
+        }
+        catch (error) {
+            if (error instanceof EpicAuthTooManyAttemptsException) {
+                response.setHeader('Retry-After', String(error.retryAfterSeconds))
+            }
+            throw error
+        }
     }
 
 }

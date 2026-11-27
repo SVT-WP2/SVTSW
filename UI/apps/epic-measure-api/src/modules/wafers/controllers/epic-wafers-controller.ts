@@ -24,6 +24,7 @@ import {
 import { firstValueFrom } from 'rxjs'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
+import { redactEpicKafkaSecrets } from '../../../common'
 import { EpicWafersService } from '../services'
 
 
@@ -122,17 +123,22 @@ export class EpicWafersController {
         ))
     }
 
+    /**
+     * Prints every request of the topic, of every domain. `CreateUser` and `UpdateUserPassword` carry a password hash:
+     * it is printed as `[redacted]`.
+     */
     @EventPattern(SvtDbAgentKafka.TopicName.Request)
     handleDbRequest(@Payload() message: SvtDbAgentKafkaWafers.Message, @Ctx() context: KafkaContext) {
         const { headers } = context.getMessage()
         console.log(
             `[${new Date().toUTCString()}] MESSAGE :: ${SvtDbAgentKafka.TopicName.Request}`,
             JSON.stringify(headers, null, 4),
-            JSON.stringify(message, null, 4),
+            JSON.stringify(redactEpicKafkaSecrets(message), null, 4),
         )
 
     }
 
+    /** Prints the headers only: the reply of `GetUserCredentials` holds a password hash. Keep the body out. */
     @EventPattern(SvtDbAgentKafka.TopicName.RequestReply)
     handleDbRequestReply(@Payload() message: SvtDbAgentKafkaWafers.ReplyMessage, @Ctx() context: KafkaContext) {
         const { headers } = context.getMessage()
