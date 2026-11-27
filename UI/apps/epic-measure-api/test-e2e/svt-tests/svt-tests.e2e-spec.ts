@@ -111,7 +111,7 @@ describe('SVT tests (e2e)', () => {
                 })
             expect(Object.keys(response.body)).toEqual([
                 'id', 'dutEntityName', 'dutId', 'testTypeConfigId', 'testSetupConfigId', 'createdAt', 'startedAt', 'finishedAt',
-                'pathToResult', 'testResultStatus', 'createdByUserId', 'createdByUserName', 'status',
+                'pathToResult', 'testResultStatus', 'status', 'createdByUserId', 'createdByUserName',
             ])
             expect(await setup.query('select "createdByUserId" from main."SvtTestList"')).toEqual([{ createdByUserId: E2E_ADMIN.id }])
             expect(await setup.query('select "testId", "dutEntityName" from main."SvtTestListToEntityName"'))

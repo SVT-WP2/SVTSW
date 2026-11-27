@@ -20,10 +20,10 @@ export type EpicSvtTest = {
     pathToResult: string | null
     /** Physical, stored in the DB; `null` while the test has no result yet. */
     testResultStatus: EpicSvtTestResultStatus | null
+    /** Synthetic, derived by the API — the one the UI shows. */
+    status: EpicSvtTestStatus
     /** The id of the user who created the test; `null` for a test without one (older tests, no user). */
     createdByUserId: number | null
     /** The name of that user (`SvtUser.name`), also of a user who was switched off later; `null` without a user. */
     createdByUserName: string | null
-    /** Synthetic, derived by the API — the one the UI shows. */
-    status: EpicSvtTestStatus
 }

@@ -259,8 +259,11 @@ describe('Chips (e2e)', () => {
                  from main."ChipLocation" order by id`,
             ))
                 .toEqual([
-                    { generalLocation: 'CERN', date: await setup.today(), username: null, note: 'Location at creation', userId: 1 },
-                    { generalLocation: 'Prague', date: '2026-03-01', username: null, note: 'moved to the lab', userId: 1 },
+                    {
+                        generalLocation: 'CERN', date: await setup.today(), username: null, note: 'Location at creation',
+                        userId: E2E_ADMIN.id,
+                    },
+                    { generalLocation: 'Prague', date: '2026-03-01', username: null, note: 'moved to the lab', userId: E2E_ADMIN.id },
                 ])
             expect((await page()).items).toEqual([{ ...CHIP_1, generalLocation: 'Prague' }])
         })

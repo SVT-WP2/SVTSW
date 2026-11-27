@@ -59,6 +59,10 @@ export class EpicSvtTestDto implements EpicSvtTest {
     })
     testResultStatus: EpicSvtTestResultStatus | null
 
+    @IsEnum(EpicSvtTestStatus)
+    @ApiProperty({ enum: EpicSvtTestStatus, description: 'Synthetic status, derived on the BE from testResultStatus' })
+    status: EpicSvtTestStatus
+
     @IsOptional()
     @IsNumber()
     @ApiProperty({ type: 'number', nullable: true, description: 'The id of the user who created the test; null for a test without one' })
@@ -72,9 +76,5 @@ export class EpicSvtTestDto implements EpicSvtTest {
         description: 'The name of that user, also of a user who was switched off later; null for a test without one',
     })
     createdByUserName: string | null
-
-    @IsEnum(EpicSvtTestStatus)
-    @ApiProperty({ enum: EpicSvtTestStatus, description: 'Synthetic status, derived on the BE from testResultStatus' })
-    status: EpicSvtTestStatus
 
 }

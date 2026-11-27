@@ -210,8 +210,8 @@ describe('Equipment (e2e)', () => {
                 `select "generalLocation", to_char(date, 'YYYY-MM-DD') as date, note, username, "userId"
                  from main."EquipmentLocation" order by id`,
             )).toEqual([
-                { generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null, userId: 1 },
-                { generalLocation: 'Prague', date: '2026-03-01', note: 'shipped', username: null, userId: 1 },
+                { generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null, userId: E2E_ADMIN.id },
+                { generalLocation: 'Prague', date: '2026-03-01', note: 'shipped', username: null, userId: E2E_ADMIN.id },
             ])
             expect((await setup.get('/api/equipment')).body).toEqual([{ ...EQUIPMENT_1, generalLocation: 'Prague' }])
         })

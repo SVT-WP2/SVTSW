@@ -271,8 +271,11 @@ describe('Wafers (e2e)', () => {
                 'select "generalLocation", date::text, username, note, "userId" from main."WaferLocation" order by id',
             ))
                 .toEqual([
-                    { generalLocation: WAFER_LOCATION, date: await setup.today(), username: null, note: 'Location at creation', userId: 1 },
-                    { generalLocation: 'CERN', date: '2026-03-01', username: null, note: 'moved to the lab', userId: 1 },
+                    {
+                        generalLocation: WAFER_LOCATION, date: await setup.today(), username: null, note: 'Location at creation',
+                        userId: E2E_ADMIN.id,
+                    },
+                    { generalLocation: 'CERN', date: '2026-03-01', username: null, note: 'moved to the lab', userId: E2E_ADMIN.id },
                 ])
         })
 
