@@ -1,19 +1,45 @@
 import { Injectable } from '@nestjs/common'
 import { normalizeEpicUserLogin } from 'svt-ts-types'
 
+import { EpicAuthSvc } from '../models'
+
 
 type LoginState = {
     /** When the failed log-ins of the window happened (ms). */
     failures: number[]
     /** Until when the login is locked (ms); 0 when it is not. */
     lockedUntil: number
+    /** The attempts of the login that hold a slot now: started, not ended. */
+    running: number
 }
 
 /**
- * The limit of wrong log-ins: after `MAX_FAILURES` failed log-ins of one login within `WINDOW_MS`, that login is
- * locked for `LOCK_MS`, and the BFF answers `429` without asking the DB agent. Every failed log-in counts, whatever
- * the cause (unknown login, wrong password, user switched off), so the `429` does not tell them apart either. A
- * successful log-in clears the login. The state is in memory: a restart of the BFF clears it.
+ * A log-in attempt that holds a slot of its login. End it with `fail()` (wrong credentials) or `succeed()`, and
+ * always `release()` it (`finally`): an attempt that ends otherwise (no reply, an error) gives its slot back and
+ * counts nothing. Each method acts once; later calls do nothing.
+ */
+export type EpicAuthLoginAttempt = {
+    fail(): void
+    succeed(): void
+    release(): void
+}
+
+/** `start` gives an attempt, or how long the caller should wait (`429`). */
+export type EpicAuthLoginAdmission = { attempt: EpicAuthLoginAttempt } | { retryAfterMs: number }
+
+/**
+ * The limit of wrong log-ins, per login (trimmed, in lower case):
+ *
+ * - An attempt takes a slot before it does any work (`start`, synchronous). The failures of the last
+ *   `WINDOW_MS` and the attempts that run now together may not reach `MAX_FAILURES`: beyond that, `429` at once,
+ *   without a hash check and without a Kafka request. So no number of guesses sent at the same time gets past it.
+ * - Every failed log-in counts, whatever the cause (unknown login, wrong password, user switched off), so the `429`
+ *   does not tell them apart either. The failure that reaches `MAX_FAILURES` locks the login for `LOCK_MS`.
+ * - A successful log-in clears the failures; attempts that still run stay counted.
+ * - An attempt without an answer (timeout, error) gives its slot back and counts nothing.
+ *
+ * The state is in memory: a restart of the BFF clears it. Anybody who knows a login can keep it locked (a known
+ * limit, `UI/docs/ARCHITECTURE.md` §10).
  */
 @Injectable()
 export class EpicAuthLoginThrottleService {
@@ -21,39 +47,57 @@ export class EpicAuthLoginThrottleService {
     static readonly MAX_FAILURES = 5
     static readonly WINDOW_MS = 5 * 60 * 1000
     static readonly LOCK_MS = 60 * 1000
-    /** Bounds the memory: logins are what a caller sends. Above it, the oldest login is dropped. */
+    /**
+     * The `Retry-After` of a `429` that comes from running attempts, not from a lock: by then they have ended (each
+     * waits at most this long for the DB agent). If they all failed, the login is locked then.
+     */
+    static readonly BUSY_RETRY_AFTER_MS = EpicAuthSvc.DB_AGENT_TIMEOUT_MS
+    /** Bounds the memory: logins are what a caller sends. Above it, the oldest logins are dropped. */
     static readonly MAX_LOGINS = 10_000
 
     private readonly logins = new Map<string, LoginState>()
 
-    /** The last attempt of each login that is still running: the next one waits for it (`oneAtATime`). Never rejects. */
-    private readonly running = new Map<string, Promise<unknown>>()
-
-    /**
-     * Runs the attempts of one login one after another. Without it, many attempts sent at the same time would all
-     * pass the check of the limit before the first one is counted (each takes the time of a hash). An attempt waits
-     * for the one before it at most `maxWaitMs`, whatever happened to that one (no reply, an error, an exception):
-     * a dead attempt never holds its login.
-     */
-    async oneAtATime<T>(login: string, attempt: () => Promise<T>, maxWaitMs: number): Promise<T> {
+    /** Takes a slot for an attempt of the login, or answers how long to wait. Synchronous: call it before any `await`. */
+    start(login: string): EpicAuthLoginAdmission {
         const key = normalizeEpicUserLogin(login)
-        const previous = this.running.get(key) ?? Promise.resolve()
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const waitLimit = new Promise<void>((resolve) => {
-            timer = setTimeout(resolve, maxWaitMs)
-        })
-        const result = Promise.race([previous, waitLimit])
-            .finally(() => clearTimeout(timer))
-            .then(attempt)
-        const done = result.then(() => undefined, () => undefined)
-        this.running.set(key, done)
-        try {
-            return await result
+        const now = Date.now()
+        const state = this.current(key, now)
+        if (state.lockedUntil > now) {
+            return { retryAfterMs: state.lockedUntil - now }
         }
-        finally {
-            if (this.running.get(key) === done) {
-                this.running.delete(key)
+        if (state.failures.length + state.running >= EpicAuthLoginThrottleService.MAX_FAILURES) {
+            return { retryAfterMs: EpicAuthLoginThrottleService.BUSY_RETRY_AFTER_MS }
+        }
+        state.running++
+        this.keep(key, state, now)
+
+        let holdsSlot = true
+        const giveBack = (): boolean => {
+            if (!holdsSlot) {
+                return false
             }
+            holdsSlot = false
+            state.running--
+            return true
+        }
+        return {
+            attempt: {
+                fail: () => {
+                    if (giveBack()) {
+                        this.countFailure(state, Date.now())
+                    }
+                },
+                succeed: () => {
+                    if (giveBack()) {
+                        state.failures = []
+                        state.lockedUntil = 0
+                    }
+                },
+                release: () => {
+                    giveBack()
+                    this.dropIfIdle(key, state, Date.now())
+                },
+            },
         }
     }
 
@@ -64,48 +108,65 @@ export class EpicAuthLoginThrottleService {
         return remaining > 0 ? remaining : 0
     }
 
-    /** Counts one failed log-in. The one that reaches the limit locks the login. */
-    recordFailure(login: string): void {
-        const key = normalizeEpicUserLogin(login)
-        const now = Date.now()
-        const state = this.logins.get(key) ?? { failures: [], lockedUntil: 0 }
+    clearAll(): void {
+        this.logins.clear()
+    }
+
+    /** The state of the login, with the failures of the window only and an expired lock removed. */
+    private current(key: string, now: number): LoginState {
+        const state = this.logins.get(key) ?? { failures: [], lockedUntil: 0, running: 0 }
+        state.failures = state.failures.filter((time) => time > now - EpicAuthLoginThrottleService.WINDOW_MS)
+        if (state.lockedUntil <= now) {
+            state.lockedUntil = 0
+        }
+        return state
+    }
+
+    private countFailure(state: LoginState, now: number): void {
         state.failures = state.failures.filter((time) => time > now - EpicAuthLoginThrottleService.WINDOW_MS)
         state.failures.push(now)
         if (state.failures.length >= EpicAuthLoginThrottleService.MAX_FAILURES) {
             state.failures = []
             state.lockedUntil = now + EpicAuthLoginThrottleService.LOCK_MS
         }
+    }
+
+    /** Stores the state as the newest login, then keeps the map within `MAX_LOGINS`. */
+    private keep(key: string, state: LoginState, now: number): void {
         this.logins.delete(key)
         this.logins.set(key, state)
-        this.prune(now)
-    }
-
-    /** A successful log-in: the login starts again from zero. */
-    clear(login: string): void {
-        this.logins.delete(normalizeEpicUserLogin(login))
-    }
-
-    clearAll(): void {
-        this.logins.clear()
-    }
-
-    private prune(now: number): void {
         if (this.logins.size <= EpicAuthLoginThrottleService.MAX_LOGINS) {
             return
         }
-        for (const [key, state] of this.logins) {
-            const isRecent = state.failures.some((time) => time > now - EpicAuthLoginThrottleService.WINDOW_MS)
-            if (!isRecent && state.lockedUntil <= now) {
-                this.logins.delete(key)
+        for (const [oldKey, oldState] of this.logins) {
+            if (this.isIdle(oldState, now)) {
+                this.logins.delete(oldKey)
             }
         }
-        // The map keeps the order of the last change: the first keys are the oldest.
-        for (const key of this.logins.keys()) {
-            if (this.logins.size <= EpicAuthLoginThrottleService.MAX_LOGINS) {
-                break
+        // The map keeps the order of the last start: the first keys are the oldest. Logins with a running attempt go
+        // last; an attempt whose login was dropped acts on its own state object, which is no longer in the map.
+        for (const onlyIdle of [true, false]) {
+            for (const [oldKey, oldState] of this.logins) {
+                if (this.logins.size <= EpicAuthLoginThrottleService.MAX_LOGINS) {
+                    return
+                }
+                if (oldKey !== key && (!onlyIdle || oldState.running === 0)) {
+                    this.logins.delete(oldKey)
+                }
             }
+        }
+    }
+
+    private dropIfIdle(key: string, state: LoginState, now: number): void {
+        if (this.logins.get(key) === state && this.isIdle(state, now)) {
             this.logins.delete(key)
         }
+    }
+
+    private isIdle(state: LoginState, now: number): boolean {
+        return state.running === 0
+            && state.lockedUntil <= now
+            && !state.failures.some((time) => time > now - EpicAuthLoginThrottleService.WINDOW_MS)
     }
 
 }

@@ -110,13 +110,27 @@ describe('Auth (e2e)', () => {
             ])
         })
 
-        it('counts attempts sent at the same time one after another: five 401, then 429', async () => {
+        it('lets five of the attempts sent at the same time run: five 401, the rest 429', async () => {
             await setup.createUser({ login: 'jane.doe', name: 'Jane Doe', role: EpicUserRole.User })
 
             const responses = await Promise.all(Array.from({ length: 8 }, () => (
                 setup.as(null).post('/api/auth/login', { login: 'jane.doe', password: 'wrong' }))))
 
             expect(responses.map((response) => response.status).sort()).toEqual([401, 401, 401, 401, 401, 429, 429, 429])
+        })
+
+        it('answers 429 to the right password sent while five wrong attempts of the login still run', async () => {
+            const jane = await setup.createUser({ login: 'jane.doe', name: 'Jane Doe', role: EpicUserRole.User })
+
+            const guess = () => setup.as(null).post('/api/auth/login', { login: 'jane.doe', password: 'wrong' })
+            const guesses = Array.from({ length: 7 }, guess)
+            // The guesses have taken the five slots; each of them needs a hash check (about 0.2 s) before it ends.
+            await new Promise((resolve) => setTimeout(resolve, 50))
+            const right = await setup.fetch('POST', '/api/auth/login', { body: { login: 'jane.doe', password: jane.password } })
+
+            expect(right.status).toBe(429)
+            expect(sessionCookieOf(right)).toBeUndefined()
+            expect((await Promise.all(guesses)).map((response) => response.status).sort()).toEqual([401, 401, 401, 401, 401, 429, 429])
         })
 
         it('starts the count again after a successful log-in', async () => {

@@ -49,32 +49,36 @@ export class EpicAuthService {
 
     /**
      * The user and a new session token. `401` with one text for an unknown login, a wrong password and a user that
-     * is switched off; `429` while the login is locked, without asking the DB agent; `503` when the DB agent does not
-     * answer within `EpicAuthSvc.DB_AGENT_TIMEOUT_MS` (not counted as a failed log-in, and the count stays).
+     * is switched off. `429` while the login is locked, or while its failures and its running attempts reach the
+     * limit: then without a hash check and without asking the DB agent. `503` when the DB agent does not answer
+     * within `EpicAuthSvc.DB_AGENT_TIMEOUT_MS` (not counted as a failed log-in, and the count stays).
      */
     async login(request: EpicAuthLoginRequest): Promise<{ user: EpicAuthUser; token: string }> {
         const login = normalizeEpicUserLogin(request.login)
-        return this.throttle.oneAtATime(login, () => this.attempt(login, request.password), EpicAuthSvc.DB_AGENT_TIMEOUT_MS)
-    }
-
-    private async attempt(login: string, password: string): Promise<{ user: EpicAuthUser; token: string }> {
-        const lockMs = this.throttle.lockRemainingMs(login)
-        if (lockMs > 0) {
-            throw new EpicAuthTooManyAttemptsException(Math.ceil(lockMs / 1000))
+        // The slot is taken before the first await: attempts sent at the same time cannot pass the limit together.
+        const admission = this.throttle.start(login)
+        if ('retryAfterMs' in admission) {
+            throw new EpicAuthTooManyAttemptsException(Math.ceil(admission.retryAfterMs / 1000))
         }
+        const { attempt } = admission
+        try {
+            // A login that breaks the login rule cannot exist: an unknown login, without asking the DB agent.
+            const credentials = isEpicUserLogin(login) ? await firstValueFrom(this.users.getCredentials(login)) : null
+            const isPassword = await verifyEpicPassword(request.password, credentials?.passwordHash ?? await this.dummyHash)
+            if (!credentials || !isPassword || !credentials.isActive) {
+                attempt.fail()
+                throw new UnauthorizedException(EpicAuthSvc.LOGIN_FAILED_MESSAGE)
+            }
 
-        // A login that breaks the login rule cannot exist: an unknown login, without asking the DB agent.
-        const credentials = isEpicUserLogin(login) ? await firstValueFrom(this.users.getCredentials(login)) : null
-        const isPassword = await verifyEpicPassword(password, credentials?.passwordHash ?? await this.dummyHash)
-        if (!credentials || !isPassword || !credentials.isActive) {
-            this.throttle.recordFailure(login)
-            throw new UnauthorizedException(EpicAuthSvc.LOGIN_FAILED_MESSAGE)
+            attempt.succeed()
+            const { passwordHash, ...user } = credentials
+            this.userCache.remember(user)
+            return { user: toEpicAuthUser(user), token: this.session.sign(user.id) }
         }
-
-        this.throttle.clear(login)
-        const { passwordHash, ...user } = credentials
-        this.userCache.remember(user)
-        return { user: toEpicAuthUser(user), token: this.session.sign(user.id) }
+        finally {
+            // Every other end (no reply, an error) gives the slot back and counts nothing.
+            attempt.release()
+        }
     }
 
 }

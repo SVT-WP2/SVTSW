@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { EpicAuthLoginThrottleService } from './epic-auth-login-throttle.service'
+import { EpicAuthLoginAttempt, EpicAuthLoginThrottleService } from './epic-auth-login-throttle.service'
 
 
 describe('EpicAuthLoginThrottleService', () => {
@@ -16,138 +16,200 @@ describe('EpicAuthLoginThrottleService', () => {
         vi.useRealTimers()
     })
 
-    const fail = (login: string, times: number) => {
+    /** A slot, or the test fails. */
+    function start(login: string): EpicAuthLoginAttempt {
+        const admission = throttle.start(login)
+        if (!('attempt' in admission)) {
+            throw new Error(`no slot for ${login}: ${JSON.stringify(admission)}`)
+        }
+        return admission.attempt
+    }
+
+    /** `times` failed log-ins, one after another. */
+    function fail(login: string, times: number): void {
         for (let index = 0; index < times; index++) {
-            throttle.recordFailure(login)
+            const attempt = start(login)
+            attempt.fail()
+            attempt.release()
         }
     }
 
-    it('locks a login for 60 s after the fifth failure within 5 minutes', () => {
-        fail('jane.doe', 4)
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+    const retryAfterMs = (login: string) => {
+        const admission = throttle.start(login)
+        return 'retryAfterMs' in admission ? admission.retryAfterMs : 0
+    }
 
-        throttle.recordFailure('jane.doe')
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
+    describe('the lock', () => {
 
-        vi.advanceTimersByTime(59_999)
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(1)
-        vi.advanceTimersByTime(1)
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
-    })
+        it('locks a login for 60 s after the fifth failure within 5 minutes', () => {
+            fail('jane.doe', 4)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
 
-    it('starts from zero after the lock', () => {
-        fail('jane.doe', 5)
-        vi.advanceTimersByTime(60_000)
+            fail('jane.doe', 1)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
+            expect(retryAfterMs('jane.doe')).toBe(60_000)
 
-        fail('jane.doe', 4)
-
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
-    })
-
-    it('counts only the failures of the last 5 minutes', () => {
-        fail('jane.doe', 4)
-        vi.advanceTimersByTime(5 * 60_000)
-
-        throttle.recordFailure('jane.doe')
-
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
-    })
-
-    it('counts a login in any case and with spaces as one login, and keeps logins apart', () => {
-        fail('Jane.Doe', 2)
-        fail(' jane.doe ', 2)
-        fail('john', 4)
-        throttle.recordFailure('JANE.DOE')
-
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
-        expect(throttle.lockRemainingMs('john')).toBe(0)
-    })
-
-    it('is cleared by a successful log-in', () => {
-        fail('jane.doe', 4)
-        throttle.clear('Jane.Doe')
-
-        throttle.recordFailure('jane.doe')
-
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
-    })
-
-    describe('oneAtATime', () => {
-
-        const task = (order: string[], name: string, ms: number, fails = false) => () => new Promise<string>((resolve, reject) => {
-            setTimeout(() => {
-                order.push(name)
-                if (fails) {
-                    reject(new Error(name))
-                }
-                else {
-                    resolve(name)
-                }
-            }, ms)
+            vi.advanceTimersByTime(59_999)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(1)
+            vi.advanceTimersByTime(1)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
         })
 
-        beforeEach(() => {
-            vi.useRealTimers()
+        it('starts from zero after the lock', () => {
+            fail('jane.doe', 5)
+            vi.advanceTimersByTime(60_000)
+
+            fail('jane.doe', 4)
+
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
         })
 
-        it('runs the attempts of one login one after another, and those of two logins side by side', async () => {
-            const order: string[] = []
+        it('counts only the failures of the last 5 minutes', () => {
+            fail('jane.doe', 4)
+            vi.advanceTimersByTime(5 * 60_000)
 
-            const results = await Promise.all([
-                throttle.oneAtATime('jane.doe', task(order, 'jane 1', 40), 10_000),
-                throttle.oneAtATime(' JANE.DOE', task(order, 'jane 2', 1), 10_000),
-                throttle.oneAtATime('john', task(order, 'john 1', 15), 10_000),
-            ])
+            fail('jane.doe', 1)
 
-            expect(results).toEqual(['jane 1', 'jane 2', 'john 1'])
-            expect(order).toEqual(['john 1', 'jane 1', 'jane 2'])
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
         })
 
-        it('goes on with the next attempt after one that fails, and gives each its own result', async () => {
-            const order: string[] = []
+        it('counts a login in any case and with spaces as one login, and keeps logins apart', () => {
+            fail('Jane.Doe', 2)
+            fail(' jane.doe ', 2)
+            fail('john', 4)
+            fail('JANE.DOE', 1)
 
-            const first = throttle.oneAtATime('jane.doe', task(order, 'jane 1', 10, true), 10_000)
-            const second = throttle.oneAtATime('jane.doe', task(order, 'jane 2', 1), 10_000)
-
-            await expect(first).rejects.toThrow('jane 1')
-            await expect(second).resolves.toBe('jane 2')
-            expect(order).toEqual(['jane 1', 'jane 2'])
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
+            expect(throttle.lockRemainingMs('john')).toBe(0)
         })
 
-        it('waits for an attempt that never ends at most maxWaitMs, then runs the next one', async () => {
-            vi.useFakeTimers()
-            const dead = throttle.oneAtATime('jane.doe', () => new Promise<string>(() => undefined), 1000)
-            const next = vi.fn(() => Promise.resolve('next'))
+        it('is cleared by a successful log-in', () => {
+            fail('jane.doe', 4)
+            const success = start('Jane.Doe')
+            success.succeed()
+            success.release()
 
-            const result = throttle.oneAtATime('JANE.DOE', next, 1000)
-            await vi.advanceTimersByTimeAsync(999)
-            expect(next).not.toHaveBeenCalled()
-            await vi.advanceTimersByTimeAsync(1)
+            fail('jane.doe', 4)
 
-            await expect(result).resolves.toBe('next')
-            expect(next).toHaveBeenCalledTimes(1)
-            void dead
-        })
-
-        it('goes on after an attempt that throws before it returns a promise', async () => {
-            const broken = throttle.oneAtATime('jane.doe', () => {
-                throw new Error('broken')
-            }, 10_000)
-
-            await expect(broken).rejects.toThrow('broken')
-            await expect(throttle.oneAtATime('jane.doe', () => Promise.resolve('next'), 10_000)).resolves.toBe('next')
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
         })
 
     })
 
-    it('keeps at most MAX_LOGINS logins, and drops the oldest first', () => {
-        fail('jane.doe', 5)
-        for (let index = 0; index <= EpicAuthLoginThrottleService.MAX_LOGINS; index++) {
-            throttle.recordFailure(`login-${index}`)
-        }
+    describe('the slots of running attempts', () => {
 
-        expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
-        expect((throttle as unknown as { logins: Map<string, unknown> }).logins.size).toBe(EpicAuthLoginThrottleService.MAX_LOGINS)
+        it('lets the failures and the running attempts together reach five at most: the rest get 429 at once', () => {
+            fail('jane.doe', 2)
+            const running = [start('jane.doe'), start('jane.doe'), start('jane.doe')]
+
+            const refused = throttle.start('JANE.DOE')
+
+            expect(refused).toEqual({ retryAfterMs: EpicAuthLoginThrottleService.BUSY_RETRY_AFTER_MS })
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+            running.forEach((attempt) => attempt.release())
+        })
+
+        it('gives every slot of 30 attempts started together to the first five only', () => {
+            const admissions = Array.from({ length: 30 }, () => throttle.start('jane.doe'))
+
+            expect(admissions.filter((admission) => 'attempt' in admission)).toHaveLength(5)
+            expect(admissions.slice(5).every((admission) => 'retryAfterMs' in admission)).toBe(true)
+        })
+
+        it('turns a running attempt that fails into a counted failure, and the fifth locks', () => {
+            const running = Array.from({ length: 5 }, () => start('jane.doe'))
+
+            running.forEach((attempt) => {
+                attempt.fail()
+                attempt.release()
+            })
+
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
+        })
+
+        it('gives the slot of an attempt without an answer back, and counts nothing', () => {
+            fail('jane.doe', 4)
+            const lost = start('jane.doe')
+            expect('retryAfterMs' in throttle.start('jane.doe')).toBe(true)
+
+            lost.release()
+
+            expect('attempt' in throttle.start('jane.doe')).toBe(true)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+        })
+
+        it('acts once per attempt: a second end or a second release changes nothing', () => {
+            const attempt = start('jane.doe')
+            attempt.fail()
+            attempt.fail()
+            attempt.release()
+            attempt.release()
+
+            fail('jane.doe', 3)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+            fail('jane.doe', 1)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(60_000)
+        })
+
+        it('clears the failures at a success while other attempts of the login still run, and keeps those counted', () => {
+            fail('jane.doe', 3)
+            const success = start('jane.doe')
+            const stillRunning = start('jane.doe')
+
+            success.succeed()
+            success.release()
+
+            // No failures now, one attempt running: four more slots, then 429.
+            const more = Array.from({ length: 4 }, () => start('jane.doe'))
+            expect('retryAfterMs' in throttle.start('jane.doe')).toBe(true)
+            stillRunning.release()
+            more.forEach((attempt) => attempt.release())
+            expect('attempt' in throttle.start('jane.doe')).toBe(true)
+        })
+
+    })
+
+    describe('the memory bound', () => {
+
+        it('keeps at most MAX_LOGINS logins, and drops the oldest first', () => {
+            fail('jane.doe', 5)
+            for (let index = 0; index <= EpicAuthLoginThrottleService.MAX_LOGINS; index++) {
+                fail(`login-${index}`, 1)
+            }
+
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+            expect((throttle as unknown as { logins: Map<string, unknown> }).logins.size).toBe(EpicAuthLoginThrottleService.MAX_LOGINS)
+        })
+
+        it('drops a login with a running attempt last, and that attempt still ends without an error or a negative count', () => {
+            const running = start('jane.doe')
+            for (let index = 0; index <= EpicAuthLoginThrottleService.MAX_LOGINS; index++) {
+                start(`login-${index}`)
+            }
+            const logins = (throttle as unknown as { logins: Map<string, { running: number }> }).logins
+            expect(logins.size).toBe(EpicAuthLoginThrottleService.MAX_LOGINS)
+            expect(logins.has('jane.doe')).toBe(false)
+
+            expect(() => {
+                running.fail()
+                running.release()
+            }).not.toThrow()
+            const again = start('jane.doe')
+            expect(logins.get('jane.doe')?.running).toBe(1)
+            again.release()
+        })
+
+        it('lets an attempt end after clearAll without an error', () => {
+            const running = start('jane.doe')
+            throttle.clearAll()
+
+            expect(() => {
+                running.succeed()
+                running.release()
+            }).not.toThrow()
+            expect('attempt' in throttle.start('jane.doe')).toBe(true)
+        })
+
     })
 
 })
