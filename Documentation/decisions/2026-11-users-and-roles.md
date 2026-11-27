@@ -147,10 +147,12 @@ sequenceDiagram
 
 - **No HTTPS yet.** The UI is served over plain HTTP, so a password crosses the network of the laboratory
   unencrypted, and the cookie cannot have the `Secure` flag. HTTPS is a separate task of the infrastructure.
-- **The password hash travels on Kafka**, and it stays in the reply topic until the broker deletes old records.
+- **The password hash travels on Kafka**, and it stays in the topics until the broker deletes old records: in the
+  reply topic (`GetUserCredentials`) and in the request topic (`CreateUser`, `UpdateUserPassword`, ticket 396).
   Access to the broker and to Kafka UI must stay limited to the team.
 - **A session lives until it expires.** A changed password does not end the other open sessions of that user. A
-  user that is switched off loses access within 30 seconds.
+  user that is switched off in the UI loses access with the next request (ticket 396); one switched off by hand in
+  the database, within 30 seconds.
 - **No flow for a forgotten password.** An Admin sets a new one.
 
 ## Not decided here
