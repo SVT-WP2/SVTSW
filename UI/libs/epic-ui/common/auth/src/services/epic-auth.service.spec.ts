@@ -167,4 +167,23 @@ describe('EpicAuthService', () => {
 
     })
 
+    describe('updateCurrentUser', () => {
+
+        it('takes the new name of the logged-in user, without the keys the browser keeps none of', async () => {
+            const result = firstValueFrom(service.login('jane.doe', 'secret-of-the-test'))
+            http.expectOne('/api/auth/login').flush(jane)
+            await result
+
+            service.updateCurrentUser({ ...jane, name: 'Jane D.', isActive: true, createdAt: '2026-11-27' } as EpicAuthUser)
+
+            expect(service.user).toEqual({ ...jane, name: 'Jane D.' })
+        })
+
+        it('changes nothing for another user, or without a logged-in user', () => {
+            service.updateCurrentUser({ ...jane, id: 8 })
+            expect(service.user).toBeNull()
+        })
+
+    })
+
 })

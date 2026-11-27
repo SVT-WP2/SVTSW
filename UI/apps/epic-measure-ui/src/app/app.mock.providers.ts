@@ -14,6 +14,7 @@ import {
     EpicSvtTestTemplatesApiClient,
     EpicSvtTestTypeConfigsApiClient,
     EpicSvtTestTypesApiClient,
+    EpicUsersApiClient,
     EpicWafersApiClient,
     EpicWaferTestsApiClient,
     EpicWaferTypesApiClient,
@@ -35,6 +36,7 @@ import {
     EpicSvtTestTemplatesApiClientMock,
     EpicSvtTestTypeConfigsApiClientMock,
     EpicSvtTestTypesApiClientMock,
+    EpicUsersApiClientMock,
     EpicWafersApiClientMock,
     EpicWaferTypesApiClientMock,
     EpicWpMachinesApiClientMock,
@@ -126,6 +128,10 @@ export function provideMockData(): Provider[] {
         {
             provide: EpicSvtTestsApiClient,
             useClass: EpicSvtTestsApiClientMock,
+        },
+        {
+            provide: EpicUsersApiClient,
+            useClass: EpicUsersApiClientMock,
         },
     ]
 }

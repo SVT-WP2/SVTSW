@@ -1,0 +1,52 @@
+@if (initProcessing().processing) {
+    <epic-loader/>
+} @else if (initProcessing().processingError) {
+    <epic-content-error [floating]="false">
+        {{ initProcessing().processingError }}
+    </epic-content-error>
+} @else {
+    <div class="d-flex gap-3 flex-column" [formGroup]="formGroup">
+        <mat-form-field class="w-100">
+            <mat-label>Login</mat-label>
+            <input [formControlName]="FormField.login" matInput autocomplete="off">
+            <mat-hint>Stored in lower case; it cannot be changed later</mat-hint>
+            <mat-error>{{ getFieldErrorText(formGroup.controls[FormField.login]) }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Name</mat-label>
+            <input [formControlName]="FormField.name" matInput autocomplete="off">
+            <mat-error>{{ getFieldErrorText(formGroup.controls[FormField.name]) }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Role</mat-label>
+            <mat-select [formControlName]="FormField.role">
+                @for (role of roles; track role) {
+                    <mat-option [value]="role">{{ role }}</mat-option>
+                }
+            </mat-select>
+            <mat-error>Required Field</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Password</mat-label>
+            <input [formControlName]="FormField.password" matInput autocomplete="new-password"
+                   [type]="isPasswordVisible ? 'text' : 'password'">
+            <mat-hint>8 to 128 characters</mat-hint>
+            <mat-error>{{ getPasswordErrorText(formGroup.controls[FormField.password]) }}</mat-error>
+            <div matSuffix>
+                <button type="button" mat-icon-button class="me-2" (click)="isPasswordVisible = !isPasswordVisible">
+                    <epic-icon [name]="isPasswordVisible ? 'epic-eye-close' : 'epic-eye-open'"/>
+                </button>
+            </div>
+        </mat-form-field>
+
+        <mat-form-field class="w-100">
+            <mat-label>Repeat the password</mat-label>
+            <input [formControlName]="FormField.repeatPassword" matInput autocomplete="new-password"
+                   [type]="isPasswordVisible ? 'text' : 'password'">
+            <mat-error>{{ getPasswordErrorText(formGroup.controls[FormField.repeatPassword]) }}</mat-error>
+        </mat-form-field>
+    </div>
+}

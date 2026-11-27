@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 import { Observable } from 'rxjs'
-import { EpicAuthLoginRequest, EpicAuthUser } from 'svt-ts-types'
+import { EpicAuthLoginRequest, EpicAuthPasswordChangeRequest, EpicAuthUser } from 'svt-ts-types'
 
 import { EpicApi } from '../../common'
 
@@ -30,6 +30,14 @@ export class EpicAuthApiClient {
     /** The user of the session; `401` without a valid session. */
     me(): Observable<EpicAuthUser> {
         return this.httpClient.get<EpicAuthUser>(`${this.baseUrl}/me`)
+    }
+
+    /**
+     * Changes the password of the logged-in user. `400` for a wrong current password (it counts as a failed log-in),
+     * `429` while the login is locked. The session stays valid.
+     */
+    changeOwnPassword(request: EpicAuthPasswordChangeRequest): Observable<void> {
+        return this.httpClient.post<void>(`${this.baseUrl}/password`, request)
     }
 
 }

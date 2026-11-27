@@ -6,7 +6,7 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu'
 import { MatSlideToggle } from '@angular/material/slide-toggle'
 import { RouterOutlet } from '@angular/router'
 import { environment } from '@env/environment'
-import { EpicAuthService } from 'epic-ui/common/auth'
+import { EpicAuthPasswordChangeDialogService, EpicAuthService } from 'epic-ui/common/auth'
 import { EpicIconComponent, EpicIconMatOutlinedPipe, EpicMenuLightModule, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent } from 'epic-ui/utils'
@@ -44,10 +44,15 @@ export class AppLayoutPageComponent extends BaseComponent {
     // DI
     private readonly epicAuthService = inject(EpicAuthService)
     private readonly epicNotificationService = inject(EpicNotificationService)
+    private readonly passwordChangeDialogService = inject(EpicAuthPasswordChangeDialogService)
 
     constructor() {
         super()
         this.user = toSignal(this.epicAuthService.user$)
+    }
+
+    onChangePassword(): void {
+        this.passwordChangeDialogService.openDialog()
     }
 
     onLogout(): void {
