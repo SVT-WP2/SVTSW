@@ -64,7 +64,11 @@ classDiagram
     SvtTest ..> Asic : device under test
     SvtTest ..> Chip : device under test
     SvtTest ..> ChipBlock : device under test
+    SvtTest "*" --> "0..1" User : created by
 ```
+
+The history rows of a location, a load and an install also point to the `User` of the request (§4.5). They are not
+entities of their own, so the diagram does not show them.
 
 ## 2. Entities
 
@@ -116,6 +120,8 @@ Two more sets of rows are configuration data without a message: which block type
 | Template → type configuration | exactly one | foreign key, `NOT NULL`; the pair (DUT type, configuration) is unique | The configuration must exist. |
 | Test → type configuration, setup configuration | exactly one of each | foreign keys, `NOT NULL` | Both must exist. |
 | Test → device under test | exactly one | nothing: the link rows have no foreign key to the device | It writes one kind row and one id row, and it checks that the device exists. **Open.** |
+| Location, load or install row → user | at most one | foreign key, nullable | The user of the header `svt_userId` must exist (the dispatcher checks it before the handler). |
+| Test → the user who created it | at most one | foreign key, nullable | The same. |
 
 Where the agent checks that a parent exists, the reply for a missing parent is a clear error and no row is written.
 The exact status and text of each check are in [messages.md](messages.md).
@@ -143,12 +149,14 @@ The exact status and text of each check are in [messages.md](messages.md).
 
 Wafers, chips and equipment have a current location (`generalLocation`) and a location history.
 
-- The create message writes the first history row, with the note `Location at creation` and without a user name.
+- The create message writes the first history row, with the note `Location at creation`, without a `username`, and
+  with the user of the request (§4.5).
 - A move (`Update<Entity>Location`) adds one history row and sets the current location to the location of that row.
   The two writes are one transaction.
 - The history is only added to. The agent reads it in the order in which the rows were written.
 - A history row has a day (`date`), not a time.
-- The user name is free text from the client. **Open.**
+- A move records the user of the request (§4.5). The free text `username` of a move is stored as the client sends
+  it; the UI sends none. **Open:** whether `username` goes.
 - A wafer probe machine and a test setup have a location and no history. A probe card has a location from its own
   enum type and no history.
 
@@ -170,6 +178,8 @@ stateDiagram-v2
   adds one `Loaded` row for the new wafer; it adds no `Unloaded` row for the wafer before it. An explicit unload
   adds one `Unloaded` row.
 - **An install of a probe card adds one row to the install history.** The orientation of the card is optional.
+- **A load row, an unload row and an install row record the user of the request** (§4.5). The agent writes no
+  `username` there.
 - **A removal of the probe card clears the state of the machine and adds no history row.** The history table
   cannot hold a row without a probe card. **Open.**
 - `UpdateWaferProbeMachine` changes the address, the software and the location of a machine. It cannot change the
@@ -207,6 +217,8 @@ stateDiagram-v2
   its log when one is out of order. **Open.**
 - **The result status** is a value of the enum `testResultStatus`, or `null` for a test without a result.
 - **The times are UTC.** `createdAt` comes from the database.
+- **A test records the user who created it** (§4.5): the user of `CreateSvtTest`. The start and the finish record no
+  user yet: the test agents that send them do not send the header (#391).
 
 ### 4.5 Users
 
@@ -232,6 +244,11 @@ A user of the installation is one row of `SvtUser`. Other services point to a us
   `GetUserCredentials` holds it, and the agent never writes it to its log.
 - **The agent does not check who sends a user message.** The rule that only an Admin manages the users belongs to
   the BFF.
+- **A history row and a test record the user of the request.** The user is the one of the header `svt_userId`: a
+  location row (`userId`), a load, unload or install row (`userId`), and a test (`createdByUserId`). A request
+  without the header writes no user (`NULL`), and so do the rows from before this rule. No request names the user in
+  its body. A reply names the user by its id and its `name`, also when the user was switched off later: the rows
+  stay the work of that user.
 
 ## 5. Values that the agent derives
 
@@ -246,6 +263,8 @@ A reply has fields that are not columns of the table of the entity. The agent co
 | `dutTypes` of a test type | The rows of `SvtTestTypeDUTTypeList`. |
 | `testTypeId` of a test template | The test type of its test type configuration. |
 | `dutEntityName` and `dutId` of a test | The two link rows of the test, or `null`. |
+| `userName` of a history record | The `name` of the user of the row, or `null`. |
+| `createdByUserName` of a test | The `name` of the user who created the test, or `null`. |
 
 ## 6. Rules for all entities
 
@@ -260,8 +279,9 @@ A reply has fields that are not columns of the table of the entity. The agent co
 
 ## 7. What the model does not hold
 
-Rights per page or per message: the model has the four roles only (§4.5). Which user did something: no row points
-to a user yet. The content of a test result: the model has only the path to it. The outcome of wafer
+Rights per page or per message: the model has the four roles only (§4.5). Which user created or changed an entity:
+only the history rows and the tests record a user (§4.5). The content of a test result: the model has only the path
+to it. The outcome of wafer
 probing. The list of equipment of a test setup: the table `SvtTestSetupEquipList` exists, and nothing reads or
 writes it. Modules. An audit trail other than the location, load and install histories.
 
@@ -277,7 +297,7 @@ A decision on one of these points changes the model, and then it changes this pa
 | The enum type `blockType` | Its name on the wire is `chipBlockType`. The rename in the database is planned ([02 §2](02-database-migration.md#2-what-migration-1-adds)). |
 | The removal of a probe card | It leaves no history row. A status column on `ProbeCardInstalledInMachine` is proposed. |
 | The meaning of the orientations | One enum type serves the wafer and the probe card. What each orientation describes is not written down. |
-| The user name in a history row | Free text. The users are in `SvtUser`, and no history row points to one yet. |
+| The free text `username` of a history row | It stays beside `userId`: older rows hold a name there, and a client without a user id may send one. Its removal is not decided. |
 | `UpdateSvtTestType` | It replaces the list of DUT types. The owners of the clients did not confirm this meaning. |
 | Several devices for one test | The link tables permit it. The agent writes one. |
 | The order of start and finish of a test | Not enforced. Who enforces it is not decided. |

@@ -149,13 +149,14 @@ Wafers, chips and equipment have a **general location**: an institute or a room 
 `Prague`, …). The room level and the institute level are values of one enumeration, by decision.
 
 - Each of these entities has a **location history**: one row for each move, with the location, the date (day
-  resolution), the user name and a note. The first row is written at creation, with the note
-  `Location at creation`.
+  resolution), the user who moved it and a note. The first row is written at creation, with the note
+  `Location at creation`, and names the user who created the entity.
 - A move is its own operation. It appends a history row, and that row becomes the current location. A general
   update of the entity cannot change the location.
 - The history is append-only.
-- **Open:** the user name is a free text from the client. The users are in the database ([§5a](#5a-users)), and
-  no history row points to one yet.
+- **The user of a move** is the logged-in user of the request ([§5a](#5a-users)). A row has no user when the
+  request had none, and the rows from before the users have none. A row can also hold a free-text user name that a
+  client sent; the UI sends none, and older rows may hold one.
 - Wafer probe machines also have a general location, without a history. Probe cards have a location from a
   separate enumeration, without a history.
 
@@ -237,6 +238,7 @@ stateDiagram-v2
 - The UI shows a simpler status, which the BFF derives: `SUCCESS` and `PARTIAL_SUCCESS` are "Completed", `FAILURE`
   and `ERROR` are "Failed", `CANCELLED` is "Cancelled", no result is "Pending".
 - No service of this repository sends a start or a finish yet.
+- A test records the **user who created it** ([§5a](#5a-users)). The start and the finish record no user yet.
 
 ## 5a. Users
 
@@ -250,6 +252,9 @@ database ([the decision record](decisions/2026-11-users-and-roles.md)).
 - A user is never deleted. An Admin **switches it off**; a user that is switched off cannot log in.
 - The installation always keeps one active Admin. The DB agent refuses the change that would remove the last one.
 - The first Admin of an installation is entered by hand in the database.
+- **A record says who did it.** A location history row, a load or install row of a prober, and a test point to the
+  user of the request that wrote them. The user is the one of the session, not a name that the client types. A user
+  who is switched off later still names those records.
 
 ## 6. Rules for all entities
 
@@ -267,6 +272,6 @@ database ([the decision record](decisions/2026-11-users-and-roles.md)).
 
 ## 7. Not in the model
 
-Rights per page beyond the four roles; which user did something (no record points to a user yet); the content of
-test results; the outcome of wafer probing; maintenance and cleaning
+Rights per page beyond the four roles; which user created or changed an entity, except the history rows and the
+tests, which name their user ([§5a](#5a-users)); the content of test results; the outcome of wafer probing; maintenance and cleaning
 counters of probe cards; modules; an audit trail other than the location and machine histories; archival.

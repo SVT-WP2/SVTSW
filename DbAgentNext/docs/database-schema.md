@@ -14,9 +14,9 @@ proposal for a schema change is a change of this page ([§8](#8-how-to-change-th
 | [wafer-map.md](wafer-map.md) | The JSON document in `WaferTypeMap.waferMap`, and how the `Asic` rows come from it. |
 | [02-database-migration.md](02-database-migration.md) | How a migration is made and run, and how a table maps onto a MikroORM entity. |
 
-**State.** This page describes the schema after the migration `Migration20261126000005_users`, the latest of
-6 migrations. It was checked on 2026-11-26 against a database that the migrations built from an empty
-database (PostgreSQL 17.7): 34 tables of the domain and 22 enum types
+**State.** This page describes the schema after the migration `Migration20261127000006_history_and_test_users`, the
+latest of 7 migrations. It was checked on 2026-11-27 against a database that the migrations built from an empty
+database (PostgreSQL 17.7): 34 tables of the domain, 22 enum types and 40 foreign keys
 ([§9](#9-how-to-check-this-page)).
 
 ## 1. Conventions
@@ -29,7 +29,7 @@ database (PostgreSQL 17.7): 34 tables of the domain and 22 enum types
   are the tables whose key is a foreign key (`WaferTypeMap`, `WaferTypeImage`, `SvtTestSetupDefaultConfig`) and
   the link tables with a key of two columns. In the tables below, "identity" in the column **Default** means this
   clause.
-- **Foreign keys.** Each of the 34 foreign keys is `DEFERRABLE` (initially immediate) and has no `ON DELETE` or
+- **Foreign keys.** Each of the 40 foreign keys is `DEFERRABLE` (initially immediate) and has no `ON DELETE` or
   `ON UPDATE` action. The database thus refuses to delete a row that another row refers to.
 - **Constraint names.** The names are the PostgreSQL defaults: `<Table>_pkey`, `<Table>_<column>_key`,
   `<Table>_<column>_fkey`, `<Table>_<column>_check`. Two unique indexes have their own names (`SvtTestTypeConfig`, `SvtTestTemplate`).
@@ -61,7 +61,8 @@ The agent maps 29 tables to entities. It does not map 5 tables:
 No message reads or writes them. They exist because the database had them before the agent, and the first migration
 keeps them.
 
-The diagrams show the foreign keys. A label is the column of the child table. `||` is "exactly one", `|o` and
+The diagrams show the foreign keys. `SvtUser` is in the diagram of each area whose rows point to a user. A label is
+the column of the child table. `||` is "exactly one", `|o` and
 `o|` are "zero or one", `o{` is "zero or more".
 
 **Silicon**
@@ -75,6 +76,8 @@ erDiagram
     Wafer ||--o{ Asic : "waferId"
     Asic ||--o{ Chip : "asicId"
     Chip ||--o{ ChipLocation : "chipId"
+    SvtUser |o--o{ WaferLocation : "userId"
+    SvtUser |o--o{ ChipLocation : "userId"
     Chip ||--o{ ChipBlock : "chipId"
     Chip ||--o{ ModuleChipList : "chipId"
     Module ||--o{ ModuleChipList : "modId"
@@ -93,6 +96,8 @@ erDiagram
     ProbeCard ||--o{ ProbeCardFamilyType : "probeCardId"
     WaferProbeMachine ||--o{ ProbeCardInstalledInMachine : "machineId"
     ProbeCard ||--o{ ProbeCardInstalledInMachine : "probeCardId"
+    SvtUser |o--o{ WaferLoadedInMachine : "userId"
+    SvtUser |o--o{ ProbeCardInstalledInMachine : "userId"
     WaferType ||--o{ WaferProbeProject : "waferTypeId"
     WaferProbeMachine ||--o{ WaferProbeProject : "wpMachineId"
 ```
@@ -103,6 +108,7 @@ erDiagram
 erDiagram
     EquipmentType ||--o{ Equipment : "equipmentTypeId"
     Equipment ||--o{ EquipmentLocation : "equipmentId"
+    SvtUser |o--o{ EquipmentLocation : "userId"
     SvtTestSetup ||--o{ SvtTestSetupConfig : "setupId"
     SvtTestSetup ||--o| SvtTestSetupDefaultConfig : "setupId"
     SvtTestSetupConfig |o--o{ SvtTestSetupDefaultConfig : "defaultConfigId"
@@ -113,6 +119,7 @@ erDiagram
     SvtTestTypeConfig ||--o{ SvtTestTemplate : "testTypeConfigId"
     SvtTestSetupConfig ||--o{ SvtTestList : "testSetupConfigId"
     SvtTestTypeConfig ||--o{ SvtTestList : "testTypeConfigId"
+    SvtUser |o--o{ SvtTestList : "createdByUserId"
     SvtTestList ||--o{ SvtTestListToEntityName : "testId"
     SvtTestList ||--o{ SvtTestListToEntityId : "testId"
 ```
@@ -190,9 +197,10 @@ The location history of a wafer: one row for each move, and one row for the crea
 | `waferId` | `integer` | no |  | FK → `Wafer.id` | The wafer. |
 | `generalLocation` | enum `wpGeneralLocation` | no |  |  | The location after this move. |
 | `date` | `date` | yes | `CURRENT_DATE` |  | The day of the move. |
-| `username` | `varchar(50)` | yes |  |  | Free text from the client. `NULL` on the row that a create message writes. |
+| `username` | `varchar(50)` | yes |  |  | Free text from the client, stored as sent. `NULL` on the row that a create message writes. A row written before migration 6 may hold a name here. |
 | `note` | `text` | yes |  |  | Free text. `Location at creation` on the row that a create message writes. |
 | `id` | `integer` | no | identity | PK | Surrogate key. The agent reads the history of a wafer in the order of this column. |
+| `userId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the request that wrote the row (the header `svt_userId`). `NULL` for a request without the header, and on the rows written before migration 6. |
 
 ### 3.6 `Asic`
 
@@ -236,9 +244,10 @@ The location history of a chip.
 | `chipId` | `integer` | no |  | FK → `Chip.id` | The chip. |
 | `generalLocation` | enum `wpGeneralLocation` | no |  |  | The location after this move. |
 | `date` | `date` | yes | `CURRENT_DATE` |  | The day of the move. |
-| `username` | `varchar(50)` | yes |  |  | Free text from the client. `NULL` on the row that a create message writes. |
+| `username` | `varchar(50)` | yes |  |  | Free text from the client, stored as sent. `NULL` on the row that a create message writes. A row written before migration 6 may hold a name here. |
 | `note` | `text` | yes |  |  | Free text. `Location at creation` on the row that a create message writes. |
 | `id` | `integer` | no | identity | PK | Surrogate key. The agent reads the history of a chip in the order of this column. |
+| `userId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the request that wrote the row (the header `svt_userId`). `NULL` for a request without the header, and on the rows written before migration 6. |
 
 ### 3.9 `ChipBlock`
 
@@ -356,6 +365,7 @@ The load history of a machine: one row for each load and each explicit unload.
 | `username` | `varchar(50)` | yes |  |  | The agent does not write this column: it is `NULL` on a row that the agent writes. |
 | `status` | enum `waferInMachineStatus` | yes |  |  | `Loaded` or `Unloaded`. |
 | `id` | `integer` | no | identity | PK | Surrogate key. It gives the order of the history. |
+| `userId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the request that wrote the row (the header `svt_userId`). `NULL` for a request without the header, and on the rows written before migration 6. |
 
 ### 4.3 `ProbeCard`
 
@@ -406,6 +416,7 @@ The install history of a machine: one row for each install of a probe card.
 | `date` | `date` | yes | `CURRENT_DATE` |  | The day of the install. The database sets it. |
 | `username` | `varchar(50)` | yes |  |  | The agent does not write this column: it is `NULL` on a row that the agent writes. |
 | `id` | `integer` | no | identity | PK | Surrogate key. It gives the order of the history. |
+| `userId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the request that wrote the row (the header `svt_userId`). `NULL` for a request without the header, and on the rows written before migration 6. |
 
 ### 4.6 `WaferProbeProject`
 
@@ -469,9 +480,10 @@ The location history of an instrument.
 | `equipmentId` | `integer` | no |  | FK → `Equipment.id` | The instrument. |
 | `generalLocation` | enum `wpGeneralLocation` | no |  |  | The location after this move. |
 | `date` | `date` | yes | `CURRENT_DATE` |  | The day of the move. |
-| `username` | `varchar(50)` | yes |  |  | Free text from the client. `NULL` on the row that a create message writes. |
+| `username` | `varchar(50)` | yes |  |  | Free text from the client, stored as sent. `NULL` on the row that a create message writes. A row written before migration 6 may hold a name here. |
 | `note` | `text` | yes |  |  | Free text. `Location at creation` on the row that a create message writes. |
 | `id` | `integer` | no | identity | PK | Surrogate key. The agent reads the history of a instrument in the order of this column. |
+| `userId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the request that wrote the row (the header `svt_userId`). `NULL` for a request without the header, and on the rows written before migration 6. |
 
 ### 5.4 `SvtTestSetup`
 
@@ -605,6 +617,7 @@ A test: one execution of one test type configuration on one test setup configura
 | `finishedAt` | `timestamp` | yes |  |  | When the test finished, UTC. `NULL` until the finish is recorded. |
 | `pathToResult` | `text` | yes |  |  | Where the result data is. `NULL` until the finish is recorded. |
 | `testResultStatus` | enum `testResultStatus` | yes |  |  | The result. `NULL` when the test has no result. |
+| `createdByUserId` | `integer` | yes |  | FK → `SvtUser.id` | The user of the `CreateSvtTest` request (the header `svt_userId`). `NULL` for a request without the header, and on the tests created before migration 6. |
 
 ### 5.13 `SvtTestListToEntityName`
 
@@ -641,7 +654,9 @@ The area has the number 5a so that the sections after it keep the numbers that o
 ### 5a.1 `SvtUser`
 
 A user of the installation. The table is not `User`: `user` is a reserved word of PostgreSQL, and an unquoted `user`
-in hand-written SQL means the current database user. No foreign key points to the table yet.
+in hand-written SQL means the current database user. Six foreign keys point to the table: `userId` of the five
+history tables (`WaferLocation`, `ChipLocation`, `EquipmentLocation`, `WaferLoadedInMachine`,
+`ProbeCardInstalledInMachine`) and `SvtTestList.createdByUserId`. A user is never deleted, so they always find it.
 
 - **Entity:** `SvtDbUserEntity` ([`src/db/data/users/svt-db-user.entity.ts`](../src/db/data/users/svt-db-user.entity.ts)).
 - **Written by:** `CreateUser`; `UpdateUser` (`name`, `role`, `isActive`); `UpdateUserPassword` (`passwordHash`). No

@@ -35,7 +35,7 @@ the DB agent (`GetAll<…>`, `Create<…>`) and, after the slash, the type of
 |---|---|---|---|---|
 | **General location** | Where an object is: an institute or a room. | location | enum `wpGeneralLocation` | field `generalLocation` |
 | **Location history** | The list of the moves of a wafer, a chip or an equipment. | location records | `WaferLocation`, `ChipLocation`, `EquipmentLocation` | `Get<…>LocationHistory` / `EpicWaferLocationHistoryRecord`, `EpicChipLocationHistoryRecord`, `EpicEquipmentLocationHistoryRecord` |
-| **Move** | A change of the general location, with a date, a user name and a note. | relocation, location update | one history row | `Update<…>Location` |
+| **Move** | A change of the general location, with a date, the user who made it and a note. | relocation, location update | one history row | `Update<…>Location` |
 
 ## Wafer probing
 

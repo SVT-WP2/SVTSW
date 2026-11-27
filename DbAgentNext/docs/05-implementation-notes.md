@@ -116,15 +116,23 @@ src/
   - Lists are `findPage(filter, pager?)`: one `em.findAndCount` with `limit` and `offset` in the database, ordered
     by `id` ascending. Tests list newest first (01 §6.8). With no pager, every row comes back.
   - Writes run in `em.transactional`.
-  - Reply fields that are no column (`Asic.chipId`, `Chip.familyType`, `SvtTestTemplate.testTypeId`) are computed
-    in the repository, by a populated relation or one extra query per page, never one query per row.
+  - Reply fields that are no column (`Asic.chipId`, `Chip.familyType`, `SvtTestTemplate.testTypeId`, the
+    `userName` of a history record, the `createdByUserName` of a test) are computed in the repository, by a populated
+    relation or one extra query per page, never one query per row. The e2e helper `countE2eQueries` proves it for the
+    names: a list of more rows by more users sends the same number of statements.
+  - The user of a request: a handler that writes a row with a user takes the second argument `context` and passes
+    `context.userId` (a number, or `null`) in the input of the repository. `src/db` never sees the header or the
+    contract. The relation is `user` (column `userId`) or `createdByUser` (column `createdByUserId`), written as the
+    plain id.
   - Business rules live in the handlers. The exceptions are the pure functions of `wafer-maps/` and
     `chips/svt-db-chip-block-generation.ts`.
 - **Location pattern** (wafers, chips, equipment):
-  - `createWithLocation` writes the parent and a first history row with the note `Location at creation`.
-  - `appendLocation(id, { generalLocation, date?, username, note })` writes a history row and sets the parent's
+  - `createWithLocation` writes the parent and a first history row with the note `Location at creation` and the
+    `userId` of the input.
+  - `appendLocation(id, { generalLocation, date?, username, note, userId })` writes a history row and sets the parent's
     `generalLocation` to that row's value (X-9: the row just written is current).
-  - `findLocationHistory(id)` orders by `id`. The input type `SvtDbLocationInput` is in `db/data/common`.
+  - `findLocationHistory(id)` orders by `id` and populates `user`. The input type `SvtDbLocationInput` is in
+    `db/data/common`.
 - **Enum values service** (`SvtDbEnumsService`). It reads the catalogue on every call:
 
   ```sql
