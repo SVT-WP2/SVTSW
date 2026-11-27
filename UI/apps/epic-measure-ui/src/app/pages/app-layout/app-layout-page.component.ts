@@ -53,7 +53,14 @@ export class AppLayoutPageComponent extends BaseComponent {
     onLogout(): void {
         this.epicAuthService.logout()
             .subscribe({
-                error: (error: Error) => this.epicNotificationService.error(error.message, 'Log-out'),
+                // Like every toast it closes by itself after 5 s, but a toast waits while the mouse is on it. At the
+                // usual place (bottom left) it would open under the mouse, over the Account button: bottom center.
+                error: (error: Error) => this.epicNotificationService.error(
+                    error.message,
+                    'Log-out',
+                    true,
+                    { positionClass: 'toast-bottom-center' },
+                ),
             })
     }
 
