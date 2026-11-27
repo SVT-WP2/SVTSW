@@ -1,5 +1,6 @@
 import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
+import { EpicEquipmentCreateRequest } from 'svt-ts-types'
+import { SvtDbAgentKafkaEquipment } from 'svt-ts-types/kafka'
 
 
 /**
@@ -29,7 +30,7 @@ export class SvtDbAgentNextEquipmentCreateDto implements EpicEquipmentCreateRequ
  * with this one: `date` and `username` may be `null` or absent (the database stamps the day), `note` may be
  * absent.
  */
-export class SvtDbAgentNextEquipmentLocationRecordDto implements EpicEquipmentLocationHistoryRecord {
+export class SvtDbAgentNextEquipmentLocationRecordDto implements SvtDbAgentKafkaEquipment.UpdateEquipmentLocationMessageData {
 
     @IsInt()
     equipmentId!: number

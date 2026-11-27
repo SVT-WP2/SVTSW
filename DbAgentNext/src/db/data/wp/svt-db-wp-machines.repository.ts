@@ -22,16 +22,24 @@ export type SvtDbWpMachineUpdateInput = Partial<Pick<
     'hostName' | 'connectionType' | 'connectionPort' | 'generalLocation' | 'software' | 'swVersion'
 >>
 
-/** `waferId: null` unloads; otherwise the wafer is loaded with the given orientation. */
+/**
+ * `waferId: null` unloads; otherwise the wafer is loaded with the given orientation. `userId` is the user of the
+ * request, written on the history row; `null` without one.
+ */
 export type SvtDbWpLoadedWaferChange = {
     waferId: number | null
     orientation: string | null
+    userId: number | null
 }
 
-/** `probeCardId: null` uninstalls; otherwise the card is installed with the given (optional) orientation. */
+/**
+ * `probeCardId: null` uninstalls; otherwise the card is installed with the given (optional) orientation. `userId` is
+ * the user of the request, written on the history row of an install; `null` without one.
+ */
 export type SvtDbWpInstalledProbeCardChange = {
     probeCardId: number | null
     orientation: string | null
+    userId: number | null
 }
 
 export const SVT_DB_WP_WAFER_LOADED = 'Loaded'
@@ -106,6 +114,7 @@ export class SvtDbWpMachinesRepository {
                     wafer: change.waferId,
                     orientation: change.orientation,
                     status: SVT_DB_WP_WAFER_LOADED,
+                    user: change.userId,
                 })
             }
             else if (machine.loadedWafer) {
@@ -114,6 +123,7 @@ export class SvtDbWpMachinesRepository {
                     wafer: machine.loadedWafer.id,
                     orientation: null,
                     status: SVT_DB_WP_WAFER_UNLOADED,
+                    user: change.userId,
                 })
             }
             em.assign(machine, { loadedWafer: change.waferId, loadedWaferOrientation: change.orientation })
@@ -138,6 +148,7 @@ export class SvtDbWpMachinesRepository {
                     machine,
                     probeCard: change.probeCardId,
                     orientation: change.orientation,
+                    user: change.userId,
                 })
             }
             em.assign(machine, { installedProbeCard: change.probeCardId, installedProbeCardOrientation: change.orientation })

@@ -26,6 +26,7 @@ import {
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
@@ -72,7 +73,11 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
     getHandlerDefinitions(): SvtDbAgentNextHandlerDefinition<unknown, unknown>[] {
         return [
             { type: MessageType.GetAllSvtTests, replyType: MessageType.GetAllSvtTestsReply, handle: (data) => this.getAll(data) },
-            { type: MessageType.CreateSvtTest, replyType: MessageType.CreateSvtTestReply, handle: (data) => this.create(data) },
+            {
+                type: MessageType.CreateSvtTest,
+                replyType: MessageType.CreateSvtTestReply,
+                handle: (data, context) => this.create(data, context),
+            },
             {
                 type: MessageType.UpdateSvtTestStart,
                 replyType: MessageType.UpdateSvtTestStartReply,
@@ -109,8 +114,14 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
         return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
-    /** `data.create = { dutEntityName, dutId, testTypeConfigId, testSetupConfigId }`; the device and both configs must exist. */
-    private async create(data: unknown): Promise<SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessageData> {
+    /**
+     * `data.create = { dutEntityName, dutId, testTypeConfigId, testSetupConfigId }`; the device and both configs must
+     * exist. The test records the user of the request as its creator.
+     */
+    private async create(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessageData> {
         const create = validateRequestData(SvtDbAgentNextSvtTestCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         await this.assertDutExists(create.dutEntityName, create.dutId)
         if (!(await this.typeConfigs.findById(create.testTypeConfigId))) {
@@ -125,6 +136,7 @@ export class SvtDbAgentNextSvtTestsHandlers implements SvtDbAgentNextMessageHand
             dutId: create.dutId,
             testTypeConfigId: create.testTypeConfigId,
             testSetupConfigId: create.testSetupConfigId,
+            createdByUserId: context.userId,
         })
         return { entity: toWire(created) }
     }
@@ -207,6 +219,8 @@ function toWire({ test, dutEntityName, dutId }: SvtDbSvtTestWithDut): EpicSvtTes
         finishedAt: toIso(test.finishedAt),
         pathToResult: test.pathToResult,
         testResultStatus: test.testResultStatus as EpicSvtTestResultStatus | null,
+        createdByUserId: test.createdByUser?.id ?? null,
+        createdByUserName: test.createdByUser?.getEntity().name ?? null,
     }
 }
 

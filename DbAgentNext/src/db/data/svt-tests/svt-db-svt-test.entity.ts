@@ -4,6 +4,7 @@ import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decora
 import { SVT_DB_ENUM_VALUES } from '../enums'
 import { SvtDbSvtTestSetupConfigEntity } from '../svt-test-setups'
 import { SvtDbSvtTestTypeConfigEntity } from '../svt-test-types'
+import { SvtDbUserEntity } from '../users'
 
 
 /**
@@ -11,7 +12,7 @@ import { SvtDbSvtTestTypeConfigEntity } from '../svt-test-types'
  * under test is in `SvtTestListToEntityName` / `SvtTestListToEntityId` (polymorphic: ASIC, chip or chip block,
  * no foreign key). Timestamps are `timestamp without time zone`, read and written as UTC; `createdAt` is
  * stamped by the database. `testResultStatus` is the database enum (`SUCCESS`, `PARTIAL_SUCCESS`, …), set by
- * `UpdateSvtTestFinish`.
+ * `UpdateSvtTestFinish`. `createdByUserId` is the user of the `CreateSvtTest` request (migration 6), `NULL` without one.
  */
 @Entity({ tableName: 'SvtTestList' })
 export class SvtDbSvtTestEntity {
@@ -52,8 +53,20 @@ export class SvtDbSvtTestEntity {
     pathToResult!: string | null
 
     @Enum({ nativeEnumName: 'testResultStatus', items: SVT_DB_ENUM_VALUES.testResultStatus, nullable: true })
-    testResultStatus!: string | null;
+    testResultStatus!: string | null
 
-    [OptionalProps]?: 'id' | 'createdAt' | 'startedAt' | 'finishedAt' | 'pathToResult' | 'testResultStatus'
+    /** The user of the request that created the test (header `svt_userId`); `NULL` without one, and on older tests. */
+    @ManyToOne({
+        entity: () => SvtDbUserEntity,
+        fieldName: 'createdByUserId',
+        ref: true,
+        nullable: true,
+        deferMode: DeferMode.INITIALLY_IMMEDIATE,
+        updateRule: 'no action',
+        deleteRule: 'no action',
+    })
+    createdByUser!: Ref<SvtDbUserEntity> | null;
+
+    [OptionalProps]?: 'id' | 'createdAt' | 'startedAt' | 'finishedAt' | 'pathToResult' | 'testResultStatus' | 'createdByUser'
 
 }

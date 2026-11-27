@@ -2,6 +2,7 @@ import { DeferMode, OptionalProps, Ref } from '@mikro-orm/core'
 import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy'
 
 import { SVT_DB_ENUM_VALUES } from '../enums'
+import { SvtDbUserEntity } from '../users'
 
 import { SvtDbWaferEntity } from './svt-db-wafer.entity'
 
@@ -33,12 +34,25 @@ export class SvtDbWaferLocationEntity {
     @Property({ type: 'date', nullable: true, defaultRaw: 'CURRENT_DATE' })
     date!: string | null
 
+    /** Free text from the client, stored as sent. Rows from before migration 6 may hold a name here. */
     @Property({ type: 'string', length: 50, nullable: true })
     username!: string | null
+
+    /** The user of the request that wrote the row (header `svt_userId`); `NULL` without one, and on older rows. */
+    @ManyToOne({
+        entity: () => SvtDbUserEntity,
+        fieldName: 'userId',
+        ref: true,
+        nullable: true,
+        deferMode: DeferMode.INITIALLY_IMMEDIATE,
+        updateRule: 'no action',
+        deleteRule: 'no action',
+    })
+    user!: Ref<SvtDbUserEntity> | null
 
     @Property({ type: 'text', nullable: true })
     note!: string | null;
 
-    [OptionalProps]?: 'id' | 'date' | 'username' | 'note'
+    [OptionalProps]?: 'id' | 'date' | 'username' | 'user' | 'note'
 
 }

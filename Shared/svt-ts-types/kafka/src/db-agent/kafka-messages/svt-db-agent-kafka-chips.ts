@@ -1,7 +1,7 @@
 import { EpicApiPager, EpicChip, EpicChipCreateManyRequest, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
-import { EpicGetAllChipsQueryFilter } from '../models'
+import { EpicChipLocationUpdate, EpicGetAllChipsQueryFilter } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 
@@ -85,7 +85,15 @@ export namespace SvtDbAgentKafkaChips {
 
     // LOCATION
 
-    export class UpdateChipLocationMessage extends EpicKafkaMessageClass<EpicChipLocationHistoryRecord> {
+    /**
+     * `data` of `UpdateChipLocation`: the move, without the `userId` and `userName` of a history record (the DB
+     * agent takes the user from the header `svt_userId`).
+     */
+    export type UpdateChipLocationMessageData = EpicChipLocationUpdate & {
+        chipId: number
+    }
+
+    export class UpdateChipLocationMessage extends EpicKafkaMessageClass<UpdateChipLocationMessageData> {
 
         readonly type = MessageType.UpdateChipLocation
 

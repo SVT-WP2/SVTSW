@@ -1,7 +1,7 @@
 import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaEquipment, SvtDbAgentKafkaEquipmentTypes } from 'svt-ts-types/kafka'
 
-import { expectListPaging, TestSetup } from '../utils'
+import { asE2eUser, countE2eQueries, createE2eUser, expectListPaging, switchOffE2eUser, TestSetup } from '../utils'
 
 
 const SPECIFICATION = { vendor: 'Enclustra', firmware: '1.2.0', channels: 4 }
@@ -183,7 +183,7 @@ describe('Equipment (e2e)', () => {
 
     describe('GetEquipmentLocationHistory', () => {
 
-        it('returns the history oldest first with the five record fields', async () => {
+        it('returns the history oldest first with the record fields, the user ones last', async () => {
             const equipment = await createEquipment(CREATE)
             await setup.send(new SvtDbAgentKafkaEquipment.UpdateEquipmentLocationMessage({
                 equipmentId: equipment.id, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak',
@@ -196,12 +196,19 @@ describe('Equipment (e2e)', () => {
             expect(reply).toMatchObject({ type: 'GetEquipmentLocationHistoryReply', status: 'Success' })
             expect(reply.data).toEqual({
                 items: [
-                    { equipmentId: 1, generalLocation: 'CERN', date: await today(), note: 'Location at creation', username: null },
-                    { equipmentId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak' },
+                    {
+                        equipmentId: 1, generalLocation: 'CERN', date: await today(), note: 'Location at creation', username: null,
+                        userId: null, userName: null,
+                    },
+                    {
+                        equipmentId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak',
+                        userId: null, userName: null,
+                    },
                 ],
                 totalCount: 2,
             })
-            expect(Object.keys(reply.data.items[0])).toEqual(['equipmentId', 'generalLocation', 'date', 'note', 'username'])
+            expect(Object.keys(reply.data.items[0]))
+                .toEqual(['equipmentId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers NotFound for unknown equipment and BadRequest without equipmentId', async () => {
@@ -210,6 +217,100 @@ describe('Equipment (e2e)', () => {
 
             expect(notFound).toMatchObject({ status: 'NotFound', data: null, error: { message: 'Equipment 999 not found' } })
             expect(missing).toMatchObject({ status: 'BadRequest', error: { message: 'data.equipmentId must be an integer' } })
+        })
+
+    })
+
+    // ── The user of the request (#397) ────────────────────────────
+
+    describe('The user of the request', () => {
+
+        type UserRow = { userId: number | null; username: string | null }
+
+        function userRows(): Promise<UserRow[]> {
+            return setup.query<UserRow>('select "userId", username from main."EquipmentLocation" order by id')
+        }
+
+        function history(equipmentId: number) {
+            return setup.send<HistoryReply>(new SvtDbAgentKafkaEquipment.GetEquipmentLocationHistoryMessage({ equipmentId }))
+        }
+
+        function move(equipmentId: number, userId: number | null) {
+            return setup.send(new SvtDbAgentKafkaEquipment.UpdateEquipmentLocationMessage({
+                equipmentId, generalLocation: 'Prague', date: null, note: 'moved', username: 'free text',
+            }), userId === null ? undefined : asE2eUser(userId))
+        }
+
+        async function createAs(userId: number): Promise<EpicEquipment> {
+            const reply = await setup.send<EntityReply>(
+                new SvtDbAgentKafkaEquipment.CreateEquipmentMessage({ create: CREATE }),
+                asE2eUser(userId),
+            )
+            expect(reply.status, reply.error.message).toBe('Success')
+            return reply.data.entity
+        }
+
+        it('stores the user of the header on the first row of CreateEquipment and on the row of UpdateEquipmentLocation', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+
+            const equipment = await createAs(anna)
+            const moved = await move(equipment.id, bruno)
+
+            expect(moved.status, moved.error.message).toBe('Success')
+            expect(await userRows()).toEqual([{ userId: anna, username: null }, { userId: bruno, username: 'free text' }])
+        })
+
+        it('refuses a userId in data: the user comes from the header only', async () => {
+            const equipment = await createEquipment(CREATE)
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+
+            const reply = await setup.send({
+                type: 'UpdateEquipmentLocation',
+                data: { equipmentId: equipment.id, generalLocation: 'CERN', note: 'n', userId: anna },
+            })
+
+            expect(reply.status).toBe('BadRequest')
+            expect(reply.error.message).toContain('userId')
+            expect(await setup.query('select "userId" from main."EquipmentLocation"')).toEqual([{ userId: null }])
+        })
+
+        it('leaves userId NULL for a request without the header, and the reply has no user', async () => {
+            const equipment = await createEquipment(CREATE)
+            await move(equipment.id, null)
+
+            expect((await userRows()).map((row) => row.userId)).toEqual([null, null])
+            expect((await history(equipment.id)).data.items.map(({ userId, userName }) => ({ userId, userName })))
+                .toEqual([{ userId: null, userName: null }, { userId: null, userName: null }])
+        })
+
+        it('replies with the id and the name of the user of each row, also after the user was switched off', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+            const equipment = await createAs(anna)
+            await move(equipment.id, bruno)
+            await switchOffE2eUser(setup, anna)
+
+            const reply = await history(equipment.id)
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(reply.data.items).toMatchObject([
+                { generalLocation: 'CERN', username: null, userId: anna, userName: 'Anna Rossi' },
+                { generalLocation: 'Prague', username: 'free text', userId: bruno, userName: 'Bruno Weber' },
+            ])
+        })
+
+        it('reads the names with the history, not with one query per row', async () => {
+            const equipment = await createAs(await createE2eUser(setup, 'anna', 'Anna Rossi'))
+            const one = await countE2eQueries(setup, () => history(equipment.id))
+
+            for (const login of ['bruno', 'carla', 'dario']) {
+                await move(equipment.id, await createE2eUser(setup, login, login))
+            }
+            const four = await countE2eQueries(setup, () => history(equipment.id))
+
+            expect((await history(equipment.id)).data.items.map((item) => item.userName)).toEqual(['Anna Rossi', 'bruno', 'carla', 'dario'])
+            expect(four).toBe(one)
         })
 
     })

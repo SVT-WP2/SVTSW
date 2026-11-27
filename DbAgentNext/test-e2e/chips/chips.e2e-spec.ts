@@ -7,7 +7,7 @@ import {
     SvtDbAgentKafkaWaferTypes,
 } from 'svt-ts-types/kafka'
 
-import { TestSetup } from '../utils'
+import { asE2eUser, countE2eQueries, createE2eUser, switchOffE2eUser, TestSetup } from '../utils'
 
 
 /** Two dies, one row: the wafer created in beforeEach yields ASIC 1 `W-1_0_0` (MOSAIX) and ASIC 2 `W-1_0_1` (BABYMOSAIX). */
@@ -373,7 +373,7 @@ describe('Chips (e2e)', () => {
 
     describe('GetChipLocationHistory', () => {
 
-        it('returns the history oldest first with the five record fields', async () => {
+        it('returns the history oldest first with the record fields, the user ones last', async () => {
             const chip = await createChip({ serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' })
             await send(new SvtDbAgentKafkaChips.UpdateChipLocationMessage({
                 chipId: chip.id, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak',
@@ -384,12 +384,19 @@ describe('Chips (e2e)', () => {
             expect(reply).toMatchObject({ type: 'GetChipLocationHistoryReply', status: 'Success' })
             expect(reply.data).toEqual({
                 items: [
-                    { chipId: 1, generalLocation: 'CERN', date: await today(), note: 'Location at creation', username: null },
-                    { chipId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak' },
+                    {
+                        chipId: 1, generalLocation: 'CERN', date: await today(), note: 'Location at creation', username: null,
+                        userId: null, userName: null,
+                    },
+                    {
+                        chipId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: 'okorchak',
+                        userId: null, userName: null,
+                    },
                 ],
                 totalCount: 2,
             })
-            expect(Object.keys(reply.data.items[0])).toEqual(['chipId', 'generalLocation', 'date', 'note', 'username'])
+            expect(Object.keys(reply.data.items[0]))
+                .toEqual(['chipId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers NotFound for an unknown chip and BadRequest without chipId', async () => {
@@ -398,6 +405,122 @@ describe('Chips (e2e)', () => {
 
             expect(notFound).toMatchObject({ status: 'NotFound', data: null, error: { message: 'Chip 999 not found' } })
             expect(missing).toMatchObject({ status: 'BadRequest', error: { message: 'data.chipId must be an integer' } })
+        })
+
+    })
+
+    // ── The user of the request (#397) ────────────────────────────
+
+    describe('The user of the request', () => {
+
+        type UserRow = { chipId: number; userId: number | null; username: string | null }
+
+        function userRows(): Promise<UserRow[]> {
+            return setup.query<UserRow>('select "chipId", "userId", username from main."ChipLocation" order by id')
+        }
+
+        function history(chipId: number) {
+            return setup.send<HistoryReply>(new SvtDbAgentKafkaChips.GetChipLocationHistoryMessage({ chipId }))
+        }
+
+        function move(chipId: number, generalLocation: string, userId: number | null) {
+            return setup.send(new SvtDbAgentKafkaChips.UpdateChipLocationMessage({
+                chipId, generalLocation, date: null, note: 'moved', username: 'free text',
+            }), userId === null ? undefined : asE2eUser(userId))
+        }
+
+        it('stores the user of the header on the first row of CreateChip and on the row of UpdateChipLocation', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+
+            const created = await setup.send<EntityReply>(new SvtDbAgentKafkaChips.CreateChipMessage({
+                create: { serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' },
+            }), asE2eUser(anna))
+            const moved = await move(created.data.entity.id, 'Prague', bruno)
+
+            expect([created.status, moved.status]).toEqual(['Success', 'Success'])
+            expect(await userRows()).toEqual([
+                { chipId: 1, userId: anna, username: null },
+                { chipId: 1, userId: bruno, username: 'free text' },
+            ])
+        })
+
+        it('stores the user on the first row of every chip of CreateManyChips', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+
+            const reply = await setup.send(new SvtDbAgentKafkaChips.CreateManyChipsMessage({
+                create: {
+                    generalLocation: 'BNL',
+                    items: [{ serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID }, { serialNumber: 'C-2', asicId: BABY_ASIC_ID }],
+                },
+            }), asE2eUser(anna))
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(await userRows()).toEqual([
+                { chipId: 1, userId: anna, username: null },
+                { chipId: 2, userId: anna, username: null },
+            ])
+        })
+
+        it('refuses a userId in data: the user comes from the header only', async () => {
+            const chip = await createChip({ serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' })
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+
+            const reply = await setup.send({
+                type: 'UpdateChipLocation',
+                data: { chipId: chip.id, generalLocation: 'CERN', note: 'n', userId: anna },
+            })
+
+            expect(reply.status).toBe('BadRequest')
+            expect(reply.error.message).toContain('userId')
+            expect(await setup.query('select "userId" from main."ChipLocation"')).toEqual([{ userId: null }])
+        })
+
+        it('leaves userId NULL for a request without the header, and the reply has no user', async () => {
+            const chip = await createChip({ serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' })
+            await send(new SvtDbAgentKafkaChips.CreateManyChipsMessage({
+                create: { generalLocation: 'BNL', items: [{ serialNumber: 'C-2', asicId: BABY_ASIC_ID }] },
+            }))
+            await move(chip.id, 'Prague', null)
+
+            expect((await userRows()).map((row) => row.userId)).toEqual([null, null, null])
+            expect((await history(chip.id)).data.items.map(({ userId, userName }) => ({ userId, userName })))
+                .toEqual([{ userId: null, userName: null }, { userId: null, userName: null }])
+        })
+
+        it('replies with the id and the name of the user of each row, also after the user was switched off', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+            const created = await setup.send<EntityReply>(new SvtDbAgentKafkaChips.CreateChipMessage({
+                create: { serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' },
+            }), asE2eUser(anna))
+            await move(created.data.entity.id, 'Prague', bruno)
+            await switchOffE2eUser(setup, anna)
+
+            const reply = await history(created.data.entity.id)
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(reply.data.items).toMatchObject([
+                { generalLocation: 'CERN', username: null, userId: anna, userName: 'Anna Rossi' },
+                { generalLocation: 'Prague', username: 'free text', userId: bruno, userName: 'Bruno Weber' },
+            ])
+        })
+
+        it('reads the names with the history, not with one query per row', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const created = await setup.send<EntityReply>(new SvtDbAgentKafkaChips.CreateChipMessage({
+                create: { serialNumber: 'C-1', asicId: MOSAIX_ASIC_ID, generalLocation: 'CERN' },
+            }), asE2eUser(anna))
+            const chipId = created.data.entity.id
+            const one = await countE2eQueries(setup, () => history(chipId))
+
+            for (const login of ['bruno', 'carla', 'dario']) {
+                await move(chipId, 'Prague', await createE2eUser(setup, login, login))
+            }
+            const four = await countE2eQueries(setup, () => history(chipId))
+
+            expect((await history(chipId)).data.items.map((item) => item.userName)).toEqual(['Anna Rossi', 'bruno', 'carla', 'dario'])
+            expect(four).toBe(one)
         })
 
     })

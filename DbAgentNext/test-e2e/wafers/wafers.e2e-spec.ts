@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes } from 'svt-ts-types/kafka'
 
-import { TestSetup } from '../utils'
+import { asE2eUser, countE2eQueries, createE2eUser, switchOffE2eUser, TestSetup } from '../utils'
 
 
 const ER2_MAP = readFileSync(resolve(__dirname, '../../../Configurations/WaferTypeMappings/ER2WaferMap_v0.json'), 'utf8')
@@ -309,7 +309,7 @@ describe('Wafers (e2e)', () => {
 
     describe('GetWaferLocationHistory', () => {
 
-        it('returns the history oldest first with the five record fields', async () => {
+        it('returns the history oldest first with the record fields, the user ones last', async () => {
             const wafer = await createWafer(waferPayload())
             await setup.send(new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
                 waferId: wafer.id, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: 'okorchak',
@@ -320,12 +320,20 @@ describe('Wafers (e2e)', () => {
             expect(reply).toMatchObject({ type: 'GetWaferLocationHistoryReply', status: 'Success' })
             expect(reply.data).toEqual({
                 items: [
-                    { waferId: wafer.id, generalLocation: LOCATION, date: await today(), note: 'Location at creation', username: null },
-                    { waferId: wafer.id, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: 'okorchak' },
+                    {
+                        waferId: wafer.id, generalLocation: LOCATION, date: await today(), note: 'Location at creation', username: null,
+                        userId: null, userName: null,
+                    },
+                    {
+                        waferId: wafer.id, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: 'okorchak',
+                        userId: null, userName: null,
+                    },
                 ],
                 totalCount: 2,
             })
             expect(reply.data.items[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+            expect(Object.keys(reply.data.items[0]))
+                .toEqual(['waferId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers NotFound for an unknown wafer and BadRequest without waferId', async () => {
@@ -334,6 +342,110 @@ describe('Wafers (e2e)', () => {
 
             expect(notFound).toMatchObject({ status: 'NotFound', data: null })
             expect(missing).toMatchObject({ status: 'BadRequest', error: { message: 'data.waferId must be an integer' } })
+        })
+
+    })
+
+    // ── The user of the request (#397) ────────────────────────────
+
+    describe('The user of the request', () => {
+
+        type UserRow = { userId: number | null; username: string | null; note: string | null }
+
+        function userRows(): Promise<UserRow[]> {
+            return setup.query<UserRow>('select "userId", username, note from main."WaferLocation" order by id')
+        }
+
+        function history(waferId: number) {
+            return setup.send<HistoryReply>(new SvtDbAgentKafkaWafers.GetWaferLocationHistoryMessage({ waferId }))
+        }
+
+        function createAs(userId: number) {
+            return setup.send<EntityReply>(new SvtDbAgentKafkaWafers.CreateWaferMessage({ create: waferPayload() }), asE2eUser(userId))
+        }
+
+        it('stores the user of the header on the first row of CreateWafer and on the row of UpdateWaferLocation', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+
+            const created = await createAs(anna)
+            const moved = await setup.send<EntityReply>(new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
+                waferId: created.data.entity.id, generalLocation: 'CERN', date: null, note: 'moved', username: 'free text',
+            }), asE2eUser(bruno))
+
+            expect([created.status, moved.status]).toEqual(['Success', 'Success'])
+            expect(await userRows()).toEqual([
+                { userId: anna, username: null, note: 'Location at creation' },
+                { userId: bruno, username: 'free text', note: 'moved' },
+            ])
+        })
+
+        it('refuses a userId in data: the user comes from the header only', async () => {
+            const wafer = await createWafer(waferPayload())
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+
+            const reply = await setup.send({
+                type: 'UpdateWaferLocation',
+                data: { waferId: wafer.id, generalLocation: 'CERN', note: 'n', userId: anna },
+            })
+
+            expect(reply.status).toBe('BadRequest')
+            expect(reply.error.message).toContain('userId')
+            expect(await setup.query('select "userId" from main."WaferLocation"')).toEqual([{ userId: null }])
+        })
+
+        it('leaves userId NULL for a request without the header, and the reply has no user', async () => {
+            const wafer = await createWafer(waferPayload())
+            await setup.send(new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
+                waferId: wafer.id, generalLocation: 'CERN', date: null, note: 'moved', username: 'free text',
+            }))
+
+            expect((await userRows()).map((row) => row.userId)).toEqual([null, null])
+            expect((await history(wafer.id)).data.items.map(({ userId, userName }) => ({ userId, userName })))
+                .toEqual([{ userId: null, userName: null }, { userId: null, userName: null }])
+        })
+
+        it('replies with the id and the name of the user of each row, also after the user was switched off', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+            const created = await createAs(anna)
+            const waferId = created.data.entity.id
+            await setup.send(new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
+                waferId, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: 'free text',
+            }), asE2eUser(bruno))
+            await switchOffE2eUser(setup, anna)
+
+            const reply = await history(waferId)
+
+            expect(reply.status, reply.error.message).toBe('Success')
+            expect(reply.data.items).toEqual([
+                {
+                    waferId, generalLocation: LOCATION, date: await today(), note: 'Location at creation', username: null,
+                    userId: anna, userName: 'Anna Rossi',
+                },
+                {
+                    waferId, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: 'free text',
+                    userId: bruno, userName: 'Bruno Weber',
+                },
+            ])
+        })
+
+        it('reads the names with the history, not with one query per row', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const created = await createAs(anna)
+            const waferId = created.data.entity.id
+            const one = await countE2eQueries(setup, () => history(waferId))
+
+            for (const login of ['bruno', 'carla', 'dario']) {
+                const user = await createE2eUser(setup, login, login)
+                await setup.send(new SvtDbAgentKafkaWafers.UpdateWaferLocationMessage({
+                    waferId, generalLocation: 'CERN', date: null, note: login, username: null,
+                }), asE2eUser(user))
+            }
+            const four = await countE2eQueries(setup, () => history(waferId))
+
+            expect((await history(waferId)).data.items.map((item) => item.userName)).toEqual(['Anna Rossi', 'bruno', 'carla', 'dario'])
+            expect(four).toBe(one)
         })
 
     })

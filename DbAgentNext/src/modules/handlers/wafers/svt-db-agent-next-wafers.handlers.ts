@@ -21,6 +21,7 @@ import {
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
@@ -55,12 +56,16 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
     getHandlerDefinitions(): SvtDbAgentNextHandlerDefinition<unknown, unknown>[] {
         return [
             { type: MessageType.GetAllWafers, replyType: MessageType.GetAllWafersReply, handle: (data) => this.getAll(data) },
-            { type: MessageType.CreateWafer, replyType: MessageType.CreateWaferReply, handle: (data) => this.create(data) },
+            {
+                type: MessageType.CreateWafer,
+                replyType: MessageType.CreateWaferReply,
+                handle: (data, context) => this.create(data, context),
+            },
             { type: MessageType.UpdateWafer, replyType: MessageType.UpdateWaferReply, handle: (data) => this.update(data) },
             {
                 type: MessageType.UpdateWaferLocation,
                 replyType: MessageType.UpdateWaferLocationReply,
-                handle: (data) => this.updateLocation(data),
+                handle: (data, context) => this.updateLocation(data, context),
             },
             {
                 type: MessageType.GetWaferLocationHistory,
@@ -83,9 +88,10 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
 
     /**
      * Wafer + first location row + every ASIC of the wafer map, in one transaction. The location is required
-     * (the C++ agent failed without one, after writing the wafer); the wafer type must exist and have a map.
+     * (the C++ agent failed without one, after writing the wafer); the wafer type must exist and have a map. The
+     * location row records the user of the request.
      */
-    private async create(data: unknown): Promise<SvtDbAgentKafkaWafers.CreateWaferReplyMessageData> {
+    private async create(data: unknown, context: SvtDbAgentNextRequestContext): Promise<SvtDbAgentKafkaWafers.CreateWaferReplyMessageData> {
         const body = requireRecord(data, 'data')
         const create = validateRequestData(SvtDbAgentNextWaferCreateDto, body['create'], 'data.create')
         if (!create.generalLocation) {
@@ -111,6 +117,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
                 dicingDate: create.dicingDate ?? null,
                 productionDate: create.productionDate ?? null,
                 generalLocation: create.generalLocation,
+                userId: context.userId,
             },
             () => generateAsicsOrBadRequest(create.serialNumber, JSON.parse(map.waferMap) as SvtDbWaferMap),
         )
@@ -134,8 +141,11 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
         return { entity: toWire(wafer) }
     }
 
-    /** `data` is the history record; the row written becomes the current location. */
-    private async updateLocation(data: unknown): Promise<SvtDbAgentKafkaWafers.UpdateWaferLocationReplyMessageData> {
+    /** `data` is the move; the row written becomes the current location and records the user of the request. */
+    private async updateLocation(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaWafers.UpdateWaferLocationReplyMessageData> {
         const record = validateRequestData(SvtDbAgentNextWaferLocationRecordDto, data, 'data')
         await this.assertGeneralLocation(record.generalLocation)
 
@@ -144,6 +154,7 @@ export class SvtDbAgentNextWafersHandlers implements SvtDbAgentNextMessageHandle
             date: record.date ?? null,
             username: record.username ?? null,
             note: record.note ?? null,
+            userId: context.userId,
         })
         if (!wafer) {
             throw SvtDbAgentNextRequestError.notFound(`Wafer ${record.waferId} not found`)
@@ -199,5 +210,7 @@ function toWireLocation(row: SvtDbWaferLocationEntity): EpicWaferLocationHistory
         date: row.date,
         note: row.note ?? '',
         username: row.username,
+        userId: row.user?.id ?? null,
+        userName: row.user?.getEntity().name ?? null,
     }
 }

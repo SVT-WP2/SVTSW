@@ -25,6 +25,7 @@ import {
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
@@ -71,12 +72,20 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
     getHandlerDefinitions(): SvtDbAgentNextHandlerDefinition<unknown, unknown>[] {
         return [
             { type: MessageType.GetAllChips, replyType: MessageType.GetAllChipsReply, handle: (data) => this.getAll(data) },
-            { type: MessageType.CreateChip, replyType: MessageType.CreateChipReply, handle: (data) => this.create(data) },
-            { type: MessageType.CreateManyChips, replyType: MessageType.CreateManyChipsReply, handle: (data) => this.createMany(data) },
+            {
+                type: MessageType.CreateChip,
+                replyType: MessageType.CreateChipReply,
+                handle: (data, context) => this.create(data, context),
+            },
+            {
+                type: MessageType.CreateManyChips,
+                replyType: MessageType.CreateManyChipsReply,
+                handle: (data, context) => this.createMany(data, context),
+            },
             {
                 type: MessageType.UpdateChipLocation,
                 replyType: MessageType.UpdateChipLocationReply,
-                handle: (data) => this.updateLocation(data),
+                handle: (data, context) => this.updateLocation(data, context),
             },
             {
                 type: MessageType.GetChipLocationHistory,
@@ -101,22 +110,29 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
         return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
-    /** `data.create`: the chip, its first location row and (feature on) its blocks, in one transaction. */
-    private async create(data: unknown): Promise<SvtDbAgentKafkaChips.CreateChipReplyMessageData> {
+    /**
+     * `data.create`: the chip, its first location row and (feature on) its blocks, in one transaction. The location
+     * row records the user of the request.
+     */
+    private async create(data: unknown, context: SvtDbAgentNextRequestContext): Promise<SvtDbAgentKafkaChips.CreateChipReplyMessageData> {
         const body = requireRecord(data, 'data')
         const create = validateRequestData(SvtDbAgentNextChipCreateDto, body['create'], 'data.create')
         await this.assertGeneralLocation(create.generalLocation)
 
-        const [input] = await this.toCreateInputs([create], create.generalLocation, 'data.create')
+        const [input] = await this.toCreateInputs([create], create.generalLocation, context.userId, 'data.create')
         const created = await this.chips.create(input, this.createOptions())
         return { entity: toWire(created) }
     }
 
     /**
      * `data.create = { generalLocation, items }`: every item at the same location, all or nothing. The reply
-     * lists the chips created (the C++ returned all chips, R-2); an extra `data.items` is ignored (D-8).
+     * lists the chips created (the C++ returned all chips, R-2); an extra `data.items` is ignored (D-8). The first
+     * location row of each chip records the user of the request.
      */
-    private async createMany(data: unknown): Promise<SvtDbAgentKafkaChips.CreateManyChipsReplyMessageData> {
+    private async createMany(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaChips.CreateManyChipsReplyMessageData> {
         const body = requireRecord(data, 'data')
         const create = validateRequestData(SvtDbAgentNextChipCreateManyDto, body['create'], 'data.create')
         if (!Array.isArray(create.items)) {
@@ -124,13 +140,16 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
         }
         await this.assertGeneralLocation(create.generalLocation)
 
-        const inputs = await this.toCreateInputs(create.items, create.generalLocation, 'data.create.items')
+        const inputs = await this.toCreateInputs(create.items, create.generalLocation, context.userId, 'data.create.items')
         const created = inputs.length > 0 ? await this.chips.createMany(inputs, this.createOptions()) : []
         return { items: created.map(toWire), totalCount: created.length }
     }
 
-    /** `data` is the history record; the row written becomes the current location. */
-    private async updateLocation(data: unknown): Promise<SvtDbAgentKafkaChips.UpdateChipLocationReplyMessageData> {
+    /** `data` is the move; the row written becomes the current location and records the user of the request. */
+    private async updateLocation(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaChips.UpdateChipLocationReplyMessageData> {
         const record = validateRequestData(SvtDbAgentNextChipLocationRecordDto, data, 'data')
         await this.assertGeneralLocation(record.generalLocation)
 
@@ -139,6 +158,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
             date: record.date ?? null,
             username: record.username ?? null,
             note: record.note ?? null,
+            userId: context.userId,
         })
         if (!chip) {
             throw SvtDbAgentNextRequestError.notFound(`Chip ${record.chipId} not found`)
@@ -157,9 +177,15 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
 
     /**
      * Resolves the ASIC of every item: it must exist, appear once in the request and have no chip yet. The
-     * family type travels with the input so the repository can pick the block types without another query.
+     * family type travels with the input so the repository can pick the block types without another query, and so
+     * does the user of the request.
      */
-    private async toCreateInputs(items: ChipItem[], generalLocation: string, path: string): Promise<SvtDbChipCreateInput[]> {
+    private async toCreateInputs(
+        items: ChipItem[],
+        generalLocation: string,
+        userId: number | null,
+        path: string,
+    ): Promise<SvtDbChipCreateInput[]> {
         const asicIds = items.map((item) => item.asicId)
         const repeated = asicIds.find((id, index) => asicIds.indexOf(id) !== index)
         if (repeated !== undefined) {
@@ -177,7 +203,7 @@ export class SvtDbAgentNextChipsHandlers implements SvtDbAgentNextMessageHandler
             if (!asic) {
                 throw SvtDbAgentNextRequestError.badRequest(`Asic ${item.asicId} does not exist`)
             }
-            return { asicId: asic.id, asicFamilyType: asic.familyType, serialNumber: item.serialNumber, generalLocation }
+            return { asicId: asic.id, asicFamilyType: asic.familyType, serialNumber: item.serialNumber, generalLocation, userId }
         })
     }
 
@@ -210,5 +236,7 @@ function toWireLocation(row: SvtDbChipLocationEntity): EpicChipLocationHistoryRe
         date: row.date,
         note: row.note ?? '',
         username: row.username,
+        userId: row.user?.id ?? null,
+        userName: row.user?.getEntity().name ?? null,
     }
 }

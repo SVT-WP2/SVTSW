@@ -10,8 +10,8 @@ type EntityReply = SvtDbAgentKafka.OneEntityReplyMessageData<EpicUser>
 
 /**
  * The header `svt_userId` (`docs/messages.md` §1.5). The dispatcher checks it before the handler and hands the user
- * to the handler as `context.userId`. No handler uses it yet, so the spec spies on the definition of
- * `GetAllEquipmentTypes` to see what a handler gets.
+ * to the handler as `context.userId`. The handlers that store it on a row are tested in the specs of their domains
+ * (`docs/messages.md` §1.6); this spec spies on the definition of `GetAllEquipmentTypes` to see what a handler gets.
  */
 describe('The user of a request, header svt_userId (e2e)', () => {
 
