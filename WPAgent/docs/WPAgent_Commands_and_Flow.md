@@ -6,13 +6,13 @@ Every command is sent as a Kafka message to `svt.wp-agent.request`:
 { "type": "<Command>", "data": { "user": "<wp_user>", "waferAgentName": "<wp_agent_name>", ...parameters } }
 ```
 
- The reply comes back on `svt.wp-agent.request.reply` as `{ "status", "type": "<Command>Reply", "data": WpMachineStateDto, "error" }`. `its3 agent python script` treats `status` = `Success` / `ok` as success. `WpMachineStateDto` is the agent and machine state: `WPAG_State`, user, opened project, loaded wafer, current die, `proberConnected`, `proberInitialized`.
+ The reply comes back on `svt.wp-agent.request.reply` as `{ "status", "type": "<Command>Reply", "data": WpMachineStateDto, "error" }`. `its3.py` treats `status` = `Success` / `ok` as success. `WpMachineStateDto` is the agent and machine state: `WPAG_State`, user, opened project, loaded wafer, current die, `proberConnected`, `proberInitialized`.
 
 ## Part 1. Commands
 
 | Command | Required parameters | Reply | What it does | Example |
 |---|---|---|---|---|
-| `Initialize` | none (`force`: true to re-connect, optional) | `InitializeReply` + machine state, or error 503 if the machine is off | Connects the agent to its WP machine and reads the loaded wafer and probe card from the DB. Must be sent before any prober command. | `python3.12 main.py send Initialize --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
+| `Initialize` | none. The machine address can be given manually only as a fallback; normally it comes from the DB | `InitializeReply` + machine state, or error 503 if the machine is off | The only way to connect the agent to the WP machine. The user sends it when the machine is needed; the address comes from the DB. | `python3.12 main.py send Initialize --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `UserLogIn` | none | `UserLogInReply` + machine state | Logs the user in. Needed before the other commands. | `python3.12 main.py send UserLogIn --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `UserLogOut` | none | `UserLogOutReply` + machine state | Logs the user out. The last command of the run. | `python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `ResetAgent` | none | `ResetAgentReply` + machine state | Resets the agent state machine. Logs the user out, so `UserLogIn` must follow. | `python3.12 main.py send ResetAgent --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
