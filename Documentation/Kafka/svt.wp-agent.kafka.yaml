@@ -1658,17 +1658,42 @@ components:
         properties:
           type:
             type: string
-            default: 'MoveChuckDie'
+            default: 'MoveChuckRowColumn'
           data:
             type: object
-            required: [ user, waferAgentName,row,col ] 
-            properties:              
-              row:
-                type: number
+            description: Give either col + row or label, not both (error 400).
+            required: [ user, waferAgentName ]
+            properties:
               col:
-                type: number
+                type: integer
+              row:
+                type: integer
               label:
-                type: string  
+                type: string
+                description: Die label, converted with the die map of the open project. ITS3 e.g. BAM00, SEG0; SVT e.g. MOSAIX-1_ER2-W1
+              subsite:
+                type: integer
+                default: 0
+                description: Not allowed with precise=true
+              precise:
+                type: boolean
+                default: false
+                description: Move by exact die pitches from the reference with closed-loop MoveChuckXYPrecise instead of step_die
+              reference:
+                type: string
+                description: (precise only) Position saved by SaveChuckPosition, e.g. BAMTest. Empty = current position
+              precision_um:
+                type: number
+                default: 0.5
+              max_iterations:
+                type: integer
+                default: 10
+              correction_settle_s:
+                type: number
+                default: 0.1
+              step_tolerance_um:
+                type: number
+                default: 50.0
 
       MoveChuckRowColumnReplyMessage:
         properties:

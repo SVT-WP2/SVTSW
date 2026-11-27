@@ -12,7 +12,7 @@ Every command is sent as a Kafka message to `svt.wp-agent.request`:
 
 | Command | Required parameters | Reply | What it does | Example |
 |---|---|---|---|---|
-| `Initialize` | none. The machine address can be given manually only as a fallback; normally it comes from the DB | `InitializeReply` + machine state, or error 503 if the machine is off | The only way to connect the agent to the WP machine. The user sends it when the machine is needed; the address comes from the DB. | `python3.12 main.py send Initialize --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
+| `Initialize` | `force` (bool, optional: initialize again when already initialized). Manual address fallback: not in the current WPAgent code, any other key gets error 400 | `InitializeReply` + machine state, or error 503 if the machine is off | The only way to connect the agent to the WP machine. The user sends it when the machine is needed; the address comes from the DB. | `python3.12 main.py send Initialize --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `UserLogIn` | none | `UserLogInReply` + machine state | Logs the user in. Needed before the other commands. | `python3.12 main.py send UserLogIn --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `UserLogOut` | none | `UserLogOutReply` + machine state | Logs the user out. The last command of the run. | `python3.12 main.py send UserLogOut --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `ResetAgent` | none | `ResetAgentReply` + machine state | Resets the agent state machine. Logs the user out, so `UserLogIn` must follow. | `python3.12 main.py send ResetAgent --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
@@ -23,7 +23,7 @@ Every command is sent as a Kafka message to `svt.wp-agent.request`:
 | `AlignWafer` | none in spec. The py file sends `align_die_col: -1`, `align_die_row: 1` | `AlignWaferReply` + machine state | Aligns the wafer. | `python3.12 main.py send AlignWafer --data='{"user":"user1","waferAgentName":"WPMIT_DEV","align_die_col":-1,"align_die_row":1}'` |
 | `InitProbing` | none | `InitProbingReply` + machine state | Runs OffAxis, Center, AutoFocus, AlignWafer and FindHome in one command. Run after loading a wafer, before testing. | `python3.12 main.py send InitProbing --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `FindHome` | none | `FindHomeReply` + machine state, or error "Failed to find home position" | Finds the home die using vision, so row/column moves are correct. | `python3.12 main.py send FindHome --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
-| `MoveChuckRowColumn` | `col`, `row` (numbers) | `MoveChuckRowColumnReply` + machine state | Moves to the die at that column and row of the wafer map. | `python3.12 main.py send MoveChuckRowColumn --data='{"user":"user1","waferAgentName":"WPMIT_DEV","col":3,"row":2}'` |
+| `MoveChuckRowColumn` | **Either** `col` + `row` (int) **or** `label` (string), not both. Optional: `subsite` (int, default 0), `precise` (bool, default false), `reference`, `precision_um`, `max_iterations`, `correction_settle_s`, `step_tolerance_um` (see below) | `MoveChuckDieReply` + machine state, message e.g. "Moved to die 'BAM03' (col=.., row=..)". Error 400 if neither or both of col/row and label are given | Moves to a die. Always goes to the off-axis side first, so the state becomes `OnDie_OffAxis_withoutPTPA`. With `precise: true` it moves by exact die pitches with closed-loop XY instead of the prober's step_die. | `python3.12 main.py send MoveChuckRowColumn --data='{"user":"user1","waferAgentName":"WPMIT_DEV","col":3,"row":2}'`<br>`python3.12 main.py send MoveChuckRowColumn --data='{"user":"user1","waferAgentName":"WPMIT_DEV","label":"BAM03"}'`<br>`python3.12 main.py send MoveChuckRowColumn --data='{"user":"user1","waferAgentName":"WPMIT_DEV","label":"BAM03","precise":true,"reference":"BAMTest"}'` |
 | `SetPTPA` | `enable` (true / false) | `SetPTPAReply` + machine state | Enables or disables Probe Tip Position Alignment. | `python3.12 main.py send SetPTPA --data='{"user":"user1","waferAgentName":"WPMIT_DEV","enable":true}'` |
 | `RunPTPA` | none | `RunPTPAReply` + machine state | Runs Probe Tip Position Alignment: aligns the probe tips to the die pads with vision. | `python3.12 main.py send RunPTPA --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `MoveChuckWide` | none | `MoveChuckWideReply` + machine state | Moves the die from off-axis to the wide area under the probes, ready for contact. | `python3.12 main.py send MoveChuckWide --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
@@ -32,6 +32,25 @@ Every command is sent as a Kafka message to `svt.wp-agent.request`:
 | `MoveChuckContact` | none | `MoveChuckContactReply` + machine state | Raises the chuck so the probes touch the die. | `python3.12 main.py send MoveChuckContact --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `MoveChuckSeparation` | none | `MoveChuckSeparationReply` + machine state | Lowers the chuck so the probes lift off the die. | `python3.12 main.py send MoveChuckSeparation --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
 | `MoveChuckHome` | none | `MoveChuckHomeReply` + machine state | Moves the chuck to the home (park) position. | `python3.12 main.py send MoveChuckHome --data='{"user":"user1","waferAgentName":"WPMIT_DEV"}'` |
+
+
+### `MoveChuckRowColumn` variants
+
+| Variant | Parameters | How it moves |
+|---|---|---|
+| By coordinates | `col`, `row`, optional `subsite` | Prober `step_die` to that column/row of the wafer map. |
+| By label | `label`, optional `subsite` | The label is turned into col/row with the die map of the open project. ITS3 labels like `BAM00`, `SEG0`; SVT labels like `MOSAIX-1_ER2-W1` or `babyMOSAIX-1_1_ER2-W1`. |
+| Precise | `col`+`row` or `label`, plus `precise: true` | Target XY = reference XY + whole die pitches (die size from the wafer map), reached with closed-loop `MoveChuckXYPrecise`. The chuck lands on the same point inside the target die as on the reference die. No calibration needed. Cannot be combined with `subsite` (error 400). |
+
+Precise-only parameters:
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `reference` | empty | A position saved with `SaveChuckPosition` in the off-axis area, e.g. `BAMTest` (after PTPA on it). Empty means the current position/die. |
+| `precision_um` | 0.5 | Target accuracy of the closed-loop XY move, µm. |
+| `max_iterations` | 10 | Max correction steps of the closed-loop move. |
+| `correction_settle_s` | 0.1 | Wait between correction steps, s. |
+| `step_tolerance_um` | 50.0 | Accepted difference between the prober's die-to-die step and the die size, µm. |
 
 ## Part 2. Flow #1 ER2B Wafer
 
