@@ -1,8 +1,9 @@
-import { EpicWafer, EpicWaferLocationHistoryRecord, EpicWaferType, EpicWaferTypeMap } from 'svt-ts-types'
+import { EpicUserRole, EpicWafer, EpicWaferLocationHistoryRecord, EpicWaferType, EpicWaferTypeMap } from 'svt-ts-types'
 
 import {
     createWafer,
     createWaferType,
+    E2E_ADMIN,
     expectError,
     expectStatus,
     SMALL_WAFER_MAP,
@@ -25,6 +26,12 @@ const WAFER_1: EpicWafer = {
     waferTypeId: 1,
     generalLocation: WAFER_LOCATION,
 }
+
+/** The user fields of a history row that the Admin of the suite wrote over HTTP. */
+const BY_ADMIN = { userId: E2E_ADMIN.id, userName: E2E_ADMIN.name }
+
+/** The user fields of a history record. */
+type RowUser = { userId: number | null; userName: string | null }
 
 describe('Wafers (e2e)', () => {
 
@@ -156,13 +163,14 @@ describe('Wafers (e2e)', () => {
             const response = await setup.post('/api/wafers', waferCreate({ thinningDate: '2026-01-15', dicingDate: '2026-02-01' }))
 
             expect(response).toEqual({ status: 201, body: { ...WAFER_1, thinningDate: '2026-01-15', dicingDate: '2026-02-01' } })
-            expect(await setup.query('select "waferId", "generalLocation", date::text, username, note from main."WaferLocation"'))
+            expect(await setup.query('select "waferId", "generalLocation", date::text, username, note, "userId" from main."WaferLocation"'))
                 .toEqual([{
                     waferId: 1,
                     generalLocation: WAFER_LOCATION,
                     date: await setup.today(),
                     username: null,
                     note: 'Location at creation',
+                    userId: E2E_ADMIN.id,
                 }])
             expect(await setup.query('select "serialNumber", "waferMapPosition", "familyType" from main."Asic" order by id')).toEqual([
                 { serialNumber: 'W-1_0_0', waferMapPosition: '0_0', familyType: 'MOSAIX' },
@@ -251,7 +259,7 @@ describe('Wafers (e2e)', () => {
             await createWafer(setup)
         })
 
-        it('moves the wafer: 201 with the updated wafer and a history row without username', async () => {
+        it('moves the wafer: 201 with the updated wafer and a history row of the logged-in user, without username', async () => {
             const response = await setup.post('/api/wafers/1/location', {
                 generalLocation: 'CERN',
                 note: 'moved to the lab',
@@ -259,10 +267,12 @@ describe('Wafers (e2e)', () => {
             })
 
             expect(response).toEqual({ status: 201, body: { ...WAFER_1, generalLocation: 'CERN' } })
-            expect(await setup.query('select "generalLocation", date::text, username, note from main."WaferLocation" order by id'))
+            expect(await setup.query(
+                'select "generalLocation", date::text, username, note, "userId" from main."WaferLocation" order by id',
+            ))
                 .toEqual([
-                    { generalLocation: WAFER_LOCATION, date: await setup.today(), username: null, note: 'Location at creation' },
-                    { generalLocation: 'CERN', date: '2026-03-01', username: null, note: 'moved to the lab' },
+                    { generalLocation: WAFER_LOCATION, date: await setup.today(), username: null, note: 'Location at creation', userId: 1 },
+                    { generalLocation: 'CERN', date: '2026-03-01', username: null, note: 'moved to the lab', userId: 1 },
                 ])
         })
 
@@ -289,21 +299,70 @@ describe('Wafers (e2e)', () => {
             await createWafer(setup)
         })
 
-        it('returns the history oldest first as a plain array of the five record fields', async () => {
+        it('returns the history oldest first as a plain array of the record fields, the user ones last', async () => {
             await setup.post('/api/wafers/1/location', { generalLocation: 'CERN', note: 'moved', date: '2026-03-01' })
 
             const history = expectStatus(await setup.get<EpicWaferLocationHistoryRecord[]>('/api/wafers/1/location-history'), 200)
 
             expect(history).toEqual([
-                { waferId: 1, generalLocation: WAFER_LOCATION, date: await setup.today(), note: 'Location at creation', username: null },
-                { waferId: 1, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: null },
+                {
+                    waferId: 1, generalLocation: WAFER_LOCATION, date: await setup.today(), note: 'Location at creation', username: null,
+                    ...BY_ADMIN,
+                },
+                { waferId: 1, generalLocation: 'CERN', date: '2026-03-01', note: 'moved', username: null, ...BY_ADMIN },
             ])
-            expect(Object.keys(history[0])).toEqual(['waferId', 'generalLocation', 'date', 'note', 'username'])
+            expect(Object.keys(history[0])).toEqual(['waferId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers 404 for an unknown wafer and 400 for an id that is no number', async () => {
             expectError(await setup.get('/api/wafers/999/location-history'), 404)
             expectError(await setup.get('/api/wafers/one/location-history'), 400, 'numeric string is expected')
+        })
+
+    })
+
+    // ── The user of the session (#397) ────────────────────────────
+
+    describe('The user of the session on the wafer history', () => {
+
+        beforeEach(async () => {
+            await createWaferType(setup)
+            await createWafer(setup)
+        })
+
+        it('stores the id of the logged-in user on the row of a move, and the history names that user', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const session = await setup.login(anna.login, anna.password)
+
+            expectStatus(await setup.as(session).post('/api/wafers/1/location', { generalLocation: 'Prague', note: 'moved' }), 201)
+
+            expect(await setup.query('select "userId", username from main."WaferLocation" order by id')).toEqual([
+                { userId: E2E_ADMIN.id, username: null },
+                { userId: anna.id, username: null },
+            ])
+            const history = expectStatus(await setup.as(session).get<RowUser[]>('/api/wafers/1/location-history'), 200)
+            expect(history.map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                BY_ADMIN,
+                { userId: anna.id, userName: 'Anna Rossi' },
+            ])
+        })
+
+        it('gives two users two ids, and keeps the name of a user who was switched off later', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const bruno = await setup.createUser({ login: 'bruno', name: 'Bruno Weber', role: EpicUserRole.Expert })
+            for (const user of [anna, bruno]) {
+                const session = await setup.login(user.login, user.password)
+                expectStatus(await setup.as(session).post('/api/wafers/1/location', { generalLocation: 'Prague', note: user.login }), 201)
+            }
+            await setup.query('update main."SvtUser" set "isActive" = false where id = $1', [anna.id])
+
+            const history = expectStatus(await setup.get<RowUser[]>('/api/wafers/1/location-history'), 200)
+
+            expect(history.slice(1).map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                { userId: anna.id, userName: 'Anna Rossi' },
+                { userId: bruno.id, userName: 'Bruno Weber' },
+            ])
+            expect(anna.id).not.toBe(bruno.id)
         })
 
     })

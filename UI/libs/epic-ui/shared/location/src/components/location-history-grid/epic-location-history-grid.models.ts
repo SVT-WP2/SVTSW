@@ -10,14 +10,22 @@ export namespace EpicLocationHistoryGrid {
         generalLocation: string
         date: string
         note: string
+        /** Free text that a client sent with the move. Rows from before the users may hold a name here. */
         username: string | null
+        /** The name of the user who moved it; `null` for an older row or a move without a user. */
+        userName: string | null
     }
 
     export enum ColId {
         generalLocation = 'generalLocation',
         date = 'date',
-        username = 'username',
+        updatedBy = 'updatedBy',
         note = 'note',
+    }
+
+    /** Who moved it: the name of its user, or for an older row the free text `username`. */
+    export function getUpdatedBy(row: Pick<RowEntity, 'userName' | 'username'> | undefined): string | null {
+        return row?.userName ?? row?.username ?? null
     }
 
     export function getColDefs(): ColDef<RowEntity>[] {
@@ -45,9 +53,10 @@ export namespace EpicLocationHistoryGrid {
                 flex: 1,
             },
             {
-                field: ColId.username,
+                colId: ColId.updatedBy,
                 headerName: 'Updated By',
                 flex: 1,
+                valueGetter: ({ data }) => getUpdatedBy(data),
             },
         ]
     }

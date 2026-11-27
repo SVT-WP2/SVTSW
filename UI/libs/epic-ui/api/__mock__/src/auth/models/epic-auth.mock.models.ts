@@ -16,4 +16,34 @@ export namespace EpicAuthMock {
         ]
     }
 
+    /** The mock user who is logged in now (the login kept in `localStorage`), `null` when nobody is. */
+    export function getCurrentUser(): EpicAuthUser | null {
+        try {
+            const login = window.localStorage.getItem(STORAGE_KEY)
+            return getUsers().find((user) => user.login === login) ?? null
+        }
+        catch {
+            return null
+        }
+    }
+
+    /**
+     * The user of a seeded row (a history row, a test): the mock users in turn, and every fifth row without a user,
+     * as the rows from before the users of #392.
+     */
+    export function getUserOfRow(index: number): EpicAuthUser | null {
+        const users = [...getUsers(), null]
+        return users[index % users.length]
+    }
+
+    /** `userId` and `userName` of a history row that this user wrote, as the DB agent answers them. */
+    export function toRowUser(user: EpicAuthUser | null): { userId: number | null; userName: string | null } {
+        return { userId: user?.id ?? null, userName: user?.name ?? null }
+    }
+
+    /** `createdByUserId` and `createdByUserName` of a test that this user created. */
+    export function toCreatedBy(user: EpicAuthUser | null): { createdByUserId: number | null; createdByUserName: string | null } {
+        return { createdByUserId: user?.id ?? null, createdByUserName: user?.name ?? null }
+    }
+
 }

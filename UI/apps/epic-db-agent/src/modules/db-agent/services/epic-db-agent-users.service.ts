@@ -55,6 +55,14 @@ export class EpicDbAgentUsersService {
         })
     }
 
+    /**
+     * The `name` of a user for the rows that record one, also of a user who is switched off, as the DB agent answers;
+     * `null` for no user and for an id of no user.
+     */
+    nameOf(userId: number | null): string | null {
+        return this.users.find((user) => user.id === userId)?.name ?? null
+    }
+
     getCredentials(login: string): Observable<Users.GetUserCredentialsReplyMessage> {
         return this.whenReady(() => {
             const user = this.users.find((item) => item.login === normalizeLogin(login))
@@ -142,6 +150,15 @@ export class EpicDbAgentUsersService {
         })))
     }
 
+}
+
+/**
+ * The user of a seeded row of the mock (a history row, a test): the mock users in turn, and every fifth row without a
+ * user, as the rows from before the users of #392.
+ */
+export function mockEpicDbAgentUserIdOf(index: number): number | null {
+    const ids = [...MOCK_USERS.map((_, position) => position + 1), null]
+    return ids[index % ids.length]
 }
 
 function normalizeLogin(login: string): string {

@@ -3,6 +3,8 @@ import { delay, map, Observable, of } from 'rxjs'
 import { EpicApiPager, EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTestCreateRequest, EpicSvtTestResultStatus } from 'svt-ts-types'
 import { EpicSvtTestEntity, SvtDbAgentKafkaSvtTests } from 'svt-ts-types/kafka'
 
+import { EpicDbAgentUsersService, mockEpicDbAgentUserIdOf } from './epic-db-agent-users.service'
+
 
 /** How many of the newest generated tests have not been run yet. */
 const PENDING_TESTS_COUNT = 3
@@ -12,6 +14,10 @@ export class EpicDbAgentSvtTestsService {
 
     protected data: EpicSvtTestEntity[] = generateSvtTests(2 * 1000)
 
+    constructor(private readonly epicDbAgentUsersService: EpicDbAgentUsersService) {
+    }
+
+    /** The name of the user who created each test is read now, as the DB agent does. */
     getAll(
         queryFilter?: SvtDbAgentKafkaSvtTests.GetAllSvtTestsFilter,
         pager?: EpicApiPager,
@@ -28,7 +34,7 @@ export class EpicDbAgentSvtTestsService {
             : filteredData
 
         return of({
-            items: pageData,
+            items: pageData.map(item => ({ ...item, createdByUserName: this.epicDbAgentUsersService.nameOf(item.createdByUserId) })),
             totalCount: filteredData.length,
         })
             .pipe(
@@ -43,7 +49,8 @@ export class EpicDbAgentSvtTestsService {
             )
     }
 
-    create(createRequest: EpicSvtTestCreateRequest): Observable<EpicSvtTestEntity> {
+    /** `userId`: the user of the header `svt_userId`, the creator of the test; `null` without one. */
+    create(createRequest: EpicSvtTestCreateRequest, userId: number | null): Observable<EpicSvtTestEntity> {
         const newId = (this.data[this.data.length - 1]?.id || 0) + 1
         const now = new Date().toISOString()
 
@@ -58,11 +65,13 @@ export class EpicDbAgentSvtTestsService {
             finishedAt: null,
             pathToResult: null,
             testResultStatus: null,
+            createdByUserId: userId,
+            createdByUserName: null,
         }
 
         this.data.push(newEntity)
 
-        return of(newEntity)
+        return of({ ...newEntity, createdByUserName: this.epicDbAgentUsersService.nameOf(userId) })
             .pipe(
                 delay(50),
             )
@@ -152,6 +161,8 @@ export function generateSvtTests(totalCount: number, idStartsFrom = 1): EpicSvtT
             finishedAt,
             pathToResult: isPending ? null : `/results/test-${i}`,
             testResultStatus,
+            createdByUserId: mockEpicDbAgentUserIdOf(i),
+            createdByUserName: null,
         })
     }
 

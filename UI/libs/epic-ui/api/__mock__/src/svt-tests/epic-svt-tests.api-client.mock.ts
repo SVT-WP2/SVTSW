@@ -13,6 +13,8 @@ import {
     EpicSvtTestStatus,
 } from 'svt-ts-types'
 
+import { EpicAuthMock } from '../auth'
+
 
 export function getMockEpicSvtTests(): EpicSvtTest[] {
     return [
@@ -28,6 +30,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             pathToResult: '/results/test-1',
             testResultStatus: EpicSvtTestResultStatus.Success,
             status: EpicSvtTestStatus.Completed,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUsers()[0]),
         },
         {
             id: 2,
@@ -41,6 +44,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             pathToResult: '/results/test-2',
             testResultStatus: EpicSvtTestResultStatus.Failure,
             status: EpicSvtTestStatus.Failed,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUsers()[2]),
         },
         {
             id: 3,
@@ -54,6 +58,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             pathToResult: '/results/test-3',
             testResultStatus: EpicSvtTestResultStatus.Success,
             status: EpicSvtTestStatus.Completed,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUsers()[0]),
         },
         {
             id: 4,
@@ -67,6 +72,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             pathToResult: null,
             testResultStatus: null,
             status: EpicSvtTestStatus.Running,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUsers()[3]),
         },
         {
             id: 5,
@@ -80,6 +86,7 @@ export function getMockEpicSvtTests(): EpicSvtTest[] {
             pathToResult: null,
             testResultStatus: null,
             status: EpicSvtTestStatus.Pending,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUsers()[1]),
         },
     ]
 }
@@ -139,6 +146,7 @@ export function generateMockEpicSvtTests(totalCount: number, idStartsFrom = 1): 
             pathToResult: isPending ? null : `/results/test-${i}`,
             testResultStatus,
             status: resolveTestStatus(testResultStatus),
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getUserOfRow(i)),
         })
     }
 
@@ -195,6 +203,7 @@ export class EpicSvtTestsApiClientMock extends EpicSvtTestsApiClient {
             pathToResult: null,
             testResultStatus: null,
             status: EpicSvtTestStatus.Pending,
+            ...EpicAuthMock.toCreatedBy(EpicAuthMock.getCurrentUser()),
         }
 
         this.data = [...this.data, entity]
