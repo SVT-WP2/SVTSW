@@ -17,6 +17,7 @@ class ResponseBuilder:
         Called for EVERY response (success and error).
         """
         from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        from services.WPProberConnectionWatch import is_prober_initialized
 
         g = SvtWPAagentGlobalParameters.getInstance()
 
@@ -50,6 +51,8 @@ class ResponseBuilder:
             asicSerialNumber=getattr(g, "asicSerialNumber", 0),
             wpMachineId=getattr(g, "wpMachineId", 0),
             WPAG_State=getattr(g, "wpag_state", "ServiceOff"),
+            proberConnected=getattr(g, "prober_connected", None),
+            proberInitialized=is_prober_initialized(),
             wpAgentName=getattr(g, "wpAgentName", "Default"),
             loadedWafer=loaded_wafer,
             installedProbeCard=installed_probe_card,

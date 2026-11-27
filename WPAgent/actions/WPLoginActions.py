@@ -40,6 +40,14 @@ def _get_user_hierarchy(user: str) -> str:
     return None
 
 
+def _prober_if_connected():
+    """The prober, or None while the WP machine is off: log-in does not need the machine."""
+    try:
+        return get_current_prober()
+    except RuntimeError:  # not initialized yet, or ProberNotConnectedError
+        return None
+
+
 @validate_command_with_name("UserLogIn")
 def UserLogIn(
     user: str, waferAgentName: str = None, address: str = None, machineType: str = None
@@ -54,7 +62,7 @@ def UserLogIn(
     g = SvtWPAagentGlobalParameters.getInstance()
     g_userLogged = g.userLogged
     g_userLoggedHierarchy = g.userLoggedHierarchy
-    prober = get_current_prober()
+    prober = _prober_if_connected()
 
     user_hierarchy = _get_user_hierarchy(user)
     if user_hierarchy is None:

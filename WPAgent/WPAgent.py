@@ -1,17 +1,21 @@
 """
-Wafer Prober Agent - With Auto-Initialization on Listen
+Wafer Prober Agent - one agent per WP machine
 
-When starting with: python main.py listen configs/ProbeConfigCERN.json
-- Loads config directly from the specified JSON file
-- Auto-initializes prober connection
-- Sets all global parameters
-- Ready to receive commands immediately
+When starting with: python main.py --config=configs/ProbeConfigCERN.json listen
+(or, in a container, with the env vars SVT_WP_AGENT_MACHINE_NAME + SVT_WP_AGENT_KAFKA_BROKER):
+- Reads the machine name and the Kafka broker
+- Gets the machine (address, port, type, id) from its record in the DB; stops when it cannot
+- Starts the listener and the connection watch, which only reports whether the machine is on.
+  The agent connects to the machine when it gets the Initialize command, never by itself.
+- Runs only the requests whose waferAgentName names this machine
 """
 
 from WPKafkaClient import KafkaClient
-from services.WPHeartbeat import ListenerHealthCheck
+from services.WPHeartbeat import ListenerHealthCheck, read_local_health
 import json
 import os
+import sys
+import time
 from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 from utilities.WPResponseBuilder import ResponseBuilder
 
@@ -30,6 +34,15 @@ def _effective_agent_name(config: dict) -> str:
     if config.get("kafka_broker", "") == _DEV_BROKER:
         return f"{name}_DEV"
     return name
+
+
+# Set by compose for the service of one WP machine (Environment/<Env>/docker-compose-svtsw-<env>.yml)
+ENV_MACHINE_NAME = "SVT_WP_AGENT_MACHINE_NAME"
+ENV_KAFKA_BROKER = "SVT_WP_AGENT_KAFKA_BROKER"
+
+# The DB agent can start after this agent: wait for its answer
+DB_LOOKUP_WAIT = 60.0
+DB_LOOKUP_RETRY = 5.0
 
 
 class WaferProberAgent:
@@ -177,259 +190,192 @@ class WaferProberAgent:
 
         return matches[-1][1]
 
-    def _load_probe_config_with_db(self, config_path, kafka_broker=None):
-        """
-        Load probe station config from file (name + kafka_broker),
-        then fetch connection details from DB by name (waferAgentName).
+    def _load_start_config(self):
+        """The machine name and Kafka broker: the --config file, else the env vars from compose."""
+        if self.config:
+            return self._load_probe_config(self.config)
 
-        Args:
-            config_path: Path to config JSON file (e.g., "configs/ProbeConfigCERN_DEV.json")
-            kafka_broker: Override kafka_broker (optional)
+        name = os.environ.get(ENV_MACHINE_NAME, "").strip()
+        broker = os.environ.get(ENV_KAFKA_BROKER, "").strip()
+        if not name or not broker:
+            raise KeyError(f"Give --config=<file>, or set both {ENV_MACHINE_NAME} and {ENV_KAFKA_BROKER}.")
+        return {"name": name, "kafka_broker": broker}
+
+    @staticmethod
+    def _is_mock_config(file_config):
+        """A mock config ("machineType": "mock") has no record in the DB."""
+        return str(file_config.get("machineType", "")).lower() == "mock"
+
+    def _load_probe_config_with_db(self, file_config):
+        """
+        Complete the start config (name + kafka_broker) with the machine from the DB.
+
+        A mock config ("machineType": "mock") keeps its own values and needs no DB.
+        Raises when the DB agent does not answer or has no machine with this name:
+        a wrong config must stop the agent, not connect it to a wrong address.
 
         Returns:
             dict: Config with name, machineId, address, port, machineType, kafka_broker
         """
-        file_config = self._load_probe_config(config_path)
         config_name = file_config.get("name")
-        if not config_name:
-            raise KeyError(
-                f"Config file '{config_path}' is missing required 'name' field."
-            )
+        kafka_broker = file_config.get("kafka_broker")
+        if not config_name or not kafka_broker:
+            raise KeyError("The config needs both 'name' and 'kafka_broker'.")
 
-        print(f"🔍 Loading configuration for '{config_name}' from {config_path}...")
+        print(f"🔍 Loading configuration for '{config_name}' (Kafka broker {kafka_broker})...")
 
-        # kafka_broker always comes from config file
-        if file_config.get("kafka_broker"):
-            kafka_broker = file_config["kafka_broker"]
-            print(f"   ✅ Using kafka_broker from config file: {kafka_broker}")
+        if self._is_mock_config(file_config):
+            print("   ✅ Mock prober: values from the config file, no DB lookup")
+            return file_config
 
-        # Fetch connection details from DB by waferAgentName
-        db_config = self._load_from_database_by_name(
-            config_name, kafka_broker=kafka_broker, timeout=5.0
-        )
+        db_config = self._find_machine_in_db(config_name, kafka_broker)
+        print("   ✅ Loaded machine info from database")
+        db_config["kafka_broker"] = kafka_broker
+        db_config["name"] = config_name
+        return db_config
 
-        if db_config:
-            print("   ✅ Loaded machine info from database")
-            db_config["kafka_broker"] = kafka_broker
-            db_config["name"] = config_name
-            return db_config
-
-        print("   ⚠️  DB lookup failed, falling back to config file values")
-        return file_config
-
-    def _load_from_database_by_name(self, agent_name, kafka_broker=None, timeout=10.0):
+    def _find_machine_in_db(self, agent_name, kafka_broker, wait=DB_LOOKUP_WAIT):
         """
-        Fetch machine connection details from DB by waferAgentName (name field in DB).
-
-        Args:
-            agent_name: The name from the config file (e.g., "CERN_DEV") — becomes waferAgentName
-            kafka_broker: Kafka broker address needed to reach the DB agent
-            timeout: Seconds to wait for DB response
-
-        Returns:
-            Config dict with address/port/machineType/machineId or None if not found/error
+        Get the WaferProbeMachine named agent_name from the DB agent, as config values
+        (the host and the port exactly as they are in the record).
+        Retries for `wait` seconds while the DB agent gives no machines.
         """
-        if not agent_name:
-            return None
+        from services.WPDbKafkaClient import DBKafkaClient
+        from services.WPMachineRecord import find_record, machine_config
 
-        try:
-            from actions.WPDataBaseActions import _find_machine_by_name
-            from services.WPDbKafkaClient import DBKafkaClient
+        if DBKafkaClient._instance is None:
+            DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
 
-            if kafka_broker and DBKafkaClient._instance is None:
-                DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
+        deadline = time.monotonic() + wait
+        while True:
+            machines = DBKafkaClient.get_instance().get_all_wafer_probe_machines(timeout=5.0)
+            if machines:
+                break
+            if time.monotonic() >= deadline:
+                raise TimeoutError(
+                    f"The DB agent gave no wafer probe machines within {wait:.0f} s "
+                    "(no answer, or the list is empty)."
+                )
+            print(f"   ⏳ No answer from the DB agent yet, next try in {DB_LOOKUP_RETRY:.0f} s...")
+            time.sleep(DB_LOOKUP_RETRY)
 
-            machine_data = _find_machine_by_name(agent_name, timeout=timeout)
+        machine_data = find_record(machines, agent_name)
+        if not machine_data:
+            known = ", ".join(sorted(str(m.get("name")) for m in machines))
+            raise LookupError(f"The DB has no WaferProbeMachine named '{agent_name}'. Known: {known}.")
 
-            if not machine_data:
-                return None
-
-            machine_name = machine_data.get("name", "").lower()
-            host_name = machine_data.get("hostName", "localhost")
-
-            if machine_name and host_name and host_name != "localhost":
-                full_address = f"{machine_name}01.{host_name}"
-            else:
-                full_address = host_name
-
-            return {
-                "address": full_address,
-                "port": machine_data.get("connectionPort", 35555),
-                "machineType": machine_data.get("software", "sentio"),
-                "machineId": machine_data.get("id", 0),
-                "description": machine_data.get("generalLocation", ""),
-            }
-
-        except Exception:
-            # Silently fail — will fallback to config file values
-            return None
-
-    def _auto_initialize_prober(self, config_name, config):
-        """
-        Auto-initialize prober connection when listener starts
-
-        Args:
-            config_name: Name of the config (e.g., "CERN", "MOCK")
-            config: Config dict from JSON
-        """
-        try:
-            print("\n🔌 Auto-initializing prober connection...")
-
-            from actions.WPProjectActions import svt_initialise_wp
-
-            port = config.get("port", 35555)
-            address_host = config.get("address", "localhost")
-            full_address = f"{address_host}:{port}"
-
-            g = SvtWPAagentGlobalParameters.getInstance()
-
-            init_params = {
-                "address": full_address,
-                "machine_type": config.get("machineType", "sentio"),
-                "machine_id": config.get("machineId", 0),
-                "machine_name": config.get("description", config_name),
-                "initialization_mode": "config",
-                "force": True,
-            }
-
-            if "projectName" in config:
-                init_params["projectName"] = config["projectName"]
-
-            print(f"   Address: {full_address}")
-            print(f"   Type: {init_params['machine_type']}")
-            print(f"   Machine ID: {init_params['machine_id']}")
-
-            g.set_machine_id(init_params["machine_id"])
-
-            result = svt_initialise_wp(**init_params)
-
-            if result.get("status", "") == "Success":
-                msg = result.get("data", {}).get("message", "Initialized successfully")
-                print(f"✅ {msg}")
-                return True
-            else:
-                print("❌ Initialization failed:")
-                error_obj = result.get("error", {})
-                error_msg = error_obj.get("message", "Unknown error")
-                error_code = error_obj.get("code", "N/A")
-                print(f"   Error code: {error_code}")
-                print(f"   Error message: {error_msg}")
-                print("\n   Full result:")
-                import json
-
-                print(json.dumps(result, indent=2))
-                return False
-
-        except Exception as e:
-            print(f"❌ Auto-initialization error: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
-            return False
+        return machine_config(machine_data)
 
     def listen(self):
         """
-        Start the listener service with auto-initialization.
+        Start the listener of one WP machine. The start does not touch the machine: the
+        connection watch only reports whether it is on, and the agent connects to it when
+        it gets the Initialize command.
         Usage: python main.py --config=configs/ProbeConfigCERN_DEV.json listen
+               (or set SVT_WP_AGENT_MACHINE_NAME and SVT_WP_AGENT_KAFKA_BROKER, then: python main.py listen)
         """
-        config_path = self.config
-        if config_path:
-            sep = '=' * 70
-            print(f"\n{sep}")
-            print(f"  Starting WP Agent: {config_path}")
-            print(f"{sep}\n")
+        from services.WPMachineRecord import full_address
+        from stateMachine.WpAgentStateMachineGlobals import agentStateMachine
 
-            try:
-                config = self._load_probe_config_with_db(config_path)
-                agent_name = _effective_agent_name(config)
-                self.wp_agent_name = agent_name
+        sep = '=' * 70
+        print(f"\n{sep}")
+        print(f"  Starting WP Agent: {self.config or f'{ENV_MACHINE_NAME} / {ENV_KAFKA_BROKER}'}")
+        print(f"{sep}\n")
 
-                print(f"\n📋 Loaded config for '{agent_name}':")
-                print(f"   Machine ID: {config.get('machineId')}")
-                print(f"   Address: {config.get('address')}:{config.get('port', 35555)}")
-                print(f"   Type: {config.get('machineType', 'sentio')}")
-                if "description" in config:
-                    print(f"   Description: {config['description']}")
+        try:
+            start_config = self._load_start_config()
+            config = self._load_probe_config_with_db(start_config)
+            agent_name = _effective_agent_name(config)
+            self.wp_agent_name = agent_name
+            address = full_address(config)
+            kafka_broker = config["kafka_broker"]
 
-                kafka_broker = config.get("kafka_broker")
-                if kafka_broker:
-                    print(f"   Kafka Broker: {kafka_broker}")
-                print()
+            print(f"\n📋 Loaded config for '{agent_name}':")
+            print(f"   Machine ID: {config.get('machineId')}")
+            print(f"   Address: {address}")
+            print(f"   Type: {config.get('machineType', 'sentio')}")
+            if "description" in config:
+                print(f"   Description: {config['description']}")
+            print(f"   Kafka Broker: {kafka_broker}\n")
 
-                # Set wpAgentName in global parameters
+            g = SvtWPAagentGlobalParameters.getInstance()
+            g.wpAgentName = agent_name
+            # The machine of the connection watch and of the Initialize command. Its DB record
+            # is read again while the machine is off and before every connect.
+            g.set_address(address)
+            g.set_machine_type(config.get("machineType", "sentio"))
+            g.set_machine_id(config.get("machineId", 0))
+            g.machine_record_name = None if self._is_mock_config(start_config) else config["name"]
+            # Every reply reports the state of the state machine, also before the first command
+            g.wpag_state = agentStateMachine.get_state_name()
+
+            self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker, agent_name=agent_name)
+            self.kafka = KafkaClient(bootstrap_servers=kafka_broker, agent_name=agent_name)
+
+            from services.WPDbKafkaClient import DBKafkaClient
+            if DBKafkaClient._instance:
                 try:
-                    g = SvtWPAagentGlobalParameters.getInstance()
-                    g.wpAgentName = agent_name
-                    print(f"✓ Set wpAgentName: {agent_name}\n")
-                except Exception as e:
-                    print(f"⚠️  Warning: Could not set wpAgentName: {e}\n")
+                    DBKafkaClient._instance.close()
+                except Exception:
+                    pass
+                DBKafkaClient._instance = None
+            DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
 
-                # Initialize all Kafka clients with correct broker
-                if kafka_broker:
-                    print("🔌 Initializing health check...")
-                    print(f"   Broker: {kafka_broker}")
-                    self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker)
-                    print("   ✅ Health check initialized\n")
+        except (FileNotFoundError, KeyError, LookupError, TimeoutError, ValueError) as e:
+            print(f"❌ Error loading config: {e}")
+            print("\n💡 Usage: python main.py --config=configs/ProbeConfigCERN_DEV.json listen,")
+            print(f"   or set {ENV_MACHINE_NAME} and {ENV_KAFKA_BROKER}, then: python main.py listen")
+            sys.exit(1)
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 
-                    print("🔌 Initializing WP Kafka Client...")
-                    print(f"   Broker: {kafka_broker}")
-                    self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
-                    print("   ✅ WP Kafka client initialized\n")
-
-                    from services.WPDbKafkaClient import DBKafkaClient
-                    if DBKafkaClient._instance:
-                        try:
-                            DBKafkaClient._instance.close()
-                        except Exception:
-                            pass
-                        DBKafkaClient._instance = None
-
-                    print("🔌 Initializing DB Kafka Client...")
-                    print(f"   Broker: {kafka_broker}")
-                    DBKafkaClient.get_instance(bootstrap_servers=kafka_broker)
-                    print("   ✅ DB Kafka client initialized\n")
-                else:
-                    print("⚠️  No kafka_broker in config, using defaults")
-                    self.health_check = ListenerHealthCheck(bootstrap_servers=kafka_broker)
-                    self.kafka = KafkaClient(bootstrap_servers=kafka_broker)
-
-                init_success = self._auto_initialize_prober(agent_name, config)
-                if not init_success:
-                    print("\n⚠️  Warning: Auto-initialization failed")
-                    print("   Continuing to start listener anyway...\n")
-
-            except (FileNotFoundError, KeyError) as e:
-                print(f"❌ Error loading config: {e}")
-                print("\n💡 Usage: python main.py --config=configs/ProbeConfigCERN_DEV.json listen")
-                return
-            except Exception as e:
-                print(f"❌ Unexpected error: {e}")
-                import traceback
-                traceback.print_exc()
-                return
-        else:
-            sep = '=' * 70
-            print(f"\n{sep}")
-            print("  Starting WP Agent (no auto-config)")
-            print(f"{sep}\n")
-            print("💡 Tip: Start with a config for auto-initialization:")
-            print("   python main.py --config=configs/ProbeConfigCERN_DEV.json listen\n")
-
-            if self.kafka is None:
-                self.kafka = KafkaClient()
-            if self.health_check is None:
-                self.health_check = ListenerHealthCheck()
-
-        # Start Kafka listener
+        # Start the Kafka listener and the connection watch. No connection to the machine yet:
+        # that is the Initialize command.
         print(f"{'=' * 70}")
-        print("  Starting Kafka Listener")
+        print(f"  Starting Kafka Listener for {agent_name}")
         print(f"{'=' * 70}\n")
         self.kafka.listen()
 
+    def check_local_health(self, max_age=ListenerHealthCheck.HEARTBEAT_TIMEOUT):
+        """
+        Docker HEALTHCHECK: exit 1 when the listener in this container had no heartbeat
+        confirmed by Kafka in the last max_age seconds. A WP machine that is off is a
+        normal case: its connection status is printed, it does not make the check fail.
+        """
+        heartbeat = read_local_health() or {}
+        # confirmedAt: when Kafka's confirmation of the heartbeat reached the listener
+        confirmed_at = heartbeat.get("confirmedAt") or heartbeat.get("timestamp")
+        age = time.time() - confirmed_at if confirmed_at else None
+        if age is None or age > max_age:
+            print(
+                "❌ Listener is DOWN ("
+                + ("no heartbeat" if age is None else f"last confirmed heartbeat {age:.1f}s ago")
+                + ")"
+            )
+            sys.exit(1)
+
+        connection = {True: "connected", False: "NOT connected"}.get(heartbeat.get("proberConnected"), "not checked yet")
+        initialized = "initialized" if heartbeat.get("proberInitialized") else "not initialized"
+        print(
+            f"✅ Listener of {heartbeat.get('waferAgentName')} is alive (heartbeat confirmed {age:.1f}s ago); "
+            f"WP machine {connection}, {initialized}"
+        )
+        sys.exit(0)
+
     def check_listener_health(self):
-        """Check if the listener is alive and responding"""
+        """Check over Kafka that the listener of the machine of --config (or the env vars) is alive"""
         if self.health_check is None:
-            self.health_check = ListenerHealthCheck()
+            try:
+                config = self._load_start_config()
+            except (FileNotFoundError, KeyError) as e:
+                print(f"❌ {e}")
+                return False
+            self.health_check = ListenerHealthCheck(
+                bootstrap_servers=config.get("kafka_broker"), agent_name=_effective_agent_name(config)
+            )
 
         print("🔍 Checking listener health...")
         is_alive, age = self.health_check.is_listener_alive(timeout=2.0)

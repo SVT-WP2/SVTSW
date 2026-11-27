@@ -1,8 +1,9 @@
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait as wait_for_futures
 
 import json
+import signal
 import threading
 import time
 import ast
@@ -14,7 +15,11 @@ from WPCmdMap import execute_command
 from utilities.WPAgentLogger import WPAgentLogger, Severity
 from utilities.WPAgentCache import WPAgentCache
 from services.WPHeartbeat import ListenerHealthCheck, ListenerHealthMonitor
-from services.WPProberConnectionWatch import ProberConnectionWatch
+from services.WPProberConnectionWatch import (
+    ProberConnectionWatch, add_connection_listener, close_prober_connection, remove_connection_listener,
+)
+from utilities.WPCommandActivity import command_running, running_commands
+from utilities.WPMachineName import is_same_machine, normalize_machine_name
 from utilities.WPMessagesStatus import WPMessagesStatus
 
 logger = WPAgentLogger(kafka_servers=None)
@@ -28,7 +33,31 @@ KAFKA_HEADER__CORRELATION_ID = "kafka_correlationId"
 KAFKA_HEADER__REPLY_TOPIC = "kafka_replyTopic"
 KAFKA_HEADER__REPLY_PARTITION = "kafka_replyPartition"
 
+# Connection status of each WP machine (see ProberConnectionWatch)
+CONNECTION_STATUS_TOPIC = "svt.wp-agent.connection-status"
+CONNECTION_STATUS_EVENT = "WpConnectionStatusChanged"
 
+# Seconds that a command which is running when the listener stops gets to finish, before
+# the connection to the WP machine is closed anyway. Keep the stop timeout of the service
+# above it (stop_grace_period in the compose files).
+STOP_COMMAND_WAIT = 20.0
+
+
+def _stop_on_sigterm(stop: threading.Event):
+    """
+    SIGTERM (docker stop, a deploy, systemctl stop) asks the listener to stop in order,
+    as Ctrl+C does. Without a handler Python has none for SIGTERM: a process with PID 1
+    in a container ignores the signal and is killed after the stop timeout.
+
+    Returns a function that puts the previous handler back.
+    """
+    try:
+        previous = signal.signal(signal.SIGTERM, lambda _signum, _frame: stop.set())
+    except ValueError:
+        return lambda: None  # not the main thread: signal handlers cannot be set here
+    if previous is None:  # the old handler was not set from Python
+        previous = signal.SIG_DFL
+    return lambda: signal.signal(signal.SIGTERM, previous)
 
 
 
@@ -40,7 +69,7 @@ def _headers_to_dict(headers) -> Dict[str, bytes]:
 
 
 class KafkaClient:
-    def __init__(self, bootstrap_servers=None, group_id="wafer-executor"):
+    def __init__(self, bootstrap_servers=None, group_id="wafer-executor", agent_name=None):
         """
         Initialize Kafka client
 
@@ -48,19 +77,24 @@ class KafkaClient:
             bootstrap_servers: Kafka broker address (e.g., "svmithi02:9092")
                               If None, uses default
             group_id: Consumer group ID
+            agent_name: WP machine of this listener. It runs only the requests for this
+                        machine, and every machine has its own consumer group.
         """
 
         self.bootstrap_servers = bootstrap_servers
         print(f"🔌 Using Kafka broker from config: {bootstrap_servers}")
 
         self.group_id = group_id
+        self.agent_name = agent_name
 
         # Topics
         self.request_topic = "svt.wp-agent.request"
         self.reply_topic = f"{self.request_topic}.reply"
+        self.connection_topic = CONNECTION_STATUS_TOPIC
 
         self._ensure_topic_exists(self.request_topic)
         self._ensure_topic_exists(self.reply_topic)
+        self._ensure_topic_exists(self.connection_topic)
 
         # Producer configuration
         producer_config = {
@@ -75,9 +109,6 @@ class KafkaClient:
         self.request_consumer = None
         self.reply_consumer = None
 
-        # Number of commands being executed right now (the connection watch stays quiet meanwhile)
-        self._active_commands = 0
-        self._active_lock = threading.Lock()
         self._initialize_reply_consumer()
         self.cache = None
 
@@ -279,12 +310,106 @@ class KafkaClient:
 
         return results if repeat > 1 else (results[0] if results else None)
 
+    def listener_group_id(self):
+        """One consumer group per machine: each listener gets every request.
+        A second listener of the same machine joins the same group and stays idle."""
+        machine = normalize_machine_name(self.agent_name)
+        return f"{self.group_id}-{machine}" if machine else self.group_id
+
+    def is_for_this_machine(self, params):
+        """True when the request names the machine of this listener (always, without agent_name)."""
+        if not self.agent_name:
+            return True
+        target = params.get("waferAgentName") if isinstance(params, dict) else None
+        return is_same_machine(target, self.agent_name)
+
+    def publish_connection_status(self, connected, initialized):
+        """Send a WpConnectionStatusChanged event (key: the machine name) with the given status."""
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+
+        g = SvtWPAagentGlobalParameters.getInstance()
+        event = {
+            "type": CONNECTION_STATUS_EVENT,
+            "data": {
+                "waferAgentName": self.agent_name,
+                "wpMachineId": g.wpMachineId,
+                "connected": connected,
+                "initialized": initialized,
+                "address": g.address,
+                "timestamp": time.time(),
+            },
+        }
+        self.producer.produce(
+            self.connection_topic,
+            key=(normalize_machine_name(self.agent_name) or None),
+            value=json.dumps(event).encode("utf-8"),
+        )
+        self.producer.poll(0)
+
+    def skip_request_backlog(self, consumer):
+        """
+        Move the offsets of this listener's group to the end of the request topic, before
+        the consumer subscribes.
+
+        Kafka resumes a group from its committed offset ("auto.offset.reset: latest" only
+        covers a group without one), so the requests sent while the agent was down would
+        run when it starts: their senders gave up long ago, and a command among them
+        would move the machine now.
+
+        The broker accepts the commit only while the group has no member. With another
+        listener of this machine in the group the offsets stay, and this listener joins the
+        group as it is. Returns the number of skipped requests, or None when the offsets
+        could not be read or moved.
+        """
+        from confluent_kafka import TopicPartition
+
+        group = self.listener_group_id()
+        try:
+            metadata = consumer.list_topics(self.request_topic, timeout=5.0)
+            partitions = [
+                TopicPartition(self.request_topic, partition)
+                for partition in metadata.topics[self.request_topic].partitions
+            ]
+            skipped, ends = 0, []
+            for committed in consumer.committed(partitions, timeout=5.0):
+                _low, high = consumer.get_watermark_offsets(committed, timeout=5.0, cached=False)
+                if committed.offset >= 0:  # negative: no committed offset, "latest" applies
+                    skipped += max(0, high - committed.offset)
+                ends.append(TopicPartition(committed.topic, committed.partition, high))
+            if skipped:
+                consumer.commit(offsets=ends, asynchronous=False)
+        except Exception as e:
+            logger.log_command(
+                messageOut=f"Could not skip the request backlog of group '{group}': {e}",
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result={"error": str(e)},
+            )
+            return None
+
+        if skipped:
+            logger.log_command(
+                messageOut=f"Skipped {skipped} request(s) sent while no listener of group '{group}' was running",
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+        return skipped
+
     def listen(self, poll_timeout=0.1):
-        """Listen for and process Kafka messages (LISTENER MODE)."""
+        """Listen for and process Kafka messages (LISTENER MODE).
+
+        The listener starts after the last request of the topic (skip_request_backlog) and
+        with the connection watch, which only reports whether the WP machine is on: the
+        agent connects to the machine when it gets the Initialize command.
+
+        Ctrl+C or SIGTERM stops it in order (_stop_listening): the running command
+        finishes, then the connection to the WP machine is closed.
+        """
 
         consumer_config = {
             "bootstrap.servers": self.bootstrap_servers,
-            "group.id": self.group_id,
+            "group.id": self.listener_group_id(),
             "auto.offset.reset": "latest",
             "enable.auto.commit": True,
             "session.timeout.ms": 10000,
@@ -301,11 +426,12 @@ class KafkaClient:
         self.cache.initialize_cache()
 
         self.request_consumer = KafkaConsumer(consumer_config)
+        self.skip_request_backlog(self.request_consumer)
         self.request_consumer.subscribe([self.request_topic])
 
         # Initialize heartbeat monitoring with correct broker only when listener started
         health_check = ListenerHealthCheck(
-            bootstrap_servers=self.bootstrap_servers
+            bootstrap_servers=self.bootstrap_servers, agent_name=self.agent_name
         )
         # The cache snapshot is refreshed on every heartbeat beat (no separate cache topic)
         heartbeat_monitor = ListenerHealthMonitor(
@@ -313,6 +439,7 @@ class KafkaClient:
         )
 
         executor = ThreadPoolExecutor(max_workers=4)
+        handling = set()  # the futures of the requests that are being handled
 
         logger.log_command(
             messageOut=f"Kafka listener started on topic '{self.request_topic}'",
@@ -323,13 +450,17 @@ class KafkaClient:
 
         heartbeat_monitor.start()
 
-        # Put the agent into Error when the prober machine stops answering
-        # (e.g. powered off). ReconnectProber brings it back without a restart.
-        connection_watch = ProberConnectionWatch(is_busy=lambda: self._active_commands > 0)
+        # The global watcher of the WP machine: it reports whether the machine is on and
+        # restores a lost connection; every status change is published as an event.
+        add_connection_listener(self.publish_connection_status)
+        # The watch stays quiet while a command runs (utilities/WPCommandActivity.py)
+        connection_watch = ProberConnectionWatch(is_busy=lambda: running_commands() > 0)
         connection_watch.start()
 
+        stop = threading.Event()
+        restore_sigterm = _stop_on_sigterm(stop)
         try:
-            while True:
+            while not stop.is_set():
                 msg = self.request_consumer.poll(poll_timeout)
 
                 if msg is None:
@@ -344,17 +475,85 @@ class KafkaClient:
                     )
                     continue
 
-                executor.submit(self._handle_message, msg)
+                future = executor.submit(self._handle_message, msg)
+                handling.add(future)
+                future.add_done_callback(handling.discard)
 
         except KeyboardInterrupt:
             pass
         finally:
-            self.request_consumer.close()
-            heartbeat_monitor.stop()
-            connection_watch.stop()
-            self.producer.flush(timeout=5.0)
-            if self.reply_consumer:
-                self.reply_consumer.close()
+            try:
+                self._stop_listening(executor, handling, heartbeat_monitor, connection_watch)
+            finally:
+                restore_sigterm()
+
+    def _stop_listening(self, executor, handling, heartbeat_monitor, connection_watch):
+        """
+        Stop the listener in an order that leaves the WP machine in a clean state:
+
+        1. No new requests; requests that wait for a free worker are dropped.
+        2. A running command gets STOP_COMMAND_WAIT seconds to finish and to send its reply.
+        3. The connection watch stops, so that it does not take the closed connection for
+           a lost machine (no reconnect, no Error state).
+        4. The machine goes to local mode and the TCP connection is closed
+           (close_prober_connection). A command that is still running is cut: no local
+           mode then, because a second command on the same connection would mix with it.
+        5. The heartbeat stops, the replies and the last status event go out.
+
+        A step that fails does not stop the next ones.
+        """
+        def step(what, action):
+            try:
+                return action()
+            except Exception as e:
+                logger.log_command(
+                    messageOut=f"Stop of the listener: could not {what}: {e}",
+                    severityLevel=Severity.WARNING,
+                    command="KAFKA_LISTEN",
+                    result={"error": str(e)},
+                )
+                return None
+
+        logger.log_command(
+            messageOut="Kafka listener stops",
+            severityLevel=Severity.INFO,
+            command="KAFKA_LISTEN",
+            result=None,
+        )
+
+        step("close the request consumer", self.request_consumer.close)
+        step("drop the waiting requests", lambda: executor.shutdown(wait=False, cancel_futures=True))
+
+        _done, still_running = wait_for_futures(list(handling), timeout=STOP_COMMAND_WAIT)
+        if still_running:
+            logger.log_command(
+                messageOut=(
+                    f"{len(still_running)} command(s) still running after {STOP_COMMAND_WAIT:.0f} s: "
+                    "the connection to the WP machine is closed anyway"
+                ),
+                severityLevel=Severity.WARNING,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+
+        step("stop the connection watch", connection_watch.stop)
+        closed = step(
+            "close the connection to the WP machine",
+            lambda: close_prober_connection(send_local_mode=not still_running),
+        )
+        if closed:
+            logger.log_command(
+                messageOut="Connection to the WP machine closed: the next start needs Initialize",
+                severityLevel=Severity.INFO,
+                command="KAFKA_LISTEN",
+                result=None,
+            )
+
+        step("remove the connection listener", lambda: remove_connection_listener(self.publish_connection_status))
+        step("stop the heartbeat", heartbeat_monitor.stop)
+        step("send the last messages", lambda: self.producer.flush(timeout=5.0))
+        if self.reply_consumer:
+            step("close the reply consumer", self.reply_consumer.close)
 
     def _handle_message(self, msg):
         """Runs in a thread — executes command and sends reply."""
@@ -363,6 +562,10 @@ class KafkaClient:
 
             command = payload.get("type")
             params = payload.get("data", {}) or {}
+
+            # Every agent reads every request: only the named machine runs it and replies.
+            if not self.is_for_this_machine(params):
+                return
 
             if hasattr(self, "_convert_param_types"):
                 params = self._convert_param_types(params)
@@ -395,13 +598,8 @@ class KafkaClient:
             )
 
             exec_start = time.time()
-            with self._active_lock:
-                self._active_commands += 1
-            try:
+            with command_running():
                 result = execute_command(command, params)
-            finally:
-                with self._active_lock:
-                    self._active_commands -= 1
             exec_end = time.time()
             exec_time_ms = (exec_end - exec_start) * 1000
             self.cache.cache_command()  # update cache snapshot with current global state

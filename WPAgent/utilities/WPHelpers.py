@@ -90,11 +90,17 @@ def check_prober_ready():
         tuple: (is_ready: bool, message: str)
     """
     from drivers.WPFactory import ProberFactory
+    from services.WPProberConnectionWatch import (
+        is_prober_connected, not_connected_message, not_initialized_message,
+    )
+
+    if is_prober_connected() is False:
+        return False, not_connected_message()
 
     factory = ProberFactory.get_instance()
 
     if not factory.is_initialized():
-        return False, "Prober not initialized. Please run 'Initialize' command first."
+        return False, not_initialized_message()
 
     globals_ = SvtWPAagentGlobalParameters.getInstance()
     if not globals_.address or not globals_.machineType:

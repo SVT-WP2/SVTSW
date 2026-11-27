@@ -21,12 +21,17 @@
 #      versions.env are NEVER overwritten).
 #   2. Refuses to run until the admin has created /opt/docker/svtsw/<env>/.env
 #      (secrets never leave the server, so CI cannot create it); bootstraps
-#      versions.env from versions.env.example on the first run.
+#      versions.env from versions.env.example on the first run, and adds the
+#      lines of services that are new in the template.
 #   3. Pins <SERVICE>_VERSION=<image-tag> in versions.env.
-#   4. Pulls the image and recreates ONLY that service:
+#   4. Removes the containers of retired services (RETIRED_SERVICES), pulls the
+#      image and recreates ONLY that service:
 #      docker compose up -d --no-deps --wait <service>.
 #      The deploy fails when the container stops, or its HEALTHCHECK fails,
-#      within WAIT_TIMEOUT seconds.
+#      within WAIT_TIMEOUT seconds. No --remove-orphans here: the compose file
+#      comes from the deployed ref, and an older ref (a manual deploy from an
+#      old branch, a tag cut before a service was added) would remove the
+#      containers of the services that it does not have yet.
 #
 # --apply-compose does steps 1 and 2, keeps every pinned version and runs
 # `docker compose up -d --remove-orphans --wait` for the whole stack: compose
@@ -146,6 +151,14 @@ if ! sudo test -f "$VERSIONS_FILE"; then
   echo "First deploy to ${ENV_NAME}: bootstrapping ${VERSIONS_FILE} from the template."
   sudo cp "${SRC_DIR}/versions.env.example" "$VERSIONS_FILE"
 fi
+# A service new in the template (e.g. a new WP machine) gets its bootstrap line:
+# compose needs the version of every service before it runs any command.
+while IFS= read -r line; do
+  if ! sudo grep -q "^${line%%=*}=" "$VERSIONS_FILE"; then
+    echo "Adding ${line} to ${VERSIONS_FILE} (new in the template)."
+    printf '%s\n' "$line" | sudo tee -a "$VERSIONS_FILE" >/dev/null
+  fi
+done < <(grep -E '^[A-Z0-9_]+_VERSION=' "${SRC_DIR}/versions.env.example")
 
 # --- 3. pin the new version (not for --apply-compose) --------------------------
 if [ "$APPLY_COMPOSE" = false ]; then
@@ -191,6 +204,24 @@ if sudo docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
     sudo docker rm -f "$CONTAINER_NAME"
   fi
 fi
+
+# --- 5b. retired services --------------------------------------------------------
+# Services that were renamed or split: their containers are removed by name, so that
+# an old container never runs next to its successor (e.g. two agents driving the same
+# WP machine). Only these: a deploy never removes the container of another service.
+RETIRED_SERVICES=(
+  svt-wp-agent   # split into one svt-wp-agent-<machine> per WP machine (#387)
+)
+for retired in "${RETIRED_SERVICES[@]}"; do
+  ids="$(sudo docker ps -aq \
+    --filter "label=com.docker.compose.project=${PROJECT}" \
+    --filter "label=com.docker.compose.service=${retired}")"
+  if [ -n "$ids" ]; then
+    echo "Removing the container(s) of the retired service ${retired}: ${ids//$'\n'/ }"
+    # shellcheck disable=SC2086 # one id per word
+    sudo docker rm -f $ids
+  fi
+done
 
 # --- 6. deploy just this service -----------------------------------------------
 "${COMPOSE[@]}" pull "$SERVICE"

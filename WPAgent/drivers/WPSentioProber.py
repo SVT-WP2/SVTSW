@@ -57,6 +57,32 @@ class SentioProberImpl(AbstractProber):
         except Exception:
             return False
 
+    def disconnect(self):
+        """
+        Close the TCP connection to SENTIO. Sends no command; safe to call twice.
+
+        shutdown() comes first: SENTIO sees the end of the connection at once, and a
+        command of another thread that still waits for an answer on this socket wakes
+        up with an error (close() alone would leave it waiting).
+        """
+        sock = self._socket()
+        if sock is not None:
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass  # already closed, or the machine is gone
+        try:
+            disconnect = getattr(getattr(self.prober, "comm", None), "disconnect", None)
+            if callable(disconnect):
+                disconnect()  # CommunicatorTcpIp closes its socket
+        except Exception as e:
+            print(f"WARNING - the SENTIO library could not close the connection: {e}")
+        if sock is not None:
+            try:
+                sock.close()
+            except OSError:
+                pass
+
     def open_project(self, path: str):
         self.prober.open_project(path, restore_heights=True)
 

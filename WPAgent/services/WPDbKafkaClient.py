@@ -5,6 +5,7 @@ Kafka client specifically for DB Agent communication.
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic
 import json
+import threading
 import uuid
 import time
 from typing import Optional, List
@@ -24,8 +25,10 @@ class DBKafkaClient:
     def get_instance(cls, bootstrap_servers=None) -> "DBKafkaClient":
         """Get or create singleton instance."""
         if cls._instance is None:
-            cls._instance = cls.__new__(cls)
-            cls._instance._initialize(bootstrap_servers)
+            # Keep the instance only when it is ready: a failed start must not leave a broken one
+            instance = cls.__new__(cls)
+            instance._initialize(bootstrap_servers)
+            cls._instance = instance
         return cls._instance
 
     def __init__(self):
@@ -42,6 +45,9 @@ class DBKafkaClient:
         self.DB_BROKER = bootstrap_servers
         self.DB_REQUEST_TOPIC = "svt.db-agent.request"
         self.DB_REPLY_TOPIC = "svt.db-agent.request.reply"
+        # One request at a time: the commands and the connection watch run in different
+        # threads and share the reply consumer, which drops the replies of other requests.
+        self._request_lock = threading.Lock()
 
         print(f"🔌 Initializing DB Kafka Client — broker: {bootstrap_servers}")
         print(f"   Request topic: {self.DB_REQUEST_TOPIC}")
@@ -174,11 +180,12 @@ class DBKafkaClient:
         reply_type: str,
         timeout: float = 10.0,
     ) -> Optional[KafkaPayload]:
-        """Send a request and wait for the correlated reply."""
+        """Send a request and wait for the correlated reply (one request at a time)."""
         correlation_id = str(uuid.uuid4())
-        if not self._send_request(message_type, data, correlation_id):
-            return None
-        return self._wait_for_reply(correlation_id, timeout)
+        with self._request_lock:
+            if not self._send_request(message_type, data, correlation_id):
+                return None
+            return self._wait_for_reply(correlation_id, timeout)
 
     # =========================================================================
     # High-level DB operations

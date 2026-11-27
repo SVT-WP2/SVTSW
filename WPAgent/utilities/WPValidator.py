@@ -4,6 +4,7 @@ from typing import Optional, List, Tuple, Any
 from utilities.WPAgentTypes import AgentResponse
 from utilities.WPCommandConstants import BYPASS_COMMANDS as _GLOBAL_BYPASS_COMMANDS, USER_COMMANDS, EXPERT_COMMANDS
 from utilities.WPSequenceContext import in_trusted_sequence
+from utilities.WPMachineName import is_same_machine
 import re
 
 
@@ -114,7 +115,7 @@ class WPCommandValidator:
                 500,
             )
 
-        if payload_agent_name != self.g.wpAgentName:
+        if not is_same_machine(payload_agent_name, self.g.wpAgentName):
             return ResponseBuilder.error(
                 reply_type,
                 f"Wrong agent: This is '{self.g.wpAgentName}', not '{payload_agent_name}'",
@@ -397,16 +398,9 @@ class WPCommandValidator:
                 "align_die_row": {"type": "int", "required": False},
                 "subsite": {"type": "int", "required": False},
             },
-            # Initialize — all optional
+            # Initialize — the machine is the DB record of this agent, so no address
             "Initialize": {
-                "serialNumber": {"type": "str", "required": False},
-                "address": {"type": "str", "required": False},
-                "machineType": {"type": "str", "required": False},
-                "projectName": {"type": "str", "required": False},
-                "alignmentDie": {"type": "str", "required": False},
-                "homeDie": {"type": "str", "required": False},
                 "force": {"type": "bool", "required": False},
-                "withDB": {"type": "bool", "required": False},
             },
             # Testing lock/unlock
             "TestingLock": {

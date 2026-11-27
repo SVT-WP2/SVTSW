@@ -326,7 +326,7 @@ A wafer probe machine (a prober), with its live state: the loaded wafer and the 
 | `id` | `integer` | no | identity | PK |  |
 | `serialNumber` | `varchar(50)` | no |  | unique | The serial number of the machine. |
 | `name` | `varchar(50)` | no |  | unique | The name of the machine. |
-| `hostName` | `varchar(200)` | no |  |  | The host of the control software of the machine. |
+| `hostName` | `varchar(200)` | no |  |  | The host of the control software of the machine: the full host name or the address. WPAgent connects to `hostName`:`connectionPort` as they are. |
 | `connectionType` | enum `wpConnectionType` | no |  |  | How a client connects to the control software. |
 | `connectionPort` | `integer` | no |  |  | The port of the control software. |
 | `generalLocation` | enum `wpGeneralLocation` | no |  |  | The location. A machine has no location history. |

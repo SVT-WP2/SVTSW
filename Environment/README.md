@@ -10,7 +10,7 @@ as systemd services on the same host:
 | Stack | Compose file | systemd unit | Contents |
 | ----- | ------------ | ------------ | -------- |
 | kafka | `docker-compose-kafka-<env>.yml` | `svt.kafka--<env>.service` | Kafka broker (KRaft) + Kafka UI; **owns** the `svt-network--<env>` network |
-| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui` and the DB agent `svt-db-agent-next` (join the network as `external`) |
+| svtsw (apps) | `docker-compose-svtsw-<env>.yml` | `svt.svtsw--<env>.service` | `svt-ui`, the DB agent `svt-db-agent-next` and one `svt-wp-agent-<machine>` per WP machine (prepared, commented out in both environments for now) (join the network as `external`) |
 
 On the server each environment is one self-contained folder:
 
@@ -83,6 +83,101 @@ It also starts a service that an admin stopped by hand, and it removes the
 container of a service that is no longer in the file (`--remove-orphans`, as
 the systemd unit does at boot). The Kafka stack is not
 touched: apply Kafka changes with `sudo systemctl restart svt.kafka--<env>.service`.
+
+## WPAgent: one service per WP machine
+
+**Off for now (temporary).** The WP machine services are commented out in both
+environments. A push to master that changes `WPAgent/` tests and builds the image
+(`wp-agent.yml`) and deploys nothing. The rest of this section says how the services
+work when they are on.
+
+- **Dev:** off until an agent that gets stuck no longer needs a manual restart: a
+  command that SENTIO never answers (for example after an Abort on the machine) blocks
+  the agent. To enable: uncomment the block in `docker-compose-svtsw-dev.yml`, the
+  version line in `Dev/versions.env.example`, the `deploy-dev--manual` option in
+  `wp-agent-manual.yml` and the two deploy jobs in `wp-agent.yml`, and change the
+  `WPMIT` record first ([Switching WPMIT from the old agent](#switching-wpmit-from-the-old-agent)).
+- **Prod:** off until the first WPAgent release (`WPAgent :: Release`). Before it there
+  is no release image, and a missing image or version line stops every compose command
+  of the prod stack. To enable: uncomment the block in `docker-compose-svtsw-prod.yml`,
+  the version line in `Prod/versions.env.example` and the `deploy-prod--manual` option
+  in `wp-agent-manual.yml`, and change the `WPMIT` record first
+  ([Switching WPMIT from the old agent](#switching-wpmit-from-the-old-agent)).
+
+Each WP machine has its own compose service `svt-wp-agent-<machine>` (all use the
+image `svt-wp-agent`) with its own version line `SVT_WP_AGENT_<MACHINE>_VERSION`.
+Compose sets the machine name (`WaferProbeMachine.name`) and the Kafka broker as
+env vars; the agent gets the rest from the record of the machine in the DB, and it
+runs also while the machine is off. A started agent does not connect to the machine:
+it connects when it gets the `Initialize` command (see the WPAgent README, "One agent
+per WP machine").
+
+**A deploy restarts the agent, and the user sends `Initialize` again.** Stop the
+measurements before a deploy. Docker sends SIGTERM to the old container. The agent reads no more requests, lets the running command
+finish (up to 20 s), switches the machine to local mode, closes its connection to the
+machine and ends with exit code 0. The service has `stop_grace_period: 30s` for that:
+keep it above the 20 s (`STOP_COMMAND_WAIT` in `WPAgent/WPKafkaClient.py`), because
+docker kills the container after it. The new container is not initialized and sends
+nothing to the machine. When the machine is needed, the user sends `Initialize`, logs
+in and opens the project again (see the WPAgent README, "Start, Initialize, stop").
+
+To add a machine:
+
+1. Create the `WaferProbeMachine` record in the DB of the environment first. Its `name`
+   is the machine name of the service. The agent connects to `hostName`:`connectionPort`
+   exactly as the record has them, so `hostName` is the full host name of the machine
+   (e.g. `wpmit01.cern.ch`). An agent without its record stops at start.
+2. Copy the `svt-wp-agent-wpmit` block in `docker-compose-svtsw-<env>.yml` and change
+   the service, the container, the version variable and `SVT_WP_AGENT_MACHINE_NAME`.
+3. Add the version line to `versions.env.example`. A deploy adds a template line that
+   is missing from the server's `versions.env`.
+4. Add the service to `WP_AGENT_SERVICES` in `wp-agent.yml` and `wp-agent-manual.yml`:
+   a WPAgent deploy deploys every service of the list.
+
+A later change of the record (`UpdateWaferProbeMachine`) needs no restart of the agent:
+it reads the record again while the machine is off and before every connect.
+
+Every single-service deploy removes the containers of the retired service
+`svt-wp-agent` (`RETIRED_SERVICES` in `deploy-service.sh`): the first deploy of
+`svt-wp-agent-wpmit` removes the old `svt.wp-agent--<env>` container, so two agents
+never drive the same machine. A single-service deploy removes no other container (no
+`--remove-orphans`): its compose file comes from the deployed ref, which can be older
+than the running stack.
+
+### Switching WPMIT from the old agent
+
+The `WPMIT` record has `hostName: cern.ch`. The old agent (the system service on the CERN
+side, `ProbeConfigCERN*.json`) builds the host from it as `wpmit01.` + `hostName`; the new
+agent uses `hostName` as it is and would try `cern.ch:35555`. The record can hold only
+one of the two forms, so change it when the new agent replaces the old one, in each
+environment:
+
+1. Stop the old agent (its system service), so that only one agent drives the machine.
+2. Read the record: `GetAllWaferProbeMachines` with `{"filter": {"name": "WPMIT"}}` on
+   `svt.db-agent.request` (e.g. from the Kafka UI of the environment, with the headers
+   `kafka_correlationId` and `kafka_replyTopic: svt.db-agent.request.reply`).
+3. Send `UpdateWaferProbeMachine` with the `id` of the record and its current values,
+   `hostName` changed. The update takes all six fields:
+
+   ```json
+   {
+     "type": "UpdateWaferProbeMachine",
+     "data": {
+       "id": <id of WPMIT>,
+       "update": {
+         "hostName": "wpmit01.cern.ch",
+         "connectionType": "<as in the record>",
+         "connectionPort": <as in the record>,
+         "generalLocation": "<as in the record>",
+         "software": "<as in the record>",
+         "swVersion": "<as in the record>"
+       }
+     }
+   }
+   ```
+4. Start the new service (uncomment it, deploy), then send `Initialize`.
+
+To go back to the old agent, set `hostName` to `cern.ch` again before you start it.
 
 ## The two DB agent services
 

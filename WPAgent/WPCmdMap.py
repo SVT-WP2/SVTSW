@@ -13,6 +13,8 @@ import actions.WPContactingActions as contacting_actions
 import actions.WPDieGridActions as die_grid_actions
 import actions.WPTopographyActions as topography_actions
 
+from drivers.WPFactory import ProberNotConnectedError
+from services.WPProberConnectionWatch import is_prober_connected
 from utilities.WPCommandConstants import BYPASS_COMMANDS
 from utilities.WPValidationDecorator import validate_command_with_name
 from utilities.WPSequenceContext import trusted_sequence, in_trusted_sequence
@@ -47,7 +49,7 @@ COMMAND_ROUTER = {
     "UserLogOut": user_actions.UserLogOut,
 
     # General
-    "Initialize": project_actions.svt_initialise_wp,
+    "Initialize": project_actions.initialize_machine,
     "ShowStatus": project_actions.show_status,
     "GetInfo": project_actions.get_info,  # !! irrelevant
     "Help": project_actions.help,
@@ -184,15 +186,19 @@ def _exec_in_sequence(message_type, data=None):
 
 
 def _try_local_mode():
-    """Try to set prober to local mode after error"""
+    """
+    Try to set prober to local mode after error, on the current connection only: never a
+    new connection (the globals may hold a newer address from the DB record than the
+    connection, e.g. after a forced Initialize that found the machine off).
+    """
+    if is_prober_connected() is False:
+        return
     try:
         from drivers.WPFactory import ProberFactory
-        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
 
         factory = ProberFactory.get_instance()
-        if factory.is_initialized():
-            globals_ = SvtWPAagentGlobalParameters.getInstance()
-            prober = factory.get_prober(globals_.machineType, globals_.address)
+        prober = factory.peek_prober()
+        if factory.is_initialized() and prober is not None:
             prober.local_mode()
             print("   🔓 Switched to local mode after error")
     except Exception:
@@ -299,6 +305,11 @@ def execute_command(message_type, data=None):
             else:
                 severity = Severity.ERROR
                 _try_local_mode()  # Try to recover by going to local mode
+
+    except ProberNotConnectedError as e:
+        # The machine is off or not initialized: a normal case, not an agent error (no Error state).
+        result = ResponseBuilder.error(f"{message_type}Reply", str(e), 503)
+        severity = Severity.WARNING
 
     except Exception as e:
         import traceback

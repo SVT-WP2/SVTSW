@@ -4,6 +4,11 @@ name: WPAgent
 # (one-off build, deploy to dev/prod) live in wp-agent-manual.yml, mirroring
 # the ui.yml / ui-manual.yml and db-agent.yml / db-agent-manual.yml split.
 #
+# TEMPORARY: the automatic deploys to dev are switched off (see the note above
+# the commented deploy jobs at the end of this file). This workflow tests and
+# builds the image and deploys nothing: the WP machine services are commented
+# out of the compose files of both environments.
+#
 # Release commits (svt-wp-agent@<version>, pushed to master by
 # WPAgent :: Release) are a no-op here: every master-push job skips them,
 # because the release image is built straight from the svt-wp-agent-* tag
@@ -31,6 +36,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: svt-wp2/svt-wp-agent
   PYTHON_VERSION: '3.12'
+  # The compose services of the WP machines (one per machine, same image), space-separated.
+  # Keep in sync with wp-agent-manual.yml and Environment/<Env>/docker-compose-svtsw-<env>.yml.
+  WP_AGENT_SERVICES: 'svt-wp-agent-wpmit'
 
 defaults:
   run:
@@ -161,63 +169,73 @@ jobs:
           cache-to: type=gha,mode=max,scope=wp-agent
           tags: ${{ steps.vars.outputs.tags }}
 
+  # TEMPORARY: the two automatic deploys to dev below are switched off.
+  # The agent can still get stuck: a command that SENTIO never answers (for example
+  # after an Abort on the machine) blocks it, and it then needs a manual restart. An
+  # agent in that state is not ready to run as a service. The service is therefore also
+  # commented out of the dev compose file (docker-compose-svtsw-dev.yml), so nothing
+  # starts it. To switch it on again: uncomment that block, its line in
+  # Dev/versions.env.example, the deploy-dev--manual option of wp-agent-manual.yml and
+  # the two jobs below.
+  #
   # Deploys pin the image version in /opt/docker/svtsw/dev/versions.env and
   # recreate ONLY this service inside the svt-svtsw--dev compose project (see
   # Environment/README.md). App config + secrets live in the server-side .env,
   # not in GitHub.
-  deploy-dev:
-    # Same guard as docker-registry-create: don't deploy version-bump commits.
-    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
-    if: >-
-      false &&
-      github.event_name == 'push' && github.ref == 'refs/heads/master'
-      && !startsWith(github.event.head_commit.message, 'svt-wp-agent@')
-    needs: docker-registry-create
-    runs-on: self-hosted
-    environment: dev
-    steps:
-      # The deploy needs Environment/ (compose files + deploy-service.sh) from
-      # the repo; sparse-checkout keeps the checkout on the runner minimal.
-      - uses: actions/checkout@v5
-        with:
-          sparse-checkout: Environment
-      - name: Deploy wp-agent to dev
-        # Override the workflow-level `defaults.run.working-directory: WPAgent`
-        # — the sparse checkout only materialises Environment/ and root files.
-        working-directory: ${{ github.workspace }}
-        env:
-          IMAGE_TAG: ${{ needs.docker-registry-create.outputs.image_tag }}
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          bash Environment/deploy-service.sh dev svt-wp-agent "${IMAGE_TAG}"
+  # deploy-dev:
+  #   # Same guard as docker-registry-create: don't deploy version-bump commits.
+  #   if: >-
+  #     github.event_name == 'push' && github.ref == 'refs/heads/master'
+  #     && !startsWith(github.event.head_commit.message, 'svt-wp-agent@')
+  #   needs: docker-registry-create
+  #   runs-on: self-hosted
+  #   environment: dev
+  #   steps:
+  #     # The deploy needs Environment/ (compose files + deploy-service.sh) from
+  #     # the repo; sparse-checkout keeps the checkout on the runner minimal.
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         sparse-checkout: Environment
+  #     - name: Deploy wp-agent to dev
+  #       # Override the workflow-level `defaults.run.working-directory: WPAgent`
+  #       # — the sparse checkout only materialises Environment/ and root files.
+  #       working-directory: ${{ github.workspace }}
+  #       env:
+  #         IMAGE_TAG: ${{ needs.docker-registry-create.outputs.image_tag }}
+  #         REGISTRY_USER: ${{ github.actor }}
+  #         REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         set -euo pipefail
+  #         for service in ${WP_AGENT_SERVICES}; do
+  #           bash Environment/deploy-service.sh dev "${service}" "${IMAGE_TAG}"
+  #         done
 
   # Auto-deploy a release image to dev as soon as it's built. Runs on every
   # svt-wp-agent-* tag (any release type), after
   # docker-registry-create--release has pushed the image. Deploys the
   # release-versioned image (svt-wp-agent:<version>), replacing whatever the
   # master-push deploy-dev last pinned for the service.
-  deploy-dev--release:
-    # TEMPORARY: off (`false &&`) while WPAgent is out of the compose files.
-    if: false && startsWith(github.ref, 'refs/tags/svt-wp-agent-')
-    needs: docker-registry-create--release
-    runs-on: self-hosted
-    environment: dev
-    steps:
-      # The deploy needs Environment/ (compose files + deploy-service.sh) from
-      # the repo; sparse-checkout keeps the checkout on the runner minimal.
-      - uses: actions/checkout@v5
-        with:
-          sparse-checkout: Environment
-      - name: Deploy wp-agent to dev
-        # Override the workflow-level `defaults.run.working-directory: WPAgent`
-        # — the sparse checkout only materialises Environment/ and root files.
-        working-directory: ${{ github.workspace }}
-        env:
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          VERSION="${GITHUB_REF#refs/tags/svt-wp-agent-}"
-          bash Environment/deploy-service.sh dev svt-wp-agent "${VERSION}"
+  # deploy-dev--release:
+  #   if: startsWith(github.ref, 'refs/tags/svt-wp-agent-')
+  #   needs: docker-registry-create--release
+  #   runs-on: self-hosted
+  #   environment: dev
+  #   steps:
+  #     # The deploy needs Environment/ (compose files + deploy-service.sh) from
+  #     # the repo; sparse-checkout keeps the checkout on the runner minimal.
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         sparse-checkout: Environment
+  #     - name: Deploy wp-agent to dev
+  #       # Override the workflow-level `defaults.run.working-directory: WPAgent`
+  #       # — the sparse checkout only materialises Environment/ and root files.
+  #       working-directory: ${{ github.workspace }}
+  #       env:
+  #         REGISTRY_USER: ${{ github.actor }}
+  #         REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         set -euo pipefail
+  #         VERSION="${GITHUB_REF#refs/tags/svt-wp-agent-}"
+  #         for service in ${WP_AGENT_SERVICES}; do
+  #           bash Environment/deploy-service.sh dev "${service}" "${VERSION}"
+  #         done

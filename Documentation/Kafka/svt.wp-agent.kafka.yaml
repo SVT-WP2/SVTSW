@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: SVT Wafer Prober Agent API (Kafka Command Contract)
-  version: 2.2.0
+  version: 2.3.0
   description: |
     The Kafka communication layer definitions for `SVT Wafer Prober Agent Service`.
 
@@ -37,7 +37,42 @@ info:
     ### Request/Reply Messages
     - Request messages are sent to `svt.wp-agent.request` topic
     - Reply messages are emitted to `svt.wp-agent.request.reply` topic
-    - Request body describes Kafka Message structure. Mandatory fields: user, waferAgentName
+    - Request body describes Kafka Message structure. `waferAgentName` is mandatory in every
+      request. `user` is mandatory in the request of every command that needs a log-in.
+    - The read-only queries that need no log-in (`ShowStatus`, `Help`, `ListProbers`,
+      `ListChipTypes`) have no `user`. The agent ignores a `user` that a client still sends.
+    - One WP agent per WP machine. Every agent reads every request; only the agent of the
+      machine named by `waferAgentName` (`WaferProbeMachine.name`, case-insensitive, `_DEV` suffix
+      allowed) runs it and replies. A request without `waferAgentName` gets no reply.
+    - An agent that starts skips the requests sent while no agent of its machine was running:
+      they get no reply.
+
+    ### The WP machine of an agent
+    - The machine is the `WaferProbeMachine` record with the agent's name in the DB. The agent
+      connects to `hostName`:`connectionPort` exactly as the record has them. It reads the record
+      at its start, again while the machine is off (every 30 s) and right before every connect
+      (`Initialize`, a reconnect), so a change of the record needs no restart of the agent. A
+      change does not touch a live connection: it is used at the next connect.
+    - The start of the agent does not connect to the machine. The agent only watches whether the
+      machine is on (`connected`). It connects when it gets `Initialize` (`initialized`). After
+      that it restores a lost connection by itself when the machine is on again.
+    - An agent that stops (a restart, a deploy) lets the running command finish and reply,
+      closes its connection to the machine and sends `WpConnectionStatusChanged` with
+      `initialized: false`. A request that it has not started gets no reply. The agent that
+      starts next is not initialized and keeps nothing of the old one (no user, no project):
+      send `Initialize` again.
+    - A command that needs the prober gets an error reply with code 503 while the machine is off
+      (`... is not connected`) or before `Initialize` (`... is not initialized`). The agent state
+      does not change.
+    - Every reply reports both flags in its data: `proberConnected` (`null` before the first
+      check) and `proberInitialized`.
+
+    ### Events
+    - `svt.wp-agent.connection-status` (key: the machine name), on every change of `connected` or
+      `initialized`:
+      `{ type: 'WpConnectionStatusChanged', data: { waferAgentName, wpMachineId, connected, initialized, address, timestamp } }`
+    - `svt.wp-agent.heartbeat`, every 2 s:
+      `{ timestamp, status: 'alive', waferAgentName, wpMachineId, proberConnected, proberInitialized, appVersion }`
 
     ### Useful Links
     - Online Swagger Editor: [https://editor-next.swagger.io](https://editor-next.swagger.io)
@@ -383,6 +418,14 @@ paths:
       tags: [ "1. USER LEVEL" ]
       summary: Show overall Status
       description: |
+        The status of the agent (state, user, project) and of its WP machine (connected,
+        initialized). It needs no prober: it also works before `Initialize` and while the
+        machine is off.
+
+        It needs no log-in, and its request has no `user`. It reads only what the agent
+        knows and sends nothing to the WP machine: `connected` is what the connection watch
+        saw at its last check (at most 5 s ago).
+
         ### State availability
         **Required state:** `All of the states`
       requestBody:
@@ -391,7 +434,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RequestMessageWithoutUser'
                 - $ref: '#/components/schemas/ShowStatusMessage'
       responses:
         '200':
@@ -1118,7 +1161,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestMessage'
+              $ref: '#/components/schemas/RequestMessageWithoutUser'
       responses:
         '200':
           description: Success
@@ -1159,7 +1202,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestMessage'
+              $ref: '#/components/schemas/RequestMessageWithoutUser'
       responses:
         '200':
           description: Success
@@ -1349,15 +1392,24 @@ paths:
                 $ref: '#/components/schemas/ReplyMessage'
 
 
-  /svt.wp-agent.request/WPAGInitializeManual:
+  /svt.wp-agent.request/Initialize:
     post:
-      tags: [ "3. DEVELOPER LEVEL" ]
-      summary: Initialize connection to wafer prober
+      tags: [ "1. USER LEVEL" ]
+      summary: Connect the agent to its WP machine
       description: |
-        **Manual Mode** - Direct connection with explicit parameters
-          - Required: address, machineType
-          - Optional: projectName, alignmentDie, homeDie, force
-          - Use when you know exact prober address and settings
+        Connects the agent to its WP machine and reads the machine state (loaded wafer, installed
+        probe card) from the DB. The agent never does this by itself: after its start it only
+        reports whether the machine is on.
+
+          - The machine is the `WaferProbeMachine` record of the agent, read again right before the
+            connect. The request carries no address: any key other than `user`, `waferAgentName`
+            and `force` gets an error reply with code 400.
+          - Works in every agent state and without a log-in. The agent state does not change.
+          - An agent that is already initialized stays as it is (`Success`), unless `force` is true.
+          - `force` on an initialized agent opens the new connection first and closes the old one
+            after that. Error 409 while another command runs (closing the old connection would cut
+            it). Error 503 when the machine does not answer: the old connection and its status stay.
+          - Error 503 while the machine is off.
 
       requestBody:
         required: true
@@ -1451,7 +1503,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RequestMessage'
+                - $ref: '#/components/schemas/RequestMessageWithoutUser'
                 - $ref: '#/components/schemas/HelpMessage'
       responses:
         '200':
@@ -2334,24 +2386,15 @@ components:
             enum: [ Initialize ]
           data:
             type: object
+            required: [ waferAgentName ]
             properties:
-              serialNumber:
+              user:
                 type: string
-              address:
-                type: string
-              machineType:
-                type: string
-                enum: [ "sentio", "summit" ]
-              projectName:
-                type: string
-              alignmentDie:
-                type: string
-              homeDie:
+              waferAgentName:
                 type: string
               force:
                 type: boolean
-              withDB:
-                type: boolean
+                description: Initialize again when the agent is already initialized. Default false.
 
 
       RequestMessage:
@@ -2366,7 +2409,21 @@ components:
              user:
               type: string
              waferAgentName:
-              type: string   
+              type: string
+
+      # The request of a read-only query that needs no log-in: it has no `user`.
+      RequestMessageWithoutUser:
+        type: object
+        required: [ type ]
+        properties:
+          type:
+            type: string
+          data:
+            type: object
+            required: [ waferAgentName ]
+            properties:
+              waferAgentName:
+                type: string
 
       ReplyMessage:
         type: object
@@ -2469,6 +2526,13 @@ components:
             type: number
           WPAG_State:
             $ref: "#/components/schemas/WPAG_State"
+          proberConnected:
+            type: boolean
+            nullable: true
+            description: The WP machine is on. `null` until the agent has checked it for the first time.
+          proberInitialized:
+            type: boolean
+            description: The agent is connected to the machine by `Initialize`.
           loadedWafer:
             type: object
             nullable: true

@@ -34,7 +34,6 @@ HEADER_STRINGS_EXEMPT = {"WPKafkaClient.py", "WPKafkaHeaders.py", "WPDbKafkaClie
 SCAN_EXCLUDE = {
     "WPMapConversionActions.py",  # not in COMMAND_ROUTER, not imported — dead code
     "WPCommandActions.py",  # pending deletion
-    "WPInitializationService.py",  # producer-side interactive CLI, not a Kafka listener
     "WPCacheHeartbeat.py",  # internal monitoring heartbeat, not a command response
     "WPListenerHeartbeat.py",  # internal monitoring heartbeat, not a command response
 }

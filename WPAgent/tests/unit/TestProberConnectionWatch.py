@@ -121,9 +121,10 @@ def test_auto_reconnect_succeeds_without_error(connected, globals_instance):
     assert sm.current_state == S.UserLogged
 
 
-def test_auto_reconnect_failure_goes_to_error_once(connected, globals_instance, monkeypatch):
+def test_auto_reconnect_failure_goes_to_error_and_keeps_trying(connected, globals_instance, monkeypatch):
     globals_instance.set_user("u1", "Expert")
     calls = []
+    real_reconnect = connected.reconnect
 
     def unreachable(machine_type, address):
         calls.append(address)
@@ -134,8 +135,52 @@ def test_auto_reconnect_failure_goes_to_error_once(connected, globals_instance, 
     w = ProberConnectionWatch(failures=1)
     assert w.check_once() is True
     assert sm.current_state == S.Error
-    assert w.check_once() is False           # Error: quiet, no second attempt
-    assert len(calls) == 1
+    assert globals_instance.prober_connected is False
+    assert w.check_once() is False           # still off: one more try, no new Error
+    assert len(calls) == 2
+
+    monkeypatch.setattr(connected, "reconnect", real_reconnect)   # the machine is on again
+    assert w.check_once() is False
+    assert globals_instance.prober_connected is True
+    assert sm.current_state == S.UserLogged  # session forgotten, like ReconnectProber
+
+
+def test_no_reconnect_of_a_connection_that_was_replaced_meanwhile(connected, globals_instance):
+    """The watch found a dead connection, but Initialize / ReconnectProber replaced it meanwhile."""
+    globals_instance.set_user("u1", "Expert")
+    lost = connected.get_prober("mock", "mock:35555")
+    lost.disconnect()
+    fresh = connected.reconnect("mock", "mock:35555")     # another thread
+    w = ProberConnectionWatch(failures=1)
+    assert w._reconnect(connected, lost) is None
+    assert connected.peek_prober() is fresh
+    assert sm.current_state == S.OpenedProject             # the session is kept
+
+
+def test_no_reconnect_when_a_command_started_meanwhile(connected):
+    lost = connected.get_prober("mock", "mock:35555")
+    lost.disconnect()
+    w = ProberConnectionWatch(failures=1, is_busy=lambda: False)
+    w.is_busy = lambda: True                               # the command started after the first check
+    assert w._reconnect(connected, lost) is None
+    assert connected.peek_prober() is lost
+    assert sm.current_state == S.OpenedProject
+
+
+def test_lost_connection_that_was_replaced_meanwhile_sets_no_error(connected, globals_instance, monkeypatch):
+    lost = connected.get_prober("mock", "mock:35555")
+    lost.disconnect()
+    globals_instance.prober_connected = True
+
+    def replaced_meanwhile():
+        connected.reconnect("mock", "mock:35555")         # Initialize of another thread
+        return False                                      # the TCP check of the watch failed
+
+    w = ProberConnectionWatch(failures=1)
+    monkeypatch.setattr(w, "_is_machine_reachable", replaced_meanwhile)
+    assert w.check_once() is False
+    assert sm.current_state == S.OpenedProject
+    assert globals_instance.prober_connected is True
 
 
 def test_background_thread_puts_agent_in_error(connected):

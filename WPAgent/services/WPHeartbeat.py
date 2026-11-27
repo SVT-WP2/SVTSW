@@ -10,20 +10,55 @@ Architecture:
 There is a single heartbeat topic (svt.wp-agent.heartbeat). The cache snapshot
 that used to be written from a separate cache-heartbeat monitor is now written
 from the on_heartbeat callback of the listener monitor.
+
+All agents share the topic: a heartbeat carries waferAgentName (and the machine status:
+proberConnected, proberInitialized), and a health check with an agent name counts only
+the heartbeats of that machine. Each heartbeat that Kafka
+confirms also goes to LOCAL_HEALTH_FILE, which the Docker HEALTHCHECK reads.
 """
 
 import json
+import os
+import tempfile
 import time
 import threading
 
 from confluent_kafka import Producer as KafkaProducer, Consumer as KafkaConsumer
 from confluent_kafka.admin import AdminClient, NewTopic, ConfigResource
 
+from utilities.WPMachineName import is_same_machine
+
 
 _HEARTBEAT_TOPIC_CONFIG = {
     "retention.ms": "60000",
     "segment.ms":   "120000",
 }
+
+# One agent per container, so one fixed file is enough.
+LOCAL_HEALTH_FILE = os.path.join(tempfile.gettempdir(), "wp-agent-health.json")
+
+
+def write_local_health(heartbeat: dict):
+    """
+    Keep the last confirmed heartbeat for the Docker HEALTHCHECK.
+    The file is replaced in one step, so a reader never sees a half-written file.
+    """
+    temp_file = f"{LOCAL_HEALTH_FILE}.tmp"
+    try:
+        with open(temp_file, "w") as f:
+            json.dump(heartbeat, f)
+        os.replace(temp_file, LOCAL_HEALTH_FILE)
+    except OSError as e:
+        print(f"WARNING - cannot write {LOCAL_HEALTH_FILE}: {e}")
+
+
+def read_local_health():
+    """The last confirmed heartbeat of this container, or None."""
+    try:
+        with open(LOCAL_HEALTH_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
 class HeartbeatBase:
@@ -37,8 +72,9 @@ class HeartbeatBase:
     HEARTBEAT_INTERVAL = 2.0
     HEARTBEAT_TIMEOUT  = 6.0
 
-    def __init__(self, bootstrap_servers=None):
+    def __init__(self, bootstrap_servers=None, agent_name=None):
         self.bootstrap_servers = bootstrap_servers
+        self.agent_name = agent_name  # None: every heartbeat counts
 
         if not bootstrap_servers:
             print(f"WARNING - Kafka broker not found for {self.__class__.__name__}")
@@ -90,10 +126,30 @@ class HeartbeatBase:
     def send_heartbeat(self):
         if not self.producer:
             return
-        heartbeat = {"timestamp": time.time(), "status": "alive"}
+        from globals.WPAagentGlobalParameters import SvtWPAagentGlobalParameters
+        from services.WPProberConnectionWatch import is_prober_initialized
+
+        g = SvtWPAagentGlobalParameters.getInstance()
+        heartbeat = {
+            "timestamp": time.time(),
+            "status": "alive",
+            "waferAgentName": self.agent_name,
+            "wpMachineId": g.wpMachineId,
+            "proberConnected": g.prober_connected,
+            "proberInitialized": is_prober_initialized(),
+            "appVersion": os.environ.get("APP_VERSION"),
+        }
+
+        def on_delivery(err, _msg):
+            # The confirmation is served by the poll() of a later beat: the health check
+            # counts from confirmedAt, not from the time the heartbeat was sent.
+            if err is None:
+                write_local_health({**heartbeat, "confirmedAt": time.time()})
+
         self.producer.produce(
             self.HEARTBEAT_TOPIC,
             value=json.dumps(heartbeat).encode("utf-8"),
+            on_delivery=on_delivery,
         )
         self.producer.poll(0)
 
@@ -110,6 +166,8 @@ class HeartbeatBase:
             if msg and not msg.error():
                 try:
                     heartbeat      = json.loads(msg.value().decode("utf-8"))
+                    if self.agent_name and not is_same_machine(heartbeat.get("waferAgentName"), self.agent_name):
+                        continue
                     heartbeat_time = heartbeat.get("timestamp")
                     if heartbeat_time:
                         age = current_time - heartbeat_time
