@@ -29,8 +29,9 @@ src/
 
 The messages carry the `svt-ts-types` types directly while the Kafka shape equals the HTTP shape
 (`PageReplyMessageData<EpicAsic>`, `create: EpicAsicCreateRequest`). `db-agent/models` holds a type only where the
-two differ: `EpicSvtTestEntity` (no `status` — the BFF derives it), the `*LocationUpdate` types (extra `username`),
-the WP machine updates (extra `wpMachineId`), the Kafka-only `EpicSvtTestStartUpdate` / `EpicSvtTestFinishUpdate`
+two differ: `EpicSvtTestEntity` (no `status` — the BFF derives it), the `*LocationUpdate` types (extra `username`;
+the `data` of `Update<Entity>LocationMessage` adds the entity id and has none of the reply-only `userId` and `userName`
+of a history record: the user travels in the header `svt_userId`), the WP machine updates (extra `wpMachineId`), the Kafka-only `EpicSvtTestStartUpdate` / `EpicSvtTestFinishUpdate`
 and the `EpicGetAll<X>QueryFilter` filters.
 
 What needs RxJS or NestJS around the contract — `mapEpicKafkaMessageData()`, `processKafkaReplyError()`, the

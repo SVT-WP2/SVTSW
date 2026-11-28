@@ -22,6 +22,8 @@ export type SvtDbWaferCreateInput = {
     productionDate: string | null
     /** The initial location; also written as the first history row. */
     generalLocation: string
+    /** The user of the request, written on the first history row; `null` without one. */
+    userId: number | null
 }
 
 export type SvtDbWaferUpdateInput = Partial<Pick<SvtDbWaferEntity, 'thinningDate' | 'dicingDate' | 'productionDate'>>
@@ -74,6 +76,7 @@ export class SvtDbWafersRepository {
                 wafer,
                 generalLocation: input.generalLocation,
                 note: SVT_DB_LOCATION_AT_CREATION_NOTE,
+                user: input.userId,
             })
             const asics = asicsFor(wafer)
             if (asics.length > 0) {
@@ -111,6 +114,7 @@ export class SvtDbWafersRepository {
                 wafer,
                 generalLocation: location.generalLocation,
                 username: location.username ?? null,
+                user: location.userId,
                 note: location.note ?? null,
                 ...(location.date ? { date: location.date } : {}),
             })
@@ -120,9 +124,12 @@ export class SvtDbWafersRepository {
         })
     }
 
-    /** The full history of a wafer, oldest first. */
+    /**
+     * The full history of a wafer, oldest first, with the user of each row (`user` populated: one more query for the
+     * whole history at most, never one per row). A user that is switched off still gives its name.
+     */
     findLocationHistory(waferId: number): Promise<SvtDbWaferLocationEntity[]> {
-        return this.em.find(SvtDbWaferLocationEntity, { wafer: waferId }, { orderBy: { id: 'asc' } })
+        return this.em.find(SvtDbWaferLocationEntity, { wafer: waferId }, { orderBy: { id: 'asc' }, populate: ['user'] })
     }
 
 }

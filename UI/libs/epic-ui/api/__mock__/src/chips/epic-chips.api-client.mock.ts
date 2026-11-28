@@ -11,6 +11,7 @@ import {
     EpicChipsListQuery,
 } from 'svt-ts-types'
 
+import { EpicAuthMock } from '../auth'
 import { EpicEnumsMock } from '../enums'
 
 
@@ -101,6 +102,7 @@ export class EpicChipsApiClientMock extends EpicChipsApiClient {
                 ...update,
                 chipId,
                 username: null,
+                ...EpicAuthMock.toRowUser(EpicAuthMock.getCurrentUser()),
             },
         ]
 

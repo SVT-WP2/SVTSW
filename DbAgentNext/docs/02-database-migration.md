@@ -81,6 +81,7 @@ Then the changes this agent needs. The last two rows are **not migrated yet**:
 | June-dump leftovers (**migration 3**, 2026-11-09): `ProbeCard.arrivalDate` → `arriveDate`, `pcModel` and `pcName` values | a developer database restored from the June 2026 dump still had them; migration 0 adds what is missing but cannot rename | No: guarded, a no-op on production- and dev-shaped databases. |
 | `configBody` `json` → `text` on databases that ran migration 1 before 2026-11-12 (**migration 4**, 2026-11-12) | migration 1 converted to `json` until Q27/Q31 were answered; the same guarded conversion is repeated so those databases catch up | No: it reads and writes the column as text either way (dev has been `text` all along). |
 | The enum type `userRole` and the table `SvtUser`, with no row, and the check `SvtUser_login_check` (the login rule of the agent: `login ~ '^[a-z0-9._-]{3,50}$'`) (**migration 5**, 2026-11-26) | the users of the installation (#392, #393); the first Admin is entered by hand, and the check keeps its login one that can log in | No: a new table and a new type. |
+| `userId integer NULL` on `WaferLocation`, `ChipLocation`, `EquipmentLocation`, `WaferLoadedInMachine` and `ProbeCardInstalledInMachine`, and `createdByUserId integer NULL` on `SvtTestList`, each with a foreign key to `SvtUser.id` (`DEFERRABLE`, no action); the rows that exist keep `NULL` (**migration 6**, 2026-11-27) | the user of the request on the history rows and on a test (#397) | No: nullable columns that it never names, so its inserts leave them `NULL`. The previous release of this agent is the same. |
 | Allow probe-card uninstall: a status column on `ProbeCardInstalledInMachine` (the author suggests a status such as "PC not installed", Q14) rather than a nullable `probeCardId` | decision in [01](01-behaviour-decisions.md#3-handlers); the enum values are to be agreed with the WPAgent team | Only if the C++ is still handling that message on the same DB; it never writes the new column. |
 | Rename the enum type `blockType` → `chipBlockType` (Q30): `ALTER TYPE main."blockType" RENAME TO "chipBlockType"`, guarded | the author keeps the contract's name; `GetAllEnums` then answers with the key `chipBlockType` | After a restart: the C++ reads the type names at startup and would answer `chipBlockType` too; the columns keep working. **Pending**: the UI (`EpicEnumName.blockType`), the mock agent's enum list and the entities (`nativeEnumName`, `SVT_DB_ENUM_VALUES`) still say `blockType`, and all of them must change in the same step as the migration. |
 
@@ -123,21 +124,21 @@ The entities, in `src/db/data/<domain>/`, all listed in `SVT_DB_ENTITIES`. The c
 | `SvtDbWaferTypeEntity` | `WaferType` | id | name UK, engineeringRun UK (enum), foundry, technology (enums); 1:0..1 `WaferTypeMap` |
 | `SvtDbWaferTypeMapEntity` | `WaferTypeMap` | waferTypeId (PK+FK) | `waferMap` json, a string on the wire |
 | `SvtDbWaferEntity` | `Wafer` | id | → WaferType; serialNumber UK; 3 nullable dates; generalLocation enum |
-| `SvtDbWaferLocationEntity` | `WaferLocation` | id (migration 1) | → Wafer; generalLocation, date, username, note |
+| `SvtDbWaferLocationEntity` | `WaferLocation` | id (migration 1) | → Wafer; generalLocation, date, username, note; nullable → User (`userId`, migration 6) |
 | `SvtDbAsicEntity` | `Asic` | id | → Wafer; serialNumber UK; familyType, quality enums; waferMapPosition; reply field `chipId` |
 | `SvtDbChipEntity` | `Chip` | id | → Asic; serialNumber UK; generalLocation; reply field `familyType` (from the ASIC) |
-| `SvtDbChipLocationEntity` | `ChipLocation` | id (migration 1) | → Chip |
+| `SvtDbChipLocationEntity` | `ChipLocation` | id (migration 1) | → Chip; nullable → User (`userId`) |
 | `SvtDbChipBlockEntity` | `ChipBlock` | id | → Chip; blockType enum; serialNumber UK |
 | `SvtDbAsicFamilyTypeBlockListEntity` | `AsicFamilyTypeBlockList` | (asicFamilyType, blockType) | configuration table, maintained by hand (Q7) |
 | `SvtDbWpMachineEntity` | `WaferProbeMachine` | id | serialNumber UK, name UK; 5 enums; nullable → Wafer (`loadedWaferId`), → ProbeCard (`installedProbeCardId`); two orientation enums |
-| `SvtDbWpWaferLoadedInMachineEntity` | `WaferLoadedInMachine` | id (migration 1) | → Machine, → Wafer; orientation, date, username, status enum |
-| `SvtDbWpProbeCardInstalledInMachineEntity` | `ProbeCardInstalledInMachine` | id (migration 1) | → Machine, → ProbeCard; orientation, date, username |
+| `SvtDbWpWaferLoadedInMachineEntity` | `WaferLoadedInMachine` | id (migration 1) | → Machine, → Wafer; orientation, date, username, status enum; nullable → User (`userId`) |
+| `SvtDbWpProbeCardInstalledInMachineEntity` | `ProbeCardInstalledInMachine` | id (migration 1) | → Machine, → ProbeCard; orientation, date, username; nullable → User (`userId`) |
 | `SvtDbWpProbeCardEntity` | `ProbeCard` | id | serialNumber UK; name (enum, UK), vendor, model, location, type enums; version, arriveDate, vendorCleaningInterval |
 | `SvtDbWpProbeCardFamilyTypeEntity` | `ProbeCardFamilyType` | (probeCardId, asicFamilyType) | → ProbeCard |
 | `SvtDbWpProjectEntity` | `WaferProbeProject` | id | → Machine, → WaferType; name UK; `local2GlobalMap` json |
 | `SvtDbEquipmentTypeEntity` | `EquipmentType` | id | name UK |
 | `SvtDbEquipmentEntity` | `Equipment` | id | → EquipmentType; name UK; `specification` json |
-| `SvtDbEquipmentLocationEntity` | `EquipmentLocation` | id (migration 1) | → Equipment |
+| `SvtDbEquipmentLocationEntity` | `EquipmentLocation` | id (migration 1) | → Equipment; nullable → User (`userId`) |
 | `SvtDbSvtTestSetupEntity` | `SvtTestSetup` | id | name, generalLocation nullable |
 | `SvtDbSvtTestSetupDefaultConfigEntity` | `SvtTestSetupDefaultConfig` | setupId (PK) | → Setup, nullable → SetupConfig |
 | `SvtDbSvtTestSetupConfigEntity` | `SvtTestSetupConfig` | id | → Setup; name UK (global); `configBody` text; createdAt date |
@@ -145,7 +146,7 @@ The entities, in `src/db/data/<domain>/`, all listed in `SVT_DB_ENTITIES`. The c
 | `SvtDbSvtTestTypeDutTypeEntity` | `SvtTestTypeDUTTypeList` | (dutType, testTypeId) | → TestType |
 | `SvtDbSvtTestTypeConfigEntity` | `SvtTestTypeConfig` | id | → TestType; (testTypeId, name) UK; `configBody` text; createdAt date |
 | `SvtDbSvtTestTemplateEntity` | `SvtTestTemplate` | id | dutType enum nullable; → TestTypeConfig; isEnabled default true; (dutType, testTypeConfigId) UK; reply field `testTypeId` |
-| `SvtDbSvtTestEntity` | `SvtTestList` | id | → TestTypeConfig, → TestSetupConfig; createdAt default now; startedAt, finishedAt, pathToResult, testResultStatus enum |
+| `SvtDbSvtTestEntity` | `SvtTestList` | id | → TestTypeConfig, → TestSetupConfig; createdAt default now; startedAt, finishedAt, pathToResult, testResultStatus enum; nullable → User (`createdByUserId`, migration 6) |
 | `SvtDbSvtTestDutEntityNameEntity` | `SvtTestListToEntityName` | (dutEntityName, testId) | → Test; one row per test in practice |
 | `SvtDbSvtTestDutIdEntity` | `SvtTestListToEntityId` | id (migration 1) | → Test; `dutId` without a foreign key (it is polymorphic) |
 | `SvtDbUserEntity` | `SvtUser` | id (migration 5) | login UK and `@Check({ name: 'SvtUser_login_check' })`; role enum `userRole`; `passwordHash` lazy (lists never load it); isActive default true; createdAt timestamp default now |

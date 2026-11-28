@@ -34,6 +34,8 @@ export type SvtDbChipCreateInput = {
     serialNumber: string
     /** The initial location; also written as the first history row. */
     generalLocation: string
+    /** The user of the request, written on the first history row; `null` without one. */
+    userId: number | null
 }
 
 export type SvtDbChipCreateOptions = {
@@ -117,6 +119,7 @@ export class SvtDbChipsRepository {
                     chip,
                     generalLocation: chip.generalLocation,
                     note: SVT_DB_LOCATION_AT_CREATION_NOTE,
+                    user: inputs[index].userId,
                 })
                 const blockTypes = blockTypesByFamily.get(inputs[index].asicFamilyType) ?? []
                 for (const block of generateChipBlocks(chip.serialNumber, blockTypes)) {
@@ -143,6 +146,7 @@ export class SvtDbChipsRepository {
                 chip,
                 generalLocation: location.generalLocation,
                 username: location.username ?? null,
+                user: location.userId,
                 note: location.note ?? null,
                 ...(location.date ? { date: location.date } : {}),
             })
@@ -152,9 +156,12 @@ export class SvtDbChipsRepository {
         })
     }
 
-    /** The full history of a chip, oldest first. */
+    /**
+     * The full history of a chip, oldest first, with the user of each row (`user` populated: one more query for the
+     * whole history at most, never one per row). A user that is switched off still gives its name.
+     */
     findLocationHistory(chipId: number): Promise<SvtDbChipLocationEntity[]> {
-        return this.em.find(SvtDbChipLocationEntity, { chip: chipId }, { orderBy: { id: 'asc' } })
+        return this.em.find(SvtDbChipLocationEntity, { chip: chipId }, { orderBy: { id: 'asc' }, populate: ['user'] })
     }
 
     /** The block types of `AsicFamilyTypeBlockList` per family type, in the enum's order. */

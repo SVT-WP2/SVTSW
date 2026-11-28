@@ -1,5 +1,6 @@
 import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator'
-import { EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
+import { EpicEquipmentCreateRequest } from 'svt-ts-types'
+import { SvtDbAgentKafkaEquipment } from 'svt-ts-types/kafka'
 
 
 /**
@@ -24,12 +25,12 @@ export class SvtDbAgentNextEquipmentCreateDto implements EpicEquipmentCreateRequ
 }
 
 /**
- * `UpdateEquipmentLocation` payload: the history record itself. As for wafers, the contract DTO in
- * `epic/entities` is a reply shape without validators on `note` and `username`, so the request is validated
- * with this one: `date` and `username` may be `null` or absent (the database stamps the day), `note` may be
- * absent.
+ * `UpdateEquipmentLocation` payload: the move. The contract DTO in `epic/entities` is a reply shape without
+ * validators on `note` and `username`, so the request is validated with this one: `date` and `username` may be
+ * `null` or absent (the database stamps the day), `note` may be absent. The `userId` and `userName` of a history
+ * record are reply fields: the agent takes the user from the header `svt_userId`, and an unknown key is refused.
  */
-export class SvtDbAgentNextEquipmentLocationRecordDto implements EpicEquipmentLocationHistoryRecord {
+export class SvtDbAgentNextEquipmentLocationRecordDto implements SvtDbAgentKafkaEquipment.UpdateEquipmentLocationMessageData {
 
     @IsInt()
     equipmentId!: number

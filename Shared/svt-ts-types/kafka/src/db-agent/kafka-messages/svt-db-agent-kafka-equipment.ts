@@ -1,6 +1,7 @@
 import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicEquipmentLocationUpdate } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 
@@ -65,7 +66,15 @@ export namespace SvtDbAgentKafkaEquipment {
 
     // LOCATION
 
-    export class UpdateEquipmentLocationMessage extends EpicKafkaMessageClass<EpicEquipmentLocationHistoryRecord> {
+    /**
+     * `data` of `UpdateEquipmentLocation`: the move, without the `userId` and `userName` of a history record (the DB
+     * agent takes the user from the header `svt_userId`).
+     */
+    export type UpdateEquipmentLocationMessageData = EpicEquipmentLocationUpdate & {
+        equipmentId: number
+    }
+
+    export class UpdateEquipmentLocationMessage extends EpicKafkaMessageClass<UpdateEquipmentLocationMessageData> {
 
         readonly type = MessageType.UpdateEquipmentLocation
 

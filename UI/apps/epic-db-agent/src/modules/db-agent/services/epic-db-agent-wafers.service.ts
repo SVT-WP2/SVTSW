@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common'
 import moment from 'moment/moment'
 import { delay, map, Observable, of } from 'rxjs'
 import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord } from 'svt-ts-types'
+import { SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
 import { getEnumsCollection } from './epic-db-agent-enums.service'
+import { EpicDbAgentUsersService, mockEpicDbAgentUserIdOf } from './epic-db-agent-users.service'
 
 
 @Injectable()
@@ -21,11 +23,16 @@ export class EpicDbAgentWafersService {
                         date: moment().subtract(Math.round(Math.random() * 100), 'days').format('YYYY-MM-DD'),
                         username: null,
                         note: 'Init location',
+                        userId: mockEpicDbAgentUserIdOf(wafer.id),
+                        userName: null,
                     }],
                 }
             },
             {},
         )
+
+    constructor(private readonly epicDbAgentUsersService: EpicDbAgentUsersService) {
+    }
 
     getAllWafers(filter?: { ids?: number[] }): Observable<EpicWafer[]> {
         const result = filter?.ids
@@ -80,17 +87,21 @@ export class EpicDbAgentWafersService {
             )
     }
 
+    /** The name of the user of each row is read now, as the DB agent does: a renamed user shows its new name. */
     getWaferLocationHistory(waferId: number): Observable<EpicWaferLocationHistoryRecord[]> {
-        return of(this.wafersLocationHistory[waferId] ?? [])
+        const history = (this.wafersLocationHistory[waferId] ?? [])
+            .map(record => ({ ...record, userName: this.epicDbAgentUsersService.nameOf(record.userId) }))
+        return of(history)
             .pipe(
                 delay(500),
             )
     }
 
-    updateWaferLocation(location: EpicWaferLocationHistoryRecord): Observable<EpicWafer> {
+    /** `userId`: the user of the header `svt_userId`, `null` without one. */
+    updateWaferLocation(location: SvtDbAgentKafkaWafers.UpdateWaferLocationMessageData, userId: number | null): Observable<EpicWafer> {
         this.wafersLocationHistory[location.waferId] = [
             ...(this.wafersLocationHistory[location.waferId] ?? []),
-            location,
+            { ...location, username: location.username ?? null, userId, userName: null },
         ]
 
         return this.updateWafer(location.waferId, { generalLocation: location.generalLocation })

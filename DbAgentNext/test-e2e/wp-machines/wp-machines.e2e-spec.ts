@@ -1,7 +1,7 @@
 import { EpicWpMachine, EpicWpMachineUpdateRequest } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaWafers, SvtDbAgentKafkaWaferTypes, SvtDbAgentKafkaWpMachines } from 'svt-ts-types/kafka'
 
-import { expectListPaging, insertProbeCard, TestSetup, WP_MACHINE_CREATE } from '../utils'
+import { asE2eUser, createE2eUser, expectListPaging, insertProbeCard, TestSetup, WP_MACHINE_CREATE } from '../utils'
 
 
 const SMALL_MAP = JSON.stringify({
@@ -338,6 +338,64 @@ describe('Wafer probe machines (e2e)', () => {
                 expect(reply.error.message).toContain(message)
             }
             expect(await installedRows()).toEqual([])
+        })
+
+    })
+
+    // ── The user of the request (#397) ────────────────────────────
+
+    describe('The user of the request', () => {
+
+        type UserRow = { userId: number | null; username: string | null }
+
+        beforeEach(async () => {
+            await seedWafers()
+            await insertProbeCard(setup, { serialNumber: 'MVP251669H', name: 'NKF7_MPI' })
+        })
+
+        function loadedUsers(): Promise<(UserRow & { status: string })[]> {
+            return setup.query('select status, "userId", username from main."WaferLoadedInMachine" order by id')
+        }
+
+        function installedUsers(): Promise<UserRow[]> {
+            return setup.query('select "userId", username from main."ProbeCardInstalledInMachine" order by id')
+        }
+
+        async function sendAs(userId: number | null, type: string, data: unknown): Promise<void> {
+            const reply = await setup.send({ type, data }, userId === null ? undefined : asE2eUser(userId))
+            expect(reply.status, reply.error.message).toBe('Success')
+        }
+
+        it('stores the user of the header on the Loaded and the Unloaded rows of UpdateWpMachineLoadedWafer', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+
+            await sendAs(anna, 'UpdateWpMachineLoadedWafer', { wpMachineId: 1, loadedWaferId: 1, loadedWaferOrientation: 'West' })
+            await sendAs(bruno, 'UpdateWpMachineLoadedWafer', { wpMachineId: 1, loadedWaferId: null })
+
+            expect(await loadedUsers()).toEqual([
+                { status: 'Loaded', userId: anna, username: null },
+                { status: 'Unloaded', userId: bruno, username: null },
+            ])
+        })
+
+        it('stores the user of the header on the row of an install of UpdateWpMachineInstalledProbeCard', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+
+            await sendAs(anna, 'UpdateWpMachineInstalledProbeCard', {
+                wpMachineId: 1, installedProbeCardId: 1, installedProbeCardOrientation: 'West',
+            })
+            await sendAs(anna, 'UpdateWpMachineInstalledProbeCard', { wpMachineId: 1, installedProbeCardId: null })
+
+            expect(await installedUsers()).toEqual([{ userId: anna, username: null }])
+        })
+
+        it('leaves userId NULL for a request without the header', async () => {
+            await sendAs(null, 'UpdateWpMachineLoadedWafer', { wpMachineId: 1, loadedWaferId: 1, loadedWaferOrientation: 'West' })
+            await sendAs(null, 'UpdateWpMachineInstalledProbeCard', { wpMachineId: 1, installedProbeCardId: 1 })
+
+            expect(await loadedUsers()).toEqual([{ status: 'Loaded', userId: null, username: null }])
+            expect(await installedUsers()).toEqual([{ userId: null, username: null }])
         })
 
     })

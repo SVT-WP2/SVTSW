@@ -101,7 +101,8 @@ The agent checks a request in this order:
    | The value is not a decimal string of a positive integer: a sign, a space, a leading zero, a point, more than 10 digits, a number above 2147483647, an empty value, a null value, a value that the header has twice (`1,1`). | `BadRequest` | `Header svt_userId must be a positive integer` |
    | No row of `SvtUser` has this id. | `BadRequest` | `Unknown user: <id>` |
 
-3. The handler. It gets the user id, or no user when the record has no header. No handler uses it yet.
+3. The handler. It gets the user id, or no user when the record has no header. The handlers that write a history
+   row or a test store it on that row (§1.6); the others do not use it.
 
 - **A header that is there must hold a valid value.** Only a record without the header is a request without a
   user. A null value is refused like an empty one: a client library that sends a null value for "no user" (as
@@ -118,6 +119,33 @@ The agent checks a request in this order:
 - A reply does not repeat the header.
 - The log line of each request names the user: `user=42`, `user=-` without the header, `user=invalid` for a value
   that is no positive integer. An id of no user is logged as it is (`user=999`).
+
+### 1.6 The rows that record the user
+
+The user of the header is stored on the rows that say who did something. A request without the header stores no
+user there (`NULL`), and so do the rows that were written before migration 6.
+
+| Message | Row | Column |
+|---|---|---|
+| `CreateWafer` | the first `WaferLocation` row | `userId` |
+| `UpdateWaferLocation` | the new `WaferLocation` row | `userId` |
+| `CreateChip`, `CreateManyChips` | the first `ChipLocation` row of each chip | `userId` |
+| `UpdateChipLocation` | the new `ChipLocation` row | `userId` |
+| `CreateEquipment` | the first `EquipmentLocation` row | `userId` |
+| `UpdateEquipmentLocation` | the new `EquipmentLocation` row | `userId` |
+| `UpdateWpMachineLoadedWafer` | the new `WaferLoadedInMachine` row (`Loaded` or `Unloaded`) | `userId` |
+| `UpdateWpMachineInstalledProbeCard` | the new `ProbeCardInstalledInMachine` row of an install | `userId` |
+| `CreateSvtTest` | the `SvtTestList` row | `createdByUserId` |
+
+- The user comes from the header only. No message has a `userId` in its `data`: in the five messages whose `data` is
+  validated as a whole (§2.1), the key is refused as an unknown key.
+- The free text `username` of the three `Update<Entity>Location` messages is stored as before, beside `userId`.
+- A reply names the user of a row with its id and its `name` (`SvtUser.name`): `userId` and `userName` in a history
+  record (§2.8), `createdByUserId` and `createdByUserName` in a test (§3.16). Both are `null` for a row without a user.
+  A user who is switched off later still gives its name.
+- The agent reads the names with the list: at most one more query for a history or a page of tests, never one query
+  for each row.
+- `UpdateSvtTestStart` and `UpdateSvtTestFinish` record no user: no service sends them with the header yet (#391).
 
 ## 2. Rules for all messages
 
@@ -274,9 +302,10 @@ column `generalLocation` of the entity. The history is one table per entity: `Wa
 
 **Create.** The create message inserts the entity with its `generalLocation` and the first history row. This row
 has the location of the request and the note `Location at creation`. Its `date` is the current date of the
-database. Its `username` has no value.
+database. Its `username` has no value. Its `userId` is the user of the request (§1.6).
 
-**`Update<Entity>Location`.** `data` is the history record: `{ <entity>Id, generalLocation, date, username, note }`.
+**`Update<Entity>Location`.** `data` is the move: `{ <entity>Id, generalLocation, date, username, note }`. It has no
+`userId`: the user is the one of the header (§1.6).
 
 1. Validation of `data` (§2.1). `<entity>Id` (integer) and `generalLocation` (string) are required. `date`,
    `username` and `note` are optional.
@@ -287,6 +316,7 @@ database. Its `username` has no value.
 - The agent inserts one history row and sets `generalLocation` of the entity to the location of that row.
 - When `date` is absent or `null`, the database sets the current date.
 - When `username` or `note` is absent or `null`, the row has no value in that column.
+- The row records the user of the request in `userId` (§1.6). Without the header, `userId` has no value.
 - The reply is `{ entity }` with the new `generalLocation`.
 
 **Which row is the current location.** The current location is the row that the agent wrote last. It is not the
@@ -300,7 +330,8 @@ row with the latest `date`. A record with an old `date` still becomes the curren
 - The reply is `{ items, totalCount }` with every history row of the entity. The message has no filter and no
   pager.
 - The oldest row is first: the order is the ascending `id` of the history rows, which is the order of the inserts.
-- An item is `{ <entity>Id, generalLocation, date, note, username }`.
+- An item is `{ <entity>Id, generalLocation, date, note, username, userId, userName }`. `userId` is the user of the
+  row and `userName` its name, both `null` for a row without a user (§1.6).
 
 Wafer probe machines and test setups also have a `generalLocation`, but no history.
 
@@ -489,7 +520,8 @@ location history. The TypeScript contract names three types with `WpMachine` (`G
 | Load while another wafer is loaded | One `Loaded` row for the new wafer. No `Unloaded` row for the wafer before. | Both columns get the new values. |
 | Unload | The wafer that was loaded, no orientation, `status` `Unloaded`. | Both columns lose their value. |
 
-- `date` of the history row is the current date of the database. `username` has no value.
+- `date` of the history row is the current date of the database. `username` has no value. `userId` is the user of
+  the request (§1.6).
 - The agent does not compare the new wafer with the loaded wafer. A load of the wafer that is already loaded
   writes one more `Loaded` row.
 - On an unload the agent ignores `loadedWaferOrientation`.
@@ -497,7 +529,8 @@ location history. The TypeScript contract names three types with `WpMachine` (`G
 **Install and uninstall.** An `installedProbeCardId` installs that probe card. `null` or an absent key uninstalls
 the current probe card.
 
-- Install: the history row has the probe card, the orientation, the current date and no `username`. The agent
+- Install: the history row has the probe card, the orientation, the current date, the user of the request in
+  `userId` (§1.6) and no `username`. The agent
   sets `installedProbeCardId` and `installedProbeCardOrientation` of the machine. The orientation is optional.
 - Uninstall: the agent removes the value of the two machine columns. It writes no history row.
 - An uninstall with no probe card installed answers `Success`.
@@ -650,7 +683,7 @@ configuration on a test setup configuration, for one DUT. `dutEntityName` says i
 | Message | What it does | Checks, in order | Writes |
 |---|---|---|---|
 | `GetAllSvtTests` | Lists the tests. The newest test is first. | Standard list, in descending order of `id`. Filter keys: the table below. | Nothing. |
-| `CreateSvtTest` | Creates a test. | 1. Validation of `data.create`: `dutEntityName` (string), `dutId`, `testTypeConfigId` and `testSetupConfigId` (numbers) are required.<br>2. Enum check of `dutEntityName`.<br>3. The DUT exists: a row with the id `dutId` in `Asic`, `Chip` or `ChipBlock`. If not: `BadRequest`, `<dutEntityName> <dutId> does not exist` (`Chip 7 does not exist`).<br>4. The test type configuration exists. If not: `BadRequest`, `Test type config <id> does not exist`.<br>5. The test setup configuration exists. If not: `BadRequest`, `Test setup config <id> does not exist`. | One `SvtTestList` row, one `SvtTestListToEntityName` row, one `SvtTestListToEntityId` row. |
+| `CreateSvtTest` | Creates a test. | 1. Validation of `data.create`: `dutEntityName` (string), `dutId`, `testTypeConfigId` and `testSetupConfigId` (numbers) are required.<br>2. Enum check of `dutEntityName`.<br>3. The DUT exists: a row with the id `dutId` in `Asic`, `Chip` or `ChipBlock`. If not: `BadRequest`, `<dutEntityName> <dutId> does not exist` (`Chip 7 does not exist`).<br>4. The test type configuration exists. If not: `BadRequest`, `Test type config <id> does not exist`.<br>5. The test setup configuration exists. If not: `BadRequest`, `Test setup config <id> does not exist`. | One `SvtTestList` row (with the user of the request in `createdByUserId`, §1.6), one `SvtTestListToEntityName` row, one `SvtTestListToEntityId` row. |
 | `UpdateSvtTestStart` | Records the start of a test. | 1. Id check.<br>2. Validation of `data.update`: `startedAt` is a required ISO 8601 string. No other key is allowed.<br>3. The test exists. If not: `NotFound`, `Test <id> not found`. | `startedAt` of the `SvtTestList` row. |
 | `UpdateSvtTestFinish` | Records the end of a test and its result. | 1. Id check.<br>2. Validation of `data.update`: `finishedAt` (ISO 8601 string), `pathToResult` (string) and `testResultStatus` are required. `testResultStatus` is `SUCCESS`, `PARTIAL_SUCCESS`, `FAILURE`, `ERROR` or `CANCELLED`. No other key is allowed.<br>3. Enum check of `testResultStatus` against the database enum.<br>4. The test exists. If not: `NotFound`, `Test <id> not found`. | `finishedAt`, `pathToResult` and `testResultStatus` of the `SvtTestList` row. |
 
@@ -667,7 +700,9 @@ configuration on a test setup configuration, for one DUT. `dutEntityName` says i
 
 - A test with no value in a timestamp never matches a bound on that timestamp.
 - Item: the fields `id`, `dutEntityName`, `dutId`, `testTypeConfigId`, `testSetupConfigId`, `createdAt`,
-  `startedAt`, `finishedAt`, `pathToResult` and `testResultStatus`.
+  `startedAt`, `finishedAt`, `pathToResult`, `testResultStatus`, `createdByUserId` and `createdByUserName`.
+- `createdByUserId` is the user of the `CreateSvtTest` request and `createdByUserName` its name (§1.6). Both are `null`
+  for a test without one. The two update messages do not change them.
 - `dutEntityName` and `dutId` are not columns of `SvtTestList`. They come from the rows of
   `SvtTestListToEntityName` and `SvtTestListToEntityId`. Each is `null` when its row is missing.
 - The database sets `createdAt` to the current time. `startedAt`, `finishedAt`, `pathToResult` and

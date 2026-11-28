@@ -38,6 +38,7 @@ export namespace EpicSvtTestsGrid {
         testSetup = 'testSetup.name',
         testSetupConfig = 'testSetupConfig.name',
         createdAt = 'createdAt',
+        createdBy = 'createdByUserName',
         startedAt = 'startedAt',
         finishedAt = 'finishedAt',
         pathToResult = 'pathToResult',
@@ -278,6 +279,13 @@ export namespace EpicSvtTestsGrid {
                 headerName: 'Created At',
                 minWidth: 200,
                 valueFormatter: (params) => params.value ? moment(params.value).format('DD.MM.YY - HH:mm:ss') : '-',
+            },
+            {
+                // the name of the user who created the test; a test from before the users has none
+                field: ColId.createdBy,
+                headerName: 'Created By',
+                minWidth: 160,
+                valueFormatter: ({ value }) => (value as string | null) || '-',
             },
             {
                 field: ColId.startedAt,

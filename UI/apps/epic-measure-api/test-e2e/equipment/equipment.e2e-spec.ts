@@ -1,6 +1,12 @@
-import { EpicEquipment, EpicEquipmentCreateRequest, EpicEquipmentLocationHistoryRecord, EpicEquipmentType } from 'svt-ts-types'
+import {
+    EpicEquipment,
+    EpicEquipmentCreateRequest,
+    EpicEquipmentLocationHistoryRecord,
+    EpicEquipmentType,
+    EpicUserRole,
+} from 'svt-ts-types'
 
-import { expectError, expectStatus, TestSetup } from '../utils'
+import { E2E_ADMIN, expectError, expectStatus, TestSetup } from '../utils'
 
 
 const ENCLUSTRA: EpicEquipmentType = { id: 1, name: 'Enclustra Card' }
@@ -16,6 +22,12 @@ const CREATE: EpicEquipmentCreateRequest = {
 /** The specification comes back byte for byte as it was sent: the stored text of the `json` column. */
 const EQUIPMENT_1: EpicEquipment = { id: 1, ...CREATE }
 const EQUIPMENT_2: EpicEquipment = { id: 2, ...CREATE, name: 'DAQ-0009012C0D0F301D', specification: '{}' }
+
+/** The user fields of a history row that the Admin of the suite wrote over HTTP. */
+const BY_ADMIN = { userId: E2E_ADMIN.id, userName: E2E_ADMIN.name }
+
+/** The user fields of a history record. */
+type RowUser = { userId: number | null; userName: string | null }
 
 describe('Equipment (e2e)', () => {
 
@@ -186,7 +198,7 @@ describe('Equipment (e2e)', () => {
             await createEquipment(CREATE)
         })
 
-        it('moves the equipment: 201 with the updated entity, a new history row without username', async () => {
+        it('moves the equipment: 201 with the updated entity, a new history row of the logged-in user, without username', async () => {
             const response = await setup.post('/api/equipment/1/location', {
                 generalLocation: 'Prague',
                 note: 'shipped',
@@ -195,10 +207,11 @@ describe('Equipment (e2e)', () => {
 
             expect(response).toEqual({ status: 201, body: { ...EQUIPMENT_1, generalLocation: 'Prague' } })
             expect(await setup.query(
-                'select "generalLocation", to_char(date, \'YYYY-MM-DD\') as date, note, username from main."EquipmentLocation" order by id',
+                `select "generalLocation", to_char(date, 'YYYY-MM-DD') as date, note, username, "userId"
+                 from main."EquipmentLocation" order by id`,
             )).toEqual([
-                { generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null },
-                { generalLocation: 'Prague', date: '2026-03-01', note: 'shipped', username: null },
+                { generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null, userId: E2E_ADMIN.id },
+                { generalLocation: 'Prague', date: '2026-03-01', note: 'shipped', username: null, userId: E2E_ADMIN.id },
             ])
             expect((await setup.get('/api/equipment')).body).toEqual([{ ...EQUIPMENT_1, generalLocation: 'Prague' }])
         })
@@ -233,21 +246,71 @@ describe('Equipment (e2e)', () => {
             await createEquipment(CREATE)
         })
 
-        it('returns the history oldest first as a plain array of the five record fields', async () => {
+        it('returns the history oldest first as a plain array of the record fields, the user ones last', async () => {
             await setup.post('/api/equipment/1/location', { generalLocation: 'Prague', note: 'moved', date: '2026-03-01' })
 
             const history = expectStatus(await setup.get<EpicEquipmentLocationHistoryRecord[]>('/api/equipment/1/location-history'), 200)
 
             expect(history).toEqual([
-                { equipmentId: 1, generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null },
-                { equipmentId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: null },
+                {
+                    equipmentId: 1, generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null,
+                    ...BY_ADMIN,
+                },
+                { equipmentId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: null, ...BY_ADMIN },
             ])
-            expect(Object.keys(history[0])).toEqual(['equipmentId', 'generalLocation', 'date', 'note', 'username'])
+            expect(Object.keys(history[0])).toEqual(['equipmentId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers 404 for unknown equipment and 400 for an id that is no number', async () => {
             expectError(await setup.get('/api/equipment/999/location-history'), 404, 'Equipment 999 not found')
             expectError(await setup.get('/api/equipment/one/location-history'), 400, 'numeric string is expected')
+        })
+
+    })
+
+    // ── The user of the session (#397) ────────────────────────────
+
+    describe('The user of the session on the equipment history', () => {
+
+        beforeEach(async () => {
+            await createType(ENCLUSTRA.name)
+            await createEquipment(CREATE)
+        })
+
+        it('stores the id of the logged-in user on the row of a move, and the history names that user', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const session = await setup.login(anna.login, anna.password)
+
+            expectStatus(await setup.as(session).post('/api/equipment/1/location', { generalLocation: 'Prague', note: 'moved' }), 201)
+
+            expect(await setup.query('select "userId", username from main."EquipmentLocation" order by id')).toEqual([
+                { userId: E2E_ADMIN.id, username: null },
+                { userId: anna.id, username: null },
+            ])
+            const history = expectStatus(await setup.as(session).get<RowUser[]>('/api/equipment/1/location-history'), 200)
+            expect(history.map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                BY_ADMIN,
+                { userId: anna.id, userName: 'Anna Rossi' },
+            ])
+        })
+
+        it('gives two users two ids, and keeps the name of a user who was switched off later', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const bruno = await setup.createUser({ login: 'bruno', name: 'Bruno Weber', role: EpicUserRole.Expert })
+            for (const user of [anna, bruno]) {
+                const session = await setup.login(user.login, user.password)
+                const moved = await setup.as(session).post('/api/equipment/1/location', { generalLocation: 'Prague', note: user.login })
+                expectStatus(moved, 201)
+            }
+            await setup.query('update main."SvtUser" set "isActive" = false where id = $1', [anna.id])
+
+            const history = expectStatus(await setup.get<RowUser[]>('/api/equipment/1/location-history'), 200)
+
+            expect(history.slice(1).map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                { userId: anna.id, userName: 'Anna Rossi' },
+                { userId: bruno.id, userName: 'Bruno Weber' },
+            ])
+            expect(anna.id).not.toBe(bruno.id)
         })
 
     })

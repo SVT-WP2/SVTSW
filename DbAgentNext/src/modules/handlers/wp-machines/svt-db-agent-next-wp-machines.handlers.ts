@@ -19,6 +19,7 @@ import {
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
@@ -69,12 +70,12 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
             {
                 type: MessageType.UpdateWpMachineLoadedWafer,
                 replyType: MessageType.UpdateWpMachineLoadedWaferReply,
-                handle: (data) => this.updateLoadedWafer(data),
+                handle: (data, context) => this.updateLoadedWafer(data, context),
             },
             {
                 type: MessageType.UpdateWpMachineInstalledProbeCard,
                 replyType: MessageType.UpdateWpMachineInstalledProbeCardReply,
-                handle: (data) => this.updateInstalledProbeCard(data),
+                handle: (data, context) => this.updateInstalledProbeCard(data, context),
             },
         ]
     }
@@ -131,9 +132,13 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
     /**
      * `data = { wpMachineId, loadedWaferId | null, loadedWaferOrientation | null }`. Loading needs an existing
      * wafer and an orientation; unloading needs a loaded wafer. The history gets a `Loaded` row for the new
-     * wafer, or an `Unloaded` row for the current one on an unload; a swap writes no `Unloaded` row (X-8, Q13).
+     * wafer, or an `Unloaded` row for the current one on an unload; a swap writes no `Unloaded` row (X-8, Q13). The
+     * row records the user of the request.
      */
-    private async updateLoadedWafer(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpMachine>> {
+    private async updateLoadedWafer(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpMachine>> {
         const record = validateRequestData(SvtDbAgentNextWpMachineLoadedWaferDto, data, 'data')
         const machine = await this.requireMachine(record.wpMachineId)
         const waferId = record.loadedWaferId ?? null
@@ -154,15 +159,23 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
             }
         }
 
-        const updated = await this.machines.setLoadedWafer(machine.id, { waferId, orientation: waferId === null ? null : orientation })
+        const updated = await this.machines.setLoadedWafer(machine.id, {
+            waferId,
+            orientation: waferId === null ? null : orientation,
+            userId: context.userId,
+        })
         return { entity: toWire(updated) }
     }
 
     /**
      * `data = { wpMachineId, installedProbeCardId | null, installedProbeCardOrientation | null }`. Installing
-     * needs an existing probe card (the orientation is optional); `null` uninstalls (D-13: no history row).
+     * needs an existing probe card (the orientation is optional); `null` uninstalls (D-13: no history row). The row of
+     * an install records the user of the request.
      */
-    private async updateInstalledProbeCard(data: unknown): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpMachine>> {
+    private async updateInstalledProbeCard(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafka.OneEntityReplyMessageData<EpicWpMachine>> {
         const record = validateRequestData(SvtDbAgentNextWpMachineInstalledProbeCardDto, data, 'data')
         const machine = await this.requireMachine(record.wpMachineId)
         const probeCardId = record.installedProbeCardId ?? null
@@ -180,6 +193,7 @@ export class SvtDbAgentNextWpMachinesHandlers implements SvtDbAgentNextMessageHa
         const updated = await this.machines.setInstalledProbeCard(machine.id, {
             probeCardId,
             orientation: probeCardId === null ? null : orientation,
+            userId: context.userId,
         })
         return { entity: toWire(updated) }
     }

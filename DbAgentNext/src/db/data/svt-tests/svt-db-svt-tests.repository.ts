@@ -40,6 +40,8 @@ export type SvtDbSvtTestCreateInput = {
     dutId: number
     testTypeConfigId: number
     testSetupConfigId: number
+    /** The user of the request that creates the test; `null` without one. */
+    createdByUserId: number | null
 }
 
 export type SvtDbSvtTestUpdateInput = Partial<Pick<SvtDbSvtTestEntity, 'startedAt' | 'finishedAt' | 'pathToResult' | 'testResultStatus'>>
@@ -48,7 +50,11 @@ type TimestampRange = { $gte?: Date; $lt?: Date }
 
 const EMPTY_PAGE: SvtDbPage<SvtDbSvtTestWithDut> = { items: [], totalCount: 0 }
 
-/** SVT test runs with their device links; every write is one transaction. Lists come newest first. */
+/**
+ * SVT test runs with their device links; every write is one transaction. Lists come newest first. Every test that
+ * this repository returns has its `createdByUser` populated (one more query per page at most, never one per test),
+ * so that the name of the user who created it can be read; a user that is switched off still gives its name.
+ */
 @Injectable()
 export class SvtDbSvtTestsRepository {
 
@@ -109,12 +115,13 @@ export class SvtDbSvtTestsRepository {
             orderBy: { id: 'desc' },
             limit: pager?.limit,
             offset: pager?.offset,
+            populate: ['createdByUser'],
         })
         return { items: await this.withDuts(tests), totalCount }
     }
 
     async findById(id: number): Promise<SvtDbSvtTestWithDut | null> {
-        const test = await this.em.findOne(SvtDbSvtTestEntity, { id })
+        const test = await this.em.findOne(SvtDbSvtTestEntity, { id }, { populate: ['createdByUser'] })
         if (!test) {
             return null
         }
@@ -128,12 +135,14 @@ export class SvtDbSvtTestsRepository {
             const test = em.create(SvtDbSvtTestEntity, {
                 testTypeConfig: input.testTypeConfigId,
                 testSetupConfig: input.testSetupConfigId,
+                createdByUser: input.createdByUserId,
             })
             await em.flush()
             em.create(SvtDbSvtTestDutEntityNameEntity, { test, dutEntityName: input.dutEntityName })
             em.create(SvtDbSvtTestDutIdEntity, { test, dutId: input.dutId })
             await em.flush()
             await em.refresh(test)
+            await em.populate(test, ['createdByUser'])
             return { test, dutEntityName: input.dutEntityName, dutId: input.dutId }
         })
     }
@@ -141,7 +150,7 @@ export class SvtDbSvtTestsRepository {
     /** Sets the given fields; `null` when the test does not exist. */
     update(id: number, patch: SvtDbSvtTestUpdateInput): Promise<SvtDbSvtTestWithDut | null> {
         return this.em.transactional(async (em) => {
-            const test = await em.findOne(SvtDbSvtTestEntity, { id })
+            const test = await em.findOne(SvtDbSvtTestEntity, { id }, { populate: ['createdByUser'] })
             if (!test) {
                 return null
             }

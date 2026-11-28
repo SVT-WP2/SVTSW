@@ -43,7 +43,9 @@ info:
       `Header svt_userId must be a positive integer`, and the
       id of no user is a `BadRequest` with `Unknown user: <id>`. A user who is switched off (`isActive: false`) is
       accepted. A malformed request or an unknown type is answered as without the header. The agent checks no role,
-      and a reply does not repeat the header. A key `svt_userId` in the body has no meaning.
+      and a reply does not repeat the header. A key `svt_userId` in the body has no meaning. The rows that record a
+      user store this id: the history rows of a location, a load or an install (`userId`) and a test
+      (`createdByUserId`); without the header they store `NULL`. No request carries a `userId` in `data`.
     - All the rows that a request writes are written in one database transaction: a request that fails
       half-way leaves nothing behind (the C++ committed every statement on its own, X-1). The checks that
       come before the write (a value of an enum, a row that must exist) run before that transaction.
@@ -231,7 +233,7 @@ paths:
       summary: Create Wafer
       description: >-
         Returns the newly created Wafer in the reply message.
-        Inserts the wafer, its first location row and every ASIC of the wafer type's map in one transaction. The three dates may be left out or `null` (D-9). A duplicate `serialNumber` is a `BadRequest`.
+        Inserts the wafer, its first location row and every ASIC of the wafer type's map in one transaction. The three dates may be left out or `null` (D-9). A duplicate `serialNumber` is a `BadRequest`. The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -297,7 +299,7 @@ paths:
       summary: Update Wafer Location
       description: >-
         Returns updated Wafer in the reply message.
-        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the wafer's current location (X-9). `NotFound` for an unknown wafer.
+        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the wafer's current location (X-9). `NotFound` for an unknown wafer. The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header). `data` has no `userId`.
       requestBody:
         content:
           application/json:
@@ -330,7 +332,7 @@ paths:
       summary: Get Wafer Location History Records
       description: >-
         Return list of location records for a wafer.
-        `NotFound` for an unknown wafer; the reply carries `totalCount` (R-12).
+        `NotFound` for an unknown wafer; the reply carries `totalCount` (R-12). Each record carries the user who wrote it (`userId`, `userName`), resolved per history, not per row.
       requestBody:
         content:
           application/json:
@@ -460,7 +462,7 @@ paths:
       summary: Create chip
       description: >-
         Returns the newly created chip in the reply message.
-        Chip blocks are generated for the chip's family type only when the agent runs with `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS=true` (off by default: the naming of blocks is not decided yet, Q6).
+        Chip blocks are generated for the chip's family type only when the agent runs with `SVT_DB_AGENT_FEATURE_CHIP_BLOCKS=true` (off by default: the naming of blocks is not decided yet, Q6). The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -493,7 +495,7 @@ paths:
       summary: Create many chips
       description: >-
         Returns created chip array in the reply message.
-        Only `data.create.items` is read (the C++ also required a `data.items` key, D-8); the reply lists the created chips, not every chip (R-2). All chips are created in one transaction.
+        Only `data.create.items` is read (the C++ also required a `data.items` key, D-8); the reply lists the created chips, not every chip (R-2). All chips are created in one transaction. The first history row of every chip records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -526,7 +528,7 @@ paths:
       summary: Update Chip Location
       description: >-
         Returns updated Chip in the reply message.
-        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the chip's current location (X-9). `NotFound` for an unknown chip.
+        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the chip's current location (X-9). `NotFound` for an unknown chip. The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header). `data` has no `userId`.
       requestBody:
         content:
           application/json:
@@ -559,7 +561,7 @@ paths:
       summary: Get Chip Location History Records
       description: >-
         Return list of location records for a chip.
-        `NotFound` for an unknown chip; the reply carries `totalCount` (R-12).
+        `NotFound` for an unknown chip; the reply carries `totalCount` (R-12). Each record carries the user who wrote it (`userId`, `userName`), resolved per history, not per row.
       requestBody:
         content:
           application/json:
@@ -723,7 +725,7 @@ paths:
       summary: Update WaferProbeMachine Loaded Wafer
       description: >-
         Returns updated WaferProbeMachine in the reply message.
-        Loading needs an existing wafer and `loadedWaferOrientation` (a value of `waferMapOrientation`); unloading (`loadedWaferId: null`) while nothing is loaded is a `BadRequest`. A swap records one `Loaded` row for the new wafer in `WaferLoadedInMachine`, as the C++ did: a load implies the unload of the previous wafer (Q13; X-8 withdrawn). `NotFound` for an unknown machine.
+        Loading needs an existing wafer and `loadedWaferOrientation` (a value of `waferMapOrientation`); unloading (`loadedWaferId: null`) while nothing is loaded is a `BadRequest`. A swap records one `Loaded` row for the new wafer in `WaferLoadedInMachine`, as the C++ did: a load implies the unload of the previous wafer (Q13; X-8 withdrawn). `NotFound` for an unknown machine. The `Loaded` or `Unloaded` row records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -756,7 +758,7 @@ paths:
       summary: Update WaferProbeMachine Installed Probe Card
       description: >-
         Returns updated WaferProbeMachine in the reply message.
-        Installing needs an existing probe card; the orientation is optional. `installedProbeCardId: null` uninstalls the card and clears both columns (D-13; the C++ failed on it). `NotFound` for an unknown machine.
+        Installing needs an existing probe card; the orientation is optional. `installedProbeCardId: null` uninstalls the card and clears both columns (D-13; the C++ failed on it). `NotFound` for an unknown machine. The row of an install in `ProbeCardInstalledInMachine` records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -979,7 +981,7 @@ paths:
       summary: Create Equipment
       description: >-
         Returns the newly created Equipment in the reply message.
-        `specification` may be left out or `null` (D-10) and must be a JSON string when sent (R-7). A duplicate `name` is a `BadRequest`.
+        `specification` may be left out or `null` (D-10) and must be a JSON string when sent (R-7). A duplicate `name` is a `BadRequest`. The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header).
       requestBody:
         content:
           application/json:
@@ -1012,7 +1014,7 @@ paths:
       summary: Update Equipment Location
       description: >-
         Returns updated Equipment in the reply message.
-        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the equipment's current location (X-9). `NotFound` for unknown equipment.
+        Appends a history row (`date` defaults to today, `username` may be left out, D-11) and makes it the equipment's current location (X-9). `NotFound` for unknown equipment. The history row records the user of the header `svt_userId` in `userId` (`NULL` without the header). `data` has no `userId`.
       requestBody:
         content:
           application/json:
@@ -1044,8 +1046,8 @@ paths:
         - Equipment
       summary: Get Equipment Location History Records
       description: >-
-        Return list of location records for a wafer.
-        `NotFound` for unknown equipment; the reply carries `totalCount` (R-12).
+        Return list of location records for a piece of equipment.
+        `NotFound` for unknown equipment; the reply carries `totalCount` (R-12). Each record carries the user who wrote it (`userId`, `userName`), resolved per history, not per row.
       requestBody:
         content:
           application/json:
@@ -1573,7 +1575,7 @@ paths:
       summary: Get all SvtTest
       description: >-
         Returns SvtTest list in the reply message, filtered and paged, newest first (`id` descending).
-        Every filter is implemented (D-3): `testResultStatuses` may contain `null` for the tests without a result; the date ranges take ISO 8601 date-times, `…From` inclusive and `…To` exclusive.
+        Every filter is implemented (D-3): `testResultStatuses` may contain `null` for the tests without a result; the date ranges take ISO 8601 date-times, `…From` inclusive and `…To` exclusive. Each test carries the user who created it (`createdByUserId`, `createdByUserName`), resolved per page, not per test.
       requestBody:
         content:
           application/json:
@@ -1606,7 +1608,7 @@ paths:
       summary: Create an entry to the SvtTest
       description: >-
         Returns the newly created entry to the SvtTest in the reply message.
-        The device (`dutEntityName` + `dutId`) and both configs must exist (`BadRequest` otherwise). `createdAt` is set by the agent; `startedAt`, `finishedAt`, `pathToResult` and `testResultStatus` are `null` until the test is started and finished.
+        The device (`dutEntityName` + `dutId`) and both configs must exist (`BadRequest` otherwise). `createdAt` is set by the agent; `startedAt`, `finishedAt`, `pathToResult` and `testResultStatus` are `null` until the test is started and finished. The test records the user of the header `svt_userId` as its creator (`createdByUserId`, `createdByUserName`; `null` without the header).
       requestBody:
         content:
           application/json:
@@ -3835,6 +3837,8 @@ components:
         - date
         - username
         - note
+        - userId
+        - userName
       properties:
         waferId:
           type: number
@@ -3846,9 +3850,18 @@ components:
         username:
           type: string
           nullable: true
+          description: The free text `username` of the request, as sent. Rows written before the users (#392) may hold a name here.
         note:
           type: string
           description: General comment/reason about the location update; `Location at creation` for the first row.
+        userId:
+          type: number
+          nullable: true
+          description: The user of the request that wrote the row (the header `svt_userId`); `null` without one.
+        userName:
+          type: string
+          nullable: true
+          description: The `name` of that user, also of a user who was switched off later; `null` without a user.
     AsicDto:
       type: object
       required:
@@ -3962,6 +3975,8 @@ components:
         - date
         - username
         - note
+        - userId
+        - userName
       properties:
         chipId:
           type: number
@@ -3973,9 +3988,18 @@ components:
         username:
           type: string
           nullable: true
+          description: The free text `username` of the request, as sent. Rows written before the users (#392) may hold a name here.
         note:
           type: string
           description: General comment/reason about the location update; `Location at creation` for the first row.
+        userId:
+          type: number
+          nullable: true
+          description: The user of the request that wrote the row (the header `svt_userId`); `null` without one.
+        userName:
+          type: string
+          nullable: true
+          description: The `name` of that user, also of a user who was switched off later; `null` without a user.
     # CHIP BLOCK :: DTO
     ChipBlockDto:
       type: object
@@ -4310,6 +4334,8 @@ components:
         - date
         - username
         - note
+        - userId
+        - userName
       properties:
         equipmentId:
           type: number
@@ -4321,9 +4347,18 @@ components:
         username:
           type: string
           nullable: true
+          description: The free text `username` of the request, as sent. Rows written before the users (#392) may hold a name here.
         note:
           type: string
           description: General comment/reason about the location update; `Location at creation` for the first row.
+        userId:
+          type: number
+          nullable: true
+          description: The user of the request that wrote the row (the header `svt_userId`); `null` without one.
+        userName:
+          type: string
+          nullable: true
+          description: The `name` of that user, also of a user who was switched off later; `null` without a user.
     # TEST_SETUP :: DTO
     SvtTestSetupDto:
       type: object
@@ -4588,6 +4623,8 @@ components:
         - finishedAt
         - pathToResult
         - testResultStatus
+        - createdByUserId
+        - createdByUserName
       properties:
         id:
           type: number
@@ -4623,6 +4660,14 @@ components:
             - $ref: "#/components/schemas/SvtTestResultStatus"
           nullable: true
           description: "`null` until the test has finished"
+        createdByUserId:
+          type: number
+          nullable: true
+          description: The user of the `CreateSvtTest` request (the header `svt_userId`); `null` without one.
+        createdByUserName:
+          type: string
+          nullable: true
+          description: The `name` of that user, also of a user who was switched off later; `null` without a user.
     SvtTestCreateDto:
       required:
         - dutEntityName

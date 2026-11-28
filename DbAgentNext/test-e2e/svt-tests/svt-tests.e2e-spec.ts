@@ -11,7 +11,16 @@ import {
     SvtDbAgentKafkaWaferTypes,
 } from 'svt-ts-types/kafka'
 
-import { SVT_TEST_SETUP_CREATE, SVT_TEST_TYPE_CREATE, TestSetup } from '../utils'
+import {
+    asE2eUser,
+    countE2eQueries,
+    createE2eUser,
+    expectListPaging,
+    SVT_TEST_SETUP_CREATE,
+    SVT_TEST_TYPE_CREATE,
+    switchOffE2eUser,
+    TestSetup,
+} from '../utils'
 
 
 /** Two dies, one row: ASIC 1 `W-1_0_0` (MOSAIX) and ASIC 2 `W-1_0_1` (BABYMOSAIX). */
@@ -41,6 +50,9 @@ const CHIP_TEST_CREATE: EpicSvtTestCreateRequest = {
 
 /** A freshly created test: nothing started, nothing finished, no result. */
 const FRESH = { startedAt: null, finishedAt: null, pathToResult: null, testResultStatus: null }
+
+/** A test created by a request without the header `svt_userId`. */
+const NO_CREATOR = { createdByUserId: null, createdByUserName: null }
 
 type ListReply = SvtDbAgentKafka.PageReplyMessageData<EpicSvtTestEntity>
 type EntityReply = SvtDbAgentKafka.OneEntityReplyMessageData<EpicSvtTestEntity>
@@ -120,12 +132,12 @@ describe('SVT tests (e2e)', () => {
             expect(reply).toMatchObject({ type: 'GetAllSvtTestsReply', status: 'Success' })
             expect(reply.data).toEqual({ items: [second, first], totalCount: 2 })
             expect(reply.data.items[0]).toMatchObject({
-                id: 2, dutEntityName: 'Chip', dutId: 1, testTypeConfigId: 2, testSetupConfigId: 1, ...FRESH,
+                id: 2, dutEntityName: 'Chip', dutId: 1, testTypeConfigId: 2, testSetupConfigId: 1, ...FRESH, ...NO_CREATOR,
             })
             expect(reply.data.items[0].createdAt).toMatch(ISO_DATE_TIME)
             expect(Object.keys(reply.data.items[0])).toEqual([
                 'id', 'dutEntityName', 'dutId', 'testTypeConfigId', 'testSetupConfigId', 'createdAt', 'startedAt', 'finishedAt',
-                'pathToResult', 'testResultStatus',
+                'pathToResult', 'testResultStatus', 'createdByUserId', 'createdByUserName',
             ])
         })
 
@@ -200,7 +212,7 @@ describe('SVT tests (e2e)', () => {
             const reply = await setup.send<EntityReply>(new SvtDbAgentKafkaSvtTests.CreateSvtTestMessage({ create: CREATE }))
 
             expect(reply).toMatchObject({ type: 'CreateSvtTestReply', status: 'Success' })
-            expect(reply.data.entity).toMatchObject({ id: 1, ...CREATE, ...FRESH })
+            expect(reply.data.entity).toMatchObject({ id: 1, ...CREATE, ...FRESH, ...NO_CREATOR })
             expect(reply.data.entity.createdAt).toMatch(ISO_DATE_TIME)
             expect(await setup.query(
                 `select id, "testTypeConfigId", "testSetupConfigId", "createdAt" is not null as stamped, "startedAt", "testResultStatus"
@@ -243,6 +255,79 @@ describe('SVT tests (e2e)', () => {
             expect(await count('SvtTestList')).toBe(0)
             expect(await count('SvtTestListToEntityName')).toBe(0)
             expect(await count('SvtTestListToEntityId')).toBe(0)
+        })
+
+    })
+
+    // ── The user of the request (#397) ────────────────────────────
+
+    describe('The user of the request', () => {
+
+        async function createAs(userId: number, create: EpicSvtTestCreateRequest = CREATE): Promise<EpicSvtTestEntity> {
+            const reply = await setup.send<EntityReply>(new SvtDbAgentKafkaSvtTests.CreateSvtTestMessage({ create }), asE2eUser(userId))
+            expect(reply.status, reply.error.message).toBe('Success')
+            return reply.data.entity
+        }
+
+        function creators(): Promise<{ id: number; createdByUserId: number | null }[]> {
+            return setup.query('select id, "createdByUserId" from main."SvtTestList" order by id')
+        }
+
+        it('stores the user of CreateSvtTest as the creator, and every reply that returns the test names it', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const creator = { createdByUserId: anna, createdByUserName: 'Anna Rossi' }
+
+            const created = await createAs(anna)
+            const listed = await getAll()
+            const started = await start(created.id, '2026-03-01T10:15:30Z')
+            const finished = await setup.send<EntityReply>({
+                type: 'UpdateSvtTestFinish',
+                data: { id: created.id, update: { finishedAt: '2026-03-01T11:00:00Z', pathToResult: '/r', testResultStatus: 'SUCCESS' } },
+            })
+
+            expect(await creators()).toEqual([{ id: created.id, createdByUserId: anna }])
+            expect(created).toMatchObject(creator)
+            expect(listed.items).toEqual([created])
+            expect(started.entity).toMatchObject(creator)
+            expect(finished.data.entity).toMatchObject(creator)
+        })
+
+        it('leaves createdByUserId NULL for a request without the header, and the replies have no creator', async () => {
+            const created = await createTest(CREATE)
+
+            expect(await creators()).toEqual([{ id: created.id, createdByUserId: null }])
+            expect(created).toMatchObject(NO_CREATOR)
+            expect((await getAll()).items[0]).toMatchObject(NO_CREATOR)
+        })
+
+        it('gives two users two ids, and the name of a user who was switched off after the create', async () => {
+            const anna = await createE2eUser(setup, 'anna', 'Anna Rossi')
+            const bruno = await createE2eUser(setup, 'bruno', 'Bruno Weber')
+            await createAs(anna)
+            await createAs(bruno, CHIP_TEST_CREATE)
+            await switchOffE2eUser(setup, anna)
+
+            const listed = await getAll()
+
+            expect(listed.items.map(({ createdByUserId, createdByUserName }) => ({ createdByUserId, createdByUserName }))).toEqual([
+                { createdByUserId: bruno, createdByUserName: 'Bruno Weber' },
+                { createdByUserId: anna, createdByUserName: 'Anna Rossi' },
+            ])
+        })
+
+        it('pages with the creators and reads them with the page, not with one query per test', async () => {
+            await createAs(await createE2eUser(setup, 'anna', 'Anna Rossi'))
+            const one = await countE2eQueries(setup, () => getAll())
+
+            for (const login of ['bruno', 'carla', 'dario']) {
+                await createAs(await createE2eUser(setup, login, login))
+            }
+            const four = await countE2eQueries(setup, () => getAll())
+            const all = (await getAll()).items
+
+            expect(all.map((test) => test.createdByUserName)).toEqual(['dario', 'carla', 'bruno', 'Anna Rossi'])
+            expect(four).toBe(one)
+            await expectListPaging(setup, 'GetAllSvtTests', all)
         })
 
     })

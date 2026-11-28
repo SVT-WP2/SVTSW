@@ -96,9 +96,13 @@ export class EpicSvtTestsService implements OnModuleInit {
      * BFF — this is the seam where, later, the live processing state of other services gets folded in.
      */
     protected resolveEntity(entity: EpicSvtTestEntity): EpicSvtTest {
+        // the creator came after every older key (#397): it stays after the synthetic status, the last key before it
+        const { createdByUserId, createdByUserName, ...test } = entity
         return {
-            ...entity,
+            ...test,
             status: resolveEpicSvtTestStatus(entity.testResultStatus),
+            createdByUserId,
+            createdByUserName,
         }
     }
 

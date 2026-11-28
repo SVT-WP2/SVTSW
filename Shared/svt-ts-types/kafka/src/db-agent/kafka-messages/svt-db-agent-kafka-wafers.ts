@@ -1,6 +1,7 @@
 import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'svt-ts-types'
 
 import { EpicKafkaMessageClass, EpicKafkaReplyMessageClass } from '../../common'
+import { EpicWaferLocationUpdate } from '../models'
 
 import { SvtDbAgentKafka } from './svt-db-agent-kafka'
 
@@ -87,7 +88,15 @@ export namespace SvtDbAgentKafkaWafers {
 
     // LOCATION
 
-    export class UpdateWaferLocationMessage extends EpicKafkaMessageClass<EpicWaferLocationHistoryRecord> {
+    /**
+     * `data` of `UpdateWaferLocation`: the move, without the `userId` and `userName` of a history record (the DB
+     * agent takes the user from the header `svt_userId`).
+     */
+    export type UpdateWaferLocationMessageData = EpicWaferLocationUpdate & {
+        waferId: number
+    }
+
+    export class UpdateWaferLocationMessage extends EpicKafkaMessageClass<UpdateWaferLocationMessageData> {
 
         readonly type = MessageType.UpdateWaferLocation
 

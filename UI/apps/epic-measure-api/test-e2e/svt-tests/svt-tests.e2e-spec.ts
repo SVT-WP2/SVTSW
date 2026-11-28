@@ -1,8 +1,9 @@
-import { EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestCreateRequest } from 'svt-ts-types'
+import { EpicApiPageResponse, EpicSvtDutEntityName, EpicSvtTest, EpicSvtTestCreateRequest, EpicUserRole } from 'svt-ts-types'
 
 import {
     createWafer,
     createWaferType,
+    E2E_ADMIN,
     expectError,
     expectPageQueryParams,
     expectStatus,
@@ -29,6 +30,9 @@ const CHIP_TEST: EpicSvtTestCreateRequest = {
 
 /** A fresh test: nothing started or finished, no result, so the synthetic status is Pending. */
 const FRESH = { startedAt: null, finishedAt: null, pathToResult: null, testResultStatus: null, status: 'Pending' }
+
+/** A test created over HTTP by the Admin that the suite runs as. */
+const BY_ADMIN = { createdByUserId: E2E_ADMIN.id, createdByUserName: E2E_ADMIN.name }
 
 type SvtTestPage = EpicApiPageResponse<EpicSvtTest>
 
@@ -101,11 +105,15 @@ describe('SVT tests (e2e)', () => {
             const response = await setup.post<EpicSvtTest>('/api/svt-tests', ASIC_TEST)
 
             expect(response)
-                .toEqual({ status: 201, body: { id: 1, ...ASIC_TEST, createdAt: expect.stringMatching(ISO_DATE_TIME), ...FRESH } })
+                .toEqual({
+                    status: 201,
+                    body: { id: 1, ...ASIC_TEST, createdAt: expect.stringMatching(ISO_DATE_TIME), ...FRESH, ...BY_ADMIN },
+                })
             expect(Object.keys(response.body)).toEqual([
                 'id', 'dutEntityName', 'dutId', 'testTypeConfigId', 'testSetupConfigId', 'createdAt', 'startedAt', 'finishedAt',
-                'pathToResult', 'testResultStatus', 'status',
+                'pathToResult', 'testResultStatus', 'status', 'createdByUserId', 'createdByUserName',
             ])
+            expect(await setup.query('select "createdByUserId" from main."SvtTestList"')).toEqual([{ createdByUserId: E2E_ADMIN.id }])
             expect(await setup.query('select "testId", "dutEntityName" from main."SvtTestListToEntityName"'))
                 .toEqual([{ testId: 1, dutEntityName: 'Asic' }])
             expect(await setup.query('select "testId", "dutId" from main."SvtTestListToEntityId"')).toEqual([{ testId: 1, dutId: 1 }])
@@ -146,6 +154,40 @@ describe('SVT tests (e2e)', () => {
 
     })
 
+    describe('The user of the session as the creator of a test (#397)', () => {
+
+        it('stores the id of the logged-in user on the test, and the list and the test name that user', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const session = await setup.login(anna.login, anna.password)
+
+            const created = expectStatus(await setup.as(session).post<EpicSvtTest>('/api/svt-tests', ASIC_TEST), 201)
+
+            expect(created).toMatchObject({ createdByUserId: anna.id, createdByUserName: 'Anna Rossi' })
+            expect(await setup.query('select "createdByUserId" from main."SvtTestList"')).toEqual([{ createdByUserId: anna.id }])
+            const listed = expectStatus(await setup.get<SvtTestPage>('/api/svt-tests'), 200)
+            expect(listed.items).toEqual([created])
+            expect(expectStatus(await setup.get<EpicSvtTest>(`/api/svt-tests/${created.id}`), 200)).toEqual(created)
+        })
+
+        it('gives two users two ids, and keeps the name of a user who was switched off later', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const bruno = await setup.createUser({ login: 'bruno', name: 'Bruno Weber', role: EpicUserRole.Developer })
+            for (const user of [anna, bruno]) {
+                const session = await setup.login(user.login, user.password)
+                expectStatus(await setup.as(session).post('/api/svt-tests', ASIC_TEST), 201)
+            }
+            await setup.query('update main."SvtUser" set "isActive" = false where id = $1', [anna.id])
+
+            const listed = expectStatus(await setup.get<SvtTestPage>('/api/svt-tests'), 200)
+
+            expect(listed.items.map(({ createdByUserId, createdByUserName }) => ({ createdByUserId, createdByUserName }))).toEqual([
+                { createdByUserId: bruno.id, createdByUserName: 'Bruno Weber' },
+                { createdByUserId: anna.id, createdByUserName: 'Anna Rossi' },
+            ])
+        })
+
+    })
+
     describe('GET /api/svt-tests', () => {
 
         it('answers a page of the tests newest first, each with its synthetic status', async () => {
@@ -155,7 +197,7 @@ describe('SVT tests (e2e)', () => {
             const body = expectStatus(await setup.get<SvtTestPage>('/api/svt-tests'), 200)
 
             expect(body).toEqual({ items: [second, first], totalCount: 2 })
-            expect(body.items[0]).toEqual({ id: 2, ...CHIP_TEST, createdAt: expect.stringMatching(ISO_DATE_TIME), ...FRESH })
+            expect(body.items[0]).toEqual({ id: 2, ...CHIP_TEST, createdAt: expect.stringMatching(ISO_DATE_TIME), ...FRESH, ...BY_ADMIN })
         })
 
         it('resolves the status from the stored result: SUCCESS and PARTIAL_SUCCESS Completed, FAILURE and ERROR Failed', async () => {
@@ -281,6 +323,7 @@ describe('SVT tests (e2e)', () => {
                 body: {
                     id: 5, ...ASIC_TEST, createdAt: expect.stringMatching(ISO_DATE_TIME), startedAt: null,
                     finishedAt: '2026-03-01T12:00:00.000Z', pathToResult: '/results/5', testResultStatus: 'ERROR', status: 'Failed',
+                    ...BY_ADMIN,
                 },
             })
             expectError(await setup.get('/api/svt-tests/999'), 404, 'SvtTest does not exist: 999')

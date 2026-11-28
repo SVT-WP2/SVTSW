@@ -28,7 +28,7 @@ What the entities mean: [domain model §5](../domain-model.md#5-testing).
 | 3 | UI → BFF → DB agent | Create the test type with its DUT types and its first configuration | page `/admin/svt-test/test-types/list`; `POST /api/svt-test-types`; `CreateSvtTestType`; tables `SvtTestType`, `SvtTestTypeDUTTypeList`, `SvtTestTypeConfig` | same |
 | 4 | UI → BFF → DB agent | Optional: add more configurations to the test type | `POST /api/svt-test-type-configs`; `CreateSvtTestTypeConfig`; table `SvtTestTypeConfig` | same |
 | 5 | UI → BFF → DB agent | Create a template: one DUT type with one test type configuration, enabled | page `/admin/svt-test/test-templates/list`; `POST /api/svt-test-templates`; `CreateSvtTestTemplate`; table `SvtTestTemplate` | same |
-| 6 | UI → BFF → DB agent | Create the test. The dialog offers the enabled templates of the DUT type of the device, and sends the test type configuration of the chosen template with the setup configuration | page `/svt-tests`; `POST /api/svt-tests`; `CreateSvtTest` with `dutEntityName`, `dutId`, `testTypeConfigId`, `testSetupConfigId`; tables `SvtTestList`, `SvtTestListToEntityName`, `SvtTestListToEntityId` | [DbAgentNext/docs/01 §6.8](../../DbAgentNext/docs/01-behaviour-decisions.md#68-svt-tests) |
+| 6 | UI → BFF → DB agent | Create the test. The dialog offers the enabled templates of the DUT type of the device, and sends the test type configuration of the chosen template with the setup configuration | page `/svt-tests`; `POST /api/svt-tests`; `CreateSvtTest` with `dutEntityName`, `dutId`, `testTypeConfigId`, `testSetupConfigId`, and the logged-in user in the header `svt_userId`; tables `SvtTestList` (`createdByUserId`: that user), `SvtTestListToEntityName`, `SvtTestListToEntityId` | [DbAgentNext/docs/01 §6.8](../../DbAgentNext/docs/01-behaviour-decisions.md#68-svt-tests) |
 | 7 | not built → DB agent | Record the start | `UpdateSvtTestStart` with `id` and `update.startedAt`; column `SvtTestList.startedAt` | same |
 | 8 | not built → DB agent | Record the finish: the time, the path to the result, the result status | `UpdateSvtTestFinish` with `id` and `update.finishedAt`, `update.pathToResult`, `update.testResultStatus`; columns of `SvtTestList` | same |
 
@@ -43,8 +43,8 @@ result is "Pending"; `SUCCESS` and `PARTIAL_SUCCESS` are "Completed"; `FAILURE` 
 
 ## Check
 
-- After step 6: the page `/svt-tests` lists the test with the status "Pending", and the details page of the device
-  shows it.
+- After step 6: the page `/svt-tests` lists the test with the status "Pending" and the name of its creator in
+  "Created By", and the details page of the device shows it.
 - After step 8 (with a message sent by hand or by a test): the list shows "Completed", "Failed" or "Cancelled".
   The e2e spec `DbAgentNext/test-e2e/svt-tests/` sends both messages.
 

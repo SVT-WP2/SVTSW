@@ -1,7 +1,10 @@
 import { EpicEquipmentLocationUpdateRequest } from 'svt-ts-types'
 
 
-/** Payload of the `UpdateEquipmentLocation` Kafka message — the HTTP request body plus the acting user. */
+/**
+ * The HTTP request body plus `username`, free text that the history row stores as sent. The user of the request is
+ * not part of it: it travels in the header `svt_userId`.
+ */
 export type EpicEquipmentLocationUpdate = EpicEquipmentLocationUpdateRequest & {
     username: string | null
 }

@@ -1,8 +1,9 @@
-import { EpicApiPageResponse, EpicChip, EpicChipCreateRequest, EpicChipLocationHistoryRecord } from 'svt-ts-types'
+import { EpicApiPageResponse, EpicChip, EpicChipCreateRequest, EpicChipLocationHistoryRecord, EpicUserRole } from 'svt-ts-types'
 
 import {
     createWafer,
     createWaferType,
+    E2E_ADMIN,
     expectError,
     expectPageQueryParams,
     expectStatus,
@@ -16,6 +17,12 @@ const CHIP_1: EpicChip = { id: 1, serialNumber: 'C-1', generalLocation: 'CERN', 
 const CHIP_2: EpicChip = { id: 2, serialNumber: 'C-2', generalLocation: 'Prague', familyType: 'BABYMOSAIX' }
 
 type ChipPage = EpicApiPageResponse<EpicChip>
+
+/** The user fields of a history row that the Admin of the suite wrote over HTTP. */
+const BY_ADMIN = { userId: E2E_ADMIN.id, userName: E2E_ADMIN.name }
+
+/** The user fields of a history record. */
+type RowUser = { userId: number | null; userName: string | null }
 
 describe('Chips (e2e)', () => {
 
@@ -239,7 +246,7 @@ describe('Chips (e2e)', () => {
 
         beforeEach(() => createChip({ serialNumber: 'C-1', asicId: 1, generalLocation: 'CERN' }))
 
-        it('moves the chip: 201 with the updated chip and a history row without username', async () => {
+        it('moves the chip: 201 with the updated chip and a history row of the logged-in user, without username', async () => {
             const response = await setup.post('/api/chips/1/location', {
                 generalLocation: 'Prague',
                 note: 'moved to the lab',
@@ -248,11 +255,15 @@ describe('Chips (e2e)', () => {
 
             expect(response).toEqual({ status: 201, body: { ...CHIP_1, generalLocation: 'Prague' } })
             expect(await setup.query(
-                'select "generalLocation", to_char(date, \'YYYY-MM-DD\') as date, username, note from main."ChipLocation" order by id',
+                `select "generalLocation", to_char(date, 'YYYY-MM-DD') as date, username, note, "userId"
+                 from main."ChipLocation" order by id`,
             ))
                 .toEqual([
-                    { generalLocation: 'CERN', date: await setup.today(), username: null, note: 'Location at creation' },
-                    { generalLocation: 'Prague', date: '2026-03-01', username: null, note: 'moved to the lab' },
+                    {
+                        generalLocation: 'CERN', date: await setup.today(), username: null, note: 'Location at creation',
+                        userId: E2E_ADMIN.id,
+                    },
+                    { generalLocation: 'Prague', date: '2026-03-01', username: null, note: 'moved to the lab', userId: E2E_ADMIN.id },
                 ])
             expect((await page()).items).toEqual([{ ...CHIP_1, generalLocation: 'Prague' }])
         })
@@ -270,21 +281,69 @@ describe('Chips (e2e)', () => {
 
         beforeEach(() => createChip({ serialNumber: 'C-1', asicId: 1, generalLocation: 'CERN' }))
 
-        it('returns the history oldest first as a plain array of the five record fields', async () => {
+        it('returns the history oldest first as a plain array of the record fields, the user ones last', async () => {
             await setup.post('/api/chips/1/location', { generalLocation: 'Prague', note: 'moved', date: '2026-03-01' })
 
             const history = expectStatus(await setup.get<EpicChipLocationHistoryRecord[]>('/api/chips/1/location-history'), 200)
 
             expect(history).toEqual([
-                { chipId: 1, generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null },
-                { chipId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: null },
+                {
+                    chipId: 1, generalLocation: 'CERN', date: await setup.today(), note: 'Location at creation', username: null,
+                    ...BY_ADMIN,
+                },
+                { chipId: 1, generalLocation: 'Prague', date: '2026-03-01', note: 'moved', username: null, ...BY_ADMIN },
             ])
-            expect(Object.keys(history[0])).toEqual(['chipId', 'generalLocation', 'date', 'note', 'username'])
+            expect(Object.keys(history[0])).toEqual(['chipId', 'generalLocation', 'date', 'note', 'username', 'userId', 'userName'])
         })
 
         it('answers 404 for an unknown chip and 400 for an id that is no number', async () => {
             expectError(await setup.get('/api/chips/999/location-history'), 404, 'Chip 999 not found')
             expectError(await setup.get('/api/chips/one/location-history'), 400, 'numeric string is expected')
+        })
+
+    })
+
+    // ── The user of the session (#397) ────────────────────────────
+
+    describe('The user of the session on the chip history', () => {
+
+        beforeEach(async () => {
+            await createChip({ serialNumber: 'C-1', asicId: 1, generalLocation: 'CERN' })
+        })
+
+        it('stores the id of the logged-in user on the row of a move, and the history names that user', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const session = await setup.login(anna.login, anna.password)
+
+            expectStatus(await setup.as(session).post('/api/chips/1/location', { generalLocation: 'Prague', note: 'moved' }), 201)
+
+            expect(await setup.query('select "userId", username from main."ChipLocation" order by id')).toEqual([
+                { userId: E2E_ADMIN.id, username: null },
+                { userId: anna.id, username: null },
+            ])
+            const history = expectStatus(await setup.as(session).get<RowUser[]>('/api/chips/1/location-history'), 200)
+            expect(history.map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                BY_ADMIN,
+                { userId: anna.id, userName: 'Anna Rossi' },
+            ])
+        })
+
+        it('gives two users two ids, and keeps the name of a user who was switched off later', async () => {
+            const anna = await setup.createUser({ login: 'anna', name: 'Anna Rossi', role: EpicUserRole.User })
+            const bruno = await setup.createUser({ login: 'bruno', name: 'Bruno Weber', role: EpicUserRole.Expert })
+            for (const user of [anna, bruno]) {
+                const session = await setup.login(user.login, user.password)
+                expectStatus(await setup.as(session).post('/api/chips/1/location', { generalLocation: 'Prague', note: user.login }), 201)
+            }
+            await setup.query('update main."SvtUser" set "isActive" = false where id = $1', [anna.id])
+
+            const history = expectStatus(await setup.get<RowUser[]>('/api/chips/1/location-history'), 200)
+
+            expect(history.slice(1).map(({ userId, userName }) => ({ userId, userName }))).toEqual([
+                { userId: anna.id, userName: 'Anna Rossi' },
+                { userId: bruno.id, userName: 'Bruno Weber' },
+            ])
+            expect(anna.id).not.toBe(bruno.id)
         })
 
     })

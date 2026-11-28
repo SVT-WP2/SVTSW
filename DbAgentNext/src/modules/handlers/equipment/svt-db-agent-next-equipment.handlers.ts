@@ -20,6 +20,7 @@ import {
     SvtDbAgentNextHandlerDefinition,
     SvtDbAgentNextHandlers,
     SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
     SvtDbAgentNextRequestError,
     validateRequestData,
 } from '../../dispatch'
@@ -49,11 +50,15 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
     getHandlerDefinitions(): SvtDbAgentNextHandlerDefinition<unknown, unknown>[] {
         return [
             { type: MessageType.GetAllEquipment, replyType: MessageType.GetAllEquipmentReply, handle: (data) => this.getAll(data) },
-            { type: MessageType.CreateEquipment, replyType: MessageType.CreateEquipmentReply, handle: (data) => this.create(data) },
+            {
+                type: MessageType.CreateEquipment,
+                replyType: MessageType.CreateEquipmentReply,
+                handle: (data, context) => this.create(data, context),
+            },
             {
                 type: MessageType.UpdateEquipmentLocation,
                 replyType: MessageType.UpdateEquipmentLocationReply,
-                handle: (data) => this.updateLocation(data),
+                handle: (data, context) => this.updateLocation(data, context),
             },
             {
                 type: MessageType.GetEquipmentLocationHistory,
@@ -72,8 +77,11 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
         return { items: page.items.map(toWire), totalCount: page.totalCount }
     }
 
-    /** `data.create`: the equipment and its first location row, in one transaction. */
-    private async create(data: unknown): Promise<SvtDbAgentKafkaEquipment.CreateEquipmentReplyMessageData> {
+    /** `data.create`: the equipment and its first location row, in one transaction; the row records the user of the request. */
+    private async create(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaEquipment.CreateEquipmentReplyMessageData> {
         const create = validateRequestData(SvtDbAgentNextEquipmentCreateDto, requireRecord(data, 'data')['create'], 'data.create')
         await this.assertGeneralLocation(create.generalLocation)
         if (!(await this.equipmentTypes.findById(create.equipmentTypeId))) {
@@ -87,12 +95,16 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
             specification: create.specification === null || create.specification === undefined
                 ? null
                 : jsonTextOrBadRequest(create.specification, 'data.create.specification'),
+            userId: context.userId,
         })
         return { entity: toWire(equipment) }
     }
 
-    /** `data` is the history record; the row written becomes the current location. */
-    private async updateLocation(data: unknown): Promise<SvtDbAgentKafkaEquipment.UpdateEquipmentLocationReplyMessageData> {
+    /** `data` is the move; the row written becomes the current location and records the user of the request. */
+    private async updateLocation(
+        data: unknown,
+        context: SvtDbAgentNextRequestContext,
+    ): Promise<SvtDbAgentKafkaEquipment.UpdateEquipmentLocationReplyMessageData> {
         const record = validateRequestData(SvtDbAgentNextEquipmentLocationRecordDto, data, 'data')
         await this.assertGeneralLocation(record.generalLocation)
 
@@ -101,6 +113,7 @@ export class SvtDbAgentNextEquipmentHandlers implements SvtDbAgentNextMessageHan
             date: record.date ?? null,
             username: record.username ?? null,
             note: record.note ?? null,
+            userId: context.userId,
         })
         if (!equipment) {
             throw SvtDbAgentNextRequestError.notFound(`Equipment ${record.equipmentId} not found`)
@@ -145,5 +158,7 @@ function toWireLocation(row: SvtDbEquipmentLocationEntity): EpicEquipmentLocatio
         date: row.date,
         note: row.note ?? '',
         username: row.username,
+        userId: row.user?.id ?? null,
+        userName: row.user?.getEntity().name ?? null,
     }
 }

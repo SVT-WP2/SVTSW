@@ -10,6 +10,7 @@ import {
     EpicWaferUpdateRequest,
 } from 'svt-ts-types'
 
+import { EpicAuthMock } from '../auth'
 import { EpicEnumsMock } from '../enums'
 
 
@@ -48,6 +49,7 @@ export class EpicWafersApiClientMock extends EpicWafersApiClient {
                         date: moment().subtract(Math.round(Math.random() * 100), 'days').format('YYYY-MM-DD'),
                         username: null,
                         note: 'Init location',
+                        ...EpicAuthMock.toRowUser(EpicAuthMock.getUserOfRow(wafer.id)),
                     }],
                 }
             },
@@ -98,6 +100,7 @@ export class EpicWafersApiClientMock extends EpicWafersApiClient {
             ...update,
             waferId: id,
             username: null,
+            ...EpicAuthMock.toRowUser(EpicAuthMock.getCurrentUser()),
         }
 
         this.wafersLocationHistory[id] = [

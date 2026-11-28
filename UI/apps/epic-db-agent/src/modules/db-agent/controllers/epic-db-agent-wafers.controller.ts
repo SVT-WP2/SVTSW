@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common'
-import { MessagePattern, Payload } from '@nestjs/microservices'
+import { Ctx, KafkaContext, MessagePattern, Payload } from '@nestjs/microservices'
 import { map } from 'rxjs'
 import {
     SvtDbAgentKafka,
@@ -21,6 +21,7 @@ import {
     SvtDbAgentKafkaWpMachines,
     SvtDbAgentKafkaWpProbeCards,
     SvtDbAgentKafkaWpProjects,
+    SvtKafkaHeader,
 } from 'svt-ts-types/kafka'
 
 import {
@@ -80,7 +81,11 @@ export class EpicDbAgentWafersController {
             | SvtDbAgentKafkaSvtTestTypeConfigs.Message
             | SvtDbAgentKafkaSvtTestTemplates.Message
             | SvtDbAgentKafkaSvtTests.Message
-            | SvtDbAgentKafkaUsers.Message) {
+            | SvtDbAgentKafkaUsers.Message,
+        @Ctx() context: KafkaContext,
+    ) {
+        // the rows that record a user get the user of the header; the mock does not check it as the DB agent does
+        const userId = userIdOf(context)
         switch (message.type) {
             // WAFERS
             case SvtDbAgentKafkaWafers.MessageType.GetAllWafers:
@@ -101,7 +106,7 @@ export class EpicDbAgentWafersController {
 
             // WAFER LOCATION
             case SvtDbAgentKafkaWafers.MessageType.UpdateWaferLocation:
-                return this.epicDbAgentWafersService.updateWaferLocation(message.data)
+                return this.epicDbAgentWafersService.updateWaferLocation(message.data, userId)
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaWafers.UpdateWaferLocationReplyMessage({ entity }))),
                     )
@@ -147,7 +152,7 @@ export class EpicDbAgentWafersController {
 
             // CHIP LOCATION
             case SvtDbAgentKafkaChips.MessageType.UpdateChipLocation:
-                return this.epicDbAgentChipsService.updateChipLocation(message.data)
+                return this.epicDbAgentChipsService.updateChipLocation(message.data, userId)
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaChips.UpdateChipLocationReplyMessage({ entity }))),
                     )
@@ -249,7 +254,7 @@ export class EpicDbAgentWafersController {
                     )
             // EQUIPMENT LOCATION
             case SvtDbAgentKafkaEquipment.MessageType.UpdateEquipmentLocation:
-                return this.epicDbAgentEquipmentService.updateEquipmentLocation(message.data)
+                return this.epicDbAgentEquipmentService.updateEquipmentLocation(message.data, userId)
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaEquipment.UpdateEquipmentLocationReplyMessage({ entity }))),
                     )
@@ -364,12 +369,12 @@ export class EpicDbAgentWafersController {
                         map(result => JSON.stringify(new SvtDbAgentKafkaSvtTests.GetAllSvtTestsReplyMessage(result))),
                     )
             case SvtDbAgentKafkaSvtTests.MessageType.CreateSvtTest:
-                return this.epicDbAgentSvtTestsService.create(message.data.create)
+                return this.epicDbAgentSvtTestsService.create(message.data.create, userId)
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessage({ entity }))),
                     )
 
-            // USERS (the mock ignores the header svt_userId)
+            // USERS
             case SvtDbAgentKafkaUsers.MessageType.GetAllUsers:
                 return this.epicDbAgentUsersService.getAll(message.data)
                     .pipe(map(reply => JSON.stringify(reply)))
@@ -392,4 +397,11 @@ export class EpicDbAgentWafersController {
 
     }
 
+}
+
+/** The user of the header `svt_userId` of a request: a positive integer, else `null` (no header, or a value of no use). */
+function userIdOf(context: KafkaContext): number | null {
+    const value: unknown = context.getMessage().headers?.[SvtKafkaHeader.UserId]
+    const text = Buffer.isBuffer(value) ? value.toString('utf8') : value
+    return typeof text === 'string' && /^[1-9]\d{0,9}$/.test(text) ? Number(text) : null
 }

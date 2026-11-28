@@ -9,10 +9,11 @@ import {
     EpicChipCreateRequest,
     EpicChipLocationHistoryRecord,
 } from 'svt-ts-types'
-import { EpicGetAllChipsQueryFilter } from 'svt-ts-types/kafka'
+import { EpicGetAllChipsQueryFilter, SvtDbAgentKafkaChips } from 'svt-ts-types/kafka'
 
 import { EpicDbAgentAsicsService } from './epic-db-agent-asics.service'
 import { getEnumsCollection } from './epic-db-agent-enums.service'
+import { EpicDbAgentUsersService, mockEpicDbAgentUserIdOf } from './epic-db-agent-users.service'
 
 
 @Injectable()
@@ -30,13 +31,18 @@ export class EpicDbAgentChipsService {
                         date: moment().subtract(Math.round(Math.random() * 100), 'days').format('YYYY-MM-DD'),
                         username: null,
                         note: 'Init location',
+                        userId: mockEpicDbAgentUserIdOf(chip.id),
+                        userName: null,
                     }],
                 }
             },
             {},
         )
 
-    constructor(private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService) {
+    constructor(
+        private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService,
+        private readonly epicDbAgentUsersService: EpicDbAgentUsersService,
+    ) {
     }
 
     getAllChips(queryFilter?: EpicGetAllChipsQueryFilter, pager?: EpicApiPager): Observable<EpicApiPageResponse<EpicChip>> {
@@ -134,17 +140,21 @@ export class EpicDbAgentChipsService {
             )
     }
 
+    /** The name of the user of each row is read now, as the DB agent does: a renamed user shows its new name. */
     getChipLocationHistory(chipId: number): Observable<EpicChipLocationHistoryRecord[]> {
-        return of(this.chipsLocationHistory[chipId] ?? [])
+        const history = (this.chipsLocationHistory[chipId] ?? [])
+            .map(record => ({ ...record, userName: this.epicDbAgentUsersService.nameOf(record.userId) }))
+        return of(history)
             .pipe(
                 delay(500),
             )
     }
 
-    updateChipLocation(location: EpicChipLocationHistoryRecord): Observable<EpicChip> {
+    /** `userId`: the user of the header `svt_userId`, `null` without one. */
+    updateChipLocation(location: SvtDbAgentKafkaChips.UpdateChipLocationMessageData, userId: number | null): Observable<EpicChip> {
         this.chipsLocationHistory[location.chipId] = [
             ...(this.chipsLocationHistory[location.chipId] ?? []),
-            location,
+            { ...location, username: location.username ?? null, userId, userName: null },
         ]
 
         return this.updateChip(location.chipId, { generalLocation: location.generalLocation })
