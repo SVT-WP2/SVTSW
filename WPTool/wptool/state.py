@@ -2,7 +2,8 @@
 
 Nothing is kept between requests: no project, no contact height, no overtravel, no die, no machine fact, no wafer
 (D9). A command that needs a value gets it as a parameter; a fact of the machine is read from the machine when it is
-needed (#408). A new field here is a change of design: ask on the ticket first (tests/test_state.py fails).
+needed (`wptool.facts`). The open connection itself and its lock are `wptool.connection.Connection`, which writes these
+two fields. A new field here is a change of design: ask on the ticket first (tests/test_state.py fails).
 """
 
 from __future__ import annotations

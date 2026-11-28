@@ -7,8 +7,9 @@
     wptool call   [--config FILE] [--mock] [--log-level LEVEL] <Command> [key=value ...]
 
 Exit codes: 0 a normal end (call: a Success reply); 2 a wrong command line, config or script file; 1 a failed step of
-run, an Error reply of call, or any other failure; 130 Ctrl+C while a command runs; 128 plus the signal number after
-SIGTERM, SIGHUP or SIGBREAK (#408).
+run, an Error reply of call, or any other failure; 130 Ctrl+C; 128 plus the signal number after SIGTERM (143), SIGHUP
+(129) or SIGBREAK (149, Windows). After Ctrl+C and the signals the modes run the Shutdown path first: the machine is
+given back and the connection closed (`wptool.signals`).
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from wptool.modes.describe import write_describe
 from wptool.modes.run import run_mode
 from wptool.modes.serve import serve
 from wptool.modes.shell import run_shell
+from wptool.signals import handle_signals
 
 log = logging.getLogger("wptool")
 
@@ -38,7 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"{TOOL_NAME} {__version__} (tool contract {CONTRACT_VERSION})")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--config", metavar="FILE", help="the config file (YAML or JSON): machine and log")
-    common.add_argument("--mock", action="store_true", help="the machine is a simulator (#408)")
+    common.add_argument("--mock", action="store_true", help="the machine is the simulator: no TCP connection, no lock")
     common.add_argument(
         "--log-level", metavar="LEVEL", type=str.upper, choices=LEVELS, default="INFO",
         help="the level of the log on the error output (the log file always gets DEBUG); default INFO",
@@ -73,7 +75,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         log.debug("%s %s: mode %s, config %s, mock %s", TOOL_NAME, __version__, args.mode, config.path, config.mock)
-        return _run_mode(args, config)
+        # SIGTERM, SIGHUP, SIGBREAK raise SystemExit(128 + number): the modes' finally blocks give the machine back.
+        with handle_signals():
+            return _run_mode(args, config)
     except KeyboardInterrupt:
         # Ctrl+C outside a command (the modes catch it inside): the modes ran the Shutdown path in their finally.
         return 130

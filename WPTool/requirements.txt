@@ -1,2 +1,4 @@
 # Run from WPTool/: pip resolves these paths against the current folder.
+# The shared package is installed by its path, never by its name (D18): the repository is public.
+-e ../Shared/svt-wp-core[sentio]
 -e .[dev]

@@ -5,7 +5,7 @@ The test-only commands (`_testing`) are registered only when the environment var
 
 import os
 
-from wptool.commands import frame
+from wptool.commands import connect, frame
 
 if os.environ.get("WPTOOL_TESTING") == "1":
     from wptool.commands import _testing
