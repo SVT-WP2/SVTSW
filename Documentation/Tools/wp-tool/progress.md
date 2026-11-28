@@ -41,6 +41,11 @@ What a ticket did differently from its text, and why. Later tickets build on wha
   the editable install, out; `-X utf8` because `label_to_coordinates` prints an emoji, and a Windows pipe is not
   UTF-8.
 - **#406: the workflow runs `python -m pytest -q -rs`**, so that the log names every skipped test and why.
+- **#406: the extra `dev` also pins `setuptools==80.9.0`**, and `tests/test_installed.py` builds the wheel with
+  `pip wheel --no-build-isolation`: an isolated build would fetch setuptools from PyPI, and the tests must need no
+  network.
+- **#406: the path filters of `shared-wp-core.yml` also have `ITS3TestAgent/run_list.csv` and
+  `ITS3TestAgent/run_list_er2b.csv`**, the run lists that `tests/test_die_maps.py` checks the maps against.
 
 ## Findings for later tickets
 
@@ -50,7 +55,7 @@ reuse.
 - **#406, the imports:** `from svt_wp_core.drivers.WPSentioProber import SentioProberImpl`,
   `from svt_wp_core.interfaces.WPProberInterface import AbstractProber`,
   `from svt_wp_core.utilities.WPDieMaps import label_to_coordinates, wafer_type, project_dies`. Install:
-  `pip install -e Shared/svt-wp-core[sentio]` (from the repository root).
+  `pip install -e "Shared/svt-wp-core[sentio]"` (from the repository root; the quotes are needed in zsh).
 - **#406, the driver closes its connection:** `SentioProberImpl.disconnect()` sends no command (socket `shutdown`,
   the library's `comm.disconnect()`, `close`) and is safe to call twice. It does not send `*LOCAL`: giving the machine
   back stays the engine's job (D16).
@@ -67,8 +72,9 @@ reuse.
 - **#406, a new copy of WPAgent** (step 2): copy it with the header and only the import prefix changed, add it to the
   lists of `tests/test_twins.py`, to the `exclude` of `Shared/svt-wp-core/.flake8`, and to the paths of
   `.github/workflows/shared-wp-core.yml`.
-- **#406, lint:** `Shared/svt-wp-core/.flake8` uses `ignore =` like `WPAgent/.flake8`, which replaces flake8's default
-  list: W504 (a line break after a binary operator) is reported in new code.
+- **#406, lint:** `Shared/svt-wp-core/.flake8` uses `ignore =` like `WPAgent/.flake8`, which replaces flake8's whole
+  default list. So new code also gets W504 (a line break after a binary operator), E226 (no spaces around an
+  arithmetic operator), E704, E121, E123, E126 and E24.
 - **#406, for the merge of the feature branch into `master`:** `ui.yml`, `db-agent-next.yml` and `ui-e2e.yml` change
   (their path filter is `Shared/svt-ts-types/**` now, not `Shared/**`), so the merge runs them once on `master`. They
   build the UI and the DB agent as they are and deploy the same versions to dev. Say so in that pull request.

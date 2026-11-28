@@ -6,11 +6,12 @@ folder, and runs the check in a child Python that sees only that folder and the 
 site-packages, so the editable install of the test run cannot answer instead). An editable install proves nothing
 about the data files, because it reads them from the source folder.
 
-pip builds the wheel in an isolated environment, so it fetches setuptools when its cache has none.
+pip builds the wheel with the setuptools of the extra dev (--no-build-isolation), so the test needs no network.
 
 Run (from Shared/svt-wp-core):  python -m pytest tests/test_installed.py -q
 """
 
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -51,14 +52,17 @@ print(json.dumps({
 
 @pytest.fixture(scope="module")
 def wheel(tmp_path_factory):
-    """The wheel, built from a copy of the sources, so that the build leaves nothing (build/, *.egg-info) in the folder."""
+    """The wheel, built from a copy of the sources, so that the build leaves nothing (build/, *.egg-info) in the folder.
+    The copy has tests/ too, so that the check that the tests are not in the wheel can fail."""
+    assert importlib.util.find_spec("setuptools") is not None, "setuptools is missing: install the extra dev"
     sources = tmp_path_factory.mktemp("sources")
     for name in ["pyproject.toml", "README.md"]:
         shutil.copy2(PACKAGE_ROOT / name, sources / name)
-    shutil.copytree(PACKAGE_ROOT / "svt_wp_core", sources / "svt_wp_core", ignore=shutil.ignore_patterns("__pycache__"))
+    for folder in ["svt_wp_core", "tests"]:
+        shutil.copytree(PACKAGE_ROOT / folder, sources / folder, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
 
     out = tmp_path_factory.mktemp("wheel")
-    run = subprocess.run([sys.executable, "-m", "pip", "wheel", ".", "--no-deps", "-w", str(out)],
+    run = subprocess.run([sys.executable, "-m", "pip", "wheel", ".", "--no-deps", "--no-build-isolation", "-w", str(out)],
                          cwd=sources, capture_output=True, text=True, timeout=600)
     assert run.returncode == 0, f"pip wheel failed:\n{run.stdout}\n{run.stderr}"
     wheels = list(out.glob("svt_wp_core-*.whl"))

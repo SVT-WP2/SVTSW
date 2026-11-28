@@ -1,7 +1,7 @@
 # Shared
 
-Code compiled into more than one deployable of SVTSW. Each top-level folder of the repository is a deployable;
-this one is not, it has no build of its own.
+Code used by more than one deployable of SVTSW. Each top-level folder of the repository is a deployable; this one is
+not: nothing here is deployed on its own.
 
 | Folder | Holds | Consumers |
 |---|---|---|

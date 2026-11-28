@@ -48,9 +48,9 @@ def _text(path):
     return path.read_bytes().decode("utf-8").replace("\r\n", "\n")
 
 
-def _diff(expected, actual, rel):
+def _diff(expected, actual, rel, note=""):
     return "".join(difflib.unified_diff(expected.splitlines(True), actual.splitlines(True),
-                                        f"WPAgent/{rel}", f"svt_wp_core/{rel} (header removed, prefix undone)"))
+                                        f"WPAgent/{rel}", f"svt_wp_core/{rel}{note}"))
 
 
 @pytest.mark.parametrize("rel", PYTHON_TWINS)
@@ -62,7 +62,7 @@ def test_python_copy_is_a_twin(rel):
     assert shared.startswith(header), f"svt_wp_core/{rel}: the first line must be the header {header!r}"
     shared = _PREFIX.sub(r"\1from ", shared[len(header):])
 
-    assert shared == wpagent, _diff(wpagent, shared, rel)
+    assert shared == wpagent, _diff(wpagent, shared, rel, " (header removed, prefix undone)")
 
 
 @pytest.mark.parametrize("rel", DATA_TWINS)
