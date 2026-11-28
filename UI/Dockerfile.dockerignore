@@ -3,6 +3,7 @@
 *
 !UI
 !Shared
+Shared/svt-wp-core
 
 # The former UI/.dockerignore, with the UI/ prefix of the root context.
 **/node_modules
