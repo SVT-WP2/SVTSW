@@ -1,0 +1,28 @@
+[build-system]
+# 64 is the first version with editable installs from pyproject.toml.
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "svt-wp-core"
+version = "0.1.0"
+description = "Code of WPAgent shared with the WP tool: the prober interface, the SENTIO driver and the die maps."
+readme = "README.md"
+requires-python = ">=3.12"
+# None: the die maps and the interface need only the standard library.
+dependencies = []
+
+[project.optional-dependencies]
+# The pins of WPAgent/requirements.txt. WPSentioProber imports the SENTIO library at module level.
+sentio = ["sentio-prober-control==24.4.0"]
+dev = ["pytest==9.0.3", "flake8==7.3.0"]
+
+[tool.setuptools.packages.find]
+include = ["svt_wp_core*"]
+
+[tool.setuptools.package-data]
+# The die maps, so that a normal (not editable) install has them too.
+svt_wp_core = ["configs/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
