@@ -37,7 +37,7 @@ column links to.
 | 9 | Mock DB agent | The same message on data in memory | `UI/apps/epic-db-agent/src/modules/db-agent/` | [RECIPES, section 1.4](../../UI/docs/RECIPES.md) |
 | 10 | BFF | The route: controller, service that sends the Kafka message, module. Its e2e spec | `UI/apps/epic-measure-api/src/modules/<domain>/`, `UI/apps/epic-measure-api/test-e2e/` | [RECIPES, section 1.5](../../UI/docs/RECIPES.md) |
 | 11 | Angular UI | The API client and its mock, then the store and the page | `UI/libs/epic-ui/api/main/src/<domain>s/`, `UI/libs/epic-ui/api/__mock__/src/<domain>s/` | [RECIPES, section 1.6](../../UI/docs/RECIPES.md) |
-| 12 | Other clients | If WPAgent or TestAgent sends the message: its client code. A client must send the headers `kafka_correlationId` and `kafka_replyTopic` | `WPAgent/services/WPDbKafkaClient.py`, `TestAgent/svt_test_agent/db_client.py` | [conventions](../Kafka/SvtKafkaConventions.md) |
+| 12 | Other clients | If WPAgent or TestAgent sends the message: its client code. A client must send the headers `kafka_correlationId` and `kafka_replyTopic`. It may send `svt_userId`, the user that the request is for | `WPAgent/services/WPDbKafkaClient.py`, `TestAgent/svt_test_agent/db_client.py` | [conventions](../Kafka/SvtKafkaConventions.md) |
 
 A message that only another agent uses (no UI) stops after step 7, plus step 12.
 

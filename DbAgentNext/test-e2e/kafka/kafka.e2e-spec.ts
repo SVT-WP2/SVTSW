@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
-import { Consumer, Kafka, logLevel, Producer } from 'kafkajs'
-import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
+import { Consumer, IHeaders, Kafka, logLevel, Producer } from 'kafkajs'
+import { SvtDbAgentKafka, SvtKafkaHeader } from 'svt-ts-types/kafka'
 
 import { SvtDbAgentNextReply } from '../../src/modules/dispatch'
 import { SVT_DB_AGENT_NEXT_HEARTBEAT_TOPIC, SVT_DB_AGENT_NEXT_KAFKA_CONSUMER_GROUP } from '../../src/modules/kafka'
@@ -12,12 +12,19 @@ import { TestSetup } from '../utils'
  * The only spec that needs a broker: set `SVT_DB_AGENT_E2E_KAFKA=1` with Kafka listening where `.env.test`
  * says (`Dev/docker-compose.kafka-local.yml`, `localhost:9085`). It plays a client (kafkajs, the headers of
  * `Documentation/Kafka/SvtKafkaConventions.md`) against the agent's real Kafka microservice: envelope,
- * correlation, a non-envelope value, a write, the skip of a backlog, and the heartbeat. Everything else about the messages is
+ * correlation, a non-envelope value, a write, the header `svt_userId`, the skip of a backlog, and the heartbeat.
+ * Everything else about the messages is
  * covered by the dispatcher-level specs, which need no broker.
  */
 const describeWithBroker = process.env.SVT_DB_AGENT_E2E_KAFKA === '1' ? describe : describe.skip
 
 const REPLY_TIMEOUT_MS = 15_000
+
+/** A reply record: the envelope of its value, and its headers. */
+type ReplyRecord = {
+    reply: SvtDbAgentNextReply
+    headers: IHeaders
+}
 
 const SMALL_MAP = JSON.stringify({
     Groups: { Group_0: [{ PosInGroup: 0, FamilyType: 'MOSAIX' }] },
@@ -39,7 +46,7 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
     const setup = new TestSetup({ kafka: true })
     const brokers = [`${process.env.SVT_DB_AGENT_KAFKA_SERVER}:${process.env.SVT_DB_AGENT_KAFKA_PORT}`]
     const kafka = new Kafka({ clientId: 'svt-db-agent-next-e2e', brokers, logLevel: logLevel.NOTHING })
-    const replies = new Map<string, (reply: SvtDbAgentNextReply) => void>()
+    const replies = new Map<string, (record: ReplyRecord) => void>()
     let producer: Producer
     let replyConsumer: Consumer
     /** Set when a reply to the request produced before the agent started arrives: it must not. */
@@ -57,7 +64,7 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
                 const resolve = correlationId ? replies.get(correlationId) : undefined
                 if (resolve && message.value) {
                     replies.delete(correlationId)
-                    resolve(JSON.parse(message.value.toString()) as SvtDbAgentNextReply)
+                    resolve({ reply: JSON.parse(message.value.toString()) as SvtDbAgentNextReply, headers: message.headers ?? {} })
                 }
                 return Promise.resolve()
             },
@@ -116,8 +123,11 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
         }
     }
 
-    /** Produces one request record the way the BFF and WPAgent do; returns its correlation id. */
-    async function produce(value: string, correlationId = randomUUID()): Promise<string> {
+    /**
+     * Produces one request record the way the BFF and WPAgent do, with the headers of `extraHeaders` too (for example
+     * `svt_userId`); returns its correlation id.
+     */
+    async function produce(value: string, correlationId = randomUUID(), extraHeaders: Record<string, string> = {}): Promise<string> {
         await producer.send({
             topic: SvtDbAgentKafka.TopicName.Request,
             messages: [{
@@ -126,24 +136,30 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
                     kafka_correlationId: correlationId,
                     kafka_replyTopic: SvtDbAgentKafka.TopicName.RequestReply,
                     kafka_replyPartition: '0',
+                    ...extraHeaders,
                 },
             }],
         })
         return correlationId
     }
 
-    /** Sends one request record and waits for the reply with its correlation id. */
-    async function request(value: string): Promise<SvtDbAgentNextReply> {
+    /** Sends one request record and waits for the reply record with its correlation id. */
+    async function exchange(value: string, extraHeaders: Record<string, string> = {}): Promise<ReplyRecord> {
         const correlationId = randomUUID()
-        const reply = new Promise<SvtDbAgentNextReply>((resolve, reject) => {
+        const reply = new Promise<ReplyRecord>((resolve, reject) => {
             replies.set(correlationId, resolve)
             setTimeout(() => {
                 replies.delete(correlationId)
                 reject(new Error(`No reply for ${correlationId} within ${REPLY_TIMEOUT_MS} ms`))
             }, REPLY_TIMEOUT_MS)
         })
-        await produce(value, correlationId)
+        await produce(value, correlationId, extraHeaders)
         return reply
+    }
+
+    /** Sends one request record and waits for the envelope of its reply. */
+    async function request(value: string): Promise<SvtDbAgentNextReply> {
+        return (await exchange(value)).reply
     }
 
     it('skips a request produced while no agent consumed the topic, as the C++ agent does', async () => {
@@ -184,6 +200,28 @@ describeWithBroker('Kafka transport (e2e, broker-backed)', () => {
 
         expect(created).toMatchObject({ status: 'Success', data: { entity: { id: 1, name: 'Kafka' } } })
         expect(listed).toMatchObject({ status: 'Success', data: { totalCount: 1 } })
+    })
+
+    it('reads the header svt_userId of a real record, and the reply does not repeat it', async () => {
+        const create = { login: 'kafka.user', name: 'Kafka User', role: 'User', passwordHash: 'test-hash-kafka' }
+        const created = await request(JSON.stringify({ type: 'CreateUser', data: { create } }))
+        const list = JSON.stringify({ type: 'GetAllEquipmentTypes' })
+
+        const known = await exchange(list, { [SvtKafkaHeader.UserId]: '1' })
+        const unknown = await exchange(list, { [SvtKafkaHeader.UserId]: '999' })
+        // NestJS's parser turns header text that is a JSON array into an array: it must not count as user 1.
+        const array = await exchange(list, { [SvtKafkaHeader.UserId]: '[1]' })
+
+        expect(created).toMatchObject({ status: 'Success', data: { entity: { id: 1, login: 'kafka.user' } } })
+        expect(known.reply).toMatchObject({ type: 'GetAllEquipmentTypesReply', status: 'Success' })
+        expect(known.headers).not.toHaveProperty(SvtKafkaHeader.UserId)
+        expect(unknown.reply).toMatchObject({ status: 'BadRequest', data: null, error: { code: -1, message: 'Unknown user: 999' } })
+        expect(unknown.headers).not.toHaveProperty(SvtKafkaHeader.UserId)
+        expect(array.reply).toMatchObject({
+            type: 'GetAllEquipmentTypesReply',
+            status: 'BadRequest',
+            error: { message: 'Header svt_userId must be a positive integer' },
+        })
     })
 
     it('produces a heartbeat record every two seconds: a string timestamp in epoch seconds with six decimals', async () => {

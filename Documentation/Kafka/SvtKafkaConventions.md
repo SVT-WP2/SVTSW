@@ -118,3 +118,31 @@ Error Reply Message: {
 ```
 
 
+## The user of a request
+
+A request can say which user it is for, in the message header `svt_userId`. The reasons for a header and not a key
+in the body are in the [decision record](../decisions/2026-11-users-and-roles.md#3-the-user-of-a-request-is-a-kafka-header).
+
+| | |
+|---|---|
+| Name | `svt_userId` (`SvtKafkaHeader.UserId` of `svt-ts-types/kafka`) |
+| Value | The `id` of a row of `SvtUser`, as a decimal string in UTF-8: `42`. No sign, no spaces, no leading zero. |
+| Where | On a request record, beside `kafka_correlationId`, `kafka_replyTopic` and `kafka_replyPartition`. |
+| Required | No. A request without the header is valid and is served as before. A header that is there must hold a valid value: a null value or an empty one is refused. To send no user, leave the header out. |
+| On a reply | Not set. A reply does not repeat the header. |
+| Meaning | The user that the request is for: the person who asked for the work. A service that works for a user passes the same value on in its own requests. |
+
+```
+Topic:   svt.db-agent.request
+Headers: kafka_correlationId  = 1647f30ff6d9acbea7ce5
+         kafka_replyTopic     = svt.db-agent.request.reply
+         kafka_replyPartition = 0
+         svt_userId           = 42
+Value:   { "type": "UpdateWaferLocation", "data": { "waferId": 7, "generalLocation": "CERN" } }
+```
+
+- The body stays `{ type, data }` for every message. A key `svt_userId` in the body has no meaning.
+- The role of the user is never a header and never a part of a request. A service that needs the role reads it
+  from the DB agent by the user id.
+- What the DB agent does with the header (the checks and their replies) is in
+  [DbAgentNext/docs/messages.md](../../DbAgentNext/docs/messages.md) §1.5.

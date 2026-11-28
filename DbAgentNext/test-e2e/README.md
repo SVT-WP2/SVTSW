@@ -18,7 +18,12 @@ npm run e2e                       # from DbAgentNext/ = vitest run --config vite
 | JSON wire format (dates as strings, `null` data on failure, key order) | yes: every request and reply takes a `JSON.parse(JSON.stringify(…))` round trip |
 | NestJS's Kafka transport itself (topics, headers, compression) | not by `send()`, which calls the dispatcher the Kafka controller delegates to. The broker-backed smoke spec `test-e2e/kafka` covers it; it runs only with `SVT_DB_AGENT_E2E_KAFKA=1` and a broker on 9085. |
 
-So `setup.send(message)` is to this agent what `request().post(url)` is to an HTTP API.
+So `setup.send(message)` is to this agent what `request().post(url)` is to an HTTP API. The headers of a record that
+the agent reads go in a second argument, as raw strings: `setup.send(message, { userId: '42' })` is a record with
+`svt_userId = 42`, and a spec can send a malformed value the same way (`user-header/user-header.e2e-spec.ts`);
+`{ userId: null }` is a header without text, as the controller hands on a null value or parsed JSON.
+`setup.handlerDefinition(type)` gives the definition that the dispatcher calls, so that a spec can spy on its
+`handle` and see the context of the request.
 
 ## Database
 
@@ -64,7 +69,8 @@ SVT_DB_AGENT_E2E_KAFKA=1 npx vitest run --config vitest.e2e.config.ts test-e2e/k
 ```
 
 It checks the reply envelope and its correlation id, an unknown type and a non-JSON value (both
-`BadRequest`, the agent keeps serving), a write through Kafka, and the heartbeat record. CI has no
+`BadRequest`, the agent keeps serving), a write through Kafka, a record with the header `svt_userId`, and the
+heartbeat record. CI has no
 broker, so the flag stays off there.
 
 ## Writing a spec for a new slice

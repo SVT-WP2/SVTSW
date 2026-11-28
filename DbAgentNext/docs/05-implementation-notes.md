@@ -71,6 +71,17 @@ src/
   `getHandlerDefinitions(): { type, replyType, handle }[]`. The dispatcher discovers every marked provider
   (`DiscoveryService`) in its module-init hook. A new domain only adds its class to `SvtDbAgentNextHandlersModule`.
   `main.ts` awaits `app.init()` before the consumer starts: a record consumed earlier would find no handler.
+- `handle(data, context)` gets a second argument, the context of the request (`SvtDbAgentNextRequestContext`):
+  `{ userId }`, the user of the header `svt_userId`, or `null` without the header. A handler that does not need it
+  takes one argument; TypeScript accepts a function with fewer parameters. No handler reads it yet.
+- `dispatch(message, headers?)` takes the text of the headers it reads (`SvtDbAgentNextRequestHeaders`,
+  `{ userId?: string | null }`: absent without the header, `null` for a header without text). After the envelope and
+  the type, and inside the MikroORM request context, it checks `svt_userId` (`null` is refused, then
+  `parseUserIdHeader`, then `SvtDbUsersRepository.exists`, one count by primary key) and answers a failure with
+  `BadRequest` ([messages.md §1.5](messages.md#15-the-user-of-a-request)). The lookup counts and loads no entity: a
+  user loaded there would stay in the identity map of the request, and `UpdateUser` would find a copy read before its
+  own lock. A test in `user-header.e2e-spec.ts` changes the row between the check and the handler and fails when the
+  lookup loads the user.
 - Request `data` is validated by name. `validateRequestData(Dto, data.create, 'data.create')` uses the app-local
   DTOs with `whitelist` and `forbidNonWhitelisted`, so unknown keys are rejected. The rest goes through the helpers
   of `svt-db-agent-next-request-validation.ts`:
@@ -80,9 +91,23 @@ src/
   - `optionalPager` (in the pager DTO's file): `limit 20`, `offset 0` when the pager is present.
 
   Enum values are checked against the live catalogue (`SvtDbEnumsService`), not against the generated snapshot.
-- The Kafka controller is one `@MessagePattern('svt.db-agent.request')` method. It hands the payload to the
-  dispatcher and logs type, status, duration and correlation id. It never throws: a dispatcher failure becomes an
-  `UnexpectedError` envelope.
+- The Kafka controller is one `@MessagePattern('svt.db-agent.request')` method. It reads the header `svt_userId`
+  of the record, hands the payload and that header to the dispatcher, and logs one line for each request:
+  `<type> → <status> in <n> ms user=<id> [<correlation id>]`.
+  - NestJS's `KafkaParser` decodes every header before the controller sees it: to a string; to a `Buffer` for a
+    value that starts with a zero byte; to `null` for a header without a value; and, for text that starts with `[` or
+    `{` and is valid JSON, to the parsed array or object. A header that a record has twice arrives as one string,
+    its values joined by a comma (`1,1`), which the check refuses.
+  - The controller (`headerText`) takes the text of a string or a `Buffer` (UTF-8). Any other value of a header that
+    is there becomes `null`, which the dispatcher refuses: it never unwraps an array and never turns an object into a
+    string (`String()` can throw on an object). The read cannot throw.
+  - The log line prints no value of the record raw: a raw value could hold a line break and forge a line. The type
+    is printed when it is 1 to 100 safe characters, otherwise `<invalid type>` (the reply keeps the type as it came);
+    the user is `-` without the header and `invalid` for a value that is no positive integer; the correlation id is
+    printed when it is 1 to 100 characters of `A-Z`, `a-z`, `0-9`, `.`, `_`, `:` and `-`, otherwise
+    `[invalid correlation id]`. The rules are in [04 §4](04-runtime-and-deployment.md#4-logging).
+  - A dispatcher failure becomes an `UnexpectedError` envelope; nothing is thrown out of the method.
+  - The unit spec builds its records with the real `KafkaParser`, so it sees what the controller sees.
 
 ## 4. The data layer
 

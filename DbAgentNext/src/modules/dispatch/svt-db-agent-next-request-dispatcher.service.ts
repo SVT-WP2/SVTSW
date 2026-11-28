@@ -1,10 +1,18 @@
 import { DriverException, MikroORM, RequestContext, UniqueConstraintViolationException } from '@mikro-orm/core'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { DiscoveryService } from '@nestjs/core'
-import { EpicKafkaReplyError, EpicKafkaReplyStatus } from 'svt-ts-types/kafka'
+import { EpicKafkaReplyError, EpicKafkaReplyStatus, SvtKafkaHeader } from 'svt-ts-types/kafka'
 
-import { SvtDbAgentNextHandlerDefinition, SvtDbAgentNextHandlers, SvtDbAgentNextMessageHandlers } from './svt-db-agent-next-handler.models'
+import { SvtDbUsersRepository } from '../../db/data'
+
+import {
+    SvtDbAgentNextHandlerDefinition,
+    SvtDbAgentNextHandlers,
+    SvtDbAgentNextMessageHandlers,
+    SvtDbAgentNextRequestContext,
+} from './svt-db-agent-next-handler.models'
 import { SVT_DB_AGENT_NEXT_UNIQUE_VIOLATION_MESSAGE, SvtDbAgentNextRequestError } from './svt-db-agent-next-request-error'
+import { parseUserIdHeader, SvtDbAgentNextRequestHeaders } from './svt-db-agent-next-request-headers'
 import { isRecord } from './svt-db-agent-next-request-validation'
 
 
@@ -40,6 +48,7 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
     constructor(
         private readonly discovery: DiscoveryService,
         private readonly orm: MikroORM,
+        private readonly users: SvtDbUsersRepository,
     ) {
     }
 
@@ -63,7 +72,12 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
         this.logger.log(`${this.handlers.size} message handlers registered`)
     }
 
-    async dispatch(message: unknown): Promise<SvtDbAgentNextReply> {
+    /**
+     * The checks in order (`docs/messages.md` §1.5): the envelope and the type, then the header `svt_userId` when it
+     * is present, then the handler, called with `(data, { userId })`. The header is read from the record only: a key
+     * `svt_userId` in the body has no meaning.
+     */
+    async dispatch(message: unknown, headers: SvtDbAgentNextRequestHeaders = {}): Promise<SvtDbAgentNextReply> {
         const request = isRecord(message) ? message : {}
         const type = typeof request['type'] === 'string' ? request['type'] : undefined
         if (!type) {
@@ -75,7 +89,10 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
         }
 
         try {
-            const data = await RequestContext.create(this.orm.em, () => definition.handle(request['data'] ?? {}))
+            const data = await RequestContext.create(this.orm.em, async () => {
+                const context: SvtDbAgentNextRequestContext = { userId: await this.userOf(headers.userId) }
+                return definition.handle(request['data'] ?? {}, context)
+            })
             return {
                 type: definition.replyType,
                 status: EpicKafkaReplyStatus.Success,
@@ -86,6 +103,25 @@ export class SvtDbAgentNextRequestDispatcher implements OnModuleInit {
         catch (error) {
             return this.failureFor(definition.replyType, type, error)
         }
+    }
+
+    /**
+     * The user of the header `svt_userId`: `null` without the header. A header without text (`null`), a value that is
+     * no positive integer, or the id of no user, is a `BadRequest`. A user that is switched off is accepted: work that
+     * started for that user still writes its rows. Roles are not checked (D12).
+     */
+    private async userOf(header: string | null | undefined): Promise<number | null> {
+        if (header === undefined) {
+            return null
+        }
+        const userId = header === null ? undefined : parseUserIdHeader(header)
+        if (userId === undefined) {
+            throw SvtDbAgentNextRequestError.badRequest(`Header ${SvtKafkaHeader.UserId} must be a positive integer`)
+        }
+        if (!(await this.users.exists(userId))) {
+            throw SvtDbAgentNextRequestError.badRequest(`Unknown user: ${userId}`)
+        }
+        return userId
     }
 
     private failureFor(replyType: string, requestType: string, error: unknown): SvtDbAgentNextReply {
