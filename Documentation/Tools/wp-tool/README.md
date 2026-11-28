@@ -24,8 +24,8 @@ For the why behind the design (who owns which state, how the tool fits under the
 
 | # | Ticket | Goes into | Needs |
 |---|---|---|---|
-| [#406](https://github.com/SVT-WP2/SVTSW/issues/406) | S1: Shared :: WP Core :: SENTIO Driver and Die Maps | `master` | the docs pull request |
-| [#407](https://github.com/SVT-WP2/SVTSW/issues/407) | T1: WP Tool :: CLI :: Package, Modes and Engine | `405-wp-tool` | docs, #406 |
+| [#406](https://github.com/SVT-WP2/SVTSW/issues/406) | S1: Shared :: WP Core :: SENTIO Driver and Die Maps | `405-wp-tool` | the docs branch |
+| [#407](https://github.com/SVT-WP2/SVTSW/issues/407) | T1: WP Tool :: CLI :: Package, Modes and Engine | `405-wp-tool` | #406 |
 | [#408](https://github.com/SVT-WP2/SVTSW/issues/408) | T2: WP Tool :: CLI :: Driver, Simulator and Connection | `405-wp-tool` | #407 |
 | [#409](https://github.com/SVT-WP2/SVTSW/issues/409) | T3: WP Tool :: CLI :: Project, Alignment, Die and Contact | `405-wp-tool` | #408 |
 | [#410](https://github.com/SVT-WP2/SVTSW/issues/410) | T4: WP Tool :: CLI :: XY Moves and Production Flows | `405-wp-tool` | #409 |
@@ -34,8 +34,9 @@ For the why behind the design (who owns which state, how the tool fits under the
 | [#413](https://github.com/SVT-WP2/SVTSW/issues/413) | T7: WP Tool :: CLI :: Settings and Heights | `405-wp-tool` before its merge, else `master` | #410 |
 | [#414](https://github.com/SVT-WP2/SVTSW/issues/414) | S2: WP :: Use the Shared Core | `master` | #406; only when the WPAgent owners agree |
 
-The feature branch `405-wp-tool` is cut from `master` once the docs pull request and #406 are merged. It goes into
-`master` in one pull request after #411 and the run on WPMIT (the plan, "Done when").
+The feature branch `405-wp-tool` is cut from `405-wp-tool-docs`, the branch of the docs pull request #415, so it has
+these pages. #406 is its first pull request. It goes into `master` in one pull request after #411 and the run on WPMIT
+(the plan, "Done when"), once the users-and-roles branches and #415 are in `master`.
 
 ## Branches and pull requests
 
