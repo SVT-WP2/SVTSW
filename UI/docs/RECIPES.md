@@ -157,15 +157,22 @@ export class Epic<Domain>sService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<T>(message: SvtDbAgentKafka<Domain>s.Message): Observable<T> {
-        return this.kafkaClient.send<T>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+        return sendEpicDbAgentRequest<T>(this.kafkaClient, message)
     }
 
 }
 ```
 
+Send through `sendEpicDbAgentRequest()` (`apps/epic-measure-api/src/common`), never `kafkaClient.send` directly. It
+adds the header `svt_userId` of the user of the request context in which it is called (no header without a
+user), and it delivers the reply in that context: a request sent while reacting to a reply (a `switchMap`)
+carries the user of the HTTP request that started the chain.
+
 Use `mapSvtDbAgentEntityReplyData()` instead for single-entity replies.
 
-Controller — thin, and every handler wrapped in `processKafkaReplyError`:
+Controller — thin, and every handler wrapped in `processKafkaReplyError`. Its routes need a session by default (the
+global `EpicAuthGuard`); mark a route `@EpicPublic()` only when it must answer without one, and add
+`@EpicRoles(EpicUserRole.X)` for a route of some roles only:
 
 ```ts
 @Controller('/<domain>s')

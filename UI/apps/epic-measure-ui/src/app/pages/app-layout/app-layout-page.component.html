@@ -4,7 +4,7 @@
         <epic-menu-light [items]="sidebarMenu"/>
     </epic-layout-light-section-sidebar>
 
-    @if (user()) {
+    @if (user(); as currentUser) {
         <epic-layout-light-section-sidebar-bottom>
             <button #menuTrigger="matMenuTrigger"
                     class="epic-menu-light-item"
@@ -18,9 +18,9 @@
             <mat-menu #menu="matMenu">
                 <div class="py-2 d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="epic-font-title">{{ user().name }}</div>
+                        <div class="epic-font-title">{{ currentUser.name }}</div>
                         <div class="epic-font-label epic-color-neutral-300">
-                            {{ user().role }}
+                            {{ currentUser.role }}
                         </div>
                     </div>
                     <div>

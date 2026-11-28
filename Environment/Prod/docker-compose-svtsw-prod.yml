@@ -44,6 +44,11 @@ services:
       # The UI reports its own version; keep it in lockstep with the image tag.
       APP_VERSION: "${SVT_UI_VERSION}"
       NODE_ENV: production
+      # The log-in of the UI (Environment/README.md, "Users and the log-in of the UI").
+      # The secret is required: compose refuses the whole file without it.
+      SVT_UI_AUTH_SECRET: "${SVT_UI_AUTH_SECRET:?missing - set it in .env, at least 32 random characters, see Environment/README.md}"
+      SVT_UI_AUTH_SESSION_HOURS: "${SVT_UI_AUTH_SESSION_HOURS:-12}"
+      SVT_UI_AUTH_COOKIE_SECURE: "${SVT_UI_AUTH_COOKIE_SECURE:-false}"
     logging:
       driver: "json-file"
       options:

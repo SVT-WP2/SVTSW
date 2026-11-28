@@ -19,7 +19,8 @@ One spec file: `npx vitest run --config apps/epic-measure-api/vitest.e2e.config.
 
 | Piece | How the suite runs it |
 |---|---|
-| **BFF** (`epic-measure-api`) | In-process, per spec file: `TestSetup.init()` boots the real `AppModule` with `configureEpicMeasureApiApp()` (the bootstrap `main.ts` uses), connects its Kafka clients and listens on a free port. Requests are plain `fetch` calls. |
+| **BFF** (`epic-measure-api`) | In-process, per spec file: `TestSetup.init()` boots the real `AppModule` with `configureEpicMeasureApiApp()` (the bootstrap `main.ts` uses), connects its Kafka clients as `main.ts` does (`connectEpicMeasureApiKafkaClients`) and listens on a free port. Requests are plain `fetch` calls. |
+| **The user** | The suite runs as a logged-in Admin, through the real `EpicAuthGuard`: `init()` empties the database, enters `E2E_ADMIN` (user 1, a random password per run) and logs it in with `POST /api/auth/login`; `get` / `post` / `patch` / `request` send its session cookie. `clearDatabase()` puts the user back as user 1, so the session stays valid. `setup.as(null)` sends no cookie, `setup.loginAs(role)` logs in as a new user of that role, `setup.createUser()` enters a user, `setup.fetch()` returns the raw response (cookies). |
 | **DB agent** (`DbAgentNext`) | A child process, once per run (`utils/global-setup.ts`): built with `npm run build` when `dist/main.js` is older than its sources, migrated with its own CLI when a migration is missing, started as `node dist/main.js` (NODE_ENV=test) and stopped gracefully over IPC (`agent/run-agent.cjs`). Its log: `UI/tmp/epic-measure-api-e2e/svt-db-agent-next.log`. |
 | **Kafka** | The dedicated broker of `../Dev/docker-compose.e2e.yml` on **9185**, never the dev broker (9085): see below. |
 | **PostgreSQL** | The Postgres of `../Dev/docker-compose.postgres.yml` on 5500, database **`svt_sw_db_api_e2e_test`** (created on first run). Every table is truncated before each test, so ids are `1, 2, …`. |
@@ -37,8 +38,9 @@ refuses to start while one of those groups has a member (it first waits up to 45
 
 ## Settings
 
-`apps/epic-measure-api/.env.test` (committed, no secrets): `KAFKA_BROKER`, `EPIC_API_E2E_DB_*` and
-`EPIC_API_E2E_AGENT_HTTP_PORT` (the agent's `GET /health`, the readiness probe; 7678). Personal overrides go into
+`apps/epic-measure-api/.env.test` (committed, no secrets): `KAFKA_BROKER`, `EPIC_API_E2E_DB_*`,
+`EPIC_API_E2E_AGENT_HTTP_PORT` (the agent's `GET /health`, the readiness probe; 7678) and `SVT_UI_AUTH_SECRET` (a
+value marked `DEVELOPMENT-ONLY-`). Personal overrides go into
 `apps/epic-measure-api/.env.test.local` (git-ignored), and variables set in the shell win over both. The harness
 refuses a database whose name does not end with `_e2e_test`. The agent gets the database and broker as `SVT_DB_AGENT_*`
 variables on top of its own `DbAgentNext/.env.test`, with its feature flags at their defaults (chip blocks off).
@@ -55,10 +57,12 @@ test-e2e/
 ├── agent/run-agent.cjs        # runs the agent's dist/main.js, turns IPC 'shutdown' into SIGTERM
 ├── utils/
 │   ├── global-setup.ts        # once per run: broker, database, agent build + migrations + process
-│   ├── test-setup.ts          # TestSetup: BFF lifecycle, get/post/patch, clearDatabase, query, count, today, routes
+│   ├── test-setup.ts          # TestSetup: BFF lifecycle, the e2e Admin, get/post/patch, as, loginAs, clearDatabase, query, routes
+│   ├── e2e-kafka.ts           # the broker checks of the global setup; E2eRequestTopicReader (records + headers)
 │   ├── e2e-expectations.ts    # expectError, expectStatus, expectPageQueryParams, repeatedQuery
 │   └── *-fixtures.ts          # payloads and seeds (wafer maps, WP machine, probe cards via SQL, SVT configs)
 ├── routes/                    # every route of the BFF and the spec that covers it
+├── auth/                      # log-in, log-out, me, the guard on every route, the header svt_userId, the user cache
 └── <domain>/<domain>.e2e-spec.ts
 ```
 

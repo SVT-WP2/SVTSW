@@ -4,7 +4,11 @@ import { join } from 'path'
 import { Controller, Get } from '@nestjs/common'
 import { HealthCheck, HealthCheckService, HealthIndicatorResult, HealthCheckResult } from '@nestjs/terminus'
 
+import { EpicPublic } from '../auth'
 
+
+/** Public: the Docker health check of the image calls it without a session. */
+@EpicPublic()
 @Controller('health')
 export class HealthController {
 

@@ -6,10 +6,11 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu'
 import { MatSlideToggle } from '@angular/material/slide-toggle'
 import { RouterOutlet } from '@angular/router'
 import { environment } from '@env/environment'
-import { EpicAuth, EpicAuthService } from 'epic-ui/common/auth'
-import { EpicIconComponent, EpicIconMatOutlinedPipe, EpicMenuLightModule } from 'epic-ui/common/components'
+import { EpicAuthService } from 'epic-ui/common/auth'
+import { EpicIconComponent, EpicIconMatOutlinedPipe, EpicMenuLightModule, EpicNotificationService } from 'epic-ui/common/components'
 import { EpicLayoutLightModule } from 'epic-ui/common/layout'
 import { BaseComponent } from 'epic-ui/utils'
+import { EpicAuthUser } from 'svt-ts-types'
 
 import { AppMock, AppSidebarNav } from '../../models'
 
@@ -34,7 +35,7 @@ import { AppMock, AppSidebarNav } from '../../models'
 export class AppLayoutPageComponent extends BaseComponent {
 
     readonly sidebarMenu = AppSidebarNav.getSidebarMenu()
-    readonly user: Signal<EpicAuth.UserInfo>
+    readonly user: Signal<EpicAuthUser | null>
 
     readonly disableMockDataControl = environment.useMockData
     readonly useMockData: boolean = this.disableMockDataControl ? true : AppMock.getMockSettings().useMockData
@@ -42,6 +43,7 @@ export class AppLayoutPageComponent extends BaseComponent {
 
     // DI
     private readonly epicAuthService = inject(EpicAuthService)
+    private readonly epicNotificationService = inject(EpicNotificationService)
 
     constructor() {
         super()
@@ -50,6 +52,16 @@ export class AppLayoutPageComponent extends BaseComponent {
 
     onLogout(): void {
         this.epicAuthService.logout()
+            .subscribe({
+                // Like every toast it closes by itself after 5 s, but a toast waits while the mouse is on it. At the
+                // usual place (bottom left) it would open under the mouse, over the Account button: bottom center.
+                error: (error: Error) => this.epicNotificationService.error(
+                    error.message,
+                    'Log-out',
+                    true,
+                    { positionClass: 'toast-bottom-center' },
+                ),
+            })
     }
 
     onUseMockDataChanged(useMockData: boolean): void {

@@ -1,13 +1,15 @@
+import { randomBytes } from 'node:crypto'
 import { AddressInfo } from 'node:net'
 
-import { DiscoveryModule, DiscoveryService } from '@nestjs/core'
 import { ClientKafka } from '@nestjs/microservices'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test } from '@nestjs/testing'
+import { hashEpicPassword } from 'epic/core'
 import { Pool, QueryResultRow } from 'pg'
-import { SvtDbAgentKafka } from 'svt-ts-types/kafka'
+import { EpicAuthUser, EpicUserRole } from 'svt-ts-types'
 
-import { AppModule, configureEpicMeasureApiApp } from '../../src/app'
+import { AppModule, configureEpicMeasureApiApp, connectEpicMeasureApiKafkaClients } from '../../src/app'
+import { EpicAuthLoginThrottleService, EpicAuthSvc, EpicAuthUserCacheService } from '../../src/modules/auth'
 
 import { loadEpicApiE2eConfig } from './e2e-config'
 import { toPgConfig, truncateE2eDatabase } from './e2e-database'
@@ -19,10 +21,33 @@ export type E2eResponse<T = any> = {
     body: T
 }
 
-/** How long a BFF Kafka client may take to get its reply partition after `connect()`. */
-const REPLY_ASSIGNMENT_TIMEOUT_MS = 30_000
+/** A logged-in user of the suite: the user and the `Cookie` header that its log-in set. */
+export type E2eSession = {
+    user: EpicAuthUser
+    cookie: string
+}
 
-const REPLY_TOPIC = SvtDbAgentKafka.TopicName.RequestReply
+/** A user that a spec created in the database, with its plain test password (made for this run). */
+export type E2eUser = EpicAuthUser & {
+    password: string
+    isActive: boolean
+}
+
+/** The requests of one session (`null`: no session at all). */
+export type E2eHttp = {
+    get<T = any>(path: string): Promise<E2eResponse<T>>
+    post<T = any>(path: string, body?: unknown): Promise<E2eResponse<T>>
+    patch<T = any>(path: string, body?: unknown): Promise<E2eResponse<T>>
+    request<T = any>(method: string, path: string, body?: unknown): Promise<E2eResponse<T>>
+}
+
+/** The Admin that the suite runs as: always user 1, put back by every `clearDatabase()`. */
+export const E2E_ADMIN = { id: 1, login: 'e2e-admin', name: 'E2E Admin', role: EpicUserRole.Admin } satisfies EpicAuthUser
+
+/** A test password: random for each run, so no password is written in the suite. */
+export function randomE2ePassword(): string {
+    return `e2e-${randomBytes(12).toString('base64url')}`
+}
 
 /**
  * Lifecycle, HTTP and database helpers for the e2e specs of epic-measure-api, after DbAgentNext's `TestSetup`:
@@ -40,6 +65,10 @@ const REPLY_TOPIC = SvtDbAgentKafka.TopicName.RequestReply
  * listens on a free port; its Kafka clients talk to the DbAgentNext child process the global setup started, over
  * the e2e broker. Every request therefore crosses the whole path: HTTP → BFF → Kafka → agent → PostgreSQL → back.
  * Not booted: the `epic-ui` Kafka microservice of `main.ts` (it only logs the topics) and Swagger.
+ *
+ * The suite runs as a logged-in Admin (`E2E_ADMIN`), through the real `EpicAuthGuard`: `init` empties the database,
+ * enters that user and logs it in, and `get` / `post` / `patch` / `request` send its session cookie. `as(null)` sends
+ * no cookie; `loginAs(role)` logs in as a new user with that role.
  */
 export class TestSetup {
 
@@ -47,13 +76,16 @@ export class TestSetup {
     private pool!: Pool
     private baseUrl!: string
     private kafkaClients: ClientKafka[] = []
+    private readonly adminPassword = randomE2ePassword()
+    private adminPasswordHash!: string
+    private adminSession!: E2eSession
 
     // ── Lifecycle ───────────────────────────────────────────────
 
     async init(): Promise<void> {
         const config = loadEpicApiE2eConfig()
 
-        const moduleFixture = await Test.createTestingModule({ imports: [AppModule, DiscoveryModule] }).compile()
+        const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile()
         this.app = moduleFixture.createNestApplication<NestExpressApplication>({ logger: ['error', 'warn'] })
         configureEpicMeasureApiApp(this.app)
         await this.app.init()
@@ -64,6 +96,10 @@ export class TestSetup {
         this.baseUrl = `http://127.0.0.1:${port}`
 
         this.pool = new Pool(toPgConfig(config.database))
+
+        this.adminPasswordHash = await hashEpicPassword(this.adminPassword)
+        await this.clearDatabase()
+        this.adminSession = await this.login(E2E_ADMIN.login, this.adminPassword)
     }
 
     async close(): Promise<void> {
@@ -75,6 +111,11 @@ export class TestSetup {
     }
 
     // ── HTTP ────────────────────────────────────────────────────
+
+    /** The session of `E2E_ADMIN`, which `get` / `post` / `patch` / `request` send. */
+    get admin(): E2eSession {
+        return this.adminSession
+    }
 
     get<T = any>(path: string): Promise<E2eResponse<T>> {
         return this.request<T>('GET', path)
@@ -88,15 +129,59 @@ export class TestSetup {
         return this.request<T>('PATCH', path, body)
     }
 
-    /** One request against the BFF; `path` includes the `/api` prefix and the query string. */
-    async request<T = any>(method: string, path: string, body?: unknown): Promise<E2eResponse<T>> {
-        const response = await fetch(`${this.baseUrl}${path}`, {
+    /** One request of `E2E_ADMIN` against the BFF; `path` includes the `/api` prefix and the query string. */
+    request<T = any>(method: string, path: string, body?: unknown): Promise<E2eResponse<T>> {
+        return this.as(this.adminSession).request<T>(method, path, body)
+    }
+
+    /** The requests of another session, or of none (`null`: no cookie). */
+    as(session: E2eSession | null): E2eHttp {
+        const request = async <T>(method: string, path: string, body?: unknown): Promise<E2eResponse<T>> => {
+            const response = await this.fetch(method, path, { body, cookie: session?.cookie })
+            const text = await response.text()
+            return { status: response.status, body: text ? JSON.parse(text) as T : undefined }
+        }
+        return {
+            get: (path) => request('GET', path),
+            post: (path, body) => request('POST', path, body),
+            patch: (path, body) => request('PATCH', path, body),
+            request,
+        }
+    }
+
+    /** The raw response, headers included (the cookies of the log-in). No cookie unless `cookie` is given. */
+    fetch(method: string, path: string, options: { body?: unknown; cookie?: string } = {}): Promise<Response> {
+        const headers: Record<string, string> = {}
+        if (options.body !== undefined) {
+            headers['content-type'] = 'application/json'
+        }
+        if (options.cookie !== undefined) {
+            headers['cookie'] = options.cookie
+        }
+        return fetch(`${this.baseUrl}${path}`, {
             method,
-            headers: body === undefined ? {} : { 'content-type': 'application/json' },
-            body: body === undefined ? undefined : JSON.stringify(body),
+            headers,
+            body: options.body === undefined ? undefined : JSON.stringify(options.body),
         })
+    }
+
+    /** Logs in with `POST /api/auth/login`; fails the test unless the BFF answers `200` with a session cookie. */
+    async login(login: string, password: string): Promise<E2eSession> {
+        const response = await this.fetch('POST', '/api/auth/login', { body: { login, password } })
         const text = await response.text()
-        return { status: response.status, body: text ? JSON.parse(text) as T : undefined }
+        const cookie = response.headers.getSetCookie()
+            .map((header) => header.split(';')[0])
+            .find((pair) => pair.startsWith(`${EpicAuthSvc.DEFAULT_SESSION_COOKIE_NAME}=`))
+        if (response.status !== 200 || !cookie) {
+            throw new Error(`The log-in of ${login} answered ${response.status} ${text}`)
+        }
+        return { user: JSON.parse(text) as EpicAuthUser, cookie }
+    }
+
+    /** A new user of that role (login `e2e-role-<role>`), logged in. Valid until the next `clearDatabase()`. */
+    async loginAs(role: EpicUserRole): Promise<E2eSession> {
+        const user = await this.createUser({ login: `e2e-role-${role.toLowerCase()}`, name: `E2E ${role}`, role })
+        return this.login(user.login, user.password)
     }
 
     /** Every HTTP route the application serves, as `METHOD /path` (`GET /api/wafers/:waferId`), sorted. */
@@ -110,9 +195,27 @@ export class TestSetup {
 
     // ── Database ────────────────────────────────────────────────
 
-    /** Empties every table of the agent's schema and restarts the identities (ids `1, 2, …` per test). */
-    clearDatabase(): Promise<void> {
-        return truncateE2eDatabase(this.pool)
+    /**
+     * Empties every table of the agent's schema and restarts the identities (ids `1, 2, …` per test), then enters
+     * `E2E_ADMIN` again as user 1, so its session stays valid. Also forgets what the BFF keeps in memory about users
+     * (the guard's cache, the counter of wrong log-ins): a new test starts from nothing.
+     */
+    async clearDatabase(): Promise<void> {
+        await truncateE2eDatabase(this.pool)
+        const id = await this.insertUser({ ...E2E_ADMIN, isActive: true }, this.adminPasswordHash)
+        if (id !== E2E_ADMIN.id) {
+            throw new Error(`The e2e Admin got id ${id}, not ${E2E_ADMIN.id}: the identity of SvtUser did not restart`)
+        }
+        this.app.get(EpicAuthUserCacheService).clear()
+        this.app.get(EpicAuthLoginThrottleService).clearAll()
+    }
+
+    /** A user entered in the database, as the first Admin of an installation is (no endpoint creates users yet). */
+    async createUser(user: { login: string; name: string; role: EpicUserRole; isActive?: boolean; password?: string }): Promise<E2eUser> {
+        const password = user.password ?? randomE2ePassword()
+        const isActive = user.isActive ?? true
+        const id = await this.insertUser({ ...user, isActive }, await hashEpicPassword(password))
+        return { id, login: user.login, name: user.name, role: user.role, isActive, password }
     }
 
     /** Raw SQL (`$1` placeholders) for seeding rows no endpoint creates, and for asserting what landed. */
@@ -135,24 +238,28 @@ export class TestSetup {
 
     // ── Internal ────────────────────────────────────────────────
 
+    private async insertUser(
+        user: { login: string; name: string; role: EpicUserRole; isActive: boolean },
+        passwordHash: string,
+    ): Promise<number> {
+        const [row] = await this.query<{ id: number }>(
+            'insert into main."SvtUser" (login, name, role, "passwordHash", "isActive") values ($1, $2, $3, $4, $5) returning id',
+            [user.login, user.name, user.role, passwordHash, user.isActive],
+        )
+        return row.id
+    }
+
     /**
-     * Connects every `ClientKafka` of the application (one per module) up front, so no test pays for a group join,
-     * and checks that each consumer holds its reply partition: a request from a client without one fails with
-     * `InvalidKafkaClientTopicException`, which would point at the broker or a leftover group member, not at the code.
+     * Connects every `ClientKafka` of the application as `main.ts` does (`connectEpicMeasureApiKafkaClients`), so no
+     * test pays for a group join, and fails unless each consumer holds its reply partition: a request from a client
+     * without one fails with `InvalidKafkaClientTopicException`, which would point at the broker or a leftover group
+     * member, not at the code.
      */
     private async connectKafkaClients(): Promise<void> {
-        const clients = this.app.get(DiscoveryService).getProviders()
-            .map((wrapper) => wrapper.instance as unknown)
-            .filter((instance): instance is ClientKafka => instance instanceof ClientKafka)
+        const { clients, unassigned } = await connectEpicMeasureApiKafkaClients(this.app)
         this.kafkaClients = clients
-        await Promise.all(clients.map((client) => client.connect()))
-
-        const deadline = Date.now() + REPLY_ASSIGNMENT_TIMEOUT_MS
-        while (!clients.every((client) => client.getConsumerAssignments()[REPLY_TOPIC] !== undefined)) {
-            if (Date.now() > deadline) {
-                throw new Error(`The BFF's Kafka clients got no partition of ${REPLY_TOPIC} within ${REPLY_ASSIGNMENT_TIMEOUT_MS / 1000} s`)
-            }
-            await new Promise((resolve) => setTimeout(resolve, 50))
+        if (unassigned > 0) {
+            throw new Error(`${unassigned} of the BFF's Kafka clients got no partition of the reply topic within 30 s`)
         }
     }
 

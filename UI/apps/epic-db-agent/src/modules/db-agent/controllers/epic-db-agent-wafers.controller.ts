@@ -15,6 +15,7 @@ import {
     SvtDbAgentKafkaSvtTestTemplates,
     SvtDbAgentKafkaSvtTestTypeConfigs,
     SvtDbAgentKafkaSvtTestTypes,
+    SvtDbAgentKafkaUsers,
     SvtDbAgentKafkaWafers,
     SvtDbAgentKafkaWaferTypes,
     SvtDbAgentKafkaWpMachines,
@@ -35,6 +36,7 @@ import {
     EpicDbAgentSvtTestTemplatesService,
     EpicDbAgentSvtTestTypeConfigsService,
     EpicDbAgentSvtTestTypesService,
+    EpicDbAgentUsersService,
     EpicDbAgentWafersService,
     EpicDbAgentWaferTypesService,
     EpicDbAgentWpMachinesService,
@@ -63,7 +65,8 @@ export class EpicDbAgentWafersController {
         private readonly epicDbAgentSvtTestTypeConfigsService: EpicDbAgentSvtTestTypeConfigsService,
         private readonly epicDbAgentSvtTestTemplatesService: EpicDbAgentSvtTestTemplatesService,
         private readonly epicDbAgentSvtTestsService: EpicDbAgentSvtTestsService,
-        private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService) {
+        private readonly epicDbAgentAsicsService: EpicDbAgentAsicsService,
+        private readonly epicDbAgentUsersService: EpicDbAgentUsersService) {
     }
 
     @MessagePattern(SvtDbAgentKafka.TopicName.Request)
@@ -76,7 +79,8 @@ export class EpicDbAgentWafersController {
             | SvtDbAgentKafkaSvtTestSetupConfigs.Message | SvtDbAgentKafkaSvtTestTypes.Message
             | SvtDbAgentKafkaSvtTestTypeConfigs.Message
             | SvtDbAgentKafkaSvtTestTemplates.Message
-            | SvtDbAgentKafkaSvtTests.Message) {
+            | SvtDbAgentKafkaSvtTests.Message
+            | SvtDbAgentKafkaUsers.Message) {
         switch (message.type) {
             // WAFERS
             case SvtDbAgentKafkaWafers.MessageType.GetAllWafers:
@@ -364,6 +368,23 @@ export class EpicDbAgentWafersController {
                     .pipe(
                         map(entity => JSON.stringify(new SvtDbAgentKafkaSvtTests.CreateSvtTestReplyMessage({ entity }))),
                     )
+
+            // USERS (the mock ignores the header svt_userId)
+            case SvtDbAgentKafkaUsers.MessageType.GetAllUsers:
+                return this.epicDbAgentUsersService.getAll(message.data)
+                    .pipe(map(reply => JSON.stringify(reply)))
+            case SvtDbAgentKafkaUsers.MessageType.GetUserCredentials:
+                return this.epicDbAgentUsersService.getCredentials(message.data.login)
+                    .pipe(map(reply => JSON.stringify(reply)))
+            case SvtDbAgentKafkaUsers.MessageType.CreateUser:
+                return this.epicDbAgentUsersService.create(message.data.create)
+                    .pipe(map(reply => JSON.stringify(reply)))
+            case SvtDbAgentKafkaUsers.MessageType.UpdateUser:
+                return this.epicDbAgentUsersService.update(message.data.id, message.data.update)
+                    .pipe(map(reply => JSON.stringify(reply)))
+            case SvtDbAgentKafkaUsers.MessageType.UpdateUserPassword:
+                return this.epicDbAgentUsersService.updatePassword(message.data.id, message.data.passwordHash)
+                    .pipe(map(reply => JSON.stringify(reply)))
 
             default:
                 throw new Error('Unknown request')

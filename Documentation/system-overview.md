@@ -103,7 +103,7 @@ Which DB agent messages each client sends:
 | Wafer maps | the files of `Configurations/WaferTypeMappings/`; the database has a copy for each wafer type | The copy is written one time, when the wafer type is created |
 | The live state of a prober (position of the chuck, open project) | WPAgent | Commands on `svt.wp-agent.request` |
 | The result data of a test | outside this repository | The database has only the path to the result |
-| Users | nobody | §6 |
+| Users and their roles | the DB agent (table `SvtUser`); the first Admin is entered by hand ([Environment/README.md](../Environment/README.md#the-first-admin)) | The BFF logs people in against it; the user management in the UI is ticket 396 |
 
 The decisions about the data (what a valid wafer is, when a chip can be created) are rules of the DB agent
 ([DbAgentNext/docs/domain-model.md](../DbAgentNext/docs/domain-model.md),
@@ -141,7 +141,10 @@ These are facts of the current system, not plans.
   in the TestAgent contract; the code sends progress to the reply topic.
 - **No service starts a test on the TestAgent.** The UI creates a test in the database; nothing sends the command
   to the TestAgent, so every test stays "Pending" ([Run an SVT test](flows/run-svt-test.md)).
-- **No authentication.** The BFF accepts every request. The login of the UI is a check in the browser.
+- **Only the UI uses the users.** The BFF needs a session on every route and sends the header `svt_userId` with
+  each request of a logged-in user. WPAgent and the test agents do not send the header, and WPAgent keeps its own
+  list of names ([decision](decisions/2026-11-users-and-roles.md)). The UI is served over plain HTTP, so a
+  password crosses the network unencrypted.
 - **SVTSupervisor does not exist yet.**
 - **The BFF has two endpoints that are not backed by the DB agent**: `/api/tcp` opens a TCP connection to an
   address that the caller gives, and the WebSocket `/ws/iv-mnt` is a stub.

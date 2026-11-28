@@ -10,6 +10,7 @@ import {
 } from 'svt-ts-types'
 import { SvtDbAgentKafka, SvtDbAgentKafkaSvtTestTemplates } from 'svt-ts-types/kafka'
 
+import { sendEpicDbAgentRequest } from '../../../common'
 import { EpicSvtTestSvc } from '../models'
 
 
@@ -53,8 +54,7 @@ export class EpicSvtTestTemplatesService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaSvtTestTemplates.Message): Observable<TReplyMessage> {
-        return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+        return sendEpicDbAgentRequest<TReplyMessage>(this.kafkaClient, message)
     }
 
 }

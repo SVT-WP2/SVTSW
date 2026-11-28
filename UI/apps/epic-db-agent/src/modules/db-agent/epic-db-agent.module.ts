@@ -17,6 +17,7 @@ import {
     EpicDbAgentSvtTestTemplatesService,
     EpicDbAgentSvtTestTypeConfigsService,
     EpicDbAgentSvtTestTypesService,
+    EpicDbAgentUsersService,
     EpicDbAgentWafersService,
     EpicDbAgentWaferTypesService,
     EpicDbAgentWpMachinesService,
@@ -66,6 +67,7 @@ import {
         EpicDbAgentSvtTestTypeConfigsService,
         EpicDbAgentSvtTestTemplatesService,
         EpicDbAgentSvtTestsService,
+        EpicDbAgentUsersService,
     ],
     controllers: [EpicDbAgentWafersController],
 })

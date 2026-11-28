@@ -5,6 +5,7 @@ import { Observable } from 'rxjs'
 import { EpicWafer, EpicWaferCreateRequest, EpicWaferLocationHistoryRecord, EpicWaferUpdateRequest } from 'svt-ts-types'
 import { EpicWaferLocationUpdate, SvtDbAgentKafka, SvtDbAgentKafkaWafers } from 'svt-ts-types/kafka'
 
+import { sendEpicDbAgentRequest } from '../../../common'
 import { EpicWafersSvc } from '../models'
 
 
@@ -71,8 +72,7 @@ export class EpicWafersService implements OnModuleInit {
     }
 
     protected sendMessageAndGetReply<TReplyMessage>(message: SvtDbAgentKafkaWafers.Message): Observable<TReplyMessage> {
-        return this.kafkaClient
-            .send<TReplyMessage>(SvtDbAgentKafka.TopicName.Request, JSON.stringify(message))
+        return sendEpicDbAgentRequest<TReplyMessage>(this.kafkaClient, message)
     }
 
 }

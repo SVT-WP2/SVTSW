@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { DiscoveryModule } from '@nestjs/core'
 
 import { EpicAsicsModule } from '../modules/asics'
+import { EpicAuthModule } from '../modules/auth'
 import { EpicChipBlocksModule } from '../modules/chip-blocks'
 import { EpicChipsModule } from '../modules/chips'
 import { EpicEnumsModule } from '../modules/enums'
@@ -20,6 +22,9 @@ import { EpicWpModule } from '../modules/wp'
             isGlobal: true,
             envFilePath: `.env.${process.env.NODE_ENV}`,
         }),
+        // connectEpicMeasureApiKafkaClients finds the Kafka clients through it.
+        DiscoveryModule,
+        EpicAuthModule,
         HealthModule,
         IvMntModule,
         EpicTcpModule,
