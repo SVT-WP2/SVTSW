@@ -273,7 +273,7 @@ describe('Auth (e2e)', () => {
             expect((await setup.as(null).get('/api/health/version')).status).toBe(200)
         })
 
-        it('lets every role use the routes: no route has a role rule yet (D13)', async () => {
+        it('lets every role use the routes without a role rule: only the user management has one (D13)', async () => {
             for (const role of Object.values(EpicUserRole)) {
                 const session = await setup.loginAs(role)
 

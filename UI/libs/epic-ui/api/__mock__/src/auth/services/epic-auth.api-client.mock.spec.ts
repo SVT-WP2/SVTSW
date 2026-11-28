@@ -43,6 +43,19 @@ describe('EpicAuthApiClientMock', () => {
         await expect(firstValueFrom(client.me())).rejects.toMatchObject({ status: 401 })
     })
 
+    it('changes the own password with any current password that is not empty; 400 for an empty one, 401 without a log-in', async () => {
+        await expect(firstValueFrom(client.changeOwnPassword({ currentPassword: 'x', newPassword: '12345678' })))
+            .rejects.toMatchObject({ status: 401 })
+        await firstValueFrom(client.login({ login: 'user', password: 'anything' }))
+
+        await expect(firstValueFrom(client.changeOwnPassword({ currentPassword: '', newPassword: '12345678' }))).rejects.toMatchObject({
+            status: 400,
+            error: { message: 'The current password is wrong.' },
+        })
+        await expect(firstValueFrom(client.changeOwnPassword({ currentPassword: 'anything', newPassword: '12345678' })))
+            .resolves.toBeUndefined()
+    })
+
     it('forgets the user at the log-out', async () => {
         await firstValueFrom(client.login({ login: 'admin', password: 'anything' }))
 

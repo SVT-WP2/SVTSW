@@ -11,6 +11,7 @@ import type {
     EpicSvtTestTemplatesListQuery,
     EpicSvtTestTypeConfigsListQuery,
     EpicSvtTestTypesListQuery,
+    EpicUserUpdateRequest,
     EpicWaferUpdateRequest,
     EpicWpMachineUpdateInstalledProbeCardRequest,
 } from 'svt-ts-types'
@@ -27,6 +28,7 @@ import type {
     EpicSvtTestTypeConfigsGetAllParamsDto,
     EpicSvtTestTypesGetAllParamsDto,
 } from '../svt-tests'
+import type { EpicUserUpdateRequestDto } from '../users'
 import type { EpicWaferUpdateRequestDto } from '../wafers'
 import type { EpicWpMachineUpdateInstalledProbeCardDto } from '../wp'
 
@@ -67,6 +69,7 @@ export type EpicApiContractChecks = EpicAllTrue<[
     EpicSameKeys<EpicSvtTestTemplatesGetAllParamsDto, EpicSvtTestTemplatesListQuery>,
     EpicSameKeys<EpicSvtTestTypeConfigsGetAllParamsDto, EpicSvtTestTypeConfigsListQuery>,
     EpicSameKeys<EpicSvtTestTypesGetAllParamsDto, EpicSvtTestTypesListQuery>,
+    EpicSameKeys<EpicUserUpdateRequestDto, EpicUserUpdateRequest>,
     EpicSameKeys<EpicWaferUpdateRequestDto, EpicWaferUpdateRequest>,
     EpicSameKeys<EpicWpMachineUpdateInstalledProbeCardDto, EpicWpMachineUpdateInstalledProbeCardRequest>,
 ]>

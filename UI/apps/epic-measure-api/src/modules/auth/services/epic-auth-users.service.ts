@@ -10,9 +10,10 @@ import { EpicAuthSvc } from '../models'
 
 
 /**
- * The two user messages that the log-in and the guard need. The user management (ticket 396) has its own service.
- * Both have a timeout (`EpicAuthSvc.DB_AGENT_TIMEOUT_MS`): a log-in or a guard read that gets no reply (the DB agent
- * is down, or skipped the request at its start) ends with `503`, so it can never hold the next log-in of its login.
+ * The user messages that the log-in, the guard and the change of the own password need. The user management of an
+ * Admin (ticket 396) has its own service (`modules/users`). Every request has a timeout
+ * (`EpicAuthSvc.DB_AGENT_TIMEOUT_MS`): a log-in or a guard read that gets no reply (the DB agent is down, or skipped
+ * the request at its start) ends with `503`, so it can never hold the next log-in of its login.
  */
 @Injectable()
 export class EpicAuthUsersService implements OnModuleInit {
@@ -42,6 +43,16 @@ export class EpicAuthUsersService implements OnModuleInit {
             .pipe(
                 mapEpicKafkaMessageData(),
                 map((data) => data.items.find((user) => user.id === id) ?? null),
+            )
+    }
+
+    /** Sets the password hash of a user (the own password: `POST /api/auth/password`). */
+    updatePasswordHash(id: number, passwordHash: string): Observable<EpicUser> {
+        const message = new SvtDbAgentKafkaUsers.UpdateUserPasswordMessage({ id, passwordHash })
+        return this.sendMessageAndGetReply<SvtDbAgentKafkaUsers.UpdateUserPasswordReplyMessage>(message)
+            .pipe(
+                mapEpicKafkaMessageData(),
+                map((data) => data.entity),
             )
     }
 

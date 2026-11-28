@@ -1,9 +1,16 @@
 import { randomBytes } from 'node:crypto'
 
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common'
 import { hashEpicPassword, verifyEpicPassword } from 'epic/core'
+import { processKafkaReplyError } from 'epic/entities'
 import { firstValueFrom } from 'rxjs'
-import { EpicAuthLoginRequest, EpicAuthUser, isEpicUserLogin, normalizeEpicUserLogin } from 'svt-ts-types'
+import {
+    EpicAuthLoginRequest,
+    EpicAuthPasswordChangeRequest,
+    EpicAuthUser,
+    isEpicUserLogin,
+    normalizeEpicUserLogin,
+} from 'svt-ts-types'
 
 import { EpicAuthSvc, toEpicAuthUser } from '../models'
 
@@ -61,6 +68,8 @@ export class EpicAuthService {
             throw new EpicAuthTooManyAttemptsException(Math.ceil(admission.retryAfterMs / 1000))
         }
         const { attempt } = admission
+        // A change of the user while this log-in runs (switched off, another role) wins over what it read.
+        const readMark = this.userCache.mark()
         try {
             // A login that breaks the login rule cannot exist: an unknown login, without asking the DB agent.
             const credentials = isEpicUserLogin(login) ? await firstValueFrom(this.users.getCredentials(login)) : null
@@ -72,11 +81,49 @@ export class EpicAuthService {
 
             attempt.succeed()
             const { passwordHash, ...user } = credentials
-            this.userCache.remember(user)
+            this.userCache.remember(user, readMark)
             return { user: toEpicAuthUser(user), token: this.session.sign(user.id) }
         }
         finally {
             // Every other end (no reply, an error) gives the slot back and counts nothing.
+            attempt.release()
+        }
+    }
+
+    /**
+     * The logged-in user changes the own password (ticket 396). The current password is checked like a log-in of the
+     * user's login, under the same limit: a wrong one is `400` (`CURRENT_PASSWORD_WRONG_MESSAGE`) and a counted
+     * failure, `429` while the login is locked or busy. Then only the hash of the new password is sent. The session
+     * stays valid.
+     */
+    async changePassword(user: EpicAuthUser, request: EpicAuthPasswordChangeRequest): Promise<void> {
+        // The slot is taken before the first await, as at the log-in.
+        const admission = this.throttle.start(user.login)
+        if ('retryAfterMs' in admission) {
+            throw new EpicAuthTooManyAttemptsException(Math.ceil(admission.retryAfterMs / 1000))
+        }
+        const { attempt } = admission
+        try {
+            const credentials = await firstValueFrom(this.users.getCredentials(user.login))
+            if (credentials?.id !== user.id || !credentials.isActive) {
+                // The guard has just read this user as active: only a change in between ends here. Not a guess.
+                throw new UnauthorizedException()
+            }
+            if (!await verifyEpicPassword(request.currentPassword, credentials.passwordHash)) {
+                attempt.fail()
+                throw new BadRequestException(EpicAuthSvc.CURRENT_PASSWORD_WRONG_MESSAGE)
+            }
+            attempt.succeed()
+
+            const passwordHash = await hashEpicPassword(request.newPassword)
+            try {
+                await processKafkaReplyError(() => firstValueFrom(this.users.updatePasswordHash(user.id, passwordHash)))
+            }
+            finally {
+                this.userCache.forget(user.id)
+            }
+        }
+        finally {
             attempt.release()
         }
     }

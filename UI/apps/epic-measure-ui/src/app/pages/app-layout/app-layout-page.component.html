@@ -42,6 +42,10 @@
                 </div>
 
                 <mat-divider/>
+                <button mat-menu-item (click)="onChangePassword()">
+                    <epic-icon [name]="'password' | epicIconMatOutlined" matMenuItemIcon/>
+                    Change password
+                </button>
                 <button mat-menu-item (click)="onLogout()">
                     <epic-icon name="logout" matMenuItemIcon/>
                     Logout

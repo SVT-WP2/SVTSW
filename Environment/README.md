@@ -365,7 +365,7 @@ a valid session of the user with the same id in prod.
 
 A new installation has no user, and nobody can log in to the UI: that is intended (no account with a known
 password exists). Enter the first Admin by hand, once per environment, after `svt-db-agent-next` has run its
-migrations (the table `SvtUser` exists). That Admin then creates the other users in the UI.
+migrations (the table `SvtUser` exists). That Admin then creates the other users in the UI ([below](#the-other-users)).
 
 1. Make the hash of the password, on any machine with a checkout of this repository and Node 22:
 
@@ -396,6 +396,24 @@ migrations (the table `SvtUser` exists). That Admin then creates the other users
      public git history.
 
 3. Open the UI and log in with that login and password; reload the page (you stay logged in) and log out.
+
+The first Admin is the only user entered by hand. Do not insert the others with SQL.
+
+### The other users
+
+An Admin creates the other users in the UI: **Administration → Users** (`/app/admin/users`). The tab is shown to
+an Admin only, and the BFF answers `403` to another role.
+
+- **New user**: login, name, role and a password of 8 to 128 characters. The login is stored in lower case and
+  cannot be changed later. Give the password to the person by a safe channel; they change it in the user menu
+  (**Account → Change password**).
+- **Edit**: the name and the role. **Set password**: a new password, without the current one (for a forgotten
+  password).
+- **Switch off**: the user cannot log in any more, and an open session ends with its next request. No user is
+  deleted; a user switched off stays in the list, and **Switch on** gives access back.
+- The installation keeps one active Admin: the DB agent refuses to switch off the last one or to give it another
+  role. An Admin cannot change the own role or switch themselves off on the page; give the role Admin to a second
+  user first.
 
 ### Roll-out order
 

@@ -1,0 +1,31 @@
+<epic-mat-dialog-header>
+    Edit user
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    @if (processingError?.length) {
+        <epic-alert severity="error" class="mb-3 d-block">
+            <epic-icon name="epic-info"/>
+            {{ processingError }}
+        </epic-alert>
+    }
+
+    <epic-user-update-form [formData]="formData"
+                           [formOptions]="formOptions"
+                           (formGroupReady$)="onFormGroupReady($event)"/>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [disabled]="isProcessing" mat-dialog-close mat-stroked-button>
+        Cancel
+    </button>
+
+    <button [disabled]="!formGroup?.valid || isProcessing"
+            color="primary"
+            mat-flat-button
+            (click)="formGroup && onSubmitBtnClicked(formGroup)">
+        {{ isProcessing ? 'Processing ...' : 'Save' }}
+    </button>
+</mat-dialog-actions>

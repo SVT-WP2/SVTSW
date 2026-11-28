@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { ServiceUnavailableException, UnauthorizedException } from '@nestjs/common'
 import { ClientKafka } from '@nestjs/microservices'
-import { verifyEpicPassword } from 'epic/core'
+import { hashEpicPassword, verifyEpicPassword } from 'epic/core'
 import { from, map, NEVER, of } from 'rxjs'
 import { EpicUserRole } from 'svt-ts-types'
 import { EpicKafkaReplyStatus, SvtDbAgentKafkaUsers } from 'svt-ts-types/kafka'
@@ -33,6 +33,9 @@ const JANE = {
     passwordHash: 'stored-hash-of-jane',
 }
 
+/** Jane as `GetAllUsers` answers her: no hash. */
+const { passwordHash: JANE_HASH, ...JANE_USER } = JANE
+
 const credentialsReply = () => of(new SvtDbAgentKafkaUsers.GetUserCredentialsReplyMessage({ entity: JANE }))
 
 const notFoundReply = () => of(new SvtDbAgentKafkaUsers.GetUserCredentialsReplyMessage(
@@ -51,6 +54,7 @@ describe('EpicAuthService', () => {
 
     let send: ReturnType<typeof vi.fn>
     let throttle: EpicAuthLoginThrottleService
+    let userCache: EpicAuthUserCacheService
     let auth: EpicAuthService
 
     beforeEach(() => {
@@ -58,8 +62,14 @@ describe('EpicAuthService', () => {
         send = vi.fn()
         const users = new EpicAuthUsersService({ send, subscribeToResponseOf: vi.fn() } as unknown as ClientKafka)
         throttle = new EpicAuthLoginThrottleService()
-        auth = new EpicAuthService(users, new EpicAuthSessionService(config), new EpicAuthUserCacheService(config, users), throttle)
+        userCache = new EpicAuthUserCacheService(config, users)
+        auth = new EpicAuthService(users, new EpicAuthSessionService(config), userCache, throttle)
     })
+
+    /** The types of the messages the service sent, in order. */
+    function sentTypes(): string[] {
+        return send.mock.calls.map(([, record]: [string, { value: string }]) => (JSON.parse(record.value) as { type: string }).type)
+    }
 
     afterEach(() => {
         vi.useRealTimers()
@@ -242,6 +252,149 @@ describe('EpicAuthService', () => {
         expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
         expect(await outcome(auth.login({ login: 'jane.doe', password: 'wrong' }))).toBe(401)
         expect(throttle.lockRemainingMs('jane.doe')).toBeGreaterThan(0)
+    })
+
+    it('does not keep the user in the cache when the user changes while the log-in runs', async () => {
+        const switchedOff = new SvtDbAgentKafkaUsers.GetAllUsersReplyMessage({ items: [{ ...JANE_USER, isActive: false }], totalCount: 1 })
+        send.mockReturnValueOnce(credentialsReply()).mockReturnValue(of(switchedOff))
+        // An Admin switches the user off while its password is checked (the PATCH drops the user from the cache).
+        verify.mockImplementation(() => {
+            userCache.forget(JANE.id)
+            return Promise.resolve(true)
+        })
+
+        await auth.login({ login: 'jane.doe', password: 'a-password' })
+
+        expect(await userCache.getActiveUser(JANE.id)).toBeNull()
+        expect(sentTypes()).toEqual([
+            SvtDbAgentKafkaUsers.MessageType.GetUserCredentials,
+            SvtDbAgentKafkaUsers.MessageType.GetAllUsers,
+        ])
+    })
+
+    it('keeps the user in the cache after a log-in without a change', async () => {
+        send.mockReturnValueOnce(credentialsReply())
+        verify.mockResolvedValue(true)
+
+        await auth.login({ login: 'jane.doe', password: 'a-password' })
+
+        expect(await userCache.getActiveUser(JANE.id)).toMatchObject({ id: JANE.id })
+        expect(sentTypes()).toEqual([SvtDbAgentKafkaUsers.MessageType.GetUserCredentials])
+    })
+
+    describe('changePassword', () => {
+
+        const session = { id: JANE.id, login: JANE.login, name: JANE.name, role: JANE.role }
+        const passwordReply = () => of(new SvtDbAgentKafkaUsers.UpdateUserPasswordReplyMessage({ entity: JANE_USER }))
+
+        /** The messages the service sent, parsed. */
+        function sentMessages(): { type: string; data: Record<string, unknown> }[] {
+            return send.mock.calls.map(([, record]: [string, { value: string }]) => JSON.parse(record.value))
+        }
+
+        it('checks the current password against the stored hash, then sends only the hash of the new one', async () => {
+            send.mockReturnValueOnce(credentialsReply()).mockReturnValueOnce(passwordReply())
+            verify.mockResolvedValue(true)
+            vi.mocked(hashEpicPassword).mockResolvedValueOnce('hash-of-the-new-password')
+
+            await auth.changePassword(session, { currentPassword: 'the-current-one', newPassword: 'the-new-one' })
+
+            expect(verify).toHaveBeenCalledWith('the-current-one', JANE_HASH)
+            expect(hashEpicPassword).toHaveBeenLastCalledWith('the-new-one')
+            expect(sentMessages()).toEqual([
+                { type: 'GetUserCredentials', data: { login: 'jane.doe' } },
+                { type: 'UpdateUserPassword', data: { id: 7, passwordHash: 'hash-of-the-new-password' } },
+            ])
+            expect(JSON.stringify(send.mock.calls)).not.toContain('the-new-one')
+            expect(JSON.stringify(send.mock.calls)).not.toContain('the-current-one')
+        })
+
+        it('lets five of six wrong current passwords sent together reach the check; 429 at once for the sixth', async () => {
+            let replyNow!: () => void
+            const lateReply = new Promise<void>((resolve) => {
+                replyNow = resolve
+            })
+            const reply = () => new SvtDbAgentKafkaUsers.GetUserCredentialsReplyMessage({ entity: JANE })
+            send.mockImplementation(() => from(lateReply).pipe(map(reply)))
+
+            const attempts = Array.from({ length: 6 }, (_, index) => outcome(auth.changePassword(session, {
+                currentPassword: `guess-${index}`,
+                newPassword: 'the-new-one',
+            })))
+            const settled: number[] = []
+            attempts.forEach((attempt) => void attempt.then((status) => settled.push(status)))
+            await new Promise((resolve) => setImmediate(resolve))
+
+            // Before any reply: one answered 429, five wait for the DB agent.
+            expect(settled).toEqual([429])
+            expect(send).toHaveBeenCalledTimes(5)
+            replyNow()
+            expect(await Promise.all(attempts)).toEqual([400, 400, 400, 400, 400, 429])
+            expect(sentTypes()).not.toContain(SvtDbAgentKafkaUsers.MessageType.UpdateUserPassword)
+            expect(throttle.lockRemainingMs('jane.doe')).toBeGreaterThan(0)
+        })
+
+        it('answers 400 to a wrong current password, sends no new hash, and counts a failed log-in of the login', async () => {
+            send.mockReturnValue(credentialsReply())
+
+            for (let attempt = 0; attempt < EpicAuthLoginThrottleService.MAX_FAILURES; attempt++) {
+                await expect(auth.changePassword(session, { currentPassword: 'wrong', newPassword: 'the-new-one' })).rejects.toMatchObject({
+                    status: 400,
+                    message: EpicAuthSvc.CURRENT_PASSWORD_WRONG_MESSAGE,
+                })
+            }
+
+            expect(sentMessages().map((message) => message.type)).not.toContain('UpdateUserPassword')
+            expect(throttle.lockRemainingMs('jane.doe')).toBeGreaterThan(0)
+        })
+
+        it('answers 429 while the login is locked, without asking the DB agent', async () => {
+            failBefore('jane.doe', EpicAuthLoginThrottleService.MAX_FAILURES)
+
+            await expect(auth.changePassword(session, { currentPassword: 'x', newPassword: 'the-new-one' }))
+                .rejects.toMatchObject({ status: 429 })
+
+            expect(send).not.toHaveBeenCalled()
+        })
+
+        it('clears the failures of the login when the current password is right', async () => {
+            failBefore('jane.doe', EpicAuthLoginThrottleService.MAX_FAILURES - 1)
+            send.mockReturnValueOnce(credentialsReply()).mockReturnValueOnce(passwordReply())
+            verify.mockResolvedValue(true)
+
+            await auth.changePassword(session, { currentPassword: 'right', newPassword: 'the-new-one' })
+            send.mockReturnValue(credentialsReply())
+            verify.mockResolvedValue(false)
+            await expect(auth.login({ login: 'jane.doe', password: 'wrong' })).rejects.toThrow(UnauthorizedException)
+
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+        })
+
+        it('answers 401 and counts nothing when the login now belongs to no active user of this id', async () => {
+            send.mockReturnValueOnce(of(new SvtDbAgentKafkaUsers.GetUserCredentialsReplyMessage({ entity: { ...JANE, isActive: false } })))
+                .mockReturnValueOnce(notFoundReply())
+                .mockReturnValueOnce(of(new SvtDbAgentKafkaUsers.GetUserCredentialsReplyMessage({ entity: { ...JANE, id: 8 } })))
+            verify.mockResolvedValue(true)
+
+            for (let attempt = 0; attempt < 3; attempt++) {
+                await expect(auth.changePassword(session, { currentPassword: 'right', newPassword: 'the-new-one' }))
+                    .rejects.toThrow(UnauthorizedException)
+            }
+
+            expect(sentMessages().map((message) => message.type)).not.toContain('UpdateUserPassword')
+            failBefore('jane.doe', EpicAuthLoginThrottleService.MAX_FAILURES - 1)
+            expect(throttle.lockRemainingMs('jane.doe')).toBe(0)
+        })
+
+        it('passes the 404 of the DB agent on as an HTTP error', async () => {
+            send.mockReturnValueOnce(credentialsReply()).mockReturnValueOnce(of(new SvtDbAgentKafkaUsers.UpdateUserPasswordReplyMessage(
+                undefined, EpicKafkaReplyStatus.NotFound, { message: 'No user with id 7' })))
+            verify.mockResolvedValue(true)
+
+            await expect(auth.changePassword(session, { currentPassword: 'right', newPassword: 'the-new-one' }))
+                .rejects.toMatchObject({ status: 404, message: 'No user with id 7' })
+        })
+
     })
 
 })

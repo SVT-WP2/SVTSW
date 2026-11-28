@@ -115,6 +115,16 @@ export class EpicAuthService {
             )
     }
 
+    /**
+     * Takes a new state of the logged-in user that another answer brought (the own row changed on the users page),
+     * so the layout shows the new name. A user of another id changes nothing.
+     */
+    updateCurrentUser(user: EpicAuthUser): void {
+        if (this.user?.id === user.id) {
+            this._user$.next({ id: user.id, login: user.login, name: user.name, role: user.role })
+        }
+    }
+
     /** Forgets the user without asking the BFF: the session has ended there (a `401`, see `epicAuthInterceptor`). */
     clearUser(): void {
         this.authorization$ = of({ isAuthorized: false })

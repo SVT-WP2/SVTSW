@@ -1,12 +1,15 @@
 import { NgModule } from '@angular/core'
 import { RouterModule, Routes } from '@angular/router'
-import { EpicEnumName } from 'svt-ts-types'
+import { EpicEnumName, EpicUserRole } from 'svt-ts-types'
+
+import { AppRoleGuard } from '../../app/guards'
 
 import {
     EpicAdminEnumsPageComponent,
     EpicAdminEnumValuesPageComponent,
     EpicAdminGeneralPageComponent,
     EpicAdminPageComponent,
+    EpicAdminUsersPageComponent,
     EpicAdminWpMachinesListPageComponent,
     EpicAdminWpProjectsListPageComponent,
     EpicEquipmentListPageComponent,
@@ -168,6 +171,12 @@ const routes: Routes = [
                 ],
             },
 
+            {
+                // An Admin only (ticket 396); the other tabs stay open to every logged-in user (D13).
+                path: 'users',
+                component: EpicAdminUsersPageComponent,
+                canActivate: [AppRoleGuard.canActivate(EpicUserRole.Admin)],
+            },
             {
                 path: 'tools',
                 component: EpicAdminToolsPageComponent,

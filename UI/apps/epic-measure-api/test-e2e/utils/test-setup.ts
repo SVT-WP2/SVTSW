@@ -149,20 +149,26 @@ export class TestSetup {
         }
     }
 
-    /** The raw response, headers included (the cookies of the log-in). No cookie unless `cookie` is given. */
-    fetch(method: string, path: string, options: { body?: unknown; cookie?: string } = {}): Promise<Response> {
+    /**
+     * The raw response, headers included (the cookies of the log-in). No cookie unless `cookie` is given. A `body` is
+     * sent as JSON; with `contentType`, a string `body` is sent as it is, with that type (a form a page could post).
+     */
+    fetch(method: string, path: string, options: { body?: unknown; cookie?: string; contentType?: string } = {}): Promise<Response> {
         const headers: Record<string, string> = {}
-        if (options.body !== undefined) {
+        if (options.contentType !== undefined) {
+            headers['content-type'] = options.contentType
+        }
+        else if (options.body !== undefined) {
             headers['content-type'] = 'application/json'
         }
         if (options.cookie !== undefined) {
             headers['cookie'] = options.cookie
         }
-        return fetch(`${this.baseUrl}${path}`, {
-            method,
-            headers,
-            body: options.body === undefined ? undefined : JSON.stringify(options.body),
-        })
+        let body: string | undefined
+        if (options.body !== undefined) {
+            body = options.contentType !== undefined ? String(options.body) : JSON.stringify(options.body)
+        }
+        return fetch(`${this.baseUrl}${path}`, { method, headers, body })
     }
 
     /** Logs in with `POST /api/auth/login`; fails the test unless the BFF answers `200` with a session cookie. */
@@ -210,7 +216,10 @@ export class TestSetup {
         this.app.get(EpicAuthLoginThrottleService).clearAll()
     }
 
-    /** A user entered in the database, as the first Admin of an installation is (no endpoint creates users yet). */
+    /**
+     * A user entered in the database, as the first Admin of an installation is. Quicker than `POST /api/users`, and
+     * it can enter a user that is switched off; `test-e2e/users` tests that route itself.
+     */
     async createUser(user: { login: string; name: string; role: EpicUserRole; isActive?: boolean; password?: string }): Promise<E2eUser> {
         const password = user.password ?? randomE2ePassword()
         const isActive = user.isActive ?? true

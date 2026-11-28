@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { EpicAuthApiClient } from 'epic-ui/api'
 import { defer, delay, Observable, of, throwError } from 'rxjs'
-import { EpicAuthLoginRequest, EpicAuthUser } from 'svt-ts-types'
+import { EpicAuthLoginRequest, EpicAuthPasswordChangeRequest, EpicAuthUser } from 'svt-ts-types'
 
 import { EpicAuthMock } from '../models'
 
@@ -42,6 +42,29 @@ export class EpicAuthApiClientMock extends EpicAuthApiClient {
         })
             .pipe(
                 delay(50),
+            )
+    }
+
+    /**
+     * As the mock log-in, any current password that is not empty is right; an empty one answers the `400` of the BFF.
+     * Nothing is stored: the mock users log in with any password anyway.
+     */
+    override changeOwnPassword(request: EpicAuthPasswordChangeRequest): Observable<void> {
+        return defer(() => {
+            if (!this.findUser(this.readLogin() ?? '')) {
+                return throwError(() => unauthorized('Unauthorized'))
+            }
+            if (!request.currentPassword) {
+                return throwError(() => new HttpErrorResponse({
+                    status: HttpStatusCode.BadRequest,
+                    statusText: 'Bad Request',
+                    error: { statusCode: HttpStatusCode.BadRequest, message: 'The current password is wrong.', error: 'Bad Request' },
+                }))
+            }
+            return of(undefined)
+        })
+            .pipe(
+                delay(300),
             )
     }
 

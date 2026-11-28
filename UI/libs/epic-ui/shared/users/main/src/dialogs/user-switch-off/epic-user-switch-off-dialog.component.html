@@ -1,0 +1,35 @@
+<epic-mat-dialog-header>
+    Switch off a user
+</epic-mat-dialog-header>
+
+<mat-dialog-content>
+
+    <p>
+        Switch off <strong>{{ dialogData.user.name }}</strong> ({{ dialogData.user.login }})?
+    </p>
+    <p class="mb-3">
+        The user cannot log in any more, and an open session ends with its next request. The user stays in the list,
+        and an Admin can switch it on again.
+    </p>
+
+    @if (processingError?.length) {
+        <epic-alert severity="error" class="d-block">
+            <epic-icon name="epic-info"/>
+            {{ processingError }}
+        </epic-alert>
+    }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [disabled]="isProcessing" mat-dialog-close mat-stroked-button>
+        Cancel
+    </button>
+
+    <button [disabled]="isProcessing"
+            color="warn"
+            mat-flat-button
+            (click)="onConfirmBtnClicked()">
+        {{ isProcessing ? 'Processing ...' : 'Switch off' }}
+    </button>
+</mat-dialog-actions>

@@ -20,6 +20,9 @@ export namespace EpicAuthSvc {
 
     export const TOO_MANY_ATTEMPTS_MESSAGE = 'Too many attempts. Try again in a minute.'
 
+    /** The `400` of `POST /api/auth/password` with a wrong current password; it counts as a failed log-in. */
+    export const CURRENT_PASSWORD_WRONG_MESSAGE = 'The current password is wrong.'
+
     /** How long the log-in and the guard wait for the DB agent: then `503` with `DB_AGENT_TIMEOUT_MESSAGE`. */
     export const DB_AGENT_TIMEOUT_MS = 10_000
 
