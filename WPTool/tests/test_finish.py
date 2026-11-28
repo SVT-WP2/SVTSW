@@ -71,6 +71,21 @@ def test_a_request_that_does_not_touch_the_machine_gets_no_call_at_all(engine, s
     assert sim.calls == []
 
 
+def test_after_the_give_back_the_machine_is_not_touched(engine, sim):
+    assert engine.execute(Request(command="_Query")).ok
+    assert engine.connection.machine.touched is False
+    engine.connection.give_back()
+    assert names(sim).count("local_mode") == 1
+
+
+def test_a_request_starts_untouched(engine, sim):
+    # A call outside a request (none in the tool today) does not make the next request give the machine back.
+    engine.connection.machine.get_chuck_position()
+    sim.calls.clear()
+    engine.execute(Request(command="_Echo"))
+    assert sim.calls == []
+
+
 def test_local_mode_calls_local_mode_once(engine, sim):
     reply = engine.execute(Request(command="LocalMode"))
     assert reply.data["message"] == "Local mode"
