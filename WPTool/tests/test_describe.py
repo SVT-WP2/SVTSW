@@ -19,16 +19,27 @@ def test_describe_without_the_test_commands(tmp_path):
     assert out["tool"] == "wp-tool"
     assert out["version"] == __version__ == "0.1.0"
     assert out["contract"] == "0.1"
-    assert [command["name"] for command in out["commands"]] == ["ShowStatus", "Shutdown"]
+    commands = {command["name"]: command for command in out["commands"]}
+    # name: (level, kind, changesMachine)
+    assert {name: (c["level"], c["kind"], c["changesMachine"]) for name, c in commands.items()} == {
+        "Disconnect": ("User", "MACHINE", True),
+        "Initialize": ("User", "MACHINE", True),
+        "LocalMode": ("Developer", "MACHINE", True),
+        "ShowStatus": ("User", "OFFLINE", False),
+        "Shutdown": ("User", "OFFLINE", False),
+    }
     for command in out["commands"]:
         assert list(command) == COMMAND_FIELDS
-        assert command["level"] == "User"
-        assert command["kind"] == "OFFLINE"
-        assert command["changesMachine"] is False
         assert command["movesChuck"] is False
         assert command["long"] is False
         assert command["context"] == []
-        assert command["params"] == {}
+    assert commands["Initialize"]["params"] == {
+        "address": {"type": "string", "required": False, "description": "where SENTIO listens; default: machine.address of the config"},
+        "port": {"type": "integer", "required": False, "minimum": 1, "maximum": 65535, "description": "default: machine.port of the config"},
+        "force": {"type": "boolean", "required": False, "default": False, "description": "connect again also when connected (a restarted machine)"},
+    }
+    for name in ("Disconnect", "LocalMode", "ShowStatus", "Shutdown"):
+        assert commands[name]["params"] == {}
     # No config, no log file.
     assert list(tmp_path.iterdir()) == []
 
@@ -41,7 +52,8 @@ def test_describe_ends_its_lines_with_newline_only(tmp_path):
 
 def test_the_test_commands_and_every_field_of_a_parameter():
     commands = {command["name"]: command for command in describe_tool()["commands"]}
-    assert {"_Echo", "_Fail", "_Print", "_Progress", "_Wait", "_Interrupt"} <= set(commands)
+    assert {"_Echo", "_Fail", "_Print", "_Progress", "_Wait", "_Interrupt", "_Move", "_Query"} <= set(commands)
+    assert commands["_Move"]["movesChuck"] is True
     params = commands["_Echo"]["params"]
     assert params["text"] == {"type": "string", "required": False}
     assert params["number"] == {"type": "number", "required": False, "description": "any number"}

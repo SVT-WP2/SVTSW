@@ -8,10 +8,16 @@ The path of a request:
 2. the keys `user` and `waferAgentName` are removed (D13);
 3. the parameters are checked and converted (`wptool.params.check_params`): 400;
 4. the checks before the command, in this fixed order, each a hook that raises `ToolError` to refuse:
-   the connection (503), then the checks that ask the machine, always last (#408: the separation check, D11);
+   the connection (503 for a command with `needs_connection`), then the checks that ask the machine, always last
+   (the separation check before a command with `moves_chuck`, D11: 409, or 503 without an answer);
 5. the command runs; a `ToolError` keeps its code, any other `Exception` is 500 with the traceback in the log;
-6. the hook `on_finish` (#408: `local_mode()` is the last call of a request that touched the machine, D16);
-7. the reply; 8. a `status` event after the reply when the connection changed; 9. one log line.
+6. the hook `on_finish`: `local_mode()` is the last call of a request that touched the machine, whatever its result,
+   when that connection is still open (D16);
+7. the reply; 8. a `status` event after the reply when the connection changed (none after the reply of Shutdown:
+   the end of the tool is the news); 9. one log line.
+
+The Shutdown path (`shutdown()`, the hook `on_shutdown`) closes the connection: `local_mode()`, then the close. It
+runs once, and it never raises (`Connection.close`).
 """
 
 from __future__ import annotations
@@ -23,7 +29,9 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 import wptool.commands  # noqa: F401  (registers every command)
+from wptool.checks.separation import check_separation
 from wptool.config import Config
+from wptool.connection import Connection
 from wptool.events import EventSink, RequestEvents
 from wptool.notintool import refusal
 from wptool.params import check_params, drop_ignored
@@ -57,10 +65,18 @@ def validate(request: Request) -> tuple[CommandSpec, dict]:
 
 
 class Engine:
-    def __init__(self, config: Config, events: EventSink | None = None, state: ToolState | None = None):
+    def __init__(
+        self,
+        config: Config,
+        events: EventSink | None = None,
+        state: ToolState | None = None,
+        connection: Connection | None = None,
+    ):
         self.config = config
         self.events = events if events is not None else EventSink()
         self.state = state if state is not None else ToolState()
+        # The one connection of the tool process; it writes the state (machine, proberConnected).
+        self.connection = connection if connection is not None else Connection(config, self.state)
         # True once the Shutdown path ran: the mode ends.
         self.stopped = False
 
@@ -74,6 +90,7 @@ class Engine:
         before = self.state.snapshot()
         if request.context is not None:
             log.debug("Request %s has a context; it is ignored (D10): %s", request.command, _json(request.context))
+        self.connection.start_request()
         reply = self._finish(request, self._run(request))
         log.info(
             "id=%s command=%s params=%s status=%s code=%s duration_ms=%d",
@@ -87,8 +104,9 @@ class Engine:
         if on_reply is not None:
             on_reply(reply)
         after = self.state.snapshot()
-        if after != before:
+        if after != before and not self.stopped:
             # Rule 3 of the tool contract: a status event comes only on a change (a connect or a disconnect).
+            # None after Shutdown: the tool ends, and that is the news (the example session of the tool contract).
             self.events.status(after)
         return reply
 
@@ -101,6 +119,7 @@ class Engine:
                 events=RequestEvents(self.events, request.id),
                 log=logging.getLogger(f"wptool.commands.{spec.name}"),
                 shutdown=self.shutdown,
+                connection=self.connection,
             )
             self._check_connection(spec, ctx)
             self._check_machine(spec, ctx)
@@ -122,22 +141,35 @@ class Engine:
                 return Reply.failure(request.id, FAILED, f"{request.command} failed: {_text(e)}")
         return reply
 
-    # The hooks. They are empty in #407; #408 fills them.
+    # The hooks.
 
     def _check_connection(self, spec: CommandSpec, ctx: CommandContext) -> None:
-        """Check 1: a command of kind MACHINE with `needs_connection` gets 503 without a connection (#408)."""
+        """Check 1: a command with `needs_connection` (every MACHINE command but Initialize and Disconnect) gets 503
+        without a connection."""
+        if spec.needs_connection:
+            self.connection.require()
 
     def _check_machine(self, spec: CommandSpec, ctx: CommandContext) -> None:
-        """Check 2, always last: the checks that ask the machine (#408: the separation check, D11)."""
+        """Check 2, always last: the checks that ask the machine. The separation check before every command that
+        moves or may move the chuck (D11). Nothing switches it off."""
+        if spec.moves_chuck:
+            check_separation(self.connection.require())
 
     def on_finish(self, request: Request, reply: Reply) -> None:
-        """After every request, whatever its result (#408: `local_mode()` when it touched the machine, D16)."""
+        """After every request, whatever its result: `local_mode()` when it touched the machine (D16)."""
+        self.connection.give_back()
 
     def on_shutdown(self) -> None:
-        """The Shutdown path (#408: gives the machine back and closes the connection)."""
+        """The Shutdown path: gives the machine back and closes the connection. Never raises."""
+        self.connection.close()
 
     def shutdown(self) -> None:
-        """The Shutdown path: the command Shutdown, the end of a mode, the end of the input, Ctrl+C. Runs once."""
+        """The Shutdown path: the command Shutdown, the end of a mode, the end of the input, Ctrl+C, a signal.
+
+        Runs once: `stopped` is set first, so that a second call (the `finally` of the mode after the command
+        Shutdown) does nothing. `on_shutdown` never raises, so the Shutdown reply is a Success and the mode ends with
+        exit code 0 (contract rule 6); an error of the machine is in the log.
+        """
         if self.stopped:
             return
         self.stopped = True

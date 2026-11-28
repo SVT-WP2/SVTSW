@@ -344,14 +344,24 @@ def test_a_default_reaches_the_command_converted(engine, temp_command):
 
 
 def test_machine_commands_change_the_machine_and_need_a_connection_by_default(temp_command):
-    @temp_command("_Move", kind=Kind.MACHINE, moves_chuck=True)
+    @temp_command("_TempMove", kind=Kind.MACHINE, moves_chuck=True)
     def move(ctx):
         return {}
 
-    @temp_command("_Query", kind=Kind.MACHINE, changes_machine=False)
+    @temp_command("_TempQuery", kind=Kind.MACHINE, changes_machine=False)
     def query(ctx):
         return {}
 
-    assert REGISTRY["_Move"].changes_machine and REGISTRY["_Move"].needs_connection and REGISTRY["_Move"].moves_chuck
-    assert not REGISTRY["_Query"].changes_machine and REGISTRY["_Query"].needs_connection
+    assert REGISTRY["_TempMove"].changes_machine and REGISTRY["_TempMove"].needs_connection and REGISTRY["_TempMove"].moves_chuck
+    assert not REGISTRY["_TempQuery"].changes_machine and REGISTRY["_TempQuery"].needs_connection
     assert not REGISTRY["ShowStatus"].changes_machine and not REGISTRY["ShowStatus"].needs_connection
+    assert not REGISTRY["Initialize"].needs_connection and not REGISTRY["Disconnect"].needs_connection
+    assert REGISTRY["LocalMode"].needs_connection
+
+
+def test_a_command_that_moves_the_chuck_needs_a_connection(temp_command):
+    # The separation check asks the machine: a move without a connection would skip it.
+    with pytest.raises(ValueError, match="needs a connection"):
+        @temp_command("_MoveWithout", kind=Kind.MACHINE, moves_chuck=True, needs_connection=False)
+        def move(ctx):
+            return {}

@@ -12,7 +12,7 @@ Where this page and a ticket differ, this page wins: it is newer.
 |---|---|---|---|
 | #406 S1 | in review | [#416](https://github.com/SVT-WP2/SVTSW/pull/416), into `405-wp-tool` | `Shared/svt-wp-core/` 0.1.0 |
 | #407 T1 | in review | [#417](https://github.com/SVT-WP2/SVTSW/pull/417), into `406-shared-wp-core` (then `405-wp-tool`) | `WPTool/` 0.1.0: the frame, `ShowStatus`, `Shutdown` |
-| #408 T2 | not started | | |
+| #408 T2 | in review | [#418](https://github.com/SVT-WP2/SVTSW/pull/418), into `407-wp-tool-engine` (then `405-wp-tool`) | `WPTool/`: the driver layer, the simulator, the connection and its lock, the separation check, `Initialize`, `Disconnect`, `LocalMode` |
 | #409 T3 | not started | | |
 | #410 T4 | not started | | |
 | #411 T5 | not started | | |
@@ -95,6 +95,62 @@ What a ticket did differently from its text, and why. Later tickets build on wha
   runs in every mode, also on Windows, where SIGINT cannot be sent to one process. The real SIGINT test of serve runs
   on Linux only.
 - **#407: the workflow runs `python -m pytest tests -q -rs`**, as #406 does, so that the log names the skipped test.
+- **#408: the branch is cut from `407-wp-tool-engine`, and its pull request goes into it**: #416 and #417 were not
+  merged yet.
+- **#408, the open point of #407 on the `status` event after `Shutdown`: there is none.** The engine sends no
+  `status` event once the Shutdown path has run (`Engine.execute`, `not self.stopped`): the tool ends, and that is
+  the news, as the example session of the tool contract shows. The end of the input, Ctrl+C and the signals send
+  none either. The state is still right (`proberConnected` false after the close). The tool contract says so now
+  (rule 6). Tests: `tests/test_connection.py` (`test_shutdown_calls_local_mode_before_disconnect...`,
+  `test_serve_shutdown_reply_is_the_last_line`).
+- **#408, the open point of #407 on the order in `Engine.shutdown()`: `stopped` stays first, and `on_shutdown` never
+  raises.** `Connection.close()` runs `local_mode()` and `disconnect()` each in its own `try` (the driver layer logs
+  the error), and releases the lock and sets the state in a `finally`; `disconnect()` runs also when a signal cuts
+  `local_mode()` off. So the Shutdown path runs once (a second run would send `*LOCAL` to a half-closed
+  connection), `Shutdown` always replies `Success`, and serve ends with exit code 0, as contract rule 6 asks; an
+  error of the machine is in the log. Test: `test_a_failing_close_does_not_fail_shutdown`.
+- **#408: the simulator is two classes**, `SimulatedProber` (the machine: its state, the tables, the test hooks) and
+  `SimulatorLink` (one connection, with its own `connected`; `is_alive()` and `disconnect()` are the link's). The
+  ticket has one object whose `connected` changes. But the new connection is opened before the old one is closed,
+  both on the same simulator: with one flag, the close of the old connection would make the new one dead. Every
+  link passes the other methods on to the simulator, and a call on a closed link raises `ConnectionError`, as on a
+  closed socket. One more hook: `drop_connections()` (a restarted machine: `is_alive()` gives false).
+- **#408: the lock is taken before the TCP check** (the ticket's order for the seam is "the TCP check, the lock"; it
+  also says that the lock comes "before it connects"). A second `wptool` on a held machine so sends nothing to it,
+  not even the TCP connect (`test_the_second_wptool_gets_409...` counts the connects of the listener). A failed TCP
+  check releases a lock that it took.
+- **#408, the lock file:** the letters of the address are made small (host names have no case, and Windows files
+  have none); the file is first opened without `O_CREAT` (Linux refuses `O_CREAT` on another user's file in a
+  sticky shared folder, fs.protected_regular), with `O_BINARY` on Windows (`os.open` is in text mode there, and
+  wrote the process id as `<pid>\r`), and made mode 0o666 with `fchmod` on Linux (the umask takes the write right of
+  the others away). A lock file that cannot be opened is 500 `Failed to connect: cannot open the lock file ...`.
+- **#408: `Initialize` of another machine than the connected one connects to it, also without `force`** (the old
+  connection is closed after the new one is open). The ticket's step 2 answers "Already connected to A" whatever
+  machine the request names; a script that asked for B would go on, on A.
+- **#408: the reply "Already connected" also has `machine` and `facts`** (the rule for every machine command).
+- **#408, the separation check asks the work area only when the hint alone does not decide** (today `In Default`).
+  The refusal of a hint that no pair allows (`In Contact`, `In Hover`) names no area: `The chuck is not in
+  separation (SENTIO reports 'In Contact'): run MoveChuckSeparation first`. With the area: `... reports 'In
+  Default' in Probing) ...`. An error of either query is the 503 of the position query (the work area comes from
+  SENTIO's `get_chuck_position_hint` too).
+- **#408, the facts:** a new name `dieIndex` for the index of the die; `errors` is always there (an empty list); a
+  number that is not finite (NaN) is `null` with a text in `errors`: a NaN in the data would make the reply 500.
+- **#408: the SENTIO driver gives `get_dies_number()` as `"n"`, not `"n,..."`**: the library's `map.get_num_dies`
+  returns an int, and the driver makes it a text (`str()`). The driver layer reads the first part of either, and
+  the simulator gives `"n"`.
+- **#408, `call` of a machine command:** a request that fails the parameter check gets its 400 without a connect;
+  the 400 of a missing machine has its own text (`No machine to connect to: give machine.address and machine.port
+  in the config, or start the tool with --mock`): call takes no parameters of `Initialize`.
+- **#408: the registry refuses `moves_chuck=True` with `needs_connection=False`**: the separation check asks the
+  machine, so such a move would have no check.
+- **#408, test-only additions:** the commands `_Move` (a `moves_chuck` XY move), `_Query` (a machine command that
+  reads the facts) and `_Pid` (the process id of the tool), and the variable `WPTOOL_TEST_LOCK_DIR` (read only with
+  `WPTOOL_TESTING=1`): the tests keep their lock files out of the folder of the computer. `_Pid`: on Windows, the
+  `python.exe` of a venv is a launcher, so `Popen.pid` is not the process id that the tool writes into the lock.
+- **#408, the simulator's own values** (the ticket leaves them open): the die (col, row) is at the home position
+  plus (col, row) times a pitch of (3000, 2500) µm, so a die move changes X and Y; `move_chuck_z` reports `In
+  Default` (a height without a name: the check refuses it in `Probing`); the overtravel gap is added at contact when
+  it is on; `move_error_um` is a pair (dx, dy) and is added to `move_chuck_xy` only.
 
 ## Findings for later tickets
 
@@ -141,7 +197,8 @@ reuse.
   catch it next to `KeyboardInterrupt` in those places, with the code 128 plus the signal number.
 - **#407, a question for #408: the `status` event after `Shutdown`.** The engine sends a `status` event after the reply
   whenever the snapshot changed. When `on_shutdown` closes the connection, a `status` event follows the reply of
-  `Shutdown`; the example session of the tool contract shows none. Decide which, and test it.
+  `Shutdown`; the example session of the tool contract shows none. Decide which, and test it. (#408: done, none;
+  see "Changes to the tickets".)
 - **#407, a failing `on_finish`:** a `Success` reply becomes 500 `<command> failed: <text>`; an `Error` reply keeps its
   error, and the failure of the finish is in the log (`Engine._finish`).
 - **#407, the registry checks at import time:** the function takes the context, then exactly the parameters of the
@@ -166,9 +223,52 @@ reuse.
 - **#407, for #408: the order in `Engine.shutdown()`.** It sets `stopped` before it calls `on_shutdown`, so a failing
   `on_shutdown` is not tried again (the `finally` of the mode calls `shutdown()` once more, and it does nothing), and
   serve still ends with exit code 0 after a 500 reply to `Shutdown`. #408 decides the order and the exit code when it
-  fills the hook, and tests them.
+  fills the hook, and tests them. (#408: done, `stopped` first and `on_shutdown` never raises; see "Changes to the
+  tickets".)
 - **#407, the log:** the handlers are on the root logger (the libraries of #408 reach the file too); the file gets
   DEBUG. One INFO line per request: `id=... command=... params=... status=... code=... duration_ms=...`.
+- **#408, for every machine command of #409, #410, #413:** talk to the machine only through `ctx.machine` (the
+  driver layer, `wptool/driver.py`; it raises 503 without a connection); end with `return finish(ctx, data)`
+  (`wptool/facts.py`: `data.facts`), except `GetChuckPosition` and `GetChuckXY` (single queries); never call
+  `local_mode()` (the engine does, `tests/test_finish.py` checks the source of `wptool/commands/`). `moves_chuck=True`
+  runs the separation check first. A driver method that the layer lacks is added to `Machine` in the same ticket,
+  and to `METHODS` and the simulator (`tests/test_sentio_driver_calls.py` and
+  `test_every_method_of_the_layer_is_documented` list every layer method with the library calls it makes).
+- **#408, for #409 (the contact check):** `MoveChuckContact` and `MoveChuckSeparation` have `moves_chuck=False` (they
+  move in Z on purpose). The contact check fits in `Engine._check_machine` next to the separation check, as its own
+  module in `wptool/checks/`: `machine.get_current_working_area() == "Probing"`, the value of the table
+  `AREA_AFTER["move_chuck_wide"]` of the simulator. The simulator's work areas and Z hints are the tables at the top of
+  `wptool/simulator.py`; the separation check's pairs are `ALLOWED` in `wptool/checks/separation.py`.
+- **#408, the simulator for #409 and #410:** `project`, `ptpa_enabled`, `aligned`, `contact_height`,
+  `overtravel_gap`, `overtravel_enabled`, `col`, `row` are plain attributes; `open_project` does not restore heights
+  (add it when a test needs it); `find_home` and `run_ptpa` shift (x, y, contact height) by `find_home_shift_um` and
+  `ptpa_shift_um`; `move_error_um` (dx, dy) is added to every `move_chuck_xy` (the precise move of #410);
+  `Machine.move_chuck_xy` gives the position after the move that SENTIO answers.
+- **#408, test fixtures** (`WPTool/tests/conftest.py`): `mock_engine` (an engine with `--mock`;
+  `mock_engine.connection.simulator`), `seam` (the test seam in this process), `listener` (a local TCP listener:
+  `listener.machine`, `listener.connections(at_least=1)`, which waits for the accept thread), `closed_port`,
+  `write_config(path, log_file, machine)`, `machine_calls(log_file)` and `calls_by_request(log_file)` (the machine
+  calls of a tool process from its DEBUG log, per request), `SEAM` (the variables for a tool process), the autouse
+  `lock_dir`. `tests/fake_sentio.py`: `install(monkeypatch)` puts a recording fake of the SENTIO library under the
+  shared driver and gives `(SentioProberImpl, library)`.
+- **#408, the shared package is imported only to connect to a real machine** (`wptool.connection.sentio_driver`).
+  The simulator reads the two map files from the package folder with `importlib.util.find_spec`, without importing
+  it (`test_the_tool_imports_the_shared_package_only_to_connect...`).
+- **#408, the copies print to stdout (the trap of #406):** `align_wafer` and `set_contact_height` of the SENTIO
+  driver print a line. In `serve` and `call` it goes to the error output (#407); in `shell` and `run` it is on the
+  output, among the lines for people.
+- **#408, for #411 (the client):** no `status` event after the reply of `Shutdown`; the exit codes 143 (SIGTERM), 129
+  (SIGHUP), 149 (SIGBREAK); on Windows the client ends the tool with `CTRL_BREAK_EVENT` to a tool started with
+  `CREATE_NEW_PROCESS_GROUP` (SIGTERM ends a Windows process at once, without the close). The tool ignores a second
+  signal while it closes. On Windows a signal reaches Python only between two steps of Python code: a command that
+  waits for SENTIO (or `time.sleep`) ends first.
+- **#408, a rare failure of a test of #407:** `tests/test_serve.py::test_ctrl_c_while_serve_waits_for_a_line_ends_with_130`
+  failed once with exit code 1 instead of 130 in about 170 full runs on Linux (Docker, a busy computer), never alone
+  (0 of 240 runs, on #408 and on #407). The cause is not found. If it fails again, read the error output of the tool
+  process (`ServeProcess.stderr`).
+- **#408, traps seen in the tests:** on Linux, `close()` of a listening socket does not wake an `accept()` that
+  another thread waits in, and the port still listens: `shutdown()` it first (the `Listener` of conftest). On
+  Windows, `os.open` without `O_BINARY` writes `\n` as `\r\n`.
 
 ## Facts
 
@@ -194,6 +294,29 @@ Learned from the SENTIO library, from WPMIT, or from the code, with where it com
 - PyYAML reads the step `- _Echo text: a` as a map and cannot read `- _Echo {"text": "a"}` at all: a step line with
   `: ` needs quotes (PyYAML 6.0.2).
 - PyYAML 6.0.2 has no wheel for Python 3.15; pip builds it from its source (seen on 28 Nov 2026). CI uses 3.12.
+- **The Z hints of `sentio-prober-control` 24.4.0** (`Sentio/Enumerations.py`, `ZPositionHint`): `Default` (0,
+  "unset or undefined", used internally), `Contact` (1), `Hover` (2), `Separation` (3), `Lift` (4), `Transfer` (5,
+  the chuck while the loader moves a wafer). The SENTIO driver gives them as `In Default`, `In Contact`, `In Hover`,
+  `In Separation`, `In Lift`, `In Transfer`. The separation check allows only `In Separation` and `In Default` in
+  `OffAxisCamera`; `Hover`, `Lift` and `Transfer` stay refused (`tests/test_sentio_driver_calls.py` reads the enum of
+  the installed library and fails on a new value). The driver turns any answer with "contact" into `In Contact` and
+  any with "sep" into `In Separation` (`WPSentioProber.py` lines 309-317); the library's `get_prop` gives a number
+  as a float (`In 3.0`). (Read in the library source, 28 Nov 2026.)
+- `status.get_prop("Z_Position_Hint", "chuck")` sends `status:get_prop Z_Position_Hint, chuck`; `local_mode()` sends
+  `*LOCAL` and reads no answer; `SentioProber.__init__` sends `*RCS 1` (library 24.4.0).
+- The library's `map.get_num_dies(DieNumber.Selected)` returns an int, `map.step_die(col, row, site)` a tuple of three
+  ints, `move_chuck_xy(ref, x, y)` the (x, y) after the move, `move_chuck_home()` (x, y), `move_chuck_contact()` and
+  `move_chuck_separation()` a height. `move_chuck_xy` with `ref=None` (the driver's value for an unknown reference)
+  fails with `AttributeError` before it sends anything (library 24.4.0).
+- The library has no wrapper of `map:die:get_current_index`; the driver sends it raw, and the format
+  "index,col,row" is how WPAgent reads it (`update_current_info`). To confirm on WPMIT.
+- The work areas of the library are `WorkArea.Probing` and `WorkArea.Offaxis` (sent as `Probing` and `Offaxis`); the
+  text `OffAxisCamera` of the position hint is not in the library (it comes from SENTIO; the driver's comment).
+- The library's TCP communicator is IPv4 only (`AF_INET`) and splits the address at `:` into exactly two parts, with
+  no timeout on the socket: an IPv6 address cannot be used with the SENTIO driver (`Failed to connect: Invalid
+  address format`). The lock file name handles `:` anyway (library 24.4.0, `Communication/CommunicatorTcpIp.py`).
+- `Initialize` of `192.0.2.10:35555` (never routed) answers 503 after 2.4 s, the 2 s of the TCP check (Windows, by
+  hand, 28 Nov 2026).
 
 ## The run on WPMIT
 

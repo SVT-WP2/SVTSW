@@ -19,6 +19,8 @@ from wptool.replies import ToolError
 
 if TYPE_CHECKING:
     from wptool.config import Config
+    from wptool.connection import Connection
+    from wptool.driver import Machine
     from wptool.events import RequestEvents
     from wptool.state import ToolState
 
@@ -71,13 +73,23 @@ class Param:
 
 @dataclass
 class CommandContext:
-    """What a command gets besides its parameters. #408 adds `machine` (the driver layer) and `connection`."""
+    """What a command gets besides its parameters.
+
+    A command talks to the machine only through `machine`, the driver layer (D19), and never calls `local_mode()`:
+    the engine gives the machine back after the request (D16).
+    """
 
     state: ToolState
     config: Config
     events: RequestEvents  # ctx.events.progress({...}) during a long command
     log: logging.Logger
     shutdown: Callable[[], None]  # the Shutdown path of the engine (gives the machine back); Shutdown calls it
+    connection: Connection  # open, close; Initialize and Disconnect use it
+
+    @property
+    def machine(self) -> Machine:
+        """The driver layer of the open connection, or `ToolError` 503 without one."""
+        return self.connection.require()
 
 
 @dataclass(frozen=True)
@@ -113,9 +125,11 @@ def command(
 
     - `changes_machine` (default: true for MACHINE): false for ShowStatus, GetChuckPosition, GetChuckXY and every
       offline command; true for every other machine command (the plan, "Commands"). Only for describe.
-    - `moves_chuck`: the command moves or may move the chuck ("moves" in the plan); #408 runs the separation check.
+    - `moves_chuck`: the command moves or may move the chuck ("moves" in the plan): the engine runs the separation
+      check before it (D11). It needs a connection.
     - `long`: the command can take more than 30 s.
-    - `needs_connection` (default: true for MACHINE): without a connection the engine refuses with 503 (#408).
+    - `needs_connection` (default: true for MACHINE): without a connection the engine refuses with 503. Initialize and
+      Disconnect set it to false.
     """
     params = dict(params or {})
     kind = Kind(kind)
@@ -130,6 +144,8 @@ def command(
             raise ValueError(f"Command {name} is registered twice")
         if kind is Kind.OFFLINE and (changes_machine or moves_chuck or needs_connection):
             raise ValueError(f"{name}: an offline command does not change or move the machine, nor need a connection")
+        if moves_chuck and not needs_connection:
+            raise ValueError(f"{name}: a command that moves the chuck needs a connection (the separation check asks the machine)")
         checked: dict[str, Param] = {}
         for param_name, param in params.items():
             if not isinstance(param, Param):

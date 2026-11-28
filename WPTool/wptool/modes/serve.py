@@ -3,11 +3,12 @@
 1. At start: the `ready` event, then a `status` event.
 2. A reader thread puts each line of the standard input on a queue; the main thread waits on the queue with a
    timeout of 0.5 s. On Windows a signal or Ctrl+C reaches Python only while the main thread runs Python code, not
-   while it blocks on a pipe (#408 installs the signal handlers).
+   while it blocks on a pipe (`wptool.signals` installs the handlers of SIGTERM, SIGHUP and SIGBREAK).
 3. Each line is one request: run through the engine, the reply line, then the `status` event if the state changed.
    A blank line is skipped without a reply; a UTF-8 BOM at the start of the input is dropped.
 4. Shutdown: its reply, then exit code 0. The end of the input: the Shutdown path without a reply, exit code 0.
-   Ctrl+C: the Shutdown path without a reply, exit code 130.
+   Ctrl+C: the Shutdown path without a reply, exit code 130. A signal: the same, exit code 128 + its number. No
+   `status` event after the reply of Shutdown.
 
 The standard output carries only these lines (contract rule 4): the caller points `sys.stdout` to the error output.
 """

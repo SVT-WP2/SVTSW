@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from wptool import TOOL_NAME, __version__
+from wptool.facts import read_machine_facts
 from wptool.registry import CommandContext, Kind, Level, command
 from wptool.state import connection_text
 
@@ -14,10 +15,19 @@ from wptool.state import connection_text
     level=Level.USER,
 )
 def show_status(ctx: CommandContext) -> dict:
-    # #408 adds the machine facts, read live from the machine when connected.
     snapshot = ctx.state.snapshot()
     message = f"Tool: {TOOL_NAME} {__version__} | Machine: {connection_text(snapshot)}"
-    return {"message": message, **snapshot}
+    data = {"message": message, **snapshot}
+    machine = ctx.connection.machine
+    if machine is not None:
+        # Connected: the machine facts, read live (about six queries; a host does not poll ShowStatus). A failed read
+        # is not an error of ShowStatus. The engine gives the machine back after it.
+        facts = read_machine_facts(machine)
+        data["facts"] = facts
+        chuck = facts["chuckZPositionState"] or "unknown"
+        area = facts["cameraMountPoint"] or "unknown"
+        data["message"] = f"{message} | Chuck: {chuck} | Area: {area}"
+    return data
 
 
 @command(
@@ -27,7 +37,7 @@ def show_status(ctx: CommandContext) -> dict:
     level=Level.USER,
 )
 def shutdown(ctx: CommandContext) -> dict:
-    # The Shutdown path runs before the reply (the hook on_shutdown; #408 gives the machine back in it).
-    # The mode ends after the reply.
+    # The Shutdown path runs before the reply: the engine's on_shutdown gives the machine back and closes the
+    # connection. The mode ends after the reply.
     ctx.shutdown()
     return {"message": "Shutting down"}

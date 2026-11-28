@@ -6,8 +6,11 @@ The options come before <Command>; every word after it is the command's. The she
 the words and removed the quotes, so each word is one `key=value` pair, split at its first `=`. A single word that
 starts with `{` is the JSON form of the parameters.
 
-#408 adds the machine part: for a machine command, call first connects as Initialize does with the config `machine`
-(or --mock), runs the command, and closes the connection, which gives the machine back.
+The machine part: for a command of kind MACHINE, call first connects as Initialize does, with the config `machine`
+(or --mock), without a reply of its own; then the command; then `connection.close()`, which gives the machine back.
+A failed connect (400 without a machine, 409 locked, 503 not reachable, 500) is the reply of the call, and the
+command does not run. A request that does not pass the parameter check does not connect. ShowStatus and the other
+offline commands get no connection. With --mock, every call starts a new simulator, in its start state.
 """
 
 from __future__ import annotations
@@ -15,11 +18,15 @@ from __future__ import annotations
 from typing import BinaryIO
 
 from wptool.config import Config
-from wptool.engine import Engine, Request, resolve
+from wptool.connection import MOCK_MACHINE
+from wptool.engine import Engine, Request, resolve, validate
 from wptool.events import ErrorOutputSink
 from wptool.lines import parse_words
 from wptool.modes import CTRL_C_TEXT, ProtocolWriter, log, print_error
-from wptool.replies import ToolError
+from wptool.registry import Kind
+from wptool.replies import Reply, ToolError, bad_request
+
+NO_MACHINE = "No machine to connect to: give machine.address and machine.port in the config, or start the tool with --mock"
 
 # They make no sense alone: call connects and disconnects by itself.
 CONNECTION_COMMANDS = ("Initialize", "Disconnect", "Shutdown")
@@ -34,18 +41,45 @@ def call(config: Config, command: str, words: list[str], stdout: BinaryIO) -> in
         print_error(f"{command}: call connects and disconnects by itself")
         return 2
     try:
-        resolve(command)
+        spec = resolve(command)
         params = parse_words(words)
     except ToolError as e:
         print_error(e.message)
         return 2
     writer = ProtocolWriter(stdout)
     engine = Engine(config, events=ErrorOutputSink())
+    request = Request(command=command, params=params)
     try:
-        reply = engine.execute(Request(command=command, params=params), on_reply=writer.write_reply)
+        if spec.kind is Kind.MACHINE and _valid(request):
+            try:
+                _connect(engine, config)
+            except ToolError as e:
+                log.warning("call %s: the connect failed: %s", command, e.message)
+                writer.write_reply(Reply.failure(None, e.code, e.message))
+                return 1
+        reply = engine.execute(request, on_reply=writer.write_reply)
         return 0 if reply.ok else 1
     except KeyboardInterrupt:
         log.warning(CTRL_C_TEXT)
         return 130
     finally:
         engine.shutdown()
+
+
+def _valid(request: Request) -> bool:
+    """The engine's checks without the machine: a request that fails them gets its 400 without a connect."""
+    try:
+        validate(request)
+        return True
+    except ToolError:
+        return False
+
+
+def _connect(engine: Engine, config: Config) -> None:
+    """Connect as Initialize does: the config machine, or the simulator with --mock. Raises `ToolError`."""
+    if config.mock:
+        engine.connection.open(MOCK_MACHINE)
+    elif config.machine is None:
+        raise bad_request(NO_MACHINE)
+    else:
+        engine.connection.open(config.machine)
