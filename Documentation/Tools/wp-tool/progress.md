@@ -52,16 +52,22 @@ What a ticket did differently from its text, and why. Later tickets build on wha
   400). The ticket says "a text that `int()` reads", but it accepts the float 3.0, which JSON and YAML give; the
   shell's text `count=3.0` must give the same reply (D10).
 - **#407: `number` always gives a float** (100 becomes 100.0), so that `x=100` in the shell and `"x": 100` in JSON
-  give the same reply.
+  give the same reply. A default too: the registry converts each default once and keeps the converted value in the
+  spec, so `Param("number", default=0)` reaches the command as 0.0 and `Param("string", default=5)` as "5", given or
+  not (`tests/test_engine.py`).
 - **#407: `describe` adds `"ignoreCase": true`** to a parameter whose choices are accepted in any case. A host that
-  checks the requests with the list must know that `west` is fine.
+  checks the requests with the list must know that `west` is fine. The tool contract says so now
+  (`Documentation/Tools/tool-contract.md`, "The command list").
 - **#407: in the config, `machine` needs both `address` and `port`** when it is given (the ticket makes the two keys
   optional, not their subkeys). A half machine is a typo that stops the tool at start. `null` for `machine` or `log`
   counts as not given.
 - **#407: a `.json` file is read as JSON, any other as YAML** (the config and the script files), and a UTF-8 BOM is
   dropped. YAML refuses the tabs that JSON files often have.
-- **#407: `errors="replace"` on all three standard streams**, not only on the error output: a byte that is not UTF-8
-  in the shell's input, or a lone surrogate in a value, must not end the tool.
+- **#407: `errors="replace"` on all three standard streams**, not only on the error output, and
+  `errors="backslashreplace"` on the log file: a byte that is not UTF-8 in the shell's input, or a lone surrogate in a
+  value (the JSON escape `\udc80`, or a byte of argv on Linux), must not end the tool nor drop a line of the log. The
+  protocol writer writes a lone surrogate as its JSON escape. Tested in tool processes with ASCII streams: the shell
+  (`tests/test_shell.py`), serve and call (`test_serve.py`, `test_call.py`, with the log file).
 - **#407: serve reads the raw standard input** (`sys.stdin.buffer.raw`) in its reader thread. A daemon thread that
   blocks inside the buffered stdin holds its lock, and Python can abort at exit ("could not acquire lock for
   <_io.BufferedReader name='<stdin>'> at interpreter shutdown"). The protocol writer writes the encoded bytes to
@@ -70,9 +76,21 @@ What a ticket did differently from its text, and why. Later tickets build on wha
 - **#407: `CommandContext` also has `shutdown`**, the Shutdown path of the engine (`Engine.shutdown()`), which the
   command `Shutdown` calls before its reply. The ticket lists `state`, `config`, `events` and `log`.
 - **#407: serve is strict about a request line.** An unknown field (`user` at the top level), an `id` that is not a
-  text, `NaN` or `Infinity`, or an empty line get the 400 reply without `id`. `params: null` counts as `{}`. A line may
-  end with `\r\n`.
-- **#407: a key given twice in a line of the shell or of `run` is 400**, not "the last one wins".
+  text, or `NaN` or `Infinity` get the 400 reply without `id`. `params: null` counts as `{}`. A line may end with
+  `\r\n`.
+- **#407: serve skips a blank line without a reply** (the review of #417). Rule 5 of the contract gives a 400 to "a
+  line that the tool cannot read"; a blank line is taken as no line at all, because a host that pairs the replies
+  by their order would take a reply to it for the reply of its next request. A UTF-8 BOM at the start of the input
+  is dropped.
+- **#407: a key given twice is 400 in every form of a request**, not "the last one wins": a `key=value` line, the
+  JSON form, a line of serve, the words of call (exit code 2 there, as for any word that cannot be read), and the
+  JSON and YAML files (script and config; exit code 2). `wptool/data.py` reads all JSON with an
+  `object_pairs_hook`, and YAML with a `SafeLoader` subclass that refuses a key twice in one map (a key that a merge
+  `<<` brings in may still be overridden). The text is the same everywhere: `The key '<key>' is given twice`.
+- **#407: the command name is taken as given in every mode** (the map form of a `run` step was stripped before):
+  only the splitting of a line at its spaces removes spaces.
+- **#407: `ToolState` is a `@dataclass(slots=True)`**: no attribute other than its two fields can be set, not even in
+  a method (`tests/test_state.py`).
 - **#407: one more test-only command, `_Interrupt`** (raises `KeyboardInterrupt`). It tests Ctrl+C while a command
   runs in every mode, also on Windows, where SIGINT cannot be sent to one process. The real SIGINT test of serve runs
   on Linux only.
@@ -136,12 +154,19 @@ reuse.
   `wptool.events.MemorySink`.
 - **#407, test fixtures** (`WPTool/tests/conftest.py`): `config` and `config_file` (the log in `tmp_path/log`, never in
   the working directory), `call_tool(*words)`, `serve_tool()` (a `ServeProcess` with `request`, `read`, `read_raw`,
-  `close_input`, `wait`, `rest`), `run_tool(args, cwd)`. `tests/test_engine.py` has `temp_command`, which registers a
-  command for one test, and `Recorder`, an engine that records its hooks. The tool processes of the tests start with
+  `close_input`, `wait`, `rest`), `run_tool(args, cwd)`, `temp_command` (registers a command for one test) and
+  `connect_commands` (`_Connect` and `_Disconnect`, which change the state as #408's commands will, for the `status`
+  lines and events). `tests/test_engine.py` has `Recorder`, an engine that records its hooks. The tool processes of the tests start with
   `PYTHONIOENCODING=ascii` and `PYTHONUTF8=0`: streams that are not UTF-8 on every system, so that a test with an
   emoji fails when the tool stops setting UTF-8 itself (Python 3.15 is in UTF-8 mode by default and would hide it).
 - **#407, for #411 (the client):** a request line has only `id`, `command`, `params` and `context`, and `id` is a text.
-  The reply of a line that cannot be read has no `id`.
+  The reply of a line that cannot be read has no `id`; a blank line gets no reply. The client must read the error
+  output of `serve` (or send it to a file): the tool writes one INFO log line per request there, and a full pipe
+  would block the tool.
+- **#407, for #408: the order in `Engine.shutdown()`.** It sets `stopped` before it calls `on_shutdown`, so a failing
+  `on_shutdown` is not tried again (the `finally` of the mode calls `shutdown()` once more, and it does nothing), and
+  serve still ends with exit code 0 after a 500 reply to `Shutdown`. #408 decides the order and the exit code when it
+  fills the hook, and tests them.
 - **#407, the log:** the handlers are on the root logger (the libraries of #408 reach the file too); the file gets
   DEBUG. One INFO line per request: `id=... command=... params=... status=... code=... duration_ms=...`.
 

@@ -35,14 +35,15 @@ ERROR 404: UserLogIn is not a command of the WP tool: users belong to the agent 
 
 ## Install
 
-Python 3.12, on Windows or on Linux. From the root of the repository:
+Python 3.12, on Windows or on Linux. From the root of the repository, with the virtual environment in `WPTool/.venv`
+(ignored by `WPTool/.gitignore`):
 
 Windows (PowerShell):
 
 ```powershell
+cd WPTool
 py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
-cd WPTool
 pip install -r requirements.txt
 wptool describe
 ```
@@ -50,9 +51,9 @@ wptool describe
 Linux:
 
 ```sh
+cd WPTool
 python3.12 -m venv .venv
 . .venv/bin/activate
-cd WPTool
 pip install -r requirements.txt
 wptool describe
 ```
@@ -110,6 +111,9 @@ MoveChuckXY {"x": 100, "y": -50, "position": "Relative"}
 - The values of `key=value` are text; the tool converts them by the type of the parameter (`count=3`,
   `enable=true`, `x=-50.5`). The JSON form gives typed values directly.
 - The keys `user` and `waferAgentName` are accepted and ignored (D13), so that existing scripts run unchanged.
+- A key given twice is an error (400), in every form: `key=value`, the JSON form, a line of `serve`, the words of
+  `call`, and the JSON and YAML script and config files. Nothing takes "the last one".
+- The command name is taken as it is written: only the splitting of a line at its spaces removes spaces.
 
 (`OpenProject` and `MoveChuckXY` above show the syntax: they come with #409 and #410.)
 
@@ -185,10 +189,15 @@ error output.
 
 - A request is `{"id", "command", "params", "context"}`; only `command` is required. `id` is a text that the tool
   copies into the reply and into the `progress` events of that request. `context` is accepted and ignored (D10).
+- A blank line is not a request: the tool skips it, with no reply, so that the replies stay in the order of the
+  requests. A UTF-8 BOM at the start of the input is dropped.
 - One request at a time: the host waits for the reply before it sends the next one.
 - A `status` event comes after a reply when the connection changed (a connect or a disconnect).
 - `Shutdown` replies and the tool ends with exit code 0. The end of the input does the same without a reply.
-  Ctrl+C gives the machine back and ends with exit code 130, without a reply.
+  Ctrl+C, while a command runs or while the tool waits for a request, gives the machine back and ends with exit code
+  130, without a reply.
+- A host must read the error output too (or send it to a file): the tool writes one log line per request there, and
+  a full pipe would block it.
 
 ### call
 
@@ -203,7 +212,8 @@ wptool call --config wptool.yaml ShowStatus
 - The standard output has only the reply line (the line of `serve` without `id`). Logs go to the error output and the
   log file; `progress` events of a long command go to the error output as JSON lines.
 - Exit code 0 for a `Success` reply, 1 for an `Error` reply (its code is in the line), 2 when the command is not a
-  command of the tool (nothing runs, the reason is on the error output).
+  command of the tool, or a word cannot be read (a word without `=`, a key given twice, JSON that is not valid).
+  Nothing runs for 2, and the reason is on the error output.
 - `Initialize`, `Disconnect` and `Shutdown` make no sense alone: call connects and disconnects by itself (#408).
 
 ## The config file
@@ -249,7 +259,7 @@ A failed command does not block the tool: the next command runs.
 | 0 | a normal end (for `call`: a `Success` reply) |
 | 1 | a failed step of `run`, an `Error` reply of `call`, or any other failure |
 | 2 | a wrong command line, config or script file |
-| 130 | Ctrl+C while a command runs |
+| 130 | Ctrl+C while a command runs, or between the commands (`serve` waiting for a request, `run` between two steps). In the shell, Ctrl+C at the prompt is `Shutdown` and ends with 0 |
 | 128 + the signal | SIGTERM (143), SIGHUP (129) or SIGBREAK (149) (#408) |
 
 ## Development
