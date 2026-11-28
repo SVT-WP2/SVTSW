@@ -74,6 +74,17 @@ the DB agent (`GetAll<…>`, `Create<…>`) and, after the slash, the type of
 | **Path to the result** | Where the result data of a test is. | | `SvtTestList.pathToResult` | field `pathToResult` |
 | **TestAgent** | The software that runs the tests on a setup. A service of this repository. | test agent | | |
 
+## Users
+
+| Term | Meaning | Also called | Database | Wire / TypeScript |
+|---|---|---|---|---|
+| **User** | A person who works with the system, with a login, a name, a role and a password hash. Never deleted: switched off. | account | `SvtUser` | `User` / `EpicUser` |
+| **Login** | The name a user types at log-in. Unique, in lower case. | user name | `SvtUser.login` | field `login` |
+| **Role** | The level of a user: `User` < `Expert` < `Developer` < `Admin`. A role has every right of the roles below it. | level | enum `userRole` | field `role` / `EpicUserRole` |
+| **Admin** | The highest role. An Admin manages the users. The installation always keeps one active Admin. | | value `Admin` of `userRole` | `EpicUserRole.Admin` |
+| **Password hash** | What the system keeps of a password: an opaque string that the BFF makes. Only the reply of `GetUserCredentials` carries it. | hash | `SvtUser.passwordHash` | field `passwordHash` / `EpicUserCredentials` (Kafka only) |
+| **Switched off** | A user that cannot log in. Its row stays. | inactive | `SvtUser.isActive` = `false` | field `isActive` |
+
 ## System
 
 | Term | Meaning | Also called |

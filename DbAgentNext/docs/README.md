@@ -13,7 +13,7 @@ Commands, layout, Docker and CI/CD are in [`../README.md`](../README.md).
 - The agent implements every message type of its contract
   ([`svt.db-agent-next.kafka.yaml`](../../Documentation/Kafka/svt.db-agent-next.kafka.yaml)), each with e2e tests
   ([`../test-e2e`](../test-e2e/README.md)).
-- The schema is that of [database-schema.md](database-schema.md), after five migrations.
+- The schema is that of [database-schema.md](database-schema.md), after six migrations.
 - The agent is the DB agent of every environment. The C++ agent `svt-db-agent` is frozen and gets no support
   ([decision](../../Documentation/decisions/2026-11-db-agent-next-only.md)).
 - **Dev** and **prod** run this agent: the compose files of both environments define it

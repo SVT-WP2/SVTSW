@@ -4,8 +4,9 @@
  *
  * GENERATED on 2026-11-08 from `Dev/db-example/2026-11-08-backup_prod.dump` (`pg_restore --schema-only`), plus the
  * two dev-only types migration 1 adds (`dutEntityName`, `testResultStatus`) and the `CANCELLED` value migration 2
- * adds to `testResultStatus`. Prod and dev agree on every other value. Regenerate rather than
- * edit: see `docs/02-database-migration.md` §4 (a regeneration must run after the migrations).
+ * adds to `testResultStatus`. Prod and dev agree on every other value. Checked again on 2026-11-26 against the
+ * catalogue of a database built by migrations 0 to 5: the same values, plus the type `userRole` of migration 5.
+ * Regenerate rather than edit: see `docs/02-database-migration.md` §4 (a regeneration must run after the migrations).
  *
  * These are the values the entities declare for `@Enum({ nativeEnumName })`; at runtime `GetAllEnums` reads the
  * live catalog (`pg_enum`), so a value added with `ALTER TYPE ... ADD VALUE` works without a rebuild.
@@ -25,6 +26,7 @@ export type SvtDbEnumName =
     | 'pcType'
     | 'pcVendor'
     | 'testResultStatus'
+    | 'userRole'
     | 'waferInMachineStatus'
     | 'waferMapOrientation'
     | 'waferTech'
@@ -68,6 +70,7 @@ export const SVT_DB_ENUM_VALUES: Record<SvtDbEnumName, string[]> = {
     pcType: ['Vertical', 'Cantilever'],
     pcVendor: ['MPI', 'Korea', 'Synergie', 'FormFactorPC'],
     testResultStatus: ['SUCCESS', 'PARTIAL_SUCCESS', 'FAILURE', 'ERROR', 'CANCELLED'],
+    userRole: ['User', 'Expert', 'Developer', 'Admin'],
     waferInMachineStatus: ['Loaded', 'Unloaded'],
     waferMapOrientation: ['North', 'South', 'East', 'West'],
     waferTech: ['TPSCo65', 'Xfab110'],

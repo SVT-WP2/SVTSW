@@ -5,6 +5,7 @@ import { Migration20261108000001_dev_layout_and_surrogate_ids } from './Migratio
 import { Migration20261108000002_test_result_status_cancelled } from './Migration20261108000002_test_result_status_cancelled'
 import { Migration20261108000003_june_layout_leftovers } from './Migration20261108000003_june_layout_leftovers'
 import { Migration20261112000004_config_body_text } from './Migration20261112000004_config_body_text'
+import { Migration20261126000005_users } from './Migration20261126000005_users'
 
 
 /**
@@ -19,4 +20,5 @@ export const SVT_DB_MIGRATIONS: MigrationObject[] = [
     { name: 'Migration20261108000002_test_result_status_cancelled', class: Migration20261108000002_test_result_status_cancelled },
     { name: 'Migration20261108000003_june_layout_leftovers', class: Migration20261108000003_june_layout_leftovers },
     { name: 'Migration20261112000004_config_body_text', class: Migration20261112000004_config_body_text },
+    { name: 'Migration20261126000005_users', class: Migration20261126000005_users },
 ]

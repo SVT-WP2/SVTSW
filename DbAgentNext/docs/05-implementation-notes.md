@@ -34,7 +34,7 @@ src/
 ├── db/                     the database layer, strict (src/db/tsconfig.json)
 │   ├── orm/                SvtDbOrmModule, runtime options, SvtDbNamingStrategy
 │   └── data/<domain>/      entities, repositories, enum values service, pure domain logic (wafer-maps/)
-└── migrations/             MikroORM migrations 0 to 4 and their list, applied at start (02)
+└── migrations/             MikroORM migrations 0 to 5 and their list, applied at start (02)
 ```
 
 | Topic | Rule | Why |
@@ -171,6 +171,12 @@ comparison with the C++ agent ([03](03-parity-testing.md)), and the C++ agent ge
   (`ProbeCardFamilyType`, `SvtTestListToEntityName`): `primary: true` on both properties plus `[PrimaryKeyProp]`.
 - **Line endings.** The repository stores LF; on Windows `core.autocrlf=true` checks out CRLF. Tools that read files
   byte by byte must tolerate `\r` (MSYS `grep` strips it silently, so it cannot be used to detect it).
+- **The debug log writes the values of each query.** With `SVT_DB_AGENT_LOGGER_TERM_VERBOSITY=DEBUG` (the default of
+  `.env.development`) MikroORM logs every query with its values. A transaction that writes a password hash therefore
+  runs with `loggerContext: { enabled: false }`, which turns the query log off for that transaction only (§7, Users).
+- **A transaction started by a test runs the agent's work inside it.** MikroORM keeps the transaction of
+  `em.transactional(cb)` in the async context, so a request sent from inside `cb` joins it as a savepoint. A test
+  that holds a lock while the agent works uses `em.begin()` and `em.commit()` instead (`users.e2e-spec.ts`).
 
 ## 7. Notes per domain
 
@@ -190,3 +196,28 @@ Implementation details behind the decisions of [01 §6](01-behaviour-decisions.m
   two `Get*ConfigBody` messages populate it.
 - **Tests.** The two device filters are resolved through the link tables first and intersected with `ids`; the
   rest is one `findAndCount`.
+- **Users** (`db/data/users/`).
+  - `passwordHash` is `lazy: true`: a list never loads it, and only `findCredentialsByLogin` populates it. The
+    handlers build every reply with `toWire`, which has no hash; only `GetUserCredentials` adds it.
+  - `create` and `updatePasswordHash` run their transaction without the query log (§6).
+  - `create` inserts with `ON CONFLICT DO NOTHING` (for every unique constraint: the login, and the key when a row
+    entered by hand with its own id has left the identity behind) and reads "no row back" as a duplicate: a
+    duplicate is no failing statement. PostgreSQL logs the text of a failing statement (`log_min_error_statement`
+    is `error` by default), and the text holds the hash (next point). The e2e spec proves it: the dispatcher's
+    warning `CreateUser: unique constraint violated`, which only a failing insert gives, is never written.
+  - **Known limit: the hash is in the text of the statement.** MikroORM puts the values into the SQL text that it
+    sends (it does not send them as parameters). A database server that logs statements (`log_statement`,
+    `log_min_duration_statement`, or a statement that fails for another reason) therefore logs the hash, also on
+    success. Keep the logging of statements off on the servers, and treat the server log as secret as the hashes.
+  - The last-Admin rule is the pure function `removesLastActiveAdmin` (unit spec next to it). `update` calls it in
+    the transaction of the write. The transaction first takes the advisory lock `SVT_DB_USERS_UPDATE_LOCK`
+    (`pg_advisory_xact_lock`, released at commit): the updates of users run one at a time, so two updates at the
+    same time cannot both remove an Admin of the last two. It is the only lock taken before the write, so two
+    updates cannot deadlock, and it locks no user row, so it does not wait for a row that another table locks
+    through a foreign key. Users are changed rarely, so one update at a time costs nothing.
+  - The DTOs trim `login` and `name` with `@Transform` before they validate them; `login` is also lower-cased.
+    `GetUserCredentials` normalises `data.login` with the same function. The check `SvtUser_login_check` refuses
+    any other login in the database.
+  - Lengths are checked with `HasTextLength` (`modules/dispatch`), which counts code points as a `varchar(n)`
+    column does. class-validator's `@Length` does not count U+FE0F and U+FE0E: a name of 100 characters and
+    U+FE0F would pass it and then fail in the column with `UnexpectedError`.

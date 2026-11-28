@@ -24,6 +24,8 @@ A rule that only one service enforces is marked with that service. **Open** mark
 | Wafer probing | wafer probe machine, probe card, wafer probe project | Which wafer is on which prober, with which probe card and which project |
 | Testing | equipment, test setup, test type, their configurations, test template, test | Which test ran on which device, on which setup, with which configuration and which result |
 
+The users of the installation are not an area of the laboratory; they are in [§5a](#5a-users).
+
 ```mermaid
 classDiagram
     direction LR
@@ -152,7 +154,8 @@ Wafers, chips and equipment have a **general location**: an institute or a room 
 - A move is its own operation. It appends a history row, and that row becomes the current location. A general
   update of the entity cannot change the location.
 - The history is append-only.
-- **Open:** the user name is a free text from the client. No service knows the users yet.
+- **Open:** the user name is a free text from the client. The users are in the database ([§5a](#5a-users)), and
+  no history row points to one yet.
 - Wafer probe machines also have a general location, without a history. Probe cards have a location from a
   separate enumeration, without a history.
 
@@ -235,11 +238,24 @@ stateDiagram-v2
   and `ERROR` are "Failed", `CANCELLED` is "Cancelled", no result is "Pending".
 - No service of this repository sends a start or a finish yet.
 
+## 5a. Users
+
+A **user** is a person who works with the system. The users are one list for the whole installation, in its
+database ([the decision record](decisions/2026-11-users-and-roles.md)).
+
+- A user has a **login** (the name typed at log-in, unique, in lower case), a **name** shown to people, a **role**,
+  and a password, of which the system keeps only a hash.
+- The **role** is one of four levels: `User` < `Expert` < `Developer` < `Admin`. A role has every right of the
+  roles below it. An Admin manages the users.
+- A user is never deleted. An Admin **switches it off**; a user that is switched off cannot log in.
+- The installation always keeps one active Admin. The DB agent refuses the change that would remove the last one.
+- The first Admin of an installation is entered by hand in the database.
+
 ## 6. Rules for all entities
 
 - **Identity.** Each entity has a numeric id from the database. The business keys are unique: the serial numbers
   of wafers, ASICs, chips, chip blocks, probe cards and machines; the names of wafer types, equipment types,
-  equipment, probe cards, machines, projects and test types. A test setup configuration has a name that is unique
+  equipment, probe cards, machines, projects and test types; the logins of users. A test setup configuration has a name that is unique
   in the whole system; a test type configuration has a name that is unique in its test type; a template is unique
   for its DUT type and configuration.
 - **No delete.** No service deletes an entity. A correction or a deletion is a manual action of a database expert.
@@ -251,5 +267,6 @@ stateDiagram-v2
 
 ## 7. Not in the model
 
-Users and permissions; the content of test results; the outcome of wafer probing; maintenance and cleaning
+Rights per page beyond the four roles; which user did something (no record points to a user yet); the content of
+test results; the outcome of wafer probing; maintenance and cleaning
 counters of probe cards; modules; an audit trail other than the location and machine histories; archival.
