@@ -262,6 +262,10 @@ reuse.
   `CREATE_NEW_PROCESS_GROUP` (SIGTERM ends a Windows process at once, without the close). The tool ignores a second
   signal while it closes. On Windows a signal reaches Python only between two steps of Python code: a command that
   waits for SENTIO (or `time.sleep`) ends first.
+- **#408, a rare failure of a test of #407:** `tests/test_serve.py::test_ctrl_c_while_serve_waits_for_a_line_ends_with_130`
+  failed once with exit code 1 instead of 130 in about 170 full runs on Linux (Docker, a busy computer), never alone
+  (0 of 240 runs, on #408 and on #407). The cause is not found. If it fails again, read the error output of the tool
+  process (`ServeProcess.stderr`).
 - **#408, traps seen in the tests:** on Linux, `close()` of a listening socket does not wake an `accept()` that
   another thread waits in, and the port still listens: `shutdown()` it first (the `Listener` of conftest). On
   Windows, `os.open` without `O_BINARY` writes `\n` as `\r\n`.
