@@ -1,0 +1,2 @@
+# Run from WPTool/: pip resolves these paths against the current folder.
+-e .[dev]

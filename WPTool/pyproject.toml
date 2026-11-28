@@ -1,0 +1,27 @@
+[build-system]
+# 64 is the first version with editable installs from pyproject.toml.
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "svt-wp-tool"
+version = "0.1.0"
+description = "The WP tool: a stateless command-line tool for the wafer prober (phase 1 of the plan #405)."
+readme = "README.md"
+requires-python = ">=3.12"
+# The pin of WPAgent/requirements.txt. The shared package is not listed here: requirements.txt installs it by its
+# path (#408, D18), never by its name.
+dependencies = ["PyYAML==6.0.2"]
+
+[project.optional-dependencies]
+# The pins of WPAgent/requirements.txt.
+dev = ["pytest==9.0.3", "flake8==7.3.0"]
+
+[project.scripts]
+wptool = "wptool.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["wptool*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

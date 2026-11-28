@@ -1,0 +1,50 @@
+name: WP Tool
+
+# CI of the WP tool, WPTool/ (#405, #407): lint, tests and the console script on Linux and Windows.
+# Nothing is built or deployed: the tool runs on the bench and next to the test scripts.
+# #408 adds Shared/svt-wp-core/** to the path filters, when the tool installs the shared package.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'WPTool/**'
+      - '.github/workflows/wp-tool.yml'
+  pull_request:
+    paths:
+      - 'WPTool/**'
+      - '.github/workflows/wp-tool.yml'
+
+concurrency:
+  # The group name is shared by all the workflows of the repository: it must be unique to this one.
+  group: wp-tool-${{ github.ref }}
+  # Cancel old PR runs only.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: WPTool
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the tool with its extra dev
+        run: python -m pip install -r requirements.txt
+      - name: Lint
+        run: python -m flake8 wptool tests
+      - name: Test
+        run: python -m pytest tests -q -rs
+      - name: The console script works
+        run: wptool describe

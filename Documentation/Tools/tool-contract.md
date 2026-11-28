@@ -105,7 +105,8 @@ sees it.
 | `params` | The parameters, with their type, whether they are required, and their default, choices and limits when they have them. The types are `string`, `number`, `integer`, `boolean`, `object` and `array` |
 
 A tool may add fields of its own to a command. The WP tool adds `kind` (`OFFLINE` or `MACHINE`), `movesChuck` and
-`long`.
+`long`, and `"ignoreCase": true` to a parameter whose choices it accepts in any case (it passes on the form of the
+list: `west` becomes `West`), so that a host that checks the requests does not refuse `west`.
 
 ## Data from outside
 
