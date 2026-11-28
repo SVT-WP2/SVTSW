@@ -22,6 +22,7 @@ The project-level document is the Google Doc linked from the [root README](../RE
 | [glossary.md](glossary.md) | the terms | what a term means |
 | [flows/](flows/README.md) | developer how-tos that touch several services ("add a new chip type") | the order of the steps across services |
 | [decisions/](decisions/README.md) | dated records of decisions that span services | why things are the way they are |
+| [Tools/](Tools/README.md) | the command-line tools that drive one kind of hardware without Kafka or a DB (the WP tool), the contract by which an agent runs them, and the inventory of WPAgent's commands | how a tool and its host talk |
 | [Kafka/](Kafka/SvtKafkaConventions.md) | the conventions, and one contract per service: `svt.db-agent-next.kafka.yaml` (the DB agent: the contract to build on), `svt.wp-agent.kafka.yaml`. Two files are not contracts of the system: `svt.db-agent.kafka.yaml` (what the code of the frozen C++ DB agent does) and `svt.db-agent.kafka(ancASIC).yaml` (served by nothing) | message shapes |
 | `WaferMap/` | the wafer map formats (`GlobalWaferMapFormat.txt`, `ER1MotherFormat.txt`) | the map formats |
 | `AncillaryASICs/` | the ancillary ASIC datasheets | |

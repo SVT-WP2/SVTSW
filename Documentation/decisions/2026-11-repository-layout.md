@@ -1,5 +1,9 @@
 # 2026-11: where the DB agent and the shared contract types live
 
+> **Extended on 2026-11-28 by [2026-11-wp-tool-phase-1.md](2026-11-wp-tool-phase-1.md).** `Shared/` also holds a
+> Python package, `Shared/svt-wp-core`: code of WPAgent that the WP tool shares. The rule "dependency-free TypeScript only"
+> below is the rule of `Shared/svt-ts-types`.
+
 **Decided 2026-11-14.** The re-implementation of the DB agent is a standalone app, [`DbAgentNext/`](../../DbAgentNext/README.md),
 at the top level of the repository. The contract types that the UI workspace and the agent both compile are in
 [`Shared/svt-ts-types`](../../Shared/svt-ts-types/README.md). This replaced the decision of 2026-11-08, which put the
