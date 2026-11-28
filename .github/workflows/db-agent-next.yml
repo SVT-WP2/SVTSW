@@ -20,14 +20,14 @@ on:
       - master
     paths:
       - 'DbAgentNext/**'
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - '.github/workflows/db-agent-next.yml'
     tags:
       - 'svt-db-agent-next-*'
   pull_request:
     paths:
       - 'DbAgentNext/**'
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - '.github/workflows/db-agent-next.yml'
 
 concurrency:

@@ -1,0 +1,62 @@
+name: Shared WP Core
+
+# CI of the Python package Shared/svt-wp-core: the code of WPAgent shared with the WP tool (#405, #406).
+# Lint and tests on Linux and Windows. Nothing is built or deployed: the package is installed from its folder.
+#
+# The twin test compares the copies with their WPAgent files, so a change of one of those files runs it too.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'Shared/svt-wp-core/**'
+      - 'WPAgent/interfaces/**'
+      - 'WPAgent/drivers/WPSentioProber.py'
+      - 'WPAgent/utilities/WPDieMaps.py'
+      - 'WPAgent/configs/WPMapConversion_*.json'
+      # The run lists that tests/test_die_maps.py checks the maps against.
+      - 'ITS3TestAgent/run_list.csv'
+      - 'ITS3TestAgent/run_list_er2b.csv'
+      - '.github/workflows/shared-wp-core.yml'
+  pull_request:
+    paths:
+      - 'Shared/svt-wp-core/**'
+      - 'WPAgent/interfaces/**'
+      - 'WPAgent/drivers/WPSentioProber.py'
+      - 'WPAgent/utilities/WPDieMaps.py'
+      - 'WPAgent/configs/WPMapConversion_*.json'
+      # The run lists that tests/test_die_maps.py checks the maps against.
+      - 'ITS3TestAgent/run_list.csv'
+      - 'ITS3TestAgent/run_list_er2b.csv'
+      - '.github/workflows/shared-wp-core.yml'
+
+concurrency:
+  group: shared-wp-core-${{ github.ref }}
+  # Cancel old PR runs only.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: Shared/svt-wp-core
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the package with its extras
+        run: python -m pip install -e ".[dev,sentio]"
+      - name: Lint
+        run: python -m flake8
+      - name: Test
+        run: python -m pytest -q -rs

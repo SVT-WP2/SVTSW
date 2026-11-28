@@ -1,0 +1,19 @@
+[flake8]
+max-line-length = 200
+ignore = E203, W503, E402
+per-file-ignores =
+    __init__.py:F401
+# The copies of WPAgent are twins (tests/test_twins.py): lint must not ask to change them.
+# It lints the tests and every module that later tickets add.
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    *.egg-info,
+    svt_wp_core/interfaces/WPProberInterface.py,
+    svt_wp_core/drivers/WPSentioProber.py,
+    svt_wp_core/utilities/WPDieMaps.py

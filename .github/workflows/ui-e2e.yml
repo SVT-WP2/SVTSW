@@ -16,14 +16,14 @@ on:
     paths:
       - 'UI/**'
       - 'DbAgentNext/**'
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - 'Dev/docker-compose.e2e.yml'
       - '.github/workflows/ui-e2e.yml'
   pull_request:
     paths:
       - 'UI/**'
       - 'DbAgentNext/**'
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - 'Dev/docker-compose.e2e.yml'
       - '.github/workflows/ui-e2e.yml'
 

@@ -7,14 +7,14 @@ on:
     paths:
       - 'UI/**'
       # The HTTP contract types, compiled into the SPA and the BFF (tsconfig.base.json aliases).
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - '.github/workflows/ui.yml'
     tags:
       - 'svt-ui-*'
   pull_request:
     paths:
       - 'UI/**'
-      - 'Shared/**'
+      - 'Shared/svt-ts-types/**'
       - '.github/workflows/ui.yml'
 
 concurrency:

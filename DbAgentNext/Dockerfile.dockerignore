@@ -4,6 +4,7 @@
 *
 !DbAgentNext
 !Shared
+Shared/svt-wp-core
 
 **/node_modules
 **/*.md
