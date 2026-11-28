@@ -21,8 +21,9 @@ The tool is built ticket by ticket (the plan, "Tickets and order"):
 | #411 | the Python client (`wptool.client`, `wptool.compat`) |
 | #413 | the settings and heights |
 
-Today the tool has two commands: `ShowStatus` and `Shutdown`. Every other command of WPAgent is either a later ticket
-of this plan, a command of step 2 (it stays in WPAgent for now), or dropped. The tool says so when it is asked for one:
+Today the tool has five commands: `Initialize`, `Disconnect`, `LocalMode`, `ShowStatus` and `Shutdown`. Every other
+command of WPAgent is either a later ticket of this plan, a command of step 2 (it stays in WPAgent for now), or
+dropped. The tool says so when it is asked for one:
 
 ```text
 wptool> MoveChuckAsic
@@ -58,8 +59,14 @@ pip install -r requirements.txt
 wptool describe
 ```
 
-`requirements.txt` installs the tool from its folder (editable) with the test tools. Run `pip` from `WPTool/`: the
-paths in the file are relative to the current folder.
+`requirements.txt` installs two packages from their folders (editable): the shared package
+`../Shared/svt-wp-core` with its extra `sentio` (the SENTIO driver of WPAgent and the SENTIO library
+`sentio-prober-control==24.4.0`), and the tool with the test tools. Run `pip` from `WPTool/`: the paths in the file are
+relative to the current folder. **The shared package is installed only by its path, never by its name** (D18): the
+repository is public, and anybody could publish a package with that name on PyPI.
+
+The tool starts without the shared package: `describe`, the offline commands and `--mock` work. Only `Initialize` of
+a real machine needs it; without it, it answers 500 with a text that says how to install it.
 
 ## Every request is independent (D10)
 
@@ -120,7 +127,7 @@ MoveChuckXY {"x": 100, "y": -50, "position": "Relative"}
 ### shell
 
 ```text
-wptool shell --config wptool.yaml
+wptool shell --mock --log-level WARNING
 wp-tool 0.1.0: type help for the commands, exit to end.
 wptool> status
 OK Tool: wp-tool 0.1.0 | Machine: none, not connected
@@ -128,6 +135,30 @@ OK Tool: wp-tool 0.1.0 | Machine: none, not connected
   "machine": null,
   "proberConnected": false
 }
+wptool> Initialize
+OK Initialized mock:0
+{
+  "machine": {
+    "address": "mock",
+    "port": 0
+  },
+  "facts": {
+    "waferMapDiePosition": {
+      "colIndex": 0,
+      "rowIndex": 0
+    },
+    "dieIndex": 46,
+    "totalDiesNumber": 180,
+    "chuckZPositionState": "In Default",
+    "currentWorkingArea": "OffAxis",
+    "cameraMountPoint": "OffAxisCamera",
+    "x": 1000.0,
+    "y": -2000.0,
+    "z": 9800.0,
+    "errors": []
+  }
+}
+status: connected to mock:0
 wptool> exit
 OK Shutting down
 ```
@@ -192,7 +223,8 @@ error output.
 - A blank line is not a request: the tool skips it, with no reply, so that the replies stay in the order of the
   requests. A UTF-8 BOM at the start of the input is dropped.
 - One request at a time: the host waits for the reply before it sends the next one.
-- A `status` event comes after a reply when the connection changed (a connect or a disconnect).
+- A `status` event comes after a reply when the connection changed (a connect or a disconnect). None comes after the
+  reply of `Shutdown`: the tool ends, and that is the news (as in the example session of the tool contract).
 - `Shutdown` replies and the tool ends with exit code 0. The end of the input does the same without a reply.
   Ctrl+C, while a command runs or while the tool waits for a request, gives the machine back and ends with exit code
   130, without a reply.
@@ -214,7 +246,131 @@ wptool call --config wptool.yaml ShowStatus
 - Exit code 0 for a `Success` reply, 1 for an `Error` reply (its code is in the line), 2 when the command is not a
   command of the tool, or a word cannot be read (a word without `=`, a key given twice, JSON that is not valid).
   Nothing runs for 2, and the reason is on the error output.
-- `Initialize`, `Disconnect` and `Shutdown` make no sense alone: call connects and disconnects by itself (#408).
+- `Initialize`, `Disconnect` and `Shutdown` make no sense alone: call connects and disconnects by itself.
+
+#### call with a machine
+
+For a command of the machine (kind `MACHINE` in `describe`), call first connects as `Initialize` does, with the config
+`machine` (or `--mock`), without a reply of its own. Then the command runs, the machine is given back, and the
+connection is closed:
+
+```text
+wptool call --config wpmit.yaml LocalMode
+{"status": "Success", "data": {"message": "Local mode", "facts": {"waferMapDiePosition": {"colIndex": 0, "rowIndex": 0}, ...}}}
+```
+
+- A failed connect is the reply of the call, and the command does not run: 400 without a `machine` in the config
+  (and without `--mock`), 409 when another `wptool` holds the machine, 503 when it is not reachable, 500 when the
+  connect fails.
+- A request that fails the parameter check gets its 400 without a connect.
+- `ShowStatus` and the other offline commands get no connection.
+- So `wptool call --config wpmit.yaml MoveChuckSeparation` and the same line in `wptool shell` after `Initialize` give
+  the same reply (D10), apart from the facts, which are those of that moment.
+- **With `--mock`, every call starts a new simulator, in its start state**: a call after a call does not see the
+  moves of the first one. Use `shell`, `run` or `serve` for a sequence on the simulator.
+
+## The connection
+
+| Command | Level | Parameters | What it does |
+|---|---|---|---|
+| `Initialize` | User | `address` (text), `port` (1 to 65535), `force` (default false) | connects to the machine: each of `address` and `port` from the parameter, else from the config `machine`. With `--mock` the machine is the simulator, `mock:0`. Connected and the connection alive: `Already connected to <address>:<port>. Use force=true to connect again.` and nothing changes. `force=true` connects again (a restarted machine; WPAgent's `ReconnectProber`). The new connection is opened first, the old one closed after it, so a failed reconnect keeps the old one. |
+| `Disconnect` | User | none | gives the machine back and closes the connection; the tool keeps running. `Not connected` when there is none. |
+| `LocalMode` | Developer | none | reads the machine facts; the engine's `local_mode()` after it gives the machine back. |
+| `Shutdown` | User | none | gives the machine back, closes the connection, replies, and the tool ends. |
+
+- The machine has no name in the tool: it is `<address>:<port>`.
+- `Initialize` first checks with a TCP connect that sends nothing (2 s) that the machine answers: `503 The machine at
+  <address>:<port> is not reachable`. A failure of the connect itself is `500 Failed to connect: <error>`.
+- Without `--mock`, no `address` or no `port` (neither the parameter nor the config): 400, which names the parameter
+  and the config key.
+- `Initialize` of another machine than the connected one connects to it, also without `force` (the old connection is
+  closed after the new one is open).
+- Without a connection, every command of the machine except `Initialize` and `Disconnect` gets `503 Not connected to a
+  machine: run Initialize first`.
+
+### One computer drives one machine (D20)
+
+While a `wptool` is connected to a machine, it holds a lock of the operating system on a file
+`wptool-<address>-<port>.lock` in `%ProgramData%\wptool\` (Windows) or `/tmp/wptool/` (Linux). A second `wptool` on
+the same computer that connects to the same machine gets `409 The machine at <address>:<port> is used by another
+wptool (process <id>)`, and nothing is sent to the machine. The lock goes away by itself when the process ends, also
+when it is killed; `Disconnect` releases it.
+
+**The lock does not see WPAgent, nor a tool on another computer.** Stop every WPAgent listener of the machine (the
+service and any DEV listener) before you use the tool on it. `--mock` takes no lock. The lock is by the address as it
+is written: `localhost` and `127.0.0.1` are two locks.
+
+### The machine facts in every reply
+
+Every reply of a machine command (except `Disconnect`, which closes first) has `data.facts`: what SENTIO says after
+the command, read live. `ShowStatus` has them too when connected, and ` | Chuck: <hint> | Area: <area>` in its
+message.
+
+| Fact | What | From |
+|---|---|---|
+| `waferMapDiePosition` | `{colIndex, rowIndex}` of the current die | `get_current_index()` |
+| `dieIndex` | the index of the current die | `get_current_index()` |
+| `totalDiesNumber` | the number of dies of the map | `get_dies_number()` |
+| `chuckZPositionState` | the Z hint: `In Contact`, `In Separation`, `In Default`, ... | `get_chuck_position()` |
+| `currentWorkingArea` | the work area without the suffix `Camera`: `Probing`, `OffAxis` | `get_current_working_area()` |
+| `cameraMountPoint` | the work area as SENTIO gives it: `Probing`, `OffAxisCamera` | `get_current_working_area()` |
+| `x`, `y`, `z` | the chuck position in µm, `Zero` reference | `get_chuck_xy()`, `get_chuck_z()` |
+| `errors` | the queries that failed, as texts (an empty list when none failed) | |
+
+- The tool never keeps the facts (D10): the next request asks the machine again. A host that keeps a view keeps the
+  last facts itself.
+- A query that fails gives `null` for its facts and a text in `errors`; **it never changes the status of the reply**:
+  the command has run. An `Error` reply has no facts: send `ShowStatus` after one to see the machine.
+- Reading the facts is about six queries, and every query puts SENTIO into remote mode for a moment: do not poll
+  `ShowStatus`.
+
+### The separation check (D11)
+
+Before every command that moves or may move the chuck (`movesChuck` in `describe`), the tool asks SENTIO where the
+chuck is, and refuses unless SENTIO reports one of these pairs:
+
+| Z hint | Work area |
+|---|---|
+| `In Separation` | any |
+| `In Default` | `OffAxisCamera` (what WPMIT reports in the off-axis area, where the probes cannot touch the wafer) |
+
+- Any other answer is `409 The chuck is not in separation (SENTIO reports '<hint>' in <area>): run MoveChuckSeparation
+  first`. The work area is asked only when the hint alone does not decide (`In Default`); for `In Contact` the
+  message has no area.
+- An error of the query is `503 No answer from the machine to the position query: <text>`.
+- Nothing switches it off. Nothing is sent to the machine after a refusal (but `local_mode()`).
+- The run on WPMIT confirms the pairs; a pair is added only from such a run.
+
+### Giving the machine back (D16)
+
+Any command puts SENTIO into remote mode, so that its own screen is locked. The tool gives it back:
+
+- **after every request** that touched the machine (a command, or the query of the separation check), whatever its
+  result (success, 400, 409, 500): `local_mode()` is its last call. Each step of `run` is a request. The commands
+  never call it themselves.
+- **when it closes a connection** (`Disconnect`, `Shutdown`, the old connection of `Initialize force=true`):
+  `local_mode()`, then the close. Nothing is sent after the close.
+- **at the end**: the end of `run`, the end of the input in `serve`, the end of `call`, Ctrl+C in every mode, and the
+  signals SIGTERM, SIGHUP (Linux) and SIGBREAK (Windows: Ctrl+Break, or `CTRL_BREAK_EVENT` to the tool's process
+  group). A command cut off by a signal ends there, and the machine is given back after it. On Windows a signal
+  waits until a command that waits for SENTIO has its answer. If none of these runs (an error of the tool itself),
+  the close at the exit of the process is the last guard.
+- After a failure the tool stays usable: there is no blocked state (D15). The next command runs.
+
+## The simulator (`--mock`)
+
+`--mock` makes the machine a simulator in every mode (`wptool/simulator.py`): no TCP connection, no lock, and
+`machine.address` of the config is not used. It follows the SENTIO driver (D19):
+
+- `Zero` sets the chuck position, `Relative` adds to it, `Center` is the center (0, 0) plus (x, y).
+- It starts separated in the off-axis area (`OffAxisCamera`, Z hint `In Default`, as WPMIT reports there); after
+  `move_chuck_wide`, `move_chuck_center` and `move_chuck_home` the area is `Probing` and the hint `In Separation`; at
+  contact `In Contact`. These values are in one table at the top of `wptool/simulator.py`, so that the run on WPMIT
+  can correct them.
+- The die map covers every die of the two map files of the shared package, widened by 2 (columns -6 to 3, rows -4 to
+  13); a die outside it is refused, as SENTIO refuses it.
+- One simulator per tool process: after `Disconnect` and `Initialize force=true` the simulator keeps its state, as a
+  real machine does. Every `call --mock` is a new process, so a new simulator.
 
 ## The config file
 
@@ -237,7 +393,7 @@ log: wptool.log
 
 Options of every mode except `describe`:
 
-- `--mock`: the machine is a simulator, no hardware (#408).
+- `--mock`: the machine is the simulator, no hardware, no TCP connection, no lock (see "The simulator").
 - `--log-level LEVEL`: the level of the log on the error output: `DEBUG`, `INFO` (the default), `WARNING`, `ERROR`.
 
 ## Error codes
@@ -246,9 +402,9 @@ Options of every mode except `describe`:
 |---|---|
 | 400 | a parameter is missing, unknown, has the wrong type or a value that is not allowed, or the line cannot be read |
 | 404 | not a command of the tool: unknown, not in the tool yet (step 2), or dropped |
-| 409 | not allowed now, because of the state of the machine (the separation and contact checks, #408 and #409) |
+| 409 | not allowed now, because of the state of the machine: the separation check, the contact check (#409), or a machine that another `wptool` uses |
 | 500 | the command failed in the tool or on the machine |
-| 503 | the machine is not reachable, or the tool is not connected |
+| 503 | the machine is not reachable, the tool is not connected, or no answer to the position query |
 
 A failed command does not block the tool: the next command runs.
 
@@ -260,7 +416,7 @@ A failed command does not block the tool: the next command runs.
 | 1 | a failed step of `run`, an `Error` reply of `call`, or any other failure |
 | 2 | a wrong command line, config or script file |
 | 130 | Ctrl+C while a command runs, or between the commands (`serve` waiting for a request, `run` between two steps). In the shell, Ctrl+C at the prompt is `Shutdown` and ends with 0 |
-| 128 + the signal | SIGTERM (143), SIGHUP (129) or SIGBREAK (149) (#408) |
+| 128 + the signal | SIGTERM (143), SIGHUP (129) or SIGBREAK (149); the machine is given back first |
 
 ## Development
 
@@ -272,7 +428,13 @@ python -m pytest tests -q
 wptool describe
 ```
 
-The tests need no network and no prober. The test-only commands (`_Echo`, `_Fail`, `_Print`, `_Progress`, `_Wait`,
-`_Interrupt`) are registered only when the environment variable `WPTOOL_TESTING=1` is set; the tests set it.
+The tests need no network and no prober: they run on the simulator. The test-only commands (`_Echo`, `_Fail`,
+`_Print`, `_Progress`, `_Wait`, `_Interrupt`, `_Move`, `_Query`, `_Pid`) are registered only when the environment
+variable `WPTOOL_TESTING=1` is set; the tests set it. With `WPTOOL_TESTING=1` two more variables are read, and
+ignored otherwise:
+
+- `WPTOOL_TEST_MACHINE=sim-over-tcp`: a real address works as for a real machine (the TCP check, the lock, the
+  address in the state), but the simulator is behind it. The tests start a local TCP listener as the machine.
+- `WPTOOL_TEST_LOCK_DIR=<folder>`: the lock files go there, not into the folder shared by the users of the computer.
 CI: [.github/workflows/wp-tool.yml](../.github/workflows/wp-tool.yml), on Linux and Windows. Notes between the
 tickets: [progress.md](../Documentation/Tools/wp-tool/progress.md).

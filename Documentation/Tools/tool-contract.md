@@ -45,7 +45,8 @@ standard input of the tool and reads its standard output.
 4. The standard output carries only these lines. Everything for people goes to the error output.
 5. A line that the tool cannot read gets a reply with the status `Error`, the code 400 and no `id`.
 6. `Shutdown` is a command of every tool: it gives the hardware back, closes the connections and replies, and then the
-   tool ends with exit code 0. The host waits 30 seconds, then ends the tool itself.
+   tool ends with exit code 0. The host waits 30 seconds, then ends the tool itself. No `status` event follows the
+   reply of `Shutdown`: the end of the tool is the news.
 7. The end of the standard input means the same as `Shutdown`, without a reply, and the tool ends with exit code 0: the
    host closed the pipe, so it wants the tool to end. A tool that ends for any other reason ends with a code other
    than 0, and the host starts it again.
