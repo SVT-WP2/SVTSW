@@ -11,7 +11,7 @@ Where this page and a ticket differ, this page wins: it is newer.
 | Ticket | Status | Pull request | Note |
 |---|---|---|---|
 | #406 S1 | in review | [#416](https://github.com/SVT-WP2/SVTSW/pull/416), into `405-wp-tool` | `Shared/svt-wp-core/` 0.1.0 |
-| #407 T1 | not started | | |
+| #407 T1 | in review | [#417](https://github.com/SVT-WP2/SVTSW/pull/417), into `406-shared-wp-core` (then `405-wp-tool`) | `WPTool/` 0.1.0: the frame, `ShowStatus`, `Shutdown` |
 | #408 T2 | not started | | |
 | #409 T3 | not started | | |
 | #410 T4 | not started | | |
