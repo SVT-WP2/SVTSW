@@ -1,10 +1,19 @@
 """shell: a fake input (a list of lines) and a captured output."""
 
 import json
+import os
+import select
+import signal
+import subprocess
+import sys
+import time
 
 import pytest
 
+from conftest import TIMEOUT_S, run_tool, tool_env
+
 from wptool.engine import Engine
+from wptool.events import TextSink
 from wptool.modes.shell import PROMPT, run_shell
 
 
@@ -167,3 +176,61 @@ def test_progress_events_are_one_line_each(config):
 def test_the_banner(config):
     code, out, _ = shell(config, [])
     assert out[0] == "wp-tool 0.1.0: type help for the commands, exit to end."
+
+
+def test_status_lines_after_a_connect_and_a_disconnect(config, connect_commands):
+    code, out, _ = shell(config, ["_Connect", "ShowStatus", "_Disconnect", "exit"])
+    # One line for people, after the reply, only when the connection changed.
+    assert out[1:3] == ["OK Connected", "status: connected to 192.0.2.10:35555"]
+    assert out[3] == "OK Tool: wp-tool 0.1.0 | Machine: 192.0.2.10:35555, connected"
+    assert out.count("status: connected to 192.0.2.10:35555") == 1
+    assert out[out.index("OK Disconnected") + 1] == "status: not connected"
+
+
+def test_the_shell_in_its_own_process_with_streams_that_are_not_utf8(tmp_path, config_file):
+    # tool_env gives the process ASCII streams: the tool sets UTF-8 on stdin, stdout and stderr itself, and a lone
+    # surrogate or a byte that is not UTF-8 is replaced, it never ends the shell.
+    stdin = "_Echo text=Ω✅\n".encode("utf-8") + b'_Echo {"text": "\\udc80"}\n' + b"_Echo text=a\xffb\n" + b"exit\n"
+    result = run_tool(["shell", "--config", str(config_file)], cwd=tmp_path, stdin=stdin)
+    assert result.returncode == 0, result.stderr
+    out = result.stdout.decode("utf-8")
+    assert '"text": "Ω✅"' in out
+    assert '"text": "?"' in out
+    assert '"text": "a\ufffdb"' in out
+    assert out.rstrip().endswith("OK Shutting down")
+    assert b"Logging error" not in result.stderr
+    assert b"Traceback" not in result.stderr
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGINT cannot be sent to one process on Windows")
+def test_ctrl_c_at_the_prompt_in_its_own_process_runs_shutdown(tmp_path, config_file):
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "wptool", "shell", "--config", str(config_file)],
+        cwd=tmp_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=tool_env(),
+    )
+    try:
+        out = b""
+        deadline = time.monotonic() + TIMEOUT_S
+        while not out.endswith(PROMPT.encode()) and time.monotonic() < deadline:
+            # Wait for the prompt without blocking for ever (this test runs on Linux only).
+            ready, _, _ = select.select([proc.stdout], [], [], max(0.0, deadline - time.monotonic()))
+            if ready:
+                out += proc.stdout.read1(4096)
+        assert out.endswith(PROMPT.encode()), out
+        os.kill(proc.pid, signal.SIGINT)
+        rest, _ = proc.communicate(timeout=TIMEOUT_S)
+        assert proc.returncode == 0
+        assert rest.decode("utf-8").strip().endswith("OK Shutting down")
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=TIMEOUT_S)
+
+
+def test_the_status_line_for_people():
+    out = []
+    sink = TextSink(out.append)
+    sink.status({"machine": None, "proberConnected": False})
+    sink.status({"machine": {"address": "192.0.2.10", "port": 35555}, "proberConnected": True})
+    sink.status({"machine": {"address": "192.0.2.10", "port": 35555}, "proberConnected": False})
+    assert out == ["status: not connected", "status: connected to 192.0.2.10:35555", "status: not connected"]

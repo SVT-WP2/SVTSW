@@ -7,6 +7,7 @@ given and has no default is None), returns the `data` of the reply as a dict, an
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 import logging
 from dataclasses import dataclass
@@ -129,22 +130,27 @@ def command(
             raise ValueError(f"Command {name} is registered twice")
         if kind is Kind.OFFLINE and (changes_machine or moves_chuck or needs_connection):
             raise ValueError(f"{name}: an offline command does not change or move the machine, nor need a connection")
+        checked: dict[str, Param] = {}
         for param_name, param in params.items():
             if not isinstance(param, Param):
                 raise ValueError(f"{name}: parameter '{param_name}' is not a Param")
             if param.default is not None:
+                # The default passes its own check, and the spec keeps it converted: a command gets the same type
+                # whether the parameter was given or not (Param("number", default=0) gives 0.0).
                 try:
-                    check_value(param_name, param, param.default)
+                    default = check_value(param_name, param, param.default)
                 except ToolError as e:
                     raise ValueError(f"{name}: the default of '{param_name}' does not pass its own check: {e.message}") from None
-        _check_signature(name, func, params)
+                param = dataclasses.replace(param, default=default)
+            checked[param_name] = param
+        _check_signature(name, func, checked)
         REGISTRY[name] = CommandSpec(
             name=name,
             summary=summary,
             kind=kind,
             level=level,
             func=func,
-            params=params,
+            params=checked,
             changes_machine=changes_machine,
             moves_chuck=moves_chuck,
             long=long,

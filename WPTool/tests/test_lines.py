@@ -38,7 +38,10 @@ def test_a_line(line, command, params):
         ("_Echo name='a b", "Cannot read the line: No closing quotation"),
         ("_Echo count", "Expected key=value, got 'count'"),
         ("_Echo =5", "Expected key=value, got '=5'"),
-        ("_Echo count=1 count=2", "The parameter 'count' is given twice"),
+        # A key given twice: the same text in the key=value form and in the JSON form, at any depth.
+        ("_Echo count=1 count=2", "The key 'count' is given twice"),
+        ('_Echo {"count": 1, "count": 2}', "The key 'count' is given twice"),
+        ('_Echo {"options": {"a": 1, "a": 2}}', "The key 'a' is given twice"),
         ('_Echo {"x": 1', "Cannot read the parameters as JSON"),
         ('_Echo {"x": NaN}', "Cannot read the parameters as JSON"),
         ("", "The line is empty"),
@@ -75,8 +78,15 @@ def test_the_words_of_call(words, params):
     assert parse_words(words) == params
 
 
-@pytest.mark.parametrize("words", [["--mock"], ["count"], ['{"x": 1'], ["{}", "count=1"], ["a=1", "a=2"]])
+@pytest.mark.parametrize("words", [["--mock"], ["count"], ['{"x": 1'], ["{}", "count=1"], ["a=1", "a=2"], ['{"a": 1, "a": 2}']])
 def test_words_that_cannot_be_parsed(words):
     with pytest.raises(ToolError) as e:
         parse_words(words)
     assert e.value.code == 400
+
+
+@pytest.mark.parametrize("words", [["a=1", "a=2"], ['{"a": 1, "a": 2}']])
+def test_a_key_given_twice_in_the_words_of_call(words):
+    with pytest.raises(ToolError) as e:
+        parse_words(words)
+    assert e.value.message == "The key 'a' is given twice"

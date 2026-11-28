@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import queue
 import signal
 import sys
 import time
@@ -10,7 +11,7 @@ import time
 import pytest
 
 from wptool.engine import Engine
-from wptool.modes.serve import parse_request, serve
+from wptool.modes.serve import parse_request, read_lines, serve
 
 READY = {"event": "ready", "tool": "wp-tool", "version": "0.1.0", "contract": "0.1"}
 STATUS = {"event": "status", "data": {"machine": None, "proberConnected": False}}
@@ -47,7 +48,8 @@ def test_a_request_without_id_gets_a_reply_without_id(serve_tool):
     "line, reason",
     [
         (b"not json\n", "The line is not JSON"),
-        (b"\n", "The line is not JSON"),
+        (b'{"id": "1", "command": "_Echo", "params": {"count": 1, "count": 2}}\n', "The key 'count' is given twice"),
+        (b'{"id": "1", "id": "2", "command": "ShowStatus"}\n', "The key 'id' is given twice"),
         (b'["ShowStatus"]\n', "A request is one JSON object"),
         (b'{"id": "1"}\n', "The request has no command"),
         (b'{"id": 1, "command": "ShowStatus"}\n', "The id of a request must be a text"),
@@ -131,6 +133,64 @@ def test_a_request_line_may_end_with_crlf(serve_tool):
     process = start(serve_tool)
     process.send(b'{"id": "1", "command": "ShowStatus"}\r\n')
     assert process.read()["id"] == "1"
+
+
+def test_a_blank_line_gets_no_reply(serve_tool):
+    # A host that pairs the replies by their order must not get a reply that belongs to no request.
+    process = start(serve_tool)
+    process.send(b"\n")
+    process.send(b"   \n")
+    process.send(b"\t\r\n")
+    assert process.request({"id": "1", "command": "ShowStatus"})["id"] == "1"
+    process.send({"id": "2", "command": "Shutdown"})
+    assert process.read()["id"] == "2"
+    assert process.wait() == 0
+    assert process.rest() == []
+
+
+def test_a_bom_at_the_start_of_the_input_is_dropped(serve_tool):
+    process = start(serve_tool)
+    process.send(b'\xef\xbb\xbf{"id": "1", "command": "ShowStatus"}\n')
+    assert process.read()["id"] == "1"
+
+
+def test_a_bom_in_pieces():
+    lines = queue.Queue()
+    chunks = iter([b"\xef", b"\xbb", b'\xbf{"id": "1", "command": "ShowStatus"}\n\xef\xbb\xbf\n', b""])
+    read_lines(lambda: next(chunks), lines)
+    assert lines.get_nowait() == b'{"id": "1", "command": "ShowStatus"}'
+    # Only at the start of the input.
+    assert lines.get_nowait() == b"\xef\xbb\xbf"
+    assert lines.qsize() == 1  # the end marker
+
+
+def test_a_command_name_is_taken_as_given(serve_tool):
+    process = start(serve_tool)
+    assert process.request({"id": "1", "command": " ShowStatus"})["error"] == {"code": 404, "message": "Unknown command:  ShowStatus"}
+
+
+def test_a_lone_surrogate_does_not_end_serve(serve_tool, log_file):
+    # A JSON escape of half a UTF-16 pair: the reply carries it as the same escape, the log file too.
+    process = start(serve_tool)
+    process.send(b'{"id": "5", "command": "_Echo", "params": {"text": "\\udc80"}}\n')
+    raw = process.read_raw()
+    assert b'"text": "\\udc80"' in raw
+    assert json.loads(raw.decode("utf-8"))["data"]["params"]["text"] == "\udc80"
+    assert process.request({"id": "6", "command": "Shutdown"})["id"] == "6"
+    assert process.wait() == 0
+    stderr = process.stderr.decode("utf-8")
+    assert "Logging error" not in stderr
+    log = log_file.read_text(encoding="utf-8")
+    assert 'id=5 command=_Echo params={"text": "\\udc80"}' in log
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGINT cannot be sent to one process on Windows")
+def test_ctrl_c_while_serve_waits_for_a_line_ends_with_130(serve_tool):
+    process = start(serve_tool)
+    time.sleep(1)
+    os.kill(process.proc.pid, signal.SIGINT)
+    assert process.wait() == 130
+    assert process.rest() == []
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT cannot be sent to one process on Windows")

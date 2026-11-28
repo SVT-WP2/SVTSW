@@ -117,6 +117,21 @@ def test_a_file_that_cannot_be_read_gives_exit_code_2(tmp_path, capsys, content,
     assert message in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    "name, content",
+    [
+        ("wptool.yaml", "log: a.log\nlog: b.log\n"),
+        ("wptool.yaml", "machine:\n  address: 192.0.2.10\n  port: 35555\n  port: 35556\n"),
+        ("wptool.json", '{"log": "a.log", "log": "b.log"}'),
+    ],
+)
+def test_a_key_given_twice_gives_exit_code_2(tmp_path, capsys, name, content):
+    path = tmp_path / name
+    path.write_text(content, encoding="utf-8")
+    assert cli.main(["shell", "--config", str(path)]) == 2
+    assert "is given twice" in capsys.readouterr().err
+
+
 def test_a_log_file_that_cannot_be_opened_gives_exit_code_2(tmp_path, capsys):
     path = tmp_path / "wptool.yaml"
     path.write_text(f"log: {json.dumps(str(tmp_path / 'no-such-folder' / 'wptool.log'))}\n", encoding="utf-8")

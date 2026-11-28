@@ -11,9 +11,9 @@ Windows paths stay as they are (`file=C:\\data\\flow.yaml`).
 
 from __future__ import annotations
 
-import json
 import shlex
 
+from wptool.data import DuplicateKeyError, loads_json
 from wptool.replies import bad_request
 
 
@@ -57,20 +57,19 @@ def parse_pairs(words: list[str]) -> dict:
         if not sep or not key:
             raise bad_request(f"Expected key=value, got '{word}'")
         if key in params:
-            raise bad_request(f"The parameter '{key}' is given twice")
+            # The same text in every form of a request: a key=value line, a JSON line, a script file.
+            raise bad_request(DuplicateKeyError(key).sentence)
         params[key] = value
     return params
 
 
 def parse_json_params(text: str) -> dict:
     try:
-        params = json.loads(text, parse_constant=_no_constant)
+        params = loads_json(text)
+    except DuplicateKeyError as e:
+        raise bad_request(e.sentence) from None
     except ValueError as e:
         raise bad_request(f"Cannot read the parameters as JSON: {e}") from None
     if not isinstance(params, dict):
         raise bad_request("The JSON parameters must be one object, for example {\"x\": 100}")
     return params
-
-
-def _no_constant(name: str):
-    raise ValueError(f"{name} is not a JSON value")

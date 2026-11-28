@@ -104,6 +104,44 @@ def test_a_bad_file_ends_with_2(tmp_path, config, capsys, content, reason):
     assert reason in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    "name, content, reason",
+    [
+        # A key given twice is refused in every form where it can be seen, as in the shell and in serve.
+        ("flow.json", '[{"command": "_Echo", "params": {"count": 1, "count": 2}}]', "the key 'count' is given twice"),
+        ("flow.json", '[{"command": "_Echo", "command": "ShowStatus"}]', "the key 'command' is given twice"),
+        ("flow.yaml", "- command: _Echo\n  params:\n    count: 1\n    count: 2\n", "the key 'count' is given twice"),
+        ("flow.yaml", "- command: _Echo\n  params: {count: 1, count: 2}\n", "the key 'count' is given twice"),
+        ("flow.yaml", "- _Echo count=1 count=2\n", "The key 'count' is given twice"),
+        ("flow.yaml", "- '_Echo {\"count\": 1, \"count\": 2}'\n", "The key 'count' is given twice"),
+    ],
+)
+def test_a_key_given_twice_ends_with_2(tmp_path, config, capsys, name, content, reason):
+    code, replies = run(write(tmp_path, name, content), config)
+    assert code == 2
+    assert replies == []
+    assert reason in capsys.readouterr().err
+
+
+def test_a_yaml_merge_may_override_a_key(tmp_path, config):
+    content = "- command: _Echo\n  params: &base {count: 1, text: a}\n- command: _Echo\n  params:\n    <<: *base\n    count: 2\n"
+    code, replies = run(write(tmp_path, "flow.yaml", content), config)
+    assert code == 0
+    assert replies[1][2].data["params"] == {"count": 2, "text": "a", "mode": "normal"}
+
+
+def test_the_command_name_is_taken_as_given(tmp_path, config, capsys):
+    code, replies = run(write(tmp_path, "flow.json", [{"command": " ShowStatus"}]), config)
+    assert code == 2
+    assert "Unknown command:  ShowStatus" in capsys.readouterr().err
+
+
+def test_status_lines_in_the_output(tmp_path, config, connect_commands):
+    out = []
+    assert run_mode(write(tmp_path, "flow.json", ["_Connect", "_Disconnect"]), config, write=out.append) == 0
+    assert out == ["[1/2] _Connect", "OK Connected", "status: connected to 192.0.2.10:35555", "[2/2] _Disconnect", "OK Disconnected", "status: not connected"]
+
+
 def test_a_file_that_does_not_exist_ends_with_2(tmp_path, config, capsys):
     code, replies = run(tmp_path / "missing.yaml", config)
     assert code == 2

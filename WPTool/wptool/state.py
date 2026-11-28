@@ -11,7 +11,8 @@ import copy
 from dataclasses import dataclass
 
 
-@dataclass
+# slots: no other attribute can be set on a state, not even in a method (tests/test_state.py).
+@dataclass(slots=True)
 class ToolState:
     # {address, port} of the last Initialize (#408); {address: "mock", port: 0} with --mock. The machine has no name.
     machine: dict | None = None

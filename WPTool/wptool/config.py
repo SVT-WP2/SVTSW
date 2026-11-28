@@ -13,12 +13,11 @@ message that names the key, and exit code 2.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
+from wptool.data import DataFileError, load_data_file
 
 DEFAULT_LOG = "wptool.log"
 KEYS = ("machine", "log")
@@ -27,10 +26,6 @@ MACHINE_KEYS = ("address", "port")
 
 class ConfigError(Exception):
     """A config that cannot be read or does not pass the check. The message starts with `config:`."""
-
-
-class DataFileError(Exception):
-    """A YAML or JSON file that cannot be read."""
 
 
 @dataclass(frozen=True)
@@ -45,28 +40,6 @@ class Config:
     log: str = DEFAULT_LOG  # the log file; a relative path is relative to the working directory
     mock: bool = False  # --mock: the machine is the simulator (#408)
     path: str | None = None  # the file it came from
-
-
-def load_data_file(path: str | Path) -> Any:
-    """Read a YAML or JSON file as UTF-8 (a BOM is dropped). A `.json` file is read as JSON, any other as YAML."""
-    path = Path(path)
-    try:
-        text = path.read_text(encoding="utf-8-sig")
-    except OSError as e:
-        raise DataFileError(f"cannot read {path}: {e.strerror or e}") from None
-    except UnicodeDecodeError as e:
-        raise DataFileError(f"cannot read {path}: it is not UTF-8 ({e.reason} at byte {e.start})") from None
-    try:
-        if path.suffix.lower() == ".json":
-            return json.loads(text, parse_constant=_no_constant)
-        return yaml.safe_load(text)
-    except (ValueError, yaml.YAMLError) as e:
-        kind = "JSON" if path.suffix.lower() == ".json" else "YAML"
-        raise DataFileError(f"{path} is not valid {kind}: {e}") from None
-
-
-def _no_constant(name: str) -> Any:
-    raise ValueError(f"{name} is not a JSON value")
 
 
 def load_config(path: str | Path | None, mock: bool) -> Config:

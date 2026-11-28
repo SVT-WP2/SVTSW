@@ -2,6 +2,8 @@
 
 import dataclasses
 
+import pytest
+
 from wptool.state import ToolState, connection_text
 
 D10 = (
@@ -12,6 +14,20 @@ D10 = (
 
 def test_the_fields_are_the_connection_only():
     assert [field.name for field in dataclasses.fields(ToolState)] == ["machine", "proberConnected"], D10
+
+
+def test_no_other_attribute_can_be_kept():
+    # Not even one that a method sets (self.lastProject = ...): the state has slots and no __dict__.
+    state = ToolState()
+    assert not hasattr(state, "__dict__"), D10
+    try:
+        state.lastProject = "ER2_babyMOSAIX_Vertical_V0_NotchW_ArrowW"
+    except AttributeError:
+        pass
+    else:
+        pytest.fail(D10)
+    state.machine = {"address": "192.0.2.10", "port": 35555}
+    state.proberConnected = True
 
 
 def test_the_start():

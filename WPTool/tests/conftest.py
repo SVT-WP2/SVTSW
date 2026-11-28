@@ -20,6 +20,7 @@ import pytest
 import wptool.commands  # noqa: F401  (every command, with the test-only ones, for every test file alone too)
 from wptool.config import Config
 from wptool.events import MemorySink
+from wptool.registry import REGISTRY, Kind, Level, command
 
 TIMEOUT_S = 30
 
@@ -73,6 +74,43 @@ def config_file(tmp_path: Path, log_file: Path) -> Path:
 @pytest.fixture
 def sink() -> MemorySink:
     return MemorySink()
+
+
+@pytest.fixture
+def temp_command():
+    """Register commands for one test only: `@temp_command("_Name", **options)` over a command function."""
+    names = []
+
+    def register(name, **kwargs):
+        kwargs.setdefault("summary", "Test")
+        kwargs.setdefault("kind", Kind.OFFLINE)
+        kwargs.setdefault("level", Level.DEVELOPER)
+
+        def decorate(func):
+            names.append(name)
+            return command(name=name, **kwargs)(func)
+
+        return decorate
+
+    yield register
+    for name in names:
+        REGISTRY.pop(name, None)
+
+
+@pytest.fixture
+def connect_commands(temp_command):
+    """`_Connect` and `_Disconnect`: change the connection of the state as #408's Initialize and Disconnect will."""
+
+    @temp_command("_Connect")
+    def connect(ctx):
+        ctx.state.machine = {"address": "192.0.2.10", "port": 35555}
+        ctx.state.proberConnected = True
+        return {"message": "Connected"}
+
+    @temp_command("_Disconnect")
+    def disconnect(ctx):
+        ctx.state.proberConnected = False
+        return {"message": "Disconnected"}
 
 
 @pytest.fixture

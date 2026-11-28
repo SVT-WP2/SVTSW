@@ -11,7 +11,8 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-from wptool.config import Config, DataFileError, load_data_file
+from wptool.config import Config
+from wptool.data import DataFileError, load_data_file
 from wptool.engine import Engine, Request, validate
 from wptool.events import EventSink, TextSink
 from wptool.lines import parse_line
@@ -54,14 +55,15 @@ def step_request(step: Any) -> Request:
             if key not in STEP_KEYS:
                 raise bad_request(f"Unknown key '{key}' in the step (the keys are command and params)")
         command = step.get("command")
-        if not isinstance(command, str) or not command.strip():
+        if not isinstance(command, str) or not command:
             raise bad_request("The step has no command (a text)")
         params = step.get("params")
         if params is None:
             params = {}
         if not isinstance(params, dict):
             raise bad_request("The params of the step must be a map")
-        return Request(command=command.strip(), params=params)
+        # The command name as given, as serve and call take it: only the line parser splits at spaces.
+        return Request(command=command, params=params)
     raise bad_request("A step is a command line (a text) or a map with command and params")
 
 

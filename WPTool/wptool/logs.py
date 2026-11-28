@@ -53,10 +53,12 @@ def setup_logging(level: str, log_file: str) -> LogSetup:
     root = logging.getLogger()
     setup = LogSetup(level=root.level)
     formatter = logging.Formatter(FORMAT)
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    # backslashreplace: a lone surrogate in a value (from a JSON escape, or from argv on Linux) is written as \udc80,
+    # and never drops the line from the file.
+    file_handler = logging.FileHandler(log_file, encoding="utf-8", errors="backslashreplace")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
-    # sys.stderr as it is now; serve and call point sys.stdout to it later.
+    # sys.stderr as it is now (UTF-8 with errors="replace", use_utf8); serve and call point sys.stdout to it later.
     error_handler = logging.StreamHandler(sys.stderr)
     error_handler.setLevel(level)
     error_handler.setFormatter(formatter)

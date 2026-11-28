@@ -15,27 +15,6 @@ def engine(config, sink):
     return Engine(config, events=sink)
 
 
-@pytest.fixture
-def temp_command():
-    """Register commands for one test only."""
-    names = []
-
-    def register(name, **kwargs):
-        kwargs.setdefault("summary", "Test")
-        kwargs.setdefault("kind", Kind.OFFLINE)
-        kwargs.setdefault("level", Level.DEVELOPER)
-
-        def decorate(func):
-            names.append(name)
-            return command(name=name, **kwargs)(func)
-
-        return decorate
-
-    yield register
-    for name in names:
-        REGISTRY.pop(name, None)
-
-
 def error_of(reply: Reply) -> tuple[int, str]:
     assert reply.status == "Error", reply
     return reply.error["code"], reply.error["message"]
@@ -349,6 +328,19 @@ def test_a_default_passes_its_own_check():
         @command(name="_BadDefault", summary="", kind=Kind.OFFLINE, level=Level.USER, params={"m": Param("string", default="x", choices=["a"])})
         def bad_default(ctx, m):
             return {}
+
+
+def test_a_default_reaches_the_command_converted(engine, temp_command):
+    @temp_command("_Defaults", params={"z": Param("number", default=0), "name": Param("string", default=5), "n": Param("integer", default=2.0)})
+    def defaults(ctx, z, name, n):
+        return {"message": "", "types": [type(z).__name__, type(name).__name__, type(n).__name__], "values": [z, name, n]}
+
+    omitted = engine.execute(Request(command="_Defaults"))
+    given = engine.execute(Request(command="_Defaults", params={"z": 0, "name": 5, "n": 2.0}))
+    # The same type whether the parameter was given or not.
+    assert omitted.data == given.data == {"message": "", "types": ["float", "str", "int"], "values": [0.0, "5", 2]}
+    assert REGISTRY["_Defaults"].params["z"].default == 0.0
+    assert REGISTRY["_Defaults"].params["name"].default == "5"
 
 
 def test_machine_commands_change_the_machine_and_need_a_connection_by_default(temp_command):

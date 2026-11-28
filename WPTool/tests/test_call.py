@@ -111,6 +111,17 @@ def test_utf8_in_and_out(call_tool):
     assert "Ωµ✅ é".encode("utf-8") in result.stdout
 
 
+def test_a_lone_surrogate_in_a_word(call_tool, log_file):
+    # On Linux a byte of argv that is not UTF-8 becomes a lone surrogate (\udc80 for 0x80); on Windows the word
+    # carries it as it is. The reply line stays valid JSON, and the log file keeps the request.
+    result = call_tool("_Echo", "text=\udc80")
+    assert result.returncode == 0, result.stderr
+    assert b'"text": "\\udc80"' in result.stdout
+    assert reply_of(result)["data"]["params"]["text"] == "\udc80"
+    assert b"Logging error" not in result.stderr
+    assert 'command=_Echo params={"text": "\\udc80"}' in log_file.read_text(encoding="utf-8")
+
+
 def test_ctrl_c_runs_the_shutdown_path_and_ends_with_130(config, monkeypatch):
     calls = []
     monkeypatch.setattr(Engine, "on_shutdown", lambda self: calls.append("shutdown"))

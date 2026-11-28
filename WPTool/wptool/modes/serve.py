@@ -5,6 +5,7 @@
    timeout of 0.5 s. On Windows a signal or Ctrl+C reaches Python only while the main thread runs Python code, not
    while it blocks on a pipe (#408 installs the signal handlers).
 3. Each line is one request: run through the engine, the reply line, then the `status` event if the state changed.
+   A blank line is skipped without a reply; a UTF-8 BOM at the start of the input is dropped.
 4. Shutdown: its reply, then exit code 0. The end of the input: the Shutdown path without a reply, exit code 0.
    Ctrl+C: the Shutdown path without a reply, exit code 130.
 
@@ -13,12 +14,12 @@ The standard output carries only these lines (contract rule 4): the caller point
 
 from __future__ import annotations
 
-import json
 import queue
 import threading
 from typing import BinaryIO, Callable
 
 from wptool.config import Config
+from wptool.data import DuplicateKeyError, loads_json
 from wptool.engine import Engine, Request
 from wptool.events import JsonLineSink
 from wptool.modes import CTRL_C_TEXT, ProtocolWriter, log
@@ -26,6 +27,7 @@ from wptool.replies import BAD_REQUEST, Reply
 
 REQUEST_FIELDS = ("id", "command", "params", "context")
 WAIT_S = 0.5
+BOM = b"\xef\xbb\xbf"
 _EOF = object()
 
 
@@ -47,6 +49,10 @@ def serve(config: Config, stdin: BinaryIO, stdout: BinaryIO) -> int:
             if raw is _EOF:
                 log.info("The end of the input: the tool ends")
                 return 0
+            if not raw.strip():
+                # A blank line is not a request, and gets no reply: a host that pairs the replies by their order
+                # would take a reply to it for the reply of its next request.
+                continue
             request, error = parse_request(raw)
             if request is None:
                 # Contract rule 5: a line that the tool cannot read gets an Error 400 reply without an id.
@@ -75,14 +81,24 @@ def chunk_reader(stream: BinaryIO) -> Callable[[], bytes]:
 
 
 def read_lines(read_chunk: Callable[[], bytes], lines: queue.Queue) -> None:
-    """The reader thread: each line (without its `\\n`) on the queue, then the end marker."""
+    """The reader thread: each line (without its `\\n`) on the queue, then the end marker.
+
+    A UTF-8 BOM at the start of the input is dropped (a host on Windows may write one).
+    """
     pending = b""
+    start = True
     try:
         while True:
             chunk = read_chunk()
             if not chunk:
                 break
             pending += chunk
+            if start:
+                if len(pending) < len(BOM) and BOM.startswith(pending):
+                    continue  # wait for the rest of a BOM
+                if pending.startswith(BOM):
+                    pending = pending[len(BOM):]
+                start = False
             while True:
                 end = pending.find(b"\n")
                 if end < 0:
@@ -104,7 +120,10 @@ def parse_request(raw: bytes) -> tuple[Request | None, str | None]:
     except UnicodeDecodeError:
         return None, "The line is not UTF-8"
     try:
-        obj = json.loads(text, parse_constant=_no_constant)
+        obj = loads_json(text)
+    except DuplicateKeyError as e:
+        # As a key given twice in a line of the shell, of run or of call.
+        return None, e.sentence
     except ValueError as e:
         return None, f"The line is not JSON: {e}"
     if not isinstance(obj, dict):
@@ -127,7 +146,3 @@ def parse_request(raw: bytes) -> tuple[Request | None, str | None]:
     if context is not None and not isinstance(context, dict):
         return None, "The context of a request must be a JSON object"
     return Request(id=request_id, command=command, params=params, context=context), None
-
-
-def _no_constant(name: str):
-    raise ValueError(f"{name} is not a JSON value")
